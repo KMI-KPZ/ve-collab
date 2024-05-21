@@ -104,10 +104,10 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                                     </span>
                                 </div>
                                 <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Medien</span>
+                                    <span className="w-1/4 font-medium">Materialien</span>
                                     <span>
                                         {showDataOrEmptySign(
-                                            task.media
+                                            task.materials
                                                 .filter((element) => element !== '')
                                                 .join(', ')
                                         )}

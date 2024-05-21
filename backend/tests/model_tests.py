@@ -204,7 +204,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.work_mode, None)
         self.assertEqual(task.notes, None)
         self.assertEqual(task.tools, [])
-        self.assertEqual(task.media, [])
+        self.assertEqual(task.materials, [])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_init(self):
@@ -223,7 +223,7 @@ class TaskModelTest(TestCase):
             work_mode=dummy_val,
             notes=dummy_val,
             tools=[dummy_val],
-            media=[dummy_val],
+            materials=[dummy_val],
         )
 
         self.assertEqual(task.title, dummy_val)
@@ -232,7 +232,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.work_mode, dummy_val)
         self.assertEqual(task.notes, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
-        self.assertEqual(task.media, [dummy_val])
+        self.assertEqual(task.materials, [dummy_val])
         self.assertEqual(task._id, _id)
 
         # test again, without supplying and _id
@@ -243,7 +243,7 @@ class TaskModelTest(TestCase):
             work_mode=dummy_val,
             notes=dummy_val,
             tools=[dummy_val],
-            media=[dummy_val],
+            materials=[dummy_val],
         )
         self.assertEqual(task.title, dummy_val)
         self.assertEqual(task.learning_goal, dummy_val)
@@ -251,7 +251,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.work_mode, dummy_val)
         self.assertEqual(task.notes, dummy_val)
         self.assertEqual(task.tools, [dummy_val])
-        self.assertEqual(task.media, [dummy_val])
+        self.assertEqual(task.materials, [dummy_val])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_to_dict(self):
@@ -267,7 +267,7 @@ class TaskModelTest(TestCase):
         self.assertIn("work_mode", task)
         self.assertIn("notes", task)
         self.assertIn("tools", task)
-        self.assertIn("media", task)
+        self.assertIn("materials", task)
         self.assertIn("_id", task)
         self.assertEqual(task["title"], None)
         self.assertEqual(task["learning_goal"], None)
@@ -275,7 +275,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task["work_mode"], None)
         self.assertEqual(task["notes"], None)
         self.assertEqual(task["tools"], [])
-        self.assertEqual(task["media"], [])
+        self.assertEqual(task["materials"], [])
         self.assertIsInstance(task["_id"], ObjectId)
 
     def test_from_dict(self):
@@ -292,7 +292,7 @@ class TaskModelTest(TestCase):
             "work_mode": "test",
             "notes": "test",
             "tools": ["test"],
-            "media": ["test"],
+            "materials": ["test"],
         }
         task = Task.from_dict(task_dict)
         self.assertEqual(task.title, "test")
@@ -301,7 +301,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.work_mode, "test")
         self.assertEqual(task.notes, "test")
         self.assertEqual(task.tools, ["test"])
-        self.assertEqual(task.media, ["test"])
+        self.assertEqual(task.materials, ["test"])
         self.assertEqual(task._id, _id)
 
         # test again, without supplying an _id
@@ -312,7 +312,7 @@ class TaskModelTest(TestCase):
             "work_mode": "test",
             "notes": "test",
             "tools": ["test"],
-            "media": ["test"],
+            "materials": ["test"],
         }
         task = Task.from_dict(task_dict)
         self.assertEqual(task.title, "test")
@@ -321,7 +321,7 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.work_mode, "test")
         self.assertEqual(task.notes, "test")
         self.assertEqual(task.tools, ["test"])
-        self.assertEqual(task.media, ["test"])
+        self.assertEqual(task.materials, ["test"])
         self.assertIsInstance(task._id, ObjectId)
 
     def test_from_dict_error_params_no_dict(self):
@@ -347,7 +347,7 @@ class TaskModelTest(TestCase):
             "work_mode": "test",
             "notes": "test",
             "tools": ["test"],
-            "media": ["test"],
+            "materials": ["test"],
         }
         self.assertRaises(MissingKeyError, Task.from_dict, task_dict)
 
@@ -365,7 +365,7 @@ class TaskModelTest(TestCase):
             "work_mode": "test",
             "notes": "test",
             "tools": ["test"],
-            "media": ["test"],
+            "materials": ["test"],
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -397,9 +397,9 @@ class TaskModelTest(TestCase):
         self.assertRaises(TypeError, Task.from_dict, task_dict)
         task_dict["tools"] = ["test"]
 
-        task_dict["media"] = dict()
+        task_dict["materials"] = dict()
         self.assertRaises(TypeError, Task.from_dict, task_dict)
-        task_dict["media"] = ["test"]
+        task_dict["materials"] = ["test"]
 
 
 class StepModelTest(TestCase):

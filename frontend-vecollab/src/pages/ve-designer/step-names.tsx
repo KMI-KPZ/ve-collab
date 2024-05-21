@@ -61,7 +61,7 @@ export const defaultFineStepData: IFineStep = {
             work_mode: '',
             notes: '',
             tools: ['', ''],
-            media: ['', ''],
+            materials: ['', ''],
         },
     ],
     evaluation_tools: [],

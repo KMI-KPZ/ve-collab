@@ -17,7 +17,7 @@ export const defaultValueTask: ITaskFrontend = {
     work_mode: '',
     notes: '',
     tools: [{ name: '' }, { name: '' }],
-    media: [{ name: '' }, { name: '' }],
+    materials: [{ name: '' }, { name: '' }],
 };
 
 export default function Stage({ fineStep }: Props) {

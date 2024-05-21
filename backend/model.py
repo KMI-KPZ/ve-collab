@@ -146,7 +146,7 @@ class Task:
         "work_mode": (str, type(None)),
         "notes": (str, type(None)),
         "tools": list,
-        "media": list,
+        "materials": list,
     }
 
     def __init__(
@@ -158,7 +158,7 @@ class Task:
         work_mode: str = None,
         notes: str = None,
         tools: List[str] = [],
-        media: List[str] = [],
+        materials: List[str] = [],
     ) -> None:
         """
         Initialization of a `Task` instance.
@@ -188,7 +188,7 @@ class Task:
         self.work_mode = work_mode
         self.notes = notes
         self.tools = tools
-        self.media = media
+        self.materials = materials
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -215,7 +215,7 @@ class Task:
             "work_mode": self.work_mode,
             "notes": self.notes,
             "tools": self.tools,
-            "media": self.media,
+            "materials": self.materials,
         }
 
     @classmethod
@@ -224,10 +224,10 @@ class Task:
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"title"`, `learning_goal`, `task_formulation`, `work_mode`,
-        `"notes"`, `"tools"`, `media`.
+        `"notes"`, `"tools"`, `materials`.
         However values are not required, any attributes may be
         initialized with None (title/notes/learning_goal/task_formulation/work_mode)
-        or [] (tools/media).
+        or [] (tools/materials).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
         already exists. However, true existence is handled by the database itself and
@@ -1894,7 +1894,7 @@ class VEPlan:
                                 "work_mode": None,
                                 "description": None,
                                 "tools": [],
-                                "media": [],
+                                "materials": [],
                             }
                         ],
                         "evaluation_tools": [],

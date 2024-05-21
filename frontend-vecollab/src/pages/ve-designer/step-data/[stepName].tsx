@@ -25,7 +25,7 @@ export interface ITask {
     work_mode: string;
     notes: string;
     tools: string[];
-    media: string[];
+    materials: string[];
 }
 
 export interface ITaskFrontend {
@@ -35,13 +35,13 @@ export interface ITaskFrontend {
     work_mode: string;
     notes: string;
     tools: IToolsFrontend[];
-    media: IMediaFrontend[];
+    materials: IMaterialFrontend[];
 }
 export interface IToolsFrontend {
     name: string;
 }
 
-export interface IMediaFrontend {
+export interface IMaterialFrontend {
     name: string;
 }
 
@@ -86,7 +86,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
             work_mode: '',
             notes: '',
             tools: [{ name: '' }, { name: '' }],
-            media: [{ name: '' }, { name: '' }],
+            materials: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -108,8 +108,8 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
                 task.tools.every((tool) => {
                     return tool.name === '';
                 }) &&
-                task.media.every((media) => {
-                    return media.name === '';
+                task.materials.every((materials) => {
+                    return materials.name === '';
                 })
             );
         })
@@ -178,8 +178,8 @@ export default function FinePlanner() {
                                         tools: task.tools.map((tool) => ({
                                             name: tool,
                                         })),
-                                        media: task.media.map((media) => ({
-                                            name: media,
+                                        materials: task.materials.map((materials) => ({
+                                            name: materials,
                                         })),
                                     };
                                 }
@@ -204,7 +204,7 @@ export default function FinePlanner() {
             return {
                 ...task,
                 tools: task.tools.map((tool) => tool.name),
-                media: task.media.map((media) => media.name),
+                materials: task.materials.map((materials) => materials.name),
             };
         });
 

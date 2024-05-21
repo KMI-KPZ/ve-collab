@@ -255,7 +255,7 @@ class VEPlanHandler(BaseHandler):
                                         "work_mode": "test",
                                         "notes": "test",
                                         "tools": ["test"],
-                                        "media": ["test"]
+                                        "materials": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -486,7 +486,7 @@ class VEPlanHandler(BaseHandler):
                                         "work_mode": "test",
                                         "notes": "test",
                                         "tools": ["test"],
-                                        "media": ["test"]
+                                        "materials": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -801,7 +801,7 @@ class VEPlanHandler(BaseHandler):
                                 "work_mode": "test",
                                 "notes": "test",
                                 "tools": ["test"],
-                                "media": ["test"]
+                                "materials": ["test"]
                             }
                         ],
                         "evaluation_tools": ["test"],

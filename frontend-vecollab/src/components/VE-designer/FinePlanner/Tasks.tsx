@@ -2,19 +2,19 @@ import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import {
     IFineStepFrontend,
-    IMediaFrontend,
+    IMaterialFrontend,
     IToolsFrontend,
 } from '@/pages/ve-designer/step-data/[stepName]';
 import Tools from '@/components/VE-designer/FinePlanner/Tools';
 import { RxPlus } from 'react-icons/rx';
-import Media from './Media';
+import Material from './Material';
 
 interface Props {
     taskIndex: number;
 }
 
 const defaultValueTools: IToolsFrontend = { name: '' };
-const defaultValueMedia: IMediaFrontend = { name: '' };
+const defaultValueMedia: IMaterialFrontend = { name: '' };
 
 export default function Tasks({ taskIndex }: Props) {
     const { register, formState, control } = useFormContext<IFineStepFrontend>();
@@ -33,7 +33,7 @@ export default function Tasks({ taskIndex }: Props) {
         remove: removeMedia,
         update: updateMedia,
     } = useFieldArray<IFineStepFrontend>({
-        name: `tasks.${taskIndex}.media`,
+        name: `tasks.${taskIndex}.materials`,
         control,
     });
 
@@ -200,16 +200,16 @@ export default function Tasks({ taskIndex }: Props) {
             </div>
             <div className="mt-4 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="media" className="px-2 py-2">
-                        Medien
+                    <label htmlFor="materials" className="px-2 py-2">
+                        Materialien
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
-                    {fieldsMedia.map((media, mediaIndex) => (
-                        <Media
-                            key={media.id}
+                    {fieldsMedia.map((materials, materialsIndex) => (
+                        <Material
+                            key={materials.id}
                             taskIndex={taskIndex}
-                            mediaIndex={mediaIndex}
+                            materialsIndex={materialsIndex}
                             removeItem={handleDeleteMedia}
                         />
                     ))}
