@@ -14,7 +14,7 @@ export const defaultValueTask: ITaskFrontend = {
     title: '',
     learning_goal: '',
     task_formulation: '',
-    social_form: '',
+    work_mode: '',
     description: '',
     tools: [{ name: '' }, { name: '' }],
     media: [{ name: '' }, { name: '' }],

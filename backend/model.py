@@ -143,7 +143,7 @@ class Task:
         "title": (str, type(None)),
         "learning_goal": (str, type(None)),
         "task_formulation": (str, type(None)),
-        "social_form": (str, type(None)),
+        "work_mode": (str, type(None)),
         "description": (str, type(None)),
         "tools": list,
         "media": list,
@@ -155,7 +155,7 @@ class Task:
         title: str = None,
         learning_goal: str = None,
         task_formulation: str = None,
-        social_form: str = None,
+        work_mode: str = None,
         description: str = None,
         tools: List[str] = [],
         media: List[str] = [],
@@ -185,7 +185,7 @@ class Task:
         self.title = title
         self.learning_goal = learning_goal
         self.task_formulation = task_formulation
-        self.social_form = social_form
+        self.work_mode = work_mode
         self.description = description
         self.tools = tools
         self.media = media
@@ -212,7 +212,7 @@ class Task:
             "title": self.title,
             "learning_goal": self.learning_goal,
             "task_formulation": self.task_formulation,
-            "social_form": self.social_form,
+            "work_mode": self.work_mode,
             "description": self.description,
             "tools": self.tools,
             "media": self.media,
@@ -223,10 +223,10 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `learning_goal`, `task_formulation`, `social_form`,
+        `"title"`, `learning_goal`, `task_formulation`, `work_mode`,
         `"description"`, `"tools"`, `media`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal/task_formulation/social_form)
+        initialized with None (title/description/learning_goal/task_formulation/work_mode)
         or [] (tools/media).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
@@ -1891,7 +1891,7 @@ class VEPlan:
                                 "title": None,
                                 "learning_goal": None,
                                 "task_formulation": None,
-                                "social_form": None,
+                                "work_mode": None,
                                 "description": None,
                                 "tools": [],
                                 "media": [],

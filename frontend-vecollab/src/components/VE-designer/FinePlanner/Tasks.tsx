@@ -125,13 +125,13 @@ export default function Tasks({ taskIndex }: Props) {
             </div>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="social_form" className="px-2 py-2">
-                        Sozialform
+                    <label htmlFor="work_mode" className="px-2 py-2">
+                        Arbeitsform
                     </label>
                 </div>
                 <div className="w-5/6">
                     <input
-                        {...register(`tasks.${taskIndex}.social_form`, {
+                        {...register(`tasks.${taskIndex}.work_mode`, {
                             maxLength: {
                                 value: 500,
                                 message: 'Bitte nicht mehr als 500 Zeichen.',
@@ -141,7 +141,7 @@ export default function Tasks({ taskIndex }: Props) {
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.social_form?.message}
+                        {formState.errors?.tasks?.[taskIndex]?.work_mode?.message}
                     </p>
                 </div>
             </div>

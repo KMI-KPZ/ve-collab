@@ -22,7 +22,7 @@ export interface ITask {
     title: string;
     learning_goal: string;
     task_formulation: string;
-    social_form: string;
+    work_mode: string;
     description: string;
     tools: string[];
     media: string[];
@@ -32,7 +32,7 @@ export interface ITaskFrontend {
     title: string;
     learning_goal: string;
     task_formulation: string;
-    social_form: string;
+    work_mode: string;
     description: string;
     tools: IToolsFrontend[];
     media: IMediaFrontend[];
@@ -83,7 +83,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
             title: '',
             learning_goal: '',
             task_formulation: '',
-            social_form: '',
+            work_mode: '',
             description: '',
             tools: [{ name: '' }, { name: '' }],
             media: [{ name: '' }, { name: '' }],
@@ -103,7 +103,7 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
                 task.title === '' &&
                 task.learning_goal === '' &&
                 task.task_formulation === '' &&
-                task.social_form === '' &&
+                task.work_mode === '' &&
                 task.description === '' &&
                 task.tools.every((tool) => {
                     return tool.name === '';
