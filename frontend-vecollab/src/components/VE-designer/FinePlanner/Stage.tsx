@@ -133,7 +133,7 @@ export default function Stage({ fineStep }: Props) {
                                     append(defaultValueTask);
                                 }}
                             >
-                                neue Aufgabe hinzufügen
+                                weitere Lernaktivität hinzufügen
                             </button>
                         </div>
                     </div>
