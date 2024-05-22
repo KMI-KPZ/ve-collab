@@ -2091,13 +2091,30 @@ class PostResourceTest(BaseResourceTestCase):
             }
             self.db.posts.insert_one(post)
 
+        # add one more post outside of the time frame (lies in the future just for the test)
+        post = {
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now() + timedelta(days=1),
+                "text": "test",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": ["test"],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+        self.db.posts.insert_one(post)
+
+
         post_manager = Posts(self.db)
-        # this should include the 5 posts, but not the default one because its creation date is
-        # in the past
+        # this should include the 5 posts and the default one , but not the
+        # future one
         posts = post_manager.get_full_timeline(
-            datetime.now() - timedelta(days=1), datetime.now()
+            datetime.now(), 10
         )
-        self.assertEqual(len(posts), 5)
+        self.assertEqual(len(posts), 6)
 
     def test_get_space_timeline(self):
         """
