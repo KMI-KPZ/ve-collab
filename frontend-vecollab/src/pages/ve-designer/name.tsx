@@ -85,11 +85,6 @@ export default function EssentialInformation() {
                             name: ProgressState.completed,
                         },
                     },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'partners',
-                        value: [author],
-                    },
                 ],
             },
             session?.accessToken
