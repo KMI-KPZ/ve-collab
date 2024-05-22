@@ -109,11 +109,11 @@ export default function HeaderSection({
                     {isGlobalAdmin && (
                         <div
                             className={
-                                isActivePath('/admin_dashboard') ? activeClass : inactiveClass
+                                isActivePath('/admin') ? activeClass : inactiveClass
                             }
                         >
                             <Link
-                                href="/admin_dashboard"
+                                href="/admin"
                                 className="inline-block px-2 py-1 text-red-500"
                             >
                                 Admin Dashboard

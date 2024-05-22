@@ -12,7 +12,6 @@ import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
 import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
-import AdminDashboard from '@/pages/admin_dashboard';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
