@@ -27,7 +27,7 @@ const GETfetcher = (relativeUrl: string, accessToken?: string) =>
     }).then((res) => {
         if (res.status === 401) {
             console.log('forced new signIn by api call');
-            signIn('keycloak');
+            //signIn('keycloak');
         }
         return res.json();
     });
@@ -37,9 +37,11 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
         return res;
     });
 
-export function useIsGlobalAdmin(accessToken: string): boolean {
-    const { data } = useSWR([`/admin_check`, accessToken], ([url, token]) =>
-        GETfetcher(url, token)
+export function useIsGlobalAdmin(accessToken?: string): boolean {
+    const { data } = useSWR(
+        [`/admin_check`, accessToken]
+        ,
+        ([url, token]) => GETfetcher(url, token)
     );
 
     return data?.is_admin || false;
@@ -126,6 +128,28 @@ export function useGetPublicPlansOfCurrentUser(
                       _id: plan._id,
                       name: plan.name,
                   })),
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetAllPlans(accessToken: string): {
+    data: IPlan[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/planner/get_all', accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data:
+            isLoading || error
+                ? []
+                : data.plans,
         isLoading,
         error,
         mutate,
@@ -375,8 +399,9 @@ export function useGetTimeline(
     toDate?: string,
     limit?: number,
     group?: string,
-    user?: string
-): {
+    user?: string,
+    adminDashboard?: boolean
+ ): {
     data: BackendPost[];
     isLoading: boolean;
     error: any;
@@ -387,10 +412,13 @@ export function useGetTimeline(
         endpointUrl += `/space/${group}`;
     } else if (user) {
         endpointUrl += `/user/${user}`;
-    } else {
-        endpointUrl += `/you`;
+    } else if (adminDashboard) {
+        // empty, adminDashboard requests to bare /timeline
     }
-    endpointUrl += `?to=${toDate}&limit=${limit}`;
+    else {
+        endpointUrl += `/you`
+    }
+    endpointUrl += `?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR([endpointUrl, accessToken], ([url, token]) =>
         GETfetcher(url, token)

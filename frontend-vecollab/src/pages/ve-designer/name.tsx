@@ -1,6 +1,5 @@
 import LoadingAnimation from '@/components/LoadingAnimation';
 import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import SideProgressBarSectionBroadPlanner from '@/components/VE-designer/SideProgressBarSectionBroadPlanner';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -11,7 +10,8 @@ import {
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import SideProgressBarWithReactHookFormWithoutPopUp from '@/components/VE-designer/SideProgressBarWithReactHookFormWithoutPopUp';
 
 interface FormValues {
     name: string;
@@ -25,6 +25,7 @@ export default function EssentialInformation() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [author, setAuthor] = useState<string>('');
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -37,12 +38,7 @@ export default function EssentialInformation() {
         }
     }, [session, status]);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue,
-    } = useForm<FormValues>({ mode: 'onChange' });
+    const methods = useForm<FormValues>({ mode: 'onChange' });
 
     useEffect(() => {
         // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
@@ -64,11 +60,12 @@ export default function EssentialInformation() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setSteps(data.plan.steps);
-                    setValue('name', data.plan.name, { shouldValidate: true });
+                    setAuthor(data.plan.author);
+                    methods.setValue('name', data.plan.name, { shouldValidate: true });
                 }
             );
         }
-    }, [session, status, router, setValue]);
+    }, [session, status, router, methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
@@ -88,6 +85,11 @@ export default function EssentialInformation() {
                             name: ProgressState.completed,
                         },
                     },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'partners',
+                        value: [author],
+                    },
                 ],
             },
             session?.accessToken
@@ -103,76 +105,79 @@ export default function EssentialInformation() {
     };
 
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                            <div className="flex-grow">
-                                <div className={'text-center font-bold text-4xl mb-24'}>
-                                    Wie soll das Projekt heißen?
+        <FormProvider {...methods}>
+            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
+                <div className="flex flex-grow justify-center">
+                    <div className="flex flex-col">
+                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
+                        {loading ? (
+                            <LoadingAnimation />
+                        ) : (
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                                <div className="flex-grow">
+                                    <div className={'text-center font-bold text-4xl mb-24'}>
+                                        Wie soll das Projekt heißen?
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <input
+                                            type="text"
+                                            placeholder="Name eingeben"
+                                            className="border border-gray-300 rounded-md p-2 w-full"
+                                            {...methods.register('name', {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Bitte gebe deiner VE einen Namen.',
+                                                },
+                                                maxLength: {
+                                                    value: 50,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                                                },
+                                                pattern: {
+                                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                                    message:
+                                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
+                                                },
+                                            })}
+                                        />
+                                        <p className="text-red-600 pt-2">
+                                            {methods.formState.errors.name?.message}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col justify-center">
-                                    <input
-                                        type="text"
-                                        placeholder="Name eingeben"
-                                        className="border border-gray-300 rounded-md p-2 w-full"
-                                        {...register('name', {
-                                            required: {
-                                                value: true,
-                                                message: 'Bitte gebe deiner VE einen Namen.',
-                                            },
-                                            maxLength: {
-                                                value: 50,
-                                                message:
-                                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                            },
-                                            pattern: {
-                                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                                message:
-                                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
-                                            },
-                                        })}
-                                    />
-                                    <p className="text-red-600 pt-2">{errors.name?.message}</p>
+                                <div className="flex w-full justify-between">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                        >
+                                            Zurück
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                            onClick={methods.handleSubmit((data) =>
+                                                combinedSubmitRouteAndUpdate(
+                                                    data,
+                                                    '/ve-designer/partners'
+                                                )
+                                            )}
+                                        >
+                                            Weiter
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex w-full justify-between">
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                                    >
-                                        Zurück
-                                    </button>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                        onClick={handleSubmit((data) =>
-                                            combinedSubmitRouteAndUpdate(
-                                                data,
-                                                '/ve-designer/partners'
-                                            )
-                                        )}
-                                    >
-                                        Weiter
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    )}
+                            </form>
+                        )}
+                    </div>
                 </div>
+                <SideProgressBarWithReactHookFormWithoutPopUp
+                    progressState={sideMenuStepsProgress}
+                    onSubmit={onSubmit}
+                />
             </div>
-            <SideProgressBarSectionBroadPlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={handleSubmit(onSubmit)}
-                isValid={true}
-            />
-        </div>
+        </FormProvider>
     );
 }

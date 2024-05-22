@@ -31,6 +31,8 @@ export default function UserProfile() {
         expertise: '',
         birthday: '',
         languages: [],
+        institutions: [],
+        chosen_institution_id: '',
     });
     const [followers, setFollowers] = useState(['']); // other users that follow this user (usernames)
     const [follows, setFollows] = useState(['']); // the other users that this user follows (usernames)
@@ -140,6 +142,8 @@ export default function UserProfile() {
                     expertise: data.profile.expertise,
                     birthday: data.profile.birthday,
                     languages: data.profile.languages,
+                    institutions: data.profile.institutions,
+                    chosen_institution_id: data.profile.chosen_institution_id,
                 });
                 setFollowers(data.followers);
                 setFollows(data.follows);
@@ -183,12 +187,22 @@ export default function UserProfile() {
                         setFollows={setFollows}
                         followers={followers}
                         foreignUser={foreignUser}
-                        username={personalInformation.firstName + ' ' + personalInformation.lastName}
+                        username={
+                            personalInformation.firstName + ' ' + personalInformation.lastName
+                        }
                     />
                     <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
                         <ProfileHeader
-                            name={personalInformation.firstName + ' ' + personalInformation.lastName}
-                            institution={personalInformation.institution}
+                            name={
+                                personalInformation.firstName + ' ' + personalInformation.lastName
+                            }
+                            institution={
+                                personalInformation.institutions.find(
+                                    (institution) =>
+                                        institution._id ===
+                                        personalInformation.chosen_institution_id
+                                )?.name || ''
+                            }
                             profilePictureUrl={profilePictureUrl}
                             foreignUser={foreignUser}
                             followers={followers}
@@ -205,11 +219,12 @@ export default function UserProfile() {
                                         cvInfo={{ educations, workExperience }}
                                     />
                                 </WhiteBox>
-                                <BoxHeadline title='Timeline' />
-                                {foreignUser
-                                    ? ( <Timeline user={router.query.username as string} /> )
-                                    : ( <Timeline /> )
-                                }
+                                <BoxHeadline title="Timeline" />
+                                {foreignUser ? (
+                                    <Timeline user={router.query.username as string} />
+                                ) : (
+                                    <Timeline />
+                                )}
                             </div>
                             <div className={'w-1/4  ml-4'}>
                                 <WhiteBox>

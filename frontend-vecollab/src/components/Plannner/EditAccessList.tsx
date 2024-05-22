@@ -5,19 +5,18 @@ import { useSession } from 'next-auth/react';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import EditAccessUserSnippet from './EditAccessUserSnippet';
+import { AlertState } from '../Alert';
 
 interface Props {
     closeDialogCallback: () => void;
     plan: PlanPreview;
-    setSuccessPopupOpen: Dispatch<SetStateAction<boolean>>;
-    setSuccessMessage: Dispatch<SetStateAction<string>>;
+    setAlert: Dispatch<SetStateAction<AlertState>>;
 }
 
 export default function EditAccessList({
     closeDialogCallback,
     plan,
-    setSuccessPopupOpen,
-    setSuccessMessage,
+    setAlert
 }: Props) {
     const { data: session } = useSession();
 
@@ -83,13 +82,7 @@ export default function EditAccessList({
                     { ...userSnippets[index], access: access },
                 ];
                 setUserSnippets(copy);
-
-                // render success message that disappears after 2 seconds
-                setSuccessPopupOpen(true);
-                setSuccessMessage('Freigabeeinstellung geändert');
-                setTimeout(() => {
-                    setSuccessPopupOpen((successPopupOpen) => false);
-                }, 2000);
+                setAlert({message: 'Freigabeeinstellung geändert', autoclose: 2000})
             });
         });
     };
@@ -106,13 +99,7 @@ export default function EditAccessList({
             setUserSnippets([
                 ...userSnippets.filter((val, count) => val.preferredUsername !== username),
             ]);
-
-            // render success message that disappears after 2 seconds
-            setSuccessPopupOpen(true);
-            setSuccessMessage('Freigabe entzogen');
-            setTimeout(() => {
-                setSuccessPopupOpen((successPopupOpen) => false);
-            }, 2000);
+            setAlert({message: 'Freigabe entzogen', autoclose: 2000})
         });
     };
 

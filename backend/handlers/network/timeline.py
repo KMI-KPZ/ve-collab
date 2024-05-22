@@ -103,8 +103,8 @@ class TimelineHandler(BaseTimelineHandler):
         GET /timeline
             watch the full timeline of all posts whatsoever, requires global admin privileges
         query params:
-            "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
             "to" : ISO timestamp string (fetch posts younger than this), default: now
+            "limit": fetch the last n posts, default: 10
         return:
             200 OK,
             {"success": True, "posts": [...]}
@@ -119,11 +119,12 @@ class TimelineHandler(BaseTimelineHandler):
             self.write({"success": False, "reason": "insufficient_permission"})
             return
 
-        time_from, time_to = self.parse_timeframe_args()
+        _, time_to = self.parse_timeframe_args()
+        limit = int(self.get_argument("limit", "10"))
 
         with util.get_mongodb() as db:
             post_manager = Posts(db)
-            result = post_manager.get_full_timeline(time_from, time_to)
+            result = post_manager.get_full_timeline(time_to, limit)
 
         # serialize post objects to dicts and enhance author information
         posts = self.add_profile_information_to_author(result)

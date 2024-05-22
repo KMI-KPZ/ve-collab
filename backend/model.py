@@ -140,25 +140,21 @@ class Task:
     # when initializing a task from a dict using 'Task.from_dict()',
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
-        "title": (str, type(None)),
-        "learning_goal": (str, type(None)),
         "task_formulation": (str, type(None)),
-        "social_form": (str, type(None)),
-        "description": (str, type(None)),
+        "work_mode": (str, type(None)),
+        "notes": (str, type(None)),
         "tools": list,
-        "media": list,
+        "materials": list,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
-        title: str = None,
-        learning_goal: str = None,
         task_formulation: str = None,
-        social_form: str = None,
-        description: str = None,
+        work_mode: str = None,
+        notes: str = None,
         tools: List[str] = [],
-        media: List[str] = [],
+        materials: List[str] = [],
     ) -> None:
         """
         Initialization of a `Task` instance.
@@ -182,13 +178,11 @@ class Task:
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
-        self.title = title
-        self.learning_goal = learning_goal
         self.task_formulation = task_formulation
-        self.social_form = social_form
-        self.description = description
+        self.work_mode = work_mode
+        self.notes = notes
         self.tools = tools
-        self.media = media
+        self.materials = materials
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -209,13 +203,11 @@ class Task:
 
         return {
             "_id": self._id,
-            "title": self.title,
-            "learning_goal": self.learning_goal,
             "task_formulation": self.task_formulation,
-            "social_form": self.social_form,
-            "description": self.description,
+            "work_mode": self.work_mode,
+            "notes": self.notes,
             "tools": self.tools,
-            "media": self.media,
+            "materials": self.materials,
         }
 
     @classmethod
@@ -223,11 +215,10 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `learning_goal`, `task_formulation`, `social_form`,
-        `"description"`, `"tools"`, `media`.
+        `task_formulation`, `work_mode`, `"notes"`, `"tools"`, `materials`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal/task_formulation/social_form)
-        or [] (tools/media).
+        initialized with None (notes/task_formulation/work_mode)
+        or [] (tools/materials).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
         already exists. However, true existence is handled by the database itself and
@@ -310,8 +301,8 @@ class Step:
         "workload": int,
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
-        "learning_env": (str, type(None)),
         "learning_goal": (str, type(None)),
+        "has_tasks": bool,
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
@@ -325,8 +316,8 @@ class Step:
         workload: int = 0,
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
-        learning_env: str = None,
         learning_goal: str = None,
+        has_tasks: bool = False,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
@@ -377,12 +368,12 @@ class Step:
         else:
             self.duration = self.timestamp_to - self.timestamp_from
 
-        self.learning_env = learning_env
         self.learning_goal = learning_goal
+        self.has_tasks = has_tasks
         self.tasks = tasks
 
-        # ensure that tasks have unique titles
-        if not self._check_unique_task_titles(self.tasks):
+        # ensure that tasks are unique by their task formulation
+        if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
         self.evaluation_tools = evaluation_tools
@@ -415,8 +406,8 @@ class Step:
             "timestamp_from": self.timestamp_from,
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
-            "learning_env": self.learning_env,
             "learning_goal": self.learning_goal,
+            "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
@@ -424,17 +415,17 @@ class Step:
         }
 
     @classmethod
-    def _check_unique_task_titles(cls, tasks: List[Task]) -> bool:
+    def _check_unique_tasks(cls, tasks: List[Task]) -> bool:
         """
-        assert that the title-attributes of the tasks in the given list are unique
+        assert that the task_formulation-attributes of the tasks in the given list are unique
         and return True if so, False otherwise.
         """
 
         seen_set = set()
         for task in tasks:
-            if task.title in seen_set:
+            if task.task_formulation in seen_set:
                 return False
-            seen_set.add(task.title)
+            seen_set.add(task.task_formulation)
         return True
 
     @classmethod
@@ -443,14 +434,14 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
         However only `name` requires a value, all other attributes may be
-        initialized with None (description/learning_goal), 0 (duration/workload)
-        or [] (tasks/attachements).
+        initialized with None (description/learning_goal), 0 (duration/workload),
+        False (has_tasks) or [] (tasks/attachements).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
-        unique `"title"`-attributes within this step.
+        unique `"task-formulation"`-attributes within this step.
 
         The `attachments`-key is a list containing ObjectId's which are
         references to files that are stored separately in GridFS.
@@ -462,7 +453,7 @@ class Step:
 
         Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
-        Raises `NonUniqueTasksError` if the titles of tasks are not unique to each other.
+        Raises `NonUniqueTasksError` if the tasks are not unique to each other.
 
         Usage example::
 
@@ -536,7 +527,7 @@ class Step:
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
         tasks = [Task.from_dict(task) for task in params["tasks"]]
-        if not cls._check_unique_task_titles(tasks):
+        if not cls._check_unique_tasks(tasks):
             raise NonUniqueTasksError
         del params["tasks"]
 
@@ -1334,6 +1325,128 @@ class Evaluation:
         return instance
 
 
+class IndividualLearningGoal:
+    EXPECTED_DICT_ENTRIES = {
+        "username": (str, type(None)),
+        "learning_goal": (str, type(None)),
+    }
+
+    def __init__(
+        self,
+        _id: str | ObjectId = None,
+        username: str = None,
+        learning_goal: str = None,
+    ) -> None:
+        # ensure _id becomes type ObjectId, either using the given value or
+        # creating a fresh ID
+        self._id = util.parse_object_id(_id) if _id != None else ObjectId()
+
+        self.username = username
+        self.learning_goal = learning_goal
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+
+    def to_dict(self) -> Dict:
+        """
+        serialize all attributes of this instance into a dictionary
+        """
+
+        return {
+            "_id": self._id,
+            "username": self.username,
+            "learning_goal": self.learning_goal,
+        }
+
+    @classmethod
+    def from_dict(cls, params: Dict[str, Any]) -> IndividualLearningGoal:
+        """
+        initialize an `IndividualLearningGoal`-object from a dictionary (`params`).
+        All of the followings keys have to be present in the dict:
+        `"username"`, `"learning_goal"`.
+        However values are not required, any attributes may be
+        initialized with None (username/learning_goal).
+
+        Optionally, a `"_id"` may be supplied, conveying the semantics that this IndividualLearningGoal
+        already exists. However, true existence is handled by the database itself and
+        not by this model.
+        If no "_id" is supplied, a fresh one will be generated by the system.
+
+        Any other entries in `params` that do not represent an attribute
+        of an IndividualLearningGoal will be ignored and deleted from the dictionary
+        (keep in mind for further use of the `params`-dict).
+
+        Returns an instance of `IndividualLearningGoal`.
+
+        Raises `TypeError` if params is not a dictionary, or any of the values in the
+        dict have the wrong type.
+
+        Raises `MissingKeyError` if any of the required keys is missing
+        in the `params`-dict.
+
+        Usage example::
+
+            individual_learning_goal = IndividualLearningGoal.from_dict(params)
+        """
+
+        if not isinstance(params, dict):
+            raise TypeError(
+                "expected type 'dict' for argument 'params', got {}".format(
+                    type(params)
+                )
+            )
+
+        # ensure all necessary keys are in the dict
+        for expected_key in cls.EXPECTED_DICT_ENTRIES.keys():
+            if expected_key not in params:
+                raise MissingKeyError(
+                    "Missing key {} in {} dictionary".format(
+                        expected_key, cls.__name__
+                    ),
+                    expected_key,
+                    cls.__name__,
+                )
+
+        # delete any keys from params that are not expected to avoid having
+        # any other additional attributes that might cause trouble
+        # (e.g. on serialization)
+        for key in list(params.keys()):
+            if key not in [*cls.EXPECTED_DICT_ENTRIES.keys(), *["_id"]]:
+                del params[key]
+
+        # ensure types of attributes are correct
+        for key in params:
+            if key in cls.EXPECTED_DICT_ENTRIES:
+                if not isinstance(params[key], cls.EXPECTED_DICT_ENTRIES[key]):
+                    raise TypeError(
+                        "expected type '{}' for key '{}', got '{}'".format(
+                            cls.EXPECTED_DICT_ENTRIES[key],
+                            key,
+                            type(params[key]),
+                        )
+                    )
+
+        # handle existence and correct type of object id's
+        if "_id" in params:
+            params["_id"] = util.parse_object_id(params["_id"])
+        else:
+            params["_id"] = ObjectId()
+
+        # create and return object
+        instance = cls()
+        instance.__dict__.update(params)
+        return instance
+
+
 class VEPlan:
     """
     Model class to represent a VE-Plan
@@ -1345,7 +1458,9 @@ class VEPlan:
         "institutions": list,
         "topics": list,
         "lectures": list,
-        "learning_goals": list,
+        "major_learning_goals": list,
+        "individual_learning_goals": list,
+        "methodical_approach": (str, type(None)),
         "audience": list,
         "languages": list,
         "evaluation": list,
@@ -1378,7 +1493,9 @@ class VEPlan:
         institutions: List[Institution] = [],
         topics: List[str] = [],
         lectures: List[Lecture] = [],
-        learning_goals: List[str] = [],
+        major_learning_goals: List[str] = [],
+        individual_learning_goals: List[IndividualLearningGoal] = [],
+        methodical_approach: str = None,
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
         evaluation: List[Evaluation] = [],
@@ -1436,7 +1553,9 @@ class VEPlan:
         self.institutions = institutions
         self.topics = topics
         self.lectures = lectures
-        self.learning_goals = learning_goals
+        self.major_learning_goals = major_learning_goals
+        self.individual_learning_goals = individual_learning_goals
+        self.methodical_approach = methodical_approach
         self.audience = audience
         self.languages = languages
         self.evaluation = evaluation
@@ -1479,6 +1598,7 @@ class VEPlan:
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -1576,7 +1696,12 @@ class VEPlan:
             ],
             "topics": self.topics,
             "lectures": [lecture.to_dict() for lecture in self.lectures],
-            "learning_goals": self.learning_goals,
+            "major_learning_goals": self.major_learning_goals,
+            "individual_learning_goals": [
+                individual_learning_goal.to_dict()
+                for individual_learning_goal in self.individual_learning_goals
+            ],
+            "methodical_approach": self.methodical_approach,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
@@ -1663,7 +1788,7 @@ class VEPlan:
         Raises `NonUniqueStepsError` if the names of the steps in the `steps`-list are not
         unique to each other.
 
-        Raises `NonUniqueTasksError` if the titles of tasks in the steps are not unique to
+        Raises `NonUniqueTasksError` if the tasks in the steps are not unique to
         each other.
 
         Usage example::
@@ -1696,7 +1821,15 @@ class VEPlan:
                         "participants_amount": 0,
                     }
                 ],
-                "learning_goals": [],
+                "major_learning_goals": [],
+                "individual_learning_goals": [
+                    {
+                        "_id": "object_id_str",
+                        "username": None,
+                        "learning_goal": None,
+                    }
+                ],
+                "methodical_approach": None,
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1746,18 +1879,16 @@ class VEPlan:
                         "workload": 0,
                         "timestamp_from": None,
                         "timestamp_to": None,
-                        "learning_env": None,
                         "learning_goal": None,
+                        "has_tasks": False,
                         "tasks": [
                             {
                                 "_id": "object_id_str",
-                                "title": None,
-                                "learning_goal": None,
                                 "task_formulation": None,
-                                "social_form": None,
+                                "work_mode": None,
                                 "description": None,
                                 "tools": [],
-                                "media": [],
+                                "materials": [],
                             }
                         ],
                         "evaluation_tools": [],
@@ -1779,6 +1910,7 @@ class VEPlan:
                     "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
+                    "methodical_approach": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "evaluation": "<completed|uncompleted|not_started>",
@@ -1934,6 +2066,13 @@ class VEPlan:
         ]
         del params["evaluation"]
 
+        # also build the individual learning goals
+        individual_learning_goals = [
+            IndividualLearningGoal.from_dict(individual_learning_goal)
+            for individual_learning_goal in params["individual_learning_goals"]
+        ]
+        del params["individual_learning_goals"]
+
         # last but not least, build lectures
         lectures = [Lecture.from_dict(lecture) for lecture in params["lectures"]]
         del params["lectures"]
@@ -1977,6 +2116,7 @@ class VEPlan:
             audience=audience,
             institutions=institutions,
             evaluation=evaluations,
+            individual_learning_goals=individual_learning_goals,
             lectures=lectures,
             physical_mobilities=physical_mobilities,
         )

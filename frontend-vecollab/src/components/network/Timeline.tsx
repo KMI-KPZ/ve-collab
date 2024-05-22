@@ -18,6 +18,7 @@ interface Props {
     group?: string | undefined;
     groupACL?: BackendGroupACLEntry | undefined
     user?: string | undefined;
+    adminDashboard?: boolean
 }
 
 Timeline.auth = true
@@ -25,7 +26,8 @@ export default function Timeline({
     userIsAdmin=false,
     group,
     groupACL,
-    user
+    user,
+    adminDashboard,
 }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -53,7 +55,8 @@ export default function Timeline({
         toDate.toISOString(),
         perFetchLimit,
         group,
-        user
+        user,
+        adminDashboard
     )
 
     const { data: allGroups } = useGetAllGroups(session!.accessToken);

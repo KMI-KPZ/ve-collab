@@ -12,11 +12,6 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/ve-designer/partners',
     },
     {
-        text: 'Externe Beteiligte',
-        id: 'involved_parties',
-        link: '/ve-designer/externalParties',
-    },
-    {
         text: 'Institution',
         id: 'institutions',
         link: '/ve-designer/lectures',
@@ -32,9 +27,14 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/ve-designer/target-groups',
     },
     {
-        text: 'Richtlernziele',
+        text: 'Lernziele',
         id: 'learning_goals',
         link: '/ve-designer/learning-goals',
+    },
+    {
+        text: 'Methodischer Ansatz',
+        id: 'methodical_approach',
+        link: '/ve-designer/methodical-approach',
     },
     {
         text: 'Thema/Themen',
@@ -62,7 +62,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/ve-designer/learning-environment',
     },
     {
-        text: 'Formale Rahmenbedingungen',
+        text: 'Checkliste',
         id: 'formalities',
         link: '/ve-designer/checklist',
     },

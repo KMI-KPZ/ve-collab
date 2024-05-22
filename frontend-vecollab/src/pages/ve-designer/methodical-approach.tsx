@@ -1,34 +1,32 @@
 import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import React, { useEffect, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
-import { useRouter } from 'next/router';
-import { signIn, useSession } from 'next-auth/react';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
+import { signIn, useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
+import { PiBookOpenText } from 'react-icons/pi';
 import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
 
-interface ExternalParty {
-    externalParty: string;
-}
-
 interface FormValues {
-    externalParties: ExternalParty[];
+    methodicalApproach: string;
 }
 
-const areAllExternalPartiesEmpty = (externalParties: ExternalParty[]): boolean => {
-    return externalParties.every((party) => party.externalParty === '');
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.methodicalApproach === '';
 };
 
-ExternalPersons.auth = true;
-export default function ExternalPersons() {
+MethodicalApproach.auth = true;
+export default function MethodicalApproach() {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -51,7 +49,7 @@ export default function ExternalPersons() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            externalParties: [{ externalParty: '' }],
+            methodicalApproach: '',
         },
     });
 
@@ -71,13 +69,8 @@ export default function ExternalPersons() {
             fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
                 (data) => {
                     setLoading(false);
-                    if (data.plan.involved_parties.length !== 0) {
-                        methods.setValue(
-                            'externalParties',
-                            data.plan.involved_parties.map((element: string) => ({
-                                externalParty: element,
-                            }))
-                        );
+                    if (data.plan.methodical_approach !== null) {
+                        methods.setValue('methodicalApproach', data.plan.methodical_approach);
                     }
                     if (data.plan.progress.length !== 0) {
                         setSideMenuStepsProgress(data.plan.progress);
@@ -88,28 +81,23 @@ export default function ExternalPersons() {
         }
     }, [session, status, router, methods]);
 
-    const { fields, append, remove } = useFieldArray({
-        name: 'externalParties',
-        control: methods.control,
-    });
-
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllExternalPartiesEmpty(data.externalParties)) {
+        if (!areAllFormValuesEmpty(data)) {
             await fetchPOST(
                 '/planner/update_fields',
                 {
                     update: [
                         {
                             plan_id: router.query.plannerId,
-                            field_name: 'involved_parties',
-                            value: data.externalParties.map((element) => element.externalParty),
+                            field_name: 'methodical_approach',
+                            value: data.methodicalApproach,
                         },
                         {
                             plan_id: router.query.plannerId,
                             field_name: 'progress',
                             value: {
                                 ...sideMenuStepsProgress,
-                                involved_parties: ProgressState.completed,
+                                methodical_approach: ProgressState.completed,
                             },
                         },
                     ],
@@ -127,41 +115,13 @@ export default function ExternalPersons() {
         });
     };
 
-    const renderExternalPartiesInputs = (): JSX.Element[] => {
-        return fields.map((externalParty, index) => (
-            <div key={externalParty.id} className="my-2">
-                <div className="flex justify-center items-center">
-                    <input
-                        type="text"
-                        placeholder="Externen eingeben"
-                        className="border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                        })}
-                    />
-                    <button type="button" onClick={() => remove(index)}>
-                        <RxMinus size={20} />
-                    </button>
-                </div>
-                {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
-                    <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
-                    </p>
-                )}
-            </div>
-        ));
-    };
-
     return (
         <FormProvider {...methods}>
             <PopupSaveData
                 isOpen={isPopupOpen}
                 handleContinue={async () => {
                     await router.push({
-                        pathname: '/ve-designer/lectures',
+                        pathname: '/ve-designer/topics',
                         query: {
                             plannerId: router.query.plannerId,
                         },
@@ -176,28 +136,36 @@ export default function ExternalPersons() {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <form
-                                onSubmit={methods.handleSubmit(onSubmit)}
-                                className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between"
-                            >
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
-                                    <div className={'text-center font-bold text-4xl mb-2'}>
-                                        Gibt es externe Beteiligte?
+                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                                        Welche methodischen Ansätze kommen im VE zum Einsatz?
+                                        <Tooltip tooltipsText="Mehr zu Methodik findest du hier in den Selbstlernmaterialien …">
+                                            <Link
+                                                target="_blank"
+                                                href={'/learning-material'}
+                                            >
+                                                <PiBookOpenText size={30} color="#00748f" />
+                                            </Link>
+                                        </Tooltip>
                                     </div>
                                     <div className={'text-center mb-20'}>optional</div>
-                                    {renderExternalPartiesInputs()}
-                                    <div className="flex justify-center mt-4">
-                                        <button
-                                            className="p-4 bg-white rounded-3xl shadow-2xl"
-                                            type="button"
-                                            onClick={() => {
-                                                append({
-                                                    externalParty: '',
-                                                });
-                                            }}
-                                        >
-                                            <RxPlus size={20} />
-                                        </button>
+                                    <div className="mt-4 flex flex-col justify-center items-center">
+                                        <textarea
+                                            rows={5}
+                                            placeholder="z.B. ..."
+                                            className="border border-gray-300 rounded-lg w-3/4 p-2"
+                                            {...methods.register('methodicalApproach', {
+                                                maxLength: {
+                                                    value: 500,
+                                                    message:
+                                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                                },
+                                            })}
+                                        />
+                                        <p className="text-red-600 pt-2">
+                                            {methods.formState.errors?.methodicalApproach?.message}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex justify-between w-full max-w-xl">
@@ -205,12 +173,12 @@ export default function ExternalPersons() {
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) => {
+                                            onClick={methods.handleSubmit((data) =>
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/ve-designer/partners'
-                                                );
-                                            })}
+                                                    '/ve-designer/learning-goals'
+                                                )
+                                            )}
                                         >
                                             Zurück
                                         </button>
@@ -223,7 +191,7 @@ export default function ExternalPersons() {
                                                 (data) => {
                                                     combinedSubmitRouteAndUpdate(
                                                         data,
-                                                        '/ve-designer/lectures'
+                                                        '/ve-designer/topics'
                                                     );
                                                 },
                                                 async () => setIsPopupOpen(true)

@@ -12,7 +12,7 @@ from error_reasons import (
     MISSING_KEY_IN_HTTP_BODY_SLUG,
     MISSING_KEY_SLUG,
     NON_UNIQUE_STEP_NAMES,
-    NON_UNIQUE_TASK_TITLES,
+    NON_UNIQUE_TASKS,
     PLAN_ALREADY_EXISTS,
     PLAN_DOESNT_EXIST,
 )
@@ -26,7 +26,7 @@ from exceptions import (
     PlanDoesntExistError,
 )
 from handlers.base_handler import auth_needed, BaseHandler
-from model import Step, VEPlan
+from model import Evaluation, IndividualLearningGoal, Step, VEPlan
 from resources.network.profile import Profiles
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
@@ -191,7 +191,14 @@ class VEPlanHandler(BaseHandler):
                                 "participants_amount": 0,
                             }
                         ],
-                        "learning_goals": ["test"],
+                        "major_learning_goals": ["test"],
+                        "individual_learning_goals": [
+                            {
+                                "username": "username1",
+                                "learning_goal": "test",
+                            }
+                        ],
+                        "methodical_approach": "test",
                         "audience": [
                             {
                                 "name": "test",
@@ -239,17 +246,15 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "learning_env": "test",
                                 "learning_goal": "test",
+                                "has_tasks": False,
                                 "tasks": [
                                     {
-                                        "title": "test",
-                                        "learning_goal": "test",
                                         "task_formulation": "test",
-                                        "social_form": "test",
-                                        "description": "test",
+                                        "work_mode": "test",
+                                        "notes": "test",
                                         "tools": ["test"],
-                                        "media": ["test"]
+                                        "materials": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -271,6 +276,7 @@ class VEPlanHandler(BaseHandler):
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
+                            "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
@@ -284,7 +290,7 @@ class VEPlanHandler(BaseHandler):
                         },
                     }
 
-                The only really necessary values are the "name"-keys of the steps and the "title"-keys
+                The only really necessary values are the "name"-keys of the steps and the "task_formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
                 keys of complex attributes like "audience" should be supplied nonetheless, only
@@ -341,6 +347,9 @@ class VEPlanHandler(BaseHandler):
             Insert an fresh empty plan into the db and return its _id to work with further.
             This endpoint is usually used by the plan to initiate a new planning process by
             a user.
+            The only automation that is already applied is that the author is added to the
+            `partners` field an in-turn the partners-dependent fields `evaluation`,
+            `individual_learning_goals` and `formalities` are also initiated (empty) for the author.
 
             query params:
                 None
@@ -412,7 +421,14 @@ class VEPlanHandler(BaseHandler):
                                 "participants_amount": 0,
                             }
                         ],
-                        "learning_goals": ["test"],
+                        "major_learning_goals": ["test"],
+                        "individual_learning_goals": [
+                            {
+                                "username": "username1",
+                                "learning_goal": "test",
+                            }
+                        ],
+                        "methodical_approach": "test",
                         "audience": [
                             {
                                 "name": "test",
@@ -460,17 +476,15 @@ class VEPlanHandler(BaseHandler):
                                 "workload": 10,
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
-                                "learning_env": "test",
                                 "learning_goal": "test",
+                                "has_tasks": False,
                                 "tasks": [
                                     {
-                                        "title": "test",
-                                        "learning_goal": "test",
                                         "task_formulation": "test",
-                                        "social_form": "test",
-                                        "description": "test",
+                                        "work_mode": "test",
+                                        "notes": "test",
                                         "tools": ["test"],
-                                        "media": ["test"]
+                                        "materials": ["test"]
                                     }
                                 ],
                                 "evaluation_tools": ["test"],
@@ -492,6 +506,7 @@ class VEPlanHandler(BaseHandler):
                             "topic": "<completed|uncompleted|not_started>",
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
+                            "methodical_approach": "<completed|uncompleted|not_started>",
                             "audience": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
@@ -505,7 +520,7 @@ class VEPlanHandler(BaseHandler):
                         },
                     }
 
-                The only really necessary values are the "name"-keys of the steps and the "title"-keys
+                The only really necessary values are the "name"-keys of the steps and the "task-formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
                 keys of complex attributes like "audience" should be supplied nonetheless, only
@@ -560,8 +575,8 @@ class VEPlanHandler(BaseHandler):
 
         POST /planner/update_field
             update a single field of a VEPlan by supplying expected data via the HTTP Body.
-            The values are type-checked and also semantic checks like unique step names or task
-            titles are enforced with respective error messages.
+            The values are type-checked and also semantic checks like unique step names or tasks
+            are enforced with respective error messages.
 
             If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
@@ -642,10 +657,10 @@ class VEPlanHandler(BaseHandler):
                  "reason": "non_unique_step_names"}
 
                 409 Conflict
-                (The titles of the tasks in a step in the http are not
+                (The task_formulation of the tasks in a step in the http are not
                 unique)
                 {"success": False,
-                 "reason": "non_unique_task_titles"}
+                 "reason": "non_unique_tasks"}
 
         POST /planner/update_fields
             update multiple fields of a VEPlan by supplying expected data via the HTTP Body.
@@ -653,8 +668,8 @@ class VEPlanHandler(BaseHandler):
             only that here multiple update dicts are supplied in a list in the http body and
             upserts are not allowed.
 
-            The values are type-checked and also semantic checks like unique step names or task
-            titles are enforced with respective error messages.
+            The values are type-checked and also semantic checks like unique step names or tasks
+            are enforced with respective error messages.
 
             If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
@@ -775,17 +790,15 @@ class VEPlanHandler(BaseHandler):
                         "workload": 10,
                         "timestamp_from": "2000-01-01",
                         "timestamp_to": "2000-01-08",
-                        "learning_env": "test",
                         "learning_goal": "test",
+                        "has_tasks": False,
                         "tasks": [
                             {
-                                "title": "test",
-                                "learning_goal": "test",
                                 "task_formulation": "test",
-                                "social_form": "test",
-                                "description": "test",
+                                "work_mode": "test",
+                                "notes": "test",
                                 "tools": ["test"],
-                                "media": ["test"]
+                                "materials": ["test"]
                             }
                         ],
                         "evaluation_tools": ["test"],
@@ -961,7 +974,15 @@ class VEPlanHandler(BaseHandler):
                 else:
                     optional_name = None
 
-                plan = VEPlan(name=optional_name)
+                plan = VEPlan(
+                    name=optional_name,
+                    partners=[self.current_user.username],
+                    evaluation=[Evaluation(username=self.current_user.username)],
+                    individual_learning_goals=[
+                        IndividualLearningGoal(username=self.current_user.username)
+                    ],
+                    formalities=[{"username": self.current_user.username}],
+                )
 
                 self.insert_plan(db, plan)
                 return
@@ -1356,7 +1377,7 @@ class VEPlanHandler(BaseHandler):
             return None
         except NonUniqueTasksError:
             self.set_status(409)
-            self.write({"success": False, "reason": "non_unique_task_titles"})
+            self.write({"success": False, "reason": "non_unique_tasks"})
             return None
 
         return plan
@@ -1564,7 +1585,7 @@ class VEPlanHandler(BaseHandler):
                             --> missing key in http body
             403 Forbidden   --> no write access to plan
             409 Conflict    --> Steps don't have unique names
-                            --> Tasks don't have unique titles
+                            --> Tasks don't have unique task_formulation's
         """
 
         planner = VEPlanResource(db)
@@ -1610,7 +1631,7 @@ class VEPlanHandler(BaseHandler):
             error_reason = NON_UNIQUE_STEP_NAMES
             self.set_status(409)
         except NonUniqueTasksError:
-            error_reason = NON_UNIQUE_TASK_TITLES
+            error_reason = NON_UNIQUE_TASKS
             self.set_status(409)
 
         if error_reason:
@@ -1682,7 +1703,7 @@ class VEPlanHandler(BaseHandler):
                 error_reason = NON_UNIQUE_STEP_NAMES
                 error_status_code = 409
             except NonUniqueTasksError:
-                error_reason = NON_UNIQUE_TASK_TITLES
+                error_reason = NON_UNIQUE_TASKS
                 error_status_code = 409
 
             if error_reason or error_status_code:
@@ -1723,7 +1744,7 @@ class VEPlanHandler(BaseHandler):
             403 Forbidden   --> no write access to plan
             409 Conflict    --> Steps don't have unique names (i.e. the to-be-added step
                                 has a name that is already present in the db)
-                            --> Tasks don't have unique titles within a step
+                            --> Tasks don't have unique task_formulation attributes within a step
         """
 
         planner = VEPlanResource(db)
@@ -1752,7 +1773,7 @@ class VEPlanHandler(BaseHandler):
             error_reason = INSUFFICIENT_PERMISSIONS
             self.set_status(403)
         except NonUniqueTasksError:
-            error_reason = NON_UNIQUE_TASK_TITLES
+            error_reason = NON_UNIQUE_TASKS
             self.set_status(409)
         except NonUniqueStepsError:
             error_reason = NON_UNIQUE_STEP_NAMES

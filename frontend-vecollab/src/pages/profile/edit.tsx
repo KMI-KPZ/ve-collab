@@ -18,11 +18,11 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { DropdownList } from '@/interfaces/dropdowns';
+import Alert from '@/components/Alert';
 
 EditProfile.auth = true;
 export default function EditProfile({
@@ -37,6 +37,8 @@ export default function EditProfile({
         birthday: '',
         profilePicId: '',
         languages: [''],
+        institutions: [],
+        chosen_institution_id: '',
     });
     const [veReady, setVeReady] = useState(true);
     const [excludedFromMatching, setExcludedFromMatching] = useState(false);
@@ -113,6 +115,8 @@ export default function EditProfile({
                     birthday: data.profile.birthday,
                     profilePicId: data.profile.profile_pic,
                     languages: data.profile.languages,
+                    institutions: data.profile.institutions,
+                    chosen_institution_id: data.profile.chosen_institution_id,
                 });
                 setVeReady(data.profile.ve_ready);
                 setExcludedFromMatching(data.profile.excluded_from_matching);
@@ -159,6 +163,8 @@ export default function EditProfile({
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,
+                institutions: personalInformation.institutions,
+                chosen_institution_id: personalInformation.chosen_institution_id,
                 ve_ready: veReady,
                 ve_interests: veInformation.veInterests,
                 ve_contents: veInformation.veContents,
@@ -181,12 +187,7 @@ export default function EditProfile({
             },
             session?.accessToken
         );
-
-        // render success message that disappears after 2 seconds
         setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
 
         // perform a reload to propagate the possible change of excluded_from_matching
         // to the parent (LayoutSection.tsx)
@@ -213,6 +214,8 @@ export default function EditProfile({
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,
+                institutions: personalInformation.institutions,
+                chosen_institution_id: personalInformation.chosen_institution_id,
             });
             setResearchAndTeachingInformation({
                 researchTags: profile.research_tags,
@@ -309,7 +312,7 @@ export default function EditProfile({
                         )}
                     </div>
                 </WhiteBox>
-                {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
+                {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
             </div>
         </>
     );

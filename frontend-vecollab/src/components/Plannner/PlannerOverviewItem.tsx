@@ -4,33 +4,33 @@ import Tabs from '../profile/Tabs';
 import React, { useState } from 'react';
 import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
-import SuccessAlert from '@/components/SuccessAlert';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
-import { MdCheck, MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
+import { MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
-import { fetchGET } from '@/lib/backend';
+import { fetchDELETE, fetchGET } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
+import ConfirmDialog from '../Confirm';
+import Alert, { AlertState } from '../Alert';
+
 interface Props {
     plan: PlanPreview;
-    deleteCallback: (planId: string) => Promise<void>;
     refetchPlansCallback: () => Promise<void>;
 }
 
-export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlansCallback }: Props) {
+export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
     const username = session?.user.preferred_username;
 
-    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
+    const [alert, setAlert] = useState<AlertState>({open: false});
 
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-
     const [isSummaryOpen, setSummaryOpen] = useState(false);
     const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
     const [planSummary, setPlanSummary] = useState<IPlan>();
+    const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
@@ -72,16 +72,14 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             planId={plan._id}
-                            setSuccessPopupOpen={setSuccessPopupOpen}
-                            setSuccessMessage={setSuccessMessage}
+                            setAlert={setAlert}
                         />
                     </div>
                     <div tabname="Verwalten">
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
-                            setSuccessPopupOpen={setSuccessPopupOpen}
-                            setSuccessMessage={setSuccessMessage}
+                            setAlert={setAlert}
                         />
                     </div>
                 </Tabs>
@@ -100,15 +98,15 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         >
             <div>
                 {plan.write_access.includes(username) && (
-                        <Link
-                            className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20'
-                            href={{
-                                pathname: '/ve-designer/name',
-                                query: { plannerId: plan._id },
-                            }}
-                        >
-                            <MdEdit className="inline" /> Bearbeiten
-                        </Link>
+                    <Link
+                        className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20'
+                        href={{
+                            pathname: '/ve-designer/name',
+                            query: { plannerId: plan._id },
+                        }}
+                    >
+                        <MdEdit className="inline" /> Bearbeiten
+                    </Link>
                 )}
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
                     {loadingSummary ? (
@@ -132,13 +130,11 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                 pathname: '/ve-designer/name',
                 query: { plannerId: plan._id },
             }}
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => e.stopPropagation()}
+            title='Plan bearbeiten'
         >
-            <button
-                className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <MdEdit />
-            </button>
+            <MdEdit />
         </Link>
     );
 
@@ -147,10 +143,10 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
             onClick={(e) => {
                 e.stopPropagation();
-                deleteCallback(plan._id);
+                setAskDeletion(true)
             }}
         >
-            <MdDelete />
+            <MdDelete title='Plan löschen' />
         </button>
     );
 
@@ -164,31 +160,43 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
         >
             {plan.read_access.length > 1 ? (
                 <MdShare
-                    className="text-lime-600"
-                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${
-                        plan.read_access.length > 2 ? 'n' : ''
-                    }`}
+                    className="text-green-600"
+                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${plan.read_access.length > 2 ? 'n' : ''
+                        }`}
                 />
             ) : (
-                <MdShare />
+                <MdShare title='Plan teilen' />
             )}
         </button>
     );
+
+    const deletePlan = async (planId: string) => {
+        const response = await fetchDELETE(
+            `/planner/delete?_id=${planId}`,
+            {},
+            session?.accessToken
+        );
+        if (response.success === true) {
+            refetchPlansCallback(); // refresh plans
+        }
+        setAlert({message: 'Plan gelöscht', autoclose: 2000})
+    };
 
     return (
         <>
             <div className="basis-1/12 text-center">
                 {/* {isPlanProgressCompleted() ?<MdCheck /> : <></>} */}
-                <span className="rounded-full border p-2">
+                <span className="rounded-full border p-2 whitespace-nowrap">
                     {getCompletedStates()} / {Object.keys(plan.progress).length}
                 </span>
             </div>
+
             <div
                 className="grow p-3 font-normal text-base group hover:cursor-pointer"
                 onClick={() => openPlanSummary()}
             >
                 <div className="flex items-center">
-                    <div className="mr-2 font-bold whitespace-nowrap">
+                    <div className="mr-2 py-1 font-bold whitespace-nowrap">
                         <Link href={`/plan/${plan._id}`} onClick={e => e.preventDefault()}>
                             {plan.name}
                         </Link>
@@ -217,18 +225,21 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
                     </div>
                 </div>
             </div>
+
             <div className="basis-1/6">
                 {plan.author === username ? (
                     <>{plan.author}</>
                 ) : (
-                    <span title="geteilt von">
+                    <span title={`Plan geteilt von ${plan.author}`}>
                         <MdShare className="inline m-1 text-slate-900" /> {plan.author}
                     </span>
                 )}
             </div>
+
             <div className="basis-1/6">
                 <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
             </div>
+
             <div className="basis-1/6">
                 <Timestamp timestamp={plan.last_modified} className="text-sm" />
             </div>
@@ -237,7 +248,14 @@ export default function PlannerOverviewItem({ plan, deleteCallback, refetchPlans
 
             <SummaryDialog />
 
-            {successPopupOpen && <SuccessAlert message={successMessage} />}
+            {askDeletion && (
+                <ConfirmDialog message="Plan löschen?" callback={proceed => {
+                    if (proceed) deletePlan(plan._id);
+                    setAskDeletion(false)
+                }} />
+            )}
+
+            <Alert state={alert} />
         </>
     );
 }

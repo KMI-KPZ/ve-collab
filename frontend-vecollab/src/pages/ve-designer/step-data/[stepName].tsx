@@ -19,29 +19,25 @@ import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 
 export interface ITask {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
-    social_form: string;
-    description: string;
+    work_mode: string;
+    notes: string;
     tools: string[];
-    media: string[];
+    materials: string[];
 }
 
 export interface ITaskFrontend {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
-    social_form: string;
-    description: string;
+    work_mode: string;
+    notes: string;
     tools: IToolsFrontend[];
-    media: IMediaFrontend[];
+    materials: IMaterialFrontend[];
 }
 export interface IToolsFrontend {
     name: string;
 }
 
-export interface IMediaFrontend {
+export interface IMaterialFrontend {
     name: string;
 }
 
@@ -51,8 +47,8 @@ export interface IFineStepFrontend {
     timestamp_to: string;
     name: string;
     workload: number;
-    learning_env: string;
     learning_goal: string;
+    has_tasks: boolean;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -65,8 +61,8 @@ export interface IFineStep {
     timestamp_to: string;
     name: string;
     workload: number;
-    learning_env: string;
     learning_goal: string;
+    has_tasks: boolean;
     tasks: ITask[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -78,18 +74,16 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     timestamp_to: '',
     name: '',
     workload: 0,
-    learning_env: '',
     learning_goal: '',
     evaluation_tools: ['', ''],
+    has_tasks: false,
     tasks: [
         {
-            title: '',
-            learning_goal: '',
             task_formulation: '',
-            social_form: '',
-            description: '',
+            work_mode: '',
+            notes: '',
             tools: [{ name: '' }, { name: '' }],
-            media: [{ name: '' }, { name: '' }],
+            materials: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -97,23 +91,20 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
         formValues.workload === 0 &&
-        formValues.learning_env === '' &&
         formValues.learning_goal === '' &&
         formValues.evaluation_tools.every((tool) => {
             return tool === '';
         }) &&
         formValues.tasks.every((task) => {
             return (
-                task.title === '' &&
-                task.learning_goal === '' &&
                 task.task_formulation === '' &&
-                task.social_form === '' &&
-                task.description === '' &&
+                task.work_mode === '' &&
+                task.notes === '' &&
                 task.tools.every((tool) => {
                     return tool.name === '';
                 }) &&
-                task.media.every((media) => {
-                    return media.name === '';
+                task.materials.every((materials) => {
+                    return materials.name === '';
                 })
             );
         })
@@ -182,8 +173,8 @@ export default function FinePlanner() {
                                         tools: task.tools.map((tool) => ({
                                             name: tool,
                                         })),
-                                        media: task.media.map((media) => ({
-                                            name: media,
+                                        materials: task.materials.map((materials) => ({
+                                            name: materials,
                                         })),
                                     };
                                 }
@@ -208,7 +199,7 @@ export default function FinePlanner() {
             return {
                 ...task,
                 tools: task.tools.map((tool) => tool.name),
-                media: task.media.map((media) => media.name),
+                materials: task.materials.map((materials) => materials.name),
             };
         });
 
@@ -217,8 +208,8 @@ export default function FinePlanner() {
                 ? {
                       ...data,
                       workload: data.workload,
-                      learning_env: data.learning_env,
                       learning_goal: data.learning_goal,
+                      has_tasks: data.has_tasks,
                       tasks: currentStepTransformBackTools,
                   }
                 : step
@@ -320,14 +311,19 @@ export default function FinePlanner() {
                                         >
                                             Feinplanung
                                             <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/learning-material/left-bubble/Etappenplanung'}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={
+                                                        '/learning-material/left-bubble/Etappenplanung'
+                                                    }
+                                                >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>
                                         </div>
                                     </div>
                                     <div className={'text-center mb-20'}>
-                                        erweitere die Informationen zu jeder Etappe
+                                        Beschreibt nun die einzelnen Etappen genauer
                                     </div>
                                     <Stage fineStep={currentFineStep} />
                                 </div>
