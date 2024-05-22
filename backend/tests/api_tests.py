@@ -66,7 +66,7 @@ USER_NOT_MEMBER_ERROR = "user_not_member_of_space"
 PLAN_DOESNT_EXIST_ERROR = "plan_doesnt_exist"
 PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
 NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
-NON_UNIQUE_TASKS_ERROR = "non_unique_task_titles"
+NON_UNIQUE_TASKS_ERROR = "non_unique_tasks"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -7651,6 +7651,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
             learning_goal="test",
+            has_tasks=True,
             tasks=[Task()],
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
@@ -7722,6 +7723,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
     
     def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=name,
+            learning_goal="test",
+        )
+
+    def create_individual_learning_goal(
+        self, name: str = "test"
+    ) -> IndividualLearningGoal:
         """
         convenience method to create an individual learning goal with non-default values
         """
@@ -7855,9 +7868,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
-        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
-        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
+        self.assertEqual(
+            response_plan.major_learning_goals, default_plan.major_learning_goals
+        )
+        self.assertEqual(
+            response_plan.individual_learning_goals,
+            default_plan.individual_learning_goals,
+        )
+        self.assertEqual(
+            response_plan.methodical_approach, default_plan.methodical_approach
+        )
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -7963,9 +7983,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
-        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
-        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
+        self.assertEqual(
+            response_plan.major_learning_goals, default_plan.major_learning_goals
+        )
+        self.assertEqual(
+            response_plan.individual_learning_goals,
+            default_plan.individual_learning_goals,
+        )
+        self.assertEqual(
+            response_plan.methodical_approach, default_plan.methodical_approach
+        )
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -8068,11 +8095,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
     def test_post_error_non_unique_tasks(self):
         """
-        expect: fail message because a step of the plan contains duplicate task
-        titles
+        expect: fail message because a step of the plan contains duplicate tasks
         """
         step = self.create_step("test")
-        step.tasks = [Task(title="test"), Task(title="test")]
+        step.tasks = [Task(task_formulation="test"), Task(task_formulation="test")]
         plan = VEPlan().to_dict()
         plan["steps"] = [step.to_dict()]
 
@@ -8123,6 +8149,45 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "POST", "/planner/insert", False, 409, body=self.json_serialize(plan)
         )
         self.assertEqual(response["reason"], PLAN_ALREADY_EXISTS_ERROR)
+
+    def test_post_insert_empty_plan(self):
+        """
+        expect: successfully insert a new plan with no attributes set
+        except for the automations on partners, author, evaluation,
+        individual_learning_goals and formalities
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/insert_empty",
+            True,
+            200,
+            body=self.json_serialize({"name": "test_plan"}),
+        )
+        self.assertIn("inserted_id", response)
+
+        # expect plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["creation_timestamp"])
+        self.assertIsNotNone(db_state["last_modified"])
+        self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
+        self.assertEqual(db_state["name"], "test_plan")
+
+        # expect automations
+        self.assertEqual(db_state["partners"], [CURRENT_ADMIN.username])
+        self.assertIsNotNone(db_state["evaluation"])
+        self.assertEqual(len(db_state["evaluation"]), 1)
+        self.assertEqual(db_state["evaluation"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["individual_learning_goals"])
+        self.assertEqual(len(db_state["individual_learning_goals"]), 1)
+        self.assertEqual(
+            db_state["individual_learning_goals"][0]["username"], CURRENT_ADMIN.username
+        )
+        self.assertIsNotNone(db_state["formalities"])
+        self.assertEqual(len(db_state["formalities"]), 1)
+        self.assertEqual(db_state["formalities"][0]["username"], CURRENT_ADMIN.username)
 
     def test_post_update_plan(self):
         """
@@ -8612,6 +8677,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_to": None,
                     "duration": None,
                     "learning_goal": None,
+                    "has_tasks": False,
                     "tasks": [],
                     "evaluation_tools": [],
                     "attachments": [],
@@ -8625,6 +8691,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_to": None,
                     "duration": None,
                     "learning_goal": None,
+                    "has_tasks": False,
                     "tasks": [],
                     "evaluation_tools": [],
                     "attachments": [],
@@ -8644,7 +8711,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
     def test_post_update_field_error_non_unique_tasks(self):
         """
-        expect: fail message because tasks in the step don't have unique titles
+        expect: fail message because tasks in the step don't have unique task_formulations
         """
 
         payload = {
@@ -8659,9 +8726,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_to": None,
                     "duration": None,
                     "learning_goal": None,
+                    "has_tasks": True,
                     "tasks": [
-                        Task(title="test").to_dict(),
-                        Task(title="test").to_dict(),
+                        Task(task_formulation="test").to_dict(),
+                        Task(task_formulation="test").to_dict(),
                     ],
                     "evaluation_tools": [],
                     "attachments": [],

@@ -2,19 +2,19 @@ import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import {
     IFineStepFrontend,
-    IMediaFrontend,
+    IMaterialFrontend,
     IToolsFrontend,
 } from '@/pages/ve-designer/step-data/[stepName]';
 import Tools from '@/components/VE-designer/FinePlanner/Tools';
 import { RxPlus } from 'react-icons/rx';
-import Media from './Media';
+import Material from './Material';
 
 interface Props {
     taskIndex: number;
 }
 
 const defaultValueTools: IToolsFrontend = { name: '' };
-const defaultValueMedia: IMediaFrontend = { name: '' };
+const defaultValueMedia: IMaterialFrontend = { name: '' };
 
 export default function Tasks({ taskIndex }: Props) {
     const { register, formState, control } = useFormContext<IFineStepFrontend>();
@@ -28,12 +28,12 @@ export default function Tasks({ taskIndex }: Props) {
         control,
     });
     const {
-        fields: fieldsMedia,
-        append: appendMedia,
-        remove: removeMedia,
-        update: updateMedia,
+        fields: fieldsMaterial,
+        append: appendMaterial,
+        remove: removeMaterial,
+        update: updateMaterial,
     } = useFieldArray<IFineStepFrontend>({
-        name: `tasks.${taskIndex}.media`,
+        name: `tasks.${taskIndex}.materials`,
         control,
     });
 
@@ -45,62 +45,16 @@ export default function Tasks({ taskIndex }: Props) {
         }
     };
 
-    const handleDeleteMedia = (index: number): void => {
-        if (fieldsMedia.length > 1) {
-            removeMedia(index);
+    const handleDeleteMaterial = (index: number): void => {
+        if (fieldsMaterial.length > 1) {
+            removeMaterial(index);
         } else {
-            updateMedia(index, defaultValueMedia);
+            updateMaterial(index, defaultValueMedia);
         }
     };
 
     return (
         <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
-            <div className="mt-2 flex">
-                <div className="w-1/6 flex items-center">
-                    <label htmlFor="title" className="px-2 py-2">
-                        Titel
-                    </label>
-                </div>
-                <div className="w-5/6">
-                    <input
-                        type="text"
-                        {...register(`tasks.${taskIndex}.title`, {
-                            maxLength: {
-                                value: 100,
-                                message: 'Bitte nicht mehr als 100 Zeichen.',
-                            },
-                        })}
-                        placeholder="Aufgabentitel"
-                        className="border border-gray-400 rounded-lg w-full p-2"
-                    />
-                    <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.title?.message}
-                    </p>
-                </div>
-            </div>
-            <div className="mt-2 flex">
-                <div className="w-1/6 flex items-center">
-                    <label htmlFor="learning_goal" className="px-2 py-2">
-                        Feinlernziel(e)
-                    </label>
-                </div>
-                <div className="w-5/6">
-                    <textarea
-                        rows={3}
-                        {...register(`tasks.${taskIndex}.learning_goal`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Bitte nicht mehr als 500 Zeichen.',
-                            },
-                        })}
-                        placeholder="Welche Lernziele werden mit der Aufgabe verfolgt?"
-                        className="border border-gray-400 rounded-lg w-full p-2"
-                    />
-                    <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.learning_goal?.message}
-                    </p>
-                </div>
-            </div>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="task_formulation" className="px-2 py-2">
@@ -125,13 +79,13 @@ export default function Tasks({ taskIndex }: Props) {
             </div>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="social_form" className="px-2 py-2">
-                        Sozialform
+                    <label htmlFor="work_mode" className="px-2 py-2">
+                        Arbeitsform
                     </label>
                 </div>
                 <div className="w-5/6">
                     <input
-                        {...register(`tasks.${taskIndex}.social_form`, {
+                        {...register(`tasks.${taskIndex}.work_mode`, {
                             maxLength: {
                                 value: 500,
                                 message: 'Bitte nicht mehr als 500 Zeichen.',
@@ -141,20 +95,20 @@ export default function Tasks({ taskIndex }: Props) {
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.social_form?.message}
+                        {formState.errors?.tasks?.[taskIndex]?.work_mode?.message}
                     </p>
                 </div>
             </div>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="description" className="px-2 py-2">
-                        Beschreibung
+                    <label htmlFor="notes" className="px-2 py-2">
+                        Notizen
                     </label>
                 </div>
                 <div className="w-5/6">
                     <textarea
                         rows={3}
-                        {...register(`tasks.${taskIndex}.description`, {
+                        {...register(`tasks.${taskIndex}.notes`, {
                             maxLength: {
                                 value: 500,
                                 message: 'Bitte nicht mehr als 500 Zeichen.',
@@ -164,7 +118,7 @@ export default function Tasks({ taskIndex }: Props) {
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
-                        {formState.errors?.tasks?.[taskIndex]?.description?.message}
+                        {formState.errors?.tasks?.[taskIndex]?.notes?.message}
                     </p>
                 </div>
             </div>
@@ -200,17 +154,17 @@ export default function Tasks({ taskIndex }: Props) {
             </div>
             <div className="mt-4 flex">
                 <div className="w-1/6 flex items-center">
-                    <label htmlFor="media" className="px-2 py-2">
-                        Medien
+                    <label htmlFor="materials" className="px-2 py-2">
+                        Materialien
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
-                    {fieldsMedia.map((media, mediaIndex) => (
-                        <Media
-                            key={media.id}
+                    {fieldsMaterial.map((materials, materialsIndex) => (
+                        <Material
+                            key={materials.id}
                             taskIndex={taskIndex}
-                            mediaIndex={mediaIndex}
-                            removeItem={handleDeleteMedia}
+                            materialsIndex={materialsIndex}
+                            removeItem={handleDeleteMaterial}
                         />
                     ))}
                 </div>
@@ -221,7 +175,7 @@ export default function Tasks({ taskIndex }: Props) {
                     <button
                         type="button"
                         onClick={() => {
-                            appendMedia(defaultValueMedia);
+                            appendMaterial(defaultValueMedia);
                         }}
                     >
                         <RxPlus size={20} />

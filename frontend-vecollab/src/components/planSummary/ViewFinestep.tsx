@@ -50,7 +50,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     <hr className="h-px my-5 bg-gray-400 border-0" />
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Workload:</p>
+                            <p className="font-semibold px-2 py-2">Zeitumfang:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
@@ -58,64 +58,66 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Groblernziel(e):</p>
+                            <p className="font-semibold px-2 py-2">Lernziel(e):</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.learning_goal)}
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="font-semibold w-1/5 flex items-center px-2 py-2px-2 py-2">
-                            Aufgabenstellungen:
+                        <div className="w-1/6 flex items-center">
+                            <p className="font-semibold px-2 py-2">Lernaktivitäten geplant:</p>
                         </div>
-                        {fineStep.tasks.map((task, taskIndex) => (
-                            <div
-                                className="flex flex-col space-y-1 w-1/2 p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl"
-                                key={taskIndex}
-                            >
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Titel</span>
-                                    <span>{showDataOrEmptySign(task.title)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Feinlernziele</span>
-                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Aufgabenstellung</span>
-                                    <span>{showDataOrEmptySign(task.task_formulation)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Sozialform</span>
-                                    <span>{showDataOrEmptySign(task.social_form)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Beschreibung</span>
-                                    <span>{showDataOrEmptySign(task.description)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Tools</span>
-                                    <span>
-                                        {showDataOrEmptySign(
-                                            task.tools
-                                                .filter((element) => element !== '')
-                                                .join(', ')
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Medien</span>
-                                    <span>
-                                        {showDataOrEmptySign(
-                                            task.media
-                                                .filter((element) => element !== '')
-                                                .join(', ')
-                                        )}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                            {showDataOrEmptySign(fineStep.has_tasks ? 'Ja' : 'Nein')}
+                        </div>
                     </div>
+                    {fineStep.has_tasks && (
+                        <div className="mt-4 flex">
+                            <div className="font-semibold w-1/5 flex items-center px-2 py-2px-2 py-2">
+                                Aufgabenstellungen:
+                            </div>
+                            {fineStep.tasks.map((task, taskIndex) => (
+                                <div
+                                    className="flex flex-col space-y-1 w-1/2 p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl"
+                                    key={taskIndex}
+                                >
+                                    <div className="flex space-x-8">
+                                        <span className="w-1/4 font-medium">Aufgabenstellung</span>
+                                        <span>{showDataOrEmptySign(task.task_formulation)}</span>
+                                    </div>
+                                    <div className="flex space-x-8">
+                                        <span className="w-1/4 font-medium">Arbeitsform</span>
+                                        <span>{showDataOrEmptySign(task.work_mode)}</span>
+                                    </div>
+                                    <div className="flex space-x-8">
+                                        <span className="w-1/4 font-medium">Notizen</span>
+                                        <span>{showDataOrEmptySign(task.notes)}</span>
+                                    </div>
+                                    <div className="flex space-x-8">
+                                        <span className="w-1/4 font-medium">Tools</span>
+                                        <span>
+                                            {showDataOrEmptySign(
+                                                task.tools
+                                                    .filter((element) => element !== '')
+                                                    .join(', ')
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="flex space-x-8">
+                                        <span className="w-1/4 font-medium">Materialien</span>
+                                        <span>
+                                            {showDataOrEmptySign(
+                                                task.materials
+                                                    .filter((element) => element !== '')
+                                                    .join(', ')
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
             )}
         </div>

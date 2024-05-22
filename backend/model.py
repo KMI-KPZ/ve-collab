@@ -140,25 +140,21 @@ class Task:
     # when initializing a task from a dict using 'Task.from_dict()',
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
-        "title": (str, type(None)),
-        "learning_goal": (str, type(None)),
         "task_formulation": (str, type(None)),
-        "social_form": (str, type(None)),
-        "description": (str, type(None)),
+        "work_mode": (str, type(None)),
+        "notes": (str, type(None)),
         "tools": list,
-        "media": list,
+        "materials": list,
     }
 
     def __init__(
         self,
         _id: str | ObjectId = None,
-        title: str = None,
-        learning_goal: str = None,
         task_formulation: str = None,
-        social_form: str = None,
-        description: str = None,
+        work_mode: str = None,
+        notes: str = None,
         tools: List[str] = [],
-        media: List[str] = [],
+        materials: List[str] = [],
     ) -> None:
         """
         Initialization of a `Task` instance.
@@ -182,13 +178,11 @@ class Task:
         # creating a fresh ID
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
-        self.title = title
-        self.learning_goal = learning_goal
         self.task_formulation = task_formulation
-        self.social_form = social_form
-        self.description = description
+        self.work_mode = work_mode
+        self.notes = notes
         self.tools = tools
-        self.media = media
+        self.materials = materials
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -209,13 +203,11 @@ class Task:
 
         return {
             "_id": self._id,
-            "title": self.title,
-            "learning_goal": self.learning_goal,
             "task_formulation": self.task_formulation,
-            "social_form": self.social_form,
-            "description": self.description,
+            "work_mode": self.work_mode,
+            "notes": self.notes,
             "tools": self.tools,
-            "media": self.media,
+            "materials": self.materials,
         }
 
     @classmethod
@@ -223,11 +215,10 @@ class Task:
         """
         initialize a `Task`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"title"`, `learning_goal`, `task_formulation`, `social_form`,
-        `"description"`, `"tools"`, `media`.
+        `task_formulation`, `work_mode`, `"notes"`, `"tools"`, `materials`.
         However values are not required, any attributes may be
-        initialized with None (title/description/learning_goal/task_formulation/social_form)
-        or [] (tools/media).
+        initialized with None (notes/task_formulation/work_mode)
+        or [] (tools/materials).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this Task
         already exists. However, true existence is handled by the database itself and
@@ -311,6 +302,7 @@ class Step:
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
         "learning_goal": (str, type(None)),
+        "has_tasks": bool,
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
@@ -325,6 +317,7 @@ class Step:
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
         learning_goal: str = None,
+        has_tasks: bool = False,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
@@ -376,10 +369,11 @@ class Step:
             self.duration = self.timestamp_to - self.timestamp_from
 
         self.learning_goal = learning_goal
+        self.has_tasks = has_tasks
         self.tasks = tasks
 
-        # ensure that tasks have unique titles
-        if not self._check_unique_task_titles(self.tasks):
+        # ensure that tasks are unique by their task formulation
+        if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
         self.evaluation_tools = evaluation_tools
@@ -413,6 +407,7 @@ class Step:
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
             "learning_goal": self.learning_goal,
+            "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
@@ -420,17 +415,17 @@ class Step:
         }
 
     @classmethod
-    def _check_unique_task_titles(cls, tasks: List[Task]) -> bool:
+    def _check_unique_tasks(cls, tasks: List[Task]) -> bool:
         """
-        assert that the title-attributes of the tasks in the given list are unique
+        assert that the task_formulation-attributes of the tasks in the given list are unique
         and return True if so, False otherwise.
         """
 
         seen_set = set()
         for task in tasks:
-            if task.title in seen_set:
+            if task.task_formulation in seen_set:
                 return False
-            seen_set.add(task.title)
+            seen_set.add(task.task_formulation)
         return True
 
     @classmethod
@@ -439,14 +434,14 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
         However only `name` requires a value, all other attributes may be
-        initialized with None (description/learning_goal), 0 (duration/workload)
-        or [] (tasks/attachements).
+        initialized with None (description/learning_goal), 0 (duration/workload),
+        False (has_tasks) or [] (tasks/attachements).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
-        unique `"title"`-attributes within this step.
+        unique `"task-formulation"`-attributes within this step.
 
         The `attachments`-key is a list containing ObjectId's which are
         references to files that are stored separately in GridFS.
@@ -458,7 +453,7 @@ class Step:
 
         Raises `MissingKeyError` if any of the required keys is missing in the `params`-dict.
 
-        Raises `NonUniqueTasksError` if the titles of tasks are not unique to each other.
+        Raises `NonUniqueTasksError` if the tasks are not unique to each other.
 
         Usage example::
 
@@ -532,7 +527,7 @@ class Step:
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
         tasks = [Task.from_dict(task) for task in params["tasks"]]
-        if not cls._check_unique_task_titles(tasks):
+        if not cls._check_unique_tasks(tasks):
             raise NonUniqueTasksError
         del params["tasks"]
 
@@ -1793,7 +1788,7 @@ class VEPlan:
         Raises `NonUniqueStepsError` if the names of the steps in the `steps`-list are not
         unique to each other.
 
-        Raises `NonUniqueTasksError` if the titles of tasks in the steps are not unique to
+        Raises `NonUniqueTasksError` if the tasks in the steps are not unique to
         each other.
 
         Usage example::
@@ -1885,16 +1880,15 @@ class VEPlan:
                         "timestamp_from": None,
                         "timestamp_to": None,
                         "learning_goal": None,
+                        "has_tasks": False,
                         "tasks": [
                             {
                                 "_id": "object_id_str",
-                                "title": None,
-                                "learning_goal": None,
                                 "task_formulation": None,
-                                "social_form": None,
+                                "work_mode": None,
                                 "description": None,
                                 "tools": [],
-                                "media": [],
+                                "materials": [],
                             }
                         ],
                         "evaluation_tools": [],

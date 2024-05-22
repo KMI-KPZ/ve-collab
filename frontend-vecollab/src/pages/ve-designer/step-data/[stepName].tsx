@@ -19,29 +19,25 @@ import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 
 export interface ITask {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
-    social_form: string;
-    description: string;
+    work_mode: string;
+    notes: string;
     tools: string[];
-    media: string[];
+    materials: string[];
 }
 
 export interface ITaskFrontend {
-    title: string;
-    learning_goal: string;
     task_formulation: string;
-    social_form: string;
-    description: string;
+    work_mode: string;
+    notes: string;
     tools: IToolsFrontend[];
-    media: IMediaFrontend[];
+    materials: IMaterialFrontend[];
 }
 export interface IToolsFrontend {
     name: string;
 }
 
-export interface IMediaFrontend {
+export interface IMaterialFrontend {
     name: string;
 }
 
@@ -52,6 +48,7 @@ export interface IFineStepFrontend {
     name: string;
     workload: number;
     learning_goal: string;
+    has_tasks: boolean;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -65,6 +62,7 @@ export interface IFineStep {
     name: string;
     workload: number;
     learning_goal: string;
+    has_tasks: boolean;
     tasks: ITask[];
     evaluation_tools: string[];
     attachments?: string[];
@@ -78,15 +76,14 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     workload: 0,
     learning_goal: '',
     evaluation_tools: ['', ''],
+    has_tasks: false,
     tasks: [
         {
-            title: '',
-            learning_goal: '',
             task_formulation: '',
-            social_form: '',
-            description: '',
+            work_mode: '',
+            notes: '',
             tools: [{ name: '' }, { name: '' }],
-            media: [{ name: '' }, { name: '' }],
+            materials: [{ name: '' }, { name: '' }],
         },
     ],
 };
@@ -100,16 +97,14 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
         }) &&
         formValues.tasks.every((task) => {
             return (
-                task.title === '' &&
-                task.learning_goal === '' &&
                 task.task_formulation === '' &&
-                task.social_form === '' &&
-                task.description === '' &&
+                task.work_mode === '' &&
+                task.notes === '' &&
                 task.tools.every((tool) => {
                     return tool.name === '';
                 }) &&
-                task.media.every((media) => {
-                    return media.name === '';
+                task.materials.every((materials) => {
+                    return materials.name === '';
                 })
             );
         })
@@ -178,8 +173,8 @@ export default function FinePlanner() {
                                         tools: task.tools.map((tool) => ({
                                             name: tool,
                                         })),
-                                        media: task.media.map((media) => ({
-                                            name: media,
+                                        materials: task.materials.map((materials) => ({
+                                            name: materials,
                                         })),
                                     };
                                 }
@@ -204,7 +199,7 @@ export default function FinePlanner() {
             return {
                 ...task,
                 tools: task.tools.map((tool) => tool.name),
-                media: task.media.map((media) => media.name),
+                materials: task.materials.map((materials) => materials.name),
             };
         });
 
@@ -214,6 +209,7 @@ export default function FinePlanner() {
                       ...data,
                       workload: data.workload,
                       learning_goal: data.learning_goal,
+                      has_tasks: data.has_tasks,
                       tasks: currentStepTransformBackTools,
                   }
                 : step

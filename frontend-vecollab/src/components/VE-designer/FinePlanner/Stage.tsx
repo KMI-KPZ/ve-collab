@@ -2,7 +2,7 @@ import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React from 'react';
 import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/[stepName]';
-import { useFormContext, useFieldArray } from 'react-hook-form';
+import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
 
@@ -11,17 +11,15 @@ interface Props {
 }
 
 export const defaultValueTask: ITaskFrontend = {
-    title: '',
-    learning_goal: '',
     task_formulation: '',
-    social_form: '',
-    description: '',
+    work_mode: '',
+    notes: '',
     tools: [{ name: '' }, { name: '' }],
-    media: [{ name: '' }, { name: '' }],
+    materials: [{ name: '' }, { name: '' }],
 };
 
 export default function Stage({ fineStep }: Props) {
-    const { register, control, formState } = useFormContext<IFineStepFrontend>();
+    const { register, control, formState, watch } = useFormContext<IFineStepFrontend>();
     const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
         name: 'tasks',
         control,
@@ -45,6 +43,46 @@ export default function Stage({ fineStep }: Props) {
             update(index, defaultValueTask);
         }
     };
+
+    function radioBooleanInput(control: any, name: any): JSX.Element {
+        return (
+            <Controller
+                control={control}
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <>
+                        <div className="flex">
+                            <div>
+                                <label className="px-2 py-2">Ja</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    className="border border-gray-400 rounded-lg p-2"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(true)} // send value to hook form
+                                    checked={value === true}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex">
+                            <div>
+                                <label className="px-2 py-2">Nein</label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    onBlur={onBlur} // notify when input is touched
+                                    onChange={() => onChange(false)} // send value to hook form
+                                    checked={value === false}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+            />
+        );
+    }
 
     return (
         <WhiteBox>
@@ -105,41 +143,50 @@ export default function Stage({ fineStep }: Props) {
                         </p>
                     </div>
                 </div>
-                <div className="mt-4 flex">
-                    <div className="w-1/6 flex mt-8">
-                        <label htmlFor="tasks" className="px-2 py-2">
-                            Aufgabenstellungen
-                        </label>
-                    </div>
-                    <div className="flex flex-col w-5/6">
-                        {fields.map((task, taskIndex) => (
-                            <div className="relative" key={task.id}>
-                                <Tasks taskIndex={taskIndex} />
-                                <div className="absolute left-10 bottom-7">
-                                    <button type="button" onClick={() => handleDelete(taskIndex)}>
-                                        <Image
-                                            src={imageTrashcan}
-                                            width={20}
-                                            height={20}
-                                            alt="trashcan"
-                                        ></Image>
-                                    </button>
+                <div className="mt-4 flex justify-center">
+                    <p>Möchten Sie Lernaktivität(en) im Designer ausarbeiten?</p>
+                    <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
+                </div>
+                {watch('has_tasks') && (
+                    <div className="mt-4 flex">
+                        <div className="w-1/6 flex mt-8">
+                            <label htmlFor="tasks" className="px-2 py-2">
+                                Aufgabenstellungen
+                            </label>
+                        </div>
+                        <div className="flex flex-col w-5/6">
+                            {fields.map((task, taskIndex) => (
+                                <div className="relative" key={task.id}>
+                                    <Tasks taskIndex={taskIndex} />
+                                    <div className="absolute left-10 bottom-7">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(taskIndex)}
+                                        >
+                                            <Image
+                                                src={imageTrashcan}
+                                                width={20}
+                                                height={20}
+                                                alt="trashcan"
+                                            ></Image>
+                                        </button>
+                                    </div>
                                 </div>
+                            ))}
+                            <div className="w-full flex items-center justify-center">
+                                <button
+                                    type="button"
+                                    className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
+                                    onClick={() => {
+                                        append(defaultValueTask);
+                                    }}
+                                >
+                                    weitere Lernaktivität hinzufügen
+                                </button>
                             </div>
-                        ))}
-                        <div className="w-full flex items-center justify-center">
-                            <button
-                                type="button"
-                                className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
-                                onClick={() => {
-                                    append(defaultValueTask);
-                                }}
-                            >
-                                neue Aufgabe hinzufügen
-                            </button>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </WhiteBox>
     );
