@@ -5,20 +5,23 @@ import Timestamp from '@/components/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { fetchPOST, useGetAllPlans } from '@/lib/backend';
+import { fetchPOST, useGetAllPlans, useIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 AdminDashboard.auth = true;
 export default function AdminDashboard() {
     const { data: session } = useSession();
+    const router = useRouter();
+    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
     const { data: plans, isLoading, error, mutate } = useGetAllPlans(session!.accessToken);
 
     const [userProfileSnippets, setUserProfileSnippets] = useState<BackendUserSnippet[]>();
 
     useEffect(() => {
-        if (isLoading) {
+        if (isLoading || error || !session || !plans) {
             return;
         }
 
@@ -29,10 +32,31 @@ export default function AdminDashboard() {
             },
             session!.accessToken
         ).then((data) => {
-            console.log(data);
             setUserProfileSnippets(data.user_snippets);
         });
     }, [isLoading, session, plans]);
+
+    if (!isGlobalAdmin) {
+        return (
+            <div className="flex justify-center items-center pt-20 pb-20">
+                <div className="flex flex-col w-1/2 justify-center items-center rounded-lg shadow-md bg-white p-10">
+                    <p className="font-bold text-3xl pt-5 pb-3">Zugriff verweigert</p>
+                    <p className="pb-10">Du bist kein Administrator</p>
+
+                    <button
+                        type="button"
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            router.back();
+                        }}
+                    >
+                        Zurück zur vorherigen Seite
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <Container>

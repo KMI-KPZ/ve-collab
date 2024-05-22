@@ -28,7 +28,7 @@ const GETfetcher = (relativeUrl: string, accessToken?: string) =>
     }).then((res) => {
         if (res.status === 401) {
             console.log('forced new signIn by api call');
-            signIn('keycloak');
+            //signIn('keycloak');
         }
         return res.json();
     });
@@ -39,7 +39,7 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
         return res
     });
 
-export function useIsGlobalAdmin(accessToken: string): boolean {
+export function useIsGlobalAdmin(accessToken?: string): boolean {
     const { data } = useSWR(
         [`/admin_check`, accessToken]
         ,
