@@ -22,6 +22,7 @@ import global_vars
 from main import make_app
 from model import (
     Evaluation,
+    IndividualLearningGoal,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -183,13 +184,24 @@ class BaseApiTestCase(AsyncHTTPTestCase):
             CURRENT_USER.username: "user",
         }
 
+        current_admin_institution_id = ObjectId()
+
         self.test_profiles = {
             CURRENT_ADMIN.username: {
                 "username": CURRENT_ADMIN.username,
                 "role": self.test_roles[CURRENT_ADMIN.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": current_admin_institution_id,
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": current_admin_institution_id,
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -213,7 +225,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "role": self.test_roles[CURRENT_USER.username],
                 "follows": [],
                 "bio": None,
-                "institution": None,
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": None,
                 "last_name": None,
@@ -1456,9 +1477,15 @@ class PostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_post"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
-
         # for some odd reason, the ms in the timestamps jitter
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
@@ -2292,7 +2319,14 @@ class CommentHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_comment"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one({"_id": self.post_oid})
@@ -2792,7 +2826,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["author"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
         self.assertIn("repostAuthor", response["inserted_repost"])
         self.assertIn("username", response["inserted_repost"]["repostAuthor"])
@@ -2818,7 +2859,14 @@ class RepostHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["inserted_repost"]["repostAuthor"]["institution"],
-            db_author_profile["institution"],
+            next(
+                (
+                    inst["name"]
+                    for inst in db_author_profile["institutions"]
+                    if inst["_id"] == db_author_profile["chosen_institution_id"]
+                ),
+                None,
+            ),
         )
 
         db_state = self.db.posts.find_one(
@@ -3720,7 +3768,16 @@ class SearchHandlerTest(BaseApiTestCase):
             "role": "admin",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": ObjectId(),
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": "",
             "projects": "test",
             "profile_pic": "test",
             "first_name": "test",
@@ -3945,7 +4002,16 @@ class SpaceHandlerTest(BaseApiTestCase):
                     "role": "admin",
                     "follows": [],
                     "bio": "test",
-                    "institution": "test",
+                    "institutions": [
+                        {
+                            "_id": ObjectId(),
+                            "name": "test",
+                            "department": "test",
+                            "school_type": "test",
+                            "country": "test",
+                        }
+                    ],
+                    "chosen_institution_id": "",
                     "projects": "test",
                     "profile_pic": "test",
                     "first_name": "test",
@@ -7584,7 +7650,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            learning_env="test",
             learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
@@ -7655,6 +7720,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_while="test",
             evaluation_after="test",
         )
+    
+    def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=name,
+            learning_goal="test",
+        )
 
     def default_plan_setup(self):
         # manually set up a VEPlan in the db
@@ -7665,6 +7740,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
         self.evaluation = self.create_evaluation("test")
+        self.individual_learning_goal = self.create_individual_learning_goal("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": CURRENT_ADMIN.username,
@@ -7677,7 +7753,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -7710,6 +7788,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -7776,7 +7855,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
+        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -7882,7 +7963,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response_plan.institutions, default_plan.institutions)
         self.assertEqual(response_plan.topics, default_plan.topics)
         self.assertEqual(response_plan.lectures, default_plan.lectures)
-        self.assertEqual(response_plan.learning_goals, default_plan.learning_goals)
+        self.assertEqual(response_plan.major_learning_goals, default_plan.major_learning_goals)
+        self.assertEqual(response_plan.individual_learning_goals, default_plan.individual_learning_goals)
+        self.assertEqual(response_plan.methodical_approach, default_plan.methodical_approach)
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
@@ -8528,7 +8611,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
@@ -8542,7 +8624,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [],
                     "evaluation_tools": [],
@@ -8577,7 +8658,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "timestamp_from": None,
                     "timestamp_to": None,
                     "duration": None,
-                    "learning_env": None,
                     "learning_goal": None,
                     "tasks": [
                         Task(title="test").to_dict(),
@@ -9170,7 +9250,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "role": "guest",
                 "follows": [],
                 "bio": "test",
-                "institution": "test",
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": "",
                 "profile_pic": "default_profile_pic.jpg",
                 "first_name": "Test",
                 "last_name": "Admin",

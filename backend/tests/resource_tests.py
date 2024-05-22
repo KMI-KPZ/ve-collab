@@ -47,6 +47,7 @@ import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
 from model import (
     Evaluation,
+    IndividualLearningGoal,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -152,7 +153,6 @@ class BaseResourceTestCase(TestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            learning_env="test",
             learning_goal="test",
             tasks=[Task()],
             evaluation_tools=["test", "test"],
@@ -222,6 +222,18 @@ class BaseResourceTestCase(TestCase):
             assessment_type="test",
             evaluation_while="test",
             evaluation_after="test",
+        )
+
+    def create_individual_learning_goal(
+        self, username: str = "test_admin"
+    ) -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=username,
+            learning_goal="test",
         )
 
 
@@ -2519,13 +2531,23 @@ class ProfileResourceTest(BaseResourceTestCase):
             print(response.content)
 
     def create_profile(self, username: str, user_id: ObjectId) -> dict:
+        institution_id = ObjectId()
         return {
             "_id": user_id,
             "username": username,
             "role": "guest",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": institution_id,
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": institution_id,
             "profile_pic": "default_profile_pic.jpg",
             "first_name": "Test",
             "last_name": "Admin",
@@ -2591,7 +2613,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], self.default_profile["role"])
         self.assertEqual(profile["follows"], self.default_profile["follows"])
         self.assertEqual(profile["bio"], self.default_profile["bio"])
-        self.assertEqual(profile["institution"], self.default_profile["institution"])
+        self.assertEqual(profile["institutions"], self.default_profile["institutions"])
+        self.assertEqual(
+            profile["chosen_institution_id"],
+            self.default_profile["chosen_institution_id"],
+        )
         self.assertEqual(profile["profile_pic"], self.default_profile["profile_pic"])
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
@@ -2641,7 +2667,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("role", profile)
         self.assertNotIn("follows", profile)
         self.assertNotIn("bio", profile)
-        self.assertNotIn("institution", profile)
+        self.assertNotIn("institutions", profile)
+        self.assertNotIn("chosen_institution_id", profile)
         self.assertNotIn("profile_pic", profile)
         self.assertNotIn("gender", profile)
         self.assertNotIn("address", profile)
@@ -2737,7 +2764,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "User")
@@ -2791,7 +2819,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "admin")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "Admin2")
@@ -2845,7 +2874,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["role"], "guest")
         self.assertEqual(result["follows"], [])
         self.assertEqual(result["bio"], "")
-        self.assertEqual(result["institution"], "")
+        self.assertEqual(result["institutions"], [])
+        self.assertEqual(result["chosen_institution_id"], "")
         self.assertEqual(result["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(result["first_name"], "")
         self.assertEqual(result["last_name"], "")
@@ -3079,7 +3109,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "")
         self.assertEqual(profile["last_name"], "")
@@ -3253,8 +3284,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         of the supplied users
         """
 
-        # add one more profile
+        # add one more profile, but unset "chosen_institution_id" to test if it is handled correctly:
+        # "institution" in the snippet should be an empty string, even though the profile
+        # contains institutions
         profile1 = self.create_profile("test1", ObjectId())
+        profile1["chosen_institution_id"] = ""
         self.db.profiles.insert_one(profile1)
 
         profile_manager = Profiles(self.db)
@@ -3267,7 +3301,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,
@@ -3277,7 +3318,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": profile1["username"],
                 "first_name": profile1["first_name"],
                 "last_name": profile1["last_name"],
-                "institution": profile1["institution"],
+                "institution": "",
                 "profile_pic": profile1["profile_pic"],
             },
             snippets,
@@ -3294,7 +3335,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,
@@ -4942,6 +4990,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
         self.evaluation = self.create_evaluation("test")
+        self.individual_learning_goal = self.create_individual_learning_goal("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
@@ -4954,7 +5003,9 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -4992,6 +5043,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5052,7 +5104,14 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["lectures"],
                 )
                 self.assertEqual(
-                    plan.learning_goals, self.default_plan["learning_goals"]
+                    plan.major_learning_goals, self.default_plan["major_learning_goals"]
+                )
+                self.assertEqual(
+                    [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+                    self.default_plan["individual_learning_goals"],
+                )
+                self.assertEqual(
+                    plan.methodical_approach, self.default_plan["methodical_approach"]
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5127,7 +5186,14 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["lectures"],
                 )
                 self.assertEqual(
-                    plan.learning_goals, self.default_plan["learning_goals"]
+                    plan.major_learning_goals, self.default_plan["major_learning_goals"]
+                )
+                self.assertEqual(
+                    [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+                    self.default_plan["individual_learning_goals"],
+                )
+                self.assertEqual(
+                    plan.methodical_approach, self.default_plan["methodical_approach"]
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5237,7 +5303,16 @@ class PlanResourceTest(BaseResourceTestCase):
             [lecture.to_dict() for lecture in plan.lectures],
             self.default_plan["lectures"],
         )
-        self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
+        self.assertEqual(
+            plan.major_learning_goals, self.default_plan["major_learning_goals"]
+        )
+        self.assertEqual(
+            [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+            self.default_plan["individual_learning_goals"],
+        )
+        self.assertEqual(
+            plan.methodical_approach, self.default_plan["methodical_approach"]
+        )
         self.assertEqual(
             [target_group.to_dict() for target_group in plan.audience],
             self.default_plan["audience"],
@@ -5295,7 +5370,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
-                "learning_goals": ["test", "test"],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approach": "test",
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
@@ -5328,6 +5405,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
+                    "methodical_approach": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
@@ -5348,7 +5426,9 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
-                "learning_goals": ["test", "test"],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approach": "test",
                 "audience": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
@@ -5381,6 +5461,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
+                    "methodical_approach": "not_started",
                     "audience": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
@@ -5420,7 +5501,9 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -5453,6 +5536,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5490,7 +5574,9 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approach": "test",
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -5523,6 +5609,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5699,7 +5786,15 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
         self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(
-            self.plan_id, "learning_goals", ["update1", "update2"]
+            self.plan_id, "major_learning_goals", ["update1", "update2"]
+        )
+        self.planner.update_field(
+            self.plan_id, "individual_learning_goals", []
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "methodical_approach",
+            "updated_methodical_approach",
         )
         self.planner.update_field(
             self.plan_id,
@@ -5741,7 +5836,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["physical_mobilities"], [])
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
-        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["individual_learning_goals"], [])
+        self.assertEqual(db_state["methodical_approach"], "updated_methodical_approach")
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
@@ -5786,8 +5883,14 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
-            "learning_goals",
+            "major_learning_goals",
             ["update1", "update2"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "methodical_approach",
+            "updated_methodical_approach",
             requesting_username="test_user",
         )
         self.planner.update_field(
@@ -5805,6 +5908,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
+                "methodical_approach": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -5825,7 +5929,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
-        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["methodical_approach"], "updated_methodical_approach")
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],

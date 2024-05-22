@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import AuthenticatedImage from '@/components/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
-import SuccessAlert from '@/components/SuccessAlert';
+import Alert from '../Alert';
 
 interface Props {
     name: string;
@@ -74,12 +74,7 @@ export default function ProfileHeader({
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             console.log(response);
-
-            // render success message that disappears after 2 seconds
             setSuccessPopupOpen(true);
-            setTimeout(() => {
-                setSuccessPopupOpen((successPopupOpen) => false);
-            }, 2000);
         });
     };
 
@@ -243,7 +238,7 @@ export default function ProfileHeader({
                                 </div>
                             </div>
                         </Dialog>
-                        {successPopupOpen && <SuccessAlert message={'Einladung gesendet'} />}
+                        {successPopupOpen && <Alert message='Einladung gesendet' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
                     </>
                 )}
             </div>

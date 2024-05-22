@@ -229,7 +229,7 @@ export default function Topics() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/ve-designer/learning-goals'
+                                                    '/ve-designer/methodical-approach'
                                                 );
                                             })}
                                         >
