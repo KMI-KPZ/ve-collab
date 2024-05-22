@@ -21,7 +21,7 @@ export default function Material({ materialsIndex, taskIndex, removeItem }: Prop
                         message: 'Bitte nicht mehr als 500 Zeichen.',
                     },
                 })}
-                placeholder="Welche materialien können verwendet werden?"
+                placeholder="Welche Materialien können verwendet werden?"
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button

@@ -28,10 +28,10 @@ export default function Tasks({ taskIndex }: Props) {
         control,
     });
     const {
-        fields: fieldsMedia,
-        append: appendMedia,
-        remove: removeMedia,
-        update: updateMedia,
+        fields: fieldsMaterial,
+        append: appendMaterial,
+        remove: removeMaterial,
+        update: updateMaterial,
     } = useFieldArray<IFineStepFrontend>({
         name: `tasks.${taskIndex}.materials`,
         control,
@@ -45,11 +45,11 @@ export default function Tasks({ taskIndex }: Props) {
         }
     };
 
-    const handleDeleteMedia = (index: number): void => {
-        if (fieldsMedia.length > 1) {
-            removeMedia(index);
+    const handleDeleteMaterial = (index: number): void => {
+        if (fieldsMaterial.length > 1) {
+            removeMaterial(index);
         } else {
-            updateMedia(index, defaultValueMedia);
+            updateMaterial(index, defaultValueMedia);
         }
     };
 
@@ -159,12 +159,12 @@ export default function Tasks({ taskIndex }: Props) {
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
-                    {fieldsMedia.map((materials, materialsIndex) => (
+                    {fieldsMaterial.map((materials, materialsIndex) => (
                         <Material
                             key={materials.id}
                             taskIndex={taskIndex}
                             materialsIndex={materialsIndex}
-                            removeItem={handleDeleteMedia}
+                            removeItem={handleDeleteMaterial}
                         />
                     ))}
                 </div>
@@ -175,7 +175,7 @@ export default function Tasks({ taskIndex }: Props) {
                     <button
                         type="button"
                         onClick={() => {
-                            appendMedia(defaultValueMedia);
+                            appendMaterial(defaultValueMedia);
                         }}
                     >
                         <RxPlus size={20} />
