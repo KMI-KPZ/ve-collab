@@ -302,6 +302,7 @@ class Step:
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
         "learning_goal": (str, type(None)),
+        "has_tasks": bool,
         "tasks": list,
         "evaluation_tools": list,
         "attachments": list,
@@ -316,6 +317,7 @@ class Step:
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
         learning_goal: str = None,
+        has_tasks: bool = False,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
@@ -367,6 +369,7 @@ class Step:
             self.duration = self.timestamp_to - self.timestamp_from
 
         self.learning_goal = learning_goal
+        self.has_tasks = has_tasks
         self.tasks = tasks
 
         # ensure that tasks are unique by their task formulation
@@ -404,6 +407,7 @@ class Step:
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
             "learning_goal": self.learning_goal,
+            "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
@@ -430,10 +434,10 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
         However only `name` requires a value, all other attributes may be
-        initialized with None (description/learning_goal), 0 (duration/workload)
-        or [] (tasks/attachements).
+        initialized with None (description/learning_goal), 0 (duration/workload),
+        False (has_tasks) or [] (tasks/attachements).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
@@ -1876,6 +1880,7 @@ class VEPlan:
                         "timestamp_from": None,
                         "timestamp_to": None,
                         "learning_goal": None,
+                        "has_tasks": False,
                         "tasks": [
                             {
                                 "_id": "object_id_str",
