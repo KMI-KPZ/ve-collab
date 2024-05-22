@@ -138,6 +138,7 @@ class PostHandler(BaseTimelineHandler):
                 "tags": ["tag1", "tag2"], (json encoded list)
                 "space": "optional _id, post this post into a space, not directly into your profile",
                 "wordpress_post_id": "optional, id of associated wordpress post"
+                "plans": ["optional, list of plans to attach to the post"] (json encoded list)
             }
         return:
             200 OK,
@@ -180,9 +181,11 @@ class PostHandler(BaseTimelineHandler):
             text = self.get_body_argument("text")  # http_body['text']
             wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
             tags = self.get_body_argument("tags")  # http_body['tags']
-            # convert tags to list, because formdata will send it as a string
+            plans = self.get_body_argument("plans", [])
+            # convert tags and plans to list, because formdata will send it as a string
             try:
                 tags = json.loads(tags)
+                plans = json.loads(plans)
             except Exception:
                 pass
             # if space is set, this post belongs to a space (only visible inside)
@@ -267,6 +270,7 @@ class PostHandler(BaseTimelineHandler):
                     "pinned": False,
                     "wordpress_post_id": wordpress_post_id,
                     "tags": tags,
+                    "plans": plans,
                     "files": files,
                     "comments": [],
                     "likers": [],
@@ -945,6 +949,7 @@ class RepostHandler(BaseHandler):
                         "post_id": "id_of__original_post",
                         "text": "new text for the repost",
                         "space": "space _id, the space where to post, None if no space"
+                        "plans": ["optional, list of plans to attach to the repost"] (json encoded list)
                     }
             or update existing repost:
                 http_body:
@@ -1118,6 +1123,10 @@ class RepostHandler(BaseHandler):
                 post["likers"] = []
                 post["comments"] = []
                 post["tags"] = []
+                if "plans" in http_body:
+                    post["plans"] = http_body["plans"]
+                else:
+                    post["plans"] = []
                 del post["_id"]
 
                 repost_id = post_manager.insert_repost(post)

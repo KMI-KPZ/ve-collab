@@ -4,11 +4,12 @@ import { createRef } from 'react';
 interface Props {
     url: string;
     filename: string;
+    title?: string;
     children: JSX.Element | JSX.Element[];
     className?: string;
 }
 
-export function AuthenticatedFile({ url, filename, children, className }: Props) {
+export function AuthenticatedFile({ url, filename, title, children, className }: Props) {
     const { data: session, status } = useSession();
     const link = createRef<HTMLAnchorElement>();
 
@@ -33,7 +34,7 @@ export function AuthenticatedFile({ url, filename, children, className }: Props)
 
     return (
         <>
-            <a role="button" ref={link} onClick={handleAction} className={className}>
+            <a role="button" ref={link} title={title} onClick={handleAction} className={className}>
                 {children}
             </a>
         </>

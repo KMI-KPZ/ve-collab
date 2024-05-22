@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         ).then((data) => {
             setUserProfileSnippets(data.user_snippets);
         });
-    }, [isLoading, session, plans]);
+    }, [isLoading, session, plans, error]);
 
     if (!isGlobalAdmin) {
         return (

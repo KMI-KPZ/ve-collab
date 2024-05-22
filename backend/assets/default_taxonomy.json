@@ -167,25 +167,25 @@
         {
             "parent": 0,
             "droppable": true,
-            "text": "topBubble",
+            "text": "top-bubble",
             "id": 30
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "leftBubble",
+            "text": "left-bubble",
             "id": 31
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "rightBubble",
+            "text": "right-bubble",
             "id": 32
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "bottomBubble",
+            "text": "bottom-bubble",
             "id": 33
         }
     ]

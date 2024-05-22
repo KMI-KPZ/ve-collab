@@ -3,8 +3,8 @@ import { useSession } from 'next-auth/react';
 import VeInvitationNotification from './VeInvitationNotification';
 import { Socket } from 'socket.io-client';
 import VeInvitationReplyNotification from './VeInvitationReplyNotification';
-import SpaceInvitationNotification from './SpaceInvitationNotification';
-import SpaceJoinRequestNotification from './SpaceJoinRequestNotification';
+import GroupInvitationNotification from './GroupInvitationNotification';
+import GroupJoinRequestNotification from './GroupJoinRequestNotification';
 
 interface Props {
     socket: Socket;
@@ -58,7 +58,7 @@ export default function AllNotifications({ socket }: Props) {
                                 />
                             )}
                             {notification.type === 'space_invitation' && (
-                                <SpaceInvitationNotification
+                                <GroupInvitationNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string
@@ -69,7 +69,7 @@ export default function AllNotifications({ socket }: Props) {
                                 />
                             )}
                             {notification.type === 'space_join_request' && (
-                                <SpaceJoinRequestNotification
+                                <GroupJoinRequestNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string
