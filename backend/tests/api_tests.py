@@ -7721,6 +7721,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_while="test",
             evaluation_after="test",
         )
+    
+    def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=name,
+            learning_goal="test",
+        )
 
     def create_individual_learning_goal(
         self, name: str = "test"

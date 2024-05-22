@@ -18,11 +18,11 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import SuccessAlert from '@/components/SuccessAlert';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { DropdownList } from '@/interfaces/dropdowns';
+import Alert from '@/components/Alert';
 
 EditProfile.auth = true;
 export default function EditProfile({
@@ -187,12 +187,7 @@ export default function EditProfile({
             },
             session?.accessToken
         );
-
-        // render success message that disappears after 2 seconds
         setSuccessPopupOpen(true);
-        setTimeout(() => {
-            setSuccessPopupOpen((successPopupOpen) => false);
-        }, 2000);
 
         // perform a reload to propagate the possible change of excluded_from_matching
         // to the parent (LayoutSection.tsx)
@@ -317,7 +312,7 @@ export default function EditProfile({
                         )}
                     </div>
                 </WhiteBox>
-                {successPopupOpen && <SuccessAlert message={'Gespeichert'} />}
+                {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
             </div>
         </>
     );
