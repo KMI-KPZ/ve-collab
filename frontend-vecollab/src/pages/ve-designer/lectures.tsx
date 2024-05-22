@@ -380,7 +380,7 @@ export default function Lectures() {
                                             onClick={methods.handleSubmit((data) => {
                                                 combinedSubmitRouteAndUpdate(
                                                     data,
-                                                    '/ve-designer/externalParties'
+                                                    '/ve-designer/partners'
                                                 );
                                             })}
                                         >
