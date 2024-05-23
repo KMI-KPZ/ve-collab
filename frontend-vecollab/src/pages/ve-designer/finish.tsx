@@ -64,9 +64,17 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
                     </div>
                     {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
                     {feedbackFormURL && (
-                        <div className='mt-4 font-bold text-lg'>
+                        <div className="mt-4 font-bold text-lg">
                             Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns{' '}
-                            <a className='underline text-ve-collab-orange' href={feedbackFormURL} target='_blank' rel='noreferrer'>hier</a> wissen!
+                            <a
+                                className="underline text-ve-collab-orange"
+                                href={feedbackFormURL}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                hier
+                            </a>{' '}
+                            wissen!
                         </div>
                     )}
                     <div className="flex justify-around w-full mt-10">
@@ -118,9 +126,10 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
 }
 
 export async function getServerSideProps() {
+    const feedbackFormURL = process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL;
     return {
         props: {
-            feedbackFormURL: process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL,
+            feedbackFormURL: feedbackFormURL ?? null,
         },
     };
 }
