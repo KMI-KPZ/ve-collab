@@ -185,7 +185,6 @@ class BaseResourceTestCase(TestCase):
             school_type="test",
             country="test",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -6103,7 +6102,6 @@ class PlanResourceTest(BaseResourceTestCase):
         institution = Institution(
             name="updated_institution_name",
             departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
         )
         institution_dict = institution.to_dict()
 
@@ -6117,10 +6115,6 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(
             db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
@@ -6152,7 +6146,6 @@ class PlanResourceTest(BaseResourceTestCase):
         institution = Institution(
             name="updated_institution_name",
             departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
         )
         institution_dict = institution.to_dict()
 
@@ -6172,10 +6165,6 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(
             db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 

@@ -178,7 +178,6 @@ class VEPlanHandler(BaseHandler):
                                 "school_type": "test",
                                 "country": "test",
                                 "departments": ["test", "test"],
-                                "academic_courses: ["test", "test"]
                             }
                         ],
                         "topic": "test",
@@ -408,7 +407,6 @@ class VEPlanHandler(BaseHandler):
                                 "school_type": "test",
                                 "country": "test",
                                 "departments": ["test", "test"],
-                                "academic_courses: ["test", "test"]
                             }
                         ],
                         "topic": "test",
