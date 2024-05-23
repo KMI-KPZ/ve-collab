@@ -71,14 +71,12 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                         <li className="font-medium">Bildungseinrichtung</li>
                                         <li className="font-medium">Land</li>
                                         <li className="font-medium">Fachbereich</li>
-                                        <li className="font-medium">beteiligte Studiengänge</li>
                                     </ul>
                                     <ul className="space-y-1">
                                         <li>{showDataOrEmptySign(institution.name)}</li>
                                         <li>{showDataOrEmptySign(institution.school_type)}</li>
                                         <li>{showDataOrEmptySign(institution.country)}</li>
                                         <li>{showDataOrEmptySign(institution.departments)}</li>
-                                        <li>{showDataOrEmptySign(institution.academic_courses)}</li>
                                     </ul>
                                 </div>
                             ))

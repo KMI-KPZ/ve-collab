@@ -23,7 +23,6 @@ export interface Lecture {
     school_type: string;
     country: string;
     departments: string[];
-    academic_courses: string[];
 }
 
 interface FormValues {
@@ -36,8 +35,7 @@ const areAllFormValuesEmpty = (lectures: Lecture[]): boolean => {
             institution.name === '' &&
             institution.school_type === '' &&
             institution.country === '' &&
-            institution.departments.every((department) => department === '') &&
-            institution.academic_courses.every((course) => course === '')
+            institution.departments.every((department) => department === '')
         );
     });
 };
@@ -71,7 +69,6 @@ export default function Lectures() {
                     school_type: '',
                     country: '',
                     departments: [],
-                    academic_courses: [],
                 },
             ],
         },
@@ -277,38 +274,6 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/3 flex items-center">
-                            <label htmlFor="academicCourses" className="px-2 py-2">
-                                beteiligte Studiengänge
-                            </label>
-                        </div>
-                        <div className="w-2/3">
-                            <input
-                                type="text"
-                                placeholder="mehrere durch Komma trennen"
-                                className="border border-gray-400 rounded-lg w-full p-2"
-                                {...methods.register(`lectures.${index}.academic_courses.0`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
-                                    },
-                                })}
-                            />
-                            <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.lectures?.[index]
-                                        ?.academic_courses?.[0]?.message
-                                }
-                            </p>
-                        </div>
-                    </div>
                     <div className="flex justify-end items-center">
                         <Image
                             className="mx-2 cursor-pointer m-2 "
@@ -364,7 +329,6 @@ export default function Lectures() {
                                                     school_type: '',
                                                     country: '',
                                                     departments: [],
-                                                    academic_courses: [],
                                                 });
                                             }}
                                         >
