@@ -59,9 +59,13 @@ interface AlertNever {
 /*
 TODO: add type: success/info/warning/error
 */
-export default function Alert({state, open=true, type, children, message, autoclose, onClose}: AlertState|AlertStateState) {
+export default function Alert({state, open=true, type='info', children, message, autoclose, onClose}: AlertState|AlertStateState) {
 
-    // TODO use type!
+    const typedStyles = {
+        info: 'bg-ve-collab-blue/85 border-ve-collab-blue',
+        warning: 'bg-ve-collab-orange/85 border-ve-collab-orange',
+        error: 'bg-red-500/85 border-red-500'
+    }
 
     const {
         open: _open,
@@ -96,7 +100,7 @@ export default function Alert({state, open=true, type, children, message, autocl
 
     return (
         <div className="fixed inset-0 z-50 items-center" onClick={handleClose}>
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex bg-ve-collab-blue/75 text-white rounded-xl p-2 border border-ve-collab-blue shadow-md shadow-white/25">
+            <div className={`${typedStyles[_type||'info']} absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex text-white rounded-xl p-2 border shadow-md shadow-white/25`}>
                 <div className='m-2 font-bold'>{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
