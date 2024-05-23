@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useEffect } from 'react';
-import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
+import { MdClose } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
 import AllNotifications from '@/components/Notifications/AllNotifications';
 import GroupInvitationNotification from '@/components/Notifications/GroupInvitationNotification';
@@ -42,19 +42,9 @@ export default function NotificationsWindow({
     }
 
     return (
-        <div
-            className={`absolute z-30 right-0 top-20 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}
-        >
-            <div
-                style={{ clipPath: 'inset(-5px 1px -5px -5px)', borderRight: '0' }}
-                className="absolute flex top-1/3 -ml-2 -left-[16px] w-[26px] h-[90px] bg-white rounded-l border shadow"
-            >
-                <button
-                    onClick={(e) => toggleNotifWindow()}
-                    className="p-1 h-full w-full hover:bg-slate-100"
-                >
-                    <MdKeyboardDoubleArrowRight />
-                </button>
+        <div className='absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border' >
+            <div className="absolute -top-[16px] -left-[16px]">
+                <button onClick={e => toggleNotifWindow()} className="bg-white rounded-full shadow p-2 hover:bg-slate-50"><MdClose size={20} /></button>
             </div>
 
             <div className="h-[60vh] min-h-[16rem] overflow-y-auto content-scrollbar text-sm">
