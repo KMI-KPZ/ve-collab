@@ -6,6 +6,7 @@ from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
+from resources.planner.ve_plan import VEPlanResource
 from resources.elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
@@ -156,6 +157,12 @@ class ProfileInformationHandler(BaseHandler):
             del profile["_id"]
             del profile["role"]
             del profile["follows"]
+
+            # agregate the ve_window with plan names in addition to the ids
+            if "ve_window" in profile and profile["ve_window"]:
+                plan_manager = VEPlanResource(db)
+                for window in profile["ve_window"]:
+                    window["plan_name"] = plan_manager.get_plan(window["plan_id"]).name
 
             # grab users that follow the user separately, because db model is 1:n
             followers = profile_manager.get_followers(username)

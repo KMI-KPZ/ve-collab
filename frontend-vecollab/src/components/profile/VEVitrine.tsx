@@ -17,7 +17,7 @@ export default function VEVitrine({ items }: Props) {
                 {items.map((item, index) => (
                     <VEVitrineItem
                         key={index}
-                        title={item.title}
+                        title={item.title === "" ? item.plan.name : item.title}
                         excerpt={item.description}
                         _id={item.plan._id}
                     />
