@@ -1,6 +1,21 @@
 import { useEffect, useState } from 'react';
 import { IoMdClose } from 'react-icons/io';
 
+/**
+ * Alert Component, can be used in different ways. Examples:
+ *
+ * 1)
+ * <Alert message={"Foo Bar!"} autoclose={2000} onClose={() => ...} ... />
+ *
+ * 2)
+ * <Alert><div>Foo Bar!</div></Alert>
+ *
+ * 3)
+ * const alertState: AlertState = {message: "Foo Bar"}
+ * <Alert state={alertState} />
+ *
+ */
+
 export type AlertTypes = 'info'|'warning'|'error'
 
 export type AlertState = AlertStateClose|AlertStateMessage|AlertStateChildren
@@ -46,31 +61,43 @@ TODO: add type: success/info/warning/error
 */
 export default function Alert({state, open=true, type, children, message, autoclose, onClose}: AlertState|AlertStateState) {
 
-    const [iamOpen, setIamOpen] = useState(typeof open !== 'undefined' ? open : true);
+    // TODO use type!
+
+    const {
+        open: _open,
+        type: _type,
+        children: _children,
+        message: _message,
+        autoclose: _autoclose,
+        onClose: _onClose
+    } = state || {open, type, children, message, autoclose, onClose}
+
+    const [iamOpen, setIamOpen] = useState(typeof _open !== 'undefined' ? _open : true)
 
     useEffect(() => {
-        if (typeof open !== 'undefined') setIamOpen(open)
-        if (autoclose) {
+        if (typeof _open !== 'undefined') setIamOpen(_open)
+        if (_autoclose) {
             setTimeout(() => {
                 setIamOpen(false)
-                if (onClose) onClose()
-            }, autoclose);
+                if (_onClose) _onClose()
+            }, _autoclose);
         }
-    }, [open, autoclose, onClose])
+    }, [_open, _autoclose, _onClose])
 
     const handleClose = () => {
         setIamOpen(false)
-        if (onClose) onClose()
+        if (_onClose) _onClose()
+
     }
 
-    if (!message && !children) return (<></>)
+    if (!_message && !_children) return (<></>)
 
     if (!iamOpen) return (<></>)
 
     return (
         <div className="fixed inset-0 z-50 items-center" onClick={handleClose}>
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex bg-ve-collab-blue/75 text-white rounded-xl p-2 border border-ve-collab-blue shadow-md shadow-white/25">
-                <div className='m-2 font-bold'>{children ? children : message}</div>
+                <div className='m-2 font-bold'>{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
                         className="text-white hover:text-gray-200"
