@@ -62,9 +62,9 @@ TODO: add type: success/info/warning/error
 export default function Alert({state, open=true, type='info', children, message, autoclose, onClose}: AlertState|AlertStateState) {
 
     const typedStyles = {
-        info: 'bg-ve-collab-blue/85 border-ve-collab-blue',
-        warning: 'bg-ve-collab-orange/85 border-ve-collab-orange',
-        error: 'bg-red-500/85 border-red-500'
+        info: 'bg-ve-collab-blue/75 border-ve-collab-blue',
+        warning: 'bg-ve-collab-orange/75 border-ve-collab-orange',
+        error: 'bg-red-500/75 border-red-500'
     }
 
     const {
