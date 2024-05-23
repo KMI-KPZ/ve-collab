@@ -25,7 +25,6 @@ export default function EssentialInformation() {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [author, setAuthor] = useState<string>('');
     const [steps, setSteps] = useState<IFineStep[]>([]);
 
     // check for session errors and trigger the login flow if necessary
@@ -60,7 +59,6 @@ export default function EssentialInformation() {
                         setSideMenuStepsProgress(data.plan.progress);
                     }
                     setSteps(data.plan.steps);
-                    setAuthor(data.plan.author);
                     methods.setValue('name', data.plan.name, { shouldValidate: true });
                 }
             );

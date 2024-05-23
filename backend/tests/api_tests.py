@@ -7682,7 +7682,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             school_type="test",
             country="test",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
