@@ -8,6 +8,7 @@ import { PlansOverview } from '@/components/Plannner/PlansOverview';
 import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+import Alert from '@/components/Alert';
 
 export interface IfilterBy {
     planKey: keyof PlanPreview;
@@ -34,7 +35,7 @@ export default function Plans() {
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
     useEffect(() => {
-        if (isLoading) return;
+        if (isLoading || !plans.length || error) return;
 
         let sortedPlans = plans.sort((a, b) => {
             let av = a[sortBy.key]?.toString() || '';
@@ -103,6 +104,8 @@ export default function Plans() {
                         filterByCallback={handleFilterBy}
                     />
 
+                    {typeof error !== 'undefined' && <Alert type='error' message={'Error loading plans. See console for details.'} />}
+
                     {isLoading ? (
                         <div className="m-12">
                             <LoadingAnimation size="small" /> lade Pläne ...
@@ -111,6 +114,7 @@ export default function Plans() {
                         <PlansOverview
                             plans={sortedPlans}
                             sortBy={sortBy}
+                            filterBy={filterBy}
                             sortByCallback={handleSortBy}
                             refetchPlansCallback={mutate}
                     />

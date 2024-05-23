@@ -2,11 +2,12 @@ import React from 'react';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
 import PlannerOverviewItem from './PlannerOverviewItem';
-import { IsortBy } from '@/pages/plans';
+import { IfilterBy, IsortBy } from '@/pages/plans';
 
 interface Props {
     plans: PlanPreview[];
     sortBy: IsortBy;
+    filterBy: IfilterBy[];
     sortByCallback: (key: keyof PlanPreview) => void;
     refetchPlansCallback: () => Promise<void>;
 }
@@ -14,6 +15,7 @@ interface Props {
 export function PlansOverview({
     plans ,
     sortBy,
+    filterBy,
     sortByCallback,
     refetchPlansCallback
 }: Props) {
@@ -63,7 +65,14 @@ export function PlansOverview({
 
                 <div>
                     {plans.length == 0 ? (
-                        <div className="m-12">Noch keine Pläne erstellt</div>
+                            <div className="m-12">
+
+                                {filterBy.find((f) => f.id == 'otherAuthor')
+                                    ? "Es wurde noch kein Plan mit Dir geteilt"
+                                    : "Du hast noch keinen Plan erstellt"
+                                }
+                            </div>
+
                     ) : (
                         plans.map((plan, index) => (
                             <div
