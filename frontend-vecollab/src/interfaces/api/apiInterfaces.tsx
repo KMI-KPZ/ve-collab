@@ -1,3 +1,5 @@
+import { IPlan } from "../planner/plannerInterfaces";
+
 export interface BackendUserSnippet {
     username: string;
     first_name: string;
@@ -96,7 +98,7 @@ export interface BackendPost {
     files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
-    plans: string;
+    plans: IPlan[];
     space: string;
     tags: string[];
     text: string;
