@@ -5286,69 +5286,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         # create one more plan
         additional_plan_id = ObjectId()
-        self.db.plans.insert_one(
-            {
-                "_id": additional_plan_id,
-                "author": "test_user",
-                "read_access": ["test_user", "test_admin"],
-                "write_access": ["test_user"],
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
-                "name": "test",
-                "partners": ["test_admin"],
-                "institutions": [self.institution.to_dict()],
-                "topics": ["test", "test"],
-                "lectures": [self.lecture.to_dict()],
-                "learning_goals": ["test", "test"],
-                "audience": [self.target_group.to_dict()],
-                "languages": ["test", "test"],
-                "evaluation": [self.evaluation.to_dict()],
-                "timestamp_from": self.step.timestamp_from,
-                "timestamp_to": self.step.timestamp_to,
-                "involved_parties": ["test", "test"],
-                "realization": "test",
-                "physical_mobility": True,
-                "physical_mobilities": [self.physical_mobility.to_dict()],
-                "learning_env": "test",
-                "new_content": False,
-                "formalities": [
-                    {
-                        "username": "test_user",
-                        "technology": False,
-                        "exam_regulations": False,
-                    },
-                    {
-                        "username": "test_admin",
-                        "technology": True,
-                        "exam_regulations": True,
-                    },
-                ],
-                "duration": self.step.duration.total_seconds(),
-                "workload": self.step.workload,
-                "steps": [self.step.to_dict()],
-                "is_good_practise": True,
-                "underlying_ve_model": "test",
-                "reflection": "test",
-                "good_practise_evaluation": "test",
-                "evaluation_file": None,
-                "progress": {
-                    "name": "not_started",
-                    "institutions": "not_started",
-                    "topics": "not_started",
-                    "lectures": "not_started",
-                    "learning_goals": "not_started",
-                    "audience": "not_started",
-                    "languages": "not_started",
-                    "evaluation": "not_started",
-                    "involved_parties": "not_started",
-                    "realization": "not_started",
-                    "learning_env": "not_started",
-                    "new_content": "not_started",
-                    "formalities": "not_started",
-                    "steps": "not_started",
-                },
-            }
-        )
+        self.db.plans.insert_one(VEPlan(_id=additional_plan_id).to_dict())
 
         # test with both input types (str and ObjectId)
         for id_input in [
