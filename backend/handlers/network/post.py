@@ -19,6 +19,8 @@ from resources.network.post import (
     Posts,
     PostNotExistingException,
 )
+from model import VEPlan
+from resources.planner.ve_plan import VEPlanResource
 from resources.network.profile import Profiles
 from resources.network.space import (
     FileAlreadyInRepoError,
@@ -183,11 +185,17 @@ class PostHandler(BaseTimelineHandler):
             tags = self.get_body_argument("tags")  # http_body['tags']
             plans = self.get_body_argument("plans", [])
             # convert tags and plans to list, because formdata will send it as a string
+
             try:
                 tags = json.loads(tags)
+            except Exception:
+                pass
+
+            try:
                 plans = json.loads(plans)
             except Exception:
                 pass
+
             # if space is set, this post belongs to a space (only visible inside)
             space_id = self.get_body_argument("space", None)
 
@@ -285,6 +293,26 @@ class PostHandler(BaseTimelineHandler):
                     0
                 ]
                 post["author"] = author_profile_snippet
+
+                if post["plans"] != []:
+                    plan_ids = []
+
+                    for plan_id in post["plans"]:
+                        if plan_id not in plan_ids:
+                            plan_ids.append(plan_id)
+
+                    with util.get_mongodb() as db:
+                        plan_manager = VEPlanResource(db)
+                        plans = plan_manager.get_bulk_plans(plan_ids)
+
+                        # replace the plan_ids with the full plan objects
+                        # post_plan_ids_copy = post["plans"].copy()
+                        post["plans"] = []
+                        for plan_id in plan_ids:
+                            plan = self._filter_from_plan_objects(plan_id, plans)
+                            if isinstance(plan, VEPlan):
+                                plan = plan.to_dict()
+                            post["plans"].append(plan)
 
                 self.set_status(200)
                 self.serialize_and_write(
