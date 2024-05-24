@@ -456,7 +456,7 @@ export default function TimelinePost(
                     </div>
                 )}
 
-                {post.plans.length > 0 && (
+                {post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">Pläne</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
