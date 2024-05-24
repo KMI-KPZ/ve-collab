@@ -27,6 +27,7 @@ from resources.network.space import (
     Spaces,
     SpaceDoesntExistError,
 )
+from resources.planner.ve_plan import VEPlanResource
 from handlers.network.timeline import BaseTimelineHandler
 import util
 
@@ -288,31 +289,32 @@ class PostHandler(BaseTimelineHandler):
 
                 post["_id"] = post_id
 
+                # enhance author with profile information
                 profile_manager = Profiles(db)
                 author_profile_snippet = profile_manager.get_profile_snippets([author])[
                     0
                 ]
                 post["author"] = author_profile_snippet
 
-                if post["plans"] != []:
+                # enhance the post with the full plan objects
+                if post["plans"]:
                     plan_ids = []
 
                     for plan_id in post["plans"]:
                         if plan_id not in plan_ids:
                             plan_ids.append(plan_id)
 
-                    with util.get_mongodb() as db:
-                        plan_manager = VEPlanResource(db)
-                        plans = plan_manager.get_bulk_plans(plan_ids)
+                    plan_manager = VEPlanResource(db)
+                    plans = plan_manager.get_bulk_plans(plan_ids)
 
-                        # replace the plan_ids with the full plan objects
-                        # post_plan_ids_copy = post["plans"].copy()
-                        post["plans"] = []
-                        for plan_id in plan_ids:
-                            plan = self._filter_from_plan_objects(plan_id, plans)
-                            if isinstance(plan, VEPlan):
-                                plan = plan.to_dict()
-                            post["plans"].append(plan)
+                    # replace the plan_ids with the full plan objects
+                    # post_plan_ids_copy = post["plans"].copy()
+                    post["plans"] = []
+                    for plan_id in plan_ids:
+                        plan = self._filter_from_plan_objects(plan_id, plans)
+                        if isinstance(plan, VEPlan):
+                            plan = plan.to_dict()
+                        post["plans"].append(plan)
 
                 self.set_status(200)
                 self.serialize_and_write(
