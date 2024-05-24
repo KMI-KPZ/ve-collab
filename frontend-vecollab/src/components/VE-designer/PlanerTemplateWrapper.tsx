@@ -12,9 +12,10 @@ interface Props {
 }
 
 // TODO interface for planerData, loading?, daten hin und herschieben, mehr reactHookForm vllt noch in parent
+// TODO name: Sidemenu data -> backend einzel state änderbar machen
 // TODO Error onSubmit -> einzeln durchgeben?
 
-export default function PlanerTemplate({ children, methods }: Props): JSX.Element {
+export default function PlanerTemplateWrapper({ children, methods }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<any>();

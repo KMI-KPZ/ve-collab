@@ -8,7 +8,7 @@ import {
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import PlanerTemplate from '@/components/VE-designer/PlanerTemplate';
+import PlanerTemplateWrapper from '@/components/VE-designer/PlanerTemplateWrapper';
 
 interface FormValues {
     name: string;
@@ -70,7 +70,7 @@ export default function EssentialInformation() {
     };
 
     return (
-        <PlanerTemplate methods={methods}>
+        <PlanerTemplateWrapper methods={methods}>
             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                 <div className="flex-grow">
                     <div className={'text-center font-bold text-4xl mb-24'}>
@@ -125,6 +125,6 @@ export default function EssentialInformation() {
                     </div>
                 </div>
             </form>
-        </PlanerTemplate>
+        </PlanerTemplateWrapper>
     );
 }
