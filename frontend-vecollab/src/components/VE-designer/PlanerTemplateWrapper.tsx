@@ -11,9 +11,11 @@ interface Props {
     children: React.ReactNode;
 }
 
+// TODO Weiter, Zurück button + combinedSubmitRouteAndUpdate in parent verschieben
+// TODO react query (https://tanstack.com/query/) einbauen
 // TODO interface for planerData, loading?, daten hin und herschieben, mehr reactHookForm vllt noch in parent
-// TODO name: Sidemenu data -> backend einzel state änderbar machen
 // TODO Error onSubmit -> einzeln durchgeben?
+// TODO Topmenu mit submit refactoren
 
 export default function PlanerTemplateWrapper({ children, methods }: Props): JSX.Element {
     const router = useRouter();
