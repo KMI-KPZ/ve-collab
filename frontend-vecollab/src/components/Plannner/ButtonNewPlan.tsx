@@ -3,10 +3,11 @@ import { useSession } from 'next-auth/react';
 import router from 'next/router';
 
 interface Props {
-    label: string|JSX.Element;
+    label?: string|JSX.Element;
+    children?: JSX.Element;
     className?: string;
 }
-export default function ButtonNewPlan({ label, className }: Props) {
+export default function ButtonNewPlan({ label, children, className }: Props) {
     const { data: session } = useSession();
 
     const createAndForwardNewPlanner = async () => {
@@ -23,10 +24,10 @@ export default function ButtonNewPlan({ label, className }: Props) {
             className={`${
                 className
                     ? className
-                    : 'py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white'
+                    : 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
             }`}
         >
-            {label}
+            {children || label}
         </button>
     );
 }

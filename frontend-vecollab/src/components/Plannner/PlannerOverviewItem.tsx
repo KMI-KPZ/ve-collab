@@ -237,11 +237,11 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             </div>
 
             <div className="basis-1/6">
-                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
+                <Timestamp timestamp={plan.last_modified} className="text-sm" />
             </div>
 
             <div className="basis-1/6">
-                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
             </div>
 
             <ShareDialog />

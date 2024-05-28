@@ -46,7 +46,7 @@ export function PlansOverviewFilter({ filterBy, filterByCallback }: Props) {
                                 filterByCallback({
                                     planKey: 'author',
                                     compare: (planAuthor) => (planAuthor as string) == session?.user.preferred_username,
-                                    id: 'iamAthor'
+                                    id: 'iamAuthor'
                                 })
                             }
                         >
@@ -64,7 +64,7 @@ export function PlansOverviewFilter({ filterBy, filterByCallback }: Props) {
                                 filterByCallback({
                                     planKey: 'author',
                                     compare: (planAuthor) => (planAuthor as string) != session?.user.preferred_username,
-                                    id: 'otherAthor'
+                                    id: 'otherAuthor'
                                 })
                             }
                         >
