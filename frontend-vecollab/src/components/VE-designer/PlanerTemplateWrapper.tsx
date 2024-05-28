@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import SideProgressBarWithReactHookFormWithoutPopUp from '@/components/VE-designer/SideProgressBarWithReactHookFormWithoutPopUp';
-import { FormProvider } from 'react-hook-form';
+import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
+import PopupSaveData from './PopupSaveData';
 
 interface Props {
-    methods: any;
+    methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
     prevpage?: string
     nextpage?: string
@@ -40,6 +41,10 @@ export default function PlanerTemplateWrapper({
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<any>();
     const [loading, setLoading] = useState(true);
+    const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
+        isOpen: false,
+        continueLink: '/plans',
+    });
 
     useEffect(() => {
         if (!router.isReady || status === 'loading' || !session) {
@@ -61,7 +66,7 @@ export default function PlanerTemplateWrapper({
 
     const handleSubmit = async (data: any) => {
         setLoading(true)
-        let fields = await submitCallback(data)
+        const fields = await submitCallback(data)
 
         if (fields) {
             await fetchPOST(
@@ -74,6 +79,18 @@ export default function PlanerTemplateWrapper({
 
     return (
         <FormProvider {...methods}>
+             <PopupSaveData
+                isOpen={popUp.isOpen}
+                handleContinue={async () => {
+                    await router.push({
+                        pathname: popUp.continueLink,
+                        query: {
+                            plannerId: router.query.plannerId,
+                        },
+                    });
+                }}
+                handleCancel={() => setPopUp(prev => { return {...prev, isOpen: false}} )}
+            />
 
             <div className="flex bg-pattern-left-blue-small bg-no-repeat">
                 <div className="flex flex-grow justify-center">
@@ -101,15 +118,21 @@ export default function PlanerTemplateWrapper({
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
 
-                                            onClick={methods.handleSubmit(async (data: any, e: React.BaseSyntheticEvent) => {
-                                                await submitCallback(data)
+                                            onClick={methods.handleSubmit(
+                                                // valid
+                                                async (data: any) => {
+                                                    await submitCallback(data)
 
-                                                await router.push({
-                                                    pathname: prevpage,
-                                                    query: { plannerId: router.query.plannerId }
-                                                })
-
-                                            })}
+                                                    router.push({
+                                                        pathname: prevpage,
+                                                        query: { plannerId: router.query.plannerId }
+                                                    })
+                                                },
+                                                // invalid
+                                                async () => {
+                                                    setPopUp({isOpen: true, continueLink: prevpage})
+                                                }
+                                            )}
                                         >
                                             Zurück
                                         </button>
@@ -117,20 +140,26 @@ export default function PlanerTemplateWrapper({
 
                                 </div>
                                 <div>
-                                    {typeof nextpage !== undefined && (
+                                    {typeof nextpage !== 'undefined' && (
                                         <button
                                             type="button"
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
 
-                                            onClick={methods.handleSubmit(async (data: any) => {
-                                                await handleSubmit(data)
+                                            onClick={methods.handleSubmit(
+                                                // valid
+                                                async (data: any) => {
+                                                    await handleSubmit(data)
 
-                                                await router.push({
-                                                    pathname: nextpage,
-                                                    query: { plannerId: router.query.plannerId }
-                                                })
-
-                                            })}
+                                                    router.push({
+                                                        pathname: nextpage,
+                                                        query: { plannerId: router.query.plannerId }
+                                                    })
+                                                },
+                                                // invalid
+                                                async () => {
+                                                    setPopUp({isOpen: true, continueLink: nextpage})
+                                                }
+                                            )}
                                         >
                                             Weiter
                                         </button>
