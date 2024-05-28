@@ -35,7 +35,7 @@ export default function Plans() {
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
     useEffect(() => {
-        if (isLoading || !plans.length || error) return;
+        if (isLoading || !plans.length) return;
 
         let sortedPlans = plans.sort((a, b) => {
             let av = a[sortBy.key]?.toString() || '';
