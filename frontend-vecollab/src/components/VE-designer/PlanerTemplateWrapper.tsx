@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import SideProgressBarWithReactHookFormWithoutPopUp from '@/components/VE-designer/SideProgressBarWithReactHookFormWithoutPopUp';
 import { FormProvider } from 'react-hook-form';
-import { fetchGET } from '@/lib/backend';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -15,7 +15,11 @@ interface Props {
     nextpage?: string
 
     planerDataCallback: (data: any) => void
-    submitCallback: (data: any) => void
+    submitCallback: (data: any) => unknown | Promise<{
+        plan_id: string,
+        field_name: string
+        value: any
+    }[]>
 }
 
 // TODO Weiter, Zurück button + combinedSubmitRouteAndUpdate in parent verschieben
@@ -55,6 +59,19 @@ export default function PlanerTemplateWrapper({
         );
     }, [session, status, router]);
 
+    const handleSubmit = async (data: any) => {
+        setLoading(true)
+        let fields = await submitCallback(data)
+
+        if (fields) {
+            await fetchPOST(
+                '/planner/update_fields',
+                { update: fields },
+                session?.accessToken
+            );
+        }
+    }
+
     return (
         <FormProvider {...methods}>
 
@@ -85,7 +102,6 @@ export default function PlanerTemplateWrapper({
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
 
                                             onClick={methods.handleSubmit(async (data: any, e: React.BaseSyntheticEvent) => {
-                                                setLoading(true)
                                                 await submitCallback(data)
 
                                                 await router.push({
@@ -107,8 +123,7 @@ export default function PlanerTemplateWrapper({
                                             className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
 
                                             onClick={methods.handleSubmit(async (data: any) => {
-                                                setLoading(true)
-                                                await submitCallback(data)
+                                                await handleSubmit(data)
 
                                                 await router.push({
                                                     pathname: nextpage,
@@ -129,10 +144,7 @@ export default function PlanerTemplateWrapper({
                 </div>
                 <SideProgressBarWithReactHookFormWithoutPopUp
                     progressState={planerData?.progress}
-                    onSubmit={data => {
-                        setLoading(true)
-                        submitCallback(data)
-                    }}
+                    onSubmit={handleSubmit}
                 />
             </div>
         </FormProvider>

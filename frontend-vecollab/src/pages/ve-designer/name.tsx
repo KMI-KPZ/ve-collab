@@ -1,7 +1,5 @@
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect, BaseSyntheticEvent } from 'react';
+import React, { useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -17,7 +15,6 @@ interface FormValues {
 
 EssentialInformation.auth = true;
 export default function EssentialInformation() {
-    const { data: session, status } = useSession();
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -26,34 +23,28 @@ export default function EssentialInformation() {
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
     const setPlanerData = (plan: IPlan) => {
-        if (plan.progress) {
+        if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress);
         }
         methods.setValue('name', plan.name, { shouldValidate: true });
     }
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues, event?: BaseSyntheticEvent) => {
-        await fetchPOST(
-            '/planner/update_fields',
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        return [
             {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'name',
-                        value: data.name,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'progress',
-                        value: {
-                            ...sideMenuStepsProgress,
-                            name: ProgressState.completed,
-                        },
-                    },
-                ],
+                plan_id: router.query.plannerId,
+                field_name: 'name',
+                value: data.name,
             },
-            session?.accessToken
-        );
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    name: ProgressState.completed,
+                },
+            },
+        ]
     };
 
     return (
@@ -63,7 +54,6 @@ export default function EssentialInformation() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-
                 <div className="flex-grow">
                     <div className={'text-center font-bold text-4xl mb-24'}>
                         Wie soll das Projekt heißen?
@@ -95,7 +85,6 @@ export default function EssentialInformation() {
                         </p>
                     </div>
                 </div>
-
         </PlanerTemplateWrapper>
     );
 }
