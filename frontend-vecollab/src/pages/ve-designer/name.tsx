@@ -53,19 +53,26 @@ export default function EssentialInformation() {
             },
             session?.accessToken
         );
-    };
 
-    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-        onSubmit(data);
         await router.push({
-            pathname: url,
+            pathname: '/ve-designer/partners',
             query: { plannerId: router.query.plannerId },
         });
+
+
     };
 
+    // const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
+    //     onSubmit(data);
+    //     await router.push({
+    //         pathname: url,
+    //         query: { plannerId: router.query.plannerId },
+    //     });
+    // };
+
     return (
-        <PlanerTemplateWrapper methods={methods} planerDataCallback={setPlanerData} >
-            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+        <PlanerTemplateWrapper methods={methods} planerDataCallback={setPlanerData} submitCallback={onSubmit} >
+
                 <div className="flex-grow">
                     <div className={'text-center font-bold text-4xl mb-24'}>
                         Wie soll das Projekt heißen?
@@ -97,28 +104,7 @@ export default function EssentialInformation() {
                         </p>
                     </div>
                 </div>
-                <div className="flex w-full justify-between">
-                    <div>
-                        <button
-                            type="button"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                        >
-                            Zurück
-                        </button>
-                    </div>
-                    <div>
-                        <button
-                            type="button"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                            onClick={methods.handleSubmit((data) =>
-                                combinedSubmitRouteAndUpdate(data, '/ve-designer/partners')
-                            )}
-                        >
-                            Weiter
-                        </button>
-                    </div>
-                </div>
-            </form>
+
         </PlanerTemplateWrapper>
     );
 }

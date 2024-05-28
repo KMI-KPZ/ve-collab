@@ -11,6 +11,7 @@ interface Props {
     children: React.ReactNode;
 
     planerDataCallback: (data: any) => void
+    submitCallback: (data: any) => void
 }
 
 // TODO Weiter, Zurück button + combinedSubmitRouteAndUpdate in parent verschieben
@@ -19,7 +20,12 @@ interface Props {
 // TODO Error onSubmit -> einzeln durchgeben?
 // TODO Topmenu mit submit refactoren
 
-export default function PlanerTemplateWrapper({ children, methods, planerDataCallback }: Props): JSX.Element {
+export default function PlanerTemplateWrapper({
+    children,
+    methods,
+    planerDataCallback,
+    submitCallback }: Props
+): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<any>();
@@ -35,6 +41,7 @@ export default function PlanerTemplateWrapper({ children, methods, planerDataCal
 
     return (
         <FormProvider {...methods}>
+
             <div className="flex bg-pattern-left-blue-small bg-no-repeat">
                 <div className="flex flex-grow justify-center">
                     <div className="flex flex-col">
@@ -43,12 +50,39 @@ export default function PlanerTemplateWrapper({ children, methods, planerDataCal
                             linkFineStep={planerData?.steps[0]?.name}
                         />
 
-                        {children}
+                        <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+
+                            {children}
+
+                            <div className="flex w-full justify-between">
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
+                                    >
+                                        Zurück
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+
+                                        onClick={methods.handleSubmit((data: any) => {
+                                            submitCallback(data)
+                                        })}
+                                    >
+                                        Weiter
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
                 <SideProgressBarWithReactHookFormWithoutPopUp
                     progressState={planerData?.progress}
-                    onSubmit={methods.onSubmit}
+                    onSubmit={submitCallback}
                 />
             </div>
         </FormProvider>
