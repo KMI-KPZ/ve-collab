@@ -5,10 +5,14 @@ import { FormProvider } from 'react-hook-form';
 import { fetchGET } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import LoadingAnimation from '../LoadingAnimation';
 
 interface Props {
     methods: any;
     children: React.ReactNode;
+    prevpage?: string
+    nextpage?: string
 
     planerDataCallback: (data: any) => void
     submitCallback: (data: any) => void
@@ -23,18 +27,30 @@ interface Props {
 export default function PlanerTemplateWrapper({
     children,
     methods,
+    prevpage,
+    nextpage,
     planerDataCallback,
     submitCallback }: Props
 ): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<any>();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!router.isReady || status === 'loading' || !session) {
+            return;
+        }
+        if (!router.query.plannerId) {
+            router.push('/plans');
+            return
+        }
+
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            (data) => {
-                setPlanerData(data.plan);
-                planerDataCallback(data.plan)
+            data => {
+                setLoading(false)
+                setPlanerData(data.plan as IPlan);
+                planerDataCallback(data.plan as IPlan)
             }
         );
     }, [session, status, router]);
@@ -52,28 +68,59 @@ export default function PlanerTemplateWrapper({
 
                         <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
 
+                            {loading &&
+                                (<>
+                                    <div className='absolute w-full h-full bg-slate-50/50 blur-2xl'></div>
+                                    <div className='absolute'><LoadingAnimation /></div>
+                                </>
+                            )}
+
                             {children}
 
                             <div className="flex w-full justify-between">
                                 <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg invisible"
-                                    >
-                                        Zurück
-                                    </button>
+                                    {typeof prevpage !== 'undefined' && (
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+
+                                            onClick={methods.handleSubmit(async (data: any, e: React.BaseSyntheticEvent) => {
+                                                setLoading(true)
+                                                await submitCallback(data)
+
+                                                await router.push({
+                                                    pathname: prevpage,
+                                                    query: { plannerId: router.query.plannerId }
+                                                })
+
+                                            })}
+                                        >
+                                            Zurück
+                                        </button>
+                                    )}
+
                                 </div>
                                 <div>
-                                    <button
-                                        type="button"
-                                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                    {typeof nextpage !== undefined && (
+                                        <button
+                                            type="button"
+                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
 
-                                        onClick={methods.handleSubmit((data: any) => {
-                                            submitCallback(data)
-                                        })}
-                                    >
-                                        Weiter
-                                    </button>
+                                            onClick={methods.handleSubmit(async (data: any) => {
+                                                setLoading(true)
+                                                await submitCallback(data)
+
+                                                await router.push({
+                                                    pathname: nextpage,
+                                                    query: { plannerId: router.query.plannerId }
+                                                })
+
+                                            })}
+                                        >
+                                            Weiter
+                                        </button>
+                                    )}
+
                                 </div>
                             </div>
 
@@ -82,7 +129,10 @@ export default function PlanerTemplateWrapper({
                 </div>
                 <SideProgressBarWithReactHookFormWithoutPopUp
                     progressState={planerData?.progress}
-                    onSubmit={submitCallback}
+                    onSubmit={data => {
+                        setLoading(true)
+                        submitCallback(data)
+                    }}
                 />
             </div>
         </FormProvider>

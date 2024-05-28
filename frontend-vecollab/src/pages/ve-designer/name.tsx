@@ -1,7 +1,7 @@
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, BaseSyntheticEvent } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -9,6 +9,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import PlanerTemplateWrapper from '@/components/VE-designer/PlanerTemplateWrapper';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 interface FormValues {
     name: string;
@@ -24,14 +25,14 @@ export default function EssentialInformation() {
 
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
-    const setPlanerData = (plan: any) => {
-        if (plan.progress.length !== 0) {
+    const setPlanerData = (plan: IPlan) => {
+        if (plan.progress) {
             setSideMenuStepsProgress(plan.progress);
         }
         methods.setValue('name', plan.name, { shouldValidate: true });
     }
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues, event?: BaseSyntheticEvent) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -53,25 +54,15 @@ export default function EssentialInformation() {
             },
             session?.accessToken
         );
-
-        await router.push({
-            pathname: '/ve-designer/partners',
-            query: { plannerId: router.query.plannerId },
-        });
-
-
     };
 
-    // const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-    //     onSubmit(data);
-    //     await router.push({
-    //         pathname: url,
-    //         query: { plannerId: router.query.plannerId },
-    //     });
-    // };
-
     return (
-        <PlanerTemplateWrapper methods={methods} planerDataCallback={setPlanerData} submitCallback={onSubmit} >
+        <PlanerTemplateWrapper
+            methods={methods}
+            nextpage='/ve-designer/partners'
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
 
                 <div className="flex-grow">
                     <div className={'text-center font-bold text-4xl mb-24'}>
