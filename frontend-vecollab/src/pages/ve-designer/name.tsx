@@ -13,8 +13,8 @@ interface FormValues {
     name: string;
 }
 
-EssentialInformation.auth = true;
-export default function EssentialInformation() {
+Name.auth = true;
+export default function Name() {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
