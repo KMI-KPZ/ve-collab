@@ -167,11 +167,12 @@ export default function UserProfile() {
                 setWorkExperience(data.profile.work_experience);
                 setVeWindowItems(
                     data.profile.ve_window.map((elem: any) => ({
-                        plan: { _id: elem.plan_id, name: '' },
+                        plan: { _id: elem.plan_id, name: elem.plan_name },
                         title: elem.title,
                         description: elem.description,
                     }))
                 );
+                console.log(data.profile.ve_window);
             }
         });
     }, [session, router]);

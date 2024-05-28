@@ -35,7 +35,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
             lecture.name === '' &&
             lecture.lecture_type === '' &&
             lecture.lecture_format === '' &&
-            lecture.participants_amount === ''
+            isNaN(Number(lecture.participants_amount))
         );
     });
 };

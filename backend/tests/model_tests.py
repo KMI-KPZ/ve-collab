@@ -1003,7 +1003,6 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.school_type, None)
         self.assertEqual(institution.country, None)
         self.assertEqual(institution.departments, [])
-        self.assertEqual(institution.academic_courses, [])
 
     def test_init(self):
         """
@@ -1017,7 +1016,6 @@ class InstitutionModelTest(TestCase):
             school_type="test",
             country="de",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         )
         self.assertEqual(institution._id, _id)
         self.assertEqual(institution.name, "test")
@@ -1025,8 +1023,6 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.country, "de")
         self.assertEqual(len(institution.departments), 2)
         self.assertEqual(institution.departments, ["test", "test"])
-        self.assertEqual(len(institution.academic_courses), 2)
-        self.assertEqual(institution.academic_courses, ["test", "test"])
 
     def test_to_dict(self):
         """
@@ -1041,7 +1037,6 @@ class InstitutionModelTest(TestCase):
             school_type="test",
             country="de",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         ).to_dict()
 
         self.assertIn("_id", institution)
@@ -1049,15 +1044,12 @@ class InstitutionModelTest(TestCase):
         self.assertIn("school_type", institution)
         self.assertIn("country", institution)
         self.assertIn("departments", institution)
-        self.assertIn("academic_courses", institution)
         self.assertEqual(institution["_id"], _id)
         self.assertEqual(institution["name"], "test")
         self.assertEqual(institution["school_type"], "test")
         self.assertEqual(institution["country"], "de")
         self.assertEqual(len(institution["departments"]), 2)
         self.assertEqual(institution["departments"], ["test", "test"])
-        self.assertEqual(len(institution["academic_courses"]), 2)
-        self.assertEqual(institution["academic_courses"], ["test", "test"])
 
     def test_from_dict(self):
         """
@@ -1070,7 +1062,6 @@ class InstitutionModelTest(TestCase):
             "school_type": "test",
             "country": "de",
             "departments": ["test", "test"],
-            "academic_courses": ["test", "test"],
         }
 
         institution = Institution.from_dict(params)
@@ -1081,8 +1072,6 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.country, "de")
         self.assertEqual(len(institution.departments), 2)
         self.assertEqual(institution.departments, ["test", "test"])
-        self.assertEqual(len(institution.academic_courses), 2)
-        self.assertEqual(institution.academic_courses, ["test", "test"])
 
         # with _ids
         _id = ObjectId()
@@ -1092,7 +1081,6 @@ class InstitutionModelTest(TestCase):
             "school_type": "test",
             "country": "de",
             "departments": ["test", "test"],
-            "academic_courses": ["test", "test"],
         }
 
         institution = Institution.from_dict(params)
@@ -1102,8 +1090,6 @@ class InstitutionModelTest(TestCase):
         self.assertEqual(institution.country, "de")
         self.assertEqual(len(institution.departments), 2)
         self.assertEqual(institution.departments, ["test", "test"])
-        self.assertEqual(len(institution.academic_courses), 2)
-        self.assertEqual(institution.academic_courses, ["test", "test"])
 
     def test_from_dict_error_params_not_dict(self):
         """
@@ -1124,7 +1110,6 @@ class InstitutionModelTest(TestCase):
             "name": "test",
             "country": "de",
             "departments": ["test", "test"],
-            "academic_courses": ["test", "test"],
         }
 
         self.assertRaises(MissingKeyError, Institution.from_dict, params)
@@ -1140,7 +1125,6 @@ class InstitutionModelTest(TestCase):
             "school_type": "test",
             "country": "de",
             "departments": ["test", "test"],
-            "academic_courses": ["test", "test"],
         }
 
         params["name"] = list()
@@ -1158,10 +1142,6 @@ class InstitutionModelTest(TestCase):
         params["departments"] = "test"
         self.assertRaises(TypeError, Institution.from_dict, params)
         params["departments"] = []
-
-        params["academic_courses"] = "test"
-        self.assertRaises(TypeError, Institution.from_dict, params)
-        params["academic_courses"] = []
 
 
 class LectureModelTest(TestCase):
@@ -1762,7 +1742,6 @@ class VEPlanModelTest(TestCase):
             school_type="test",
             country="test",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -2249,7 +2228,6 @@ class VEPlanModelTest(TestCase):
                     "school_type": institution.school_type,
                     "country": institution.country,
                     "departments": institution.departments,
-                    "academic_courses": institution.academic_courses,
                 }
             ],
             "topics": [],
@@ -2405,7 +2383,6 @@ class VEPlanModelTest(TestCase):
                     "school_type": institution.school_type,
                     "country": institution.country,
                     "departments": institution.departments,
-                    "academic_courses": institution.academic_courses,
                 }
             ],
             "topics": [],

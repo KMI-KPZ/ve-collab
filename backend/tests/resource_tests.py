@@ -185,7 +185,6 @@ class BaseResourceTestCase(TestCase):
             school_type="test",
             country="test",
             departments=["test", "test"],
-            academic_courses=["test", "test"],
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -5280,6 +5279,26 @@ class PlanResourceTest(BaseResourceTestCase):
         wrong_id_format = "123"
         self.assertRaises(PlanDoesntExistError, self.planner.get_plan, wrong_id_format)
 
+    def test_get_bulk_plan(self):
+        """
+        expect: successfully get multiple plans from the db, both by passing the _ids as str
+        """
+
+        # create one more plan
+        additional_plan_id = ObjectId()
+        self.db.plans.insert_one(VEPlan(_id=additional_plan_id).to_dict())
+
+        # test with both input types (str and ObjectId)
+        for id_input in [
+            [self.plan_id, additional_plan_id],
+            [str(self.plan_id), str(additional_plan_id)],
+        ]:
+            with self.subTest(id_input=id_input):
+                plans = self.planner.get_bulk_plans(id_input)
+                self.assertEqual(len(plans), 2)
+                for plan in plans:
+                    self.assertIsInstance(plan, VEPlan)
+
     def test_get_all_plans(self):
         """
         expect: a list with exactly one VEPlan object inside
@@ -6103,7 +6122,6 @@ class PlanResourceTest(BaseResourceTestCase):
         institution = Institution(
             name="updated_institution_name",
             departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
         )
         institution_dict = institution.to_dict()
 
@@ -6117,10 +6135,6 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(
             db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
@@ -6152,7 +6166,6 @@ class PlanResourceTest(BaseResourceTestCase):
         institution = Institution(
             name="updated_institution_name",
             departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
         )
         institution_dict = institution.to_dict()
 
@@ -6172,10 +6185,6 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(
             db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 

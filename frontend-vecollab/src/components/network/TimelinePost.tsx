@@ -63,25 +63,6 @@ export default function TimelinePost(
     const [likers, setLikers] = useState<BackendPostAuthor[]>([])
     const [askDeletion, setAskDeletion] = useState<boolean>(false)
 
-    const [plans, setPlans] = useState<PlanPreview[]>([])
-
-    useEffect(() => {
-        if (post.plans && post.plans.length) {
-
-            let requests: Promise<PlanPreview>[] = [];
-
-            (JSON.parse(post.plans) as Array<string>).forEach(planId => {
-                requests.push(
-                    fetchGET(`/planner/get?_id=${planId}`, session!.accessToken)
-                    .then(data => data.plan)
-                )
-            })
-
-            Promise.all(requests)
-            .then(data => setPlans(data) )
-        }
-    }, [post, session])
-
     // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
@@ -471,15 +452,15 @@ export default function TimelinePost(
                                     </div>
                                 </AuthenticatedFile>
                             ))}
-                        </div>
+                        </div>^
                     </div>
                 )}
 
-                {plans.length > 0 && (
+                {post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">Pläne</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
-                            {plans.map((plan, index) => (
+                            {post.plans.map((plan, index) => (
                                 <Link
                                     key={index}
                                     href={{pathname: `/plan/${plan._id}`}}
@@ -491,7 +472,6 @@ export default function TimelinePost(
                                         {plan.name}
                                     </div>
                                 </Link>
-
                             ))}
                         </div>
                     </div>
