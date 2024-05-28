@@ -24,18 +24,12 @@ export default function EssentialInformation() {
 
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
-    useEffect(() => {
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                    }
-                    methods.setValue('name', data.plan.name, { shouldValidate: true });
-                }
-            );
+    const setPlanerData = (plan: any) => {
+        if (plan.progress.length !== 0) {
+            setSideMenuStepsProgress(plan.progress);
         }
-    }, [session, status, router, methods]);
+        methods.setValue('name', plan.name, { shouldValidate: true });
+    }
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
@@ -70,7 +64,7 @@ export default function EssentialInformation() {
     };
 
     return (
-        <PlanerTemplateWrapper methods={methods}>
+        <PlanerTemplateWrapper methods={methods} planerDataCallback={setPlanerData} >
             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                 <div className="flex-grow">
                     <div className={'text-center font-bold text-4xl mb-24'}>

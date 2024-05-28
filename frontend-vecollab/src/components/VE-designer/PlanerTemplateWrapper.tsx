@@ -9,6 +9,8 @@ import { useSession } from 'next-auth/react';
 interface Props {
     methods: any;
     children: React.ReactNode;
+
+    planerDataCallback: (data: any) => void
 }
 
 // TODO Weiter, Zurück button + combinedSubmitRouteAndUpdate in parent verschieben
@@ -17,7 +19,7 @@ interface Props {
 // TODO Error onSubmit -> einzeln durchgeben?
 // TODO Topmenu mit submit refactoren
 
-export default function PlanerTemplateWrapper({ children, methods }: Props): JSX.Element {
+export default function PlanerTemplateWrapper({ children, methods, planerDataCallback }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<any>();
@@ -26,6 +28,7 @@ export default function PlanerTemplateWrapper({ children, methods }: Props): JSX
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
             (data) => {
                 setPlanerData(data.plan);
+                planerDataCallback(data.plan)
             }
         );
     }, [session, status, router]);
