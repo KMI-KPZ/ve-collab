@@ -1,7 +1,7 @@
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import AsyncCreatableSelect from 'react-select/async-creatable';
@@ -67,7 +67,7 @@ export default function Partners() {
         },
     });
 
-    const setPlanerData = (plan: IPlan) => {
+    const setPlanerData = useCallback((plan: IPlan) => {
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress);
         }
@@ -124,7 +124,7 @@ export default function Partners() {
                 methods.setValue('partners', usernameWithFirstAndLastName);
             });
         }
-    }
+    }, [])
 
     const {
         fields: fieldsPartners,

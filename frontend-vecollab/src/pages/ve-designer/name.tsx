@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -22,12 +22,13 @@ export default function Name() {
 
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
-    const setPlanerData = (plan: IPlan) => {
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress);
-        }
-        methods.setValue('name', plan.name, { shouldValidate: true });
-    }
+    const setPlanerData = useCallback((plan: IPlan) => {
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+            methods.setValue('name', plan.name, { shouldValidate: true });
+    }, [])
+
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         return [
