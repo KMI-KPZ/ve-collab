@@ -427,7 +427,7 @@ export default function Partners() {
                                             </Tooltip>
                                         </div>
                                     </div>
-                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className={'text-center mb-20'}>einige Felder werden individuell für die Beteiligten beantwortet</div>
                                     <div className={'text-center font-bold text-2xl mb-8'}>
                                         Beteiligte
                                     </div>
