@@ -64,9 +64,6 @@ export default function Lectures() {
     });
 
     const setPlanerData = (plan: IPlan) => {
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress);
-        }
         if (plan.institutions.length !== 0) {
             methods.setValue('lectures', plan.institutions);
         }
@@ -247,6 +244,7 @@ export default function Lectures() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
+            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

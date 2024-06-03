@@ -58,6 +58,8 @@ export default function Partners() {
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
         { username: string; learning_goal: string }[]
     >([]);
+    const prevpage = '/ve-designer/name'
+    const nextpage = '/ve-designer/lectures'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -68,9 +70,6 @@ export default function Partners() {
     });
 
     const setPlanerData = useCallback((plan: IPlan) => {
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress);
-        }
         if (plan.formalities && Array.isArray(plan.formalities)) {
             setFormalConditions(plan.formalities);
         }
@@ -342,8 +341,9 @@ export default function Partners() {
     return (
         <Wrapper
             methods={methods}
-            prevpage='/ve-designer/name'
-            nextpage='/ve-designer/lectures'
+            prevpage={prevpage}
+            nextpage={nextpage}
+            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

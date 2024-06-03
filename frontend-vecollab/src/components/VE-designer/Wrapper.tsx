@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
+import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -15,6 +16,7 @@ interface Props {
     prevpage?: string
     nextpage?: string
 
+    setProgress: (progress: ISideProgressBarStates) => void
     planerDataCallback: (data: any) => void
     submitCallback: (data: any) => unknown | Promise<{
         plan_id: string,
@@ -23,17 +25,12 @@ interface Props {
     }[]>
 }
 
-// TODO Weiter, Zurück button + combinedSubmitRouteAndUpdate in parent verschieben
-// TODO react query (https://tanstack.com/query/) einbauen
-// TODO interface for planerData, loading?, daten hin und herschieben, mehr reactHookForm vllt noch in parent
-// TODO Error onSubmit -> einzeln durchgeben?
-// TODO Topmenu mit submit refactoren
-
 export default function Wrapper({
     children,
     methods,
     prevpage,
     nextpage,
+    setProgress,
     planerDataCallback,
     submitCallback }: Props
 ): JSX.Element {
@@ -58,7 +55,7 @@ export default function Wrapper({
             if (wrapperRef.current && lastClickEvent && !wrapperRef.current.contains(lastClickEvent.target as Node)) {
                 //  may prompt only if we have unsaved changes?!
                 // if (!methods.formState.isDirty) return
-                console.log('handleBrowseAway', {isDirty: methods.formState.isDirty});
+                //      console.log('handleBrowseAway', {isDirty: methods.formState.isDirty});
 
                 setPopUp({isOpen: true, continueLink: nextlink})
                 router.events.emit('routeChangeError');
@@ -93,6 +90,9 @@ export default function Wrapper({
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
             data => {
                 setLoading(false)
+                if (Object.keys(data.plan.progress).length) {
+                    setProgress(data.plan.progress);
+                }
                 setPlanerData(data.plan as IPlan);
                 planerDataCallback(data.plan as IPlan)
             }

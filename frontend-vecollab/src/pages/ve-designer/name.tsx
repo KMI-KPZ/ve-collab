@@ -23,9 +23,6 @@ export default function Name() {
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
     const setPlanerData = useCallback((plan: IPlan) => {
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             methods.setValue('name', plan.name, { shouldValidate: true });
     }, [])
 
@@ -52,6 +49,7 @@ export default function Name() {
         <Wrapper
             methods={methods}
             nextpage='/ve-designer/partners'
+            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
