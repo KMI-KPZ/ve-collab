@@ -1,24 +1,20 @@
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import Wrapper from '@/components/VE-designer/Wrapper';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -49,15 +45,14 @@ Evaluation.auth = true;
 export default function Evaluation() {
     const router = useRouter();
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+    const prevpage = '/ve-designer/languages'
+    const nextpage = '/ve-designer/teaching-formats'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -83,46 +78,24 @@ export default function Evaluation() {
         },
     });
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
+    const setPlanerData = useCallback((plan: IPlan) => {
+        if (plan.evaluation.length !== 0) {
+            methods.setValue('evaluationPerPartner', plan.evaluation);
         }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data: { plan: IPlan }) => {
-                    if (data.plan !== undefined) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                        setSteps(data.plan.steps);
-                        if (data.plan.evaluation.length !== 0) {
-                            methods.setValue('evaluationPerPartner', data.plan.evaluation);
-                        }
 
-                        // fetch profile snippets to be able to display the full name instead of username only
-                        fetchPOST(
-                            '/profile_snippets',
-                            { usernames: [...data.plan.partners, data.plan.author] },
-                            session.accessToken
-                        ).then((snippets: BackendProfileSnippetsResponse) => {
-                            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                                partnerSnippets[element.username] = element;
-                            });
-                            setPartnerProfileSnippets(partnerSnippets);
-                            setLoading(false);
-                        });
-                    }
-                }
-            );
-        }
-    }, [session, status, router, methods]);
+        // fetch profile snippets to be able to display the full name instead of username only
+        fetchPOST(
+            '/profile_snippets',
+            { usernames: [...plan.partners, plan.author] },
+            session?.accessToken
+        ).then((snippets: BackendProfileSnippetsResponse) => {
+            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                partnerSnippets[element.username] = element;
+            });
+            setPartnerProfileSnippets(partnerSnippets);
+        });
+    }, [methods, session]);
 
     const { fields } = useFieldArray({
         name: 'evaluationPerPartner',
@@ -130,38 +103,23 @@ export default function Evaluation() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        console.log(data);
-        if (!areAllFormValuesEmpty(data)) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'evaluation',
-                            value: data.evaluationPerPartner,
-                        },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                evaluation: ProgressState.completed,
-                            },
-                        },
-                    ],
-                },
-                session?.accessToken
-            );
-        }
-    };
+        if (areAllFormValuesEmpty(data)) return
 
-    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-        onSubmit(data);
-        await router.push({
-            pathname: url,
-            query: { plannerId: router.query.plannerId },
-        });
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'evaluation',
+                value: data.evaluationPerPartner,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    evaluation: ProgressState.completed,
+                },
+            },
+        ]
     };
 
     function radioBooleanInput(control: any, name: any): JSX.Element {
@@ -286,91 +244,33 @@ export default function Evaluation() {
     }
 
     return (
-        <FormProvider {...methods}>
-            <PopupSaveData
-                isOpen={isPopupOpen}
-                handleContinue={async () => {
-                    await router.push({
-                        pathname: '/ve-designer/teaching-formats',
-                        query: {
-                            plannerId: router.query.plannerId,
-                        },
-                    });
-                }}
-                handleCancel={() => setIsPopupOpen(false)}
-            />
-
-            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-                <div className="flex flex-grow justify-center">
-                    <div className="flex flex-col">
-                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                        {loading ? (
-                            <LoadingAnimation />
-                        ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
-                                <div>
-                                    <div className="flex justify-center">
-                                        <div className={'font-bold text-4xl mb-2 w-fit relative'}>
-                                            Bewertung / Evaluation
-                                            <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                                                <Link
-                                                    target="_blank"
-                                                    href={
-                                                        '/learning-material/left-bubble/Evaluation'
-                                                    }
-                                                >
-                                                    <PiBookOpenText size={30} color="#00748f" />
-                                                </Link>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                    <div className={'text-center mb-4'}>optional</div>
-                                    <div className="flex flex-wrap justify-center">
-                                        {renderEvaluationInfoBox()}
-                                    </div>
-                                </div>
-                                <div className="flex justify-between w-full max-w-xl">
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/ve-designer/languages'
-                                                )
-                                            )}
-                                        >
-                                            Zurück
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit(
-                                                (data) => {
-                                                    combinedSubmitRouteAndUpdate(
-                                                        data,
-                                                        '/ve-designer/teaching-formats'
-                                                    );
-                                                },
-                                                async () => setIsPopupOpen(true)
-                                            )}
-                                        >
-                                            Weiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
+        <Wrapper
+            methods={methods}
+            prevpage={prevpage}
+            nextpage={nextpage}
+            setProgress={setSideMenuStepsProgress}
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
+            <div className="flex justify-center">
+                <div className={'font-bold text-4xl mb-2 w-fit relative'}>
+                    Bewertung / Evaluation
+                    <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
+                        <Link
+                            target="_blank"
+                            href={
+                                '/learning-material/left-bubble/Evaluation'
+                            }
+                        >
+                            <PiBookOpenText size={30} color="#00748f" />
+                        </Link>
+                    </Tooltip>
                 </div>
-                <SideProgressBarWithReactHookForm
-                    progressState={sideMenuStepsProgress}
-                    onSubmit={onSubmit}
-                />
             </div>
-        </FormProvider>
+            <div className={'text-center mb-4'}>optional</div>
+            <div className="flex flex-wrap justify-center">
+                {renderEvaluationInfoBox()}
+            </div>
+        </Wrapper>
     );
 }
