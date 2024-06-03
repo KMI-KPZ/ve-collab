@@ -6,7 +6,7 @@ import {
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import PlanerTemplateWrapper from '@/components/VE-designer/PlanerTemplateWrapper';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 interface FormValues {
@@ -49,7 +49,7 @@ export default function Name() {
     };
 
     return (
-        <PlanerTemplateWrapper
+        <Wrapper
             methods={methods}
             nextpage='/ve-designer/partners'
             planerDataCallback={setPlanerData}
@@ -86,6 +86,6 @@ export default function Name() {
                         </p>
                     </div>
                 </div>
-        </PlanerTemplateWrapper>
+        </Wrapper>
     );
 }

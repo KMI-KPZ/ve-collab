@@ -21,7 +21,7 @@ import {
 } from '@/interfaces/api/apiInterfaces';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
-import PlanerTemplateWrapper from '@/components/VE-designer/PlanerTemplateWrapper';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface FormValues {
@@ -340,7 +340,7 @@ export default function Partners() {
     };
 
     return (
-        <PlanerTemplateWrapper
+        <Wrapper
             methods={methods}
             prevpage='/ve-designer/name'
             nextpage='/ve-designer/lectures'
@@ -417,6 +417,6 @@ export default function Partners() {
                     </div>
                 </div>
             </div>
-        </PlanerTemplateWrapper>
+        </Wrapper>
     );
 }

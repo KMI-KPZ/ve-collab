@@ -29,7 +29,7 @@ interface Props {
 // TODO Error onSubmit -> einzeln durchgeben?
 // TODO Topmenu mit submit refactoren
 
-export default function PlanerTemplateWrapper({
+export default function Wrapper({
     children,
     methods,
     prevpage,
