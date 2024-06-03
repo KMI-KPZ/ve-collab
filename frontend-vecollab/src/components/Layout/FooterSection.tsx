@@ -37,6 +37,13 @@ export default function FooterSection() {
                         Kontaktiere uns
                     </a>
                 </p>
+                {process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL && (
+                    <p className="mx-2 font-bold">
+                        <a href={process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL}>
+                            Feedback
+                        </a>
+                    </p>
+                )}
             </div>
             <Disclaimer />
         </footer>

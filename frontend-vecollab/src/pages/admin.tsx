@@ -76,7 +76,7 @@ export default function AdminDashboard() {
                                         <div className="flex">
                                             <div className="mx-2">
                                                 <Link
-                                                    href={`/planSummary/${plan._id}`}
+                                                    href={`/plan/${plan._id}`}
                                                     target="_blank"
                                                     className="text-xl font-bold leading-tight text-gray-800"
                                                 >

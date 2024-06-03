@@ -37,10 +37,10 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return formValues.evaluationPerPartner.every((partner) => {
         return (
             !partner.is_graded &&
-            partner.task_type === '' &&
-            partner.assessment_type === '' &&
-            partner.evaluation_while === '' &&
-            partner.evaluation_after === ''
+            (partner.task_type === '' || partner.task_type === null) &&
+            (partner.assessment_type === '' || partner.assessment_type === null) &&
+            (partner.evaluation_while === '' || partner.evaluation_while === null) &&
+            (partner.evaluation_after === '' || partner.evaluation_after === null)
         );
     });
 };
@@ -130,6 +130,7 @@ export default function Evaluation() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        console.log(data);
         if (!areAllFormValuesEmpty(data)) {
             await fetchPOST(
                 '/planner/update_fields',
@@ -312,7 +313,12 @@ export default function Evaluation() {
                                         <div className={'font-bold text-4xl mb-2 w-fit relative'}>
                                             Bewertung / Evaluation
                                             <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                                                <Link target="_blank" href={'/learning-material/left-bubble/Evaluation'}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={
+                                                        '/learning-material/left-bubble/Evaluation'
+                                                    }
+                                                >
                                                     <PiBookOpenText size={30} color="#00748f" />
                                                 </Link>
                                             </Tooltip>

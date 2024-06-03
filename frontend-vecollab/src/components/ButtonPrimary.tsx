@@ -1,10 +1,11 @@
 interface Props {
-    label: string|JSX.Element;
+    label?: string|JSX.Element;
+    children?: JSX.Element;
     onClick: () => void
     className?: string;
     classNameExtend?: string;
 }
-export default function ButtonPrimary({ label, onClick, className, classNameExtend }: Props) {
+export default function ButtonPrimary({ label, children, onClick, className, classNameExtend }: Props) {
 
     const defaulStyle = 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
 
@@ -19,7 +20,7 @@ export default function ButtonPrimary({ label, onClick, className, classNameExte
                     : classNameExtend ? `${defaulStyle} ${classNameExtend}` : defaulStyle
             }`}
         >
-            {label}
+            {children || label}
         </button>
     );
 }

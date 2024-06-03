@@ -41,7 +41,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
             return goal.value === '' && goal.label === '';
         }) &&
         formValues.individualLearningGoals.every((goal) => {
-            return goal.learningGoal === '';
+            return goal.learningGoal === '' || goal.learningGoal === null;
         })
     );
 };

@@ -43,9 +43,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.every((partner) => {
-            return partner.label === '' && partner.value === '';
-        })
+        formValues.partners.length <= 1
     );
 };
 
@@ -365,7 +363,7 @@ export default function Partners() {
                 <div className="flex justify-center items-center">
                     <input
                         type="text"
-                        placeholder="Externen eingeben"
+                        placeholder="Externe eingeben"
                         className="border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`, {
                             maxLength: {
@@ -429,7 +427,7 @@ export default function Partners() {
                                             </Tooltip>
                                         </div>
                                     </div>
-                                    <div className={'text-center mb-20'}>optional</div>
+                                    <div className={'text-center mb-20'}>einige Felder werden individuell für die Beteiligten beantwortet</div>
                                     <div className={'text-center font-bold text-2xl mb-8'}>
                                         Beteiligte
                                     </div>
@@ -462,7 +460,7 @@ export default function Partners() {
                                 </div>
                                 <div>
                                     <div className={'text-center font-bold text-2xl mb-8 mt-10'}>
-                                        Extern Beteiligte
+                                        Externe Beteiligte
                                     </div>
                                     {renderExternalPartiesInputs()}
                                     <div className="flex justify-center mt-4">
