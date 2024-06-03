@@ -360,7 +360,6 @@ export default function StepNames() {
                     <RxPlus size={30} />
                 </button>
             </div>
-            <div>{nextpage}</div>
         </Wrapper>
     );
 }
