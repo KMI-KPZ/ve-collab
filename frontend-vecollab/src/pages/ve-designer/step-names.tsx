@@ -1,5 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -78,7 +78,6 @@ export default function StepNames() {
     );
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
     const prevpage = '/ve-designer/checklist'
-    // const nextpage = '/ve-designer/step-names'
     const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/');
 
     const methods = useForm<FormValues>({
@@ -88,45 +87,20 @@ export default function StepNames() {
                 { from: '', to: '', name: 'Kennenlernen' },
                 { from: '', to: '', name: 'Evaluation' },
             ],
-        },
+        }
     });
 
-    // useEffect(() => {
-    //     // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-    //     if (!router.isReady || status === 'loading') {
-    //         setLoading(true);
-    //         return;
-    //     }
-    //     // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-    //     if (!router.query.plannerId) {
-    //         router.push('/plans');
-    //         return;
-    //     }
-    //     // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-    //     if (session) {
-    //         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-    //             (data) => {
-    //                 setLoading(false);
-    //                 setSteps(data.plan.steps);
-    //                 if (data.plan.steps?.length > 0) {
-    //                     const steps: IFineStep[] = data.plan.steps;
-    //                     const stepNames: StepName[] = steps.map((step) => {
-    //                         const { timestamp_from, timestamp_to, name } = step;
-    //                         return {
-    //                             from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-    //                             to: timestamp_to.split('T')[0],
-    //                             name: name,
-    //                         };
-    //                     });
-    //                     methods.setValue('stepNames', stepNames);
-    //                 }
-    //                 if (data.plan.progress.length !== 0) {
-    //                     setSideMenuStepsProgress(data.plan.progress);
-    //                 }
-    //             }
-    //         );
-    //     }
-    // }, [session, status, router, methods]);
+    useEffect(() => {
+        const subs = methods.watch((value, {name}) => {
+            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
+                (value && value.stepNames)
+                    ? value.stepNames[0]?.name as string
+                    : prev
+            )}`)
+        })
+        return () => subs.unsubscribe()
+    }, [methods]);
+
 
     const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.steps?.length > 0) {
@@ -140,6 +114,10 @@ export default function StepNames() {
                 };
             });
             methods.setValue('stepNames', stepNames);
+
+            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
+                steps[0].name
+            )}`)
         }
     }, [methods]);
 
@@ -177,10 +155,10 @@ export default function StepNames() {
 
         if (areAllFormValuesEmpty(data)) return
 
-        // TODO
-        setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
-            methods.watch('stepNames')[0].name
-        )}`)
+        // setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
+        //     methods.watch('stepNames')[0].name
+        // )}`)
+        // await new Promise(res => setTimeout(res, 5000));
 
         return [
             {
