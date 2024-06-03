@@ -101,7 +101,6 @@ export default function StepNames() {
         return () => subs.unsubscribe()
     }, [methods]);
 
-
     const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.steps?.length > 0) {
             const steps: IFineStep[] = plan.steps;
@@ -115,6 +114,7 @@ export default function StepNames() {
             });
             methods.setValue('stepNames', stepNames);
 
+            setSteps(plan.steps)
             setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
                 steps[0].name
             )}`)
@@ -154,11 +154,6 @@ export default function StepNames() {
         });
 
         if (areAllFormValuesEmpty(data)) return
-
-        // setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
-        //     methods.watch('stepNames')[0].name
-        // )}`)
-        // await new Promise(res => setTimeout(res, 5000));
 
         return [
             {
