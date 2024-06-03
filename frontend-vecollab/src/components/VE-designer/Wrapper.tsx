@@ -157,7 +157,7 @@ export default function Wrapper({
                                                 onClick={methods.handleSubmit(
                                                     // valid
                                                     async (data: any) => {
-                                                        await submitCallback(data)
+                                                        await handleSubmit(data)
 
                                                         router.push({
                                                             pathname: prevpage,
