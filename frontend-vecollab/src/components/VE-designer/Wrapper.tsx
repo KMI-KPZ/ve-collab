@@ -8,13 +8,14 @@ import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
-import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+import { ISideProgressBarStates, SideMenuStep } from '@/interfaces/ve-designer/sideProgressBar';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
     prevpage?: string
     nextpage?: string
+    sideMenuStepsData?: SideMenuStep[]
 
     setProgress: (progress: ISideProgressBarStates) => void
     planerDataCallback: (data: any) => void
@@ -30,6 +31,7 @@ export default function Wrapper({
     methods,
     prevpage,
     nextpage,
+    sideMenuStepsData,
     setProgress,
     planerDataCallback,
     submitCallback }: Props
@@ -210,6 +212,7 @@ export default function Wrapper({
                     <SideProgressBarWithReactHookFormWithoutPopUp
                         progressState={planerData?.progress}
                         onSubmit={handleSubmit}
+                        sideMenuStepsData={sideMenuStepsData}
                     />
                 </div>
             </FormProvider>

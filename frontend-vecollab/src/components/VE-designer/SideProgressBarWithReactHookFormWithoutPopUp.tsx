@@ -8,21 +8,27 @@ import {
     SideMenuStep,
     ISideProgressBarStates,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { sideMenuStepsData } from '@/data/sideMenuSteps';
+import { sideMenuStepsData as sideMenuSteps } from '@/data/sideMenuSteps';
 import { SubmitHandler, useFormContext } from 'react-hook-form';
 import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 
 interface SideProgressBarSectionProps {
     progressState?: ISideProgressBarStates;
     onSubmit: SubmitHandler<any>;
+    sideMenuStepsData?: SideMenuStep[];
 }
 
 export default function SideProgressBarWithReactHookForm({
     progressState,
     onSubmit,
+    sideMenuStepsData
 }: SideProgressBarSectionProps): JSX.Element {
     const router = useRouter();
     const { handleSubmit } = useFormContext();
+
+    const steps = sideMenuStepsData
+        ? sideMenuStepsData
+        : sideMenuSteps
 
     function renderIcon(state: ProgressState) {
         switch (state) {
@@ -89,7 +95,7 @@ export default function SideProgressBarWithReactHookForm({
                     <h2 className="mt-5 mb-4 font-konnect font-medium">Schritte</h2>{' '}
                 </div>
                 <ul className="flex flex-col gap-1 bg-white p-3">
-                    {renderStageSteps(sideMenuStepsData)}
+                    {renderStageSteps(steps)}
                 </ul>
             </nav>
         </>
