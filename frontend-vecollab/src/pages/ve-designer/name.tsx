@@ -24,7 +24,7 @@ export default function Name() {
 
     const setPlanerData = useCallback((plan: IPlan) => {
             methods.setValue('name', plan.name, { shouldValidate: true });
-    }, [])
+    }, [methods])
 
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {

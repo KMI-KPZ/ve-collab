@@ -1,5 +1,5 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -63,11 +63,11 @@ export default function Lectures() {
         control: methods.control,
     });
 
-    const setPlanerData = (plan: IPlan) => {
+    const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.institutions.length !== 0) {
             methods.setValue('lectures', plan.institutions);
         }
-    }
+    }, [methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (areAllFormValuesEmpty(data.lectures)) {

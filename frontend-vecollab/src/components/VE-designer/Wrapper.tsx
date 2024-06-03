@@ -97,7 +97,7 @@ export default function Wrapper({
                 planerDataCallback(data.plan as IPlan)
             }
         );
-    }, [session, status, router, planerDataCallback]);
+    }, [session, status, router, planerDataCallback, setProgress]);
 
     const handleSubmit = async (data: any) => {
         setLoading(true)

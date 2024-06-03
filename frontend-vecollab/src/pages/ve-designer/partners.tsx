@@ -123,7 +123,7 @@ export default function Partners() {
                 methods.setValue('partners', usernameWithFirstAndLastName);
             });
         }
-    }, [])
+    }, [methods, session])
 
     const {
         fields: fieldsPartners,
