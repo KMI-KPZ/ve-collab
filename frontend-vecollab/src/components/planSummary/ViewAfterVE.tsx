@@ -23,12 +23,12 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                     height={20}
                     className={`${isOpenShowMore ? `rotate-180` : `rotate-0`}`}
                 />
-                <div className="text-2xl font-semibold">Good-Practise Dokumentation</div>
+                <div className="text-2xl font-semibold">Good-Practice Dokumentation</div>
             </div>
             {isOpenShowMore ? (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                     <span className="font-semibold pr-5">
-                        Als Good-Practise Beispiel veröffentlicht
+                        Als Good-Practice Beispiel veröffentlicht
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
@@ -73,7 +73,7 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
             ) : (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                     <span className="font-semibold pr-5">
-                        Als Good-Practise Beispiel veröffentlicht
+                        Als Good-Practice Beispiel veröffentlicht
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">

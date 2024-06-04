@@ -144,7 +144,7 @@ export default function Stage({ fineStep }: Props) {
                     </div>
                 </div>
                 <div className="mt-4 flex justify-center">
-                    <p>Möchten Sie Lernaktivität(en) im Designer ausarbeiten?</p>
+                    <p>Möchten Sie Lernaktivität(en) im Designer genauer ausarbeiten?</p>
                     <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
                 </div>
                 {watch('has_tasks') && (
