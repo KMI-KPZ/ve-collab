@@ -415,7 +415,7 @@ export default function Partners() {
                                             }
                                         >
                                             Wer ist am Projekt beteiligt?
-                                            <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                                            <Tooltip tooltipsText="Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …">
                                                 <Link
                                                     target="_blank"
                                                     href={

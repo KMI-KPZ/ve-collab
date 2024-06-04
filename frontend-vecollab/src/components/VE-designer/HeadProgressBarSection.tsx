@@ -35,12 +35,12 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
             image: imageGeneralInformation,
         },
         {
-            description: 'Etappenplaner',
+            description: 'Etappenplanung',
             link: '/ve-designer/step-names',
             image: imageStagePlanner,
         },
         {
-            description: 'Feinplanner',
+            description: 'Feinplanung',
             link: linkFineplanner,
             image: imageFinePlanner,
         },
@@ -121,7 +121,7 @@ export default function HeadProgressBarSection({ stage, linkFineStep }: HeadProg
                         type="submit"
                         className="items-end border border-ve-collab-orange text-ve-collab-orange py-3 px-5 rounded-lg w-60"
                     >
-                        Jitsi Raum betreten
+                        Videokonferenz betreten
                     </button>
                 </Link>
             </div>

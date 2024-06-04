@@ -350,7 +350,7 @@ export default function Checklist() {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
+                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                         An alles gedacht?

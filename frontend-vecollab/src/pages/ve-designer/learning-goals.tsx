@@ -272,7 +272,7 @@ export default function LearningGoals() {
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                         1. Welche fachlichen Lernziele sollen im VE erreicht werden?
-                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                        <Tooltip tooltipsText="Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
                                                 href={'/learning-material/top-bubble/Potenziale'}
@@ -302,7 +302,7 @@ export default function LearningGoals() {
                                                                 `individualLearningGoals.${index}.learningGoal`
                                                             )}
                                                             placeholder={
-                                                                'Beschreibe die individuellen Lernziele von ' +
+                                                                'Beschreibe die individuellen Lernziele für die Lernenden von ' +
                                                                 findPartnerFirstAndLastName(
                                                                     individualLearningGoalPerPartner.username
                                                                 )
@@ -317,7 +317,7 @@ export default function LearningGoals() {
                                 <div className="mt-12">
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
                                         2. Welche weitere übergeordnete Lernziele werden verfolgt?
-                                        <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                                        <Tooltip tooltipsText="Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
                                                 href={'/learning-material/top-bubble/Potenziale'}

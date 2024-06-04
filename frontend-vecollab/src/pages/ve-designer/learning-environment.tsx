@@ -152,8 +152,8 @@ export default function LearningEnvironment() {
                                     <div className={'text-center mb-20'}>optional</div>
                                     <div className="mt-4 flex flex-col justify-center items-center">
                                         <textarea
-                                            rows={5}
-                                            placeholder="Lernumgebung beschreiben"
+                                            rows={3}
+                                            placeholder="z.B. Moodle, ILIAS, Teams, etc."
                                             className="border border-gray-300 rounded-lg w-3/4 p-2"
                                             {...methods.register('learningEnv', {
                                                 maxLength: {
