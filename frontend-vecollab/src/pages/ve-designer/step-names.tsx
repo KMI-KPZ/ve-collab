@@ -299,6 +299,7 @@ export default function StepNames() {
             prevpage={prevpage}
             nextpage={nextpage}
             setProgress={setSideMenuStepsProgress}
+            progressBarStage={1}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

@@ -246,6 +246,7 @@ export default function FinePlanner() {
             prevpage={prevpage}
             nextpage={nextpage}
             sideMenuStepsData={sideMenuStepsData}
+            progressBarStage={2}
             setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
