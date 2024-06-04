@@ -203,7 +203,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                     </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
-                            <MdPublic title='Plan ist als "good practice" markiert' />
+                            <MdPublic title='Plan ist als "Good Practice" markiert' />
                         </div>
                     )}
                     {/* {(plan.author == username && plan.read_access.length > 1) && (

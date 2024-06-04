@@ -7,7 +7,7 @@ export const sideMenuStepsData: SideMenuStep[] = [
         link: '/ve-designer/name',
     },
     {
-        text: 'Partner',
+        text: 'Partner:innen',
         id: 'partners',
         link: '/ve-designer/partners',
     },

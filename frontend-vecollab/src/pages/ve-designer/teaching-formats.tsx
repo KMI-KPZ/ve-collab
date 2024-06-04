@@ -374,7 +374,7 @@ export default function Realization() {
                                     <div className="p-6 w-full">
                                         <div className="flex items-center">
                                             <p className="w-72">
-                                                Wird der VE durch eine physische Mobilität ergänzt /
+                                                Wird der VE durch gemeinsame Präsenztreffen ergänzt /
                                                 begleitet?
                                             </p>
                                             <div className="flex w-40 justify-end gap-x-5">

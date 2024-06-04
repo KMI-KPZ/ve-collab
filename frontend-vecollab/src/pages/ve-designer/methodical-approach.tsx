@@ -139,7 +139,7 @@ export default function MethodicalApproach() {
                             <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
                                 <div>
                                     <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        Welche methodischen Ansätze kommen im VE zum Einsatz?
+                                        Welcher methodische Ansatz liegt deinem VE zugrunde?
                                         <Tooltip tooltipsText="Mehr zu Methodik findest du hier in den Selbstlernmaterialien …">
                                             <Link
                                                 target="_blank"
@@ -153,7 +153,7 @@ export default function MethodicalApproach() {
                                     <div className="mt-4 flex flex-col justify-center items-center">
                                         <textarea
                                             rows={5}
-                                            placeholder="z.B. ..."
+                                            placeholder="z.B. aufgabenbasiertes Lernen, problembasiertes / problemorientiertes Lernen, forschendes Lernen, game-based learning, etc."
                                             className="border border-gray-300 rounded-lg w-3/4 p-2"
                                             {...methods.register('methodicalApproach', {
                                                 maxLength: {

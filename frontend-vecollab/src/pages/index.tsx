@@ -36,7 +36,7 @@ export default function Home() {
                             </div>
                         </> : <WhiteBox><div className='text-center lg:text-xl'>
                             <h2 className='text-2xl m-10'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
-                            <p>Logge dich ein um einen neuen VA zu planen</p>
+                            <p>Logge dich ein, um einen neuen VA zu planen.</p>
                             <ButtonPrimary label='Login' onClick={() => signIn('keycloak')} classNameExtend='m-10' />
                         </div></WhiteBox>
                     } </>
