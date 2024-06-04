@@ -16,6 +16,8 @@ interface Props {
     prevpage?: string
     nextpage?: string
     sideMenuStepsData?: SideMenuStep[]
+    progressBarStage?: number
+    preventToLeave?: boolean
 
     setProgress: (progress: ISideProgressBarStates) => void
     planerDataCallback: (data: any) => void
@@ -32,6 +34,8 @@ export default function Wrapper({
     prevpage,
     nextpage,
     sideMenuStepsData,
+    progressBarStage=0,
+    preventToLeave=true,
     setProgress,
     planerDataCallback,
     submitCallback }: Props
@@ -54,6 +58,7 @@ export default function Wrapper({
         const handleClickOutside = (e: MouseEvent) => lastClickEvent = e
 
         const handleBrowseAway = (nextlink: any) => {
+            if (preventToLeave === false) return
             if (wrapperRef.current && lastClickEvent && !wrapperRef.current.contains(lastClickEvent.target as Node)) {
                 //  may prompt only if we have unsaved changes?!
                 // if (!methods.formState.isDirty) return
@@ -78,7 +83,7 @@ export default function Wrapper({
             router.events.off('routeChangeStart', handleBrowseAway);
         };
 
-    }, [wrapperRef, methods, router]);
+    }, [wrapperRef, methods, router, preventToLeave]);
 
     useEffect(() => {
         if (!router.isReady || status === 'loading' || !session) {
@@ -92,6 +97,11 @@ export default function Wrapper({
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
             data => {
                 setLoading(false)
+                if (!data || !data.plan) {
+                    // TODO show error
+                    console.log('Error: failed to fetch plannner data', {data});
+                    return
+                }
                 if (Object.keys(data.plan.progress).length) {
                     setProgress(data.plan.progress);
                 }
@@ -134,7 +144,7 @@ export default function Wrapper({
                     <div className="flex flex-grow justify-center">
                         <div className="flex flex-col">
                             <HeadProgressBarSection
-                                stage={0}
+                                stage={progressBarStage}
                                 linkFineStep={planerData?.steps[0]?.name}
                             />
 
@@ -210,10 +220,10 @@ export default function Wrapper({
                         </div>
                     </div>
                     <SideProgressBarWithReactHookFormWithoutPopUp
-                        progressState={planerData?.progress}
-                        onSubmit={handleSubmit}
-                        sideMenuStepsData={sideMenuStepsData}
-                    />
+                            progressState={planerData?.progress}
+                            onSubmit={handleSubmit}
+                            sideMenuStepsData={sideMenuStepsData}
+                        />
                 </div>
             </FormProvider>
         </div>
