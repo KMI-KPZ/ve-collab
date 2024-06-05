@@ -48,6 +48,7 @@ export interface IFineStepFrontend {
     name: string;
     workload: number;
     learning_goal: string;
+    learning_activity: string;
     has_tasks: boolean;
     tasks: ITaskFrontend[];
     evaluation_tools: string[];
@@ -62,6 +63,7 @@ export interface IFineStep {
     name: string;
     workload: number;
     learning_goal: string;
+    learning_activity: string;
     has_tasks: boolean;
     tasks: ITask[];
     evaluation_tools: string[];
@@ -75,6 +77,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     name: '',
     workload: 0,
     learning_goal: '',
+    learning_activity: '',
     evaluation_tools: ['', ''],
     has_tasks: false,
     tasks: [
@@ -92,6 +95,7 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
         formValues.workload === 0 &&
         formValues.learning_goal === '' &&
+        formValues.learning_activity === '' &&
         formValues.evaluation_tools.every((tool) => {
             return tool === '';
         }) &&
