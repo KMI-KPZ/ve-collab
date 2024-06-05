@@ -53,6 +53,7 @@ export const defaultFineStepData: IFineStep = {
     timestamp_from: '',
     timestamp_to: '',
     learning_goal: '',
+    learning_activity: '',
     has_tasks: false,
     tasks: [
         {

@@ -246,6 +246,7 @@ class VEPlanHandler(BaseHandler):
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
                                 "learning_goal": "test",
+                                "learning_activity": "test",
                                 "has_tasks": False,
                                 "tasks": [
                                     {
@@ -475,6 +476,7 @@ class VEPlanHandler(BaseHandler):
                                 "timestamp_from": "2000-01-01",
                                 "timestamp_to": "2000-01-08",
                                 "learning_goal": "test",
+                                "learning_activity": "test",
                                 "has_tasks": False,
                                 "tasks": [
                                     {
@@ -789,6 +791,7 @@ class VEPlanHandler(BaseHandler):
                         "timestamp_from": "2000-01-01",
                         "timestamp_to": "2000-01-08",
                         "learning_goal": "test",
+                        "learning_activity": "test",
                         "has_tasks": False,
                         "tasks": [
                             {
