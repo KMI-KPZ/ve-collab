@@ -154,6 +154,7 @@ class BaseResourceTestCase(TestCase):
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
             learning_goal="test",
+            learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
             evaluation_tools=["test", "test"],

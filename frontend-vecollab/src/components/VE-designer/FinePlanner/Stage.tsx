@@ -143,6 +143,28 @@ export default function Stage({ fineStep }: Props) {
                         </p>
                     </div>
                 </div>
+                <div className="mt-4 flex">
+                    <div className="w-1/6 flex items-center">
+                        <label htmlFor="learning_goal" className="px-2 py-2">
+                            Lernaktivität(en)
+                        </label>
+                    </div>
+                    <div className="w-5/6">
+                        <input
+                            {...register(`learning_activity`, {
+                                maxLength: {
+                                    value: 500,
+                                    message: 'Bitte nicht mehr als 500 Zeichen.',
+                                },
+                            })}
+                            placeholder="mehrere durch Komma trennen"
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {formState.errors?.learning_activity?.message}
+                        </p>
+                    </div>
+                </div>
                 <div className="mt-4 flex justify-center">
                     <p>Möchten Sie Lernaktivität(en) im Designer genauer ausarbeiten?</p>
                     <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
