@@ -77,7 +77,7 @@ export default function SideProgressbarSectionFinePlanner({
                             alt="Ve Collab Logo"
                         ></Image>
                         <p
-                            className={`ml-3 font-konnect ${
+                            className={`ml-3 text-left font-konnect ${
                                 isCurrentPage ? 'text-ve-collab-blue font-extrabold' : ''
                             }`}
                         >

@@ -128,13 +128,14 @@ export default function Stage({ fineStep }: Props) {
                         </label>
                     </div>
                     <div className="w-5/6">
-                        <input
+                        <textarea
                             {...register(`learning_goal`, {
                                 maxLength: {
                                     value: 500,
                                     message: 'Bitte nicht mehr als 500 Zeichen.',
                                 },
                             })}
+                            rows={2}
                             placeholder="mehrere durch Komma trennen"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -150,13 +151,14 @@ export default function Stage({ fineStep }: Props) {
                         </label>
                     </div>
                     <div className="w-5/6">
-                        <input
+                        <textarea
                             {...register(`learning_activity`, {
                                 maxLength: {
                                     value: 500,
                                     message: 'Bitte nicht mehr als 500 Zeichen.',
                                 },
                             })}
+                            rows={2}
                             placeholder="mehrere durch Komma trennen"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
