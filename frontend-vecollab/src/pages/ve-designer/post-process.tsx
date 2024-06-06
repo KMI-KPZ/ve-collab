@@ -1,6 +1,6 @@
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { FiInfo } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import WhiteBox from '@/components/Layout/WhiteBox';
@@ -10,6 +10,8 @@ import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, useForm } from 'react-hook-form';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { ISideProgressBarStates, initialSideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 
 export interface EvaluationFile {
     file_id: string;
@@ -29,6 +31,9 @@ export default function PostProcess() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [uploadFile, setUploadFile] = useState<Blob>();
+    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    );
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -73,36 +78,15 @@ export default function PostProcess() {
         setUploadFile(undefined);
     };
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            return;
+    const setPlanerData = useCallback((plan: IPlan) => {
+        if (plan.is_good_practise !== null) {
+            methods.setValue('share', plan.is_good_practise);
         }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-
-        if (!session) return
-
-        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-        (data: any) => {
-            if (!data.plan) return
-            methods.setValue('share', data.plan.is_good_practise);
-            methods.setValue('veModel', data.plan.underlying_ve_model);
-            methods.setValue('reflection', data.plan.reflection);
-            methods.setValue('evaluation', data.plan.good_practise_evaluation);
-            methods.setValue('evaluationFile', data.plan.evaluation_file);
-        });
-    }, [session, status, router, methods]);
-
-    // TODO use setPlanerData
-    //  but currently we dive into a recursion ... ;()
-    // const setPlanerData = useCallback((plan: IPlan) => {
-    //     console.log('setPlanerData', {plan});
-    //     methods.setValue('share', plan.is_good_practise);
-    // }, [methods]);
+        methods.setValue('veModel', plan.underlying_ve_model as string);
+        methods.setValue('reflection', plan.reflection as string);
+        methods.setValue('evaluation', plan.good_practise_evaluation as string);
+        methods.setValue('evaluationFile', plan.evaluation_file as EvaluationFile);
+    }, [methods]);
 
     // const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
     const onSubmit = async () => {
@@ -144,12 +128,12 @@ export default function PostProcess() {
 
     return (
         <Wrapper
-            methods={useForm<any>({})}
-            setProgress={() => {}}
+            methods={methods}
+            setProgress={setSideMenuStepsProgress}
             preventToLeave={false}
             progressBarStage={4}
             sideMenuStepsData={[]}
-            planerDataCallback={d => {}}
+            planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
             <div>
@@ -257,7 +241,6 @@ export default function PostProcess() {
                                             >
                                                 <div className="flex justify-center">
                                                     <RxFile size={40} />
-                                                    {/* // TODO preview for certain file types */}
                                                 </div>
                                                 <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
                                                     {methods.getValues('evaluationFile') .file_name}
