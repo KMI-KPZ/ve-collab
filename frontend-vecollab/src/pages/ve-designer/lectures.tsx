@@ -162,11 +162,6 @@ export default function Lectures() {
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?-,',
-                                    },
                                 })}
                             />
                             <p className="text-red-600 pt-2">
@@ -230,11 +225,6 @@ export default function Lectures() {
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
-                                    },
                                 })}
                             />
                             <p className="text-red-600 pt-2">
@@ -258,11 +248,6 @@ export default function Lectures() {
                                         value: 500,
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
                                     },
                                 })}
                             />
