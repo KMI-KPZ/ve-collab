@@ -10,13 +10,8 @@ import {
     IMenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { mainMenu } from '@/data/sideMenuSteps';
-import { SubmitHandler, UseFormReturn, useFormContext } from 'react-hook-form';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
-
-
-import Link from 'next/link';
+import { UseFormReturn } from 'react-hook-form';
 import { MdArrowDropDown, MdArrowRight } from 'react-icons/md';
-import { IoMdArrowDropleft } from 'react-icons/io';
 import { usePathname } from 'next/navigation';
 import { useGetPlanById } from '@/lib/backend';
 
@@ -25,7 +20,6 @@ interface Props {
     submitCallback: (data: any) => void,
     handleInvalidData: (data: any, continueLink: string) => void,
     progressState?: ISideProgressBarStates;
-    // stageInMenu?: string
     // onSubmit: SubmitHandler<any>;
 }
 
@@ -33,7 +27,6 @@ export default function Sidebar({
     methods,
     submitCallback,
     progressState,
-    // stageInMenu='generally',
     handleInvalidData,
     // onSubmit,
 }: Props): JSX.Element {
