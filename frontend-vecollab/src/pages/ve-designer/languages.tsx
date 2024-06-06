@@ -140,10 +140,6 @@ export default function Languages() {
                                 value: 500,
                                 message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
-                            pattern: {
-                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                            },
                         })}
                     />
                     <button type="button" onClick={() => remove(index)}>
