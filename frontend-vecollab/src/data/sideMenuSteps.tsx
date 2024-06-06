@@ -1,6 +1,10 @@
-import { SideMenuStep } from '@/interfaces/ve-designer/sideProgressBar';
+import imageGeneralInformation from '@/images/icons/progressBar/topProgressBar/generalInformation.svg';
+import imageStagePlanner from '@/images/icons/progressBar/topProgressBar/stagePlanner.svg';
+import imageFinePlanner from '@/images/icons/progressBar/topProgressBar/finePlanner.svg';
+import imageFinish from '@/images/icons/progressBar/topProgressBar/finish.svg';
+import { IMenuData, ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 
-export const sideMenuStepsData: SideMenuStep[] = [
+const itemsAllgemein: ISubmenuData[] = [
     {
         text: 'Projektname',
         id: 'name',
@@ -66,9 +70,59 @@ export const sideMenuStepsData: SideMenuStep[] = [
         id: 'formalities',
         link: '/ve-designer/checklist',
     },
+];
+
+const itemsEtappenplaner: ISubmenuData[] = [
     {
-        text: 'Etappenplanung',
-        id: 'steps',
+        text: 'Grobplanung',
+        id: 'stepsGenerally',
         link: '/ve-designer/step-names',
     },
 ];
+
+export const mainMenu: IMenuData[] = [
+    {
+        text: 'Allgemein',
+        id: 'generally',
+        link: '',
+        image: imageGeneralInformation,
+        // submenu: getSubMenu('generally', itemsAllgemein)
+        submenu: itemsAllgemein
+    },
+    {
+        text: 'Etappenplaner',
+        id: 'steps',
+        link: '',
+        image: imageStagePlanner,
+        submenu: itemsEtappenplaner
+    },
+    {
+        text: 'Abschluss',
+        id: 'finish',
+        link: '/ve-designer/finish',
+        image: imageFinish,
+        submenu: []
+    },
+    {
+        text: 'Nachbearbeitung',
+        id: 'post-process',
+        link: '/ve-designer/post-process',
+        image: imageStagePlanner,
+        submenu: []
+    },
+];
+
+// export const getSubMenu = async (ofParent: IMenuData): Promise<ISubmenuData[]> => {
+
+//     if (ofParent.id == 'steps') {
+//         // TODO dynamically ad steps
+//         await Promise.resolve()
+//     }
+
+//     return ofParent.submenu
+
+// }
+
+// export const getMainMenu = () => {
+//     return mainMenu
+// }

@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import SideProgressBarWithReactHookFormWithoutPopUp from '@/components/VE-designer/SideProgressBarWithReactHookFormWithoutPopUp';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useRouter } from 'next/router';
@@ -8,18 +6,28 @@ import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
-import { ISideProgressBarStates, SideMenuStep } from '@/interfaces/ve-designer/sideProgressBar';
+// import { itemsAllgemein, itemsEtappenplaner, mainMenu } from '@/data/sideMenuSteps';
+import Container from '../Layout/container';
+import WhiteBox from '../Layout/WhiteBox';
+import { MdArrowForwardIos } from 'react-icons/md';
+import Header from './Header';
+import Sidebar from './Sidebar';
+import { usePathname } from 'next/navigation';
+import { mainMenu } from '@/data/sideMenuSteps';
+// import { getMainMenu } from '@/data/sideMenuSteps';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
     prevpage?: string
     nextpage?: string
-    sideMenuStepsData?: SideMenuStep[]
-    progressBarStage?: number
+    // sideMenuStepsData?: SideMenuStep[]
+    // progressBarStage?: number
     preventToLeave?: boolean
 
-    setProgress: (progress: ISideProgressBarStates) => void
+    stageInMenu?: string
+
+    // setProgress: (progress: ISideProgressBarStates) => void
     planerDataCallback: (data: any) => void
     submitCallback: (data: any) => unknown | Promise<{
         plan_id: string,
@@ -33,16 +41,17 @@ export default function Wrapper({
     methods,
     prevpage,
     nextpage,
-    sideMenuStepsData,
-    progressBarStage=0,
+    // sideMenuStepsData,
+    // progressBarStage=0,
+    stageInMenu='generally',
     preventToLeave=true,
-    setProgress,
+    // setProgress,
     planerDataCallback,
     submitCallback }: Props
 ): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
-    const [planerData, setPlanerData] = useState<any>();
+    const [planerData, setPlanerData] = useState<IPlan>();
     const [loading, setLoading] = useState(true);
     const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
         isOpen: false,
@@ -59,9 +68,10 @@ export default function Wrapper({
 
         const handleBrowseAway = (nextlink: any) => {
             if (preventToLeave === false) return
+
             if (wrapperRef.current && lastClickEvent && !wrapperRef.current.contains(lastClickEvent.target as Node)) {
                 //  may prompt only if we have unsaved changes?!
-                // if (!methods.formState.isDirty) return
+                if (!methods.formState.isDirty) return
                 //      console.log('handleBrowseAway', {isDirty: methods.formState.isDirty});
 
                 setPopUp({isOpen: true, continueLink: nextlink})
@@ -102,14 +112,16 @@ export default function Wrapper({
                     console.log('Error: failed to fetch plannner data', {data});
                     return
                 }
-                if (Object.keys(data.plan.progress).length) {
-                    setProgress(data.plan.progress);
-                }
+                console.log('Wrapper.fetchGET', {data});
+
+                // if (Object.keys(data.plan.progress).length) {
+                //     setProgress(data.plan.progress);
+                // }
                 setPlanerData(data.plan as IPlan);
                 planerDataCallback(data.plan as IPlan)
             }
         );
-    }, [session, status, router, planerDataCallback, setProgress]);
+    }, [session, status, router, planerDataCallback]);
 
     const handleSubmit = async (data: any) => {
         setLoading(true)
@@ -122,110 +134,155 @@ export default function Wrapper({
                 session?.accessToken
             );
         }
+        setLoading(false)
+    }
+
+    const Breadcrumb = () => {
+        const currentPath = usePathname()
+        // const mainMenuItem = mainMenu.find(a => {
+        //     return a.submenu.length ? a.submenu.some(b => b.link == currentPath) : a.link == currentPath
+        // })
+        // console.log('planer', {planerData, stageInMenu, currentPath});
+        const mainMenuItem = mainMenu.find(a => a.id == stageInMenu)
+        let subMenuItem = mainMenuItem?.submenu.find(a => a.link == currentPath)
+
+        if (stageInMenu == 'steps') {
+            const currentStep = planerData?.steps.find(a => currentPath.endsWith(a.name))
+            subMenuItem = currentStep ? {
+                    id: currentStep.name.toLowerCase(),
+                    text: currentStep.name,
+                    link: `/ve-designer/step-data/${encodeURIComponent(currentStep.name)}`
+                } : undefined
+        }
+
+        return (
+            <div className='text-normale py-2 flex items-center text-slate-500'>
+                <MdArrowForwardIos size={15} /> {mainMenuItem?.text}
+                {subMenuItem && 'text' in subMenuItem && (
+                    <><MdArrowForwardIos size={15} /> {subMenuItem.text}</>
+                )}
+            </div>
+        );
     }
 
     return (
-        <div ref={wrapperRef}>
-            <FormProvider {...methods}>
-                <PopupSaveData
-                    isOpen={popUp.isOpen}
-                    handleContinue={async () => {
-                        await router.push({
-                            pathname: popUp.continueLink,
-                            query: popUp.continueLink.startsWith('/ve-designer') ? {
-                                plannerId: router.query.plannerId,
-                            } : {},
-                        });
-                    }}
-                    handleCancel={() => setPopUp(prev => { return {...prev, isOpen: false}} )}
-                />
-
-                <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-                    <div className="flex flex-grow justify-center">
-                        <div className="flex flex-col">
-                            <HeadProgressBarSection
-                                stage={progressBarStage}
-                                linkFineStep={planerData?.steps[0]?.name}
+        <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
+            <Container>
+                <WhiteBox>
+                    <div className="flex flex-col">
+                        <FormProvider {...methods}>
+                            {/* TODO implement an PopUp alternative or invalid data */}
+                            <PopupSaveData
+                                isOpen={popUp.isOpen}
+                                handleContinue={async () => {
+                                    await router.push({
+                                        pathname: popUp.continueLink,
+                                        query: popUp.continueLink.startsWith('/ve-designer') ? {
+                                            plannerId: router.query.plannerId,
+                                        } : {},
+                                    });
+                                }}
+                                handleCancel={() => setPopUp(prev => { return {...prev, isOpen: false}} )}
                             />
 
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
+                            <Header
+                                methods={methods}
+                                submitCallback={handleSubmit}
+                                handleUnsavedData={(data: any, continueLink: string) => {
+                                    setPopUp({isOpen: true, continueLink: continueLink})
+                                }}
 
-                                {loading &&
-                                    (<>
-                                        <div className='absolute w-full h-full bg-slate-50/50 blur-2xl'></div>
-                                        <div className='absolute'><LoadingAnimation /></div>
-                                    </>
-                                )}
+                            />
 
-                                {children}
+                            <div className='flex flex-row divide-x gap-1'>
 
-                                <div className="flex w-full justify-between">
-                                    <div>
-                                        {typeof prevpage !== 'undefined' && (
-                                            <button
-                                                type="button"
-                                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                <Sidebar
+                                    methods={methods}
+                                    submitCallback={handleSubmit}
+                                    handleInvalidData={(data: any, continueLink: string) => {
+                                        setPopUp({isOpen: true, continueLink: continueLink})
+                                    }}
+                                    progressState={planerData?.progress}
+                                />
 
-                                                onClick={methods.handleSubmit(
-                                                    // valid
-                                                    async (data: any) => {
-                                                        await handleSubmit(data)
+                                <form className="w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
 
-                                                        router.push({
-                                                            pathname: prevpage,
-                                                            query: { plannerId: router.query.plannerId }
-                                                        })
-                                                    },
-                                                    // invalid
-                                                    async () => {
-                                                        setPopUp({isOpen: true, continueLink: prevpage})
-                                                    }
-                                                )}
-                                            >
-                                                Zurück
-                                            </button>
-                                        )}
+                                    <Breadcrumb />
+
+                                    {loading &&
+                                        (<>
+                                            <div className='absolute w-full h-full bg-slate-50/50 blur-2xl'></div>
+                                            <div className='absolute'><LoadingAnimation /></div>
+                                        </>
+                                    )}
+
+                                    {children}
+
+                                    <div className='my-3 border-t py-3 flex justify-between'>
+
+                                        <div className="basis-20">
+                                            {typeof prevpage !== 'undefined' && (
+                                                <button
+                                                    type="button"
+                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+
+
+                                                    onClick={methods.handleSubmit(
+                                                        // valid
+                                                        async (data: any) => {
+                                                            await handleSubmit(data)
+
+                                                            router.push({
+                                                                pathname: prevpage,
+                                                                query: { plannerId: router.query.plannerId }
+                                                            })
+                                                        },
+                                                        // invalid
+                                                        async (data: any) => {
+                                                            setPopUp({isOpen: true, continueLink: prevpage})
+                                                        }
+                                                    )}
+                                                >
+                                                    Zurück
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className='basis-20'>
+                                            {typeof nextpage !== 'undefined' && (
+                                                <button
+                                                    type="button"
+                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+
+                                                    onClick={methods.handleSubmit(
+                                                        // valid
+                                                        async (data: any) => {
+                                                            await handleSubmit(data)
+
+                                                            router.push({
+                                                                pathname: nextpage,
+                                                                query: { plannerId: router.query.plannerId }
+                                                            })
+                                                        },
+                                                        // invalid
+                                                        async () => {
+                                                            setPopUp({isOpen: true, continueLink: nextpage})
+                                                        }
+                                                    )}
+                                                >
+                                                    Weiter
+                                                </button>
+                                            )}
+                                        </div>
 
                                     </div>
-                                    <div>
-                                        {typeof nextpage !== 'undefined' && (
-                                            <button
-                                                type="button"
-                                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
+                                </form>
+                            </div>
+                        </FormProvider>
 
-                                                onClick={methods.handleSubmit(
-                                                    // valid
-                                                    async (data: any) => {
-                                                        await handleSubmit(data)
-
-                                                        router.push({
-                                                            pathname: nextpage,
-                                                            query: { plannerId: router.query.plannerId }
-                                                        })
-                                                    },
-                                                    // invalid
-                                                    async () => {
-                                                        setPopUp({isOpen: true, continueLink: nextpage})
-                                                    }
-                                                )}
-                                            >
-                                                Weiter
-                                            </button>
-                                        )}
-
-                                    </div>
-                                </div>
-
-                            </form>
-                        </div>
                     </div>
-                    <SideProgressBarWithReactHookFormWithoutPopUp
-                            progressState={planerData?.progress}
-                            onSubmit={handleSubmit}
-                            sideMenuStepsData={sideMenuStepsData}
-                        />
-                </div>
-            </FormProvider>
+                </WhiteBox>
+            </Container>
         </div>
     );
 }

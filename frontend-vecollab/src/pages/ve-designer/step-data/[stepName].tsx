@@ -7,7 +7,7 @@ import {
     ISideProgressBarStates,
     ISideProgressBarStateSteps,
     ProgressState,
-    SideMenuStep,
+    ISubmenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
@@ -125,7 +125,7 @@ export default function FinePlanner() {
     });
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
+    const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -163,10 +163,10 @@ export default function FinePlanner() {
     },[methods, stepName]);
 
     useEffect(() => {
-        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
+        const sideMenuStepsDataCopy: ISubmenuData[] = [...sideMenuStepsData];
         const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
             // courseFormat generate Finestep methode rausnehmen
-            (item: SideMenuStep): boolean => item.text === currentFineStep.name // with id (encode einfach)
+            (item: ISubmenuData): boolean => item.text === currentFineStep.name // with id (encode einfach)
         ); // -1 if not found
 
         setNextpage(
@@ -232,7 +232,7 @@ export default function FinePlanner() {
         ]
     };
 
-    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+    const generateSideMenuStepsData = (steps: IFineStep[]): ISubmenuData[] => {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
             text: step.name,
@@ -245,19 +245,18 @@ export default function FinePlanner() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            sideMenuStepsData={sideMenuStepsData}
-            progressBarStage={2}
-            setProgress={setSideMenuStepsProgress}
+            // sideMenuStepsData={sideMenuStepsData}
+            // progressBarStage={2}
+            // setProgress={setSideMenuStepsProgress}
+            stageInMenu='steps'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex justify-center">
+            <div className="">
                 <div
-                    className={
-                        'text-center font-bold text-4xl mb-2 relative w-fit'
-                    }
+                    className='flex items-center font-bold text-2xl mb-2 relative h-14 mb-16'
                 >
-                    Feinplanung
+                    Etappe: {currentFineStep.name}
                     <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
                         <Link
                             target="_blank"
@@ -270,8 +269,8 @@ export default function FinePlanner() {
                     </Tooltip>
                 </div>
             </div>
-            <div className={'text-center mb-20'}>
-                Beschreibt nun die einzelnen Etappen genauer
+            <div className='mb-10'>
+                Beschreibung der Etappe
             </div>
             <Stage fineStep={currentFineStep} />
         </Wrapper>

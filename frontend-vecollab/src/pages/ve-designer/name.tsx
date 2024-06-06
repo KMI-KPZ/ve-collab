@@ -49,19 +49,19 @@ export default function Name() {
         <Wrapper
             methods={methods}
             nextpage='/ve-designer/partners'
-            setProgress={setSideMenuStepsProgress}
+            // setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-                <div className="flex-grow">
-                    <div className={'text-center font-bold text-4xl mb-24'}>
+                <div className="">
+                    <div className={'flex items-center font-bold text-2xl mb-2 relative h-14 mb-16'}>
                         Wie soll das Projekt heißen?
                     </div>
                     <div className="flex flex-col justify-center">
                         <input
                             type="text"
                             placeholder="Name eingeben"
-                            className="border border-gray-300 rounded-md p-2 w-full"
+                            className="border border-gray-300 rounded-md p-2"
                             {...methods.register('name', {
                                 required: {
                                     value: true,

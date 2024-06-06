@@ -1,4 +1,12 @@
-export interface SideMenuStep {
+export interface IMenuData {
+    id: string;
+    text: string;
+    link: string;
+    image: string;
+    submenu: ISubmenuData[]
+}
+
+export interface ISubmenuData {
     readonly text: string;
     readonly id: string;
     readonly link: string;
