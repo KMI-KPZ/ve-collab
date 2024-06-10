@@ -27,7 +27,7 @@ export default function MethodicalApproach() {
         initialSideProgressBarStates
     );
     const prevpage = '/ve-designer/learning-goals'
-    const nextpage = '/ve-designer/topics'
+    const nextpage = '/ve-designer/evaluation'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

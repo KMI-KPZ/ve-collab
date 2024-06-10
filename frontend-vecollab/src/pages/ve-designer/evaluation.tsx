@@ -51,7 +51,7 @@ export default function Evaluation() {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const prevpage = '/ve-designer/topics'
+    const prevpage = '/ve-designer/methodical-approach'
     const nextpage = '/ve-designer/teaching-formats'
 
     const methods = useForm<FormValues>({

@@ -1,6 +1,5 @@
 import imageGeneralInformation from '@/images/icons/progressBar/topProgressBar/generalInformation.svg';
 import imageStagePlanner from '@/images/icons/progressBar/topProgressBar/stagePlanner.svg';
-import imageFinePlanner from '@/images/icons/progressBar/topProgressBar/finePlanner.svg';
 import imageFinish from '@/images/icons/progressBar/topProgressBar/finish.svg';
 import { IMenuData, ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 
@@ -31,7 +30,7 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/target-groups',
     },
     {
-        text: 'Lernziele',
+        text: 'Lerninhalte',
         id: 'learning_goals',
         link: '/ve-designer/learning-goals',
     },
@@ -39,11 +38,6 @@ const itemsAllgemein: ISubmenuData[] = [
         text: 'Methodischer Ansatz',
         id: 'methodical_approach',
         link: '/ve-designer/methodical-approach',
-    },
-    {
-        text: 'Thema',
-        id: 'topics',
-        link: '/ve-designer/topics',
     },
     {
         text: 'Bewertung und Evaluation',
