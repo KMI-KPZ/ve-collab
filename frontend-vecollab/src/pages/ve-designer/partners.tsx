@@ -315,12 +315,12 @@ export default function Partners() {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fieldsExternalParties.map((externalParty, index) => (
-            <div key={externalParty.id} className="my-2">
-                <div className="flex justify-center items-center">
+            <div key={externalParty.id} className="my-2 w-1/2">
+                <div className="flex">
                     <input
                         type="text"
                         placeholder="Externen eingeben"
-                        className="border border-gray-300 rounded-lg p-2 mr-2"
+                        className="grow border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`, {
                             maxLength: {
                                 value: 500,
@@ -343,6 +343,8 @@ export default function Partners() {
 
     return (
         <Wrapper
+            title='Projektpartner'
+            subtitle='Wer ist am Projekt beteiligt?'
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -350,33 +352,13 @@ export default function Partners() {
             submitCallback={onSubmit}
         >
             <div>
-                <div className="flex">
-                    <div
-                        className={
-                            'text-center font-bold text-4xl mb-2 relative'
-                        }
-                    >
-                        Wer ist am Projekt beteiligt?
-                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                            <Link
-                                target="_blank"
-                                href={
-                                    '/learning-material/left-bubble/Partnersuche'
-                                }
-                            >
-                                <PiBookOpenText size={30} color="#00748f" />
-                            </Link>
-                        </Tooltip>
-                    </div>
-                </div>
-                <div className={'text-center mb-20'}>optional</div>
-                <div className={'text-center font-bold text-2xl mb-8'}>
+                <div className={'font-bold text-xl mb-2'}>
                     Beteiligte
                 </div>
                 {fieldsPartners.map((partner, index) => (
                     <div
                         key={partner.id}
-                        className=" flex my-2 justify-center items-center gap-x-3"
+                        className="flex w-1/2 my-2 gap-x-3"
                     >
                         {createableAsyncSelect(
                             methods.control,
@@ -388,7 +370,7 @@ export default function Partners() {
                         </button>
                     </div>
                 ))}
-                <div className="flex justify-center mt-4">
+                <div className="mt-4">
                     <button
                         className="p-4 bg-white rounded-3xl shadow-2xl"
                         type="button"
@@ -400,11 +382,11 @@ export default function Partners() {
                     </button>
                 </div>
                 <div>
-                    <div className={'text-center font-bold text-2xl mb-8 mt-10'}>
+                    <div className={'font-bold text-xl mb-2 mt-10'}>
                         Extern Beteiligte
                     </div>
                     {renderExternalPartiesInputs()}
-                    <div className="flex justify-center mt-4">
+                    <div className="mt-4">
                         <button
                             className="p-4 bg-white rounded-3xl shadow-2xl"
                             type="button"

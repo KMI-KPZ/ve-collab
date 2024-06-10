@@ -230,16 +230,14 @@ export default function Lectures() {
 
     return (
         <Wrapper
+            title='Lehrveranstaltungen'
+            subtitle='Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?'
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'text-center font-bold text-4xl mb-2'}>
-                Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?
-            </div>
-            <div className={'text-center mb-20'}>optional</div>
             <div className="flex flex-wrap justify-center">
                 {renderLecturesInputs()}
             </div>

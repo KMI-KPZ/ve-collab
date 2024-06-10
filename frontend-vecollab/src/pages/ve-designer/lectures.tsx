@@ -151,7 +151,26 @@ export default function Lectures() {
                                 <option value="Fachhochschule/University of Applied Sciences">
                                     Fachhochschule/University of Applied Sciences
                                 </option>
-                                <option value="Berufsschule">Berufsschule</option>
+                            {/* <div className={'flex justify-between items-center	 mt-2 mb-2'}>
+                    <h2 className='font-bold text-2xl'>
+                        Projektpartner
+                    </h2>
+                    <div className=''>
+                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
+                            <Link
+                                target="_blank"
+                                href={
+                                    '/learning-material/left-bubble/Partnersuche'
+                                }
+                                className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
+                            >
+                                <PiBookOpenText size={30} color="#00748f" />
+                            </Link>
+                        </Tooltip>
+                    </div>
+                </div>
+                <p className='text-xl text-slate-600 mb-4'>Wer ist am Projekt beteiligt?</p> */}
+                    <option value="Berufsschule">Berufsschule</option>
                                 <option value="Schule – Primärbereich">
                                     Schule – Primärbereich
                                 </option>
@@ -244,6 +263,8 @@ export default function Lectures() {
 
     return (
         <Wrapper
+            title='Institution'
+            subtitle='In welchen Institutionen wird der VE umgesetzt?'
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -251,10 +272,6 @@ export default function Lectures() {
             submitCallback={onSubmit}
         >
             <div>
-                <div className={'text-center font-bold text-4xl mb-2'}>
-                    In welchen Institutionen wird der VE umgesetzt?
-                </div>
-                <div className={'text-center mb-20'}>optional</div>
                 <div className={'flex flex-wrap justify-center'}>
                     {renderLecturesInputs()}
                 </div>

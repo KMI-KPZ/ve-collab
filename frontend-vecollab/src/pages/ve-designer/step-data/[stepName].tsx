@@ -244,6 +244,12 @@ export default function FinePlanner() {
 
     return (
         <Wrapper
+            title={`Etappe: ${currentFineStep.name}`}
+            subtitle='Beschreibung der Etappe'
+            tooltip={{
+                text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Etappenplanung'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -251,26 +257,6 @@ export default function FinePlanner() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="">
-                <div
-                    className='flex items-center font-bold text-2xl mb-2 relative h-14 mb-16'
-                >
-                    Etappe: {currentFineStep.name}
-                    <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                        <Link
-                            target="_blank"
-                            href={
-                                '/learning-material/left-bubble/Etappenplanung'
-                            }
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-            </div>
-            <div className='mb-10'>
-                Beschreibung der Etappe
-            </div>
             <Stage fineStep={currentFineStep} />
         </Wrapper>
     );

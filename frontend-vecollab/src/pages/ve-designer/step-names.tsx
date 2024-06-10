@@ -298,6 +298,12 @@ export default function StepNames() {
 
     return (
         <Wrapper
+            title='Etappenplaner'
+            subtitle='Grobplanung des Ablaufs'
+            tooltip={{
+                text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Etappenplanung'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -306,26 +312,7 @@ export default function StepNames() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex justify-center">
-                <div
-                    className={
-                        'text-center font-bold text-4xl mb-2 relative w-fit'
-                    }
-                >
-                    Grobplanung des Ablaufs
-                    <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                        <Link
-                            target="_blank"
-                            href={
-                                '/learning-material/left-bubble/Etappenplanung'
-                            }
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-            </div>
-            <div className={'text-center mb-20'}>
+            <div className={'mb-4'}>
                 Erstellt beliebig viele Etappen und legt für jede Etappe
                 einen Zeitraum fest. Wichtig: Jede Phase braucht einen
                 individuellen Namen (z.B. Kennenlernphase I, Kennenlernphase

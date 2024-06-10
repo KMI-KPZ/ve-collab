@@ -79,8 +79,8 @@ export default function Languages() {
 
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fields.map((language, index) => (
-            <div key={language.id} className="mt-2 flex flex-col justify-center items-center">
-                <div className="flex justify-center items-center w-full">
+            <div key={language.id} className="mt-2 flex flex-col items-center">
+                <div className="flex items-center w-full">
                     <input
                         type="text"
                         placeholder="Sprache eingeben"
@@ -111,28 +111,22 @@ export default function Languages() {
 
     return (
         <Wrapper
+            title='Sprachen'
+            subtitle='In welchen Sprachen findet der VE (hauptsächlich) statt?'
+            tooltip={{
+                text: 'Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/bottom-bubble/sprachliche%20Aspekte'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                In welchen Sprachen findet der VE (hauptsächlich) statt?
-                <Tooltip tooltipsText="Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …">
-                    <Link
-                        target="_blank"
-                        href={'/learning-material/bottom-bubble/sprachliche%20Aspekte'}
-                    >
-                        <PiBookOpenText size={30} color="#00748f" />
-                    </Link>
-                </Tooltip>
-            </div>
-            <div className={'text-center mb-20'}>optional</div>
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col ">
                 {renderLanguagesInputs()}
             </div>
-            <div className="flex justify-center mt-4">
+            <div className="flex  mt-4">
                 <button
                     className="p-4 bg-white rounded-3xl shadow-2xl"
                     type="button"

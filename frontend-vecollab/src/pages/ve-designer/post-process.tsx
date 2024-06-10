@@ -131,37 +131,19 @@ export default function PostProcess() {
 
     return (
         <Wrapper
+            title='Nachbearbeitung'
+            subtitle='kehre hierher zurück, nachdem du den VE durchgeführt hast'
+            tooltip={{
+                text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Etappenplanung'
+            }}
             methods={methods}
             preventToLeave={false}
             stageInMenu='post-process'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div>
-                <div className="flex justify-center">
-                    <div
-                        className={
-                            'text-center font-bold text-4xl mb-2 relative w-fit'
-                        }
-                    >
-                        Nach dem VE
-                        <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                            <Link
-                                target="_blank"
-                                href={
-                                    '/learning-material/left-bubble/Etappenplanung'
-                                }
-                            >
-                                <FiInfo size={30} color="#00748f" />
-                            </Link>
-                        </Tooltip>
-                    </div>
-                </div>
-                <div className={'text-center mb-10'}>
-                    kehre hierher zurück, nachdem du den VE durchgeführt hast
-                </div>
-            </div>
-            <WhiteBox>
+
                 <div className="p-6 w-[60rem] divide-y">
                     <div className="flex items-center justify-between mb-3">
                         <div>
@@ -302,7 +284,7 @@ export default function PostProcess() {
                         </ol>
                     )}
                 </div>
-            </WhiteBox>
+
             <div className="flex justify-between w-full max-w-xl">
                 <div>
                     <Link

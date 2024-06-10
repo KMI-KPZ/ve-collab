@@ -15,6 +15,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import WhiteBox from '@/components/Layout/WhiteBox';
 
 export interface CheckListPartner {
     username: string;
@@ -294,36 +295,30 @@ export default function Checklist() {
 
     return (
         <Wrapper
+            title='Checkliste'
+            subtitle='An alles gedacht?'
+            tooltip={{
+                text: 'Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/top-bubble/Herausforderungen'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-           <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                An alles gedacht?
-                <Tooltip tooltipsText="Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …">
-                    <Link
-                        target="_blank"
-                        href={
-                            '/learning-material/top-bubble/Herausforderungen'
-                        }
-                    >
-                        <PiBookOpenText size={30} color="#00748f" />
-                    </Link>
-                </Tooltip>
-            </div>
-            <div className={'text-center mb-4'}>optional</div>
-            <div className={'text-center'}>
+           <div>
                 Bevor es mit der inhaltlichen und didaktischen Planung
                 losgeht:
             </div>
-            <div className="text-center mb-10">
+            <div className="mb-2">
                 Sind die folgenden Bedingungen bei allen Beteiligten
                 geklärt?
             </div>
             <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
-                {renderCheckBoxes()}
+                <WhiteBox>
+                    {renderCheckBoxes()}
+                </WhiteBox>
             </div>
         </Wrapper>
     );

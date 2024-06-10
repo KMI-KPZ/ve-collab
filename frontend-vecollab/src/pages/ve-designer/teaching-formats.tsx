@@ -259,6 +259,12 @@ export default function Realization() {
 
     return (
         <Wrapper
+            title='(Digitale) Formate'
+            subtitle='In welchem Format / welchen Formaten wird der VE umgesetzt?'
+            tooltip={{
+                text: 'Mehr zu Formaten findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -266,19 +272,7 @@ export default function Realization() {
             submitCallback={onSubmit}
         >
             <div>
-                <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                    In welchem Format / welchen Formaten wird der VE umgesetzt?
-                    <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
-                        <Link
-                            target="_blank"
-                            href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-                <div className={'text-center mb-20'}>optional</div>
-                <div className="flex justify-center items-center">
+                <div className="flex items-center">
                     <label htmlFor="courseFormat" className="px-2 py-2">
                         Format:
                     </label>

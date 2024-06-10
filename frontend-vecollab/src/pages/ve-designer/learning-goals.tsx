@@ -207,6 +207,9 @@ export default function LearningGoals() {
 
     return (
         <Wrapper
+            title="Lernziele"
+            subtitle='1. Welche fachlichen Lernziele sollen im VE erreicht werden?'
+            tooltip={{text: 'Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …', link: '/learning-material/top-bubble/Potenziale'}}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -214,23 +217,11 @@ export default function LearningGoals() {
             submitCallback={onSubmit}
         >
             <div>
-                <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                    1. Welche fachlichen Lernziele sollen im VE erreicht werden?
-                    <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
-                        <Link
-                            target="_blank"
-                            href={'/learning-material/top-bubble/Potenziale'}
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-                <div className={'text-center mb-4'}>optional</div>
-                <div className="flex flex-wrap justify-center">
+                <div className="flex flex-wrap">
                     {fields.map((individualLearningGoalPerPartner, index) => (
                         <div
                             key={individualLearningGoalPerPartner.id}
-                            className="flex justify-center mx-2"
+                            className="flex mx-2"
                         >
                             <WhiteBox className="w-fit h-fit">
                                 <div className="flex flex-col">
@@ -259,24 +250,26 @@ export default function LearningGoals() {
                 </div>
             </div>
             <div className="mt-12">
-                <div className={'text-center font-bold text-4xl mb-2 relative'}>
+                <div className={'flex justify-between items-center font-bold text-slate-600 text-xl mb-2 relative'}>
                     2. Welche weitere übergeordnete Lernziele werden verfolgt?
                     <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Potenziale'}
+                            className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
                         >
                             <PiBookOpenText size={30} color="#00748f" />
                         </Link>
                     </Tooltip>
                 </div>
-                <div className={'text-center mb-10'}>optional</div>
 
-                {createableSelect(
-                    methods.control,
-                    'majorLearningGoals',
-                    options
-                )}
+                <div className='w-1/2'>
+                    {createableSelect(
+                        methods.control,
+                        'majorLearningGoals',
+                        options
+                    )}
+                </div>
             </div>
         </Wrapper>
     );

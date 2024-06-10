@@ -168,7 +168,7 @@ export default function Evaluation() {
 
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
-            <div key={evaluationPerPartner.id} className="flex justify-center mx-2">
+            <div key={evaluationPerPartner.id} className="flex mx-2">
                 <WhiteBox className="h-fit w-[28rem]">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
@@ -248,29 +248,18 @@ export default function Evaluation() {
 
     return (
         <Wrapper
+            title='Bewertung / Evaluation'
+            tooltip={{
+                text: 'Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Evaluation'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex justify-center">
-                <div className={'font-bold text-4xl mb-2 w-fit relative'}>
-                    Bewertung / Evaluation
-                    <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                        <Link
-                            target="_blank"
-                            href={
-                                '/learning-material/left-bubble/Evaluation'
-                            }
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-            </div>
-            <div className={'text-center mb-4'}>optional</div>
-            <div className="flex flex-wrap justify-center">
+            <div className="flex flex-wrap ">
                 {renderEvaluationInfoBox()}
             </div>
         </Wrapper>

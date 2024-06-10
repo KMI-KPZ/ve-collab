@@ -66,18 +66,14 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
 
     return (
         <Wrapper
+            title='Fertig'
+            subtitle='Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!'
             methods={useForm<any>()}
             preventToLeave={false}
             stageInMenu='finish'
             planerDataCallback={d => {}}
             submitCallback={d => {}}
         >
-            <div>
-                <div className={'text-center font-bold text-4xl mb-2'}>Fertig</div>
-                <div className={'text-center mb-10'}>
-                    Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!
-                </div>
-            </div>
             {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
             {feedbackFormURL && (
                 <div className="mt-4 font-bold text-lg">

@@ -84,31 +84,24 @@ export default function Topics() {
 
     return (
         <Wrapper
+            title="Themen"
+            subtitle='Zu welchem Thema / welchen Themen findet der VE statt?'
+            tooltip={{
+                text: 'Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="text-center font-bold text-4xl mb-2 relative">
-                Zu welchem Thema / welchen Themen findet der VE statt?
-                <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
-                    <Link
-                        target="_blank"
-                        href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
-                    >
-                        <PiBookOpenText size={30} color="#00748f" />
-                    </Link>
-                </Tooltip>
-            </div>
-            <div className="text-center mb-20">optional</div>
-            <div className="flex flex-col justify-center">
+            <div className="flex flex-col ">
                 {fields.map((topic, index) => (
                     <div
                         key={topic.id}
-                        className="mt-2 flex flex-col justify-center items-center"
+                        className="mt-2 flex flex-col  w-1/2"
                     >
-                        <div className="flex justify-center items-center w-full mt-2">
+                        <div className="flex  grow mt-2">
                             <input
                                 type="text"
                                 placeholder="Thema eingeben"

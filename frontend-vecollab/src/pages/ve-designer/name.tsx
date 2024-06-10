@@ -31,6 +31,8 @@ export default function Name() {
     }, [methods])
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        console.log('namne, submit');
+
         return [
             {
                 plan_id: router.query.plannerId,
@@ -50,41 +52,38 @@ export default function Name() {
 
     return (
         <Wrapper
+            title='Projektname'
+            subtitle="Wie soll das Projekt heißen?"
             methods={methods}
             nextpage='/ve-designer/partners'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
                 <div className="">
-                    <div className={'flex items-center font-bold text-2xl mb-2 relative h-14 mb-16'}>
-                        Wie soll das Projekt heißen?
-                    </div>
-                    <div className="flex flex-col justify-center">
-                        <input
-                            type="text"
-                            placeholder="Name eingeben"
-                            className="border border-gray-300 rounded-md p-2"
-                            {...methods.register('name', {
-                                required: {
-                                    value: true,
-                                    message: 'Bitte gebe deiner VE einen Namen.',
-                                },
-                                maxLength: {
-                                    value: 50,
-                                    message:
-                                        'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                                },
-                                pattern: {
-                                    value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                    message:
-                                        'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
-                                },
-                            })}
-                        />
-                        <p className="text-red-600 pt-2">
-                            {methods.formState.errors.name?.message}
-                        </p>
-                    </div>
+                    <input
+                        type="text"
+                        placeholder="Name eingeben"
+                        className="border border-gray-300 rounded-md p-2 w-1/2"
+                        {...methods.register('name', {
+                            required: {
+                                value: true,
+                                message: 'Bitte gebe deiner VE einen Namen.',
+                            },
+                            maxLength: {
+                                value: 50,
+                                message:
+                                    'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
+                                message:
+                                    'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
+                            },
+                        })}
+                    />
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors.name?.message}
+                    </p>
                 </div>
         </Wrapper>
     );

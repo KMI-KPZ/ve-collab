@@ -14,8 +14,14 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
 import { mainMenu } from '@/data/sideMenuSteps';
+import { Tooltip } from '../Tooltip';
+import { PiBookOpenText } from 'react-icons/pi';
+import Link from 'next/link';
 
 interface Props {
+    title: string;
+    subtitle?: string;
+    tooltip?: {text: string, link: string}
     methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
     prevpage?: string
@@ -34,6 +40,9 @@ interface Props {
 }
 
 export default function Wrapper({
+    title,
+    subtitle,
+    tooltip,
     children,
     methods,
     prevpage,
@@ -118,6 +127,8 @@ export default function Wrapper({
     const handleSubmit = async (data: any) => {
         setLoading(true)
         const fields = await submitCallback(data)
+        console.log('Wrapper.handlesubmit', {fields});
+
 
         if (fields) {
             await fetchPOST(
@@ -197,6 +208,24 @@ export default function Wrapper({
 
                                     <Breadcrumb />
 
+                                    <div className={'flex justify-between items-start mt-2 mb-2'}>
+                                        <h2 className='font-bold text-2xl'>
+                                            {title}
+                                        </h2>
+                                        {typeof tooltip !== 'undefined' && (
+                                            <Tooltip tooltipsText={tooltip.text}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={tooltip.link}
+                                                    className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
+                                                >
+                                                    <PiBookOpenText size={30} color="#00748f" className='inline relative' />
+                                                </Link>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                    {typeof subtitle !== 'undefined' && (<p className='text-xl text-slate-600 mb-4'>{subtitle}</p>)}
+
                                     {loading &&
                                         (<>
                                             <div className='absolute w-full h-full bg-slate-50/50 blur-2xl'></div>
@@ -206,7 +235,7 @@ export default function Wrapper({
 
                                     {children}
 
-                                    <div className='my-3 border-t py-3 flex justify-between'>
+                                    <div className='my-8 border-t py-3 flex justify-between'>
 
                                         <div className="basis-20">
                                             {typeof prevpage !== 'undefined' && (

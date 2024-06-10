@@ -11,7 +11,6 @@ import {
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import questionMark from '@/images/icons/ve-designer/questionMarkIcon.png';
-import { Tooltip } from '@/components/Tooltip';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
@@ -336,25 +335,15 @@ export default function TargetGroups() {
 
     return (
         <Wrapper
+            title='Zielgruppen'
+            subtitle='An welche Zielgruppen richtet sich der VE?'
+            tooltip={{text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden', link: ''}}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                An welche Zielgruppen richtet sich der VE?
-                <Tooltip tooltipsText="Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden">
-                    <Image
-                        className="mx-2 cursor-pointer m-2 "
-                        src={questionMark}
-                        width={40}
-                        height={40}
-                        alt="info"
-                    ></Image>
-                </Tooltip>
-            </div>
-            <div className={'text-center mb-20'}>optional</div>
             <div className="flex flex-wrap justify-center">
                 {renderTargetGroupsInputs()}
             </div>

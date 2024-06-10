@@ -67,25 +67,19 @@ export default function LearningEnvironment() {
 
     return (
         <Wrapper
+            title='Digitale Lernumgebung'
+            subtitle='In welcher digitalen Lernumgebung findet der VE statt?'
+            tooltip={{
+                text: 'Mehr zu LMS findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                In welcher digitalen Lernumgebung findet der VE statt?
-                <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
-                    <Link
-                        target="_blank"
-                        href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
-                    >
-                        <PiBookOpenText size={30} color="#00748f" />
-                    </Link>
-                </Tooltip>
-            </div>
-            <div className={'text-center mb-20'}>optional</div>
-            <div className="mt-4 flex flex-col justify-center items-center">
+            <div className="mt-4">
                 <textarea
                     rows={5}
                     placeholder="Lernumgebung beschreiben"
