@@ -139,14 +139,13 @@ export default function Sidebar({
         return (<>
             <div
                 className='flex bg-white p-2 w-full align-middle items-center cursor-pointer'
-                onClick={() => {
+                onClick={e => {
                     if (item.submenu.length > 0) {
                         setOpenSubmenu(prev => !prev)
                     } else {
                         methods.handleSubmit(
                             // valid
                             async (data: any) => {
-                                console.log('handle submit', {data});
                                 await submitCallback(data)
                                 router.push({
                                     pathname: item.link,
@@ -155,10 +154,9 @@ export default function Sidebar({
                             },
                             // invalid
                             async (data: any) => {
-                                console.log('handle submit invalid', {data});
                                 handleInvalidData(data, item.link)
                             }
-                        )
+                        )(e)
                     }
                 }}
             >
