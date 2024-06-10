@@ -1,4 +1,3 @@
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';

@@ -133,8 +133,7 @@ export default function PostProcess() {
         <Wrapper
             methods={methods}
             preventToLeave={false}
-            progressBarStage={4}
-            sideMenuStepsData={[]}
+            stageInMenu='post-process'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
