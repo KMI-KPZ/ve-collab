@@ -34,7 +34,7 @@ export default function Topics() {
         initialSideProgressBarStates
     );
     const prevpage = '/ve-designer/methodical-approach'
-    const nextpage = '/ve-designer/languages'
+    const nextpage = '/ve-designer/evaluation'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

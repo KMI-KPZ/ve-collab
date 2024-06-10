@@ -1,6 +1,6 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import React, { useCallback, useState } from 'react';
-import { RxPlus } from 'react-icons/rx';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
@@ -24,12 +24,19 @@ export interface TargetGroup {
     foreign_languages: string;
 }
 
-interface FormValues {
-    targetGroups: TargetGroup[];
+interface Language {
+    language: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.targetGroups.every((targetGroup) => {
+interface FormValues {
+    targetGroups: TargetGroup[];
+    languages: Language[];
+
+}
+
+const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
+        formValues.languages.every((languageObject) => languageObject.language === '')
+    &&  formValues.targetGroups.every((targetGroup) => {
         return (
             targetGroup.name === '' &&
             targetGroup.age_min === '' &&
@@ -38,9 +45,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
             targetGroup.academic_course === '' &&
             targetGroup.mother_tongue === '' &&
             targetGroup.foreign_languages === ''
-        );
-    });
-};
+        )
+    })
 
 TargetGroups.auth = true;
 export default function TargetGroups() {
@@ -65,17 +71,37 @@ export default function TargetGroups() {
                     foreign_languages: '',
                 },
             ],
+            languages: [{ language: '' }],
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const {
+        fields: fieldsTg,
+        append: appendTg,
+        remove: removeTg
+    } = useFieldArray({
         name: 'targetGroups',
+        control: methods.control,
+    });
+
+    const {
+        fields: fieldsLang,
+        append: appendLang,
+        remove: removeLang
+    } = useFieldArray({
+        name: 'languages',
         control: methods.control,
     });
 
     const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.audience.length !== 0) {
             methods.setValue('targetGroups', plan.audience);
+        }
+        if (plan.languages.length !== 0) {
+            methods.setValue(
+                'languages',
+                plan.languages.map((element: string) => ({ language: element }))
+            );
         }
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress)
@@ -93,19 +119,25 @@ export default function TargetGroups() {
             },
             {
                 plan_id: router.query.plannerId,
+                field_name: 'languages',
+                value: data.languages.map((element) => element.language),
+            },
+            {
+                plan_id: router.query.plannerId,
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
                     audience: ProgressState.completed,
+                    languages: ProgressState.completed
                 },
             },
         ]
     };
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
-        return fields.map((targetGroup, index) => (
+        return fieldsTg.map((targetGroup, index) => (
             <div key={targetGroup.id} className="mx-2">
-                <WhiteBox>
+                <div className='rounded shadow p-2'>
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
@@ -321,21 +353,53 @@ export default function TargetGroups() {
                     <div className="flex justify-end items-center">
                         <Image
                             className="mx-2 cursor-pointer m-2 "
-                            onClick={() => remove(index)}
+                            onClick={() => removeTg(index)}
                             src={trash}
                             width={20}
                             height={20}
                             alt="deleteStep"
                         ></Image>
                     </div>
-                </WhiteBox>
+                </div>
+            </div>
+        ));
+    };
+
+    const renderLanguagesInputs = (): JSX.Element[] => {
+        return fieldsLang.map((language, index) => (
+            <div key={language.id} className="mt-2 flex flex-col items-center">
+                <div className="flex items-center w-full">
+                    <input
+                        type="text"
+                        placeholder="Sprache eingeben"
+                        className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
+                        {...methods.register(`languages.${index}.language`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                            },
+                        })}
+                    />
+                    <button type="button" onClick={() => removeLang(index)}>
+                        <RxMinus size={20} />
+                    </button>
+                </div>
+                {methods.formState.errors?.languages?.[index]?.language?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.languages?.[index]?.language?.message}
+                    </p>
+                )}
             </div>
         ));
     };
 
     return (
         <Wrapper
-            title='Zielgruppen'
+            title='Zielgruppen & Sprachen'
             subtitle='An welche Zielgruppen richtet sich der VE?'
             tooltip={{text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden', link: ''}}
             methods={methods}
@@ -344,27 +408,48 @@ export default function TargetGroups() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex flex-wrap justify-center">
-                {renderTargetGroupsInputs()}
+            <div className='mb-4'>
+                <div className="flex flex-wrap">
+                    {renderTargetGroupsInputs()}
+                </div>
+                <div className="flex">
+                    <button
+                        className="p-3 m-2 bg-white rounded-full shadow"
+                        type="button"
+                        onClick={() => {
+                            appendTg({
+                                name: '',
+                                age_min: '',
+                                age_max: '',
+                                experience: '',
+                                academic_course: '',
+                                mother_tongue: '',
+                                foreign_languages: '',
+                            });
+                        }}
+                    >
+                        <RxPlus size={20} />
+                    </button>
+                </div>
             </div>
-            <div className="flex justify-center">
-                <button
-                    className="p-4 bg-white rounded-3xl shadow-2xl"
-                    type="button"
-                    onClick={() => {
-                        append({
-                            name: '',
-                            age_min: '',
-                            age_max: '',
-                            experience: '',
-                            academic_course: '',
-                            mother_tongue: '',
-                            foreign_languages: '',
-                        });
-                    }}
-                >
-                    <RxPlus size={30} />
-                </button>
+            <div className=''>
+                <div className='text-xl mb-2'>In welchen Sprachen findet der VE (hauptsächlich) statt?</div>
+                <div className="flex flex-col ">
+                    {renderLanguagesInputs()}
+                </div>
+                <div className="flex  mt-4">
+                    <button
+                        className="p-3 m-2 bg-white rounded-full shadow"
+                        type="button"
+                        onClick={() => {
+                            appendLang({
+                                language: '',
+                            });
+                        }}
+                    >
+                        <RxPlus size={20} />
+                    </button>
+                </div>
             </div>
         </Wrapper>
     );

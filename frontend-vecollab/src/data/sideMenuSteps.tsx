@@ -41,14 +41,9 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/methodical-approach',
     },
     {
-        text: 'Thema/Themen',
+        text: 'Thema',
         id: 'topics',
         link: '/ve-designer/topics',
-    },
-    {
-        text: 'Sprache(n)',
-        id: 'languages',
-        link: '/ve-designer/languages',
     },
     {
         text: 'Bewertung und Evaluation',
@@ -56,12 +51,12 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/evaluation',
     },
     {
-        text: '(Digitale) Formate',
+        text: 'Formate',
         id: 'realization',
         link: '/ve-designer/teaching-formats',
     },
     {
-        text: 'Digitale Lernumgebung',
+        text: 'Lernumgebung',
         id: 'learning_env',
         link: '/ve-designer/learning-environment',
     },
