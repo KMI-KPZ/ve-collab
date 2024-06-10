@@ -21,7 +21,7 @@ interface FormValues {
     physicalMobilities: PhysicalMobility[];
 }
 
-interface PhysicalMobility {
+export interface PhysicalMobility {
     location: string;
     timestamp_from: string;
     timestamp_to: string;
