@@ -127,8 +127,6 @@ export default function Wrapper({
     const handleSubmit = async (data: any) => {
         setLoading(true)
         const fields = await submitCallback(data)
-        console.log('Wrapper.handlesubmit', {fields});
-
 
         if (fields) {
             await fetchPOST(
@@ -137,7 +135,6 @@ export default function Wrapper({
                 session?.accessToken
             );
         }
-        setLoading(false)
     }
 
     const Breadcrumb = () => {
@@ -186,7 +183,10 @@ export default function Wrapper({
 
                             <Header
                                 methods={methods}
-                                submitCallback={handleSubmit}
+                                submitCallback={async d => {
+                                    await handleSubmit(d)
+                                    setLoading(false)
+                                }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({isOpen: true, continueLink: continueLink})
                                 }}
@@ -204,7 +204,7 @@ export default function Wrapper({
                                     progressState={planerData?.progress}
                                 />
 
-                                <form className="w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
+                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
 
                                     <Breadcrumb />
 
@@ -228,8 +228,8 @@ export default function Wrapper({
 
                                     {loading &&
                                         (<>
-                                            <div className='absolute w-full h-full bg-slate-50/50 blur-2xl'></div>
-                                            <div className='absolute'><LoadingAnimation /></div>
+                                            <div className='absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg'></div>
+                                            <div className='absolute left-1/2 translate-x-1/2 top-10'><LoadingAnimation /></div>
                                         </>
                                     )}
 
