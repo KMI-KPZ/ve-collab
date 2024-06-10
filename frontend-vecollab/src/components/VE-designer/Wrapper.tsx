@@ -17,6 +17,7 @@ import { mainMenu } from '@/data/sideMenuSteps';
 import { Tooltip } from '../Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
+import Alert from '../Alert';
 
 interface Props {
     title: string;
@@ -63,6 +64,7 @@ export default function Wrapper({
         continueLink: '/plans',
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
+    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -171,21 +173,29 @@ export default function Wrapper({
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
                                 handleContinue={async () => {
-                                    await router.push({
-                                        pathname: popUp.continueLink,
-                                        query: popUp.continueLink.startsWith('/ve-designer') ? {
-                                            plannerId: router.query.plannerId,
-                                        } : {},
-                                    });
+                                    if (popUp.continueLink && popUp.continueLink != '') {
+                                        await router.push({
+                                            pathname: popUp.continueLink,
+                                            query: popUp.continueLink.startsWith('/ve-designer') ? {
+                                                plannerId: router.query.plannerId,
+                                            } : {},
+                                        });
+                                    } else {
+                                        setPopUp(prev => { return {...prev, isOpen: false}})
+                                    }
                                 }}
                                 handleCancel={() => setPopUp(prev => { return {...prev, isOpen: false}} )}
                             />
+
+                            {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+
 
                             <Header
                                 methods={methods}
                                 submitCallback={async d => {
                                     await handleSubmit(d)
                                     setLoading(false)
+                                    setSuccessPopupOpen(true)
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({isOpen: true, continueLink: continueLink})

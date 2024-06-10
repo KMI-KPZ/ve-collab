@@ -62,6 +62,7 @@ export default function Name() {
                         type="text"
                         placeholder="Name eingeben"
                         className="border border-gray-300 rounded-md p-2 w-1/2"
+                        autoComplete='off'
                         {...methods.register('name', {
                             required: {
                                 value: true,

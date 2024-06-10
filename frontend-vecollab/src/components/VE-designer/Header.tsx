@@ -24,13 +24,12 @@ export default function Header({
 
     return (
             <div className="p-3 flex justify-between flex-wrap border-b">
-                <div className='text-4xl font-bold flex-nowrap'>
+                <div className='text-4xl font-bold flex-nowrap text-slate-400 w-1/2 truncate'>
                     <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
-                    {plan && (<span className='ml-4 text-slate-400 text-2xl'>• {plan.name}</span>)}
+                    {plan && (<span className='ml-4 text-2xl'>• {plan.name}</span>)}
                 </div>
 
                 <div className=''>
-
                     <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
                         <button
                             type="submit"
@@ -59,9 +58,10 @@ export default function Header({
                             } else {
                                 router.push({
                                     pathname: '/plans',
-                                    query: { plannerId: router.query.plannerId }
+                                    query: { }
                                 })
                             }
+
                         }}
                     >
                         Beenden
