@@ -1,68 +1,74 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import WhiteBox from '@/components/Layout/WhiteBox';
-import Link from 'next/link';
-import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Tooltip } from '@/components/Tooltip';
+import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 
-export interface FormValues {
+interface FormValues {
+    methodicalApproach: string;
+    learningEnv: string;
     courseFormat: string;
     usePhysicalMobility: boolean;
     physicalMobilities: PhysicalMobility[];
 }
 
-export interface PhysicalMobility {
+interface PhysicalMobility {
     location: string;
     timestamp_from: string;
     timestamp_to: string;
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.courseFormat === '' &&
-        formValues.physicalMobilities.every((mobility) => {
-            return (
-                mobility.location === '' &&
-                mobility.timestamp_from === '' &&
-                mobility.timestamp_to === ''
-            );
-        })
-    );
+    return formValues.methodicalApproach === ''
+        && formValues.learningEnv === ''
+        && (
+            formValues.courseFormat === '' &&
+            formValues.physicalMobilities.every((mobility) => {
+                return (
+                    mobility.location === '' &&
+                    mobility.timestamp_from === '' &&
+                    mobility.timestamp_to === ''
+                );
+            })
+        )
 };
 
-Realization.auth = true;
-export default function Realization() {
+Methodology.auth = true;
+export default function Methodology() {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const prevpage = '/ve-designer/evaluation'
-    const nextpage = '/ve-designer/learning-environment'
+    const prevpage = '/ve-designer/learning-goals'
+    const nextpage = '/ve-designer/evaluation'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
+            methodicalApproach: '',
+            learningEnv: '',
             courseFormat: '',
             usePhysicalMobility: false,
             physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
         },
     });
 
-    const { fields, append, remove, update } = useFieldArray({
-        name: 'physicalMobilities',
-        control: methods.control,
-    });
-
     const setPlanerData = useCallback((plan: IPlan) => {
+        if (plan.methodical_approach !== null) {
+            methods.setValue('methodicalApproach', plan.methodical_approach);
+        }
+        if (plan.learning_env !== null) {
+            methods.setValue('learningEnv', plan.learning_env);
+        }
         if (plan.realization !== null) {
             methods.setValue('courseFormat', plan.realization);
         }
@@ -98,18 +104,25 @@ export default function Realization() {
         }
     }, [methods]);
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const toValue = methods.watch(`physicalMobilities.${indexFromTo}.timestamp_to`);
-        if (fromValue === '' || toValue === '') return true;
-        return new Date(fromValue) > new Date(toValue)
-            ? 'Das Startdatum muss vor dem Enddatum liegen'
-            : true;
-    };
+    const { fields, append, remove, update } = useFieldArray({
+        name: 'physicalMobilities',
+        control: methods.control,
+    });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (areAllFormValuesEmpty(data)) return
 
         return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'methodical_approach',
+                value: data.methodicalApproach,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'learning_env',
+                value: data.learningEnv,
+            },
             {
                 plan_id: router.query.plannerId,
                 field_name: 'realization',
@@ -130,10 +143,20 @@ export default function Realization() {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
+                    methodical_approach: ProgressState.completed,
+                    learning_env: ProgressState.completed,
                     realization: ProgressState.completed,
                 },
             },
         ]
+    };
+
+    const validateDateRange = (fromValue: string, indexFromTo: number) => {
+        const toValue = methods.watch(`physicalMobilities.${indexFromTo}.timestamp_to`);
+        if (fromValue === '' || toValue === '') return true;
+        return new Date(fromValue) > new Date(toValue)
+            ? 'Das Startdatum muss vor dem Enddatum liegen'
+            : true;
     };
 
     const handleDelete = (index: number): void => {
@@ -259,11 +282,11 @@ export default function Realization() {
 
     return (
         <Wrapper
-            title='(Digitale) Formate'
-            subtitle='In welchem Format / welchen Formaten wird der VE umgesetzt?'
+            title='Methodik & Tools Ansatz'
+            subtitle='Welche methodischen Ansätze kommen im VE zum Einsatz?'
             tooltip={{
-                text: 'Mehr zu Formaten findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+                text: 'Mehr zu Methodik findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material'
             }}
             methods={methods}
             prevpage={prevpage}
@@ -271,68 +294,133 @@ export default function Realization() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div>
-                <div className="flex items-center">
-                    <label htmlFor="courseFormat" className="px-2 py-2">
-                        Format:
-                    </label>
-                    <select
-                        placeholder="Auswählen..."
-                        className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
-                        {...methods.register(`courseFormat`, {
+            <div className="mt-4 flex flex-col justify-center ">
+                <textarea
+                    rows={3}
+                    placeholder="z.B. ..."
+                    className="border border-gray-300 rounded-lg w-1/2 p-2"
+                    {...methods.register('methodicalApproach', {
+                        maxLength: {
+                            value: 500,
+                            message:
+                                'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                        },
+                    })}
+                />
+                <p className="text-red-600 pt-2">
+                    {methods.formState.errors?.methodicalApproach?.message}
+                </p>
+            </div>
+
+            <div className='mt-4'>
+                <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
+                    In welcher digitalen Lernumgebung findet der VE statt?
+                    <Tooltip tooltipsText="Mehr zu LMS findest du hier in den Selbstlernmaterialien …">
+                        <Link
+                            target="_blank"
+                            href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
+                            className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
+                        >
+                            <PiBookOpenText size={30} color="#00748f" />
+                        </Link>
+                    </Tooltip>
+                </div>
+                <div className=''>
+                    <textarea
+                        rows={3}
+                        placeholder="Lernumgebung beschreiben"
+                        className="border border-gray-300 rounded-lg w-1/2 p-2"
+                        {...methods.register('learningEnv', {
                             maxLength: {
                                 value: 500,
                                 message:
                                     'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                             },
                         })}
-                    >
-                        <option value="synchron">synchron</option>
-                        <option value="asynchron">asynchron</option>
-                        <option value="asynchron und synchron">
-                            asynchron und synchron
-                        </option>
-                    </select>
+                    />
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.learningEnv?.message}
+                    </p>
                 </div>
             </div>
-            <WhiteBox>
-                <div className="p-6 w-full">
-                    <div className="flex items-center">
-                        <p className="w-72">
-                            Wird der VE durch eine physische Mobilität ergänzt /
-                            begleitet?
-                        </p>
-                        <div className="flex w-40 justify-end gap-x-5">
-                            {radioBooleanInput(
-                                methods.control,
-                                `usePhysicalMobility`
-                            )}
-                        </div>
-                    </div>
-                    {methods.watch('usePhysicalMobility') && (
-                        <>
-                            <div className="divide-y my-2 w-full">
-                                {renderMobilitiesInputs()}
-                            </div>
-                            <div className="flex justify-center">
-                                <button
-                                    className="p-4 bg-white rounded-3xl shadow-2xl ml-2"
-                                    type="button"
-                                    onClick={() => {
-                                        append({
-                                            location: '',
-                                            timestamp_from: '',
-                                            timestamp_to: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={30} />
-                                </button>
-                            </div>
-                        </>
-                    )}
+
+            <div className='mt-4'>
+                <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
+                In welchem Format / welchen Formaten wird der VE umgesetzt?
+                <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                    <Link
+                        target="_blank"
+                        href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
+                        className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
+                    >
+                        <PiBookOpenText size={30} color="#00748f" />
+                    </Link>
+                </Tooltip>
                 </div>
-            </WhiteBox>
+
+                <div className='w-1/2'>
+                    <div className="flex items-center">
+                        <label htmlFor="courseFormat" className="px-2 py-2">
+                            Format:
+                        </label>
+                        <select
+                            placeholder="Auswählen..."
+                            className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
+                            {...methods.register(`courseFormat`, {
+                                maxLength: {
+                                    value: 500,
+                                    message:
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                },
+                            })}
+                        >
+                            <option value="synchron">synchron</option>
+                            <option value="asynchron">asynchron</option>
+                            <option value="asynchron und synchron">
+                                asynchron und synchron
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div className='mt-4 rounded shadow p-2 w-1/2'>
+                    <div className="p-6 w-full">
+                        <div className="flex">
+                            <p className="w-72">
+                                Wird der VE durch eine physische Mobilität ergänzt /
+                                begleitet?
+                            </p>
+                            <div className="flex w-40 justify-end gap-x-5">
+                                {radioBooleanInput(
+                                    methods.control,
+                                    `usePhysicalMobility`
+                                )}
+                            </div>
+                        </div>
+                        {methods.watch('usePhysicalMobility') && (
+                            <>
+                                <div className="divide-y my-2 w-full">
+                                    {renderMobilitiesInputs()}
+                                </div>
+                                <div className="flex justify-center">
+                                    <button
+                                        className="p-4 bg-white rounded-full shadow ml-2"
+                                        type="button"
+                                        onClick={() => {
+                                            append({
+                                                location: '',
+                                                timestamp_from: '',
+                                                timestamp_to: '',
+                                            });
+                                        }}
+                                    >
+                                        <RxPlus size={25} />
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
         </Wrapper>
     );
 }

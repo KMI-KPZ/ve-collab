@@ -51,7 +51,7 @@ export default function Evaluation() {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const prevpage = '/ve-designer/methodical-approach'
+    const prevpage = '/ve-designer/methodology'
     const nextpage = '/ve-designer/teaching-formats'
 
     const methods = useForm<FormValues>({
@@ -169,7 +169,7 @@ export default function Evaluation() {
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
             <div key={evaluationPerPartner.id} className="flex mx-2">
-                <WhiteBox className="h-fit w-[28rem]">
+                <div className="rounded shadow p-2 h-fit w-[28rem]">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
                             {partnerProfileSnippets[evaluationPerPartner.username]
@@ -241,7 +241,7 @@ export default function Evaluation() {
                             />
                         </div>
                     </div>
-                </WhiteBox>
+                </div>
             </div>
         ));
     }

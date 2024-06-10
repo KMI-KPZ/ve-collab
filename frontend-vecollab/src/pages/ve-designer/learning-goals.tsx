@@ -59,7 +59,7 @@ export default function LearningGoals() {
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
 
     const prevpage = '/ve-designer/target-groups'
-    const nextpage = '/ve-designer/methodical-approach'
+    const nextpage = '/ve-designer/methodology'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

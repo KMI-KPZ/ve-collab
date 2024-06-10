@@ -25,7 +25,7 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/participatingCourses',
     },
     {
-        text: 'Zielgruppen',
+        text: 'Zielgruppen & Sprache',
         id: 'audience',
         link: '/ve-designer/target-groups',
     },
@@ -34,25 +34,15 @@ const itemsAllgemein: ISubmenuData[] = [
         id: 'learning_goals',
         link: '/ve-designer/learning-goals',
     },
-    {
-        text: 'Methodischer Ansatz',
-        id: 'methodical_approach',
-        link: '/ve-designer/methodical-approach',
+        {
+        text: 'Methodik & Tools',
+        id: 'methodology',
+        link: '/ve-designer/methodology',
     },
     {
-        text: 'Bewertung und Evaluation',
+        text: 'Bewertung & Evaluation',
         id: 'evaluation',
         link: '/ve-designer/evaluation',
-    },
-    {
-        text: 'Formate',
-        id: 'realization',
-        link: '/ve-designer/teaching-formats',
-    },
-    {
-        text: 'Lernumgebung',
-        id: 'learning_env',
-        link: '/ve-designer/learning-environment',
     },
     {
         text: 'Checkliste',

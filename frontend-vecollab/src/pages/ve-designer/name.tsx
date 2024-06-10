@@ -31,8 +31,6 @@ export default function Name() {
     }, [methods])
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        console.log('namne, submit');
-
         return [
             {
                 plan_id: router.query.plannerId,
