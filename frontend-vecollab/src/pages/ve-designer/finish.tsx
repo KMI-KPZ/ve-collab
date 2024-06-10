@@ -4,7 +4,7 @@ import React from 'react';
 import { useGetPlanById } from '@/lib/backend';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 
 interface Props {
@@ -66,11 +66,9 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
 
     return (
         <Wrapper
-            methods={useForm<any>({})}
-            setProgress={() => {}}
-            sideMenuStepsData={[]}
-            progressBarStage={3}
+            methods={useForm<any>()}
             preventToLeave={false}
+            stageInMenu='finish'
             planerDataCallback={d => {}}
             submitCallback={d => {}}
         >

@@ -86,6 +86,9 @@ export default function PostProcess() {
         methods.setValue('reflection', plan.reflection as string);
         methods.setValue('evaluation', plan.good_practise_evaluation as string);
         methods.setValue('evaluationFile', plan.evaluation_file as EvaluationFile);
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     // const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -129,7 +132,6 @@ export default function PostProcess() {
     return (
         <Wrapper
             methods={methods}
-            setProgress={setSideMenuStepsProgress}
             preventToLeave={false}
             progressBarStage={4}
             sideMenuStepsData={[]}

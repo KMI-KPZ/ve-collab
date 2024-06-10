@@ -14,7 +14,6 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
 import { mainMenu } from '@/data/sideMenuSteps';
-// import { getMainMenu } from '@/data/sideMenuSteps';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -26,8 +25,6 @@ interface Props {
     preventToLeave?: boolean
 
     stageInMenu?: string
-
-    // setProgress: (progress: ISideProgressBarStates) => void
     planerDataCallback: (data: any) => void
     submitCallback: (data: any) => unknown | Promise<{
         plan_id: string,
@@ -45,7 +42,6 @@ export default function Wrapper({
     // progressBarStage=0,
     stageInMenu='generally',
     preventToLeave=true,
-    // setProgress,
     planerDataCallback,
     submitCallback }: Props
 ): JSX.Element {
@@ -112,11 +108,7 @@ export default function Wrapper({
                     console.log('Error: failed to fetch plannner data', {data});
                     return
                 }
-                console.log('Wrapper.fetchGET', {data});
 
-                // if (Object.keys(data.plan.progress).length) {
-                //     setProgress(data.plan.progress);
-                // }
                 setPlanerData(data.plan as IPlan);
                 planerDataCallback(data.plan as IPlan)
             }
@@ -139,10 +131,6 @@ export default function Wrapper({
 
     const Breadcrumb = () => {
         const currentPath = usePathname()
-        // const mainMenuItem = mainMenu.find(a => {
-        //     return a.submenu.length ? a.submenu.some(b => b.link == currentPath) : a.link == currentPath
-        // })
-        // console.log('planer', {planerData, stageInMenu, currentPath});
         const mainMenuItem = mainMenu.find(a => a.id == stageInMenu)
         let subMenuItem = mainMenuItem?.submenu.find(a => a.link == currentPath)
 

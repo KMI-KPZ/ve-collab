@@ -1,9 +1,7 @@
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { fetchPOST } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -14,9 +12,7 @@ import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import WhiteBox from '@/components/Layout/WhiteBox';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -91,6 +87,9 @@ export default function LearningGoals() {
                 learningGoal: goal.learning_goal,
             }))
         );
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
 
         // fetch profile snippets to be able to display the full name instead of username only
         fetchPOST(
@@ -211,7 +210,6 @@ export default function LearningGoals() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

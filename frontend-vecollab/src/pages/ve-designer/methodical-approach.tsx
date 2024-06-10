@@ -40,6 +40,9 @@ export default function MethodicalApproach() {
         if (plan.methodical_approach !== null) {
             methods.setValue('methodicalApproach', plan.methodical_approach);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -67,7 +70,6 @@ export default function MethodicalApproach() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

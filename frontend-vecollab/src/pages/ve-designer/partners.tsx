@@ -90,6 +90,9 @@ export default function Partners() {
                 }))
             );
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
         if (plan.partners.length !== 0) {
             fetchPOST(
                 '/profile_snippets',
@@ -343,7 +346,6 @@ export default function Partners() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

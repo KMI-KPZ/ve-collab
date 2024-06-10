@@ -40,6 +40,9 @@ export default function LearningEnvironment() {
         if (plan.learning_env !== null) {
             methods.setValue('learningEnv', plan.learning_env);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -67,7 +70,6 @@ export default function LearningEnvironment() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

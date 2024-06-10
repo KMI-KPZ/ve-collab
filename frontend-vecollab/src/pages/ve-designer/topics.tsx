@@ -52,6 +52,9 @@ export default function Topics() {
                 }))
             );
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const { fields, append, remove } = useFieldArray({
@@ -84,7 +87,6 @@ export default function Topics() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

@@ -47,6 +47,9 @@ export default function Languages() {
                 plan.languages.map((element: string) => ({ language: element }))
             );
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const { fields, append, remove } = useFieldArray({
@@ -111,7 +114,6 @@ export default function Languages() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

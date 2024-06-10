@@ -158,7 +158,9 @@ export default function FinePlanner() {
             setCurrentFineStep(fineStepCopyTransformedTools);
             methods.reset({ ...fineStepCopyTransformedTools });
             setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
-            // setSideMenuStepsProgress(plan.progress);
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress)
+            }
         }
     },[methods, stepName]);
 
@@ -245,9 +247,6 @@ export default function FinePlanner() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            // sideMenuStepsData={sideMenuStepsData}
-            // progressBarStage={2}
-            // setProgress={setSideMenuStepsProgress}
             stageInMenu='steps'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}

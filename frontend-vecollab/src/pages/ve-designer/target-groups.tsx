@@ -78,6 +78,9 @@ export default function TargetGroups() {
         if (plan.audience.length !== 0) {
             methods.setValue('targetGroups', plan.audience);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -336,7 +339,6 @@ export default function TargetGroups() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

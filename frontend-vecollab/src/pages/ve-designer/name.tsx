@@ -24,8 +24,11 @@ export default function Name() {
 
     const setPlanerData = useCallback((plan: IPlan) => {
             methods.setValue('name', plan.name, { shouldValidate: true });
-    }, [methods])
 
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress)
+            }
+    }, [methods])
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         return [
@@ -49,7 +52,6 @@ export default function Name() {
         <Wrapper
             methods={methods}
             nextpage='/ve-designer/partners'
-            // setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

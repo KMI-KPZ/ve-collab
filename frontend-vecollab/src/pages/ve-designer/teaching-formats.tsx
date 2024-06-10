@@ -93,6 +93,9 @@ export default function Realization() {
                 );
             methods.setValue('physicalMobilities', physical_mobilities);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
@@ -259,7 +262,6 @@ export default function Realization() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

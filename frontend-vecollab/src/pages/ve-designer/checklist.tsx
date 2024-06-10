@@ -96,6 +96,9 @@ export default function Checklist() {
         ) {
             methods.setValue('checklist', plan.formalities);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
 
         // fetch profile snippets to be able to display the full name instead of username only
         fetchPOST(
@@ -294,7 +297,6 @@ export default function Checklist() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

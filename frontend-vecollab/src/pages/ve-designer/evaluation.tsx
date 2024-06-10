@@ -82,6 +82,9 @@ export default function Evaluation() {
         if (plan.evaluation.length !== 0) {
             methods.setValue('evaluationPerPartner', plan.evaluation);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
 
         // fetch profile snippets to be able to display the full name instead of username only
         fetchPOST(
@@ -248,7 +251,6 @@ export default function Evaluation() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

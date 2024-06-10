@@ -62,6 +62,9 @@ export default function Lectures() {
         if (plan.lectures.length !== 0) {
             methods.setValue('lectures', plan.lectures);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const { fields, append, remove } = useFieldArray({
@@ -230,7 +233,6 @@ export default function Lectures() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

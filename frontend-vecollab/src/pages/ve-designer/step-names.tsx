@@ -119,6 +119,9 @@ export default function StepNames() {
                 steps[0].name
             )}`)
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const { fields, append, remove, move, update } = useFieldArray({
@@ -298,7 +301,6 @@ export default function StepNames() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            // setProgress={setSideMenuStepsProgress}
             // progressBarStage={1}
             stageInMenu='steps'
             planerDataCallback={setPlanerData}

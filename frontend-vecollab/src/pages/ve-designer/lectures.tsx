@@ -67,6 +67,9 @@ export default function Lectures() {
         if (plan.institutions.length !== 0) {
             methods.setValue('lectures', plan.institutions);
         }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
     }, [methods]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -244,7 +247,6 @@ export default function Lectures() {
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            setProgress={setSideMenuStepsProgress}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
