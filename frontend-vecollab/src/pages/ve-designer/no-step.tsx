@@ -50,7 +50,6 @@ export default function NoStep() {
         <div className="flex bg-pattern-left-blue-small bg-no-repeat">
             <div className="flex flex-grow justify-center">
                 <div>
-                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
                     {loading ? (
                         <LoadingAnimation />
                     ) : (
