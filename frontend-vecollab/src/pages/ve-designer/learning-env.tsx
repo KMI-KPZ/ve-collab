@@ -316,7 +316,7 @@ export default function Methodology() {
 
                 <div className='w-1/2'>
                     <div className="flex items-center">
-                        <label htmlFor="courseFormat" className="px-2 py-2">
+                        <label htmlFor="courseFormat" className="mr-2">
                             Format:
                         </label>
                         <select
@@ -338,44 +338,40 @@ export default function Methodology() {
                         </select>
                     </div>
                 </div>
-                <div className='mt-4 rounded shadow p-2 w-2/3'>
-                    <div className="p-6 w-full">
-                        <div className="flex">
-                            <p className="w-72">
-                                Wird der VE durch eine physische Mobilität ergänzt /
-                                begleitet?
-                            </p>
-                            <div className="flex w-40 justify-end gap-x-5">
-                                {radioBooleanInput(
-                                    methods.control,
-                                    `usePhysicalMobility`
-                                )}
-                            </div>
-                        </div>
-                        {methods.watch('usePhysicalMobility') && (
-                            <>
-                                <div className="divide-y my-2 w-full">
-                                    {renderMobilitiesInputs()}
-                                </div>
-                                <div className="flex justify-center">
-                                    <button
-                                        className="p-4 bg-white rounded-full shadow ml-2"
-                                        type="button"
-                                        onClick={() => {
-                                            append({
-                                                location: '',
-                                                timestamp_from: '',
-                                                timestamp_to: '',
-                                            });
-                                        }}
-                                    >
-                                        <RxPlus size={25} />
-                                    </button>
-                                </div>
-                            </>
+                <div className='mt-4 flex w-2/3 items-center'>
+                    <p className="">
+                        Wird der VE durch eine physische Mobilität ergänzt /
+                        begleitet?
+                    </p>
+                    <div className="flex w-40 justify-end gap-x-5">
+                        {radioBooleanInput(
+                            methods.control,
+                            `usePhysicalMobility`
                         )}
                     </div>
                 </div>
+                {methods.watch('usePhysicalMobility') && (
+                    <div className='mt-4 rounded shadow p-2 w-2/3'>
+                        <div className="divide-y my-2 w-full">
+                            {renderMobilitiesInputs()}
+                        </div>
+                        <div className="flex justify-center">
+                            <button
+                                className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        location: '',
+                                        timestamp_from: '',
+                                        timestamp_to: '',
+                                    });
+                                }}
+                            >
+                                <RxPlus size={20} />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </Wrapper>
     );
