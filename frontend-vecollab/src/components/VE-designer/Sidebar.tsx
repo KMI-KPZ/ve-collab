@@ -43,6 +43,7 @@ export default function Sidebar({
             id: step.name.toLowerCase(),
             link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
         }})
+        if (!userDefinedSteps.length) return
 
         // adding user defined steps to steps menu item
         setMainMenuData(prev => {
@@ -72,26 +73,32 @@ export default function Sidebar({
         return ProgressState.notStarted;
     };
 
+    const handleClick = (item: ISubmenuData, e: React.BaseSyntheticEvent<object, any, any> | undefined) => {
+        if (item.link == currentPath) return
+
+        methods.handleSubmit(
+            // valid
+            async (data: any) => {
+                await submitCallback(data)
+                router.push({
+                    pathname: item.link,
+                    query: { plannerId: router.query.plannerId }
+                })
+            },
+            // invalid
+            async (data: any) => {
+                handleInvalidData(data, item.link)
+            }
+        )(e)
+    }
+
     const SubMenuItem = ({item}: {item: ISubmenuData}) => {
         const isCurrentPage = currentPath == item.link;
 
         return (
             <button
                 type="button"
-                onClick={methods.handleSubmit(
-                    // valid
-                    async (data: any) => {
-                        await submitCallback(data)
-                        router.push({
-                            pathname: item.link,
-                            query: { plannerId: router.query.plannerId }
-                        })
-                    },
-                    // invalid
-                    async (data: any) => {
-                        handleInvalidData(data, item.link)
-                    }
-                )}
+                onClick={e => handleClick(item, e)}
                 className={`flex justify-between p-2 w-full`}
             >
                 <p
@@ -126,20 +133,7 @@ export default function Sidebar({
                     if (item.submenu.length > 0) {
                         setOpenSubmenu(prev => !prev)
                     } else {
-                        methods.handleSubmit(
-                            // valid
-                            async (data: any) => {
-                                await submitCallback(data)
-                                router.push({
-                                    pathname: item.link,
-                                    query: { plannerId: router.query.plannerId }
-                                })
-                            },
-                            // invalid
-                            async (data: any) => {
-                                handleInvalidData(data, item.link)
-                            }
-                        )(e)
+                        handleClick(item, e)
                     }
                 }}
             >
