@@ -81,7 +81,7 @@ export default function TimelinePost(
             observer.observe(ref.current);
         }
 
-    }, [isLast])
+    }, [isLast, fetchNextPosts])
 
     // may collapse/expand repost
     useEffect(() => {

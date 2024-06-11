@@ -37,7 +37,7 @@ export default function ChatWindow(
     const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
 
     useEffect(() => {
-        if (loadingRooms) return;
+        if (loadingRooms || !rooms?.length) return;
 
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
