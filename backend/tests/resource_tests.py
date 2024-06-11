@@ -171,8 +171,7 @@ class BaseResourceTestCase(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            mother_tongue="test",
-            foreign_languages={"test": "l1"},
+            languages="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -5970,8 +5969,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            mother_tongue="de",
-            foreign_languages={"en": "c1"},
+            languages="updated_languages",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5987,10 +5985,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
         self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
         self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
-        )
+        self.assertEqual(db_state["audience"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -6001,8 +5996,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            mother_tongue="de2",
-            foreign_languages={"en": "c1"},
+            languages="updated_languages2",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6020,10 +6014,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
-        )
+        self.assertEqual(db_state["audience"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object_with_user(self):
@@ -6038,8 +6029,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            mother_tongue="de",
-            foreign_languages={"en": "c1"},
+            languages="updated_languages",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6057,10 +6047,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
         self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
         self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
-        )
+        self.assertEqual(db_state["audience"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -6071,8 +6058,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            mother_tongue="de2",
-            foreign_languages={"en": "c1"},
+            languages="updated_languages2",
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6092,10 +6078,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["audience"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
-        )
+        self.assertEqual(db_state["audience"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):

@@ -20,8 +20,7 @@ export interface TargetGroup {
     age_max: string;
     experience: string;
     academic_course: string;
-    mother_tongue: string;
-    foreign_languages: string;
+    languages: string;
 }
 
 interface Language {
@@ -43,8 +42,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
             targetGroup.age_max === '' &&
             targetGroup.experience === '' &&
             targetGroup.academic_course === '' &&
-            targetGroup.mother_tongue === '' &&
-            targetGroup.foreign_languages === ''
+            targetGroup.languages === ''
         )
     })
 
@@ -67,8 +65,7 @@ export default function TargetGroups() {
                     age_max: '',
                     experience: '',
                     academic_course: '',
-                    mother_tongue: '',
-                    foreign_languages: '',
+                    languages: '',
                 },
             ],
             languages: [{ language: '' }],
@@ -288,64 +285,27 @@ export default function TargetGroups() {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/4 flex items-center">
-                            <label htmlFor="motherTongue" className="px-2 py-2">
-                                Erstsprachen
+                            <label htmlFor="languages" className="px-2 py-2">
+                                Sprachen
                             </label>
                         </div>
                         <div className="w-3/4">
                             <input
                                 type="text"
-                                {...methods.register(`targetGroups.${index}.mother_tongue`, {
+                                {...methods.register(`targetGroups.${index}.languages`, {
                                     maxLength: {
                                         value: 500,
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
                                 })}
-                                placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
+                                placeholder="mehrere durch Komma trennen"
                                 className="border border-gray-400 rounded-lg w-full p-2"
                             />
                             <p className="text-red-600 pt-2">
                                 {
-                                    methods.formState.errors?.targetGroups?.[index]?.mother_tongue
+                                    methods.formState.errors?.targetGroups?.[index]?.languages
                                         ?.message
-                                }
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Weitere Sprachen
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <input
-                                type="text"
-                                {...methods.register(`targetGroups.${index}.foreign_languages`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
-                                })}
-                                placeholder="Weitere Sprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-400 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.targetGroups?.[index]
-                                        ?.foreign_languages?.message
                                 }
                             </p>
                         </div>
@@ -423,8 +383,7 @@ export default function TargetGroups() {
                                 age_max: '',
                                 experience: '',
                                 academic_course: '',
-                                mother_tongue: '',
-                                foreign_languages: '',
+                                languages: '',
                             });
                         }}
                     >
