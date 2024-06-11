@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import completedImage from '@/images/icons/progressBar/completed.svg';
-import notStartedImage from '@/images/icons/progressBar/notStarted.svg';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import {
@@ -11,7 +9,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { mainMenu } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
-import { MdArrowDropDown, MdArrowRight } from 'react-icons/md';
+import { MdArrowDropDown, MdArrowRight, MdCheckCircleOutline } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { useGetPlanById } from '@/lib/backend';
 
@@ -34,11 +32,11 @@ export default function Sidebar({
     // const { handleSubmit } = useFormContext();
 
     const currentPath = usePathname()
-    const { data: plan } = useGetPlanById(router.query.plannerId as string);
+    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
     const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu)
 
     useEffect(() => {
-        if (!plan?.steps || !mainMenu?.length) return
+        if (!plan?.steps || !mainMenu?.length || isLoading) return
 
         const userDefinedSteps = plan.steps.map(step => { return {
             text: step.name,
@@ -61,19 +59,7 @@ export default function Sidebar({
             })
         })
 
-    }, [plan])
-
-    function renderIcon(state: ProgressState) {
-        switch (state) {
-            case ProgressState.completed:
-                return completedImage;
-            case ProgressState.notStarted:
-                return notStartedImage;
-            case ProgressState.uncompleted:
-            default:
-                return notStartedImage;
-        }
-    }
+    }, [plan, isLoading])
 
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);
@@ -115,14 +101,11 @@ export default function Sidebar({
                 >
                     {item.text}
                 </p>
-                {(getProgressState(item.id) == ProgressState.completed
-                    || getProgressState(item.id) == ProgressState.uncompleted
-                ) && (
-                    <Image
-                        src={renderIcon(getProgressState(item.id))}
-                        alt="Ve Collab Logo"
-                    ></Image>
-                )}
+                <span>
+                    {getProgressState(item.id) == ProgressState.completed && (
+                        <MdCheckCircleOutline size={20} />
+                    )}
+                </span>
             </button>
         );
     }
@@ -174,6 +157,7 @@ export default function Sidebar({
                 </>)}
 
             </div>
+            {/* {item.id} */}
             {(item.submenu.length > 0 && openSubmenu == true) ? (
                 <ul className="flex flex-col divide-y gap-1 bg-white ml-6">
                     {item.submenu.map((subItem, subIndex) => {
