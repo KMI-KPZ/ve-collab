@@ -26,7 +26,7 @@ export default function Header({
             <div className="p-3 flex justify-between flex-wrap border-b">
                 <div className='text-4xl font-bold flex-nowrap text-slate-400 w-1/2 truncate'>
                     <span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span>
-                    {plan && (<span className='ml-4 text-2xl'>• {plan.name}</span>)}
+                    {(plan && plan.name) && (<span className='ml-4 text-2xl'>• {plan.name}</span>)}
                 </div>
 
                 <div className=''>
