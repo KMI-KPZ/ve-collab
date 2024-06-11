@@ -120,8 +120,15 @@ export default function Timeline({
         setToDate(newToDate)
     }, [allPosts, isLoadingTimeline, fetchCount])
 
+    const updatePosts = (posts: BackendPost[]) => {
+        setIsLoadingTimeline(true)
+        setAllPosts(posts)
+        setPostsByDate( groupBy(posts, (p) => p.creation_date.replace(/T.+/, '')) )
+        setIsLoadingTimeline(false)
+    }
+
     const updatePost = (newPost: BackendPost) => {
-        setAllPosts(allPosts.map(post => {
+        updatePosts(allPosts.map(post => {
             return post._id == newPost._id
                 ? { ...post, ...newPost }
                 : post
@@ -129,7 +136,7 @@ export default function Timeline({
     }
 
     const removePost = (post: BackendPost) => {
-        setAllPosts((prev) => prev.filter(a => a._id != post._id));
+        updatePosts(allPosts.filter(a => a._id != post._id));
     }
 
     const afterCreatePost = (post: BackendPost) => {
@@ -138,7 +145,7 @@ export default function Timeline({
 
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
-        setAllPosts((prev) => [post, ...prev]);
+        updatePosts([post, ...allPosts])
     }
 
     const getDatePill = (i: number) => {
