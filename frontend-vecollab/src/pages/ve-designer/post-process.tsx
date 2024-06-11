@@ -1,15 +1,12 @@
-import { Tooltip } from '@/components/Tooltip';
 import Link from 'next/link';
-import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { FiInfo } from 'react-icons/fi';
+import { ChangeEvent, useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import WhiteBox from '@/components/Layout/WhiteBox';
 import { useSession } from 'next-auth/react';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, initialSideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 
@@ -91,8 +88,8 @@ export default function PostProcess() {
         }
     }, [methods]);
 
-    // const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-    const onSubmit = async () => {
+    // TODO may use formValues.data ?!
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
             {
@@ -125,8 +122,6 @@ export default function PostProcess() {
         if (uploadFile) {
             await uploadToBackend();
         }
-
-        router.push({ pathname: '/plans' });
     };
 
     return (
@@ -287,27 +282,13 @@ export default function PostProcess() {
 
             <div className="flex justify-between w-full max-w-xl">
                 <div>
-                    <Link
-                        href={{
-                            pathname: '/ve-designer/finish',
-                            query: { plannerId: router.query.plannerId },
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        >
-                            Zurück zur Zusammenfassung
-                        </button>
-                    </Link>
-                </div>
-                <div>
                     <button
                         type="submit"
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                             e.preventDefault();
-                            onSubmit();
+                            await onSubmit({} as FormValues);
+                            router.push({ pathname: '/plans' });
                         }}
                     >
                         Absenden & zur Übersicht
