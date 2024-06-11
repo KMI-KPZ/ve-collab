@@ -111,6 +111,9 @@ export default function Wrapper({
             return
         }
 
+        // avoid overwrite changes (#272)
+        if (typeof planerData !== 'undefined') return
+
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
             data => {
                 setLoading(false)
@@ -124,7 +127,7 @@ export default function Wrapper({
                 planerDataCallback(data.plan as IPlan)
             }
         );
-    }, [session, status, router, planerDataCallback]);
+    }, [session, status, router, planerData, planerDataCallback]);
 
     const handleSubmit = async (data: any) => {
         setLoading(true)
@@ -189,7 +192,6 @@ export default function Wrapper({
 
                             {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
 
-
                             <Header
                                 methods={methods}
                                 submitCallback={async d => {
@@ -200,11 +202,9 @@ export default function Wrapper({
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({isOpen: true, continueLink: continueLink})
                                 }}
-
                             />
 
                             <div className='flex flex-row divide-x gap-1'>
-
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={handleSubmit}
@@ -246,14 +246,11 @@ export default function Wrapper({
                                     {children}
 
                                     <div className='my-8 border-t py-3 flex justify-between'>
-
                                         <div className="basis-20">
                                             {typeof prevpage !== 'undefined' && (
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-
-
                                                     onClick={methods.handleSubmit(
                                                         // valid
                                                         async (data: any) => {
@@ -280,12 +277,10 @@ export default function Wrapper({
                                                 <button
                                                     type="button"
                                                     className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-
                                                     onClick={methods.handleSubmit(
                                                         // valid
                                                         async (data: any) => {
                                                             await handleSubmit(data)
-
                                                             router.push({
                                                                 pathname: nextpage,
                                                                 query: { plannerId: router.query.plannerId }
@@ -301,12 +296,10 @@ export default function Wrapper({
                                                 </button>
                                             )}
                                         </div>
-
                                     </div>
                                 </form>
                             </div>
                         </FormProvider>
-
                     </div>
                 </WhiteBox>
             </Container>
