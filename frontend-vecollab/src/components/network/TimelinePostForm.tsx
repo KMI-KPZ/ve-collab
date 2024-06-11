@@ -190,6 +190,7 @@ export default function TimelinePostForm(
             ref.current?.reset()
             setText('')
             setFilesToAttach(null)
+            setPlansToAttach([])
         } catch (error) {
             alert(`Error:\n${error as string}\nSee console for details`)
             console.error(error);

@@ -2,7 +2,7 @@ import { fetchGET, useGetAllGroups, useGetPinnedPosts, useGetTimeline } from "@/
 import { useSession } from "next-auth/react";
 import LoadingAnimation from "../LoadingAnimation";
 import TimelinePost from "./TimelinePost";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import Timestamp from "../Timestamp";
@@ -35,9 +35,11 @@ export default function Timeline({
     const [postToRepost, setPostToRepost] = useState<BackendPost|null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
     const [postsByDate, setPostsByDate] = useState< Record<string, BackendPost[]> >({});
-    const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState(false)
+    const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState<boolean>(false)
     const [fetchCount, setFetchCount] = useState<number>(0);
     const perFetchLimit = 10
+    const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false)
+
 
     const datePillColors: { vg: string, bg: string}[] = [
         { vg: '#00748f', bg: '#d8f2f9' }, // blue
@@ -47,7 +49,7 @@ export default function Timeline({
 
     const {
         data: newFetchedPosts,
-        isLoading: isLoadingTimeline,
+        isLoading: isFetchingNewPosts,
         error,
         mutate,
     } = useGetTimeline(
@@ -62,7 +64,6 @@ export default function Timeline({
     const { data: allGroups } = useGetAllGroups(session!.accessToken);
     // console.log({allGroups});
 
-
     const {
         data: pinnedPosts,
         mutate: mutatePinnedPosts
@@ -71,17 +72,17 @@ export default function Timeline({
     useEffect(() => {
         if (!newFetchedPosts.length) return
         if (allPosts.some(a => newFetchedPosts.some(b => b._id == a._id)) ) return
+        setIsLoadingTimeline(true)
 
         setFetchCount(prev => ++prev)
-        setAllPosts((prev) => [...prev, ...newFetchedPosts]);
+        setAllPosts((prev) => {
+            const allPosts = [...prev, ...newFetchedPosts]
+            // console.log({newFetchedPosts, allPosts});
+            setPostsByDate( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
+            setIsLoadingTimeline(false)
+            return allPosts
+        });
     }, [newFetchedPosts, allPosts])
-
-    useEffect(() => {
-        if (!allPosts.length) return
-
-        setPostsByDate( groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')) )
-        // console.log({allPosts});
-    }, [allPosts])
 
     // may get repost from request query: ?repost=...
     useEffect(() => {
@@ -108,18 +109,26 @@ export default function Timeline({
         }, {});
     }
 
-    const fetchNextPosts = (force: boolean=false) => {
+    const fetchNextPosts = useCallback((force: boolean=false) => {
         if (!allPosts.length || isLoadingTimeline) return
         if (force !== true && fetchCount % 3 == 0) return
 
+        setIsLoadingTimeline(true)
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
 
         setToDate(newToDate)
+    }, [allPosts, isLoadingTimeline, fetchCount])
+
+    const updatePosts = (posts: BackendPost[]) => {
+        setIsLoadingTimeline(true)
+        setAllPosts(posts)
+        setPostsByDate( groupBy(posts, (p) => p.creation_date.replace(/T.+/, '')) )
+        setIsLoadingTimeline(false)
     }
 
     const updatePost = (newPost: BackendPost) => {
-        setAllPosts(allPosts.map(post => {
+        updatePosts(allPosts.map(post => {
             return post._id == newPost._id
                 ? { ...post, ...newPost }
                 : post
@@ -127,7 +136,7 @@ export default function Timeline({
     }
 
     const removePost = (post: BackendPost) => {
-        setAllPosts((prev) => prev.filter(a => a._id != post._id));
+        updatePosts(allPosts.filter(a => a._id != post._id));
     }
 
     const afterCreatePost = (post: BackendPost) => {
@@ -136,7 +145,7 @@ export default function Timeline({
 
         // TODO may use mutate->populateCache instead ?!
         // https://github.com/KMI-KPZ/ve-collab/blob/a791a2ed9d68e71b6968488fe33dbf8bac000d4c/frontend-vecollab/src/components/network/Timeline.tsx
-        setAllPosts((prev) => [post, ...prev]);
+        updatePosts([post, ...allPosts])
     }
 
     const getDatePill = (i: number) => {
