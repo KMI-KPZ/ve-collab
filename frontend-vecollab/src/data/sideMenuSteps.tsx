@@ -25,7 +25,7 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/participatingCourses',
     },
     {
-        text: 'Zielgruppen & Sprache',
+        text: 'Zielgruppe & Sprache',
         id: 'audience',
         link: '/ve-designer/target-groups',
     },
