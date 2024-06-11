@@ -187,8 +187,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                         </li>
                                         <li>{showDataOrEmptySign(studyGroup.experience)}</li>
                                         <li>{showDataOrEmptySign(studyGroup.academic_course)}</li>
-                                        <li>{showDataOrEmptySign(studyGroup.mother_tongue)}</li>
-                                        <li>{showDataOrEmptySign(studyGroup.foreign_languages)}</li>
+                                        <li>{showDataOrEmptySign(studyGroup.languages)}</li>
                                     </ul>
                                 </div>
                             ))

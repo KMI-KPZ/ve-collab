@@ -205,9 +205,7 @@ class VEPlanHandler(BaseHandler):
                                 "age_max": 40,
                                 "experience": "test",
                                 "academic_course": "test",
-                                "mother_tongue": "test",
-                                "foreign_languages": {},
-                                "learning_goal": "test",
+                                "languages": "test",
                             }
                         ],
                         "languages": ["test"],
@@ -434,9 +432,7 @@ class VEPlanHandler(BaseHandler):
                                 "age_max": 40,
                                 "experience": "test",
                                 "academic_course": "test",
-                                "mother_tongue": "test",
-                                "foreign_languages": {},
-                                "learning_goal": "test",
+                                "languages": "test",
                             }
                         ],
                         "languages": ["test"],
