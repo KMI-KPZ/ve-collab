@@ -37,8 +37,8 @@ interface FormValues {
     stepNames: StepName[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.stepNames.every((broadStep) => {
+const areAllFormValuesEmpty = (stepNames: StepName[]): boolean => {
+    return stepNames.every((broadStep) => {
         return broadStep.name === '' && broadStep.from === '' && broadStep.to === '';
     });
 };
@@ -77,8 +77,9 @@ export default function StepNames() {
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
-    const prevpage = '/ve-designer/checklist'
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/');
+    const noStepPage = '/ve-designer/no-step'
+    // const prevpage = '/ve-designer/checklist'
+    const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -92,11 +93,15 @@ export default function StepNames() {
 
     useEffect(() => {
         const subs = methods.watch((value, {name}) => {
-            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
-                (value && value.stepNames)
-                    ? value.stepNames[0]?.name as string
-                    : prev
-            )}`)
+            setNextpage(prev => {
+                if (!value || !value.stepNames || !value.stepNames.length) {
+                    return noStepPage
+                }
+                if (!methods.formState.isValid) {
+                    return noStepPage
+                }
+                return `/ve-designer/step-data/${encodeURIComponent(value.stepNames[0]?.name as string)}`
+            })
         })
         return () => subs.unsubscribe()
     }, [methods]);
@@ -118,6 +123,8 @@ export default function StepNames() {
             setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
                 steps[0].name
             )}`)
+        } else {
+            setNextpage(prev => `/ve-designer/no-step`)
         }
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress)
@@ -156,7 +163,7 @@ export default function StepNames() {
             return { [broadStep.name]: ProgressState.notStarted };
         });
 
-        if (areAllFormValuesEmpty(data)) return
+        if (areAllFormValuesEmpty(data.stepNames)) return
 
         return [
             {
@@ -305,9 +312,8 @@ export default function StepNames() {
                 link: '/learning-material/left-bubble/Etappenplanung'
             }}
             methods={methods}
-            prevpage={prevpage}
+            // prevpage={prevpage}
             nextpage={nextpage}
-            // progressBarStage={1}
             stageInMenu='steps'
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
