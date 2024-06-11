@@ -34,8 +34,13 @@ const itemsAllgemein: ISubmenuData[] = [
         id: 'learning_goals',
         link: '/ve-designer/learning-goals',
     },
+    {
+        text: 'Lernumgebung',
+        id: 'learning_env',
+        link: '/ve-designer/learning-env',
+    },
         {
-        text: 'Methodik & Tools',
+        text: 'Methodik',
         id: 'methodology',
         link: '/ve-designer/methodology',
     },
