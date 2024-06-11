@@ -372,7 +372,7 @@ export default function Partners() {
                 ))}
                 <div className="mt-4">
                     <button
-                        className="p-4 bg-white rounded-3xl shadow-2xl"
+                        className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
                         type="button"
                         onClick={() => {
                             appendPartners({ label: '', value: '' });
@@ -388,7 +388,7 @@ export default function Partners() {
                     {renderExternalPartiesInputs()}
                     <div className="mt-4">
                         <button
-                            className="p-4 bg-white rounded-3xl shadow-2xl"
+                            className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {
                                 appendExternalParties({
