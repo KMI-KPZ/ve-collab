@@ -16,54 +16,6 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
 
-    const ActionButtons = () => {
-        return (
-            <div className="flex justify-around w-full mt-10">
-                <div>
-                    <Link
-                        href={{
-                            pathname: `/ve-designer/step-data/${plan.steps
-                                ? encodeURIComponent(plan.steps[0]?.name)
-                                : ''
-                            }`,
-                            query: { plannerId: router.query.plannerId },
-                        }}
-                    >
-                        <button
-                            type="button"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                        >
-                            Zurück zur Feinplanung
-                        </button>
-                    </Link>
-                </div>
-                <div>
-                    <Link href={'/plans'}>
-                        <button
-                            type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        >
-                            Weiter zur Übersicht
-                        </button>
-                    </Link>
-                    <Link
-                        href={{
-                            pathname: `/ve-designer/post-process`,
-                            query: { plannerId: router.query.plannerId },
-                        }}
-                    >
-                        <button
-                            type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
-                        >
-                            zur Nachbearbeitung
-                        </button>
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <Wrapper
             title='Fertig'
@@ -89,7 +41,31 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
                     wissen!
                 </div>
             )}
-            <ActionButtons />
+            <div className="flex justify-around w-full mt-10">
+                <div>
+                    <Link href={'/plans'}>
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                        >
+                            Weiter zur Übersicht
+                        </button>
+                    </Link>
+                    <Link
+                        href={{
+                            pathname: `/ve-designer/post-process`,
+                            query: { plannerId: router.query.plannerId },
+                        }}
+                    >
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
+                        >
+                            zur Nachbearbeitung
+                        </button>
+                    </Link>
+                </div>
+            </div>
         </Wrapper>
     );
 }
