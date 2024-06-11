@@ -19,6 +19,7 @@ interface Props {
     handleInvalidData: (data: any, continueLink: string) => void,
     progressState?: ISideProgressBarStates;
     // onSubmit: SubmitHandler<any>;
+    stageInMenu: string
 }
 
 export default function Sidebar({
@@ -26,6 +27,7 @@ export default function Sidebar({
     submitCallback,
     progressState,
     handleInvalidData,
+    stageInMenu='generally',
     // onSubmit,
 }: Props): JSX.Element {
     const router = useRouter();
@@ -121,10 +123,7 @@ export default function Sidebar({
         // TODO remember if is open after routing (reduces flickering)
         //  SEE handled in ChatWindow with state prop from parent component ...?!?
         const [openSubmenu, setOpenSubmenu] = useState<boolean>(true)
-
-        const isCurrentPage = item.submenu.length
-            ? item.submenu.some(a => a.link == currentPath )
-            : item.link == currentPath
+        const isCurrentPage = item.id == stageInMenu
 
         return (<>
             <div

@@ -31,7 +31,7 @@ interface Props {
     // progressBarStage?: number
     preventToLeave?: boolean
 
-    stageInMenu?: string
+    stageInMenu?: string // TODO make it unrequired
     planerDataCallback: (data: any) => void
     submitCallback: (data: any) => unknown | Promise<{
         plan_id: string,
@@ -211,6 +211,7 @@ export default function Wrapper({
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({isOpen: true, continueLink: continueLink})
                                     }}
+                                    stageInMenu={stageInMenu}
                                     progressState={planerData?.progress}
                                 />
 
@@ -245,58 +246,60 @@ export default function Wrapper({
 
                                     {children}
 
-                                    <div className='my-8 border-t py-3 flex justify-between'>
-                                        <div className="basis-20">
-                                            {typeof prevpage !== 'undefined' && (
-                                                <button
-                                                    type="button"
-                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                    onClick={methods.handleSubmit(
-                                                        // valid
-                                                        async (data: any) => {
-                                                            await handleSubmit(data)
+                                    {(typeof prevpage !== 'undefined' || typeof nextpage !== 'undefined') && (
+                                        <div className='my-8 border-t py-3 flex justify-between'>
+                                            <div className="basis-20">
+                                                {typeof prevpage !== 'undefined' && (
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                        onClick={methods.handleSubmit(
+                                                            // valid
+                                                            async (data: any) => {
+                                                                await handleSubmit(data)
 
-                                                            router.push({
-                                                                pathname: prevpage,
-                                                                query: { plannerId: router.query.plannerId }
-                                                            })
-                                                        },
-                                                        // invalid
-                                                        async (data: any) => {
-                                                            setPopUp({isOpen: true, continueLink: prevpage})
-                                                        }
-                                                    )}
-                                                >
-                                                    Zurück
-                                                </button>
-                                            )}
-                                        </div>
+                                                                router.push({
+                                                                    pathname: prevpage,
+                                                                    query: { plannerId: router.query.plannerId }
+                                                                })
+                                                            },
+                                                            // invalid
+                                                            async (data: any) => {
+                                                                setPopUp({isOpen: true, continueLink: prevpage})
+                                                            }
+                                                        )}
+                                                    >
+                                                        Zurück
+                                                    </button>
+                                                )}
+                                            </div>
 
-                                        <div className='basis-20'>
-                                            {typeof nextpage !== 'undefined' && (
-                                                <button
-                                                    type="button"
-                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                    onClick={methods.handleSubmit(
-                                                        // valid
-                                                        async (data: any) => {
-                                                            await handleSubmit(data)
-                                                            router.push({
-                                                                pathname: nextpage,
-                                                                query: { plannerId: router.query.plannerId }
-                                                            })
-                                                        },
-                                                        // invalid
-                                                        async () => {
-                                                            setPopUp({isOpen: true, continueLink: nextpage})
-                                                        }
-                                                    )}
-                                                >
-                                                    Weiter
-                                                </button>
-                                            )}
+                                            <div className='basis-20'>
+                                                {typeof nextpage !== 'undefined' && (
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                        onClick={methods.handleSubmit(
+                                                            // valid
+                                                            async (data: any) => {
+                                                                await handleSubmit(data)
+                                                                router.push({
+                                                                    pathname: nextpage,
+                                                                    query: { plannerId: router.query.plannerId }
+                                                                })
+                                                            },
+                                                            // invalid
+                                                            async () => {
+                                                                setPopUp({isOpen: true, continueLink: nextpage})
+                                                            }
+                                                        )}
+                                                    >
+                                                        Weiter
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </form>
                             </div>
                         </FormProvider>
