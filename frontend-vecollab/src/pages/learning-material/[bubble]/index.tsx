@@ -1,12 +1,9 @@
 import Container from '@/components/Layout/container';
-import LearningContentPreview from '@/components/learningContent/content-preview-li';
 import HorizontalDivider from '@/components/learningContent/horizontal-divider';
 import MainLearningContentLayout from '@/components/Layout/main-learning-content-layout';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
-import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { getChildrenOfNodeByText } from '@/lib/backend';
+import { INode } from '@/interfaces/material/materialInterfaces';
 import CategoryBox from '@/components/learningContent/category-box';
 import Link from 'next/link';
 import { IoMdArrowRoundBack } from 'react-icons/io';
