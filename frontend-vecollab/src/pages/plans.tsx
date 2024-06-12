@@ -9,6 +9,7 @@ import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/Alert';
+import { Socket } from "socket.io-client";
 
 export interface IfilterBy {
     planKey: keyof PlanPreview;
@@ -22,9 +23,13 @@ export interface IsortBy {
     order: 'ASC'|'DESC'
 }
 
+interface Props {
+    socket: Socket;
+}
+
 // authentication is required on this page
 Plans.auth = true;
-export default function Plans() {
+export default function Plans({socket}: Props) {
     const { data: session } = useSession();
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
 
@@ -100,6 +105,7 @@ export default function Plans() {
                     </div>
 
                     <PlansOverviewFilter
+                    socket={socket}
                         filterBy={filterBy}
                         filterByCallback={handleFilterBy}
                     />

@@ -32,4 +32,5 @@ mbr_client_secret: str = ""
 mbr_metadata_base_endpoint: str = ""
 mbr_metadata_source_slug: str = ""
 socket_io = socketio.AsyncServer
-username_sid_map: Dict[str, str] = {}
+username_sid_map: Dict[str, str] = {} # username -> sid
+plan_write_lock_map: Dict[str, Dict] = {} # plan_id -> {"username": username, "expires": datetime.datetime}

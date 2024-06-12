@@ -3,13 +3,15 @@ import { MdAdd } from "react-icons/md";
 import ButtonNewPlan from "./ButtonNewPlan";
 import { useSession } from "next-auth/react";
 import { IfilterBy } from "@/pages/plans";
+import { Socket } from "socket.io-client";
 
 interface Props {
+    socket: Socket;
     filterBy: IfilterBy[]
     filterByCallback: ({planKey, compare, id }: IfilterBy) => void
 }
 
-export function PlansOverviewFilter({ filterBy, filterByCallback }: Props) {
+export function PlansOverviewFilter({ filterBy, filterByCallback, socket }: Props) {
 
     const { data: session } = useSession();
 
@@ -101,6 +103,7 @@ export function PlansOverviewFilter({ filterBy, filterByCallback }: Props) {
 
                 <div className='ml-auto'>
                     <ButtonNewPlan
+                        socket={socket}
                         className='ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white'
                         label={<><MdAdd className='inline' /> Neuen Plan starten</>}
                     />
