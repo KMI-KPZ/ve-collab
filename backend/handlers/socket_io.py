@@ -10,6 +10,7 @@ import global_vars
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
     MISSING_KEY_SLUG,
+    PLAN_DOESNT_EXIST,
     ROOM_DOESNT_EXIST,
     UNAUTHENTICATED,
 )
@@ -459,6 +460,10 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
                 This socket connection is not authenticated (use `authenticate` event)
             - {"status": 403, "success": False, "reason": "plan_locked"}
                 The plan is currently locked by another user
+            - {"status": 403, "success": False, "reason": "insufficient_permissions"}
+                the user has no write access to the plan at all
+            - {"status": 409, "success": False, "reason": "plan_doesnt_exist"}
+                The plan with the given _id doesn't exist
     """
 
     logger.info("try_acquire_or_extend_plan_write_lock " + sid)
@@ -475,6 +480,18 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
     plan_id = util.parse_object_id(data["plan_id"])
 
     LOCK_EXPIRY_HOURS = 1
+
+    with util.get_mongodb() as db:
+        # check if the plan exists and the user theoretically has write access
+        # in the first place
+        plan = db.plans.find_one({"_id": plan_id})
+        if not plan:
+            return {"status": 409, "success": False, "reason": PLAN_DOESNT_EXIST}
+        if not (
+            token["preferred_username"] in plan["write_access"]
+            or token["preferred_username"] == plan["author"]
+        ):
+            return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
 
     # no other user currently holds the lock --> assign it to the current user
     # lock expiry is set to 1 hour
