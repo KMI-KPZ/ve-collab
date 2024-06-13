@@ -7,13 +7,15 @@ import { signIn, useSession } from 'next-auth/react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { Socket } from 'socket.io-client';
 
 interface Props {
+    socket: Socket;
     feedbackFormURL: string;
 }
 
 Finished.auth = true;
-export default function Finished({ feedbackFormURL }: Props): JSX.Element {
+export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [, setLoading] = useState(false);
@@ -51,6 +53,15 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
             );
         }
     }, [session, status, router]);
+
+    const releaseLockAndForward = () => {
+        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+            console.log(response);
+            // TODO error handling
+            router.push('/plans');
+        });
+    };
+
     return (
         <>
             <HeadProgressBarSection stage={3} linkFineStep={steps[0]?.name} />
@@ -96,14 +107,14 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
                             </Link>
                         </div>
                         <div>
-                            <Link href={'/plans'}>
-                                <button
-                                    type="submit"
-                                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                                >
-                                    Weiter zur Übersicht
-                                </button>
-                            </Link>
+                            <button
+                                type="submit"
+                                className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                                onClick={releaseLockAndForward}
+                            >
+                                Weiter zur Übersicht
+                            </button>
+
                             <Link
                                 href={{
                                     pathname: `/ve-designer/post-process`,

@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 from typing import Any, Dict, List, Optional
@@ -15,6 +16,7 @@ from error_reasons import (
     NON_UNIQUE_TASKS,
     PLAN_ALREADY_EXISTS,
     PLAN_DOESNT_EXIST,
+    PLAN_LOCKED,
 )
 from exceptions import (
     MissingKeyError,
@@ -25,6 +27,7 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
 )
+import global_vars
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Evaluation, IndividualLearningGoal, Step, VEPlan
 from resources.network.profile import Profiles
@@ -40,6 +43,68 @@ class VEPlanHandler(BaseHandler):
         # no body
         self.set_status(200)
         self.finish()
+
+    def _check_lock_is_held(self, plan_id: str | ObjectId) -> bool:
+        """
+        check if the current user is currently holding the lock for the plan
+        and is therefore entitled to make changes to it.
+
+        :param plan_id: the id of the plan in str or ObjectId representation
+
+        Returns `True` if the lock is held by the user, `False` otherwise
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        # nobody currently holds a lock at all
+        if plan_id not in global_vars.plan_write_lock_map:
+            return False
+
+        # check if the username of the lock holder matches the current user
+        # and if so, the lock has to be not yet expired
+        if (
+            global_vars.plan_write_lock_map[plan_id]["username"]
+            == self.current_user.username
+        ):
+            return (
+                global_vars.plan_write_lock_map[plan_id]["expires"]
+                > datetime.datetime.now()
+            )
+
+    def _extend_lock(self, plan_id: str | ObjectId) -> None:
+        """
+        extend the lock of the plan that the current user is holding
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        try:
+            # extend the lock by 1 hour
+            global_vars.plan_write_lock_map[plan_id][
+                "expires"
+            ] = datetime.datetime.now() + datetime.timedelta(hours=1)
+        except KeyError:
+            # if the plan is not locked, do nothing
+            pass
+        print(global_vars.plan_write_lock_map)
+
+    def _release_lock(self, plan_id: str | ObjectId) -> None:
+        """
+        release the lock of the plan that the current user is holding
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        # only release the lock if the user is actually holding it
+        if not self._check_lock_is_held(plan_id):
+            return
+
+        try:
+            del global_vars.plan_write_lock_map[plan_id]
+        except KeyError:
+            # if the plan is not locked, do nothing
+            pass
+        print(global_vars.plan_write_lock_map)
 
     @auth_needed
     def get(self, slug):
@@ -1525,15 +1590,25 @@ class VEPlanHandler(BaseHandler):
         Responses:
             200 OK        --> successfully updated the plan (full overwrite)
             403 Forbidden --> no write access to the plan
+                          --> another user currently holds a write lock on this plan
             409 Conflict  --> no plan with the given _id exists in the db, consider
                               inserting it instead
         """
 
         planner = VEPlanResource(db)
         try:
+            # if the user updates an existing plan, he has to hold the lock for it
+            if upsert is False and not self._check_lock_is_held(plan._id):
+                self.set_status(403)
+                self.write({"success": False, "reason": PLAN_LOCKED})
+                return
+
             _id = planner.update_full_plan(
                 plan, upsert=upsert, requesting_username=self.current_user.username
             )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(_id)
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -1585,6 +1660,7 @@ class VEPlanHandler(BaseHandler):
                             --> supplied field_name is not an attribute of a VEPlan
                             --> missing key in http body
             403 Forbidden   --> no write access to plan
+                            --> another user currently holds a write lock on this plan
             409 Conflict    --> Steps don't have unique names
                             --> Tasks don't have unique task_formulation's
         """
@@ -1606,6 +1682,13 @@ class VEPlanHandler(BaseHandler):
 
         try:
             plan_id = util.parse_object_id(plan_id)
+
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write({"success": False, "reason": PLAN_LOCKED})
+                return
+
             _id = planner.update_field(
                 plan_id,
                 field_name,
@@ -1613,6 +1696,9 @@ class VEPlanHandler(BaseHandler):
                 upsert=upsert,
                 requesting_username=self.current_user.username,
             )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
         except InvalidId:
             error_reason = "invalid_object_id"
             self.set_status(400)
@@ -1679,12 +1765,22 @@ class VEPlanHandler(BaseHandler):
 
             try:
                 plan_id = util.parse_object_id(update_instruction["plan_id"])
-                planner.update_field(
-                    plan_id,
-                    update_instruction["field_name"],
-                    update_instruction["value"],
-                    requesting_username=self.current_user.username,
-                )
+
+                # only allow the update if the user holds the write lock
+                # deny with 403 otherwise
+                if self._check_lock_is_held(plan_id):
+                    planner.update_field(
+                        plan_id,
+                        update_instruction["field_name"],
+                        update_instruction["value"],
+                        requesting_username=self.current_user.username,
+                    )
+                    # after a successful update, extend the lock expiry
+                    self._extend_lock(plan_id)
+                else:
+                    error_reason = PLAN_LOCKED
+                    error_status_code = 403
+
             except InvalidId:
                 error_reason = "invalid_object_id"
                 error_status_code = 400
@@ -1754,10 +1850,20 @@ class VEPlanHandler(BaseHandler):
 
         try:
             plan_id = util.parse_object_id(plan_id)
+
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write({"success": False, "reason": PLAN_LOCKED})
+                return
+            
             step = Step.from_dict(step) if isinstance(step, dict) else step
             _id = planner.append_step(
                 plan_id, step, requesting_username=self.current_user.username
             )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
         except InvalidId:
             error_reason = "invalid_object_id"
             self.set_status(400)
@@ -1809,6 +1915,12 @@ class VEPlanHandler(BaseHandler):
 
         plan_id = util.parse_object_id(plan_id)
 
+        # if another holds a write lock on the plan, deny the update
+        if not self._check_lock_is_held(plan_id):
+            self.set_status(403)
+            self.write({"success": False, "reason": PLAN_LOCKED})
+            return
+
         with util.get_mongodb() as db:
             planner = VEPlanResource(db)
             try:
@@ -1819,6 +1931,9 @@ class VEPlanHandler(BaseHandler):
                     content_type,
                     self.current_user.username,
                 )
+
+                # after a successful update, extend the lock expiry
+                self._extend_lock(plan_id)
             except PlanDoesntExistError:
                 self.set_status(409)
                 self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -1976,6 +2091,7 @@ class VEPlanHandler(BaseHandler):
 
         profile_manager = Profiles(db)
         profile_manager.remove_ve_windows_entry_by_plan_id(_id)
+        self._release_lock(_id)
 
         # TODO dispatch a notification to clients that were affected by
         # the removal from their window
@@ -2002,9 +2118,19 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         try:
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write({"success": False, "reason": PLAN_LOCKED})
+                return
+
             planner.delete_step_by_id(
                 plan_id, step_id, requesting_username=self.current_user.username
             )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
+
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -2036,9 +2162,18 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         try:
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write({"success": False, "reason": PLAN_LOCKED})
+                return
+            
             planner.delete_step_by_name(
                 plan_id, step_name, requesting_username=self.current_user.username
             )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})

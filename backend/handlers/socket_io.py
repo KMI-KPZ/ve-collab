@@ -85,7 +85,7 @@ async def disconnect(sid):
         # delete the mapping username <--> socket id and remove any existing
         # write locks on plans
         del global_vars.username_sid_map[session["preferred_username"]]
-        for plan_id, lock_obj in global_vars.plan_write_lock_map.items():
+        for plan_id, lock_obj in global_vars.plan_write_lock_map.copy().items():
             if lock_obj["username"] == session["preferred_username"]:
                 del global_vars.plan_write_lock_map[plan_id]
     except KeyError:

@@ -5,7 +5,7 @@ import { Socket } from 'socket.io-client';
 
 interface Props {
     socket: Socket;
-    label?: string|JSX.Element;
+    label?: string | JSX.Element;
     children?: JSX.Element;
     className?: string;
 }
@@ -14,9 +14,19 @@ export default function ButtonNewPlan({ label, children, className, socket }: Pr
 
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-        socket.emit("try_acquire_or_extend_plan_write_lock", {plan_id: newPlanner.inserted_id}, (response: any) => {
-            console.log(response);
-        });
+        socket.emit(
+            'try_acquire_or_extend_plan_write_lock',
+            { plan_id: newPlanner.inserted_id },
+            async (response: any) => {
+                console.log(response);
+                if (response.success) {
+                    await router.push({
+                        pathname: '/ve-designer/name',
+                        query: { plannerId: newPlanner.inserted_id },
+                    });
+                }
+            }
+        );
         await router.push({
             pathname: '/ve-designer/name',
             query: { plannerId: newPlanner.inserted_id },

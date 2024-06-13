@@ -10,9 +10,14 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { Socket } from 'socket.io-client';
+
+interface Props {
+    socket: Socket;
+}
 
 AdminDashboard.auth = true;
-export default function AdminDashboard() {
+export default function AdminDashboard({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
@@ -64,7 +69,7 @@ export default function AdminDashboard() {
                 <VerticalTabs>
                     <div tabname="Posts">
                         <div className="h-screen overflow-y-auto">
-                            <Timeline userIsAdmin={true} adminDashboard={true} />
+                            <Timeline socket={socket} userIsAdmin={true} adminDashboard={true} />
                         </div>
                     </div>
                     <div tabname="VE-Pläne">

@@ -12,9 +12,14 @@ import { useSession } from 'next-auth/react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
+import { Socket } from 'socket.io-client';
+
+interface Props {
+    socket: Socket;
+}
 
 PostProcess.auth = true;
-export default function PostProcess() {
+export default function PostProcess({ socket }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -65,8 +70,15 @@ export default function PostProcess() {
             await uploadToBackend();
         }
 
+        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+            console.log(response);
+            // TODO error handling
+            router.push('/plans');
+        });
+
         await router.push({ pathname: '/plans' });
     };
+
 
     const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
