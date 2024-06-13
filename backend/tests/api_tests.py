@@ -1456,7 +1456,9 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertIn("name", response["inserted_post"]["plans"][0])
         self.assertIn("partners", response["inserted_post"]["plans"][0])
         self.assertIn("steps", response["inserted_post"]["plans"][0])
-        self.assertEqual(response["inserted_post"]["plans"][0]["_id"], str(plan_dict["_id"]))
+        self.assertEqual(
+            response["inserted_post"]["plans"][0]["_id"], str(plan_dict["_id"])
+        )
         # the author has enhanced profile information to check for
         self.assertIn("author", response["inserted_post"])
         self.assertIn("username", response["inserted_post"]["author"])
@@ -7832,8 +7834,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_while="test",
             evaluation_after="test",
         )
-    
-    def create_individual_learning_goal(self, name: str = "test") -> IndividualLearningGoal:
+
+    def create_individual_learning_goal(
+        self, name: str = "test"
+    ) -> IndividualLearningGoal:
         """
         convenience method to create an individual learning goal with non-default values
         """
@@ -7925,6 +7929,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
             },
         }
         self.db.plans.insert_one(self.default_plan)
+
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_ADMIN.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
 
     def json_serialize(self, dictionary: dict) -> dict:
         """
@@ -8390,6 +8399,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
 
         plan = VEPlan(_id=self.plan_id, name="updated_plan")
 
@@ -8869,6 +8882,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
 
         payload = {
             "plan_id": self.plan_id,
@@ -9066,6 +9083,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
 
         # create file with IO Buffer
         file_name = "test_file.txt"
@@ -9616,6 +9637,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
 
         response = self.base_checks(
             "DELETE",

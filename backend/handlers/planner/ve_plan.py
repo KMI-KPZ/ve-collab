@@ -1597,6 +1597,10 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         try:
+            if upsert is False:
+                if not planner._check_plan_exists(plan._id):
+                    raise PlanDoesntExistError
+
             # if the user updates an existing plan, he has to hold the lock for it
             if upsert is False and not self._check_lock_is_held(plan._id):
                 self.set_status(403)
@@ -1683,8 +1687,8 @@ class VEPlanHandler(BaseHandler):
         try:
             plan_id = util.parse_object_id(plan_id)
 
-            # if another holds a write lock on the plan, deny the update
-            if not self._check_lock_is_held(plan_id):
+            # if another holds a write lock on the existing plan, deny the update
+            if upsert is False and not self._check_lock_is_held(plan_id):
                 self.set_status(403)
                 self.write({"success": False, "reason": PLAN_LOCKED})
                 return
@@ -1851,6 +1855,9 @@ class VEPlanHandler(BaseHandler):
         try:
             plan_id = util.parse_object_id(plan_id)
 
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
@@ -1915,15 +1922,18 @@ class VEPlanHandler(BaseHandler):
 
         plan_id = util.parse_object_id(plan_id)
 
-        # if another holds a write lock on the plan, deny the update
-        if not self._check_lock_is_held(plan_id):
-            self.set_status(403)
-            self.write({"success": False, "reason": PLAN_LOCKED})
-            return
-
         with util.get_mongodb() as db:
             planner = VEPlanResource(db)
             try:
+                if not planner._check_plan_exists(plan_id):
+                    raise PlanDoesntExistError
+
+                # if another holds a write lock on the plan, deny the update
+                if not self._check_lock_is_held(plan_id):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": PLAN_LOCKED})
+                    return
+
                 file_id = planner.put_evaluation_file(
                     plan_id,
                     file_name,
@@ -2118,6 +2128,9 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         try:
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
@@ -2162,6 +2175,9 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         try:
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
