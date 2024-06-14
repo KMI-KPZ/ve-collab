@@ -65,6 +65,8 @@ export default function Wrapper({
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+    const [updateSidebar, setUpdateSidebar] = useState(false)
+    const currentPath = usePathname()
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -143,7 +145,6 @@ export default function Wrapper({
     }
 
     const Breadcrumb = () => {
-        const currentPath = usePathname()
         const mainMenuItem = mainMenu.find(a => a.id == stageInMenu)
         let subMenuItem = mainMenuItem?.submenu.find(a => a.link == currentPath)
 
@@ -198,6 +199,12 @@ export default function Wrapper({
                                     await handleSubmit(d)
                                     setLoading(false)
                                     setSuccessPopupOpen(true)
+                                    if (currentPath.startsWith('/ve-designer/step-names')) {
+                                        setUpdateSidebar(true)
+                                        setTimeout(() => {
+                                            setUpdateSidebar(false)
+                                        }, 1);
+                                    }
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({isOpen: true, continueLink: continueLink})
@@ -213,6 +220,7 @@ export default function Wrapper({
                                     }}
                                     stageInMenu={stageInMenu}
                                     progressState={planerData?.progress}
+                                    updateSidebar={updateSidebar}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">

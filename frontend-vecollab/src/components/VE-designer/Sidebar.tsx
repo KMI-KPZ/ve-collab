@@ -19,7 +19,8 @@ interface Props {
     handleInvalidData: (data: any, continueLink: string) => void,
     progressState?: ISideProgressBarStates;
     // onSubmit: SubmitHandler<any>;
-    stageInMenu: string
+    stageInMenu: string,
+    updateSidebar?: boolean
 }
 
 export default function Sidebar({
@@ -28,13 +29,14 @@ export default function Sidebar({
     progressState,
     handleInvalidData,
     stageInMenu='generally',
+    updateSidebar=false,
     // onSubmit,
 }: Props): JSX.Element {
     const router = useRouter();
     // const { handleSubmit } = useFormContext();
 
     const currentPath = usePathname()
-    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
+    const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
     const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu)
 
     useEffect(() => {
@@ -47,15 +49,13 @@ export default function Sidebar({
         }})
         if (!userDefinedSteps.length) return
 
+        const defaultSteps = (mainMenu.find(a => a.id == 'steps')?.submenu) || []
+
         // adding user defined steps to steps menu item
         setMainMenuData(prev => {
             return prev.map(item => {
                 if (item.id == 'steps') {
-                    // prevent adding steps multiple times
-                    if (item.submenu.some(a => a.id == userDefinedSteps[0].id)) {
-                        return item
-                    }
-                    return Object.assign({}, item, {submenu: [...item.submenu, ...userDefinedSteps]})
+                    return Object.assign({}, item, {submenu: [...defaultSteps, ...userDefinedSteps]})
                 } else {
                     return item
                 }
@@ -63,6 +63,12 @@ export default function Sidebar({
         })
 
     }, [plan, isLoading])
+
+    useEffect(() => {
+        if (updateSidebar === true) {
+            mutate()
+        }
+    }, [updateSidebar, mutate])
 
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);
@@ -150,7 +156,6 @@ export default function Sidebar({
                 </>)}
 
             </div>
-            {/* {item.id} */}
             {(item.submenu.length > 0 && openSubmenu == true) ? (
                 <ul className="flex flex-col divide-y gap-1 bg-white ml-6">
                     {item.submenu.map((subItem, subIndex) => {
