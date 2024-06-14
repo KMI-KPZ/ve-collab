@@ -19,6 +19,12 @@
             "id": 34
         },
         {
+            "parent": 32,
+            "droppable": true,
+            "text": "OER",
+            "id": 35
+        },
+        {
             "parent": 33,
             "droppable": true,
             "text": "Interaktion und kollaboratives Arbeiten",
