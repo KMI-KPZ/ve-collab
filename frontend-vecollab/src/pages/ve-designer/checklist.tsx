@@ -7,15 +7,11 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 import { TooltipList } from '@/components/TooltipList';
-import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from 'react-icons/pi';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import WhiteBox from '@/components/Layout/WhiteBox';
 
 export interface CheckListPartner {
     username: string;
@@ -145,7 +141,7 @@ export default function Checklist() {
 
     function renderCheckBoxes(): JSX.Element[] {
         return fields.map((userCheckForm, index) => (
-            <div key={userCheckForm.id} className="flex justify-center">
+            <div key={userCheckForm.id} className="flex justify-center shadow rounded mx-2">
                 <div className="w-4/5 space-y-3 py-8 flex flex-col">
                     <div className="flex justify-start items-center font-bold text-lg mb-4">
                         {findPartnerFirstAndLastName(userCheckForm.username)}
@@ -316,9 +312,7 @@ export default function Checklist() {
                 geklärt?
             </div>
             <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
-                <WhiteBox>
                     {renderCheckBoxes()}
-                </WhiteBox>
             </div>
         </Wrapper>
     );

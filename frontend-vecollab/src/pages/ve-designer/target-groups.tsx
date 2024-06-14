@@ -133,9 +133,8 @@ export default function TargetGroups() {
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fieldsTg.map((targetGroup, index) => (
-            <div key={targetGroup.id} className="mx-2">
-                <div className='rounded shadow p-2'>
-                    <div className="mt-4 flex">
+            <div key={targetGroup.id} className="pt-4 pb-2">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Bezeichnung
@@ -164,7 +163,7 @@ export default function TargetGroups() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="age" className="px-2 py-2">
                                 Alter
@@ -219,7 +218,7 @@ export default function TargetGroups() {
                             </div>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="experience" className="px-2 py-2">
                                 VE-Projektrelevante Erfahrungen
@@ -251,7 +250,7 @@ export default function TargetGroups() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="academic_course" className="px-2 py-2">
                                 Studiengang
@@ -283,7 +282,7 @@ export default function TargetGroups() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="languages" className="px-2 py-2">
                                 Sprachen
@@ -320,14 +319,13 @@ export default function TargetGroups() {
                             alt="deleteStep"
                         ></Image>
                     </div>
-                </div>
             </div>
         ));
     };
 
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fieldsLang.map((language, index) => (
-            <div key={language.id} className="mt-2 flex flex-col items-center">
+            <div key={language.id}>
                 <div className="flex items-center w-full">
                     <input
                         type="text"
@@ -368,13 +366,13 @@ export default function TargetGroups() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className='mb-4'>
-                <div className="flex flex-wrap">
+            <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
+                <div className="divide-y">
                     {renderTargetGroupsInputs()}
                 </div>
-                <div className="flex">
+                <div className="flex justify-center">
                     <button
-                        className="p-3 m-2 bg-white rounded-full shadow"
+                        className="p-2 m-2 bg-white rounded-full shadow"
                         type="button"
                         onClick={() => {
                             appendTg({
@@ -387,18 +385,18 @@ export default function TargetGroups() {
                             });
                         }}
                     >
-                        <RxPlus size={20} />
+                        <RxPlus size={24} />
                     </button>
                 </div>
             </div>
+
             <div className=''>
                 <div className='text-xl mb-2'>In welchen Sprachen findet der VE (hauptsächlich) statt?</div>
-                <div className="flex flex-col ">
-                    {renderLanguagesInputs()}
-                </div>
-                <div className="flex  mt-4">
+                    <div className='mt-2 items-center'>
+                        {renderLanguagesInputs()}
+                    </div>
                     <button
-                        className="p-3 m-2 bg-white rounded-full shadow"
+                        className="p-2 m-2 bg-white rounded-full shadow"
                         type="button"
                         onClick={() => {
                             appendLang({
@@ -408,7 +406,6 @@ export default function TargetGroups() {
                     >
                         <RxPlus size={20} />
                     </button>
-                </div>
             </div>
         </Wrapper>
     );

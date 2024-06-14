@@ -286,7 +286,7 @@ export default function Methodology() {
                 <textarea
                     rows={3}
                     placeholder="Lernumgebung beschreiben"
-                    className="border border-gray-300 rounded-lg w-1/2 p-2"
+                    className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
                     {...methods.register('learningEnv', {
                         maxLength: {
                             value: 500,
@@ -314,7 +314,7 @@ export default function Methodology() {
                 </Tooltip>
                 </div>
 
-                <div className='w-1/2'>
+                <div className='w-full lg:w-1/2'>
                     <div className="flex items-center">
                         <label htmlFor="courseFormat" className="mr-2">
                             Format:
@@ -338,7 +338,7 @@ export default function Methodology() {
                         </select>
                     </div>
                 </div>
-                <div className='mt-4 flex w-2/3 items-center'>
+                <div className='mt-4 flex w-full lg:w-2/3 items-center'>
                     <p className="">
                         Wird der VE durch eine physische Mobilität ergänzt /
                         begleitet?
@@ -351,8 +351,8 @@ export default function Methodology() {
                     </div>
                 </div>
                 {methods.watch('usePhysicalMobility') && (
-                    <div className='mt-4 rounded shadow p-2 w-2/3'>
-                        <div className="divide-y my-2 w-full">
+                    <div className='mt-4 rounded shadow p-2 w-full lg:w-2/3'>
+                        <div className="divide-y my-2">
                             {renderMobilitiesInputs()}
                         </div>
                         <div className="flex justify-center">

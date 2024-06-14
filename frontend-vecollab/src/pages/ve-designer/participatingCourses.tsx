@@ -94,9 +94,8 @@ export default function Lectures() {
 
     const renderLecturesInputs = (): JSX.Element[] => {
         return fields.map((lecture, index) => (
-            <div key={lecture.id} className="mx-2">
-                <WhiteBox>
-                    <div className="mt-4 flex">
+            <div key={lecture.id} className="pt-4 pb-2">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Name
@@ -125,7 +124,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="type" className="px-2 py-2">
                                 Typ
@@ -151,7 +150,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/4 flex items-center">
                             <label htmlFor="format" className="px-2 py-2">
                                 Format
@@ -181,7 +180,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/2 flex items-center">
                             <label htmlFor="participants" className="px-2 py-2">
                                 Teilnehmendenanzahl
@@ -223,7 +222,6 @@ export default function Lectures() {
                             alt="deleteStep"
                         ></Image>
                     </div>
-                </WhiteBox>
             </div>
         ));
     };
@@ -238,12 +236,14 @@ export default function Lectures() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex flex-wrap justify-center">
-                {renderLecturesInputs()}
-            </div>
-            <div className="flex justify-center ">
+            <div className={'rounded shadow px-4 w-full lg:w-2/3'}>
+                <div className="divide-y">
+                    {renderLecturesInputs()}
+
+                </div>
+                <div className="flex justify-center">
                 <button
-                    className="p-4 bg-white rounded-3xl shadow-2xl"
+                    className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
                     onClick={() => {
                         append({
@@ -254,9 +254,11 @@ export default function Lectures() {
                         });
                     }}
                 >
-                    <RxPlus size={30} />
+                    <RxPlus size={24} />
                 </button>
             </div>
+            </div>
+
         </Wrapper>
     );
 }

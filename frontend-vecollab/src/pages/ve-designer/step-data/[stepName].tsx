@@ -9,9 +9,6 @@ import {
     ProgressState,
     ISubmenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 

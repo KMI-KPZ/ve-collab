@@ -1,4 +1,3 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
 import React, { useCallback, useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -21,9 +20,6 @@ import {
 import iconUpAndDown from '@/images/icons/ve-designer/upAndDownArrow.png';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
@@ -205,7 +201,7 @@ export default function StepNames() {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <WhiteBox>
+                        <div className='shadow rounded px-2 py-4 my-4'>
                             <div>
                                 <div className="flex justify-center items-center">
                                     <label>von:</label>
@@ -290,7 +286,7 @@ export default function StepNames() {
                                     </p>
                                 )}
                             </div>
-                        </WhiteBox>
+                        </div>
                     </div>
                 )}
             </Draggable>
@@ -305,8 +301,8 @@ export default function StepNames() {
 
     return (
         <Wrapper
-            title='Etappenplaner'
-            subtitle='Grobplanung des Ablaufs'
+            title='Grobplanung'
+            subtitle='Grobplanung der Etappen'
             tooltip={{
                 text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung'
@@ -339,7 +335,7 @@ export default function StepNames() {
             </DragDropContext>
             <div className="flex justify-center">
                 <button
-                    className="p-4 bg-white rounded-3xl shadow-2xl"
+                    className="p-2 m-2 bg-white rounded-full shadow"
                     type="button"
                     onClick={() => {
                         append({
@@ -349,7 +345,7 @@ export default function StepNames() {
                         });
                     }}
                 >
-                    <RxPlus size={30} />
+                    <RxPlus size={25} />
                 </button>
             </div>
         </Wrapper>

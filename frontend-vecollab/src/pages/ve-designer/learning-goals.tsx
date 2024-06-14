@@ -236,13 +236,14 @@ export default function LearningGoals() {
                 {fieldsTopics.map((topic, index) => (
                     <div
                         key={topic.id}
-                        className="mt-2 flex flex-col  w-1/2"
+                        className="mt-2 flex flex-col"
                     >
-                        <div className="flex  grow mt-2">
+                        <div className="flex mt-2">
+                            <div className='grow mr-2'>
                             <input
                                 type="text"
                                 placeholder="Thema eingeben"
-                                className="border border-gray-300 rounded-lg w-3/4 p-2 mr-2"
+                                className="w-full border border-gray-300 rounded-lg p-2 "
                                 {...methods.register(
                                     `topics.${index}.name`,
                                     {
@@ -254,6 +255,7 @@ export default function LearningGoals() {
                                     }
                                 )}
                             />
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => removeTopic(index)}
@@ -270,9 +272,9 @@ export default function LearningGoals() {
                     </div>
                 ))}
             </div>
-            <div className=" mt-4">
+            <div className="">
                 <button
-                    className="p-2 bg-white rounded-full shadow"
+                    className="p-2 m-2 bg-white rounded-full shadow"
                     type="button"
                     onClick={() => {
                         appendTopic({
@@ -332,7 +334,7 @@ export default function LearningGoals() {
             </div>
             <div className="mt-12">
                 <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
-                    2. Welche weitere übergeordnete Lernziele werden verfolgt?
+                    2. Welche weiteren übergeordneten Lernziele werden verfolgt?
                     <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
                         <Link
                             target="_blank"
@@ -344,7 +346,7 @@ export default function LearningGoals() {
                     </Tooltip>
                 </div>
 
-                <div className='w-1/2'>
+                <div className='w-full lg:w-1/2'>
                     {createableSelect(
                         methods.control,
                         'majorLearningGoals',
@@ -367,7 +369,7 @@ export default function LearningGoals() {
                     </Tooltip>
                 </div>
 
-                <div>
+                <div className='w-full lg:w-1/2'>
                     {renderTopics()}
                 </div>
 

@@ -7,10 +7,6 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from 'react-icons/pi';
-import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -169,7 +165,7 @@ export default function Evaluation() {
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
             <div key={evaluationPerPartner.id} className="flex mx-2">
-                <div className="rounded shadow p-2 h-fit w-[28rem]">
+                <div className="rounded shadow px-3 py-4 h-fit w-fit">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
                             {partnerProfileSnippets[evaluationPerPartner.username]

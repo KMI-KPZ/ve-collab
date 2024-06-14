@@ -96,9 +96,9 @@ export default function Lectures() {
 
     const renderLecturesInputs = (): JSX.Element[] => {
         return fields.map((lectures, index) => (
-            <div key={lectures.id} className="mx-2">
-                <WhiteBox>
-                    <div className="mt-4 flex">
+            <div key={lectures.id} className="pt-4 pb-2">
+
+                    <div className="mt-2 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="name" className="px-2 py-2">
                                 Name
@@ -127,7 +127,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="schoolType" className="px-2 py-2">
                                 Bildungseinrichtung
@@ -185,7 +185,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="country" className="px-2 py-2">
                                 Land
@@ -214,7 +214,7 @@ export default function Lectures() {
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
+                    <div className="mt-2 flex">
                         <div className="w-1/3 flex items-center">
                             <label htmlFor="department" className="px-2 py-2">
                                 Fachbereich
@@ -256,7 +256,6 @@ export default function Lectures() {
                             alt="deleteStep"
                         ></Image>
                     </div>
-                </WhiteBox>
             </div>
         ));
     };
@@ -271,27 +270,27 @@ export default function Lectures() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div>
-                <div className={'flex flex-wrap justify-center'}>
-                    {renderLecturesInputs()}
+                <div className={'rounded shadow px-4 w-full lg:w-2/3'}>
+                    <div className="divide-y">
+                        {renderLecturesInputs()}
+                    </div>
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {
+                                append({
+                                    name: '',
+                                    school_type: '',
+                                    country: '',
+                                    departments: [],
+                                });
+                            }}
+                        >
+                            <RxPlus size={25} />
+                        </button>
+                    </div>
                 </div>
-                <div className="flex justify-center">
-                    <button
-                        className="p-4 bg-white rounded-3xl shadow-2xl"
-                        type="button"
-                        onClick={() => {
-                            append({
-                                name: '',
-                                school_type: '',
-                                country: '',
-                                departments: [],
-                            });
-                        }}
-                    >
-                        <RxPlus size={30} />
-                    </button>
-                </div>
-            </div>
         </Wrapper>
     );
 }

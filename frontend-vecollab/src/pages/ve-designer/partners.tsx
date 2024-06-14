@@ -315,7 +315,7 @@ export default function Partners() {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fieldsExternalParties.map((externalParty, index) => (
-            <div key={externalParty.id} className="my-2 w-1/2">
+            <div key={externalParty.id} className="my-2 w-full lg:w-1/2">
                 <div className="flex">
                     <input
                         type="text"
@@ -352,13 +352,10 @@ export default function Partners() {
             submitCallback={onSubmit}
         >
             <div>
-                <div className={'font-bold text-xl mb-2'}>
-                    Beteiligte
-                </div>
                 {fieldsPartners.map((partner, index) => (
                     <div
                         key={partner.id}
-                        className="flex w-1/2 my-2 gap-x-3"
+                        className="flex w-full mb-2 gap-x-3 lg:w-1/2"
                     >
                         {createableAsyncSelect(
                             methods.control,
@@ -372,23 +369,21 @@ export default function Partners() {
                 ))}
                 <div className="mt-4">
                     <button
-                        className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                         type="button"
                         onClick={() => {
                             appendPartners({ label: '', value: '' });
                         }}
                     >
-                        <RxPlus size={20} />
+                        <RxPlus size={25} />
                     </button>
                 </div>
                 <div>
-                    <div className={'font-bold text-xl mb-2 mt-10'}>
-                        Extern Beteiligte
-                    </div>
+                    <p className='text-xl text-slate-600 mb-2 mt-10'>Extern Beteiligte</p>
                     {renderExternalPartiesInputs()}
                     <div className="mt-4">
                         <button
-                            className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
+                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {
                                 appendExternalParties({
@@ -396,7 +391,7 @@ export default function Partners() {
                                 });
                             }}
                         >
-                            <RxPlus size={20} />
+                            <RxPlus size={25} />
                         </button>
                     </div>
                 </div>

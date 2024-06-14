@@ -90,7 +90,7 @@ export default function Methodology() {
                 <textarea
                     rows={3}
                     placeholder="z.B. ..."
-                    className="border border-gray-300 rounded-lg w-1/2 p-2"
+                    className="border border-gray-300 rounded-lg w-full lg:w-1/2 p-2"
                     {...methods.register('methodicalApproach', {
                         maxLength: {
                             value: 500,
