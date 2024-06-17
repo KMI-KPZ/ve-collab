@@ -102,6 +102,11 @@ export default function StepNames() {
         return () => subs.unsubscribe()
     }, [methods]);
 
+    const { fields, append, remove, move, update, replace } = useFieldArray({
+        name: 'stepNames',
+        control: methods.control,
+    });
+
     const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.steps?.length > 0) {
             const steps: IFineStep[] = plan.steps;
@@ -113,7 +118,7 @@ export default function StepNames() {
                     name: name,
                 };
             });
-            methods.setValue('stepNames', stepNames);
+            replace(stepNames)
 
             setSteps(plan.steps)
             setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
@@ -125,12 +130,7 @@ export default function StepNames() {
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress)
         }
-    }, [methods]);
-
-    const { fields, append, remove, move, update } = useFieldArray({
-        name: 'stepNames',
-        control: methods.control,
-    });
+    }, [replace]);
 
     const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
