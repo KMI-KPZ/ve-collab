@@ -141,7 +141,7 @@ export default function Wrapper({
                 setIsDirty(methods.formState.isDirty)
             }
         );
-    }, [session, status, router, planerData, planerDataCallback]);
+    }, [session, status, router, planerData, methods, planerDataCallback]);
 
     const handleSubmit = async (data: any) => {
         setLoading(true)
