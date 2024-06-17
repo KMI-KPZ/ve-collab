@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchGET, fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
-// import { itemsAllgemein, itemsEtappenplaner, mainMenu } from '@/data/sideMenuSteps';
 import Container from '../Layout/container';
 import WhiteBox from '../Layout/WhiteBox';
 import { MdArrowForwardIos } from 'react-icons/md';
@@ -27,8 +26,6 @@ interface Props {
     children: React.ReactNode;
     prevpage?: string
     nextpage?: string
-    // sideMenuStepsData?: SideMenuStep[]
-    // progressBarStage?: number
     preventToLeave?: boolean
 
     stageInMenu?: string // TODO make it unrequired
@@ -67,6 +64,7 @@ export default function Wrapper({
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [updateSidebar, setUpdateSidebar] = useState(false)
     const currentPath = usePathname()
+    const [isDirty, setIsDirty] = useState<boolean>(false)
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -105,6 +103,17 @@ export default function Wrapper({
 
     }, [wrapperRef, methods, router, preventToLeave]);
 
+    // const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
+    // useEffect(() => {
+    //     if (!plan || isLoading) return
+
+    //     // BUG: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+    //     // console.log('Wrapper', {plan, isDirty: methods.formState.isDirty});
+    //     setIsDirty(methods.formState.isDirty)
+    //     setLoading(false)
+    //     planerDataCallback(plan)
+    // }, [plan, isLoading, methods, planerDataCallback]);
+
     useEffect(() => {
         if (!router.isReady || status === 'loading' || !session) {
             return;
@@ -128,6 +137,8 @@ export default function Wrapper({
 
                 setPlanerData(data.plan as IPlan);
                 planerDataCallback(data.plan as IPlan)
+                // BUG: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+                setIsDirty(methods.formState.isDirty)
             }
         );
     }, [session, status, router, planerData, planerDataCallback]);
@@ -143,14 +154,17 @@ export default function Wrapper({
                 session?.accessToken
             );
         }
+        // await mutate()
     }
 
     const Breadcrumb = () => {
+        if (!planerData || !planerData.steps) return (<></>);
         const mainMenuItem = mainMenu.find(a => a.id == stageInMenu)
         let subMenuItem = mainMenuItem?.submenu.find(a => a.link == currentPath)
 
         if (stageInMenu == 'steps') {
-            const currentStep = planerData?.steps.find(a => currentPath.endsWith(a.name))
+            const currentStep = planerData.steps.find(a => currentPath.endsWith(encodeURIComponent(a.name)))
+
             subMenuItem = currentStep ? {
                     id: currentStep.name.toLowerCase(),
                     text: currentStep.name,
@@ -167,6 +181,11 @@ export default function Wrapper({
             </div>
         );
     }
+
+    // if (!router.query.plannerId  || error) {
+    //     console.log(error); // TODO alert/re-route
+    //     return (<></>);
+    // }
 
     return (
         <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
@@ -207,9 +226,7 @@ export default function Wrapper({
                                     // manual update sidebar after changed user steps
                                     if (currentPath.startsWith('/ve-designer/step-names')) {
                                         setUpdateSidebar(true)
-                                        setTimeout(() => {
-                                            setUpdateSidebar(false)
-                                        }, 1);
+                                        setTimeout(() => setUpdateSidebar(false), 1);
                                     }
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
@@ -225,7 +242,6 @@ export default function Wrapper({
                                         setPopUp({isOpen: true, continueLink: continueLink})
                                     }}
                                     stageInMenu={stageInMenu}
-                                    progressState={planerData?.progress}
                                     updateSidebar={updateSidebar}
                                 />
 

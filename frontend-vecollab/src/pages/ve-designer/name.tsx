@@ -23,8 +23,7 @@ export default function Name() {
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
     const setPlanerData = useCallback((plan: IPlan) => {
-            methods.setValue('name', plan.name, { shouldValidate: true, shouldDirty: true });
-
+            methods.setValue('name', plan.name, { shouldValidate: true, shouldDirty: false });
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress)
             }
