@@ -95,18 +95,3 @@ export const mainMenu: IMenuData[] = [
         submenu: []
     },
 ];
-
-// export const getSubMenu = async (ofParent: IMenuData): Promise<ISubmenuData[]> => {
-
-//     if (ofParent.id == 'steps') {
-//         // TODO dynamically ad steps
-//         await Promise.resolve()
-//     }
-
-//     return ofParent.submenu
-
-// }
-
-// export const getMainMenu = () => {
-//     return mainMenu
-// }
