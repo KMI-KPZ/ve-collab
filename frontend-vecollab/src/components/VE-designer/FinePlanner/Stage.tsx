@@ -85,13 +85,12 @@ export default function Stage({ fineStep }: Props) {
     }
 
     return (
-        <WhiteBox>
-            <div className="w-[60rem]">
-                <div className="flex justify-center items-center space-x-10">
-                    <div className="flex">
+            <div className="">
+                <div className="">
+                    {/* <div className="flex">
                         <div className="font-bold text-xl mx-2">Etappe:</div>
                         <div className="font-bold text-xl">{fineStep.name}</div>
-                    </div>
+                    </div> */}
                     <div className="flex">
                         <div className="font-bold mx-2">Zeitspanne:</div>
                         <div className="mx-2">
@@ -212,6 +211,6 @@ export default function Stage({ fineStep }: Props) {
                     </div>
                 )}
             </div>
-        </WhiteBox>
+
     );
 }

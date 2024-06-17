@@ -7780,8 +7780,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            mother_tongue="test",
-            foreign_languages={"test": "l1"},
+            languages="test",
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -8503,8 +8502,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "mother_tongue": "de",
-                    "foreign_languages": {"en": "c1"},
+                    "languages": "updated_languages",
                 }
             ],
         }
@@ -8530,8 +8528,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
-        self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
@@ -8545,8 +8542,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "mother_tongue": "de",
-                    "foreign_languages": {"en": "c1"},
+                    "languages": "updated_languages2",
                 }
             ],
         }
@@ -8571,8 +8567,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["audience"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], "de")
-        self.assertEqual(db_state["audience"][0]["foreign_languages"], {"en": "c1"})
+        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages2")
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -8653,9 +8648,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "mother_tongue": "de",
-                    "foreign_languages": {"en": "c1"},
-                    "learning_goal": "test",
+                    "languages": "updated_languages",
                 }
             ],
         }
@@ -8722,9 +8715,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": ["updated_experience"],
                     "academic_course": "updated_academic_course",
-                    "mother_tongue": "de",
-                    "foreign_languages": {"en": "c1"},
-                    "learning_goal": "test",
+                    "languages": "updated_languages",
                 }
             ],
         }
@@ -8752,9 +8743,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "mother_tongue": "de",
-                    "foreign_languages": {"en": "c1"},
-                    "learning_goal": "test",
+                    "languages": "updated_languages",
                 }
             ],
         }
