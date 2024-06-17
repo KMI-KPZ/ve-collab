@@ -20,7 +20,7 @@ export default function Header({
     const router = useRouter();
 
     // note: works better than passing {plan} as property!! (no flickering)
-    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
+    const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
 
     return (
             <div className="p-3 flex justify-between flex-wrap border-b">
@@ -53,7 +53,6 @@ export default function Header({
                         className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         onClick={e => {
                             if (methods.formState.isDirty) {
-                                // TODO does not work (eg changing the name doe not changes the formstate?!)
                                 handleUnsavedData(null, '/plans')
                             } else {
                                 router.push({
@@ -61,7 +60,6 @@ export default function Header({
                                     query: { }
                                 })
                             }
-
                         }}
                     >
                         Beenden
@@ -73,6 +71,7 @@ export default function Header({
                             // valid form
                             async (data: any) => {
                                 await submitCallback(data)
+                                await mutate()
                             },
                             // invalid form
                             // TODO open another Popup (data is invalid PopUp)
