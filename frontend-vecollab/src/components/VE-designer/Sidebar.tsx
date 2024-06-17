@@ -17,8 +17,6 @@ interface Props {
     methods: UseFormReturn<any, any, undefined>;
     submitCallback: (data: any) => void,
     handleInvalidData: (data: any, continueLink: string) => void,
-    progressState?: ISideProgressBarStates;
-    // onSubmit: SubmitHandler<any>;
     stageInMenu: string,
     updateSidebar?: boolean
 }
@@ -26,15 +24,11 @@ interface Props {
 export default function Sidebar({
     methods,
     submitCallback,
-    progressState,
     handleInvalidData,
     stageInMenu='generally',
     updateSidebar=false,
-    // onSubmit,
 }: Props): JSX.Element {
     const router = useRouter();
-    // const { handleSubmit } = useFormContext();
-
     const currentPath = usePathname()
     const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
     const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu)
@@ -73,10 +67,10 @@ export default function Sidebar({
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);
         if (
-            progressState !== undefined &&
-            progressState[idDecrypted as keyof ISideProgressBarStates] !== undefined
+            plan && plan.progress !== undefined &&
+            plan.progress[idDecrypted as keyof ISideProgressBarStates] !== undefined
         ) {
-            return progressState[idDecrypted as keyof ISideProgressBarStates];
+            return plan.progress[idDecrypted as keyof ISideProgressBarStates];
         }
         return ProgressState.notStarted;
     };
