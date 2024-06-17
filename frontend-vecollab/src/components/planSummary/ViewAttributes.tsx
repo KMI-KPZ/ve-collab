@@ -28,7 +28,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
             </div>
             {isOpenStepSection ? (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">Partners:</span>
+                    <span className="font-semibold pr-5">Partner:innen:</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.partners.length !== 0 ? (
                             plan.partners.map((partner, index) => (
@@ -278,7 +278,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                 </section>
             ) : (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">Partners:</span>
+                    <span className="font-semibold pr-5">Partner:innen:</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.partners.length !== 0 ? (
                             plan.partners.map((partner, index) => (

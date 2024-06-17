@@ -110,11 +110,6 @@ export default function Lectures() {
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                                    },
                                 })}
                                 placeholder="Name eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"

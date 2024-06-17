@@ -106,38 +106,19 @@ export default function PageCategoryNotSelected(props: Props) {
                             <Link
                                 href={`/learning-material/left-bubble/${props.mapping['left-bubble'][0].text}`}
                             >
-                                <div className="h-36 w-36 absolute -z-10 -top-8 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
+                                <div className="h-40 w-40 absolute -z-10 -top-[5rem] -left-[5rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
                                     {props.mapping['left-bubble'][0].text}
                                 </div>
                             </Link>
+                            
                             <Link
                                 href={`/learning-material/left-bubble/${props.mapping['left-bubble'][1].text}`}
                             >
-                                <div className="h-40 w-40 absolute -z-10 -top-[7rem] -right-[1rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
+                                <div className="h-40 w-40 absolute -z-10 -bottom-6 -right-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
                                     {props.mapping['left-bubble'][1].text}
                                 </div>
                             </Link>
-                            <Link
-                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][2].text}`}
-                            >
-                                <div className="h-40 w-40 absolute -z-10 -bottom-6 -right-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['left-bubble'][2].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][3].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-[7rem] left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['left-bubble'][3].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][4].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-3 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['left-bubble'][4].text}
-                                </div>
-                            </Link>
+                            
                             <Link href="/learning-material/left-bubble">
                                 <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                     <TbClipboardList
@@ -195,10 +176,25 @@ export default function PageCategoryNotSelected(props: Props) {
                             <Link
                                 href={`/learning-material/right-bubble/${props.mapping['right-bubble'][1].text}`}
                             >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-[7rem] right-[1rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
+                                <div className="h-36 w-36 absolute -z-10 -bottom-[6rem] -right-[2rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
                                     {props.mapping['right-bubble'][1].text}
                                 </div>
                             </Link>
+                            <Link
+                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][2].text}`}
+                            >
+                                <div className="h-36 w-36 absolute -z-10 -bottom-[4rem] -left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
+                                    {props.mapping['right-bubble'][2].text}
+                                </div>
+                            </Link>
+                            <Link
+                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][3].text}`}
+                            >
+                                <div className="h-36 w-36 absolute -z-10 -top-[3rem] -right-[5rem] rounded-full bg-white border border-ve-collab-orange flex items-center justify-center text-center text-ve-collab-orange cursor-pointer hover:text-ve-collab-orange-light hover:border-ve-collab-orange-light">
+                                    {props.mapping['right-bubble'][3].text}
+                                </div>
+                            </Link>
+                            
                             <Link href="/learning-material/right-bubble">
                             <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
                                 <FaLaptop size={150} className='text-white hover:text-ve-collab-orange' />

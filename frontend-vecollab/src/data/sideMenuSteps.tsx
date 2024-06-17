@@ -10,7 +10,7 @@ const itemsAllgemein: ISubmenuData[] = [
         link: '/ve-designer/name',
     },
     {
-        text: 'Partner',
+        text: 'Partner:innen',
         id: 'partners',
         link: '/ve-designer/partners',
     },
@@ -74,7 +74,7 @@ export const mainMenu: IMenuData[] = [
         submenu: itemsAllgemein
     },
     {
-        text: 'Etappenplaner',
+        text: 'Etappenplanung',
         id: 'steps',
         link: '',
         image: imageStagePlanner,

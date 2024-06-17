@@ -203,7 +203,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                     </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
-                            <MdPublic title='Plan ist als "good practice" markiert' />
+                            <MdPublic title='Plan ist als "Good Practice" markiert' />
                         </div>
                     )}
                     {/* {(plan.author == username && plan.read_access.length > 1) && (
@@ -237,11 +237,11 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             </div>
 
             <div className="basis-1/6">
-                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
+                <Timestamp timestamp={plan.last_modified} className="text-sm" />
             </div>
 
             <div className="basis-1/6">
-                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
             </div>
 
             <ShareDialog />

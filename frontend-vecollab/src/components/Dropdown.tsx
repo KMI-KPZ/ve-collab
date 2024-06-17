@@ -13,7 +13,7 @@ interface Props {
     onSelect?: (value: string) => void;
 }
 
-export default function MyDropdown({
+export default function Dropdown({
     options,
     icon=<HiDotsHorizontal />,
     ulClasses='',
@@ -54,21 +54,17 @@ export default function MyDropdown({
 
             {open && (
                 <ul className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow border`}>
-                    {options.map((element, i) => (<>
-                        {'value' in element
-                            ? (
-                                <li
-                                    key={i}
-                                    title={element.title}
-                                    onClick={() => _handleSelect(element.value)}
-                                    className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
+                    {options.map((element, i) => {
+                        return 'value' in element
+                            ? (<li key={i}
+                                title={element.title}
+                                onClick={() => _handleSelect(element.value)}
+                                className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
                                 >
                                     {element.icon}
                                     <span className="mx-2 truncate">{element.label}</span>
-                                </li>
-                            ) : (element)
-                        }
-                    </>))}
+                            </li>) : (element)
+                    })}
                 </ul>
             )}
         </div>

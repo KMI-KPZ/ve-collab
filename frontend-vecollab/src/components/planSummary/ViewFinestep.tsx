@@ -66,7 +66,15 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     <div className="mt-4 flex">
                         <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Lernaktivitäten geplant:</p>
+                            <p className="font-semibold px-2 py-2">Lernaktivität(en):</p>
+                        </div>
+                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
+                            {showDataOrEmptySign(fineStep.learning_activity)}
+                        </div>
+                    </div>
+                    <div className="mt-4 flex">
+                        <div className="w-1/6 flex items-center">
+                            <p className="font-semibold px-2 py-2">Lernaktivitäten detailert ausgearbeitet:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.has_tasks ? 'Ja' : 'Nein')}

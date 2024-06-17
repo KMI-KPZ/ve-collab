@@ -3,7 +3,7 @@ import { UserSnippet } from "@/interfaces/profile/profileInterfaces";
 import { fetchPOST, useGetChatrooms } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { MdKeyboardDoubleArrowRight } from "react-icons/md";
+import { MdClose } from "react-icons/md";
 import { Socket } from "socket.io-client";
 import LoadingAnimation from "../LoadingAnimation";
 import ChatRoom from "./ChatRoom";
@@ -37,7 +37,7 @@ export default function ChatWindow(
     const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
 
     useEffect(() => {
-        if (loadingRooms) return;
+        if (loadingRooms || !rooms?.length) return;
 
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
@@ -67,13 +67,9 @@ export default function ChatWindow(
     if (!open) { return (<></>) }
 
     return (
-        <div className={`absolute z-30 right-0 top-20 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}>
-            <div style={{clipPath: 'inset(-5px 1px -5px -5px)', borderRight: '0'}}
-                className="absolute flex top-1/3 -ml-2 -left-[16px] w-[26px] h-[90px] bg-white rounded-l border shadow"
-            >
-                <button onClick={e => toggleChatWindow()} className="p-1 h-full w-full hover:bg-slate-100">
-                    <MdKeyboardDoubleArrowRight />
-                </button>
+        <div className={`absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}>
+            <div className="absolute -top-[16px] -left-[16px]">
+                <button onClick={e => toggleChatWindow()} className="bg-white rounded-full shadow p-2 hover:bg-slate-50"><MdClose size={20} /></button>
             </div>
 
             {(selectedRoom) ? (

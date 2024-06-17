@@ -344,7 +344,11 @@ export default function Partners() {
     return (
         <Wrapper
             title='Projektpartner'
-            subtitle='Wer ist am Projekt beteiligt?'
+            subtitle='Wer ist am Projekt beteiligt? Einige Felder werden individuell für die Beteiligten beantwortet'
+            tooltip={{
+                text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Partnersuche'
+            }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

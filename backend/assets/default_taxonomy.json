@@ -1,6 +1,30 @@
 {
     "taxonomy": [
         {
+            "parent": 32,
+            "droppable": true,
+            "text": "Digitale Medien",
+            "id": 18
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Datenschutz und Urheberrecht",
+            "id": 16
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Tools",
+            "id": 34
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "OER",
+            "id": 35
+        },
+        {
             "parent": 33,
             "droppable": true,
             "text": "Interaktion und kollaboratives Arbeiten",
@@ -19,40 +43,10 @@
             "id": 20
         },
         {
-            "parent": 32,
-            "droppable": true,
-            "text": "Digitale Medien und Werkzeuge",
-            "id": 18
-        },
-        {
-            "parent": 32,
-            "droppable": true,
-            "text": "Datenschutz und Urheberrecht",
-            "id": 16
-        },
-        {
-            "parent": 31,
-            "droppable": true,
-            "text": "Partnersuche",
-            "id": 13
-        },
-        {
             "parent": 31,
             "droppable": true,
             "text": "Rahmenbedingungen",
             "id": 14
-        },
-        {
-            "parent": 31,
-            "droppable": true,
-            "text": "Etappenplanung",
-            "id": 15
-        },
-        {
-            "parent": 31,
-            "droppable": true,
-            "text": "Feinplanung",
-            "id": 28
         },
         {
             "parent": 31,
@@ -64,7 +58,7 @@
             "id": 8,
             "parent": 30,
             "droppable": true,
-            "text": "Einf\u00fchrung"
+            "text": "Einführung"
         },
         {
             "parent": 30,
@@ -90,7 +84,8 @@
             "text": "VE-Beispiele aus der Praxis",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/",
+                "mbr_id": "9d141248-b21f-40f4-a03c-71691284a39d"
             },
             "id": 27
         },
@@ -100,7 +95,8 @@
             "text": "Was ist ein Virtueller Austausch",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/",
+                "mbr_id": "2ddf3b74-2784-41a2-9e6b-96d695cdadb5"
             },
             "id": 26
         },
@@ -110,7 +106,8 @@
             "text": "2.1 Einstieg",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/",
+                "mbr_id": "4f9e40f8-e0fe-40a3-9264-13e01d314ea8"
             },
             "id": 21
         },
@@ -120,7 +117,8 @@
             "text": "2.2 21st Century Skills",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/",
+                "mbr_id": "e8585f9f-6e4f-4e8b-9ea3-a719d051bbd3"
             },
             "id": 22
         },
@@ -130,7 +128,8 @@
             "text": "2.3 Blick in die Forschung",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/elementor-849/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/elementor-849/",
+                "mbr_id": "731ae4ba-1f97-4247-9a19-73a35277f7bb"
             },
             "id": 23
         },
@@ -140,7 +139,8 @@
             "text": "2.4 Schlussreflexion",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/",
+                "mbr_id": "f8e12069-bc29-4d51-b60f-696ebef8df2b"
             },
             "id": 24
         },
@@ -151,7 +151,8 @@
             "text": "1.1 Herausforderungen in virtuellen Austauschen",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/",
+                "mbr_id": "0f3a1cc1-8e5e-4c0f-a09b-66a8090c2711"
             }
         },
         {
@@ -160,7 +161,8 @@
             "text": "1.2 Herausforderungen als Chance",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/",
+                "mbr_id": "dfb0b9bf-7eae-42da-ad0d-97fa022f5260"
             },
             "id": 25
         },

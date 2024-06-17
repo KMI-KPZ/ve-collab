@@ -149,11 +149,6 @@ export default function TargetGroups() {
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
-                                    },
                                 })}
                                 placeholder="Name eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
@@ -233,11 +228,6 @@ export default function TargetGroups() {
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                                     },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?,-',
-                                    },
                                 })}
                                 placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
                                 className="border border-gray-400 rounded-lg w-full p-2"
@@ -264,11 +254,6 @@ export default function TargetGroups() {
                                         value: 500,
                                         message:
                                             'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                    pattern: {
-                                        value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                                        message:
-                                            'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
                                     },
                                 })}
                                 placeholder="Studiengang eingeben, mehrere durch Komma trennen"

@@ -292,7 +292,7 @@ export default function LearningGoals() {
         <Wrapper
             title="Lernziele & Themen"
             subtitle='1. Welche fachlichen Lernziele sollen im VE erreicht werden?'
-            tooltip={{text: 'Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …', link: '/learning-material/top-bubble/Potenziale'}}
+            tooltip={{text: 'Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …', link: '/learning-material/top-bubble/Potenziale'}}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -320,7 +320,7 @@ export default function LearningGoals() {
                                             `individualLearningGoals.${index}.learningGoal`
                                         )}
                                         placeholder={
-                                            'Beschreibe die individuellen Lernziele von ' +
+                                            'Beschreibe die individuellen Lernziele für die Lernenden von ' +
                                             findPartnerFirstAndLastName(
                                                 individualLearningGoalPerPartner.username
                                             )
@@ -335,7 +335,7 @@ export default function LearningGoals() {
             <div className="mt-12">
                 <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
                     2. Welche weiteren übergeordneten Lernziele werden verfolgt?
-                    <Tooltip tooltipsText="Mehr zu Richtlernzielen findest du hier in den Selbstlernmaterialien …">
+                    <Tooltip tooltipsText="Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …">
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Potenziale'}

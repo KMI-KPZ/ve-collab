@@ -29,7 +29,6 @@ export default function LearningContentView(props: Props) {
             title={node.text}
             slug={node.text}
             snippet={node.data.description}
-            imgFilename={'/images/example_image.jpg'}
         />
     ));
 

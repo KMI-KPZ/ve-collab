@@ -302,6 +302,7 @@ class Step:
         "timestamp_from": (str, datetime, type(None)),
         "timestamp_to": (str, datetime, type(None)),
         "learning_goal": (str, type(None)),
+        "learning_activity": (str, type(None)),
         "has_tasks": bool,
         "tasks": list,
         "evaluation_tools": list,
@@ -317,6 +318,7 @@ class Step:
         timestamp_from: str | datetime = None,
         timestamp_to: str | datetime = None,
         learning_goal: str = None,
+        learning_activity: str = None,
         has_tasks: bool = False,
         tasks: List[Task] = [],
         evaluation_tools: List[str] = [],
@@ -369,6 +371,7 @@ class Step:
             self.duration = self.timestamp_to - self.timestamp_from
 
         self.learning_goal = learning_goal
+        self.learning_activity = learning_activity
         self.has_tasks = has_tasks
         self.tasks = tasks
 
@@ -407,6 +410,7 @@ class Step:
             "timestamp_to": self.timestamp_to,
             "duration": self.duration.total_seconds() if self.duration else None,
             "learning_goal": self.learning_goal,
+            "learning_activity": self.learning_activity,
             "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
             "evaluation_tools": self.evaluation_tools,
