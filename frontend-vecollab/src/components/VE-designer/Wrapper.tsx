@@ -71,19 +71,20 @@ export default function Wrapper({
     // detect window close or a click outside of planer
     useEffect(() => {
         if (!router.isReady) return;
-        let lastClickEvent: MouseEvent
+        let clickedOutside: boolean = false
 
-        const handleClickOutside = (e: MouseEvent) => lastClickEvent = e
+        const handleClickOutside = (e: MouseEvent) => {
+            clickedOutside = !wrapperRef?.current?.contains(e.target as Node) || false
+        }
 
-        const handleBrowseAway = (nextlink: any) => {
+        const handleBrowseAway = (nextlink: string) => {
             if (preventToLeave === false) return
 
-            if (wrapperRef.current && lastClickEvent && !wrapperRef.current.contains(lastClickEvent.target as Node)) {
-                //  may prompt only if we have unsaved changes?!
-                if (!methods.formState.isDirty) return
-                //      console.log('handleBrowseAway', {isDirty: methods.formState.isDirty});
+            // form was not changed
+            if (!methods.formState.isDirty) return
 
-                setPopUp({isOpen: true, continueLink: nextlink})
+            if (clickedOutside) {
+                setPopUp({isOpen: true, continueLink: nextlink.replace(/\?.*/, '')})
                 router.events.emit('routeChangeError');
                 throw 'routeChange aborted.';
             }
@@ -186,9 +187,13 @@ export default function Wrapper({
                                         });
                                     } else {
                                         setPopUp(prev => { return {...prev, isOpen: false}})
+                                        setLoading(false)
                                     }
                                 }}
-                                handleCancel={() => setPopUp(prev => { return {...prev, isOpen: false}} )}
+                                handleCancel={() => {
+                                    setPopUp(prev => { return {...prev, isOpen: false}})
+                                    setLoading(false)
+                                }}
                             />
 
                             {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
@@ -199,6 +204,7 @@ export default function Wrapper({
                                     await handleSubmit(d)
                                     setLoading(false)
                                     setSuccessPopupOpen(true)
+                                    // manual update sidebar after changed user steps
                                     if (currentPath.startsWith('/ve-designer/step-names')) {
                                         setUpdateSidebar(true)
                                         setTimeout(() => {
