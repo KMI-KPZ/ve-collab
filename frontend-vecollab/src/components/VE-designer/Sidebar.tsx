@@ -7,18 +7,32 @@ import {
     ISideProgressBarStates,
     IMenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { mainMenu } from '@/data/sideMenuSteps';
+import { IMenuDataState, mainMenu } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
 import { MdArrowDropDown, MdArrowRight, MdCheckCircleOutline } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { useGetPlanById } from '@/lib/backend';
+
+// init menu open states
+let menuStates: IMenuDataState[] = mainMenu.map(a => {
+    return {id: a.id, open: true}
+})
+
+// note: but why does this work while change a route?!
+//  because we actually do not reload the page
+const updateMenuState = (id: string, state: boolean) => {
+    menuStates = menuStates.map(a => ({
+        id: a.id,
+        open: (a.id == id) ? state : a.open
+    }))
+}
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
     submitCallback: (data: any) => void,
     handleInvalidData: (data: any, continueLink: string) => void,
     stageInMenu: string,
-    updateSidebar?: boolean
+    reloadSidebar?: boolean
 }
 
 export default function Sidebar({
@@ -26,7 +40,7 @@ export default function Sidebar({
     submitCallback,
     handleInvalidData,
     stageInMenu='generally',
-    updateSidebar=false,
+    reloadSidebar=false,
 }: Props): JSX.Element {
     const router = useRouter();
     const currentPath = usePathname()
@@ -59,10 +73,8 @@ export default function Sidebar({
     }, [plan, isLoading])
 
     useEffect(() => {
-        if (updateSidebar === true) {
-            mutate()
-        }
-    }, [updateSidebar, mutate])
+        if (reloadSidebar === true) mutate()
+    }, [reloadSidebar, mutate])
 
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);
@@ -120,9 +132,11 @@ export default function Sidebar({
     }
 
     const MainMenuItem = ({item}: {item: IMenuData}) => {
-        // TODO remember if is open after routing (reduces flickering)
-        //  SEE handled in ChatWindow with state prop from parent component ...?!?
-        const [openSubmenu, setOpenSubmenu] = useState<boolean>(true)
+        const prevOpenState = menuStates.find(a => a.id == item.id)?.open
+        const [openSubmenu, setOpenSubmenu] = useState<boolean>(typeof prevOpenState !== 'undefined'
+            ? prevOpenState
+            : true
+        )
         const isCurrentPage = item.id == stageInMenu
 
         return (<>
@@ -130,7 +144,10 @@ export default function Sidebar({
                 className='flex bg-white p-2 w-full align-middle items-center cursor-pointer'
                 onClick={e => {
                     if (item.submenu.length > 0) {
-                        setOpenSubmenu(prev => !prev)
+                        setOpenSubmenu(prev => {
+                            updateMenuState(item.id, !prev)
+                            return !prev
+                        })
                     } else {
                         handleClick(item, e)
                     }

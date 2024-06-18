@@ -95,3 +95,8 @@ export const mainMenu: IMenuData[] = [
         submenu: []
     },
 ];
+
+export interface IMenuDataState {
+    id: string,
+    open: boolean
+}
