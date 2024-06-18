@@ -75,8 +75,10 @@ export default function Checklist({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
-    const prevpage = '/ve-designer/learning-environment';
-    const nextpage = '/ve-designer/step-names';
+ 
+    const prevpage = '/ve-designer/evaluation'
+    const nextpage = '/ve-designer/step-names'
+
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

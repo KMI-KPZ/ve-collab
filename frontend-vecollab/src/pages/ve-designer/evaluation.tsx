@@ -52,6 +52,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
+
     const prevpage = '/ve-designer/methodology';
     const nextpage = '/ve-designer/checklist';
 
