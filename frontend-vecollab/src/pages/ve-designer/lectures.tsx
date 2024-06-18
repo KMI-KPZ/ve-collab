@@ -1,4 +1,3 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
 import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -24,16 +23,12 @@ interface FormValues {
     lectures: Lecture[];
 }
 
-const areAllFormValuesEmpty = (lectures: Lecture[]): boolean => {
-    return lectures.every((institution) => {
-        return (
-            institution.name === '' &&
-            institution.school_type === '' &&
-            institution.country === '' &&
-            institution.departments.every((department) => department === '')
-        );
-    });
-};
+const emptyLecture = {
+    name: '',
+    school_type: '',
+    country: '',
+    departments: [],
+}
 
 Lectures.auth = true;
 export default function Lectures() {
@@ -47,36 +42,33 @@ export default function Lectures() {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            lectures: [
-                {
-                    name: '',
-                    school_type: '',
-                    country: '',
-                    departments: [],
-                },
-            ],
+            lectures: [ emptyLecture ]
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, replace } = useFieldArray({
         name: 'lectures',
         control: methods.control,
     });
 
+    const handleRemoveLecture = (i: number) => {
+        if (fields.length > 1) {
+            remove(i)
+        } else {
+            replace(emptyLecture)
+        }
+    }
+
     const setPlanerData = useCallback((plan: IPlan) => {
         if (plan.institutions.length !== 0) {
-            methods.setValue('lectures', plan.institutions);
+            replace(plan.institutions)
         }
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress)
         }
-    }, [methods]);
+    }, [replace]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data.lectures)) {
-            return
-        }
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -146,26 +138,7 @@ export default function Lectures() {
                                 <option value="Fachhochschule/University of Applied Sciences">
                                     Fachhochschule/University of Applied Sciences
                                 </option>
-                            {/* <div className={'flex justify-between items-center	 mt-2 mb-2'}>
-                    <h2 className='font-bold text-2xl'>
-                        Projektpartner
-                    </h2>
-                    <div className=''>
-                        <Tooltip tooltipsText="Tipps für die Partnersuche findest du hier in den Selbstlernmaterialien …">
-                            <Link
-                                target="_blank"
-                                href={
-                                    '/learning-material/left-bubble/Partnersuche'
-                                }
-                                className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
-                            >
-                                <PiBookOpenText size={30} color="#00748f" />
-                            </Link>
-                        </Tooltip>
-                    </div>
-                </div>
-                <p className='text-xl text-slate-600 mb-4'>Wer ist am Projekt beteiligt?</p> */}
-                    <option value="Berufsschule">Berufsschule</option>
+                                <option value="Berufsschule">Berufsschule</option>
                                 <option value="Schule – Primärbereich">
                                     Schule – Primärbereich
                                 </option>
@@ -234,7 +207,7 @@ export default function Lectures() {
                     <div className="flex justify-end items-center">
                         <Image
                             className="mx-2 cursor-pointer m-2 "
-                            onClick={() => remove(index)}
+                            onClick={() => handleRemoveLecture(index)}
                             src={trash}
                             width={20}
                             height={20}
@@ -255,7 +228,7 @@ export default function Lectures() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-                <div className={'rounded shadow px-4 w-full lg:w-2/3'}>
+                <div className={'px-4 w-full lg:w-2/3'}>
                     <div className="divide-y">
                         {renderLecturesInputs()}
                     </div>
