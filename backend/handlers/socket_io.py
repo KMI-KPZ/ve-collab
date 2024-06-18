@@ -500,7 +500,6 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
             "username": token["preferred_username"],
             "expires": datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS),
         }
-        print(global_vars.plan_write_lock_map)
         return {"status": 200, "success": True}
 
     else:
@@ -510,7 +509,6 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
                 "username": token["preferred_username"],
                 "expires": datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS),
             }
-            print(global_vars.plan_write_lock_map)
             return {"status": 200, "success": True}
         # the lock is not expired, but the current user holds it --> extend the lock
         elif (
@@ -520,11 +518,9 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
             global_vars.plan_write_lock_map[plan_id][
                 "expires"
             ] = datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS)
-            print(global_vars.plan_write_lock_map)
             return {"status": 200, "success": True}
         # the lock is not expired and is held by another user --> reject
         else:
-            print(global_vars.plan_write_lock_map)
             return {
                 "status": 403,
                 "success": False,
@@ -576,10 +572,8 @@ async def drop_plan_lock(sid, data):
 
     # reject if there is no active lock or if it is expired
     if plan_id not in global_vars.plan_write_lock_map:
-        print(global_vars.plan_write_lock_map)
         return {"status": 409, "success": False, "reason": "no_active_lock"}
     if global_vars.plan_write_lock_map[plan_id]["expires"] < datetime.now():
-        print(global_vars.plan_write_lock_map)
         return {"status": 409, "success": False, "reason": "lock_expired"}
 
     # only the user who holds the lock can drop it
@@ -587,12 +581,11 @@ async def drop_plan_lock(sid, data):
         global_vars.plan_write_lock_map[plan_id]["username"]
         != token["preferred_username"]
     ):
-        print(global_vars.plan_write_lock_map)
         return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
 
     # drop the lock after all checks have passed
     del global_vars.plan_write_lock_map[plan_id]
-    print(global_vars.plan_write_lock_map)
+
     return {"status": 200, "success": True}
 
 
