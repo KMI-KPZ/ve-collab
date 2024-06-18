@@ -1,6 +1,5 @@
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -10,9 +9,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
-import { PiBookOpenText } from 'react-icons/pi';
-import { Tooltip } from '@/components/Tooltip';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -37,13 +33,6 @@ interface Partner {
     label: string;
     value: string;
 }
-
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length <= 1
-    );
-};
 
 Partners.auth = true;
 export default function Partners() {
@@ -210,10 +199,6 @@ export default function Partners() {
             });
         }
 
-        if (areAllFormValuesEmpty(data)) {
-            return
-        }
-
         return  [
             {
                 plan_id: router.query.plannerId,
@@ -265,6 +250,7 @@ export default function Partners() {
         } else {
             updateExternalParties(index, { externalParty: '' });
         }
+
     };
 
     const loadOptions = (
