@@ -1,17 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { Socket } from 'socket.io-client';
 
 interface FormValues {
     methodicalApproach: string;
@@ -24,36 +21,43 @@ export interface PhysicalMobility {
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.methodicalApproach === ''
+    return formValues.methodicalApproach === '';
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Methodology.auth = true;
-export default function Methodology() {
+export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const prevpage = '/ve-designer/learning-env'
-    const nextpage = '/ve-designer/evaluation'
+    const prevpage = '/ve-designer/learning-env';
+    const nextpage = '/ve-designer/evaluation';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            methodicalApproach: ''
+            methodicalApproach: '',
         },
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.methodical_approach !== null) {
-            methods.setValue('methodicalApproach', plan.methodical_approach);
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
-    }, [methods]);
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.methodical_approach !== null) {
+                methods.setValue('methodicalApproach', plan.methodical_approach);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+        },
+        [methods]
+    );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return
+        if (areAllFormValuesEmpty(data)) return;
 
         return [
             {
@@ -69,16 +73,17 @@ export default function Methodology() {
                     methodical_approach: ProgressState.completed,
                 },
             },
-        ]
+        ];
     };
 
     return (
         <Wrapper
-            title='Methodischer Ansatz'
-            subtitle='Welche methodischen Ansätze kommen im VE zum Einsatz?'
+            socket={socket}
+            title="Methodischer Ansatz"
+            subtitle="Welche methodischen Ansätze kommen im VE zum Einsatz?"
             tooltip={{
                 text: 'Mehr zu Methodik findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material'
+                link: '/learning-material',
             }}
             methods={methods}
             prevpage={prevpage}
@@ -94,8 +99,7 @@ export default function Methodology() {
                     {...methods.register('methodicalApproach', {
                         maxLength: {
                             value: 500,
-                            message:
-                                'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                         },
                     })}
                 />

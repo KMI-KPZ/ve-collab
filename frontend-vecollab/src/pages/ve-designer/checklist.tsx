@@ -12,6 +12,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 export interface CheckListPartner {
     username: string;
@@ -62,16 +63,22 @@ const emptyCheckListPartner: CheckListPartner = {
     dataProtection: false,
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Checklist.auth = true;
-export default function Checklist() {
+export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
+ 
     const prevpage = '/ve-designer/evaluation'
     const nextpage = '/ve-designer/step-names'
+
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -85,28 +92,30 @@ export default function Checklist() {
         control: methods.control,
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (
-            plan.formalities &&
-            Array.isArray(plan.formalities) &&
-            plan.formalities.length > 0
-        ) {
-            methods.setValue('checklist', plan.formalities);
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (
+                plan.formalities &&
+                Array.isArray(plan.formalities) &&
+                plan.formalities.length > 0
+            ) {
+                methods.setValue('checklist', plan.formalities);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
 
-        // fetch profile snippets to be able to display the full name instead of username only
-        fetchPOST(
-            '/profile_snippets',
-            { usernames: [...plan.partners, plan.author] },
-            session?.accessToken
-        ).then((snippets: BackendProfileSnippetsResponse) => {
-            setUsersFirstLastNames(snippets.user_snippets);
-        });
-
-    }, [methods, session]);
+            // fetch profile snippets to be able to display the full name instead of username only
+            fetchPOST(
+                '/profile_snippets',
+                { usernames: [...plan.partners, plan.author] },
+                session?.accessToken
+            ).then((snippets: BackendProfileSnippetsResponse) => {
+                setUsersFirstLastNames(snippets.user_snippets);
+            });
+        },
+        [methods, session]
+    );
 
     const findPartnerFirstAndLastName = (username: string): string => {
         const findUser = usersFirstLastNames.find(
@@ -120,7 +129,7 @@ export default function Checklist() {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return
+        if (areAllFormValuesEmpty(data)) return;
 
         return [
             {
@@ -136,7 +145,7 @@ export default function Checklist() {
                     formalities: ProgressState.completed,
                 },
             },
-        ]
+        ];
     };
 
     function renderCheckBoxes(): JSX.Element[] {
@@ -291,11 +300,12 @@ export default function Checklist() {
 
     return (
         <Wrapper
-            title='Checkliste'
-            subtitle='An alles gedacht?'
+            socket={socket}
+            title="Checkliste"
+            subtitle="An alles gedacht?"
             tooltip={{
                 text: 'Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/top-bubble/Herausforderungen'
+                link: '/learning-material/top-bubble/Herausforderungen',
             }}
             methods={methods}
             prevpage={prevpage}
@@ -303,17 +313,11 @@ export default function Checklist() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-           <div>
-                Bevor es mit der inhaltlichen und didaktischen Planung
-                losgeht:
-            </div>
+            <div>Bevor es mit der inhaltlichen und didaktischen Planung losgeht:</div>
             <div className="mb-2">
-                Sind die folgenden Bedingungen bei allen Beteiligten
-                geklärt?
+                Sind die folgenden Bedingungen bei allen Beteiligten geklärt?
             </div>
-            <div className="grid grid-cols-3 gap-1 mt-7 mb-10">
-                    {renderCheckBoxes()}
-            </div>
+            <div className="grid grid-cols-3 gap-1 mt-7 mb-10">{renderCheckBoxes()}</div>
         </Wrapper>
     );
 }

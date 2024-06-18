@@ -12,6 +12,7 @@ import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
+import { Socket } from 'socket.io-client';
 
 interface FormValues {
     learningEnv: string;
@@ -40,8 +41,12 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
         )
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Methodology.auth = true;
-export default function Methodology() {
+export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -270,6 +275,7 @@ export default function Methodology() {
 
     return (
         <Wrapper
+            socket={socket}
             title='Digitale Lernumgebung'
             subtitle='In welcher digitalen Lernumgebung findet der VE statt?'
             tooltip={{

@@ -103,7 +103,6 @@ class VEPlanHandler(BaseHandler):
         except KeyError:
             # if the plan is not locked, do nothing
             pass
-        print(global_vars.plan_write_lock_map)
 
     def _release_lock(self, plan_id: str | ObjectId) -> None:
         """
@@ -121,7 +120,6 @@ class VEPlanHandler(BaseHandler):
         except KeyError:
             # if the plan is not locked, do nothing
             pass
-        print(global_vars.plan_write_lock_map)
 
     @auth_needed
     def get(self, slug):

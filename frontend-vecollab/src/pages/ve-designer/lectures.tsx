@@ -1,4 +1,3 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
 import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -12,6 +11,7 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 export interface Lecture {
     name: string;
@@ -35,8 +35,12 @@ const areAllFormValuesEmpty = (lectures: Lecture[]): boolean => {
     });
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Lectures.auth = true;
-export default function Lectures() {
+export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -247,6 +251,7 @@ export default function Lectures() {
 
     return (
         <Wrapper
+            socket={socket}
             title='Institution'
             subtitle='In welchen Institutionen wird der VE umgesetzt?'
             methods={methods}
