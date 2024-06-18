@@ -30,6 +30,13 @@ const emptyLecture = {
     departments: [],
 }
 
+const isEmptyLecture = (lecture: Lecture) => {
+    return lecture.name === ''
+        && lecture.school_type === ''
+        && lecture.country === ''
+        && lecture.departments.every(d => d === '')
+}
+
 Lectures.auth = true;
 export default function Lectures() {
     const router = useRouter();
@@ -69,11 +76,12 @@ export default function Lectures() {
     }, [replace]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const lectures = data.lectures.filter((l: Lecture) => !isEmptyLecture(l))
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'institutions',
-                value: data.lectures,
+                value: lectures,
             },
             {
                 plan_id: router.query.plannerId,
