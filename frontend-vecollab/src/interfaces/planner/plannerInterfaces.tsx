@@ -3,9 +3,10 @@ import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { TargetGroup } from '@/pages/ve-designer/target-groups';
 import { Lecture } from '@/pages/ve-designer/lectures';
 import { LectureOld } from '@/pages/ve-designer/participatingCourses';
-import { PhysicalMobility } from '@/pages/ve-designer/teaching-formats';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
+import { EvaluationFile } from '@/pages/ve-designer/post-process';
+import { PhysicalMobility } from '@/pages/ve-designer/methodology';
 
 export interface PlanPreview {
     _id: string;
@@ -30,6 +31,7 @@ export interface IPlan {
     involved_parties: string[];
     languages: string[];
     evaluation: EvaluationPerPartner[];
+    evaluation_file: EvaluationFile;
     last_modified: string;
     learning_env: string | null;
     major_learning_goals: string[];

@@ -1,22 +1,16 @@
-import { signIn, useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import Stage from '@/components/VE-designer/FinePlanner/Stage';
-import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ISideProgressBarStateSteps,
     ProgressState,
-    SideMenuStep,
+    ISubmenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import SideProgressbarSectionFinePlanner from '@/components/VE-designer/SideProgressbarSectionFinePlanner';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
+import Wrapper from '@/components/VE-designer/Wrapper';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 export interface ITask {
     task_formulation: string;
@@ -117,8 +111,6 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
 
 FinePlanner.auth = true;
 export default function FinePlanner() {
-    const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { stepName } = router.query;
     const methods = useForm<IFineStepFrontend>({
@@ -127,76 +119,72 @@ export default function FinePlanner() {
             ...defaultFormValueDataFineStepFrontend,
         },
     });
-
+    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step-data/')
+    const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/')
     const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
         ...defaultFormValueDataFineStepFrontend,
     });
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [sideMenuStepsData, setSideMenuStepsData] = useState<SideMenuStep[]>([]);
+    const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
 
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
+    const setPlanerData = useCallback((plan: IPlan) => {
+        if (!plan.steps?.length) return
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    if (data.plan.steps?.length > 0) {
-                        setSteps(data.plan.steps);
-                        const currentFineStepCopy: IFineStep | undefined = data.plan.steps.find(
-                            (item: IFineStep) => item.name === stepName
-                        );
-                        if (currentFineStepCopy) {
-                            const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
-                                (task: ITask) => {
-                                    return {
-                                        ...task,
-                                        tools: task.tools.map((tool) => ({
-                                            name: tool,
-                                        })),
-                                        materials: task.materials.map((materials) => ({
-                                            name: materials,
-                                        })),
-                                    };
-                                }
-                            );
-                            const fineStepCopyTransformedTools: IFineStepFrontend = {
-                                ...currentFineStepCopy,
-                                tasks: transformedTasks,
-                            };
-                            setCurrentFineStep(fineStepCopyTransformedTools);
-                            methods.reset({ ...fineStepCopyTransformedTools });
-                            setSideMenuStepsData(generateSideMenuStepsData(data.plan.steps));
-                            setSideMenuStepsProgress(data.plan.progress);
-                        }
-                    }
+        setSteps(plan.steps);
+        const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
+            (item: IFineStep) => item.name === stepName
+        );
+        if (currentFineStepCopy) {
+            const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
+                (task: ITask) => {
+                    return {
+                        ...task,
+                        tools: task.tools.map((tool) => ({
+                            name: tool,
+                        })),
+                        materials: task.materials.map((materials) => ({
+                            name: materials,
+                        })),
+                    };
                 }
             );
+            const fineStepCopyTransformedTools: IFineStepFrontend = {
+                ...currentFineStepCopy,
+                tasks: transformedTasks,
+            };
+            setCurrentFineStep(fineStepCopyTransformedTools);
+            methods.reset({ ...fineStepCopyTransformedTools });
+            setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress)
+            }
         }
-    }, [session, status, router, stepName, methods]);
+    },[methods, stepName]);
+
+    useEffect(() => {
+        const sideMenuStepsDataCopy: ISubmenuData[] = [...sideMenuStepsData];
+        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+            // courseFormat generate Finestep methode rausnehmen
+            (item: ISubmenuData): boolean => item.text === currentFineStep.name // with id (encode einfach)
+        ); // -1 if not found
+
+        setNextpage(
+            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
+            currentSideMenuStepIndex >= 0
+                ? sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link
+                : '/ve-designer/finish'
+        )
+
+        setPrevpage(
+            currentSideMenuStepIndex > 0
+                ? sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link
+                : '/ve-designer/step-names'
+        )
+    }, [sideMenuStepsData, currentFineStep])
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
@@ -227,40 +215,27 @@ export default function FinePlanner() {
                     ? { [stepSlugDecoded]: ProgressState.completed }
                     : step
         );
-        if (!areAllFormValuesEmpty(data)) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'steps',
-                            value: [...updateStepsData],
-                        },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                steps: [...updateStepsProgress],
-                            },
-                        },
-                    ],
+
+        if (areAllFormValuesEmpty(data)) return
+
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'steps',
+                value: [...updateStepsData],
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    steps: [...updateStepsProgress],
                 },
-                session?.accessToken
-            );
-        }
+            },
+        ]
     };
 
-    const combinedSubmitRouteAndUpdate = async (data: IFineStepFrontend, url: string) => {
-        onSubmit(data);
-        await router.push({
-            pathname: url,
-            query: { plannerId: router.query.plannerId },
-        });
-    };
-
-    const generateSideMenuStepsData = (steps: IFineStep[]): SideMenuStep[] => {
+    const generateSideMenuStepsData = (steps: IFineStep[]): ISubmenuData[] => {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
             text: step.name,
@@ -268,110 +243,22 @@ export default function FinePlanner() {
         }));
     };
 
-    const getNextFineStepUrl = (): string => {
-        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
-        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
-            // courseFormat generate Finestep methode rausnehmen
-            (item: SideMenuStep): boolean => item.text === currentFineStep.name // with id (encode einfach)
-        ); // -1 if not found
-        if (
-            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
-            currentSideMenuStepIndex >= 0
-        ) {
-            return sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link;
-        } else {
-            return '/ve-designer/finish';
-        }
-    };
-
-    const getPreviousFineStepUrl = (): string => {
-        const sideMenuStepsDataCopy: SideMenuStep[] = [...sideMenuStepsData];
-        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
-            (item: SideMenuStep): boolean => item.text === currentFineStep.name
-        );
-        if (currentSideMenuStepIndex > 0) {
-            return sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link;
-        } else {
-            return '/ve-designer/step-names';
-        }
-    };
-
     return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
-                <div className="flex flex-col">
-                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <FormProvider {...methods}>
-                            <form className="gap-y-6 w-full p-12 max-w-7xl items-center flex flex-col flex-grow justify-between">
-                                <div>
-                                    <div className="flex justify-center">
-                                        <div
-                                            className={
-                                                'text-center font-bold text-4xl mb-2 relative w-fit'
-                                            }
-                                        >
-                                            Feinplanung
-                                            <Tooltip tooltipsText="Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …">
-                                                <Link
-                                                    target="_blank"
-                                                    href={
-                                                        '/learning-material/left-bubble/Etappenplanung'
-                                                    }
-                                                >
-                                                    <PiBookOpenText size={30} color="#00748f" />
-                                                </Link>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                    <div className={'text-center mb-20'}>
-                                        Beschreibt nun die einzelnen Etappen genauer
-                                    </div>
-                                    <Stage fineStep={currentFineStep} />
-                                </div>
-                                <div className="flex justify-between w-full max-w-xl">
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    getPreviousFineStepUrl()
-                                                )
-                                            )}
-                                        >
-                                            Zurück
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    getNextFineStepUrl()
-                                                )
-                                            )}
-                                        >
-                                            Weiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </FormProvider>
-                    )}
-                </div>
-            </div>
-            <SideProgressbarSectionFinePlanner
-                progressState={sideMenuStepsProgress}
-                handleValidation={methods.handleSubmit(onSubmit)}
-                isValid={true}
-                sideMenuStepsData={sideMenuStepsData}
-            />
-        </div>
+        <Wrapper
+            title={`Etappe: ${currentFineStep.name}`}
+            subtitle='Beschreibung der Etappe'
+            tooltip={{
+                text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Etappenplanung'
+            }}
+            methods={methods}
+            prevpage={prevpage}
+            nextpage={nextpage}
+            stageInMenu='steps'
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
+            <Stage fineStep={currentFineStep} />
+        </Wrapper>
     );
 }
