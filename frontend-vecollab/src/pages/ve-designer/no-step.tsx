@@ -67,7 +67,7 @@ export default function NoStep() {
                     </Link>
                     <Link
                         href={{
-                            pathname: `/ve-designer/post-process`,
+                            pathname: `/ve-designer/finish`,
                             query: { plannerId: router.query.plannerId },
                         }}
                     >

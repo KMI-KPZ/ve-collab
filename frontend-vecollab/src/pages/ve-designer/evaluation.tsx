@@ -48,7 +48,7 @@ export default function Evaluation() {
         [Key: string]: BackendUserSnippet;
     }>({});
     const prevpage = '/ve-designer/methodology'
-    const nextpage = '/ve-designer/teaching-formats'
+    const nextpage = '/ve-designer/checklist'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
