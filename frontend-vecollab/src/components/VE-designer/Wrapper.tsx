@@ -137,7 +137,7 @@ export default function Wrapper({
 
                 setPlanerData(data.plan as IPlan);
                 planerDataCallback(data.plan as IPlan)
-                // BUG: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+                // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
                 setIsDirty(methods.formState.isDirty)
             }
         );
@@ -154,6 +154,7 @@ export default function Wrapper({
                 session?.accessToken
             );
         }
+        methods.reset({}, { keepValues: true });
         // await mutate()
     }
 
@@ -242,7 +243,7 @@ export default function Wrapper({
                                         setPopUp({isOpen: true, continueLink: continueLink})
                                     }}
                                     stageInMenu={stageInMenu}
-                                    updateSidebar={updateSidebar}
+                                    reloadSidebar={updateSidebar}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">

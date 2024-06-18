@@ -119,7 +119,8 @@ export default function StepNames() {
                     name: name,
                 };
             });
-            replace(stepNames)
+            replace(stepNames) // PROBLEM isDirty is initially true
+            // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
 
             setSteps(plan.steps)
             setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
