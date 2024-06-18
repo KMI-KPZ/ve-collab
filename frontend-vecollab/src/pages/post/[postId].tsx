@@ -8,13 +8,18 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GiSadCrab } from 'react-icons/gi';
+import { Socket } from "socket.io-client";
 
 /**
  * Single post view
  */
 
+interface Props {
+    socket: Socket;
+}
+
 Post.auth = true;
-export default function Post() {
+export default function Post({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
     const { postId } = router.query
@@ -109,6 +114,7 @@ export default function Post() {
     return (
         <Wrapper>
              <TimelinePost
+                socket={socket}
                 post={post}
                 allGroups={allGroups}
                 groupACL={groupACLEntry}

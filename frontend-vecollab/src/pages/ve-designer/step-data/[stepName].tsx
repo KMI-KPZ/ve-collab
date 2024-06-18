@@ -11,6 +11,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 export interface ITask {
     task_formulation: string;
@@ -109,8 +110,12 @@ const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     );
 };
 
+interface Props {
+    socket: Socket;
+}
+
 FinePlanner.auth = true;
-export default function FinePlanner() {
+export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { stepName } = router.query;
     const methods = useForm<IFineStepFrontend>({
@@ -119,8 +124,8 @@ export default function FinePlanner() {
             ...defaultFormValueDataFineStepFrontend,
         },
     });
-    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step-data/')
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/')
+    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step-data/');
+    const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/');
     const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
         ...defaultFormValueDataFineStepFrontend,
     });
@@ -131,39 +136,42 @@ export default function FinePlanner() {
         initialSideProgressBarStates
     );
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (!plan.steps?.length) return
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (!plan.steps?.length) return;
 
-        setSteps(plan.steps);
-        const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
-            (item: IFineStep) => item.name === stepName
-        );
-        if (currentFineStepCopy) {
-            const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
-                (task: ITask) => {
-                    return {
-                        ...task,
-                        tools: task.tools.map((tool) => ({
-                            name: tool,
-                        })),
-                        materials: task.materials.map((materials) => ({
-                            name: materials,
-                        })),
-                    };
-                }
+            setSteps(plan.steps);
+            const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
+                (item: IFineStep) => item.name === stepName
             );
-            const fineStepCopyTransformedTools: IFineStepFrontend = {
-                ...currentFineStepCopy,
-                tasks: transformedTasks,
-            };
-            setCurrentFineStep(fineStepCopyTransformedTools);
-            methods.reset({ ...fineStepCopyTransformedTools });
-            setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress)
+            if (currentFineStepCopy) {
+                const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
+                    (task: ITask) => {
+                        return {
+                            ...task,
+                            tools: task.tools.map((tool) => ({
+                                name: tool,
+                            })),
+                            materials: task.materials.map((materials) => ({
+                                name: materials,
+                            })),
+                        };
+                    }
+                );
+                const fineStepCopyTransformedTools: IFineStepFrontend = {
+                    ...currentFineStepCopy,
+                    tasks: transformedTasks,
+                };
+                setCurrentFineStep(fineStepCopyTransformedTools);
+                methods.reset({ ...fineStepCopyTransformedTools });
+                setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
+                if (Object.keys(plan.progress).length) {
+                    setSideMenuStepsProgress(plan.progress);
+                }
             }
-        }
-    },[methods, stepName]);
+        },
+        [methods, stepName]
+    );
 
     useEffect(() => {
         const sideMenuStepsDataCopy: ISubmenuData[] = [...sideMenuStepsData];
@@ -174,17 +182,17 @@ export default function FinePlanner() {
 
         setNextpage(
             currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
-            currentSideMenuStepIndex >= 0
+                currentSideMenuStepIndex >= 0
                 ? sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link
                 : '/ve-designer/finish'
-        )
+        );
 
         setPrevpage(
             currentSideMenuStepIndex > 0
                 ? sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link
                 : '/ve-designer/step-names'
-        )
-    }, [sideMenuStepsData, currentFineStep])
+        );
+    }, [sideMenuStepsData, currentFineStep]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
         const currentStepTransformBackTools: ITask[] = data.tasks.map((task: ITaskFrontend) => {
@@ -216,7 +224,7 @@ export default function FinePlanner() {
                     : step
         );
 
-        if (areAllFormValuesEmpty(data)) return
+        if (areAllFormValuesEmpty(data)) return;
 
         return [
             {
@@ -232,7 +240,7 @@ export default function FinePlanner() {
                     steps: [...updateStepsProgress],
                 },
             },
-        ]
+        ];
     };
 
     const generateSideMenuStepsData = (steps: IFineStep[]): ISubmenuData[] => {
@@ -245,16 +253,17 @@ export default function FinePlanner() {
 
     return (
         <Wrapper
+            socket={socket}
             title={`Etappe: ${currentFineStep.name}`}
-            subtitle='Beschreibung der Etappe'
+            subtitle="Beschreibung der Etappe"
             tooltip={{
                 text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/left-bubble/Etappenplanung'
+                link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
-            stageInMenu='steps'
+            stageInMenu="steps"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

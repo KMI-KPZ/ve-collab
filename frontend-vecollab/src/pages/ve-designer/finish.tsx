@@ -6,25 +6,36 @@ import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
+import { Socket } from 'socket.io-client';
 
 interface Props {
+    socket: Socket;
     feedbackFormURL: string;
 }
 
 Finished.auth = true;
-export default function Finished({ feedbackFormURL }: Props): JSX.Element {
+export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
 
+    const releaseLockAndForward = () => {
+        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+            console.log(response);
+            // TODO error handling
+            router.push('/plans');
+        });
+    };
+
     return (
         <Wrapper
-            title='Fertig'
-            subtitle='Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!'
+            socket={socket}
+            title="Fertig"
+            subtitle="Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!"
             methods={useForm<any>()}
             preventToLeave={false}
-            stageInMenu='finish'
-            planerDataCallback={d => {}}
-            submitCallback={d => {}}
+            stageInMenu="finish"
+            planerDataCallback={(d) => {}}
+            submitCallback={(d) => {}}
         >
             {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
             {feedbackFormURL && (
@@ -43,14 +54,14 @@ export default function Finished({ feedbackFormURL }: Props): JSX.Element {
             )}
             <div className="flex justify-around w-full mt-10">
                 <div>
-                    <Link href={'/plans'}>
-                        <button
-                            type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        >
-                            Weiter zur Übersicht
-                        </button>
-                    </Link>
+                    <button
+                        type="submit"
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                        onClick={releaseLockAndForward}
+                    >
+                        Weiter zur Übersicht
+                    </button>
+
                     <Link
                         href={{
                             pathname: `/ve-designer/post-process`,

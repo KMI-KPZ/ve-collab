@@ -14,23 +14,28 @@ import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
 import ConfirmDialog from '../Confirm';
 import Alert, { AlertState } from '../Alert';
+import { Socket } from 'socket.io-client';
+import { useRouter } from 'next/router';
 
 interface Props {
+    socket: Socket;
     plan: PlanPreview;
     refetchPlansCallback: () => Promise<void>;
 }
 
-export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Props) {
+export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
+    const router = useRouter();
+
     const username = session?.user.preferred_username;
 
-    const [alert, setAlert] = useState<AlertState>({open: false});
+    const [alert, setAlert] = useState<AlertState>({ open: false });
 
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [isSummaryOpen, setSummaryOpen] = useState(false);
     const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
     const [planSummary, setPlanSummary] = useState<IPlan>();
-    const [askDeletion, setAskDeletion] = useState<boolean>(false)
+    const [askDeletion, setAskDeletion] = useState<boolean>(false);
 
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
@@ -59,6 +64,29 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             setPlanSummary(data.plan);
             setLoadingSummary(false);
         });
+    };
+
+    const acquireLockAndForward = async (planId: string) => {
+        socket.emit(
+            'try_acquire_or_extend_plan_write_lock',
+            { plan_id: planId },
+            async (response: any) => {
+                console.log(response);
+                if (response.success && response.status === 200) {
+                    await router.push({
+                        pathname: '/ve-designer/name',
+                        query: { plannerId: planId },
+                    });
+                } else if (!response.success && response.status === 403) {
+                    // TODO somehow this is only showing once and then only again after page reload
+                    setAlert({
+                        message: `Plan wird gerade von ${response.lock_holder} bearbeitet`,
+                        autoclose: 2000,
+                        open: true,
+                    });
+                }
+            }
+        );
     };
 
     // ensures that we have the username in the next return ...
@@ -98,15 +126,12 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         >
             <div>
                 {plan.write_access.includes(username) && (
-                    <Link
-                        className='absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20'
-                        href={{
-                            pathname: '/ve-designer/name',
-                            query: { plannerId: plan._id },
-                        }}
+                    <div
+                        className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
+                        onClick={() => acquireLockAndForward(plan._id)}
                     >
                         <MdEdit className="inline" /> Bearbeiten
-                    </Link>
+                    </div>
                 )}
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
                     {loadingSummary ? (
@@ -125,17 +150,13 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
     );
 
     const EditButton = () => (
-        <Link
-            href={{
-                pathname: '/ve-designer/name',
-                query: { plannerId: plan._id },
-            }}
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
-            onClick={(e) => e.stopPropagation()}
-            title='Plan bearbeiten'
+        <div
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
+            onClick={(e) => {e.stopPropagation(); acquireLockAndForward(plan._id)}}
+            title="Plan bearbeiten"
         >
             <MdEdit />
-        </Link>
+        </div>
     );
 
     const DeleteButton = () => (
@@ -143,10 +164,10 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
             onClick={(e) => {
                 e.stopPropagation();
-                setAskDeletion(true)
+                setAskDeletion(true);
             }}
         >
-            <MdDelete title='Plan löschen' />
+            <MdDelete title="Plan löschen" />
         </button>
     );
 
@@ -161,11 +182,12 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             {plan.read_access.length > 1 ? (
                 <MdShare
                     className="text-green-600"
-                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${plan.read_access.length > 2 ? 'n' : ''
-                        }`}
+                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${
+                        plan.read_access.length > 2 ? 'n' : ''
+                    }`}
                 />
             ) : (
-                <MdShare title='Plan teilen' />
+                <MdShare title="Plan teilen" />
             )}
         </button>
     );
@@ -179,7 +201,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
         }
-        setAlert({message: 'Plan gelöscht'})
+        setAlert({ message: 'Plan gelöscht', autoclose: 2000 });
     };
 
     return (
@@ -197,7 +219,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             >
                 <div className="flex items-center">
                     <div className="mr-2 py-1 font-bold whitespace-nowrap">
-                        <Link href={`/plan/${plan._id}`} onClick={e => e.preventDefault()}>
+                        <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
                         </Link>
                     </div>
@@ -249,10 +271,13 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             <SummaryDialog />
 
             {askDeletion && (
-                <ConfirmDialog message="Plan löschen?" callback={proceed => {
-                    if (proceed) deletePlan(plan._id);
-                    setAskDeletion(false)
-                }} />
+                <ConfirmDialog
+                    message="Plan löschen?"
+                    callback={(proceed) => {
+                        if (proceed) deletePlan(plan._id);
+                        setAskDeletion(false);
+                    }}
+                />
             )}
 
             <Alert state={alert} />

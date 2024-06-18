@@ -19,6 +19,7 @@ import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 export interface FormValues {
     partners: Partner[];
@@ -34,8 +35,19 @@ interface Partner {
     value: string;
 }
 
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return (
+        formValues.externalParties.every((party) => party.externalParty === '') &&
+        formValues.partners.length <= 1
+    );
+};
+
+interface Props {
+    socket: Socket;
+}
+
 Partners.auth = true;
-export default function Partners() {
+export default function Partners({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -47,8 +59,8 @@ export default function Partners() {
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
         { username: string; learning_goal: string }[]
     >([]);
-    const prevpage = '/ve-designer/name'
-    const nextpage = '/ve-designer/lectures'
+    const prevpage = '/ve-designer/name';
+    const nextpage = '/ve-designer/lectures';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -58,64 +70,64 @@ export default function Partners() {
         },
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.formalities && Array.isArray(plan.formalities)) {
-            setFormalConditions(plan.formalities);
-        }
-        if (plan.evaluation && Array.isArray(plan.evaluation)) {
-            setEvaluationInfo(plan.evaluation);
-        }
-        if (
-            plan.individual_learning_goals &&
-            Array.isArray(plan.individual_learning_goals)
-        ) {
-            setIndividualLearningGoals(plan.individual_learning_goals);
-        }
-        if (plan.involved_parties.length !== 0) {
-            methods.setValue(
-                'externalParties',
-                plan.involved_parties.map((element: string) => ({
-                    externalParty: element,
-                }))
-            );
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
-        if (plan.partners.length !== 0) {
-            fetchPOST(
-                '/profile_snippets',
-                { usernames: plan.partners },
-                session?.accessToken
-            ).then((snippets: BackendProfileSnippetsResponse) => {
-                const usernameWithFirstAndLastName = plan.partners.map(
-                    (partner: string): Partner => {
-                        const findFullUsername = snippets.user_snippets.find(
-                            (backendUser: BackendUserSnippet) =>
-                                backendUser.username === partner
-                        );
-                        if (findFullUsername !== undefined) {
-                            return {
-                                label:
-                                    findFullUsername.first_name +
-                                    ' ' +
-                                    findFullUsername.last_name +
-                                    ' - ' +
-                                    findFullUsername.username,
-                                value: findFullUsername.username,
-                            };
-                        } else {
-                            return {
-                                label: partner,
-                                value: partner,
-                            };
-                        }
-                    }
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.formalities && Array.isArray(plan.formalities)) {
+                setFormalConditions(plan.formalities);
+            }
+            if (plan.evaluation && Array.isArray(plan.evaluation)) {
+                setEvaluationInfo(plan.evaluation);
+            }
+            if (plan.individual_learning_goals && Array.isArray(plan.individual_learning_goals)) {
+                setIndividualLearningGoals(plan.individual_learning_goals);
+            }
+            if (plan.involved_parties.length !== 0) {
+                methods.setValue(
+                    'externalParties',
+                    plan.involved_parties.map((element: string) => ({
+                        externalParty: element,
+                    }))
                 );
-                methods.setValue('partners', usernameWithFirstAndLastName);
-            });
-        }
-    }, [methods, session])
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+            if (plan.partners.length !== 0) {
+                fetchPOST(
+                    '/profile_snippets',
+                    { usernames: plan.partners },
+                    session?.accessToken
+                ).then((snippets: BackendProfileSnippetsResponse) => {
+                    const usernameWithFirstAndLastName = plan.partners.map(
+                        (partner: string): Partner => {
+                            const findFullUsername = snippets.user_snippets.find(
+                                (backendUser: BackendUserSnippet) =>
+                                    backendUser.username === partner
+                            );
+                            if (findFullUsername !== undefined) {
+                                return {
+                                    label:
+                                        findFullUsername.first_name +
+                                        ' ' +
+                                        findFullUsername.last_name +
+                                        ' - ' +
+                                        findFullUsername.username,
+                                    value: findFullUsername.username,
+                                };
+                            } else {
+                                return {
+                                    label: partner,
+                                    value: partner,
+                                };
+                            }
+                        }
+                    );
+                    methods.setValue('partners', usernameWithFirstAndLastName);
+                });
+            }
+        },
+        [methods, session]
+    );
 
     const {
         fields: fieldsPartners,
@@ -199,7 +211,7 @@ export default function Partners() {
             });
         }
 
-        return  [
+        return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'partners',
@@ -233,7 +245,7 @@ export default function Partners() {
                 field_name: 'individual_learning_goals',
                 value: updateIndividualLearningGoals,
             },
-        ]
+        ];
     };
 
     const handleDeletePartners = (index: number): void => {
@@ -329,11 +341,12 @@ export default function Partners() {
 
     return (
         <Wrapper
-            title='Projektpartner'
-            subtitle='Wer ist am Projekt beteiligt? Einige Felder werden individuell für die Beteiligten beantwortet'
+            socket={socket}
+            title="Projektpartner"
+            subtitle="Wer ist am Projekt beteiligt? Einige Felder werden individuell für die Beteiligten beantwortet"
             tooltip={{
                 text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/left-bubble/Partnersuche'
+                link: '/learning-material/left-bubble/Partnersuche',
             }}
             methods={methods}
             prevpage={prevpage}
@@ -343,15 +356,8 @@ export default function Partners() {
         >
             <div>
                 {fieldsPartners.map((partner, index) => (
-                    <div
-                        key={partner.id}
-                        className="flex w-full mb-2 gap-x-3 lg:w-1/2"
-                    >
-                        {createableAsyncSelect(
-                            methods.control,
-                            `partners.${index}`,
-                            index
-                        )}
+                    <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
                         <button onClick={() => handleDeletePartners(index)}>
                             <RxMinus size={20} />
                         </button>
@@ -369,7 +375,7 @@ export default function Partners() {
                     </button>
                 </div>
                 <div>
-                    <p className='text-xl text-slate-600 mb-2 mt-10'>Extern Beteiligte</p>
+                    <p className="text-xl text-slate-600 mb-2 mt-10">Extern Beteiligte</p>
                     {renderExternalPartiesInputs()}
                     <div className="mt-4">
                         <button

@@ -1,13 +1,15 @@
 import React from 'react';
-import Image from 'next/image';
-import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import { signIn, useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
 import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 import ButtonPrimary from '@/components/ButtonPrimary';
 import WhiteBox from '@/components/Layout/WhiteBox';
+import { Socket } from 'socket.io-client';
 
-export default function Home() {
+interface Props {
+    socket: Socket;
+}
+export default function Home({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
 
     return (
@@ -30,9 +32,9 @@ export default function Home() {
                 {status != 'loading' && (
                     <> { session
                         ? <>
-                            <ButtonNewPlan label='Neuen VA planen' />
+                            <ButtonNewPlan socket={socket} label='Neuen VA planen' />
                             <div className="w-1/2">
-                                <Timeline />
+                                <Timeline socket={socket}/>
                             </div>
                         </> : <WhiteBox><div className='text-center lg:text-xl'>
                             <h2 className='text-2xl m-10'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>

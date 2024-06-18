@@ -7,7 +7,6 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/Tooltip';
@@ -17,6 +16,7 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
+import { Socket } from 'socket.io-client';
 
 export interface FormValues {
     majorLearningGoals: MajorLearningGoals[];
@@ -49,8 +49,12 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     );
 };
 
+interface Props {
+    socket: Socket;
+}
+
 LearningGoals.auth = true;
-export default function LearningGoals() {
+export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
@@ -290,6 +294,7 @@ export default function LearningGoals() {
 
     return (
         <Wrapper
+            socket={socket}
             title="Lernziele & Themen"
             subtitle='1. Welche fachlichen Lernziele sollen im VE erreicht werden?'
             tooltip={{text: 'Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …', link: '/learning-material/top-bubble/Potenziale'}}

@@ -17,24 +17,30 @@ import { Tooltip } from '../Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
 import Alert from '../Alert';
+import { Socket } from 'socket.io-client';
 
 interface Props {
     title: string;
     subtitle?: string;
-    tooltip?: {text: string, link: string}
+    tooltip?: { text: string; link: string };
     methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
-    prevpage?: string
-    nextpage?: string
-    preventToLeave?: boolean
+    prevpage?: string;
+    nextpage?: string;
+    preventToLeave?: boolean;
 
-    stageInMenu?: string // TODO make it unrequired
-    planerDataCallback: (data: any) => void
-    submitCallback: (data: any) => unknown | Promise<{
-        plan_id: string,
-        field_name: string
-        value: any
-    }[]>
+    stageInMenu?: string; // TODO make it unrequired
+    planerDataCallback: (data: any) => void;
+    submitCallback: (data: any) =>
+        | unknown
+        | Promise<
+              {
+                  plan_id: string;
+                  field_name: string;
+                  value: any;
+              }[]
+          >;
+    socket: Socket;
 }
 
 export default function Wrapper({
@@ -47,11 +53,12 @@ export default function Wrapper({
     nextpage,
     // sideMenuStepsData,
     // progressBarStage=0,
-    stageInMenu='generally',
-    preventToLeave=true,
+    stageInMenu = 'generally',
+    preventToLeave = true,
     planerDataCallback,
-    submitCallback }: Props
-): JSX.Element {
+    submitCallback,
+    socket,
+}: Props): JSX.Element {
     const router = useRouter();
     const { stepName } = router.query;
 
@@ -72,20 +79,33 @@ export default function Wrapper({
     // detect window close or a click outside of planer
     useEffect(() => {
         if (!router.isReady) return;
-        let clickedOutside: boolean = false
+        let clickedOutside: boolean = false;
 
         const handleClickOutside = (e: MouseEvent) => {
-            clickedOutside = !wrapperRef?.current?.contains(e.target as Node) || false
-        }
+            clickedOutside = !wrapperRef?.current?.contains(e.target as Node) || false;
+        };
 
         const handleBrowseAway = (nextlink: string) => {
-            if (preventToLeave === false) return
+            if (preventToLeave === false) return;
 
-            // form was not changed
-            if (!methods.formState.isDirty) return
+            // form was not changed, but if we clicked outside we should drop the lock
+            if (!methods.formState.isDirty){
+                if(clickedOutside){
+                    socket.emit(
+                        'drop_plan_lock',
+                        { plan_id: router.query.plannerId },
+                        (response: any) => {
+                            console.log(response);
+                            // TODO error handling
+                        }
+                    );
+                }
+                return;
+            };
 
+            // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
-                setPopUp({isOpen: true, continueLink: nextlink.replace(/\?.*/, '')})
+                setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
                 router.events.emit('routeChangeError');
                 throw 'routeChange aborted.';
             }
@@ -93,17 +113,16 @@ export default function Wrapper({
 
         const handleWindowClose = (e: BeforeUnloadEvent) => {
             e.preventDefault();
-        }
+        };
 
-        window.addEventListener("mousedown", handleClickOutside);
+        window.addEventListener('mousedown', handleClickOutside);
         window.addEventListener('beforeunload', handleWindowClose);
         router.events.on('routeChangeStart', handleBrowseAway);
         return () => {
-            window.removeEventListener("mousedown", handleClickOutside);
-            window.removeEventListener("beforeunload", handleWindowClose);
+            window.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-
     }, [wrapperRef, methods, router, preventToLeave]);
 
     // const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
@@ -124,7 +143,7 @@ export default function Wrapper({
         }
         if (!router.query.plannerId) {
             router.push('/plans');
-            return
+            return;
         }
 
         // hacky solution to avoid overwrite changes (#272) => solve with SWR (see above!)
@@ -137,8 +156,8 @@ export default function Wrapper({
         }
 
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            data => {
-                setLoading(false)
+            (data) => {
+                setLoading(false);
                 if (!data || !data.plan) {
                     // TODO show error
                     return
@@ -157,8 +176,8 @@ export default function Wrapper({
 
 
     const handleSubmit = async (data: any) => {
-        setLoading(true)
-        const fields = await submitCallback(data)
+        setLoading(true);
+        const fields = await submitCallback(data);
 
         if (fields) {
             await fetchPOST(
@@ -169,32 +188,38 @@ export default function Wrapper({
         }
         methods.reset({}, { keepValues: true });
         // await mutate()
-    }
+    };
 
     const Breadcrumb = () => {
-        if (!planerData || !planerData.steps) return (<></>);
-        const mainMenuItem = mainMenu.find(a => a.id == stageInMenu)
-        let subMenuItem = mainMenuItem?.submenu.find(a => a.link == currentPath)
+        if (!planerData || !planerData.steps) return <></>;
+        const mainMenuItem = mainMenu.find((a) => a.id == stageInMenu);
+        let subMenuItem = mainMenuItem?.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = planerData.steps.find(a => currentPath.endsWith(encodeURIComponent(a.name)))
+            const currentStep = planerData.steps.find((a) =>
+                currentPath.endsWith(encodeURIComponent(a.name))
+            );
 
-            subMenuItem = currentStep ? {
-                    id: currentStep.name.toLowerCase(),
-                    text: currentStep.name,
-                    link: `/ve-designer/step-data/${encodeURIComponent(currentStep.name)}`
-                } : undefined
+            subMenuItem = currentStep
+                ? {
+                      id: currentStep.name.toLowerCase(),
+                      text: currentStep.name,
+                      link: `/ve-designer/step-data/${encodeURIComponent(currentStep.name)}`,
+                  }
+                : undefined;
         }
 
         return (
-            <div className='text-normale py-2 flex items-center text-slate-500'>
+            <div className="text-normale py-2 flex items-center text-slate-500">
                 <MdArrowForwardIos size={15} /> {mainMenuItem?.text}
                 {subMenuItem && 'text' in subMenuItem && (
-                    <><MdArrowForwardIos size={15} /> {subMenuItem.text}</>
+                    <>
+                        <MdArrowForwardIos size={15} /> {subMenuItem.text}
+                    </>
                 )}
             </div>
         );
-    }
+    };
 
     // if (!router.query.plannerId  || error) {
     //     console.log(error); // TODO alert/re-route
@@ -211,87 +236,122 @@ export default function Wrapper({
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
                                 handleContinue={async () => {
+                                    console.log(popUp.continueLink)
                                     if (popUp.continueLink && popUp.continueLink != '') {
-                                        await router.push({
-                                            pathname: popUp.continueLink,
-                                            query: popUp.continueLink.startsWith('/ve-designer') ? {
-                                                plannerId: router.query.plannerId,
-                                            } : {},
-                                        });
+                                        if (!popUp.continueLink.startsWith('/ve-designer')) {
+                                            socket.emit(
+                                                'drop_plan_lock',
+                                                { plan_id: router.query.plannerId },
+                                                async (response: any) => {
+                                                    console.log(response);
+                                                    // TODO error handling
+                                                    await router.push({
+                                                        pathname: popUp.continueLink,
+                                                        query: {},
+                                                    });
+                                                }
+                                            );
+                                        } else {
+                                            await router.push({
+                                                pathname: popUp.continueLink,
+                                                query: popUp.continueLink.startsWith('/ve-designer')
+                                                    ? {
+                                                          plannerId: router.query.plannerId,
+                                                      }
+                                                    : {},
+                                            });
+                                        }
                                     } else {
-                                        setPopUp(prev => { return {...prev, isOpen: false}})
-                                        setLoading(false)
+                                        setPopUp((prev) => {
+                                            return { ...prev, isOpen: false };
+                                        });
+                                        setLoading(false);
                                     }
                                 }}
                                 handleCancel={() => {
-                                    setPopUp(prev => { return {...prev, isOpen: false}})
-                                    setLoading(false)
+                                    setPopUp((prev) => {
+                                        return { ...prev, isOpen: false };
+                                    });
+                                    setLoading(false);
                                 }}
                             />
 
-                            {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+                            {successPopupOpen && (
+                                <Alert
+                                    message="Gespeichert"
+                                    autoclose={2000}
+                                    onClose={() => setSuccessPopupOpen(false)}
+                                />
+                            )}
 
                             <Header
+                                socket={socket}
                                 methods={methods}
-                                submitCallback={async d => {
-                                    await handleSubmit(d)
-                                    setLoading(false)
-                                    setSuccessPopupOpen(true)
+                                submitCallback={async (d) => {
+                                    await handleSubmit(d);
+                                    setLoading(false);
+                                    setSuccessPopupOpen(true);
                                     // manual update sidebar after changed user steps
                                     if (currentPath.startsWith('/ve-designer/step-names')) {
-                                        setUpdateSidebar(true)
+                                        setUpdateSidebar(true);
                                         setTimeout(() => setUpdateSidebar(false), 1);
                                     }
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({isOpen: true, continueLink: continueLink})
+                                    setPopUp({ isOpen: true, continueLink: continueLink });
                                 }}
                             />
 
-                            <div className='flex flex-row divide-x gap-1'>
+                            <div className="flex flex-row divide-x gap-1">
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={handleSubmit}
                                     handleInvalidData={(data: any, continueLink: string) => {
-                                        setPopUp({isOpen: true, continueLink: continueLink})
+                                        setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
                                     reloadSidebar={updateSidebar}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
-
                                     <Breadcrumb />
 
                                     <div className={'flex justify-between items-start mt-2 mb-2'}>
-                                        <h2 className='font-bold text-2xl'>
-                                            {title}
-                                        </h2>
+                                        <h2 className="font-bold text-2xl">{title}</h2>
                                         {typeof tooltip !== 'undefined' && (
                                             <Tooltip tooltipsText={tooltip.text}>
                                                 <Link
                                                     target="_blank"
                                                     href={tooltip.link}
-                                                    className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
+                                                    className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
                                                 >
-                                                    <PiBookOpenText size={30} color="#00748f" className='inline relative' />
+                                                    <PiBookOpenText
+                                                        size={30}
+                                                        color="#00748f"
+                                                        className="inline relative"
+                                                    />
                                                 </Link>
                                             </Tooltip>
                                         )}
                                     </div>
-                                    {typeof subtitle !== 'undefined' && (<p className='text-xl text-slate-600 mb-4'>{subtitle}</p>)}
+                                    {typeof subtitle !== 'undefined' && (
+                                        <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
+                                    )}
 
-                                    {loading &&
-                                        (<>
-                                            <div className='absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg'></div>
-                                            <div className='absolute left-1/2 translate-x-1/2 top-10'><LoadingAnimation /></div>
+                                    {loading && (
+                                        <>
+                                            <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
+                                            <div className="absolute left-1/2 translate-x-1/2 top-10">
+                                                <LoadingAnimation />
+                                            </div>
                                         </>
                                     )}
 
                                     {children}
 
-                                    {(typeof prevpage !== 'undefined' || typeof nextpage !== 'undefined') && (
-                                        <div className='my-8 border-t py-3 flex justify-between'>
+                                    {(typeof prevpage !== 'undefined' ||
+                                        typeof nextpage !== 'undefined') && (
+                                        <div className="my-8 border-t py-3 flex justify-between">
                                             <div className="basis-20">
                                                 {typeof prevpage !== 'undefined' && (
                                                     <button
@@ -300,16 +360,22 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data)
+                                                                await handleSubmit(data);
 
                                                                 router.push({
                                                                     pathname: prevpage,
-                                                                    query: { plannerId: router.query.plannerId }
-                                                                })
+                                                                    query: {
+                                                                        plannerId:
+                                                                            router.query.plannerId,
+                                                                    },
+                                                                });
                                                             },
                                                             // invalid
                                                             async (data: any) => {
-                                                                setPopUp({isOpen: true, continueLink: prevpage})
+                                                                setPopUp({
+                                                                    isOpen: true,
+                                                                    continueLink: prevpage,
+                                                                });
                                                             }
                                                         )}
                                                     >
@@ -318,7 +384,7 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className='basis-20'>
+                                            <div className="basis-20">
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
@@ -326,15 +392,21 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data)
+                                                                await handleSubmit(data);
                                                                 router.push({
                                                                     pathname: nextpage,
-                                                                    query: { plannerId: router.query.plannerId }
-                                                                })
+                                                                    query: {
+                                                                        plannerId:
+                                                                            router.query.plannerId,
+                                                                    },
+                                                                });
                                                             },
                                                             // invalid
                                                             async () => {
-                                                                setPopUp({isOpen: true, continueLink: nextpage})
+                                                                setPopUp({
+                                                                    isOpen: true,
+                                                                    continueLink: nextpage,
+                                                                });
                                                             }
                                                         )}
                                                     >

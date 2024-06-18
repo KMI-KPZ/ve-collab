@@ -15,9 +15,14 @@ import { useRouter } from 'next/router';
 import { ChangeEvent, useEffect, useState } from 'react';
 import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
+import { Socket } from 'socket.io-client';
+
+interface Props {
+    socket: Socket;
+}
 
 Group.auth = true;
-export default function Group() {
+export default function Group({socket}: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -300,6 +305,7 @@ export default function Group() {
                                             switch (renderPicker) {
                                                 case 'timeline':
                                                     return <Timeline
+                                                                socket={socket}
                                                                 group={group._id}
                                                                 userIsAdmin={userIsAdmin()}
                                                                 groupACL={groupACLEntry}

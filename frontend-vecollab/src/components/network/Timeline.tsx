@@ -11,6 +11,7 @@ import React from "react";
 import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 import { useRouter } from "next/router";
+import { Socket } from "socket.io-client";
 
 interface Props {
     /** User is global admin or admin of current group */
@@ -18,7 +19,8 @@ interface Props {
     group?: string | undefined;
     groupACL?: BackendGroupACLEntry | undefined
     user?: string | undefined;
-    adminDashboard?: boolean
+    adminDashboard?: boolean;
+    socket: Socket;
 }
 
 Timeline.auth = true
@@ -28,6 +30,7 @@ export default function Timeline({
     groupACL,
     user,
     adminDashboard,
+    socket
 }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -168,6 +171,7 @@ export default function Timeline({
                         <div className={`${!pinnedPostsExpanded ? 'max-h-36' : ''} overflow-hidden relative`}>
                             {pinnedPosts.map((post, i) => (
                                 <TimelinePost
+                                    socket={socket}
                                     key={post._id}
                                     post={post}
                                     updatePost={post => {
@@ -211,6 +215,7 @@ export default function Timeline({
                         postToRepost={postToRepost}
                         onCancelRepost={() => setPostToRepost(null)}
                         onCreatedPost={afterCreatePost}
+                        socket={socket}
                         />
                 </div>
             )}
@@ -239,6 +244,7 @@ export default function Timeline({
 
                         { postsByDate[date].map( (post, j) => (
                             <TimelinePost
+                                socket={socket}
                                 key={post._id}
                                 post={post}
                                 updatePost={updatePost}
