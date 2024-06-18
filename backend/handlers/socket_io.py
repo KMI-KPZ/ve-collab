@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import logging
 from typing import Dict, List, Optional
 
@@ -9,6 +10,7 @@ import global_vars
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
     MISSING_KEY_SLUG,
+    PLAN_DOESNT_EXIST,
     ROOM_DOESNT_EXIST,
     UNAUTHENTICATED,
 )
@@ -81,8 +83,12 @@ async def disconnect(sid):
     session = await global_vars.socket_io.get_session(sid)
 
     try:
-        # delete the mapping username <--> socket id
+        # delete the mapping username <--> socket id and remove any existing
+        # write locks on plans
         del global_vars.username_sid_map[session["preferred_username"]]
+        for plan_id, lock_obj in global_vars.plan_write_lock_map.copy().items():
+            if lock_obj["username"] == session["preferred_username"]:
+                del global_vars.plan_write_lock_map[plan_id]
     except KeyError:
         # not finding the mapping is obviously a success as well
         pass
@@ -427,6 +433,167 @@ async def acknowledge_message(sid, data):
             return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
 
         return {"status": 200, "success": True}
+
+
+@global_vars.socket_io.event
+async def try_acquire_or_extend_plan_write_lock(sid, data):
+    """
+    Event: try_acquire_or_extend_plan_write_lock
+
+    A client tries to acquire the write lock for a plan, ensuring him to be the only
+    one to be able to modify the plan whilst he holds the lock.
+    Lock expiry is set to 1 hour.
+    If he already holds the lock, he can extend the lock's expiry time.
+
+    Payload:
+        {
+            "plan_id": "<_id_of_plan>"
+        }
+
+    Returns:
+        Success:
+            - {"status": 200, "success": True}
+        Failure:
+            - {"status": 400, "success": False, "reason": "missing_key:plan_id"}
+                The payload is missing the plan_id
+            - {"status": 401, "success": False, "reason": "unauthenticated"}
+                This socket connection is not authenticated (use `authenticate` event)
+            - {"status": 403, "success": False, "reason": "plan_locked", "lock_holder": "<username>"}
+                The plan is currently locked by another user
+            - {"status": 403, "success": False, "reason": "insufficient_permissions"}
+                the user has no write access to the plan at all
+            - {"status": 409, "success": False, "reason": "plan_doesnt_exist"}
+                The plan with the given _id doesn't exist
+    """
+
+    logger.info("try_acquire_or_extend_plan_write_lock " + sid)
+
+    # paylod keys check
+    if "plan_id" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "plan_id"}
+
+    # authentication check
+    token = await global_vars.socket_io.get_session(sid)
+    if not token:
+        return {"status": 401, "success": False, "reason": "unauthenticated"}
+
+    plan_id = util.parse_object_id(data["plan_id"])
+
+    LOCK_EXPIRY_HOURS = 1
+
+    with util.get_mongodb() as db:
+        # check if the plan exists and the user theoretically has write access
+        # in the first place
+        plan = db.plans.find_one({"_id": plan_id})
+        if not plan:
+            return {"status": 409, "success": False, "reason": PLAN_DOESNT_EXIST}
+        if not (
+            token["preferred_username"] in plan["write_access"]
+            or token["preferred_username"] == plan["author"]
+        ):
+            return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
+
+    # no other user currently holds the lock --> assign it to the current user
+    # lock expiry is set to 1 hour
+    if plan_id not in global_vars.plan_write_lock_map:
+        global_vars.plan_write_lock_map[plan_id] = {
+            "username": token["preferred_username"],
+            "expires": datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS),
+        }
+        print(global_vars.plan_write_lock_map)
+        return {"status": 200, "success": True}
+
+    else:
+        # the lock is expired --> assign it to the current user
+        if global_vars.plan_write_lock_map[plan_id]["expires"] < datetime.now():
+            global_vars.plan_write_lock_map[plan_id] = {
+                "username": token["preferred_username"],
+                "expires": datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS),
+            }
+            print(global_vars.plan_write_lock_map)
+            return {"status": 200, "success": True}
+        # the lock is not expired, but the current user holds it --> extend the lock
+        elif (
+            global_vars.plan_write_lock_map[plan_id]["username"]
+            == token["preferred_username"]
+        ):
+            global_vars.plan_write_lock_map[plan_id][
+                "expires"
+            ] = datetime.now() + timedelta(hours=LOCK_EXPIRY_HOURS)
+            print(global_vars.plan_write_lock_map)
+            return {"status": 200, "success": True}
+        # the lock is not expired and is held by another user --> reject
+        else:
+            print(global_vars.plan_write_lock_map)
+            return {
+                "status": 403,
+                "success": False,
+                "reason": "plan_locked",
+                "lock_holder": global_vars.plan_write_lock_map[plan_id]["username"],
+            }
+
+
+@global_vars.socket_io.event
+async def drop_plan_lock(sid, data):
+    """
+    Event: drop_plan_lock
+
+    A client actively drops the write lock for a plan, allowing other users to acquire it.
+
+    Payload:
+        {
+            "plan_id": "<_id_of_plan>"
+        }
+
+    Returns:
+        Success:
+            - {"status": 200, "success": True}
+        Failure:
+            - {"status": 400, "success": False, "reason": "missing_key:plan_id"}
+                The payload is missing the plan_id
+            - {"status": 401, "success": False, "reason": "unauthenticated"}
+                This socket connection is not authenticated (use `authenticate` event)
+            - {"status": 403, "success": False, "reason": "insufficient_permissions"}
+                The user is not the one who holds the lock
+            - {"status": 409, "success": False, "reason": "no_active_lock"}
+                There is no active lock for the plan
+            - {"status": 409, "success": False, "reason": "lock_expired"}
+                The lock has already expired
+    """
+
+    logger.info("drop_plan_lock " + sid)
+
+    # paylod keys check
+    if "plan_id" not in data:
+        return {"status": 400, "success": False, "reason": MISSING_KEY_SLUG + "plan_id"}
+
+    # authentication check
+    token = await global_vars.socket_io.get_session(sid)
+    if not token:
+        return {"status": 401, "success": False, "reason": "unauthenticated"}
+
+    plan_id = util.parse_object_id(data["plan_id"])
+
+    # reject if there is no active lock or if it is expired
+    if plan_id not in global_vars.plan_write_lock_map:
+        print(global_vars.plan_write_lock_map)
+        return {"status": 409, "success": False, "reason": "no_active_lock"}
+    if global_vars.plan_write_lock_map[plan_id]["expires"] < datetime.now():
+        print(global_vars.plan_write_lock_map)
+        return {"status": 409, "success": False, "reason": "lock_expired"}
+
+    # only the user who holds the lock can drop it
+    if (
+        global_vars.plan_write_lock_map[plan_id]["username"]
+        != token["preferred_username"]
+    ):
+        print(global_vars.plan_write_lock_map)
+        return {"status": 403, "success": False, "reason": INSUFFICIENT_PERMISSIONS}
+
+    # drop the lock after all checks have passed
+    del global_vars.plan_write_lock_map[plan_id]
+    print(global_vars.plan_write_lock_map)
+    return {"status": 200, "success": True}
 
 
 def recipient_online(recipient: str) -> bool:

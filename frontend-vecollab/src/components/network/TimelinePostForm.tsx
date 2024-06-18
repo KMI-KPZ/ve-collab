@@ -28,6 +28,7 @@ import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
 import Link from "next/link";
 import Timestamp from "../Timestamp";
 import ButtonNewPlan from "../Plannner/ButtonNewPlan";
+import { Socket } from "socket.io-client";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -36,7 +37,8 @@ interface Props {
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
     onUpdatedPost?: (text: string) => void
-    onCreatedPost?: (post: BackendPost) => void
+    onCreatedPost?: (post: BackendPost) => void,
+    socket: Socket;
 }
 
 TimelinePostForm.auth = true
@@ -49,6 +51,7 @@ export default function TimelinePostForm(
     onCancelRepost,
     onCreatedPost,
     onUpdatedPost,
+    socket
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<HTMLFormElement>(null)
@@ -329,7 +332,7 @@ export default function TimelinePostForm(
     const PlansDialog = () => {
         if (loadingPlans) return <LoadingAnimation />
 
-        if (!plans.length) return <>Noch keine Pläne erstellt. <ButtonNewPlan label="Neuen Plan erstellen" /></>
+        if (!plans.length) return <>Noch keine Pläne erstellt. <ButtonNewPlan socket={socket} label="Neuen Plan erstellen" /></>
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">

@@ -19,6 +19,7 @@ import { KeyedMutator } from "swr";
 import Alert from "../Alert";
 import ConfirmDialog from "../Confirm";
 import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
+import { Socket } from "socket.io-client";
 
 interface Props {
     post: BackendPost
@@ -31,7 +32,8 @@ interface Props {
     removePost: (post: BackendPost) => void
     rePost?: (post: BackendPost) => void
     fetchNextPosts: () => void
-    updatePinnedPosts: KeyedMutator<any> | undefined
+    updatePinnedPosts: KeyedMutator<any> | undefined,
+    socket: Socket;
 }
 
 TimelinePost.auth = true
@@ -47,7 +49,8 @@ export default function TimelinePost(
     removePost,
     rePost,
     fetchNextPosts,
-    updatePinnedPosts
+    updatePinnedPosts,
+    socket
 }: Props) {
     const { data: session } = useSession();
     const ref = useRef<any>(null)
@@ -419,6 +422,7 @@ export default function TimelinePost(
                     {editPost
                         ? (
                             <TimelinePostForm
+                                socket={socket}
                                 post={post}
                                 onCancelForm={() => setEditPost(false)}
                                 onUpdatedPost={updatePostText}

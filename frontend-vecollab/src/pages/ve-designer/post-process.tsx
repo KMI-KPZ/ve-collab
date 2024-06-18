@@ -9,6 +9,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, initialSideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
+import { Socket } from 'socket.io-client';
 
 export interface EvaluationFile {
     file_id: string;
@@ -23,8 +24,12 @@ interface FormValues {
     evaluationFile: EvaluationFile
 }
 
+interface Props {
+    socket: Socket;
+}
+
 PostProcess.auth = true;
-export default function PostProcess() {
+export default function PostProcess({ socket }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [uploadFile, setUploadFile] = useState<Blob>();
@@ -38,6 +43,7 @@ export default function PostProcess() {
             share: false
         },
     });
+
 
     const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
@@ -122,6 +128,12 @@ export default function PostProcess() {
         if (uploadFile) {
             await uploadToBackend();
         }
+      
+        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+            console.log(response);
+            // TODO error handling
+            router.push('/plans');
+        });
     };
 
     return (
