@@ -85,9 +85,22 @@ export default function Wrapper({
         const handleBrowseAway = (nextlink: string) => {
             if (preventToLeave === false) return;
 
-            // form was not changed
-            if (!methods.formState.isDirty) return;
+            // form was not changed, but if we clicked outside we should drop the lock
+            if (!methods.formState.isDirty){
+                if(clickedOutside){
+                    socket.emit(
+                        'drop_plan_lock',
+                        { plan_id: router.query.plannerId },
+                        (response: any) => {
+                            console.log(response);
+                            // TODO error handling
+                        }
+                    );
+                }
+                return;
+            };
 
+            // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
                 setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
                 router.events.emit('routeChangeError');
@@ -205,15 +218,31 @@ export default function Wrapper({
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
                                 handleContinue={async () => {
+                                    console.log(popUp.continueLink)
                                     if (popUp.continueLink && popUp.continueLink != '') {
-                                        await router.push({
-                                            pathname: popUp.continueLink,
-                                            query: popUp.continueLink.startsWith('/ve-designer')
-                                                ? {
-                                                      plannerId: router.query.plannerId,
-                                                  }
-                                                : {},
-                                        });
+                                        if (!popUp.continueLink.startsWith('/ve-designer')) {
+                                            socket.emit(
+                                                'drop_plan_lock',
+                                                { plan_id: router.query.plannerId },
+                                                async (response: any) => {
+                                                    console.log(response);
+                                                    // TODO error handling
+                                                    await router.push({
+                                                        pathname: popUp.continueLink,
+                                                        query: {},
+                                                    });
+                                                }
+                                            );
+                                        } else {
+                                            await router.push({
+                                                pathname: popUp.continueLink,
+                                                query: popUp.continueLink.startsWith('/ve-designer')
+                                                    ? {
+                                                          plannerId: router.query.plannerId,
+                                                      }
+                                                    : {},
+                                            });
+                                        }
                                     } else {
                                         setPopUp((prev) => {
                                             return { ...prev, isOpen: false };
