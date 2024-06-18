@@ -354,7 +354,7 @@ export default function TimelinePost(
     return (
         <>
             {shareDialogIsOpen && (
-                <Alert onClose={() => setShareDialogIsOpen(false)}>
+                <Alert autoclose={3000} onClose={() => setShareDialogIsOpen(false)}>
                     <>Link kopiert</>
                 </Alert>
             )}

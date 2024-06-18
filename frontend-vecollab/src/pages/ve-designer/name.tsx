@@ -30,6 +30,7 @@ export default function Name({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             methods.setValue('name', plan.name, { shouldValidate: true, shouldDirty: false });
+            // methods.resetField ('name', {defaultValue: plan.name})
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }

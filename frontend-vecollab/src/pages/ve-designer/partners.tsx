@@ -211,10 +211,6 @@ export default function Partners({ socket }: Props): JSX.Element {
             });
         }
 
-        if (areAllFormValuesEmpty(data)) {
-            return;
-        }
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -266,6 +262,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         } else {
             updateExternalParties(index, { externalParty: '' });
         }
+
     };
 
     const loadOptions = (

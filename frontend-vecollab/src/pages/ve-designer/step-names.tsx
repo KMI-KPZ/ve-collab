@@ -115,33 +115,31 @@ export default function StepNames({ socket }: Props): JSX.Element {
         control: methods.control,
     });
 
-    const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            if (plan.steps?.length > 0) {
-                const steps: IFineStep[] = plan.steps;
-                const stepNames: StepName[] = steps.map((step) => {
-                    const { timestamp_from, timestamp_to, name } = step;
-                    return {
-                        from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                        to: timestamp_to.split('T')[0],
-                        name: name,
-                    };
-                });
-                replace(stepNames);
+    const setPlanerData = useCallback((plan: IPlan) => {
+        if (plan.steps?.length > 0) {
+            const steps: IFineStep[] = plan.steps;
+            const stepNames: StepName[] = steps.map((step) => {
+                const { timestamp_from, timestamp_to, name } = step;
+                return {
+                    from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
+                    to: timestamp_to.split('T')[0],
+                    name: name,
+                };
+            });
+            replace(stepNames) // PROBLEM isDirty is initially true
+            // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
 
-                setSteps(plan.steps);
-                setNextpage(
-                    (prev) => `/ve-designer/step-data/${encodeURIComponent(steps[0].name)}`
-                );
-            } else {
-                setNextpage((prev) => `/ve-designer/no-step`);
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
-        },
-        [replace]
-    );
+            setSteps(plan.steps)
+            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
+                steps[0].name
+            )}`)
+        } else {
+            setNextpage(prev => `/ve-designer/no-step`)
+        }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
+    }, [replace]);
 
     const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);

@@ -60,6 +60,8 @@ export default function Wrapper({
     socket,
 }: Props): JSX.Element {
     const router = useRouter();
+    const { stepName } = router.query;
+
     const { data: session, status } = useSession();
     const [planerData, setPlanerData] = useState<IPlan>();
     const [loading, setLoading] = useState(true);
@@ -69,9 +71,10 @@ export default function Wrapper({
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-    const [updateSidebar, setUpdateSidebar] = useState(false);
-    const currentPath = usePathname();
-    const [isDirty, setIsDirty] = useState<boolean>(false);
+    const [updateSidebar, setUpdateSidebar] = useState(false)
+    const currentPath = usePathname()
+    const [isDirty, setIsDirty] = useState<boolean>(false)
+    const [currentStep, setCurrentStep] = useState<string>()
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -133,6 +136,7 @@ export default function Wrapper({
     //     planerDataCallback(plan)
     // }, [plan, isLoading, methods, planerDataCallback]);
 
+    // TODO replace with SWR from above !!!
     useEffect(() => {
         if (!router.isReady || status === 'loading' || !session) {
             return;
@@ -142,33 +146,47 @@ export default function Wrapper({
             return;
         }
 
-        // avoid overwrite changes (#272)
-        if (typeof planerData !== 'undefined') return;
+        // hacky solution to avoid overwrite changes (#272) => solve with SWR (see above!)
+        if ((typeof planerData !== 'undefined' && stageInMenu != 'steps')
+            || (typeof planerData !== 'undefined' && stageInMenu == 'steps' && stepName == currentStep)
+
+        ) {
+            setLoading(false)
+            return
+        }
 
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
             (data) => {
                 setLoading(false);
                 if (!data || !data.plan) {
                     // TODO show error
-                    console.log('Error: failed to fetch plannner data', { data });
-                    return;
+                    return
                 }
 
                 setPlanerData(data.plan as IPlan);
-                planerDataCallback(data.plan as IPlan);
-                // BUG: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-                setIsDirty(methods.formState.isDirty);
+                planerDataCallback(data.plan as IPlan)
+                // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+                setIsDirty(methods.formState.isDirty)
+                if (stageInMenu == 'steps') {
+                    setCurrentStep(stepName as string)
+                }
             }
         );
-    }, [session, status, router, planerData, methods, planerDataCallback]);
+    }, [session, status, router, planerData, methods, currentStep, stageInMenu, stepName, planerDataCallback]);
+
 
     const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
         if (fields) {
-            await fetchPOST('/planner/update_fields', { update: fields }, session?.accessToken);
+            await fetchPOST(
+                '/planner/update_fields',
+                { update: fields },
+                session?.accessToken
+            );
         }
+        methods.reset({}, { keepValues: true });
         // await mutate()
     };
 
@@ -292,7 +310,7 @@ export default function Wrapper({
                                         setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
-                                    updateSidebar={updateSidebar}
+                                    reloadSidebar={updateSidebar}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
