@@ -78,10 +78,11 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                         query: { plannerId: planId },
                     });
                 } else if (!response.success && response.status === 403) {
-                    // TODO somehow this is not showing, i cant figure out why...
+                    // TODO somehow this is only showing once and then only again after page reload
                     setAlert({
                         message: 'Plan wird gerade von einem anderen User bearbeitet',
                         autoclose: 2000,
+                        open: true,
                     });
                 }
             }
