@@ -11,6 +11,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
+import { Socket } from 'socket.io-client';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -37,8 +38,12 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     });
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Evaluation.auth = true;
-export default function Evaluation() {
+export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
@@ -47,8 +52,8 @@ export default function Evaluation() {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const prevpage = '/ve-designer/methodology'
-    const nextpage = '/ve-designer/teaching-formats'
+    const prevpage = '/ve-designer/methodology';
+    const nextpage = '/ve-designer/checklist';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -74,27 +79,30 @@ export default function Evaluation() {
         },
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.evaluation.length !== 0) {
-            methods.setValue('evaluationPerPartner', plan.evaluation);
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.evaluation.length !== 0) {
+                methods.setValue('evaluationPerPartner', plan.evaluation);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
 
-        // fetch profile snippets to be able to display the full name instead of username only
-        fetchPOST(
-            '/profile_snippets',
-            { usernames: [...plan.partners, plan.author] },
-            session?.accessToken
-        ).then((snippets: BackendProfileSnippetsResponse) => {
-            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                partnerSnippets[element.username] = element;
+            // fetch profile snippets to be able to display the full name instead of username only
+            fetchPOST(
+                '/profile_snippets',
+                { usernames: [...plan.partners, plan.author] },
+                session?.accessToken
+            ).then((snippets: BackendProfileSnippetsResponse) => {
+                let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                    partnerSnippets[element.username] = element;
+                });
+                setPartnerProfileSnippets(partnerSnippets);
             });
-            setPartnerProfileSnippets(partnerSnippets);
-        });
-    }, [methods, session]);
+        },
+        [methods, session]
+    );
 
     const { fields } = useFieldArray({
         name: 'evaluationPerPartner',
@@ -102,7 +110,7 @@ export default function Evaluation() {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return
+        if (areAllFormValuesEmpty(data)) return;
 
         return [
             {
@@ -118,7 +126,7 @@ export default function Evaluation() {
                     evaluation: ProgressState.completed,
                 },
             },
-        ]
+        ];
     };
 
     function radioBooleanInput(control: any, name: any): JSX.Element {
@@ -244,10 +252,11 @@ export default function Evaluation() {
 
     return (
         <Wrapper
-            title='Bewertung / Evaluation'
+            socket={socket}
+            title="Bewertung / Evaluation"
             tooltip={{
                 text: 'Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/left-bubble/Evaluation'
+                link: '/learning-material/left-bubble/Evaluation',
             }}
             methods={methods}
             prevpage={prevpage}
@@ -255,9 +264,7 @@ export default function Evaluation() {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="flex flex-wrap ">
-                {renderEvaluationInfoBox()}
-            </div>
+            <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
         </Wrapper>
     );
 }

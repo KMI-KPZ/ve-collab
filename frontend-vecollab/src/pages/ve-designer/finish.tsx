@@ -6,7 +6,6 @@ import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { Socket } from 'socket.io-client';
 
 interface Props {
@@ -18,7 +17,7 @@ Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
-  
+
     const releaseLockAndForward = () => {
         socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
             console.log(response);
@@ -29,13 +28,14 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
 
     return (
         <Wrapper
-            title='Fertig'
-            subtitle='Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!'
+            socket={socket}
+            title="Fertig"
+            subtitle="Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!"
             methods={useForm<any>()}
             preventToLeave={false}
-            stageInMenu='finish'
-            planerDataCallback={d => {}}
-            submitCallback={d => {}}
+            stageInMenu="finish"
+            planerDataCallback={(d) => {}}
+            submitCallback={(d) => {}}
         >
             {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
             {feedbackFormURL && (

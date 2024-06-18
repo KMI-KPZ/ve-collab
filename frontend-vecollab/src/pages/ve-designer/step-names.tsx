@@ -22,6 +22,7 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 interface StepName {
     from: string;
@@ -67,14 +68,18 @@ const emptyBroadStep: StepName = {
     name: '',
 };
 
+interface Props {
+    socket: Socket;
+}
+
 StepNames.auth = true;
-export default function StepNames() {
+export default function StepNames({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
-    const noStepPage = '/ve-designer/no-step'
+    const noStepPage = '/ve-designer/no-step';
     // const prevpage = '/ve-designer/checklist'
     const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
 
@@ -85,22 +90,24 @@ export default function StepNames() {
                 { from: '', to: '', name: 'Kennenlernen' },
                 { from: '', to: '', name: 'Evaluation' },
             ],
-        }
+        },
     });
 
     useEffect(() => {
-        const subs = methods.watch((value, {name}) => {
-            setNextpage(prev => {
+        const subs = methods.watch((value, { name }) => {
+            setNextpage((prev) => {
                 if (!value || !value.stepNames || !value.stepNames.length) {
-                    return noStepPage
+                    return noStepPage;
                 }
                 if (!methods.formState.isValid) {
-                    return noStepPage
+                    return noStepPage;
                 }
-                return `/ve-designer/step-data/${encodeURIComponent(value.stepNames[0]?.name as string)}`
-            })
-        })
-        return () => subs.unsubscribe()
+                return `/ve-designer/step-data/${encodeURIComponent(
+                    value.stepNames[0]?.name as string
+                )}`;
+            });
+        });
+        return () => subs.unsubscribe();
     }, [methods]);
 
     const { fields, append, remove, move, update, replace } = useFieldArray({
@@ -108,30 +115,33 @@ export default function StepNames() {
         control: methods.control,
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.steps?.length > 0) {
-            const steps: IFineStep[] = plan.steps;
-            const stepNames: StepName[] = steps.map((step) => {
-                const { timestamp_from, timestamp_to, name } = step;
-                return {
-                    from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                    to: timestamp_to.split('T')[0],
-                    name: name,
-                };
-            });
-            replace(stepNames)
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.steps?.length > 0) {
+                const steps: IFineStep[] = plan.steps;
+                const stepNames: StepName[] = steps.map((step) => {
+                    const { timestamp_from, timestamp_to, name } = step;
+                    return {
+                        from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
+                        to: timestamp_to.split('T')[0],
+                        name: name,
+                    };
+                });
+                replace(stepNames);
 
-            setSteps(plan.steps)
-            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
-                steps[0].name
-            )}`)
-        } else {
-            setNextpage(prev => `/ve-designer/no-step`)
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
-    }, [replace]);
+                setSteps(plan.steps);
+                setNextpage(
+                    (prev) => `/ve-designer/step-data/${encodeURIComponent(steps[0].name)}`
+                );
+            } else {
+                setNextpage((prev) => `/ve-designer/no-step`);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+        },
+        [replace]
+    );
 
     const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
@@ -160,7 +170,7 @@ export default function StepNames() {
             return { [broadStep.name]: ProgressState.notStarted };
         });
 
-        if (areAllFormValuesEmpty(data.stepNames)) return
+        if (areAllFormValuesEmpty(data.stepNames)) return;
 
         return [
             {
@@ -176,7 +186,7 @@ export default function StepNames() {
                     steps: sideMenuStateSteps,
                 },
             },
-        ]
+        ];
     };
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
@@ -202,7 +212,7 @@ export default function StepNames() {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <div className='shadow rounded px-2 py-4 my-4'>
+                        <div className="shadow rounded px-2 py-4 my-4">
                             <div>
                                 <div className="flex justify-center items-center">
                                     <label>von:</label>
@@ -302,32 +312,29 @@ export default function StepNames() {
 
     return (
         <Wrapper
-            title='Grobplanung'
-            subtitle='Grobplanung der Etappen'
+            socket={socket}
+            title="Grobplanung"
+            subtitle="Grobplanung der Etappen"
             tooltip={{
                 text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/left-bubble/Etappenplanung'
+                link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
             // prevpage={prevpage}
             nextpage={nextpage}
-            stageInMenu='steps'
+            stageInMenu="steps"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
             <div className={'mb-4'}>
-                Erstellt beliebig viele Etappen und legt für jede Etappe
-                einen Zeitraum fest. Wichtig: Jede Phase braucht einen
-                individuellen Namen (z.B. Kennenlernphase I, Kennenlernphase
-                II).
+                Erstellt beliebig viele Etappen und legt für jede Etappe einen Zeitraum fest.
+                Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Kennenlernphase I,
+                Kennenlernphase II).
             </div>
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="stepNames-items">
                     {(provided: DroppableProvided) => (
-                        <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                        >
+                        <div ref={provided.innerRef} {...provided.droppableProps}>
                             {renderStepNamesInputs()}
                             {provided.placeholder}
                         </div>
