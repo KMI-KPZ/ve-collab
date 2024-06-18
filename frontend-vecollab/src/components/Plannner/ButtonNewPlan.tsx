@@ -27,10 +27,6 @@ export default function ButtonNewPlan({ label, children, className, socket }: Pr
                 }
             }
         );
-        await router.push({
-            pathname: '/ve-designer/name',
-            query: { plannerId: newPlanner.inserted_id },
-        });
     };
 
     return (

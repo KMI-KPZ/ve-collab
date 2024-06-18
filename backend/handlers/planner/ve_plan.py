@@ -71,6 +71,23 @@ class VEPlanHandler(BaseHandler):
                 > datetime.datetime.now()
             )
 
+    def _get_lock_holder(self, plan_id: str | ObjectId) -> str | None:
+        """
+        get the username of the user who is currently holding the lock for the plan,
+        if there is any. If the plan is not locked, return None.
+
+        :param plan_id: the id of the plan in str or ObjectId representation
+
+        Returns the username of the lock holder
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        if plan_id not in global_vars.plan_write_lock_map:
+            return None
+
+        return global_vars.plan_write_lock_map[plan_id]["username"]
+
     def _extend_lock(self, plan_id: str | ObjectId) -> None:
         """
         extend the lock of the plan that the current user is holding
@@ -1604,7 +1621,13 @@ class VEPlanHandler(BaseHandler):
             # if the user updates an existing plan, he has to hold the lock for it
             if upsert is False and not self._check_lock_is_held(plan._id):
                 self.set_status(403)
-                self.write({"success": False, "reason": PLAN_LOCKED})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan._id),
+                    }
+                )
                 return
 
             _id = planner.update_full_plan(
@@ -1690,7 +1713,13 @@ class VEPlanHandler(BaseHandler):
             # if another holds a write lock on the existing plan, deny the update
             if upsert is False and not self._check_lock_is_held(plan_id):
                 self.set_status(403)
-                self.write({"success": False, "reason": PLAN_LOCKED})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
                 return
 
             _id = planner.update_field(
@@ -1762,6 +1791,7 @@ class VEPlanHandler(BaseHandler):
         for update_instruction in update_instructions:
             error_reason = None
             error_status_code = None
+            additional_error_fields = {}
 
             # skip evaluation_file updates
             if update_instruction["field_name"] == "evaluation_file":
@@ -1784,6 +1814,9 @@ class VEPlanHandler(BaseHandler):
                 else:
                     error_reason = PLAN_LOCKED
                     error_status_code = 403
+                    additional_error_fields["lock_holder"] = self._get_lock_holder(
+                        plan_id
+                    )
 
             except InvalidId:
                 error_reason = "invalid_object_id"
@@ -1815,6 +1848,9 @@ class VEPlanHandler(BaseHandler):
                         "error_reason": error_reason,
                     }
                 )
+                if additional_error_fields:
+                    for key, value in additional_error_fields.items():
+                        errors[-1][key] = value
 
         if errors:
             self.set_status(409)
@@ -1861,9 +1897,15 @@ class VEPlanHandler(BaseHandler):
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
-                self.write({"success": False, "reason": PLAN_LOCKED})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
                 return
-            
+
             step = Step.from_dict(step) if isinstance(step, dict) else step
             _id = planner.append_step(
                 plan_id, step, requesting_username=self.current_user.username
@@ -1931,7 +1973,13 @@ class VEPlanHandler(BaseHandler):
                 # if another holds a write lock on the plan, deny the update
                 if not self._check_lock_is_held(plan_id):
                     self.set_status(403)
-                    self.write({"success": False, "reason": PLAN_LOCKED})
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": PLAN_LOCKED,
+                            "lock_holder": self._get_lock_holder(plan_id),
+                        }
+                    )
                     return
 
                 file_id = planner.put_evaluation_file(
@@ -2134,7 +2182,13 @@ class VEPlanHandler(BaseHandler):
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
-                self.write({"success": False, "reason": PLAN_LOCKED})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
                 return
 
             planner.delete_step_by_id(
@@ -2181,9 +2235,15 @@ class VEPlanHandler(BaseHandler):
             # if another holds a write lock on the plan, deny the update
             if not self._check_lock_is_held(plan_id):
                 self.set_status(403)
-                self.write({"success": False, "reason": PLAN_LOCKED})
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
                 return
-            
+
             planner.delete_step_by_name(
                 plan_id, step_name, requesting_username=self.current_user.username
             )

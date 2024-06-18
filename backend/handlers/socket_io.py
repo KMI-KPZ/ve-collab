@@ -458,7 +458,7 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
                 The payload is missing the plan_id
             - {"status": 401, "success": False, "reason": "unauthenticated"}
                 This socket connection is not authenticated (use `authenticate` event)
-            - {"status": 403, "success": False, "reason": "plan_locked"}
+            - {"status": 403, "success": False, "reason": "plan_locked", "lock_holder": "<username>"}
                 The plan is currently locked by another user
             - {"status": 403, "success": False, "reason": "insufficient_permissions"}
                 the user has no write access to the plan at all
@@ -525,7 +525,12 @@ async def try_acquire_or_extend_plan_write_lock(sid, data):
         # the lock is not expired and is held by another user --> reject
         else:
             print(global_vars.plan_write_lock_map)
-            return {"status": 403, "success": False, "reason": "plan_locked"}
+            return {
+                "status": 403,
+                "success": False,
+                "reason": "plan_locked",
+                "lock_holder": global_vars.plan_write_lock_map[plan_id]["username"],
+            }
 
 
 @global_vars.socket_io.event

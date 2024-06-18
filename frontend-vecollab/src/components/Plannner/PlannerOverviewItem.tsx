@@ -80,7 +80,7 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                 } else if (!response.success && response.status === 403) {
                     // TODO somehow this is only showing once and then only again after page reload
                     setAlert({
-                        message: 'Plan wird gerade von einem anderen User bearbeitet',
+                        message: `Plan wird gerade von ${response.lock_holder} bearbeitet`,
                         autoclose: 2000,
                         open: true,
                     });
