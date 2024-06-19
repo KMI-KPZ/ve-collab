@@ -74,7 +74,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
         },
     });
 
-    const { fields: fieldsLearnings } = useFieldArray({
+    const { fields: fieldsLearnings, replace: replaceLearnings } = useFieldArray({
         name: 'individualLearningGoals',
         control: methods.control,
     });
@@ -82,7 +82,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     const {
         fields: fieldsTopics,
         append: appendTopic,
-        remove: removeTopic
+        remove: removeTopic,
+        replace: replaceTopics
     } = useFieldArray({
         name: 'topics',
         control: methods.control,
@@ -96,20 +97,14 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 label: goals,
             }))
         );
-        methods.setValue(
-            'individualLearningGoals',
-            plan.individual_learning_goals.map((goal: any) => ({
-                username: goal.username,
-                learningGoal: goal.learning_goal,
-            }))
-        );
+        replaceLearnings(plan.individual_learning_goals.map((goal: any) => ({
+            username: goal.username,
+            learningGoal: goal.learning_goal,
+        })))
         if (plan.topics.length > 0) {
-            methods.setValue(
-                'topics',
-                plan.topics.map((element: string) => ({
-                    name: element,
-                }))
-            );
+            replaceTopics(plan.topics.map((element: string) => ({
+                name: element,
+            })))
         }
         if (Object.keys(plan.progress).length) {
             setSideMenuStepsProgress(plan.progress)
@@ -123,7 +118,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
         ).then((snippets: BackendProfileSnippetsResponse) => {
             setUsersFirstLastNames(snippets.user_snippets);
         });
-    }, [methods, session]);
+    }, [methods, replaceLearnings, replaceTopics, session]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (areAllFormValuesEmpty(data)) return

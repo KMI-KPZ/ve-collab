@@ -1,7 +1,7 @@
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { TargetGroup } from '@/pages/ve-designer/target-groups';
-import { Lecture } from '@/pages/ve-designer/lectures';
+import { Institution } from '@/pages/ve-designer/institutions';
 import { LectureOld } from '@/pages/ve-designer/participatingCourses';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
@@ -27,7 +27,7 @@ export interface IPlan {
     creation_timestamp: string;
     duration: number | null;
     formalities: CheckListPartner[];
-    institutions: Lecture[];
+    institutions: Institution[];
     involved_parties: string[];
     languages: string[];
     evaluation: EvaluationPerPartner[];

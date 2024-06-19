@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
-import { fetchGET, fetchPOST, useGetPlanById } from '@/lib/backend';
+import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
 import Container from '../Layout/container';
@@ -52,8 +51,6 @@ export default function Wrapper({
     methods,
     prevpage,
     nextpage,
-    // sideMenuStepsData,
-    // progressBarStage=0,
     stageInMenu = 'generally',
     preventToLeave = true,
     planerDataCallback,
@@ -61,22 +58,17 @@ export default function Wrapper({
     socket,
 }: Props): JSX.Element {
     const router = useRouter();
-    const { stepName } = router.query;
-
     const { data: session, status } = useSession();
-    const [planerData, setPlanerData] = useState<IPlan>();
     const [loading, setLoading] = useState(true);
     const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
         isOpen: false,
         continueLink: '/plans',
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
-    const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-    const [updateSidebar, setUpdateSidebar] = useState(false);
-    const currentPath = usePathname();
-    const [isDirty, setIsDirty] = useState<boolean>(false);
-    const [currentStep, setCurrentStep] = useState<string>();
-    const [alert, setAlert] = useState<AlertState>({ open: false });
+    const [alert, setAlert] = useState<AlertState>({open: false})
+    const [updateSidebar, setUpdateSidebar] = useState(false)
+    const currentPath = usePathname()
+    const [isDirty, setIsDirty] = useState<boolean>(false) // NOTE: unused but required for correct isDirty state check ;(
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -125,123 +117,79 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, router, preventToLeave]);
+    }, [wrapperRef, methods, socket, router, preventToLeave]);
 
-    // const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
-    // useEffect(() => {
-    //     if (!plan || isLoading) return
+    const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
 
-    //     // BUG: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-    //     // console.log('Wrapper', {plan, isDirty: methods.formState.isDirty});
-    //     setIsDirty(methods.formState.isDirty)
-    //     setLoading(false)
-    //     planerDataCallback(plan)
-    // }, [plan, isLoading, methods, planerDataCallback]);
-
-    // TODO replace with SWR from above !!!
     useEffect(() => {
-        if (!router.isReady || status === 'loading' || !session) {
-            return;
-        }
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
+        if (!plan || isLoading) return
 
-        // hacky solution to avoid overwrite changes (#272) => solve with SWR (see above!)
-        if (
-            (typeof planerData !== 'undefined' && stageInMenu != 'steps') ||
-            (typeof planerData !== 'undefined' && stageInMenu == 'steps' && stepName == currentStep)
-        ) {
-            setLoading(false);
-            return;
-        }
+        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+        setIsDirty(methods.formState.isDirty)
+        planerDataCallback(plan)
+        setLoading(false)
+    }, [plan, isLoading, methods, currentPath, planerDataCallback]);
 
-        fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-            (data) => {
-                setLoading(false);
-                if (!data || !data.plan) {
-                    // TODO show error
-                    return;
-                }
-
-                setPlanerData(data.plan as IPlan);
-                planerDataCallback(data.plan as IPlan);
-                // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-                setIsDirty(methods.formState.isDirty);
-                if (stageInMenu == 'steps') {
-                    setCurrentStep(stepName as string);
-                }
-            }
-        );
-
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: router.query.plannerId },
-            async (response: any) => {
-                console.log(response);
-                if (!response.success && response.status === 403) {
-                    // TODO redirect to or directly render "access denied" page,
-                    // because plan is locked. for now, just render an alert
-                    if (response.reason === 'plan_locked') {
-                        await fetchPOST(
-                            '/profile_snippets',
-                            { usernames: [response.lock_holder] },
-                            session?.accessToken
-                        ).then((data) => {
-                            const foundUserSnippet = data.user_snippets.find(
-                                (snippet: BackendUserSnippet) =>
-                                    snippet.username === response.lock_holder
-                            );
-                            const displayName = foundUserSnippet
-                                ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
-                                : response.lock_holder;
-                            setAlert({
-                                message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
-                                autoclose: 5000,
-                                onClose: () => setAlert({ open: false }),
-                            });
-                        });
-                    } else {
-                        setAlert({
-                            message: `Kein Zugriff auf diesen Plan!`,
-                            autoclose: 5000,
-                            onClose: () => setAlert({ open: false }),
-                        });
-                    }
-                }
-            }
-        );
-    }, [
-        session,
-        status,
-        router,
-        planerData,
-        methods,
-        currentStep,
-        stageInMenu,
-        stepName,
-        planerDataCallback,
-    ]);
-
-    const handleSubmit = async (data: any) => {
+    const handleSubmit = async (data: any, updateAfterSaved = true) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
         if (fields) {
-            await fetchPOST('/planner/update_fields', { update: fields }, session?.accessToken);
+            const res = await fetchPOST(
+                '/planner/update_fields',
+                { update: fields },
+                session?.accessToken
+            );
+            if (res.success === false) {
+                console.log({res});
+                return false
+            }
         }
-        methods.reset({}, { keepValues: true });
-        // await mutate()
+        if (updateAfterSaved) {
+            // reload plan
+            await mutate()
+            // reset formstate.isdirty after save
+            methods.reset({}, { keepValues: true });
+        }
+        return true
     };
 
+    const handlePopupContinue = async () => {
+        if (popUp.continueLink && popUp.continueLink != '') {
+            if (!popUp.continueLink.startsWith('/ve-designer')) {
+                socket.emit(
+                    'drop_plan_lock',
+                    { plan_id: router.query.plannerId },
+                    async (response: any) => {
+                        console.log(response);
+                        // TODO error handling
+                        await router.push({
+                            pathname: popUp.continueLink,
+                            query: {},
+                        });
+                    }
+                );
+            } else {
+                await router.push({
+                    pathname: popUp.continueLink,
+                    query: popUp.continueLink.startsWith('/ve-designer')
+                        ? { plannerId: router.query.plannerId }
+                        : {},
+                });
+            }
+        } else {
+            setPopUp(prev => ({ ...prev, isOpen: false }));
+            setLoading(false);
+        }
+    }
+
     const Breadcrumb = () => {
-        if (!planerData || !planerData.steps) return <></>;
+        if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenu.find((a) => a.id == stageInMenu);
         let subMenuItem = mainMenuItem?.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = planerData.steps.find((a) =>
+            const currentStep = plan.steps.find((a) =>
                 currentPath.endsWith(encodeURIComponent(a.name))
             );
 
@@ -266,10 +214,11 @@ export default function Wrapper({
         );
     };
 
-    // if (!router.query.plannerId  || error) {
-    //     console.log(error); // TODO alert/re-route
-    //     return (<></>);
-    // }
+    if (!router.query.plannerId || error) {
+        console.log(error); // TODO alert/re-route to /plans?!
+        router.push('/plans')
+        return (<></>);
+    }
 
     return (
         <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
@@ -280,39 +229,7 @@ export default function Wrapper({
                             {/* TODO implement an PopUp alternative or invalid data */}
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
-                                handleContinue={async () => {
-                                    console.log(popUp.continueLink);
-                                    if (popUp.continueLink && popUp.continueLink != '') {
-                                        if (!popUp.continueLink.startsWith('/ve-designer')) {
-                                            socket.emit(
-                                                'drop_plan_lock',
-                                                { plan_id: router.query.plannerId },
-                                                async (response: any) => {
-                                                    console.log(response);
-                                                    // TODO error handling
-                                                    await router.push({
-                                                        pathname: popUp.continueLink,
-                                                        query: {},
-                                                    });
-                                                }
-                                            );
-                                        } else {
-                                            await router.push({
-                                                pathname: popUp.continueLink,
-                                                query: popUp.continueLink.startsWith('/ve-designer')
-                                                    ? {
-                                                          plannerId: router.query.plannerId,
-                                                      }
-                                                    : {},
-                                            });
-                                        }
-                                    } else {
-                                        setPopUp((prev) => {
-                                            return { ...prev, isOpen: false };
-                                        });
-                                        setLoading(false);
-                                    }
-                                }}
+                                handleContinue={async () => { handlePopupContinue() }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
                                         return { ...prev, isOpen: false };
@@ -321,21 +238,19 @@ export default function Wrapper({
                                 }}
                             />
 
-                            {successPopupOpen && (
-                                <Alert
-                                    message="Gespeichert"
-                                    autoclose={2000}
-                                    onClose={() => setSuccessPopupOpen(false)}
-                                />
-                            )}
+                            <Alert state={alert} />
 
                             <Header
                                 socket={socket}
                                 methods={methods}
                                 submitCallback={async (d) => {
-                                    await handleSubmit(d);
+                                    const res = await handleSubmit(d);
+                                    if (res) {
+                                        setAlert({message: 'Gespeichert', autoclose: 2000, onClose: setAlert({open: false})})
+                                    } else {
+                                        setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                    }
                                     setLoading(false);
-                                    setSuccessPopupOpen(true);
                                     // manual update sidebar after changed user steps
                                     if (currentPath.startsWith('/ve-designer/step-names')) {
                                         setUpdateSidebar(true);
@@ -350,7 +265,16 @@ export default function Wrapper({
                             <div className="flex flex-row divide-x gap-1">
                                 <Sidebar
                                     methods={methods}
-                                    submitCallback={handleSubmit}
+                                    submitCallback={async (data) => {
+                                        const res = await handleSubmit(data, false)
+                                        if (!res) {
+                                            setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                            // return false
+                                        }
+                                        // TODO what to do?!?
+                                        // return true
+
+                                    }}
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
@@ -405,7 +329,11 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data);
+                                                                const res = await handleSubmit(data, false);
+                                                                if (!res) {
+                                                                    setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                                                    return
+                                                                }
 
                                                                 router.push({
                                                                     pathname: prevpage,
@@ -437,8 +365,12 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data);
-                                                                router.push({
+                                                                const res = await handleSubmit(data, false);
+                                                                if (!res) {
+                                                                    setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                                                    return
+                                                                }
+                                                                await router.push({
                                                                     pathname: nextpage,
                                                                     query: {
                                                                         plannerId:

@@ -13,7 +13,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 
-export interface Lecture {
+export interface Institution {
     name: string;
     school_type: string;
     country: string;
@@ -21,29 +21,29 @@ export interface Lecture {
 }
 
 interface FormValues {
-    lectures: Lecture[];
+    institutions: Institution[];
 }
 
-const emptyLecture = {
+const emptyInstitution = {
     name: '',
     school_type: '',
     country: '',
     departments: [],
 }
 
-const isEmptyLecture = (lecture: Lecture) => {
-    return lecture.name === ''
-        && lecture.school_type === ''
-        && lecture.country === ''
-        && lecture.departments.every(d => d === '')
+const isEmptyINstitution = (institution: Institution) => {
+    return institution.name === ''
+        && institution.school_type === ''
+        && institution.country === ''
+        && institution.departments.every(d => d === '')
 }
 
 interface Props {
     socket: Socket;
 }
 
-Lectures.auth = true;
-export default function Lectures({ socket }: Props): JSX.Element {
+Institutions.auth = true;
+export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -54,12 +54,12 @@ export default function Lectures({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            lectures: [ emptyLecture ]
+            institutions: [ emptyInstitution ]
         },
     });
 
     const { fields, append, remove, replace } = useFieldArray({
-        name: 'lectures',
+        name: 'institutions',
         control: methods.control,
     });
 
@@ -67,7 +67,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
         if (fields.length > 1) {
             remove(i)
         } else {
-            replace(emptyLecture)
+            replace(emptyInstitution)
         }
     }
 
@@ -81,12 +81,12 @@ export default function Lectures({ socket }: Props): JSX.Element {
     }, [replace]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const lectures = data.lectures.filter((l: Lecture) => !isEmptyLecture(l))
+        const institutions = data.institutions.filter((l: Institution) => !isEmptyINstitution(l))
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'institutions',
-                value: lectures,
+                value: institutions,
             },
             {
                 plan_id: router.query.plannerId,
@@ -99,7 +99,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
         ]
     };
 
-    const renderLecturesInputs = (): JSX.Element[] => {
+    const renderInstitutionInputs = (): JSX.Element[] => {
         return fields.map((lectures, index) => (
             <div key={lectures.id} className="pt-4 pb-2">
 
@@ -114,7 +114,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 type="text"
                                 placeholder="Name eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...methods.register(`lectures.${index}.name`, {
+                                {...methods.register(`institutions.${index}.name`, {
                                     maxLength: {
                                         value: 500,
                                         message:
@@ -123,7 +123,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.lectures?.[index]?.name?.message}
+                                {methods.formState.errors?.institutions?.[index]?.name?.message}
                             </p>
                         </div>
                     </div>
@@ -137,7 +137,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             <select
                                 placeholder="Bildungseinrichtung eingeben"
                                 className="border border-gray-400 rounded-lg w-full px-1 py-2"
-                                {...methods.register(`lectures.${index}.school_type`, {
+                                {...methods.register(`institutions.${index}.school_type`, {
                                     maxLength: {
                                         value: 500,
                                         message:
@@ -162,7 +162,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 <option value="Sonstige">Sonstige</option>
                             </select>
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.lectures?.[index]?.school_type?.message}
+                                {methods.formState.errors?.institutions?.[index]?.school_type?.message}
                             </p>
                         </div>
                     </div>
@@ -177,7 +177,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 type="text"
                                 placeholder="Land eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...methods.register(`lectures.${index}.country`, {
+                                {...methods.register(`institutions.${index}.country`, {
                                     maxLength: {
                                         value: 500,
                                         message:
@@ -186,7 +186,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 })}
                             />
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.lectures?.[index]?.country?.message}
+                                {methods.formState.errors?.institutions?.[index]?.country?.message}
                             </p>
                         </div>
                     </div>
@@ -201,7 +201,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 type="text"
                                 placeholder="Fachbereich eingeben"
                                 className="border border-gray-400 rounded-lg w-full p-2"
-                                {...methods.register(`lectures.${index}.departments.0`, {
+                                {...methods.register(`institutions.${index}.departments.0`, {
                                     maxLength: {
                                         value: 500,
                                         message:
@@ -211,7 +211,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             />
                             <p className="text-red-600 pt-2">
                                 {
-                                    methods.formState.errors?.lectures?.[index]?.departments?.[0]
+                                    methods.formState.errors?.institutions?.[index]?.departments?.[0]
                                         ?.message
                                 }
                             </p>
@@ -244,7 +244,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
         >
                 <div className={'px-4 w-full lg:w-2/3'}>
                     <div className="divide-y">
-                        {renderLecturesInputs()}
+                        {renderInstitutionInputs()}
                     </div>
                     <div className="flex justify-center">
                         <button
