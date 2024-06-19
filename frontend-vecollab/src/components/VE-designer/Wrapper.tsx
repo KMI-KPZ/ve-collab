@@ -16,8 +16,9 @@ import { mainMenu } from '@/data/sideMenuSteps';
 import { Tooltip } from '../Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
-import Alert from '../Alert';
+import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     title: string;
@@ -71,10 +72,11 @@ export default function Wrapper({
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-    const [updateSidebar, setUpdateSidebar] = useState(false)
-    const currentPath = usePathname()
-    const [isDirty, setIsDirty] = useState<boolean>(false)
-    const [currentStep, setCurrentStep] = useState<string>()
+    const [updateSidebar, setUpdateSidebar] = useState(false);
+    const currentPath = usePathname();
+    const [isDirty, setIsDirty] = useState<boolean>(false);
+    const [currentStep, setCurrentStep] = useState<string>();
+    const [alert, setAlert] = useState<AlertState>({ open: false });
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -89,8 +91,8 @@ export default function Wrapper({
             if (preventToLeave === false) return;
 
             // form was not changed, but if we clicked outside we should drop the lock
-            if (!methods.formState.isDirty){
-                if(clickedOutside){
+            if (!methods.formState.isDirty) {
+                if (clickedOutside) {
                     socket.emit(
                         'drop_plan_lock',
                         { plan_id: router.query.plannerId },
@@ -101,7 +103,7 @@ export default function Wrapper({
                     );
                 }
                 return;
-            };
+            }
 
             // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
@@ -147,12 +149,12 @@ export default function Wrapper({
         }
 
         // hacky solution to avoid overwrite changes (#272) => solve with SWR (see above!)
-        if ((typeof planerData !== 'undefined' && stageInMenu != 'steps')
-            || (typeof planerData !== 'undefined' && stageInMenu == 'steps' && stepName == currentStep)
-
+        if (
+            (typeof planerData !== 'undefined' && stageInMenu != 'steps') ||
+            (typeof planerData !== 'undefined' && stageInMenu == 'steps' && stepName == currentStep)
         ) {
-            setLoading(false)
-            return
+            setLoading(false);
+            return;
         }
 
         fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
@@ -160,31 +162,74 @@ export default function Wrapper({
                 setLoading(false);
                 if (!data || !data.plan) {
                     // TODO show error
-                    return
+                    return;
                 }
 
                 setPlanerData(data.plan as IPlan);
-                planerDataCallback(data.plan as IPlan)
+                planerDataCallback(data.plan as IPlan);
                 // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-                setIsDirty(methods.formState.isDirty)
+                setIsDirty(methods.formState.isDirty);
                 if (stageInMenu == 'steps') {
-                    setCurrentStep(stepName as string)
+                    setCurrentStep(stepName as string);
                 }
             }
         );
-    }, [session, status, router, planerData, methods, currentStep, stageInMenu, stepName, planerDataCallback]);
 
+        socket.emit(
+            'try_acquire_or_extend_plan_write_lock',
+            { plan_id: router.query.plannerId },
+            async (response: any) => {
+                console.log(response);
+                if (!response.success && response.status === 403) {
+                    // TODO redirect to or directly render "access denied" page,
+                    // because plan is locked. for now, just render an alert
+                    if (response.reason === 'plan_locked') {
+                        await fetchPOST(
+                            '/profile_snippets',
+                            { usernames: [response.lock_holder] },
+                            session?.accessToken
+                        ).then((data) => {
+                            const foundUserSnippet = data.user_snippets.find(
+                                (snippet: BackendUserSnippet) =>
+                                    snippet.username === response.lock_holder
+                            );
+                            const displayName = foundUserSnippet
+                                ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
+                                : response.lock_holder;
+                            setAlert({
+                                message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+                                autoclose: 5000,
+                                onClose: () => setAlert({ open: false }),
+                            });
+                        });
+                    } else {
+                        setAlert({
+                            message: `Kein Zugriff auf diesen Plan!`,
+                            autoclose: 5000,
+                            onClose: () => setAlert({ open: false }),
+                        });
+                    }
+                }
+            }
+        );
+    }, [
+        session,
+        status,
+        router,
+        planerData,
+        methods,
+        currentStep,
+        stageInMenu,
+        stepName,
+        planerDataCallback,
+    ]);
 
     const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
         if (fields) {
-            await fetchPOST(
-                '/planner/update_fields',
-                { update: fields },
-                session?.accessToken
-            );
+            await fetchPOST('/planner/update_fields', { update: fields }, session?.accessToken);
         }
         methods.reset({}, { keepValues: true });
         // await mutate()
@@ -236,7 +281,7 @@ export default function Wrapper({
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
                                 handleContinue={async () => {
-                                    console.log(popUp.continueLink)
+                                    console.log(popUp.continueLink);
                                     if (popUp.continueLink && popUp.continueLink != '') {
                                         if (!popUp.continueLink.startsWith('/ve-designer')) {
                                             socket.emit(
@@ -422,6 +467,7 @@ export default function Wrapper({
                     </div>
                 </WhiteBox>
             </Container>
+            <Alert state={alert} />
         </div>
     );
 }

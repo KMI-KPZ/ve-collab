@@ -9,13 +9,14 @@ import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/
 import { MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
-import { fetchDELETE, fetchGET } from '@/lib/backend';
+import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
 import ConfirmDialog from '../Confirm';
 import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
 import { useRouter } from 'next/router';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     socket: Socket;
@@ -78,11 +79,24 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                         query: { plannerId: planId },
                     });
                 } else if (!response.success && response.status === 403) {
-                    // TODO somehow this is only showing once and then only again after page reload
-                    setAlert({
-                        message: `Plan wird gerade von ${response.lock_holder} bearbeitet`,
-                        autoclose: 2000,
-                        open: true,
+                    // exchange username for profile snippet to render full name in error alert
+                    await fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [response.lock_holder] },
+                        session?.accessToken
+                    ).then((data) => {
+                        const foundUserSnippet = data.user_snippets.find(
+                            (snippet: BackendUserSnippet) =>
+                                snippet.username === response.lock_holder
+                        );
+                        const displayName = foundUserSnippet
+                            ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
+                            : response.lock_holder;
+                        setAlert({
+                            message: `Plan wird gerade von ${displayName} bearbeitet`,
+                            autoclose: 5000,
+                            onClose: () => setAlert({ open: false }),
+                        });
                     });
                 }
             }
@@ -152,7 +166,10 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
     const EditButton = () => (
         <div
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
-            onClick={(e) => {e.stopPropagation(); acquireLockAndForward(plan._id)}}
+            onClick={(e) => {
+                e.stopPropagation();
+                acquireLockAndForward(plan._id);
+            }}
             title="Plan bearbeiten"
         >
             <MdEdit />
