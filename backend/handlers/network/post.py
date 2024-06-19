@@ -11,6 +11,7 @@ from error_reasons import (
     POST_DOESNT_EXIST,
     SPACE_DOESNT_EXIST,
 )
+from exceptions import PlanDoesntExistError
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.post import (
@@ -173,6 +174,11 @@ class PostHandler(BaseTimelineHandler):
             {"status": 409,
              "success": False,
              "reason": "post_doesnt_exist"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "plan_doesnt_exist"}
         """
 
         _id = self.get_body_argument("_id", None)
@@ -183,7 +189,7 @@ class PostHandler(BaseTimelineHandler):
             creation_date = datetime.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
             wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
-            tags = self.get_body_argument("tags")  # http_body['tags']
+            tags = self.get_body_argument("tags", [])  # http_body['tags']
             plans = self.get_body_argument("plans", [])
             # convert tags and plans to list, because formdata will send it as a string
 
@@ -270,6 +276,39 @@ class PostHandler(BaseTimelineHandler):
                                 )
                             except FileAlreadyInRepoError:
                                 pass
+
+                # if plans are referenced, they have to exist and
+                # the user has to have write permission for them
+                if plans:
+                    plan_manager = VEPlanResource(db)
+                    for plan_id in plans:
+                        try:
+                            plan = plan_manager.get_plan(plan_id)
+                        except PlanDoesntExistError:
+                            self.set_status(409)
+                            self.write(
+                                {
+                                    "status": 409,
+                                    "success": False,
+                                    "reason": "plan_doesnt_exist",
+                                }
+                            )
+                            return
+
+                        # check if user has write permission for the plan
+                        if (
+                            self.current_user.username != plan.author
+                            and self.current_user.username not in plan.write_access
+                        ):
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission_plan",
+                                }
+                            )
+                            return
 
                 post = {
                     "author": author,

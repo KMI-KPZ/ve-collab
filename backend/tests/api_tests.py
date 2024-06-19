@@ -1418,7 +1418,7 @@ class PostHandlerTest(BaseApiTestCase):
         """
 
         # create a plan to be referenced
-        plan_dict = VEPlan().to_dict()
+        plan_dict = VEPlan(write_access=[CURRENT_ADMIN.username]).to_dict()
         self.db.plans.insert_one(plan_dict)
 
         request_json = {
@@ -1704,6 +1704,34 @@ class PostHandlerTest(BaseApiTestCase):
         )
 
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_create_post_error_insufficient_permission_plan(self):
+        """
+        expect: post creation should fail,
+        because user has no write access to the plan that is referenced
+        """
+
+        # create a plan to be referenced without write access
+        plan_dict = VEPlan().to_dict()
+        self.db.plans.insert_one(plan_dict)
+
+        request_json = {
+            "text": "unittest_test_post",
+            "plans": json.dumps([str(plan_dict["_id"])]),
+        }
+
+        request = MultipartEncoder(fields=request_json)
+
+        response = self.base_checks(
+            "POST",
+            "/posts",
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        self.assertEqual(response["reason"], "insufficient_permission_plan")
 
     def test_post_create_post_error_space_doesnt_exist(self):
         """
