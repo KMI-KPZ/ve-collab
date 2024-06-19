@@ -79,13 +79,12 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                         query: { plannerId: planId },
                     });
                 } else if (!response.success && response.status === 403) {
-                    // exchange username for profile snippet to render full name
-                    const profileSnippetResponse = await fetchPOST(
+                    // exchange username for profile snippet to render full name in error alert
+                    await fetchPOST(
                         '/profile_snippets',
                         { usernames: [response.lock_holder] },
                         session?.accessToken
                     ).then((data) => {
-                        // TODO somehow this is only showing once and then only again after page reload
                         const foundUserSnippet = data.user_snippets.find(
                             (snippet: BackendUserSnippet) =>
                                 snippet.username === response.lock_holder
@@ -95,8 +94,8 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                             : response.lock_holder;
                         setAlert({
                             message: `Plan wird gerade von ${displayName} bearbeitet`,
-                            autoclose: 2000,
-                            open: true,
+                            autoclose: 5000,
+                            onClose: () => setAlert({ open: false }),
                         });
                     });
                 }
