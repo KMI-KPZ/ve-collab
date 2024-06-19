@@ -60,7 +60,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         { username: string; learning_goal: string }[]
     >([]);
     const prevpage = '/ve-designer/name';
-    const nextpage = '/ve-designer/lectures';
+    const nextpage = '/ve-designer/institutions';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

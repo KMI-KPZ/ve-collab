@@ -45,7 +45,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const prevpage = '/ve-designer/lectures';
+    const prevpage = '/ve-designer/institutions';
     const nextpage = '/ve-designer/target-groups';
 
     const methods = useForm<FormValues>({

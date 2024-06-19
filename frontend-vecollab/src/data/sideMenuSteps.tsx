@@ -17,7 +17,7 @@ const itemsAllgemein: ISubmenuData[] = [
     {
         text: 'Institution',
         id: 'institutions',
-        link: '/ve-designer/lectures',
+        link: '/ve-designer/institutions',
     },
     {
         text: 'Lehrveranstaltungen',
