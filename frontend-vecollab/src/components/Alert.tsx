@@ -45,8 +45,10 @@ interface AlertBase {
     state?: never,
     open?: boolean,
     type?: AlertTypes,
-    autoclose?: number
-    onClose?: () => void,
+    autoclose?: number,
+    onClose?: (() => void) | void,
+    // TODDO may introduce option to pass setState ?
+    // setState?: Dispatch<SetStateAction<AlertState>>
 }
 
 interface AlertNever {
