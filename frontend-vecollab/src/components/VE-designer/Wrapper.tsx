@@ -17,6 +17,7 @@ import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
 import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     title: string;
@@ -82,8 +83,8 @@ export default function Wrapper({
             if (preventToLeave === false) return;
 
             // form was not changed, but if we clicked outside we should drop the lock
-            if (!methods.formState.isDirty){
-                if(clickedOutside){
+            if (!methods.formState.isDirty) {
+                if (clickedOutside) {
                     socket.emit(
                         'drop_plan_lock',
                         { plan_id: router.query.plannerId },
@@ -94,7 +95,7 @@ export default function Wrapper({
                     );
                 }
                 return;
-            };
+            }
 
             // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
@@ -398,6 +399,7 @@ export default function Wrapper({
                     </div>
                 </WhiteBox>
             </Container>
+            <Alert state={alert} />
         </div>
     );
 }
