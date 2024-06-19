@@ -24,19 +24,23 @@ interface FormValues {
     lectures: LectureOld[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.lectures.every((lecture) => {
-        return (
-            lecture.name === '' &&
-            lecture.lecture_type === '' &&
-            lecture.lecture_format === '' &&
-            isNaN(Number(lecture.participants_amount))
-        );
-    });
-};
 
 interface Props {
     socket: Socket;
+}
+
+const emptyLecture = {
+    name: '',
+    lecture_type: '',
+    lecture_format: '',
+    participants_amount: '',
+}
+
+const isEmptyLecture = (lecture: LectureOld) => {
+    return lecture.name === ''
+        && lecture.lecture_type === ''
+        && lecture.lecture_format === ''
+        && (lecture.participants_amount === '' || isNaN(Number(lecture.participants_amount)))
 }
 
 Lectures.auth = true;
@@ -52,41 +56,36 @@ export default function Lectures({ socket }: Props): JSX.Element {
         mode: 'onChange',
         defaultValues: {
             lectures: [
-                {
-                    name: '',
-                    lecture_type: '',
-                    lecture_format: '',
-                    participants_amount: '',
-                },
+                emptyLecture,
             ],
         },
+    });
+
+    const { fields, append, remove, replace } = useFieldArray({
+        name: 'lectures',
+        control: methods.control,
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (plan.lectures.length !== 0) {
-                methods.setValue('lectures', plan.lectures);
+                replace(plan.lectures);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
         },
-        [methods]
+        [replace]
     );
 
-    const { fields, append, remove } = useFieldArray({
-        name: 'lectures',
-        control: methods.control,
-    });
-
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return;
+        const lectures = data.lectures.filter((l: LectureOld) => !isEmptyLecture(l))
 
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'lectures',
-                value: data.lectures,
+                value: lectures
             },
             {
                 plan_id: router.query.plannerId,
@@ -98,6 +97,14 @@ export default function Lectures({ socket }: Props): JSX.Element {
             },
         ];
     };
+
+    const handeleRemove = (index: number) => {
+        if (fields.length > 1) {
+            remove(index)
+        } else {
+            replace(emptyLecture)
+        }
+    }
 
     const renderLecturesInputs = (): JSX.Element[] => {
         return fields.map((lecture, index) => (
@@ -214,7 +221,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="flex justify-end items-center">
                     <Image
                         className="mx-2 cursor-pointer m-2 "
-                        onClick={() => remove(index)}
+                        onClick={() => handeleRemove(index)}
                         src={trash}
                         width={20}
                         height={20}

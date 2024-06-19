@@ -78,6 +78,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         fields: fieldsTg,
         append: appendTg,
         remove: removeTg,
+        replace: replaceTg
     } = useFieldArray({
         name: 'targetGroups',
         control: methods.control,
@@ -87,6 +88,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         fields: fieldsLang,
         append: appendLang,
         remove: removeLang,
+        replace: replaceLang
     } = useFieldArray({
         name: 'languages',
         control: methods.control,
@@ -95,19 +97,16 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (plan.audience.length !== 0) {
-                methods.setValue('targetGroups', plan.audience);
+                replaceTg(plan.audience)
             }
             if (plan.languages.length !== 0) {
-                methods.setValue(
-                    'languages',
-                    plan.languages.map((element: string) => ({ language: element }))
-                );
+                replaceLang(plan.languages.map((element: string) => ({ language: element })))
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
         },
-        [methods]
+        [replaceLang, replaceTg]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
