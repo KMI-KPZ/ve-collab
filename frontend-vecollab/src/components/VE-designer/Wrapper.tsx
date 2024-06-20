@@ -148,6 +148,7 @@ export default function Wrapper({
             { plan_id: router.query.plannerId },
             async (response: any) => {
                 console.log(response);
+                setLoading(false);
                 if (response.success === true && response.status !== 403) {
                     return
                 }
@@ -171,6 +172,9 @@ export default function Wrapper({
                         onClose: () => setAlert({ open: false }),
                     });
                     return
+                }
+                if (!response.success && response.status === 401) {
+                    // TODO handle re-authenticate
                 }
                 // show "Plan not found" message instead (see bottom)
                 // router.push('/plans')
@@ -198,8 +202,8 @@ export default function Wrapper({
         planerDataCallback
     ]);
 
-    // submit foirmform, pass FormValues data
-    //  if we DO REDIRECT to new page AFTER SAVE its better to call it with updateAfterSaved=false to reduce mutates
+    // submit formdata
+    //  reload plan on current page (mutate) if updateAfterSaved == true
     const handleSubmit = async (data: any, updateAfterSaved = true) => {
         setLoading(true);
         const fields = await submitCallback(data);
@@ -212,6 +216,11 @@ export default function Wrapper({
             );
             if (res.success === false) {
                 console.log({ res });
+                setAlert({
+                    message: 'Fehler beim speichern',
+                    type: 'error',
+                    onClose: setAlert({ open: false }),
+                });
                 return false;
             }
         }
@@ -222,7 +231,7 @@ export default function Wrapper({
             methods.reset({}, { keepValues: true });
         }
         return true;
-    };
+    }
 
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
@@ -349,18 +358,12 @@ export default function Wrapper({
                     <Header
                         socket={socket}
                         methods={methods}
-                        submitCallback={async (d) => {
-                            const res = await handleSubmit(d);
+                        submitCallback={async (data) => {
+                            const res = await handleSubmit(data);
                             if (res) {
                                 setAlert({
                                     message: 'Gespeichert',
                                     autoclose: 2000,
-                                    onClose: setAlert({ open: false }),
-                                });
-                            } else {
-                                setAlert({
-                                    message: 'Fehler beim speichern',
-                                    type: 'error',
                                     onClose: setAlert({ open: false }),
                                 });
                             }
@@ -380,15 +383,7 @@ export default function Wrapper({
                         <Sidebar
                             methods={methods}
                             submitCallback={async (data) => {
-                                const res = await handleSubmit(data, false);
-                                if (!res) {
-                                    setAlert({
-                                        message: 'Fehler beim speichern',
-                                        type: 'error',
-                                        onClose: setAlert({ open: false }),
-                                    });
-                                    // return false
-                                }
+                                await handleSubmit(data, false);
                                 // TODO what to do?!?
                                 // return true
                             }}
@@ -446,21 +441,7 @@ export default function Wrapper({
                                                 onClick={methods.handleSubmit(
                                                     // valid
                                                     async (data: any) => {
-                                                        const res = await handleSubmit(
-                                                            data,
-                                                            false
-                                                        );
-                                                        if (!res) {
-                                                            setAlert({
-                                                                message:
-                                                                    'Fehler beim speichern',
-                                                                type: 'error',
-                                                                onClose: setAlert({
-                                                                    open: false,
-                                                                }),
-                                                            });
-                                                            return;
-                                                        }
+                                                        await handleSubmit(data, false);
 
                                                         router.push({
                                                             pathname: prevpage,
@@ -492,22 +473,8 @@ export default function Wrapper({
                                                 onClick={methods.handleSubmit(
                                                     // valid
                                                     async (data: any) => {
-                                                        const res = await handleSubmit(
-                                                            data,
-                                                            false
-                                                        );
-                                                        if (!res) {
-                                                            setAlert({
-                                                                message:
-                                                                    'Fehler beim speichern',
-                                                                type: 'error',
-                                                                onClose: setAlert({
-                                                                    open: false,
-                                                                }),
-                                                            });
-                                                            return;
-                                                        }
-                                                        await router.push({
+                                                        const res = await handleSubmit(data, false)
+                                                        router.push({
                                                             pathname: nextpage,
                                                             query: {
                                                                 plannerId:
