@@ -133,12 +133,6 @@ export default function PostProcess({ socket }: Props) {
         if (uploadFile) {
             await uploadToBackend();
         }
-
-        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
-            console.log(response);
-            // TODO error handling
-            router.push('/plans');
-        });
     };
 
     return (
@@ -287,7 +281,11 @@ export default function PostProcess({ socket }: Props) {
                         onClick={async (e) => {
                             e.preventDefault();
                             await onSubmit({} as FormValues);
-                            router.push({ pathname: '/plans' });
+                            socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+                                console.log(response);
+                                // TODO error handling
+                                router.push('/plans');
+                            });
                         }}
                     >
                         Absenden & zur Übersicht
