@@ -188,6 +188,7 @@ export default function Wrapper({
 
     useEffect(() => {
         if (!plan || isLoading) return;
+        if (!plan || isLoading) return;
 
         // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
         setIsDirty(methods.formState.isDirty);
