@@ -18,6 +18,7 @@ import Link from 'next/link';
 import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { GiSadCrab } from 'react-icons/gi';
 
 interface Props {
     title: string;
@@ -66,7 +67,6 @@ export default function Wrapper({
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
-    const [updateSidebar, setUpdateSidebar] = useState(false);
     const currentPath = usePathname();
     const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
 
@@ -117,8 +117,15 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, socket, router, preventToLeave]);
+    }, [
+        wrapperRef,
+        methods,
+        socket,
+        router,
+        preventToLeave
+    ]);
 
+    // fetch plan
     const {
         data: plan,
         isLoading,
@@ -126,62 +133,77 @@ export default function Wrapper({
         mutate,
     } = useGetPlanById(router.query.plannerId as string);
 
+    // check access rights or locked plan
     useEffect(() => {
-        if (!plan || isLoading) return;
+        if (isLoading || !session) return
 
-        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-        setIsDirty(methods.formState.isDirty);
-        planerDataCallback(plan);
-        setLoading(false);
+        if (!router.query.plannerId) {
+            router.push('/plans')
+            return
+        }
 
         socket.emit(
             'try_acquire_or_extend_plan_write_lock',
             { plan_id: router.query.plannerId },
             async (response: any) => {
                 console.log(response);
-                if (!response.success && response.status === 403) {
-                    // TODO redirect to or directly render "access denied" page,
-                    // because plan is locked. for now, just render an alert
-                    if (response.reason === 'plan_locked') {
-                        await fetchPOST(
-                            '/profile_snippets',
-                            { usernames: [response.lock_holder] },
-                            session?.accessToken
-                        ).then((data) => {
-                            const foundUserSnippet = data.user_snippets.find(
-                                (snippet: BackendUserSnippet) =>
-                                    snippet.username === response.lock_holder
-                            );
-                            const displayName = foundUserSnippet
-                                ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
-                                : response.lock_holder;
-                            setAlert({
-                                message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
-                                autoclose: 5000,
-                                onClose: () => setAlert({ open: false }),
-                            });
-                        });
-                    } else {
-                        setAlert({
-                            message: `Kein Zugriff auf diesen Plan!`,
-                            autoclose: 5000,
-                            onClose: () => setAlert({ open: false }),
-                        });
-                    }
+                setLoading(false);
+                if (response.success === true && response.status !== 403) {
+                    return
                 }
+
+                if (response.reason === 'plan_locked') {
+                    const data = await fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [response.lock_holder] },
+                        session?.accessToken
+                    )
+                    const userSnippet = data.user_snippets.find(
+                        (snippet: BackendUserSnippet) =>
+                            snippet.username === response.lock_holder
+                    );
+                    const displayName = userSnippet
+                        ? `${userSnippet.first_name} ${userSnippet.last_name}`
+                        : response.lock_holder;
+                    setAlert({
+                        message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+                        autoclose: 10000,
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return
+                }
+                if (!response.success && response.status === 401) {
+                    // TODO handle re-authenticate
+                }
+                // show "Plan not found" message instead (see bottom)
+                // router.push('/plans')
             }
         );
+    }, [
+        isLoading,
+        socket,
+        router,
+        session
+    ]);
+
+    useEffect(() => {
+        if (!plan || isLoading) return;
+        if (!plan || isLoading) return;
+
+        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+        setIsDirty(methods.formState.isDirty);
+        planerDataCallback(plan);
+        setLoading(false);
     }, [
         plan,
         isLoading,
         methods,
         currentPath,
-        planerDataCallback,
-        socket,
-        router.query.plannerId,
-        session,
+        planerDataCallback
     ]);
 
+    // submit formdata
+    //  reload plan on current page (mutate) if updateAfterSaved == true
     const handleSubmit = async (data: any, updateAfterSaved = true) => {
         setLoading(true);
         const fields = await submitCallback(data);
@@ -194,6 +216,11 @@ export default function Wrapper({
             );
             if (res.success === false) {
                 console.log({ res });
+                setAlert({
+                    message: 'Fehler beim speichern',
+                    type: 'error',
+                    onClose: setAlert({ open: false }),
+                });
                 return false;
             }
         }
@@ -204,7 +231,7 @@ export default function Wrapper({
             methods.reset({}, { keepValues: true });
         }
         return true;
-    };
+    }
 
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
@@ -266,10 +293,46 @@ export default function Wrapper({
         );
     };
 
-    if (!router.query.plannerId || error) {
-        console.log(error); // TODO alert/re-route to /plans?!
-        router.push('/plans');
-        return <></>;
+    // häh: if we use this with ref for main return we will have bug #295 (lose focus in 1th type)
+    const WrapperBox = ({children}: {children: JSX.Element}) => (
+        <div className="bg-pattern-left-blue bg-no-repeat">
+            <Container>
+                <WhiteBox>
+                    {children}
+                </WhiteBox>
+            </Container>
+        </div>
+    )
+
+    const BackToStart = () => (
+        <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+            <Link href="/plans">Zurück zur Übersichtsseite</Link>
+        </button>
+    )
+
+    if (error) {
+        console.log(error);
+        return (
+            <WrapperBox>
+                <div className="flex items-center">
+                        <GiSadCrab size={60} className="m-4" />
+                        <div className="text-xl text-slate-900">Error loading plan. See console for details</div>
+                        <BackToStart />
+                </div>
+            </WrapperBox>
+        )
+    }
+
+    if (!isLoading && !plan) {
+        return (
+            <WrapperBox>
+                <div className="flex items-center">
+                    <GiSadCrab size={60} className="m-4" />
+                    <div className="text-xl text-slate-900">Dieser Plan wurde nicht gefunden.</div>
+                    <BackToStart />
+                </div>
+            </WrapperBox>
+        )
     }
 
     return (
@@ -277,6 +340,7 @@ export default function Wrapper({
             <Container>
                 <WhiteBox>
                     <div className="flex flex-col">
+                        <Alert state={alert} />
                         <FormProvider {...methods}>
                             {/* TODO implement an PopUp alternative or invalid data */}
                             <PopupSaveData
@@ -292,32 +356,20 @@ export default function Wrapper({
                                 }}
                             />
 
-                            <Alert state={alert} />
-
                             <Header
                                 socket={socket}
                                 methods={methods}
-                                submitCallback={async (d) => {
-                                    const res = await handleSubmit(d);
+                                plan={plan}
+                                submitCallback={async (data) => {
+                                    const res = await handleSubmit(data);
                                     if (res) {
                                         setAlert({
                                             message: 'Gespeichert',
                                             autoclose: 2000,
                                             onClose: setAlert({ open: false }),
                                         });
-                                    } else {
-                                        setAlert({
-                                            message: 'Fehler beim speichern',
-                                            type: 'error',
-                                            onClose: setAlert({ open: false }),
-                                        });
                                     }
                                     setLoading(false);
-                                    // manual update sidebar after changed user steps
-                                    if (currentPath.startsWith('/ve-designer/step-names')) {
-                                        setUpdateSidebar(true);
-                                        setTimeout(() => setUpdateSidebar(false), 1);
-                                    }
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({ isOpen: true, continueLink: continueLink });
@@ -328,23 +380,13 @@ export default function Wrapper({
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={async (data) => {
-                                        const res = await handleSubmit(data, false);
-                                        if (!res) {
-                                            setAlert({
-                                                message: 'Fehler beim speichern',
-                                                type: 'error',
-                                                onClose: setAlert({ open: false }),
-                                            });
-                                            // return false
-                                        }
-                                        // TODO what to do?!?
-                                        // return true
+                                        await handleSubmit(data, false);
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
-                                    reloadSidebar={updateSidebar}
+                                    plan={plan}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
@@ -394,21 +436,7 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(
-                                                                    data,
-                                                                    false
-                                                                );
-                                                                if (!res) {
-                                                                    setAlert({
-                                                                        message:
-                                                                            'Fehler beim speichern',
-                                                                        type: 'error',
-                                                                        onClose: setAlert({
-                                                                            open: false,
-                                                                        }),
-                                                                    });
-                                                                    return;
-                                                                }
+                                                                await handleSubmit(data, false);
 
                                                                 router.push({
                                                                     pathname: prevpage,
@@ -440,22 +468,8 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(
-                                                                    data,
-                                                                    false
-                                                                );
-                                                                if (!res) {
-                                                                    setAlert({
-                                                                        message:
-                                                                            'Fehler beim speichern',
-                                                                        type: 'error',
-                                                                        onClose: setAlert({
-                                                                            open: false,
-                                                                        }),
-                                                                    });
-                                                                    return;
-                                                                }
-                                                                await router.push({
+                                                                const res = await handleSubmit(data, false)
+                                                                router.push({
                                                                     pathname: nextpage,
                                                                     query: {
                                                                         plannerId:
@@ -484,7 +498,6 @@ export default function Wrapper({
                     </div>
                 </WhiteBox>
             </Container>
-            <Alert state={alert} />
         </div>
     );
 }

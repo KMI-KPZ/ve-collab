@@ -135,10 +135,13 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [wasInited, setWasInited] = useState<boolean>(false);
+
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (!plan.steps?.length) return;
+            if (wasInited) return
 
             setSteps(plan.steps);
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
@@ -168,9 +171,10 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 if (Object.keys(plan.progress).length) {
                     setSideMenuStepsProgress(plan.progress);
                 }
+                setWasInited(true)
             }
         },
-        [methods, stepName]
+        [methods, wasInited, stepName]
     );
 
     useEffect(() => {
@@ -225,6 +229,8 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         );
 
         if (areAllFormValuesEmpty(data)) return;
+
+        setWasInited(false)
 
         return [
             {

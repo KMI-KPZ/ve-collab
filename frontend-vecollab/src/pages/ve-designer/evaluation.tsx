@@ -80,10 +80,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
         },
     });
 
+    const { fields, replace } = useFieldArray({
+        name: 'evaluationPerPartner',
+        control: methods.control,
+    });
+
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (plan.evaluation.length !== 0) {
-                methods.setValue('evaluationPerPartner', plan.evaluation);
+                replace(plan.evaluation)
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -102,13 +107,8 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 setPartnerProfileSnippets(partnerSnippets);
             });
         },
-        [methods, session]
+        [replace, session]
     );
-
-    const { fields } = useFieldArray({
-        name: 'evaluationPerPartner',
-        control: methods.control,
-    });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (areAllFormValuesEmpty(data)) return;

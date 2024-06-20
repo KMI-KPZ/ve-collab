@@ -18,14 +18,6 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
 
-    const releaseLockAndForward = () => {
-        socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
-            console.log(response);
-            // TODO error handling
-            router.push('/plans');
-        });
-    };
-
     return (
         <Wrapper
             socket={socket}
@@ -54,26 +46,28 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             )}
             <div className="flex justify-around w-full mt-10">
                 <div>
-                    <button
-                        type="submit"
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        onClick={releaseLockAndForward}
+                    <Link
+                        href={{
+                            pathname: `/plans`
+                        }}
+                        onClick={() => {
+                            socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
+                                // TODO error handling ?
+                            });
+                        }}
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
                     >
                         Weiter zur Übersicht
-                    </button>
+                    </Link>
 
                     <Link
                         href={{
                             pathname: `/ve-designer/post-process`,
                             query: { plannerId: router.query.plannerId },
                         }}
+                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
                     >
-                        <button
-                            type="submit"
-                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
-                        >
-                            zur Nachbearbeitung
-                        </button>
+                        zur Nachbearbeitung
                     </Link>
                 </div>
             </div>

@@ -64,10 +64,32 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        defaultValues: {
-            partners: [{ label: '', value: '' }],
-            externalParties: [{ externalParty: '' }],
-        },
+        // defaultValues: {
+        //     partners: [{ label: '', value: '' }],
+        //     externalParties: [{ externalParty: '' }],
+        // },
+    });
+
+    const {
+        fields: fieldsPartners,
+        append: appendPartners,
+        remove: removePartners,
+        update: updatePartners,
+        replace: replacePartners,
+    } = useFieldArray({
+        name: 'partners',
+        control: methods.control,
+    });
+
+    const {
+        fields: fieldsExternalParties,
+        append: appendExternalParties,
+        remove: removeExternalParties,
+        update: updateExternalParties,
+        replace: replaceExternalParties
+    } = useFieldArray({
+        name: 'externalParties',
+        control: methods.control,
     });
 
     const setPlanerData = useCallback(
@@ -82,12 +104,11 @@ export default function Partners({ socket }: Props): JSX.Element {
                 setIndividualLearningGoals(plan.individual_learning_goals);
             }
             if (plan.involved_parties.length !== 0) {
-                methods.setValue(
-                    'externalParties',
-                    plan.involved_parties.map((element: string) => ({
+                replaceExternalParties(
+                        plan.involved_parties.map((element: string) => ({
                         externalParty: element,
                     }))
-                );
+                )
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -122,32 +143,14 @@ export default function Partners({ socket }: Props): JSX.Element {
                             }
                         }
                     );
-                    methods.setValue('partners', usernameWithFirstAndLastName);
+                    replacePartners(usernameWithFirstAndLastName)
                 });
             }
         },
-        [methods, session]
+        [replaceExternalParties, replacePartners, session]
     );
 
-    const {
-        fields: fieldsPartners,
-        append: appendPartners,
-        remove: removePartners,
-        update: updatePartners,
-    } = useFieldArray({
-        name: 'partners',
-        control: methods.control,
-    });
 
-    const {
-        fields: fieldsExternalParties,
-        append: appendExternalParties,
-        remove: removeExternalParties,
-        update: updateExternalParties,
-    } = useFieldArray({
-        name: 'externalParties',
-        control: methods.control,
-    });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const partners: string[] = data.partners.map((partner) => partner.value);
