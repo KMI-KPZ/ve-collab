@@ -293,15 +293,16 @@ export default function Wrapper({
         );
     };
 
-    const WrapperBox = ({children}: {children: JSX.Element}) => {
-        return (<div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
+    // häh: if we use this with ref for main return we will have bug #295 (lose focus in 1th type)
+    const WrapperBox = ({children}: {children: JSX.Element}) => (
+        <div className="bg-pattern-left-blue bg-no-repeat">
             <Container>
                 <WhiteBox>
                     {children}
                 </WhiteBox>
             </Container>
-        </div>)
-    }
+        </div>
+    )
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
@@ -335,172 +336,174 @@ export default function Wrapper({
     }
 
     return (
-        <WrapperBox>
-            <div className="flex flex-col">
-                <Alert state={alert} />
-                <FormProvider {...methods}>
-                    {/* TODO implement an PopUp alternative or invalid data */}
-                    <PopupSaveData
-                        isOpen={popUp.isOpen}
-                        handleContinue={async () => {
-                            handlePopupContinue();
-                        }}
-                        handleCancel={() => {
-                            setPopUp((prev) => {
-                                return { ...prev, isOpen: false };
-                            });
-                            setLoading(false);
-                        }}
-                    />
+        <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
+            <Container>
+                <WhiteBox>
+                    <div className="flex flex-col">
+                        <Alert state={alert} />
+                        <FormProvider {...methods}>
+                            {/* TODO implement an PopUp alternative or invalid data */}
+                            <PopupSaveData
+                                isOpen={popUp.isOpen}
+                                handleContinue={async () => {
+                                    handlePopupContinue();
+                                }}
+                                handleCancel={() => {
+                                    setPopUp((prev) => {
+                                        return { ...prev, isOpen: false };
+                                    });
+                                    setLoading(false);
+                                }}
+                            />
 
-                    <Alert state={alert} />
+                            <Header
+                                socket={socket}
+                                methods={methods}
+                                submitCallback={async (data) => {
+                                    const res = await handleSubmit(data);
+                                    if (res) {
+                                        setAlert({
+                                            message: 'Gespeichert',
+                                            autoclose: 2000,
+                                            onClose: setAlert({ open: false }),
+                                        });
+                                    }
+                                    setLoading(false);
+                                    // manual update sidebar after changed user steps
+                                    if (currentPath.startsWith('/ve-designer/step-names')) {
+                                        setUpdateSidebar(true);
+                                        setTimeout(() => setUpdateSidebar(false), 1);
+                                    }
+                                }}
+                                handleUnsavedData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, continueLink: continueLink });
+                                }}
+                            />
 
-                    <Header
-                        socket={socket}
-                        methods={methods}
-                        submitCallback={async (data) => {
-                            const res = await handleSubmit(data);
-                            if (res) {
-                                setAlert({
-                                    message: 'Gespeichert',
-                                    autoclose: 2000,
-                                    onClose: setAlert({ open: false }),
-                                });
-                            }
-                            setLoading(false);
-                            // manual update sidebar after changed user steps
-                            if (currentPath.startsWith('/ve-designer/step-names')) {
-                                setUpdateSidebar(true);
-                                setTimeout(() => setUpdateSidebar(false), 1);
-                            }
-                        }}
-                        handleUnsavedData={(data: any, continueLink: string) => {
-                            setPopUp({ isOpen: true, continueLink: continueLink });
-                        }}
-                    />
+                            <div className="flex flex-row divide-x gap-1">
+                                <Sidebar
+                                    methods={methods}
+                                    submitCallback={async (data) => {
+                                        await handleSubmit(data, false);
+                                        // TODO what to do?!?
+                                        // return true
+                                    }}
+                                    handleInvalidData={(data: any, continueLink: string) => {
+                                        setPopUp({ isOpen: true, continueLink: continueLink });
+                                    }}
+                                    stageInMenu={stageInMenu}
+                                    reloadSidebar={updateSidebar}
+                                />
 
-                    <div className="flex flex-row divide-x gap-1">
-                        <Sidebar
-                            methods={methods}
-                            submitCallback={async (data) => {
-                                await handleSubmit(data, false);
-                                // TODO what to do?!?
-                                // return true
-                            }}
-                            handleInvalidData={(data: any, continueLink: string) => {
-                                setPopUp({ isOpen: true, continueLink: continueLink });
-                            }}
-                            stageInMenu={stageInMenu}
-                            reloadSidebar={updateSidebar}
-                        />
+                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
+                                    <Breadcrumb />
 
-                        <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
-                            <Breadcrumb />
+                                    <div className={'flex justify-between items-start mt-2 mb-2'}>
+                                        <h2 className="font-bold text-2xl">{title}</h2>
+                                        {typeof tooltip !== 'undefined' && (
+                                            <Tooltip tooltipsText={tooltip.text}>
+                                                <Link
+                                                    target="_blank"
+                                                    href={tooltip.link}
+                                                    className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                                >
+                                                    <PiBookOpenText
+                                                        size={30}
+                                                        color="#00748f"
+                                                        className="inline relative"
+                                                    />
+                                                </Link>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                    {typeof subtitle !== 'undefined' && (
+                                        <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
+                                    )}
 
-                            <div className={'flex justify-between items-start mt-2 mb-2'}>
-                                <h2 className="font-bold text-2xl">{title}</h2>
-                                {typeof tooltip !== 'undefined' && (
-                                    <Tooltip tooltipsText={tooltip.text}>
-                                        <Link
-                                            target="_blank"
-                                            href={tooltip.link}
-                                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
-                                        >
-                                            <PiBookOpenText
-                                                size={30}
-                                                color="#00748f"
-                                                className="inline relative"
-                                            />
-                                        </Link>
-                                    </Tooltip>
-                                )}
+                                    {loading && (
+                                        <>
+                                            <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
+                                            <div className="absolute left-1/2 translate-x-1/2 top-10">
+                                                <LoadingAnimation />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {children}
+
+                                    {(typeof prevpage !== 'undefined' ||
+                                        typeof nextpage !== 'undefined') && (
+                                        <div className="my-8 border-t py-3 flex justify-between">
+                                            <div className="basis-20">
+                                                {typeof prevpage !== 'undefined' && (
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                        onClick={methods.handleSubmit(
+                                                            // valid
+                                                            async (data: any) => {
+                                                                await handleSubmit(data, false);
+
+                                                                router.push({
+                                                                    pathname: prevpage,
+                                                                    query: {
+                                                                        plannerId:
+                                                                            router.query.plannerId,
+                                                                    },
+                                                                });
+                                                            },
+                                                            // invalid
+                                                            async (data: any) => {
+                                                                setPopUp({
+                                                                    isOpen: true,
+                                                                    continueLink: prevpage,
+                                                                });
+                                                            }
+                                                        )}
+                                                    >
+                                                        Zurück
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="basis-20">
+                                                {typeof nextpage !== 'undefined' && (
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                        onClick={methods.handleSubmit(
+                                                            // valid
+                                                            async (data: any) => {
+                                                                const res = await handleSubmit(data, false)
+                                                                router.push({
+                                                                    pathname: nextpage,
+                                                                    query: {
+                                                                        plannerId:
+                                                                            router.query.plannerId,
+                                                                    },
+                                                                });
+                                                            },
+                                                            // invalid
+                                                            async () => {
+                                                                setPopUp({
+                                                                    isOpen: true,
+                                                                    continueLink: nextpage,
+                                                                });
+                                                            }
+                                                        )}
+                                                    >
+                                                        Weiter
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </form>
                             </div>
-                            {typeof subtitle !== 'undefined' && (
-                                <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
-                            )}
-
-                            {loading && (
-                                <>
-                                    <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
-                                    <div className="absolute left-1/2 translate-x-1/2 top-10">
-                                        <LoadingAnimation />
-                                    </div>
-                                </>
-                            )}
-
-                            {children}
-
-                            {(typeof prevpage !== 'undefined' ||
-                                typeof nextpage !== 'undefined') && (
-                                <div className="my-8 border-t py-3 flex justify-between">
-                                    <div className="basis-20">
-                                        {typeof prevpage !== 'undefined' && (
-                                            <button
-                                                type="button"
-                                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                onClick={methods.handleSubmit(
-                                                    // valid
-                                                    async (data: any) => {
-                                                        await handleSubmit(data, false);
-
-                                                        router.push({
-                                                            pathname: prevpage,
-                                                            query: {
-                                                                plannerId:
-                                                                    router.query.plannerId,
-                                                            },
-                                                        });
-                                                    },
-                                                    // invalid
-                                                    async (data: any) => {
-                                                        setPopUp({
-                                                            isOpen: true,
-                                                            continueLink: prevpage,
-                                                        });
-                                                    }
-                                                )}
-                                            >
-                                                Zurück
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="basis-20">
-                                        {typeof nextpage !== 'undefined' && (
-                                            <button
-                                                type="button"
-                                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                onClick={methods.handleSubmit(
-                                                    // valid
-                                                    async (data: any) => {
-                                                        const res = await handleSubmit(data, false)
-                                                        router.push({
-                                                            pathname: nextpage,
-                                                            query: {
-                                                                plannerId:
-                                                                    router.query.plannerId,
-                                                            },
-                                                        });
-                                                    },
-                                                    // invalid
-                                                    async () => {
-                                                        setPopUp({
-                                                            isOpen: true,
-                                                            continueLink: nextpage,
-                                                        });
-                                                    }
-                                                )}
-                                            >
-                                                Weiter
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </form>
+                        </FormProvider>
                     </div>
-                </FormProvider>
-            </div>
-        </WrapperBox>
+                </WhiteBox>
+            </Container>
+        </div>
     );
 }
