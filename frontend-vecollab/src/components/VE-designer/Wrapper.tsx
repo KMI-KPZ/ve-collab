@@ -65,10 +65,10 @@ export default function Wrapper({
         continueLink: '/plans',
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
-    const [alert, setAlert] = useState<AlertState>({open: false})
-    const [updateSidebar, setUpdateSidebar] = useState(false)
-    const currentPath = usePathname()
-    const [isDirty, setIsDirty] = useState<boolean>(false) // NOTE: unused but required for correct isDirty state check ;(
+    const [alert, setAlert] = useState<AlertState>({ open: false });
+    const [updateSidebar, setUpdateSidebar] = useState(false);
+    const currentPath = usePathname();
+    const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -117,18 +117,78 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, socket, router, preventToLeave]);
+    }, [
+        wrapperRef,
+        methods,
+        socket,
+        router,
+        preventToLeave
+    ]);
 
-    const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
+    const {
+        data: plan,
+        isLoading,
+        error,
+        mutate,
+    } = useGetPlanById(router.query.plannerId as string);
 
     useEffect(() => {
-        if (!plan || isLoading) return
+        if (isLoading || !session) return
+
+        socket.emit(
+            'try_acquire_or_extend_plan_write_lock',
+            { plan_id: router.query.plannerId },
+            async (response: any) => {
+                console.log(response);
+                if (response.success === true && response.status !== 403) {
+                    return
+                }
+
+                if (response.reason === 'plan_locked') {
+                    const data = await fetchPOST(
+                        '/profile_snippets',
+                        { usernames: [response.lock_holder] },
+                        session?.accessToken
+                    )
+                    const userSnippet = data.user_snippets.find(
+                        (snippet: BackendUserSnippet) =>
+                            snippet.username === response.lock_holder
+                    );
+                    const displayName = userSnippet
+                        ? `${userSnippet.first_name} ${userSnippet.last_name}`
+                        : response.lock_holder;
+                    setAlert({
+                        message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+                        autoclose: 10000,
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return
+                }
+                router.push('/plans')
+            }
+        );
+    }, [
+        isLoading,
+        socket,
+        router,
+        session
+    ]);
+
+
+    useEffect(() => {
+        if (!plan || isLoading) return;
 
         // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-        setIsDirty(methods.formState.isDirty)
-        planerDataCallback(plan)
-        setLoading(false)
-    }, [plan, isLoading, methods, currentPath, planerDataCallback]);
+        setIsDirty(methods.formState.isDirty);
+        planerDataCallback(plan);
+        setLoading(false);
+    }, [
+        plan,
+        isLoading,
+        methods,
+        currentPath,
+        planerDataCallback
+    ]);
 
     const handleSubmit = async (data: any, updateAfterSaved = true) => {
         setLoading(true);
@@ -141,17 +201,17 @@ export default function Wrapper({
                 session?.accessToken
             );
             if (res.success === false) {
-                console.log({res});
-                return false
+                console.log({ res });
+                return false;
             }
         }
         if (updateAfterSaved) {
             // reload plan
-            await mutate()
+            await mutate();
             // reset formstate.isdirty after save
             methods.reset({}, { keepValues: true });
         }
-        return true
+        return true;
     };
 
     const handlePopupContinue = async () => {
@@ -178,10 +238,10 @@ export default function Wrapper({
                 });
             }
         } else {
-            setPopUp(prev => ({ ...prev, isOpen: false }));
+            setPopUp((prev) => ({ ...prev, isOpen: false }));
             setLoading(false);
         }
-    }
+    };
 
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
@@ -216,8 +276,8 @@ export default function Wrapper({
 
     if (!router.query.plannerId || error) {
         console.log(error); // TODO alert/re-route to /plans?!
-        router.push('/plans')
-        return (<></>);
+        router.push('/plans');
+        return <></>;
     }
 
     return (
@@ -229,7 +289,9 @@ export default function Wrapper({
                             {/* TODO implement an PopUp alternative or invalid data */}
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
-                                handleContinue={async () => { handlePopupContinue() }}
+                                handleContinue={async () => {
+                                    handlePopupContinue();
+                                }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
                                         return { ...prev, isOpen: false };
@@ -246,9 +308,17 @@ export default function Wrapper({
                                 submitCallback={async (d) => {
                                     const res = await handleSubmit(d);
                                     if (res) {
-                                        setAlert({message: 'Gespeichert', autoclose: 2000, onClose: setAlert({open: false})})
+                                        setAlert({
+                                            message: 'Gespeichert',
+                                            autoclose: 2000,
+                                            onClose: setAlert({ open: false }),
+                                        });
                                     } else {
-                                        setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                        setAlert({
+                                            message: 'Fehler beim speichern',
+                                            type: 'error',
+                                            onClose: setAlert({ open: false }),
+                                        });
                                     }
                                     setLoading(false);
                                     // manual update sidebar after changed user steps
@@ -266,14 +336,17 @@ export default function Wrapper({
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={async (data) => {
-                                        const res = await handleSubmit(data, false)
+                                        const res = await handleSubmit(data, false);
                                         if (!res) {
-                                            setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
+                                            setAlert({
+                                                message: 'Fehler beim speichern',
+                                                type: 'error',
+                                                onClose: setAlert({ open: false }),
+                                            });
                                             // return false
                                         }
                                         // TODO what to do?!?
                                         // return true
-
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({ isOpen: true, continueLink: continueLink });
@@ -329,10 +402,20 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(data, false);
+                                                                const res = await handleSubmit(
+                                                                    data,
+                                                                    false
+                                                                );
                                                                 if (!res) {
-                                                                    setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
-                                                                    return
+                                                                    setAlert({
+                                                                        message:
+                                                                            'Fehler beim speichern',
+                                                                        type: 'error',
+                                                                        onClose: setAlert({
+                                                                            open: false,
+                                                                        }),
+                                                                    });
+                                                                    return;
                                                                 }
 
                                                                 router.push({
@@ -365,10 +448,20 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(data, false);
+                                                                const res = await handleSubmit(
+                                                                    data,
+                                                                    false
+                                                                );
                                                                 if (!res) {
-                                                                    setAlert({message: 'Fehler beim speichern', type: 'error', onClose: setAlert({open: false})})
-                                                                    return
+                                                                    setAlert({
+                                                                        message:
+                                                                            'Fehler beim speichern',
+                                                                        type: 'error',
+                                                                        onClose: setAlert({
+                                                                            open: false,
+                                                                        }),
+                                                                    });
+                                                                    return;
                                                                 }
                                                                 await router.push({
                                                                     pathname: nextpage,
