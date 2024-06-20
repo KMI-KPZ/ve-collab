@@ -18,6 +18,7 @@ import Link from 'next/link';
 import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { GiSadCrab } from 'react-icons/gi';
 
 interface Props {
     title: string;
@@ -125,6 +126,7 @@ export default function Wrapper({
         preventToLeave
     ]);
 
+    // fetch plan
     const {
         data: plan,
         isLoading,
@@ -132,8 +134,14 @@ export default function Wrapper({
         mutate,
     } = useGetPlanById(router.query.plannerId as string);
 
+    // check access rights or locked plan
     useEffect(() => {
         if (isLoading || !session) return
+
+        if (!router.query.plannerId) {
+            router.push('/plans')
+            return
+        }
 
         socket.emit(
             'try_acquire_or_extend_plan_write_lock',
@@ -164,7 +172,8 @@ export default function Wrapper({
                     });
                     return
                 }
-                router.push('/plans')
+                // show "Plan not found" message instead (see bottom)
+                // router.push('/plans')
             }
         );
     }, [
@@ -173,7 +182,6 @@ export default function Wrapper({
         router,
         session
     ]);
-
 
     useEffect(() => {
         if (!plan || isLoading) return;
@@ -190,6 +198,8 @@ export default function Wrapper({
         planerDataCallback
     ]);
 
+    // submit foirmform, pass FormValues data
+    //  if we DO REDIRECT to new page AFTER SAVE its better to call it with updateAfterSaved=false to reduce mutates
     const handleSubmit = async (data: any, updateAfterSaved = true) => {
         setLoading(true);
         const fields = await submitCallback(data);
@@ -274,225 +284,256 @@ export default function Wrapper({
         );
     };
 
-    if (!router.query.plannerId || error) {
-        console.log(error); // TODO alert/re-route to /plans?!
-        router.push('/plans');
-        return <></>;
+    const WrapperBox = ({children}: {children: JSX.Element}) => {
+        return (<div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
+            <Container>
+                <WhiteBox>
+                    {children}
+                </WhiteBox>
+            </Container>
+        </div>)
+    }
+
+    const BackToStart = () => (
+        <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+            <Link href="/plans">Zurück zur Übersichtsseite</Link>
+        </button>
+    )
+
+    if (error) {
+        console.log(error);
+        return (
+            <WrapperBox>
+                <div className="flex items-center">
+                        <GiSadCrab size={60} className="m-4" />
+                        <div className="text-xl text-slate-900">Error loading plan. See console for details</div>
+                        <BackToStart />
+                </div>
+            </WrapperBox>
+        )
+    }
+
+    if (!isLoading && !plan) {
+        return (
+            <WrapperBox>
+                <div className="flex items-center">
+                    <GiSadCrab size={60} className="m-4" />
+                    <div className="text-xl text-slate-900">Dieser Plan wurde nicht gefunden.</div>
+                    <BackToStart />
+                </div>
+            </WrapperBox>
+        )
     }
 
     return (
-        <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
-            <Container>
-                <WhiteBox>
-                    <div className="flex flex-col">
-                        <FormProvider {...methods}>
-                            {/* TODO implement an PopUp alternative or invalid data */}
-                            <PopupSaveData
-                                isOpen={popUp.isOpen}
-                                handleContinue={async () => {
-                                    handlePopupContinue();
-                                }}
-                                handleCancel={() => {
-                                    setPopUp((prev) => {
-                                        return { ...prev, isOpen: false };
+        <WrapperBox>
+            <div className="flex flex-col">
+                <Alert state={alert} />
+                <FormProvider {...methods}>
+                    {/* TODO implement an PopUp alternative or invalid data */}
+                    <PopupSaveData
+                        isOpen={popUp.isOpen}
+                        handleContinue={async () => {
+                            handlePopupContinue();
+                        }}
+                        handleCancel={() => {
+                            setPopUp((prev) => {
+                                return { ...prev, isOpen: false };
+                            });
+                            setLoading(false);
+                        }}
+                    />
+
+                    <Alert state={alert} />
+
+                    <Header
+                        socket={socket}
+                        methods={methods}
+                        submitCallback={async (d) => {
+                            const res = await handleSubmit(d);
+                            if (res) {
+                                setAlert({
+                                    message: 'Gespeichert',
+                                    autoclose: 2000,
+                                    onClose: setAlert({ open: false }),
+                                });
+                            } else {
+                                setAlert({
+                                    message: 'Fehler beim speichern',
+                                    type: 'error',
+                                    onClose: setAlert({ open: false }),
+                                });
+                            }
+                            setLoading(false);
+                            // manual update sidebar after changed user steps
+                            if (currentPath.startsWith('/ve-designer/step-names')) {
+                                setUpdateSidebar(true);
+                                setTimeout(() => setUpdateSidebar(false), 1);
+                            }
+                        }}
+                        handleUnsavedData={(data: any, continueLink: string) => {
+                            setPopUp({ isOpen: true, continueLink: continueLink });
+                        }}
+                    />
+
+                    <div className="flex flex-row divide-x gap-1">
+                        <Sidebar
+                            methods={methods}
+                            submitCallback={async (data) => {
+                                const res = await handleSubmit(data, false);
+                                if (!res) {
+                                    setAlert({
+                                        message: 'Fehler beim speichern',
+                                        type: 'error',
+                                        onClose: setAlert({ open: false }),
                                     });
-                                    setLoading(false);
-                                }}
-                            />
+                                    // return false
+                                }
+                                // TODO what to do?!?
+                                // return true
+                            }}
+                            handleInvalidData={(data: any, continueLink: string) => {
+                                setPopUp({ isOpen: true, continueLink: continueLink });
+                            }}
+                            stageInMenu={stageInMenu}
+                            reloadSidebar={updateSidebar}
+                        />
 
-                            <Alert state={alert} />
+                        <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
+                            <Breadcrumb />
 
-                            <Header
-                                socket={socket}
-                                methods={methods}
-                                submitCallback={async (d) => {
-                                    const res = await handleSubmit(d);
-                                    if (res) {
-                                        setAlert({
-                                            message: 'Gespeichert',
-                                            autoclose: 2000,
-                                            onClose: setAlert({ open: false }),
-                                        });
-                                    } else {
-                                        setAlert({
-                                            message: 'Fehler beim speichern',
-                                            type: 'error',
-                                            onClose: setAlert({ open: false }),
-                                        });
-                                    }
-                                    setLoading(false);
-                                    // manual update sidebar after changed user steps
-                                    if (currentPath.startsWith('/ve-designer/step-names')) {
-                                        setUpdateSidebar(true);
-                                        setTimeout(() => setUpdateSidebar(false), 1);
-                                    }
-                                }}
-                                handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, continueLink: continueLink });
-                                }}
-                            />
+                            <div className={'flex justify-between items-start mt-2 mb-2'}>
+                                <h2 className="font-bold text-2xl">{title}</h2>
+                                {typeof tooltip !== 'undefined' && (
+                                    <Tooltip tooltipsText={tooltip.text}>
+                                        <Link
+                                            target="_blank"
+                                            href={tooltip.link}
+                                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                        >
+                                            <PiBookOpenText
+                                                size={30}
+                                                color="#00748f"
+                                                className="inline relative"
+                                            />
+                                        </Link>
+                                    </Tooltip>
+                                )}
+                            </div>
+                            {typeof subtitle !== 'undefined' && (
+                                <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
+                            )}
 
-                            <div className="flex flex-row divide-x gap-1">
-                                <Sidebar
-                                    methods={methods}
-                                    submitCallback={async (data) => {
-                                        const res = await handleSubmit(data, false);
-                                        if (!res) {
-                                            setAlert({
-                                                message: 'Fehler beim speichern',
-                                                type: 'error',
-                                                onClose: setAlert({ open: false }),
-                                            });
-                                            // return false
-                                        }
-                                        // TODO what to do?!?
-                                        // return true
-                                    }}
-                                    handleInvalidData={(data: any, continueLink: string) => {
-                                        setPopUp({ isOpen: true, continueLink: continueLink });
-                                    }}
-                                    stageInMenu={stageInMenu}
-                                    reloadSidebar={updateSidebar}
-                                />
+                            {loading && (
+                                <>
+                                    <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
+                                    <div className="absolute left-1/2 translate-x-1/2 top-10">
+                                        <LoadingAnimation />
+                                    </div>
+                                </>
+                            )}
 
-                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
-                                    <Breadcrumb />
+                            {children}
 
-                                    <div className={'flex justify-between items-start mt-2 mb-2'}>
-                                        <h2 className="font-bold text-2xl">{title}</h2>
-                                        {typeof tooltip !== 'undefined' && (
-                                            <Tooltip tooltipsText={tooltip.text}>
-                                                <Link
-                                                    target="_blank"
-                                                    href={tooltip.link}
-                                                    className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
-                                                >
-                                                    <PiBookOpenText
-                                                        size={30}
-                                                        color="#00748f"
-                                                        className="inline relative"
-                                                    />
-                                                </Link>
-                                            </Tooltip>
+                            {(typeof prevpage !== 'undefined' ||
+                                typeof nextpage !== 'undefined') && (
+                                <div className="my-8 border-t py-3 flex justify-between">
+                                    <div className="basis-20">
+                                        {typeof prevpage !== 'undefined' && (
+                                            <button
+                                                type="button"
+                                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                onClick={methods.handleSubmit(
+                                                    // valid
+                                                    async (data: any) => {
+                                                        const res = await handleSubmit(
+                                                            data,
+                                                            false
+                                                        );
+                                                        if (!res) {
+                                                            setAlert({
+                                                                message:
+                                                                    'Fehler beim speichern',
+                                                                type: 'error',
+                                                                onClose: setAlert({
+                                                                    open: false,
+                                                                }),
+                                                            });
+                                                            return;
+                                                        }
+
+                                                        router.push({
+                                                            pathname: prevpage,
+                                                            query: {
+                                                                plannerId:
+                                                                    router.query.plannerId,
+                                                            },
+                                                        });
+                                                    },
+                                                    // invalid
+                                                    async (data: any) => {
+                                                        setPopUp({
+                                                            isOpen: true,
+                                                            continueLink: prevpage,
+                                                        });
+                                                    }
+                                                )}
+                                            >
+                                                Zurück
+                                            </button>
                                         )}
                                     </div>
-                                    {typeof subtitle !== 'undefined' && (
-                                        <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
-                                    )}
 
-                                    {loading && (
-                                        <>
-                                            <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
-                                            <div className="absolute left-1/2 translate-x-1/2 top-10">
-                                                <LoadingAnimation />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {children}
-
-                                    {(typeof prevpage !== 'undefined' ||
-                                        typeof nextpage !== 'undefined') && (
-                                        <div className="my-8 border-t py-3 flex justify-between">
-                                            <div className="basis-20">
-                                                {typeof prevpage !== 'undefined' && (
-                                                    <button
-                                                        type="button"
-                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                        onClick={methods.handleSubmit(
-                                                            // valid
-                                                            async (data: any) => {
-                                                                const res = await handleSubmit(
-                                                                    data,
-                                                                    false
-                                                                );
-                                                                if (!res) {
-                                                                    setAlert({
-                                                                        message:
-                                                                            'Fehler beim speichern',
-                                                                        type: 'error',
-                                                                        onClose: setAlert({
-                                                                            open: false,
-                                                                        }),
-                                                                    });
-                                                                    return;
-                                                                }
-
-                                                                router.push({
-                                                                    pathname: prevpage,
-                                                                    query: {
-                                                                        plannerId:
-                                                                            router.query.plannerId,
-                                                                    },
-                                                                });
+                                    <div className="basis-20">
+                                        {typeof nextpage !== 'undefined' && (
+                                            <button
+                                                type="button"
+                                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                onClick={methods.handleSubmit(
+                                                    // valid
+                                                    async (data: any) => {
+                                                        const res = await handleSubmit(
+                                                            data,
+                                                            false
+                                                        );
+                                                        if (!res) {
+                                                            setAlert({
+                                                                message:
+                                                                    'Fehler beim speichern',
+                                                                type: 'error',
+                                                                onClose: setAlert({
+                                                                    open: false,
+                                                                }),
+                                                            });
+                                                            return;
+                                                        }
+                                                        await router.push({
+                                                            pathname: nextpage,
+                                                            query: {
+                                                                plannerId:
+                                                                    router.query.plannerId,
                                                             },
-                                                            // invalid
-                                                            async (data: any) => {
-                                                                setPopUp({
-                                                                    isOpen: true,
-                                                                    continueLink: prevpage,
-                                                                });
-                                                            }
-                                                        )}
-                                                    >
-                                                        Zurück
-                                                    </button>
+                                                        });
+                                                    },
+                                                    // invalid
+                                                    async () => {
+                                                        setPopUp({
+                                                            isOpen: true,
+                                                            continueLink: nextpage,
+                                                        });
+                                                    }
                                                 )}
-                                            </div>
-
-                                            <div className="basis-20">
-                                                {typeof nextpage !== 'undefined' && (
-                                                    <button
-                                                        type="button"
-                                                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                        onClick={methods.handleSubmit(
-                                                            // valid
-                                                            async (data: any) => {
-                                                                const res = await handleSubmit(
-                                                                    data,
-                                                                    false
-                                                                );
-                                                                if (!res) {
-                                                                    setAlert({
-                                                                        message:
-                                                                            'Fehler beim speichern',
-                                                                        type: 'error',
-                                                                        onClose: setAlert({
-                                                                            open: false,
-                                                                        }),
-                                                                    });
-                                                                    return;
-                                                                }
-                                                                await router.push({
-                                                                    pathname: nextpage,
-                                                                    query: {
-                                                                        plannerId:
-                                                                            router.query.plannerId,
-                                                                    },
-                                                                });
-                                                            },
-                                                            // invalid
-                                                            async () => {
-                                                                setPopUp({
-                                                                    isOpen: true,
-                                                                    continueLink: nextpage,
-                                                                });
-                                                            }
-                                                        )}
-                                                    >
-                                                        Weiter
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </form>
-                            </div>
-                        </FormProvider>
+                                            >
+                                                Weiter
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </form>
                     </div>
-                </WhiteBox>
-            </Container>
-            <Alert state={alert} />
-        </div>
+                </FormProvider>
+            </div>
+        </WrapperBox>
     );
 }
