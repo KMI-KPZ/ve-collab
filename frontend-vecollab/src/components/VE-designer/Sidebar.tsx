@@ -12,6 +12,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { MdArrowDropDown, MdArrowRight, MdCheckCircleOutline } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { useGetPlanById } from '@/lib/backend';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 // init menu open states
 let menuStates: IMenuDataState[] = mainMenu.map(a => {
@@ -32,7 +33,7 @@ interface Props {
     submitCallback: (data: any) => void,
     handleInvalidData: (data: any, continueLink: string) => void,
     stageInMenu: string,
-    reloadSidebar?: boolean
+    plan: IPlan
 }
 
 export default function Sidebar({
@@ -40,15 +41,14 @@ export default function Sidebar({
     submitCallback,
     handleInvalidData,
     stageInMenu='generally',
-    reloadSidebar=false,
+    plan
 }: Props): JSX.Element {
     const router = useRouter();
     const currentPath = usePathname()
-    const { data: plan, isLoading, error, mutate } = useGetPlanById(router.query.plannerId as string);
     const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu)
 
     useEffect(() => {
-        if (!plan?.steps || !mainMenu?.length || isLoading) return
+        if (!plan?.steps || !mainMenu?.length) return
 
         const userDefinedSteps = plan.steps.map(step => { return {
             text: step.name,
@@ -70,11 +70,7 @@ export default function Sidebar({
             })
         })
 
-    }, [plan, isLoading])
-
-    useEffect(() => {
-        if (reloadSidebar === true) mutate()
-    }, [reloadSidebar, mutate])
+    }, [plan])
 
     const getProgressState = (id: string): any => {
         const idDecrypted: string = decodeURI(id);

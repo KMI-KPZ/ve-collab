@@ -2,28 +2,20 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { MdEditSquare, MdMeetingRoom } from 'react-icons/md';
-import { useGetPlanById } from '@/lib/backend';
 import { UseFormReturn } from 'react-hook-form';
 import { Socket } from 'socket.io-client';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
     submitCallback: (data: any) => void;
     handleUnsavedData: (data: any, continueLink: string) => void;
     socket: Socket;
-    // plan: IPlan
+    plan: IPlan
 }
 
-export default function Header({ methods, submitCallback, handleUnsavedData, socket }: Props) {
+export default function Header({ methods, plan, submitCallback, handleUnsavedData, socket }: Props) {
     const router = useRouter();
-
-    // note: works better than passing {plan} as property!! (no flickering)
-    const {
-        data: plan,
-        isLoading,
-        error,
-        mutate,
-    } = useGetPlanById(router.query.plannerId as string);
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -83,7 +75,6 @@ export default function Header({ methods, submitCallback, handleUnsavedData, soc
                         // valid form
                         async (data: any) => {
                             await submitCallback(data);
-                            await mutate();
                         },
                         // invalid form
                         // TODO open another Popup (data is invalid PopUp)

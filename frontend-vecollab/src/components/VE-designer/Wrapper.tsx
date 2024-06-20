@@ -67,7 +67,6 @@ export default function Wrapper({
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
-    const [updateSidebar, setUpdateSidebar] = useState(false);
     const currentPath = usePathname();
     const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
 
@@ -359,6 +358,7 @@ export default function Wrapper({
                             <Header
                                 socket={socket}
                                 methods={methods}
+                                plan={plan}
                                 submitCallback={async (data) => {
                                     const res = await handleSubmit(data);
                                     if (res) {
@@ -369,11 +369,6 @@ export default function Wrapper({
                                         });
                                     }
                                     setLoading(false);
-                                    // manual update sidebar after changed user steps
-                                    if (currentPath.startsWith('/ve-designer/step-names')) {
-                                        setUpdateSidebar(true);
-                                        setTimeout(() => setUpdateSidebar(false), 1);
-                                    }
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({ isOpen: true, continueLink: continueLink });
@@ -385,14 +380,12 @@ export default function Wrapper({
                                     methods={methods}
                                     submitCallback={async (data) => {
                                         await handleSubmit(data, false);
-                                        // TODO what to do?!?
-                                        // return true
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
-                                    reloadSidebar={updateSidebar}
+                                    plan={plan}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
