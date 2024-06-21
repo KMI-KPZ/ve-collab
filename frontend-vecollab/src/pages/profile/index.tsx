@@ -31,7 +31,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
-        institution: '',
         bio: '',
         expertise: '',
         birthday: '',
@@ -142,7 +141,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 setPersonalInformation({
                     firstName: data.profile.first_name,
                     lastName: data.profile.last_name,
-                    institution: data.profile.institution,
                     bio: data.profile.bio,
                     expertise: data.profile.expertise,
                     birthday: data.profile.birthday,
