@@ -20,15 +20,15 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
 }
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
-interface APIResponse{
+interface APIErrorResponse{
     success: boolean;
     reason: string;
     [x: string]: any;
 }
 
 class APIError extends Error {
-    apiResponse: APIResponse;
-    constructor(message: string, apiResponse: APIResponse) {
+    apiResponse: APIErrorResponse;
+    constructor(message: string, apiResponse: APIErrorResponse) {
         super(message);
         this.apiResponse = apiResponse;
     }
