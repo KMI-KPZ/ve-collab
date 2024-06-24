@@ -292,6 +292,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             socket={socket}
             title="Lernziele & Themen"
             subtitle='1. Welche fachlichen Lernziele sollen im VE erreicht werden?'
+            description="Beschreibt hier kurz die fachlichen Lernziele für den VE, also welches fachliche Wissen und welche Fertigkeiten ihr vermitteln wollt. Die Lernziele können auch überfachlich bzw. fächerübergreifend sein, wenn ihr aus eurem Fach heraus auf ein bestimmtes Thema blickt (z. B. BNE)."
             tooltip={{text: 'Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …', link: '/learning-material/top-bubble/Potenziale'}}
             methods={methods}
             prevpage={prevpage}
@@ -333,7 +334,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 </div>
             </div>
             <div className="mt-12">
-                <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
+                <div className={'flex justify-between items-center text-slate-600 text-xl relative'}>
                     2. Welche weiteren übergeordneten Lernziele werden verfolgt?
                     <Tooltip tooltipsText="Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …">
                         <Link
@@ -345,6 +346,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         </Link>
                     </Tooltip>
                 </div>
+                <p className="mb-8">Neben fachlichen Lernzielen könnt ihr mit eurem VE auch übergeordnete Kompetenzen fördern. Überlegt hier, welche gemeinsamen Schwerpunkte ihr setzen wollt.</p>
+               
 
                 <div className='w-full lg:w-1/2'>
                     {createableSelect(
@@ -356,7 +359,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             </div>
 
             <div className="mt-12">
-                <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
+                <div className={'flex justify-between items-center text-slate-600 text-xl relative'}>
                     3. Zu welchem Thema / welchen Themen findet der VE statt?
                     <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
                         <Link
@@ -368,6 +371,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         </Link>
                     </Tooltip>
                 </div>
+                <p className="mb-8">Überlegt euch, welche inhaltlichen Themen ihr in eurem VA behandeln wollt. Diese können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.</p>
 
                 <div className='w-full lg:w-1/2'>
                     {renderTopics()}

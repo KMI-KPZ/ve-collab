@@ -237,6 +237,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
             socket={socket}
             title="Lehrveranstaltungen"
             subtitle="Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?"
+            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden (z. B. die Zahl der Teilnehmenden)."
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

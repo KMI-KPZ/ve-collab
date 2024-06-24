@@ -312,7 +312,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
         <Wrapper
             socket={socket}
             title="Grobplanung"
-            subtitle="Grobplanung der Etappen"
+            subtitle="Grobplanung des Ablaufs"
+            description="Erstellt beliebig viele Etappen und legt für jede Etappe einen Zeitraum fest. Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Gruppenarbeitsphase I, Gruppenarbeitsphase II). Die von euch festgelegten Etappen dienen euch als Struktur und Überblick. Ihr könnt sie dann optional in der Feinplanung detaillierter ausarbeiten."
             tooltip={{
                 text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung',
@@ -324,11 +325,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'mb-4'}>
-                Erstellt beliebig viele Etappen und legt für jede Etappe einen Zeitraum fest.
-                Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Kennenlernphase I,
-                Kennenlernphase II).
-            </div>
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="stepNames-items">
                     {(provided: DroppableProvided) => (

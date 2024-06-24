@@ -236,6 +236,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
             socket={socket}
             title='Institution'
             subtitle='In welchen Institutionen wird der VE umgesetzt?'
+            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, gibt euch aber einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche."
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

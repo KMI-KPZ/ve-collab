@@ -303,6 +303,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
             socket={socket}
             title="Checkliste"
             subtitle="An alles gedacht?"
+            description="Bevor es mit der inhaltlichen und didaktischen Planung losgeht, dient euch die Liste noch einmal als Überblick, ob ihr die wichtigsten formalen Rahmenbedingungen berücksichtigt habt."
             tooltip={{
                 text: 'Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/top-bubble/Herausforderungen',
@@ -313,10 +314,6 @@ export default function Checklist({ socket }: Props): JSX.Element {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div>Bevor es mit der inhaltlichen und didaktischen Planung losgeht:</div>
-            <div className="mb-2">
-                Sind die folgenden Bedingungen bei allen Beteiligten geklärt?
-            </div>
             <div className="grid grid-cols-3 gap-1 mt-7 mb-10">{renderCheckBoxes()}</div>
         </Wrapper>
     );

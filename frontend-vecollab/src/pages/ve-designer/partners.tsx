@@ -86,7 +86,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         append: appendExternalParties,
         remove: removeExternalParties,
         update: updateExternalParties,
-        replace: replaceExternalParties
+        replace: replaceExternalParties,
     } = useFieldArray({
         name: 'externalParties',
         control: methods.control,
@@ -105,10 +105,10 @@ export default function Partners({ socket }: Props): JSX.Element {
             }
             if (plan.involved_parties.length !== 0) {
                 replaceExternalParties(
-                        plan.involved_parties.map((element: string) => ({
+                    plan.involved_parties.map((element: string) => ({
                         externalParty: element,
                     }))
-                )
+                );
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -143,14 +143,12 @@ export default function Partners({ socket }: Props): JSX.Element {
                             }
                         }
                     );
-                    replacePartners(usernameWithFirstAndLastName)
+                    replacePartners(usernameWithFirstAndLastName);
                 });
             }
         },
         [replaceExternalParties, replacePartners, session]
     );
-
-
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const partners: string[] = data.partners.map((partner) => partner.value);
@@ -265,7 +263,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         } else {
             updateExternalParties(index, { externalParty: '' });
         }
-
     };
 
     const loadOptions = (
@@ -345,8 +342,9 @@ export default function Partners({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Projektpartner"
-            subtitle="Wer ist am Projekt beteiligt? Einige Felder werden individuell für die Beteiligten beantwortet"
+            title="Projektpartner:innen"
+            subtitle="Wer ist am Projekt beteiligt?"
+            description={["Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden. Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.", "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind."]}
             tooltip={{
                 text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Partnersuche',
@@ -358,6 +356,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div>
+                <p className="text-xl text-slate-600 mb-2">Partner:innen</p>
                 {fieldsPartners.map((partner, index) => (
                     <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
                         {createableAsyncSelect(methods.control, `partners.${index}`, index)}
