@@ -149,6 +149,11 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "no_logged_in_user"}
 
+                403 Forbidden
+                (you don't have read access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
                 409 Conflict
                 (no plan was found with the given _id)
                 {"success": False,
