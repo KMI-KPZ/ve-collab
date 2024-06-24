@@ -49,7 +49,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
     const prevpage = '/ve-designer/partners'
-    const nextpage = '/ve-designer/participatingCourses'
+    const nextpage = '/ve-designer/lectures'
 
     const methods = useForm<FormValues>({
         mode: 'onChange',

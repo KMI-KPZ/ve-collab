@@ -54,7 +54,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const prevpage = '/ve-designer/participatingCourses';
+    const prevpage = '/ve-designer/lectures';
     const nextpage = '/ve-designer/learning-goals';
 
     const methods = useForm<FormValues>({
