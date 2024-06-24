@@ -2,7 +2,7 @@ import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import { TargetGroup } from '@/pages/ve-designer/target-groups';
 import { Institution } from '@/pages/ve-designer/institutions';
-import { LectureOld } from '@/pages/ve-designer/participatingCourses';
+import { LectureOld } from '@/pages/ve-designer/lectures';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import { EvaluationFile } from '@/pages/ve-designer/post-process';

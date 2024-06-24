@@ -22,7 +22,7 @@ const itemsAllgemein: ISubmenuData[] = [
     {
         text: 'Lehrveranstaltungen',
         id: 'lectures',
-        link: '/ve-designer/participatingCourses',
+        link: '/ve-designer/lectures',
     },
     {
         text: 'Zielgruppe & Sprache',
