@@ -278,6 +278,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             socket={socket}
             title='Digitale Lernumgebung'
             subtitle='In welcher digitalen Lernumgebung findet der VE statt?'
+            description="Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten."
             tooltip={{
                 text: 'Mehr zu LMS findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
@@ -307,7 +308,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             </div>
 
             <div className='mt-4'>
-                <div className={'flex justify-between items-center text-slate-600 text-xl mb-2 relative'}>
+                <div className={'flex justify-between items-center text-slate-600 text-xl relative'}>
                 In welchem Format / welchen Formaten wird der VE umgesetzt?
                 <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
                     <Link
@@ -319,7 +320,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     </Link>
                 </Tooltip>
                 </div>
-
+                <p className="mb-8">Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl synchrone als auch asynchrone Phasen geplant sind.</p>
                 <div className='w-full lg:w-1/2'>
                     <div className="flex items-center">
                         <label htmlFor="courseFormat" className="mr-2">

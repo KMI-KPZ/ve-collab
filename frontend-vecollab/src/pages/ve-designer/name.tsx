@@ -61,6 +61,7 @@ export default function Name({ socket }: Props): JSX.Element {
             socket={socket}
             title="Projektname"
             subtitle="Wie soll das Projekt heißen?"
+            description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint eurem Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}

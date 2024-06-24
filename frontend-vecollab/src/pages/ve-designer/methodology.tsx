@@ -81,6 +81,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             socket={socket}
             title="Methodischer Ansatz"
             subtitle="Welche methodischen Ansätze kommen im VE zum Einsatz?"
+            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden."
             tooltip={{
                 text: 'Mehr zu Methodik findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material',

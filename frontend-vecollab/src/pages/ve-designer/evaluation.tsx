@@ -255,6 +255,8 @@ export default function Evaluation({ socket }: Props): JSX.Element {
         <Wrapper
             socket={socket}
             title="Bewertung / Evaluation"
+            subtitle='Wie kann der VE während der Durchführung oder abschließend bewertet und evaluiert werden?'
+            description="Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden."
             tooltip={{
                 text: 'Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Evaluation',

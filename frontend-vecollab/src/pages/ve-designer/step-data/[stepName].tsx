@@ -261,7 +261,8 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         <Wrapper
             socket={socket}
             title={`Etappe: ${currentFineStep.name}`}
-            subtitle="Beschreibung der Etappe"
+            subtitle="Feinplanung"
+            description="Beschreibt nun die einzelnen Etappen genauer. Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen, beschreibt bitte auch die einzelnen Lernaktivitäten näher."
             tooltip={{
                 text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung',

@@ -23,6 +23,7 @@ import { GiSadCrab } from 'react-icons/gi';
 interface Props {
     title: string;
     subtitle?: string;
+    description?: string[] | string;
     tooltip?: { text: string; link: string };
     methods: UseFormReturn<any, any, undefined>;
     children: React.ReactNode;
@@ -47,6 +48,7 @@ interface Props {
 export default function Wrapper({
     title,
     subtitle,
+    description,
     tooltip,
     children,
     methods,
@@ -400,7 +402,23 @@ export default function Wrapper({
                                         )}
                                     </div>
                                     {typeof subtitle !== 'undefined' && (
-                                        <p className="text-xl text-slate-600 mb-4">{subtitle}</p>
+                                        <p className="text-xl text-slate-600">{subtitle}</p>
+                                    )}
+                                    {typeof description !== 'undefined' && (
+                                        <>
+                                            {typeof description === 'string' && (
+                                                <p className="mb-8">{description}</p>
+                                            )}
+                                            {Array.isArray(description) && (
+                                                <div className="mb-8">
+                                                    {description.map((description, index) => (
+                                                        <p key={index} className="mb-2">
+                                                            {description}
+                                                        </p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
                                     )}
 
                                     {loading && (
