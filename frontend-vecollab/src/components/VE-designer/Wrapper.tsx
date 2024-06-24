@@ -117,13 +117,7 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [
-        wrapperRef,
-        methods,
-        socket,
-        router,
-        preventToLeave
-    ]);
+    }, [wrapperRef, methods, socket, router, preventToLeave]);
 
     // fetch plan
     const {
@@ -135,11 +129,11 @@ export default function Wrapper({
 
     // check access rights or locked plan
     useEffect(() => {
-        if (isLoading || !session) return
+        if (isLoading || !session || error) return;
 
         if (!router.query.plannerId) {
-            router.push('/plans')
-            return
+            router.push('/plans');
+            return;
         }
 
         socket.emit(
@@ -149,7 +143,7 @@ export default function Wrapper({
                 console.log(response);
                 setLoading(false);
                 if (response.success === true && response.status !== 403) {
-                    return
+                    return;
                 }
 
                 if (response.reason === 'plan_locked') {
@@ -157,10 +151,9 @@ export default function Wrapper({
                         '/profile_snippets',
                         { usernames: [response.lock_holder] },
                         session?.accessToken
-                    )
+                    );
                     const userSnippet = data.user_snippets.find(
-                        (snippet: BackendUserSnippet) =>
-                            snippet.username === response.lock_holder
+                        (snippet: BackendUserSnippet) => snippet.username === response.lock_holder
                     );
                     const displayName = userSnippet
                         ? `${userSnippet.first_name} ${userSnippet.last_name}`
@@ -170,7 +163,7 @@ export default function Wrapper({
                         autoclose: 10000,
                         onClose: () => setAlert({ open: false }),
                     });
-                    return
+                    return;
                 }
                 if (!response.success && response.status === 401) {
                     // TODO handle re-authenticate
@@ -179,28 +172,28 @@ export default function Wrapper({
                 // router.push('/plans')
             }
         );
-    }, [
-        isLoading,
-        socket,
-        router,
-        session
-    ]);
+    }, [isLoading, error, socket, router, session]);
 
     useEffect(() => {
-        if (!plan || isLoading) return;
-        if (!plan || isLoading) return;
+        if (!plan || isLoading || error) return;
+
+        // write access or author check
+        if (
+            !plan.write_access.includes(session?.user.preferred_username!) &&
+            plan.author !== session?.user.preferred_username!
+        ) {
+            setAlert({
+                message: 'Sie haben keine Berechtigung, um diesen Plan zu bearbeiten.',
+                type: 'error',
+                onClose: setAlert({ open: false }),
+            });
+        }
 
         // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
         setIsDirty(methods.formState.isDirty);
         planerDataCallback(plan);
         setLoading(false);
-    }, [
-        plan,
-        isLoading,
-        methods,
-        currentPath,
-        planerDataCallback
-    ]);
+    }, [plan, isLoading, error, methods, currentPath, planerDataCallback, session]);
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
@@ -231,7 +224,7 @@ export default function Wrapper({
             methods.reset({}, { keepValues: true });
         }
         return true;
-    }
+    };
 
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
@@ -294,45 +287,41 @@ export default function Wrapper({
     };
 
     // häh: if we use this with ref for main return we will have bug #295 (lose focus in 1th type)
-    const WrapperBox = ({children}: {children: JSX.Element}) => (
+    const WrapperBox = ({ children }: { children: JSX.Element }) => (
         <div className="bg-pattern-left-blue bg-no-repeat">
             <Container>
-                <WhiteBox>
-                    {children}
-                </WhiteBox>
+                <WhiteBox>{children}</WhiteBox>
             </Container>
         </div>
-    )
+    );
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
             <Link href="/plans">Zurück zur Übersichtsseite</Link>
         </button>
-    )
+    );
 
     if (error) {
-        console.log(error);
-        return (
-            <WrapperBox>
-                <div className="flex items-center">
-                        <GiSadCrab size={60} className="m-4" />
-                        <div className="text-xl text-slate-900">Error loading plan. See console for details</div>
-                        <BackToStart />
-                </div>
-            </WrapperBox>
-        )
-    }
-
-    if (!isLoading && !plan) {
+        let errorMessage = '';
+        switch (error.apiResponse.reason) {
+            case 'plan_doesnt_exist':
+                errorMessage = 'Dieser Plan wurde nicht gefunden.';
+                break;
+            case 'insufficient_permission':
+                errorMessage = 'Sie haben keine Berechtigung, um diesen Plan zu öffnen.';
+                break;
+            default:
+                errorMessage = 'Ein Fehler ist aufgetreten. Siehe Konsole für Details.';
+        }
         return (
             <WrapperBox>
                 <div className="flex items-center">
                     <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">Dieser Plan wurde nicht gefunden.</div>
+                    <div className="text-xl text-slate-900">{errorMessage}</div>
                     <BackToStart />
                 </div>
             </WrapperBox>
-        )
+        );
     }
 
     return (
@@ -468,7 +457,10 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(data, false)
+                                                                const res = await handleSubmit(
+                                                                    data,
+                                                                    false
+                                                                );
                                                                 router.push({
                                                                     pathname: nextpage,
                                                                     query: {
