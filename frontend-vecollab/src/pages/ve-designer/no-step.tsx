@@ -1,15 +1,20 @@
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { fetchGET } from '@/lib/backend';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { useForm } from 'react-hook-form';
+import Wrapper from '@/components/VE-designer/Wrapper';
+import { Socket } from 'socket.io-client';
+
+interface Props {
+    socket: Socket;
+}
 
 // Error page for the case that the user tries to access the fine planning without having set any steps
 NoStep.auth = true;
-export default function NoStep() {
+export default function NoStep({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -47,41 +52,53 @@ export default function NoStep() {
         }
     }, [session, status, router]);
 
-    return (
-        <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-            <div className="flex flex-grow justify-center">
+    const ActionButtons = () => {
+        return (
+            <div className="flex justify-around w-full mt-10">
                 <div>
-                    <HeadProgressBarSection stage={2} linkFineStep={steps[0]?.name} />
-                    {loading ? (
-                        <LoadingAnimation />
-                    ) : (
-                        <div>
-                            <div className=" flex justify-center font-bold text-xl mt-32 mb-20">
-                                Bitte legen Sie zuerst Schritte fest bevor Sie mit der Feinplanung
-                                fortsetzen.
-                            </div>
-                            <Link
-                                className="flex justify-center font-bold text-xl m-2 bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                href={{
-                                    pathname: '/ve-designer/step-names',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                Etappenplaner
-                            </Link>
-                            <Link
-                                className="flex justify-center font-bold text-xl m-2 bg-gray-400 text-white py-3 px-5 rounded-lg"
-                                href={{
-                                    pathname: '/ve-designer/finish',
-                                    query: { plannerId: router.query.plannerId },
-                                }}
-                            >
-                                Ohne Etappen Fortfahren
-                            </Link>
-                        </div>
-                    )}
+                    <Link
+                        href={{
+                            pathname: `/ve-designer/step-names`,
+                            query: { plannerId: router.query.plannerId },
+                        }}
+                    >
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                        >
+                            Zurück
+                        </button>
+                    </Link>
+                    <Link
+                        href={{
+                            pathname: `/ve-designer/finish`,
+                            query: { plannerId: router.query.plannerId },
+                        }}
+                    >
+                        <button
+                            type="submit"
+                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
+                        >
+                            Ohne Etappen fortfahren
+                        </button>
+                    </Link>
                 </div>
             </div>
-        </div>
+        );
+    };
+
+    return (
+        <Wrapper
+            socket={socket}
+            title="Etappenplaner"
+            subtitle="Bitte legen Sie zuerst Schritte fest bevor Sie mit der Feinplanung fortsetzen"
+            methods={useForm<any>()}
+            preventToLeave={false}
+            stageInMenu="steps"
+            planerDataCallback={(d) => {}}
+            submitCallback={(d) => {}}
+        >
+            <ActionButtons />
+        </Wrapper>
     );
 }

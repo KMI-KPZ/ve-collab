@@ -33,7 +33,7 @@ export default function SharePlanForm({
         };
 
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
-            setAlert({message: 'Plan freigegeben', autoclose: 2000})
+            setAlert({message: 'Plan freigegeben', autoclose: 2000, onClose: () => setAlert({open: false})})
         });
     };
 

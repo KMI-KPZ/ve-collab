@@ -82,7 +82,7 @@ export default function EditAccessList({
                     { ...userSnippets[index], access: access },
                 ];
                 setUserSnippets(copy);
-                setAlert({message: 'Freigabeeinstellung geändert', autoclose: 2000})
+                setAlert({message: 'Freigabeeinstellung geändert', autoclose: 2000, onClose: () => setAlert({open: false})})
             });
         });
     };

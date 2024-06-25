@@ -1,7 +1,7 @@
 import WhiteBox from '@/components/Layout/WhiteBox';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import VerticalTabs from '@/components/profile/VerticalTabs';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useState } from 'react';
@@ -24,128 +24,145 @@ import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/Alert';
 
+const defaultPersonalInformation: PersonalInformation = {
+    firstName: '',
+    lastName: '',
+    bio: '',
+    expertise: '',
+    birthday: '',
+    languages: [''],
+    institutions: [],
+    chosen_institution_id: '',
+};
+const defaultVeReady = true;
+const defaultExcludedFromMatching = false;
+const defaultVeInformation: VEInformation = {
+    veInterests: [''],
+    veContents: [''],
+    veGoals: [''],
+    experience: [''],
+    interdisciplinaryExchange: true,
+    preferredFormat: '',
+};
+const defaultResearchAndTeachingInformation: ResearchAndTeachingInformation = {
+    researchTags: [''],
+    courses: [
+        {
+            title: '',
+            academic_courses: '',
+            semester: '',
+        },
+    ],
+    lms: [''],
+    tools: [''],
+};
+const defaultEducations: Education[] = [
+    {
+        institution: '',
+        degree: '',
+        department: '',
+        timestamp_from: '',
+        timestamp_to: '',
+        additional_info: '',
+    },
+];
+const defaultWorkExperience: WorkExperience[] = [
+    {
+        position: '',
+        institution: '',
+        department: '',
+        timestamp_from: '',
+        timestamp_to: '',
+        city: '',
+        country: '',
+        additional_info: '',
+    },
+];
+const defaultVeWindowItems: VEWindowItem[] = [
+    {
+        plan: {
+            _id: '',
+            name: '',
+        },
+        title: '',
+        description: '',
+    },
+];
+
 EditProfile.auth = true;
 export default function EditProfile({
     dropdowns,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
-        firstName: '',
-        lastName: '',
-        institution: '',
-        bio: '',
-        expertise: '',
-        birthday: '',
-        profilePicId: '',
-        languages: [''],
-        institutions: [],
-        chosen_institution_id: '',
-    });
-    const [veReady, setVeReady] = useState(true);
-    const [excludedFromMatching, setExcludedFromMatching] = useState(false);
-    const [veInformation, setVeInformation] = useState<VEInformation>({
-        veInterests: [''],
-        veContents: [''],
-        veGoals: [''],
-        experience: [''],
-        interdisciplinaryExchange: true,
-        preferredFormat: '',
-    });
+    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>(defaultPersonalInformation);
+    const [veReady, setVeReady] = useState(defaultVeReady);
+    const [excludedFromMatching, setExcludedFromMatching] = useState(defaultExcludedFromMatching);
+    const [veInformation, setVeInformation] = useState<VEInformation>(defaultVeInformation);
     const [researchandTeachingInformation, setResearchAndTeachingInformation] =
-        useState<ResearchAndTeachingInformation>({
-            researchTags: [''],
-            courses: [
-                {
-                    title: '',
-                    academic_courses: '',
-                    semester: '',
-                },
-            ],
-            lms: [''],
-            tools: [''],
-        });
-    const [educations, setEducations] = useState<Education[]>([
-        {
-            institution: '',
-            degree: '',
-            department: '',
-            timestamp_from: '',
-            timestamp_to: '',
-            additional_info: '',
-        },
-    ]);
-    const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
-        {
-            position: '',
-            institution: '',
-            department: '',
-            timestamp_from: '',
-            timestamp_to: '',
-            city: '',
-            country: '',
-            additional_info: '',
-        },
-    ]);
+        useState<ResearchAndTeachingInformation>(defaultResearchAndTeachingInformation);
+    const [educations, setEducations] = useState<Education[]>(defaultEducations);
+    const [workExperience, setWorkExperience] = useState<WorkExperience[]>(defaultWorkExperience);
 
-    const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>([
-        {
-            plan: {
-                _id: '',
-                name: '',
-            },
-            title: '',
-            description: '',
-        },
-    ]);
+    const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>(defaultVeWindowItems);
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
+    const { data: userInfo, isLoading, error, mutate } = useGetOwnProfile();
+
     useEffect(() => {
-        fetchGET(`/profileinformation`, session?.accessToken).then((data) => {
-            setLoading(false);
-            if (data) {
-                setPersonalInformation({
-                    firstName: data.profile.first_name,
-                    lastName: data.profile.last_name,
-                    institution: data.profile.institution,
-                    bio: data.profile.bio,
-                    expertise: data.profile.expertise,
-                    birthday: data.profile.birthday,
-                    profilePicId: data.profile.profile_pic,
-                    languages: data.profile.languages,
-                    institutions: data.profile.institutions,
-                    chosen_institution_id: data.profile.chosen_institution_id,
-                });
-                setVeReady(data.profile.ve_ready);
-                setExcludedFromMatching(data.profile.excluded_from_matching);
-                setVeInformation({
-                    veInterests: data.profile.ve_interests,
-                    veContents: data.profile.ve_contents,
-                    veGoals: data.profile.ve_goals,
-                    experience: data.profile.experience,
-                    interdisciplinaryExchange: data.profile.interdisciplinary_exchange,
-                    preferredFormat: data.profile.preferred_format,
-                });
-                setResearchAndTeachingInformation({
-                    researchTags: data.profile.research_tags,
-                    courses: data.profile.courses,
-                    lms: data.profile.lms,
-                    tools: data.profile.tools,
-                });
-                setEducations(data.profile.educations);
-                setWorkExperience(data.profile.work_experience);
-                setVeWindowItems(
-                    data.profile.ve_window.map((elem: any) => ({
-                        plan: { _id: elem.plan_id, name: '' },
-                        title: elem.title,
-                        description: elem.description,
-                    }))
-                );
-            }
+        if (isLoading) return;
+
+        // if user has filled in data that is not saved yet (e.g. on tab change)
+        // do not overwrite the values
+        if (personalInformation !== defaultPersonalInformation) return;
+        if (veReady !== defaultVeReady) return;
+        if (excludedFromMatching !== defaultExcludedFromMatching) return;
+        if (veInformation !== defaultVeInformation) return;
+        if (researchandTeachingInformation !== defaultResearchAndTeachingInformation) return;
+        if (educations !== defaultEducations) return;
+        if (workExperience !== defaultWorkExperience) return;
+        if (veWindowItems !== defaultVeWindowItems) return;
+
+        setPersonalInformation({
+            firstName: userInfo.profile.first_name,
+            lastName: userInfo.profile.last_name,
+            bio: userInfo.profile.bio,
+            expertise: userInfo.profile.expertise,
+            birthday: userInfo.profile.birthday,
+            profilePicId: userInfo.profile.profile_pic,
+            languages: userInfo.profile.languages,
+            institutions: userInfo.profile.institutions,
+            chosen_institution_id: userInfo.profile.chosen_institution_id,
         });
-    }, [session]);
+        setVeReady(userInfo.profile.ve_ready);
+        setExcludedFromMatching(userInfo.profile.excluded_from_matching);
+        setVeInformation({
+            veInterests: userInfo.profile.ve_interests,
+            veContents: userInfo.profile.ve_contents,
+            veGoals: userInfo.profile.ve_goals,
+            experience: userInfo.profile.experience,
+            interdisciplinaryExchange: userInfo.profile.interdisciplinary_exchange,
+            preferredFormat: userInfo.profile.preferred_format,
+        });
+        setResearchAndTeachingInformation({
+            researchTags: userInfo.profile.research_tags,
+            courses: userInfo.profile.courses,
+            lms: userInfo.profile.lms,
+            tools: userInfo.profile.tools,
+        });
+        setEducations(userInfo.profile.educations);
+        setWorkExperience(userInfo.profile.work_experience);
+        setVeWindowItems(
+            userInfo.profile.ve_window.map((elem: any) => ({
+                plan: { _id: elem.plan_id, name: '' },
+                title: elem.title,
+                description: elem.description,
+            }))
+        );
+
+    }, [session, isLoading, userInfo, personalInformation, veReady, excludedFromMatching, veInformation, researchandTeachingInformation, educations, workExperience, veWindowItems]);
 
     /*
     sync the currently entered form data with the backend
@@ -158,7 +175,6 @@ export default function EditProfile({
             {
                 first_name: personalInformation.firstName,
                 last_name: personalInformation.lastName,
-                institution: personalInformation.institution,
                 bio: personalInformation.bio,
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
@@ -210,7 +226,6 @@ export default function EditProfile({
                 firstName: profile.first_name,
                 lastName: profile.last_name,
                 bio: profile.bio,
-                institution: profile.institution,
                 expertise: personalInformation.expertise,
                 birthday: personalInformation.birthday,
                 languages: personalInformation.languages,

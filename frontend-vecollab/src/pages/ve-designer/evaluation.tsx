@@ -1,24 +1,17 @@
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
-import Link from 'next/link';
-import { Tooltip } from '@/components/Tooltip';
-import { PiBookOpenText } from 'react-icons/pi';
-import WhiteBox from '@/components/Layout/WhiteBox';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { Controller, FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import Wrapper from '@/components/VE-designer/Wrapper';
+import { Socket } from 'socket.io-client';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -45,19 +38,23 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     });
 };
 
+interface Props {
+    socket: Socket;
+}
+
 Evaluation.auth = true;
-export default function Evaluation() {
+export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
-    const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
+
+    const prevpage = '/ve-designer/methodology';
+    const nextpage = '/ve-designer/checklist';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -83,85 +80,54 @@ export default function Evaluation() {
         },
     });
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data: { plan: IPlan }) => {
-                    if (data.plan !== undefined) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                        setSteps(data.plan.steps);
-                        if (data.plan.evaluation.length !== 0) {
-                            methods.setValue('evaluationPerPartner', data.plan.evaluation);
-                        }
-
-                        // fetch profile snippets to be able to display the full name instead of username only
-                        fetchPOST(
-                            '/profile_snippets',
-                            { usernames: [...data.plan.partners, data.plan.author] },
-                            session.accessToken
-                        ).then((snippets: BackendProfileSnippetsResponse) => {
-                            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                                partnerSnippets[element.username] = element;
-                            });
-                            setPartnerProfileSnippets(partnerSnippets);
-                            setLoading(false);
-                        });
-                    }
-                }
-            );
-        }
-    }, [session, status, router, methods]);
-
-    const { fields } = useFieldArray({
+    const { fields, replace } = useFieldArray({
         name: 'evaluationPerPartner',
         control: methods.control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        console.log(data);
-        if (!areAllFormValuesEmpty(data)) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'evaluation',
-                            value: data.evaluationPerPartner,
-                        },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                evaluation: ProgressState.completed,
-                            },
-                        },
-                    ],
-                },
-                session?.accessToken
-            );
-        }
-    };
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.evaluation.length !== 0) {
+                replace(plan.evaluation)
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
 
-    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-        onSubmit(data);
-        await router.push({
-            pathname: url,
-            query: { plannerId: router.query.plannerId },
-        });
+            // fetch profile snippets to be able to display the full name instead of username only
+            fetchPOST(
+                '/profile_snippets',
+                { usernames: [...plan.partners, plan.author] },
+                session?.accessToken
+            ).then((snippets: BackendProfileSnippetsResponse) => {
+                let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+                snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                    partnerSnippets[element.username] = element;
+                });
+                setPartnerProfileSnippets(partnerSnippets);
+            });
+        },
+        [replace, session]
+    );
+
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        if (areAllFormValuesEmpty(data)) return;
+
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'evaluation',
+                value: data.evaluationPerPartner,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    evaluation: ProgressState.completed,
+                },
+            },
+        ];
     };
 
     function radioBooleanInput(control: any, name: any): JSX.Element {
@@ -207,8 +173,8 @@ export default function Evaluation() {
 
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
-            <div key={evaluationPerPartner.id} className="flex justify-center mx-2">
-                <WhiteBox className="h-fit w-[28rem]">
+            <div key={evaluationPerPartner.id} className="flex mx-2">
+                <div className="rounded shadow px-3 py-4 h-fit w-fit">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
                             {partnerProfileSnippets[evaluationPerPartner.username]
@@ -280,97 +246,28 @@ export default function Evaluation() {
                             />
                         </div>
                     </div>
-                </WhiteBox>
+                </div>
             </div>
         ));
     }
 
     return (
-        <FormProvider {...methods}>
-            <PopupSaveData
-                isOpen={isPopupOpen}
-                handleContinue={async () => {
-                    await router.push({
-                        pathname: '/ve-designer/teaching-formats',
-                        query: {
-                            plannerId: router.query.plannerId,
-                        },
-                    });
-                }}
-                handleCancel={() => setIsPopupOpen(false)}
-            />
-
-            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-                <div className="flex flex-grow justify-center">
-                    <div className="flex flex-col">
-                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                        {loading ? (
-                            <LoadingAnimation />
-                        ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-center">
-                                <div>
-                                    <div className="flex justify-center">
-                                        <div className={'font-bold text-4xl mb-2 w-fit relative'}>
-                                            Bewertung / Evaluation
-                                            <Tooltip tooltipsText="Mehr zur Evaluation von VE findest du hier in den Selbstlernmaterialien …">
-                                                <Link
-                                                    target="_blank"
-                                                    href={
-                                                        '/learning-material/left-bubble/Evaluation'
-                                                    }
-                                                >
-                                                    <PiBookOpenText size={30} color="#00748f" />
-                                                </Link>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                    <div className={'text-center mb-4'}>optional</div>
-                                    <div className="flex flex-wrap justify-center">
-                                        {renderEvaluationInfoBox()}
-                                    </div>
-                                </div>
-                                <div className="flex justify-between w-full max-w-xl">
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/ve-designer/languages'
-                                                )
-                                            )}
-                                        >
-                                            Zurück
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit(
-                                                (data) => {
-                                                    combinedSubmitRouteAndUpdate(
-                                                        data,
-                                                        '/ve-designer/teaching-formats'
-                                                    );
-                                                },
-                                                async () => setIsPopupOpen(true)
-                                            )}
-                                        >
-                                            Weiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-                <SideProgressBarWithReactHookForm
-                    progressState={sideMenuStepsProgress}
-                    onSubmit={onSubmit}
-                />
-            </div>
-        </FormProvider>
+        <Wrapper
+            socket={socket}
+            title="Bewertung / Evaluation"
+            subtitle='Wie kann der VE während der Durchführung oder abschließend bewertet und evaluiert werden?'
+            description="Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden."
+            tooltip={{
+                text: 'mehr zu Optionen der Bewertung findest du im Modul VA-Planung > Aushandlungsphase',
+                link: '/learning-material/left-bubble/VA-Planung',
+            }}
+            methods={methods}
+            prevpage={prevpage}
+            nextpage={nextpage}
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
+            <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
+        </Wrapper>
     );
 }

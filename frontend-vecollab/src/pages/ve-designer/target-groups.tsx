@@ -1,24 +1,17 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
-import { RxPlus } from 'react-icons/rx';
+import React, { useCallback, useState } from 'react';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
-import questionMark from '@/images/icons/ve-designer/questionMarkIcon.png';
-import { Tooltip } from '@/components/Tooltip';
+import Wrapper from '@/components/VE-designer/Wrapper';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 export interface TargetGroup {
     name: string;
@@ -26,48 +19,43 @@ export interface TargetGroup {
     age_max: string;
     experience: string;
     academic_course: string;
-    mother_tongue: string;
-    foreign_languages: string;
+    languages: string;
+}
+
+interface Language {
+    language: string;
 }
 
 interface FormValues {
     targetGroups: TargetGroup[];
+    languages: Language[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.targetGroups.every((targetGroup) => {
+const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
+    formValues.languages.every((languageObject) => languageObject.language === '') &&
+    formValues.targetGroups.every((targetGroup) => {
         return (
             targetGroup.name === '' &&
             targetGroup.age_min === '' &&
             targetGroup.age_max === '' &&
             targetGroup.experience === '' &&
             targetGroup.academic_course === '' &&
-            targetGroup.mother_tongue === '' &&
-            targetGroup.foreign_languages === ''
+            targetGroup.languages === ''
         );
     });
-};
+
+interface Props {
+    socket: Socket;
+}
 
 TargetGroups.auth = true;
-export default function TargetGroups() {
-    const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
+export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [steps, setSteps] = useState<IFineStep[]>([]);
-    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
+    const prevpage = '/ve-designer/lectures';
+    const nextpage = '/ve-designer/learning-goals';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -79,386 +67,333 @@ export default function TargetGroups() {
                     age_max: '',
                     experience: '',
                     academic_course: '',
-                    mother_tongue: '',
-                    foreign_languages: '',
+                    languages: '',
                 },
             ],
+            languages: [{ language: '' }],
         },
     });
 
-    useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    if (data.plan.audience.length !== 0) {
-                        methods.setValue('targetGroups', data.plan.audience);
-                    }
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                    }
-                    setSteps(data.plan.steps);
-                }
-            );
-        }
-    }, [session, status, router, methods]);
-
-    const { fields, append, remove } = useFieldArray({
+    const {
+        fields: fieldsTg,
+        append: appendTg,
+        remove: removeTg,
+        replace: replaceTg,
+    } = useFieldArray({
         name: 'targetGroups',
         control: methods.control,
     });
 
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (!areAllFormValuesEmpty(data)) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'audience',
-                            value: data.targetGroups,
-                        },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                audience: ProgressState.completed,
-                            },
-                        },
-                    ],
-                },
-                session?.accessToken
-            );
-        }
-    };
+    const {
+        fields: fieldsLang,
+        append: appendLang,
+        remove: removeLang,
+        replace: replaceLang,
+    } = useFieldArray({
+        name: 'languages',
+        control: methods.control,
+    });
 
-    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-        onSubmit(data);
-        await router.push({
-            pathname: url,
-            query: { plannerId: router.query.plannerId },
-        });
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.audience.length !== 0) {
+                replaceTg(plan.audience);
+            }
+            if (plan.languages.length !== 0) {
+                replaceLang(plan.languages.map((element: string) => ({ language: element })));
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+        },
+        [replaceLang, replaceTg]
+    );
+
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        if (areAllFormValuesEmpty(data)) return;
+
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'audience',
+                value: data.targetGroups,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'languages',
+                value: data.languages.map((element) => element.language),
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    audience: ProgressState.completed,
+                    languages: ProgressState.completed,
+                },
+            },
+        ];
     };
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
-        return fields.map((targetGroup, index) => (
-            <div key={targetGroup.id} className="mx-2">
-                <WhiteBox>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="name" className="px-2 py-2">
-                                Bezeichnung
-                            </label>
-                        </div>
-                        <div className="w-3/4">
+        return fieldsTg.map((targetGroup, index) => (
+            <div key={targetGroup.id} className="pt-4 pb-2">
+                <div className="mt-2 flex">
+                    <div className="w-1/4 flex items-center">
+                        <label htmlFor="name" className="px-2 py-2">
+                            Bezeichnung
+                        </label>
+                    </div>
+                    <div className="w-3/4">
+                        <input
+                            type="text"
+                            {...methods.register(`targetGroups.${index}.name`, {
+                                maxLength: {
+                                    value: 500,
+                                    message:
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                },
+                            })}
+                            placeholder="Name eingeben"
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {methods.formState.errors?.targetGroups?.[index]?.name?.message}
+                        </p>
+                    </div>
+                </div>
+                <div className="mt-2 flex">
+                    <div className="w-1/4 flex items-center">
+                        <label htmlFor="age" className="px-2 py-2">
+                            Alter
+                        </label>
+                    </div>
+                    <div className="w-3/4 flex">
+                        <div>
                             <input
-                                type="text"
-                                {...methods.register(`targetGroups.${index}.name`, {
+                                type="number"
+                                {...methods.register(`targetGroups.${index}.age_min`, {
                                     maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                        value: 4,
+                                        message: 'Bitte geben sie eine realistische Zahl ein',
+                                    },
+                                    pattern: {
+                                        value: /^\d+$/,
+                                        message: 'Bitte nur ganze postive Zahlen',
                                     },
                                 })}
-                                placeholder="Name eingeben"
-                                className="border border-gray-400 rounded-lg w-full p-2"
+                                placeholder="von"
+                                className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.targetGroups?.[index]?.name?.message}
+                                {methods.formState.errors?.targetGroups?.[index]?.age_min?.message}
                             </p>
                         </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="age" className="px-2 py-2">
-                                Alter
-                            </label>
-                        </div>
-                        <div className="w-3/4 flex">
-                            <div>
-                                <input
-                                    type="number"
-                                    {...methods.register(`targetGroups.${index}.age_min`, {
-                                        maxLength: {
-                                            value: 4,
-                                            message: 'Bitte geben sie eine realistische Zahl ein',
-                                        },
-                                        pattern: {
-                                            value: /^\d+$/,
-                                            message: 'Bitte nur ganze postive Zahlen',
-                                        },
-                                    })}
-                                    placeholder="von"
-                                    className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
-                                />
-                                <p className="text-red-600 pt-2">
-                                    {
-                                        methods.formState.errors?.targetGroups?.[index]?.age_min
-                                            ?.message
-                                    }
-                                </p>
-                            </div>
-                            <div>
-                                <input
-                                    type="number"
-                                    {...methods.register(`targetGroups.${index}.age_max`, {
-                                        maxLength: {
-                                            value: 4,
-                                            message: 'Bitte geben sie eine realistische Zahl ein',
-                                        },
-                                        pattern: {
-                                            value: /^\d+$/,
-                                            message: 'Bitte nur ganze postive Zahlen',
-                                        },
-                                    })}
-                                    placeholder="bis"
-                                    className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
-                                />
-                                <p className="text-red-600 pt-2">
-                                    {
-                                        methods.formState.errors?.targetGroups?.[index]?.age_max
-                                            ?.message
-                                    }
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="experience" className="px-2 py-2">
-                                VE-Projektrelevante Erfahrungen
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <textarea
-                                rows={3}
-                                {...methods.register(`targetGroups.${index}.experience`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                })}
-                                placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
-                                className="border border-gray-400 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.targetGroups?.[index]?.experience
-                                        ?.message
-                                }
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="academic_course" className="px-2 py-2">
-                                Studiengang
-                            </label>
-                        </div>
-                        <div className="w-3/4">
+                        <div>
                             <input
-                                type="text"
-                                {...methods.register(`targetGroups.${index}.academic_course`, {
+                                type="number"
+                                {...methods.register(`targetGroups.${index}.age_max`, {
                                     maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                        value: 4,
+                                        message: 'Bitte geben sie eine realistische Zahl ein',
+                                    },
+                                    pattern: {
+                                        value: /^\d+$/,
+                                        message: 'Bitte nur ganze postive Zahlen',
                                     },
                                 })}
-                                placeholder="Studiengang eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-400 rounded-lg w-full p-2"
+                                placeholder="bis"
+                                className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.targetGroups?.[index]?.academic_course
-                                        ?.message
-                                }
+                                {methods.formState.errors?.targetGroups?.[index]?.age_max?.message}
                             </p>
                         </div>
                     </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="motherTongue" className="px-2 py-2">
-                                Erstsprachen
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <input
-                                type="text"
-                                {...methods.register(`targetGroups.${index}.mother_tongue`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                })}
-                                placeholder="Erstsprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-400 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.targetGroups?.[index]?.mother_tongue
-                                        ?.message
-                                }
-                            </p>
-                        </div>
+                </div>
+                <div className="mt-2 flex">
+                    <div className="w-1/4 flex items-center">
+                        <label htmlFor="experience" className="px-2 py-2">
+                            VE-Projektrelevante Erfahrungen
+                        </label>
                     </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/4 flex items-center">
-                            <label htmlFor="foreignLanguages" className="px-2 py-2">
-                                Weitere Sprachen
-                            </label>
-                        </div>
-                        <div className="w-3/4">
-                            <input
-                                type="text"
-                                {...methods.register(`targetGroups.${index}.foreign_languages`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                })}
-                                placeholder="Weitere Sprachen eingeben, mehrere durch Komma trennen"
-                                className="border border-gray-400 rounded-lg w-full p-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {
-                                    methods.formState.errors?.targetGroups?.[index]
-                                        ?.foreign_languages?.message
-                                }
-                            </p>
-                        </div>
+                    <div className="w-3/4">
+                        <textarea
+                            rows={3}
+                            {...methods.register(`targetGroups.${index}.experience`, {
+                                maxLength: {
+                                    value: 500,
+                                    message:
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                },
+                            })}
+                            placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {methods.formState.errors?.targetGroups?.[index]?.experience?.message}
+                        </p>
                     </div>
-                    <div className="flex justify-end items-center">
-                        <Image
-                            className="mx-2 cursor-pointer m-2 "
-                            onClick={() => remove(index)}
-                            src={trash}
-                            width={20}
-                            height={20}
-                            alt="deleteStep"
-                        ></Image>
+                </div>
+                <div className="mt-2 flex">
+                    <div className="w-1/4 flex items-center">
+                        <label htmlFor="academic_course" className="px-2 py-2">
+                            Studiengang
+                        </label>
                     </div>
-                </WhiteBox>
+                    <div className="w-3/4">
+                        <input
+                            type="text"
+                            {...methods.register(`targetGroups.${index}.academic_course`, {
+                                maxLength: {
+                                    value: 500,
+                                    message:
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                },
+                            })}
+                            placeholder="Studiengang eingeben, mehrere durch Komma trennen"
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {
+                                methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                    ?.message
+                            }
+                        </p>
+                    </div>
+                </div>
+                <div className="mt-2 flex">
+                    <div className="w-1/4 flex items-center">
+                        <label htmlFor="languages" className="px-2 py-2">
+                            Sprachen
+                        </label>
+                    </div>
+                    <div className="w-3/4">
+                        <input
+                            type="text"
+                            {...methods.register(`targetGroups.${index}.languages`, {
+                                maxLength: {
+                                    value: 500,
+                                    message:
+                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                },
+                            })}
+                            placeholder="mehrere durch Komma trennen"
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {methods.formState.errors?.targetGroups?.[index]?.languages?.message}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex justify-end items-center">
+                    <Image
+                        className="mx-2 cursor-pointer m-2 "
+                        onClick={() => removeTg(index)}
+                        src={trash}
+                        width={20}
+                        height={20}
+                        alt="deleteStep"
+                    ></Image>
+                </div>
             </div>
         ));
     };
-    return (
-        <FormProvider {...methods}>
-            <PopupSaveData
-                isOpen={isPopupOpen}
-                handleContinue={async () => {
-                    await router.push({
-                        pathname: '/ve-designer/learning-goals',
-                        query: {
-                            plannerId: router.query.plannerId,
-                        },
-                    });
-                }}
-                handleCancel={() => setIsPopupOpen(false)}
-            />
-            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-                <div className="flex flex-grow justify-center">
-                    <div className="flex flex-col">
-                        <HeadProgressBarSection stage={0} linkFineStep={steps[0]?.name} />
-                        {loading ? (
-                            <LoadingAnimation />
-                        ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                                <div>
-                                    <div className={'text-center font-bold text-4xl mb-2 relative'}>
-                                        An welche Zielgruppen richtet sich der VE?
-                                        <Tooltip tooltipsText="Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden">
-                                            <Image
-                                                className="mx-2 cursor-pointer m-2 "
-                                                src={questionMark}
-                                                width={40}
-                                                height={40}
-                                                alt="info"
-                                            ></Image>
-                                        </Tooltip>
-                                    </div>
-                                    <div className={'text-center mb-20'}>optional</div>
-                                    <div className="flex flex-wrap justify-center">
-                                        {renderTargetGroupsInputs()}
-                                    </div>
-                                    <div className="flex justify-center">
-                                        <button
-                                            className="p-4 bg-white rounded-3xl shadow-2xl"
-                                            type="button"
-                                            onClick={() => {
-                                                append({
-                                                    name: '',
-                                                    age_min: '',
-                                                    age_max: '',
-                                                    experience: '',
-                                                    academic_course: '',
-                                                    mother_tongue: '',
-                                                    foreign_languages: '',
-                                                });
-                                            }}
-                                        >
-                                            <RxPlus size={30} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between w-full max-w-xl">
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    '/ve-designer/participatingCourses'
-                                                )
-                                            )}
-                                        >
-                                            Zurück
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit(
-                                                (data) => {
-                                                    combinedSubmitRouteAndUpdate(
-                                                        data,
-                                                        '/ve-designer/learning-goals'
-                                                    );
-                                                },
-                                                async () => setIsPopupOpen(true)
-                                            )}
-                                        >
-                                            Weiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
+
+    const renderLanguagesInputs = (): JSX.Element[] => {
+        return fieldsLang.map((language, index) => (
+            <div key={language.id}>
+                <div className="flex items-center w-full">
+                    <input
+                        type="text"
+                        placeholder="Sprache eingeben"
+                        className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
+                        {...methods.register(`languages.${index}.language`, {
+                            maxLength: {
+                                value: 500,
+                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            },
+                            pattern: {
+                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
+                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                            },
+                        })}
+                    />
+                    <button type="button" onClick={() => removeLang(index)}>
+                        <RxMinus size={20} />
+                    </button>
                 </div>
-                <SideProgressBarWithReactHookForm
-                    progressState={sideMenuStepsProgress}
-                    onSubmit={onSubmit}
-                />
+                {methods.formState.errors?.languages?.[index]?.language?.message && (
+                    <p className="text-red-600 pt-2">
+                        {methods.formState.errors?.languages?.[index]?.language?.message}
+                    </p>
+                )}
             </div>
-        </FormProvider>
+        ));
+    };
+
+    return (
+        <Wrapper
+            socket={socket}
+            title="Zielgruppen & Sprachen"
+            subtitle="An welche Zielgruppen richtet sich der VE?"
+            description={[
+                'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, da ihr eure Zielgruppe unter Umständen zum Zeitpunkt der VE-Planung noch nicht genau kennt (z. B. Alter der Teilnehmenden, Sprachen).',
+                'Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.',
+            ]}
+            tooltip={{
+                text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden',
+                link: '',
+            }}
+            methods={methods}
+            prevpage={prevpage}
+            nextpage={nextpage}
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
+            <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
+                <div className="divide-y">{renderTargetGroupsInputs()}</div>
+                <div className="flex justify-center">
+                    <button
+                        className="p-2 m-2 bg-white rounded-full shadow"
+                        type="button"
+                        onClick={() => {
+                            appendTg({
+                                name: '',
+                                age_min: '',
+                                age_max: '',
+                                experience: '',
+                                academic_course: '',
+                                languages: '',
+                            });
+                        }}
+                    >
+                        <RxPlus size={24} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="">
+                <div className="text-xl text-slate-600">
+                    In welchen Sprachen findet der VE (hauptsächlich) statt?
+                </div>
+                <div className="mb-8">
+                        <p className="mb-2">Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen könnt.</p>
+                        <p className="mb-2">Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden.</p>
+                </div>
+                <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
+                <button
+                    className="p-2 m-2 bg-white rounded-full shadow"
+                    type="button"
+                    onClick={() => {
+                        appendLang({
+                            language: '',
+                        });
+                    }}
+                >
+                    <RxPlus size={20} />
+                </button>
+            </div>
+        </Wrapper>
     );
 }

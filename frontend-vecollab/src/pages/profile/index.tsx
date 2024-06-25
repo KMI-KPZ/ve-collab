@@ -20,13 +20,17 @@ import {
 } from '@/interfaces/profile/profileInterfaces';
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/LoadingAnimation';
+import { Socket } from 'socket.io-client';
+
+interface Props {
+    socket: Socket;
+}
 
 UserProfile.auth = true;
-export default function UserProfile() {
+export default function UserProfile({ socket }: Props): JSX.Element {
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
-        institution: '',
         bio: '',
         expertise: '',
         birthday: '',
@@ -137,7 +141,6 @@ export default function UserProfile() {
                 setPersonalInformation({
                     firstName: data.profile.first_name,
                     lastName: data.profile.last_name,
-                    institution: data.profile.institution,
                     bio: data.profile.bio,
                     expertise: data.profile.expertise,
                     birthday: data.profile.birthday,
@@ -222,9 +225,9 @@ export default function UserProfile() {
                                 </WhiteBox>
                                 <BoxHeadline title="Timeline" />
                                 {foreignUser ? (
-                                    <Timeline user={router.query.username as string} />
+                                    <Timeline socket={socket} user={router.query.username as string} />
                                 ) : (
-                                    <Timeline />
+                                    <Timeline socket={socket} />
                                 )}
                             </div>
                             <div className={'w-1/4  ml-4'}>

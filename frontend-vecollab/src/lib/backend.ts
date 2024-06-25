@@ -5,6 +5,7 @@ import {
     BackendGroup,
     BackendGroupACLEntry,
     BackendUserSnippet,
+    BackendUser,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -20,20 +21,37 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
 }
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
+interface APIErrorResponse{
+    success: boolean;
+    reason: string;
+    [x: string]: any;
+}
+
+class APIError extends Error {
+    apiResponse: APIErrorResponse;
+    constructor(message: string, apiResponse: APIErrorResponse) {
+        super(message);
+        this.apiResponse = apiResponse;
+    }
+
+}
+
 // SWR fetcher for get requests
 const GETfetcher = (relativeUrl: string, accessToken?: string) =>
     fetch(BACKEND_BASE_URL + relativeUrl, {
         headers: { Authorization: 'Bearer ' + accessToken },
-    }).then((res) => {
-        if (res.status === 401) {
-            console.log('forced new signIn by api call');
-            //signIn('keycloak');
+    }).then(async (res) => {
+        if (res.status > 299) {
+            throw new APIError('Error from Backend', await res.json());
         }
         return res.json();
     });
 
 const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToken?: string) =>
     fetchPOST(relativeUrl, data, accessToken).then((res) => {
+        if (res.status > 299) {
+            throw new APIError('Error from Backend', res);
+        }
         return res;
     });
 
@@ -67,6 +85,26 @@ export function useGetProfileSnippets(usernames?: string[]): {
     };
 }
 
+export function useGetOwnProfile(): {
+    data: BackendUser;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/profileinformation`, session?.accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetAvailablePlans(accessToken: string): {
     data: PlanPreview[];
     isLoading: boolean;
@@ -89,7 +127,7 @@ export function useGetAvailablePlans(accessToken: string): {
 export function useGetPlanById(planId: string): {
     data: IPlan;
     isLoading: boolean;
-    error: any;
+    error: APIError;
     mutate: KeyedMutator<any>;
 } {
     const { data: session } = useSession();

@@ -5,13 +5,14 @@ import { IoMdClose } from 'react-icons/io';
  * Alert Component, can be used in different ways. Examples:
  *
  * 1)
- * <Alert message={"Foo Bar!"} autoclose={2000} onClose={() => ...} ... />
+ * <Alert open={true} message={"Foo Bar!"} autoclose={2000} onClose={() => ...} ... />
  *
  * 2)
- * <Alert><div>Foo Bar!</div></Alert>
+ * {true && (<Alert><div>Foo Bar!</div></Alert>)}
  *
  * 3)
- * const alertState: AlertState = {message: "Foo Bar"}
+ * const [alert, setAlert] = useState<AlertState>({open: false});
+ * setAlert({message: "Foo Bar", onClose: () => {setAlert({open: false})}})
  * <Alert state={alertState} />
  *
  */
@@ -44,8 +45,10 @@ interface AlertBase {
     state?: never,
     open?: boolean,
     type?: AlertTypes,
-    autoclose?: number
-    onClose?: () => void,
+    autoclose?: number,
+    onClose?: (() => void) | void,
+    // TODDO may introduce option to pass setState ?
+    // setState?: Dispatch<SetStateAction<AlertState>>
 }
 
 interface AlertNever {
@@ -56,15 +59,12 @@ interface AlertNever {
     autoclose?: never
 }
 
-/*
-TODO: add type: success/info/warning/error
-*/
 export default function Alert({state, open=true, type='info', children, message, autoclose, onClose}: AlertState|AlertStateState) {
 
     const typedStyles = {
-        info: 'bg-ve-collab-blue/75 border-ve-collab-blue',
-        warning: 'bg-ve-collab-orange/75 border-ve-collab-orange',
-        error: 'bg-red-500/75 border-red-500'
+        info: 'bg-ve-collab-blue/[.85] ',
+        warning: 'bg-ve-collab-orange/[.85] ',
+        error: 'bg-red-500/[.85]'
     }
 
     const {
@@ -76,10 +76,10 @@ export default function Alert({state, open=true, type='info', children, message,
         onClose: _onClose
     } = state || {open, type, children, message, autoclose, onClose}
 
-    const [iamOpen, setIamOpen] = useState(typeof _open !== 'undefined' ? _open : true)
+    const [iamOpen, setIamOpen] = useState(false)
 
     useEffect(() => {
-        if (typeof _open !== 'undefined') setIamOpen(_open)
+        setIamOpen(typeof _open !== 'undefined' ? _open : true)
         if (_autoclose) {
             setTimeout(() => {
                 setIamOpen(false)
@@ -91,7 +91,6 @@ export default function Alert({state, open=true, type='info', children, message,
     const handleClose = () => {
         setIamOpen(false)
         if (_onClose) _onClose()
-
     }
 
     if (!_message && !_children) return (<></>)
@@ -99,12 +98,12 @@ export default function Alert({state, open=true, type='info', children, message,
     if (!iamOpen) return (<></>)
 
     return (
-        <div className="fixed inset-0 z-50 items-center" onClick={handleClose}>
-            <div className={`${typedStyles[_type||'info']} absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex text-white rounded-xl p-2 border shadow-md shadow-white/25`}>
+        <div className="fixed inset-x-0 bottom-0 w-full z-50 items-center">
+            <div className={`${typedStyles[_type||'info']} absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex text-white rounded-xl p-2 border border-2 border-slate-50 shadow-white/25`}>
                 <div className='m-2 font-bold'>{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
-                        className="text-white hover:text-gray-200"
+                        className="relative -top-[28px] -right-[28px] text-black top bg-white rounded-full shadow p-2 hover:bg-slate-50"
                         onClick={handleClose}
                         aria-label="Close"
                     >

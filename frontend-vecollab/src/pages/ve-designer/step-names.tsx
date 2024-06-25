@@ -1,12 +1,7 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import HeadProgressBarSection from '@/components/VE-designer/HeadProgressBarSection';
-import { fetchGET, fetchPOST } from '@/lib/backend';
-import { signIn, useSession } from 'next-auth/react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { FormProvider, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -25,11 +20,9 @@ import {
 import iconUpAndDown from '@/images/icons/ve-designer/upAndDownArrow.png';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
-import { Tooltip } from '@/components/Tooltip';
-import Link from 'next/link';
-import { PiBookOpenText } from 'react-icons/pi';
-import SideProgressBarWithReactHookForm from '@/components/VE-designer/SideProgressBarWithReactHookForm';
-import PopupSaveData from '@/components/VE-designer/PopupSaveData';
+import Wrapper from '@/components/VE-designer/Wrapper';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { Socket } from 'socket.io-client';
 
 interface StepName {
     from: string;
@@ -41,8 +34,8 @@ interface FormValues {
     stepNames: StepName[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.stepNames.every((broadStep) => {
+const areAllFormValuesEmpty = (stepNames: StepName[]): boolean => {
+    return stepNames.every((broadStep) => {
         return broadStep.name === '' && broadStep.from === '' && broadStep.to === '';
     });
 };
@@ -75,26 +68,20 @@ const emptyBroadStep: StepName = {
     name: '',
 };
 
+interface Props {
+    socket: Socket;
+}
+
 StepNames.auth = true;
-export default function StepNames() {
-    const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
+export default function StepNames({ socket }: Props): JSX.Element {
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
-    const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
-
-    // check for session errors and trigger the login flow if necessary
-    useEffect(() => {
-        if (status !== 'loading') {
-            if (!session || session?.error === 'RefreshAccessTokenError') {
-                console.log('forced new signIn');
-                signIn('keycloak');
-            }
-        }
-    }, [session, status]);
+    const noStepPage = '/ve-designer/no-step';
+    // const prevpage = '/ve-designer/checklist'
+    const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -107,46 +94,52 @@ export default function StepNames() {
     });
 
     useEffect(() => {
-        // if router or session is not yet ready, don't make an redirect decisions or requests, just wait for the next re-render
-        if (!router.isReady || status === 'loading') {
-            setLoading(true);
-            return;
-        }
-        // router is loaded, but still no plan ID in the query --> redirect to overview because we can't do anything without an ID
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            fetchGET(`/planner/get?_id=${router.query.plannerId}`, session?.accessToken).then(
-                (data) => {
-                    setLoading(false);
-                    setSteps(data.plan.steps);
-                    if (data.plan.steps?.length > 0) {
-                        const steps: IFineStep[] = data.plan.steps;
-                        const stepNames: StepName[] = steps.map((step) => {
-                            const { timestamp_from, timestamp_to, name } = step;
-                            return {
-                                from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                                to: timestamp_to.split('T')[0],
-                                name: name,
-                            };
-                        });
-                        methods.setValue('stepNames', stepNames);
-                    }
-                    if (data.plan.progress.length !== 0) {
-                        setSideMenuStepsProgress(data.plan.progress);
-                    }
+        const subs = methods.watch((value, { name }) => {
+            setNextpage((prev) => {
+                if (!value || !value.stepNames || !value.stepNames.length) {
+                    return noStepPage;
                 }
-            );
-        }
-    }, [session, status, router, methods]);
+                if (!methods.formState.isValid) {
+                    return noStepPage;
+                }
+                return `/ve-designer/step-data/${encodeURIComponent(
+                    value.stepNames[0]?.name as string
+                )}`;
+            });
+        });
+        return () => subs.unsubscribe();
+    }, [methods]);
 
-    const { fields, append, remove, move, update } = useFieldArray({
+    const { fields, append, remove, move, update, replace } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
+
+    const setPlanerData = useCallback((plan: IPlan) => {
+        if (plan.steps?.length > 0) {
+            const steps: IFineStep[] = plan.steps;
+            const stepNames: StepName[] = steps.map((step) => {
+                const { timestamp_from, timestamp_to, name } = step;
+                return {
+                    from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
+                    to: timestamp_to.split('T')[0],
+                    name: name,
+                };
+            });
+            replace(stepNames) // PROBLEM isDirty is initially true
+            // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
+
+            setSteps(plan.steps)
+            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
+                steps[0].name
+            )}`)
+        } else {
+            setNextpage(prev => `/ve-designer/no-step`)
+        }
+        if (Object.keys(plan.progress).length) {
+            setSideMenuStepsProgress(plan.progress)
+        }
+    }, [replace]);
 
     const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
@@ -175,37 +168,23 @@ export default function StepNames() {
             return { [broadStep.name]: ProgressState.notStarted };
         });
 
-        if (!areAllFormValuesEmpty(data)) {
-            await fetchPOST(
-                '/planner/update_fields',
-                {
-                    update: [
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'steps',
-                            value: stepNamesData,
-                        },
-                        {
-                            plan_id: router.query.plannerId,
-                            field_name: 'progress',
-                            value: {
-                                ...sideMenuStepsProgress,
-                                steps: sideMenuStateSteps,
-                            },
-                        },
-                    ],
-                },
-                session?.accessToken
-            );
-        }
-    };
+        if (areAllFormValuesEmpty(data.stepNames)) return;
 
-    const combinedSubmitRouteAndUpdate = async (data: FormValues, url: string) => {
-        onSubmit(data);
-        await router.push({
-            pathname: url,
-            query: { plannerId: router.query.plannerId },
-        });
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'steps',
+                value: stepNamesData,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'progress',
+                value: {
+                    ...sideMenuStepsProgress,
+                    steps: sideMenuStateSteps,
+                },
+            },
+        ];
     };
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
@@ -231,7 +210,7 @@ export default function StepNames() {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <WhiteBox>
+                        <div className="shadow rounded px-2 py-4 my-4">
                             <div>
                                 <div className="flex justify-center items-center">
                                     <label>von:</label>
@@ -316,7 +295,7 @@ export default function StepNames() {
                                     </p>
                                 )}
                             </div>
-                        </WhiteBox>
+                        </div>
                     </div>
                 )}
             </Draggable>
@@ -330,126 +309,47 @@ export default function StepNames() {
     };
 
     return (
-        <FormProvider {...methods}>
-            <PopupSaveData
-                isOpen={isPopupOpen}
-                handleContinue={async () => {
-                    await router.push({
-                        pathname: '/ve-designer/checklist',
-                        query: {
-                            plannerId: router.query.plannerId,
-                        },
-                    });
-                }}
-                handleCancel={() => setIsPopupOpen(false)}
-            />
-            <div className="flex bg-pattern-left-blue-small bg-no-repeat">
-                <div className="flex flex-grow justify-center">
-                    <div className="flex flex-col">
-                        <HeadProgressBarSection stage={1} linkFineStep={steps[0]?.name} />
-                        {loading ? (
-                            <LoadingAnimation />
-                        ) : (
-                            <form className="gap-y-6 w-full p-12 max-w-screen-2xl items-center flex flex-col flex-grow justify-between">
-                                <div>
-                                    <div className="flex justify-center">
-                                        <div
-                                            className={
-                                                'text-center font-bold text-4xl mb-2 relative w-fit'
-                                            }
-                                        >
-                                            Grobplanung des Ablaufs
-                                            <Tooltip tooltipsText="Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …">
-                                                <Link
-                                                    target="_blank"
-                                                    href={
-                                                        '/learning-material/left-bubble/Etappenplanung'
-                                                    }
-                                                >
-                                                    <PiBookOpenText size={30} color="#00748f" />
-                                                </Link>
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                    <div className={'text-center mb-20'}>
-                                        Erstellt beliebig viele Etappen und legt für jede Etappe
-                                        einen Zeitraum fest. Wichtig: Jede Phase braucht einen
-                                        individuellen Namen (z.B. Kennenlernphase I, Kennenlernphase
-                                        II).
-                                    </div>
-                                    <DragDropContext onDragEnd={onDragEnd}>
-                                        <Droppable droppableId="stepNames-items">
-                                            {(provided: DroppableProvided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.droppableProps}
-                                                >
-                                                    {renderStepNamesInputs()}
-                                                    {provided.placeholder}
-                                                </div>
-                                            )}
-                                        </Droppable>
-                                    </DragDropContext>
-                                    <div className="flex justify-center">
-                                        <button
-                                            className="p-4 bg-white rounded-3xl shadow-2xl"
-                                            type="button"
-                                            onClick={() => {
-                                                append({
-                                                    from: '',
-                                                    to: '',
-                                                    name: '',
-                                                });
-                                            }}
-                                        >
-                                            <RxPlus size={30} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between w-full max-w-xl">
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit(
-                                                async (data) => {
-                                                    await combinedSubmitRouteAndUpdate(
-                                                        data,
-                                                        '/ve-designer/checklist'
-                                                    );
-                                                },
-                                                async () => setIsPopupOpen(true)
-                                            )}
-                                        >
-                                            Zurück
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg"
-                                            onClick={methods.handleSubmit((data) =>
-                                                combinedSubmitRouteAndUpdate(
-                                                    data,
-                                                    `/ve-designer/step-data/${encodeURIComponent(
-                                                        methods.watch('stepNames')[0].name
-                                                    )}`
-                                                )
-                                            )}
-                                        >
-                                            Weiter
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-                <SideProgressBarWithReactHookForm
-                    progressState={sideMenuStepsProgress}
-                    onSubmit={onSubmit}
-                />
+        <Wrapper
+            socket={socket}
+            title="Grobplanung"
+            subtitle="Grobplanung des Ablaufs"
+            description="Erstellt beliebig viele Etappen und legt für jede Etappe einen Zeitraum fest. Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Gruppenarbeitsphase I, Gruppenarbeitsphase II). Die von euch festgelegten Etappen dienen euch als Struktur und Überblick. Ihr könnt sie dann optional in der Feinplanung detaillierter ausarbeiten."
+            tooltip={{
+                text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
+                link: '/learning-material/left-bubble/Etappenplanung',
+            }}
+            methods={methods}
+            // prevpage={prevpage}
+            nextpage={nextpage}
+            stageInMenu="steps"
+            planerDataCallback={setPlanerData}
+            submitCallback={onSubmit}
+        >
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="stepNames-items">
+                    {(provided: DroppableProvided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                            {renderStepNamesInputs()}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
+            </DragDropContext>
+            <div className="flex justify-center">
+                <button
+                    className="p-2 m-2 bg-white rounded-full shadow"
+                    type="button"
+                    onClick={() => {
+                        append({
+                            from: '',
+                            to: '',
+                            name: '',
+                        });
+                    }}
+                >
+                    <RxPlus size={25} />
+                </button>
             </div>
-        </FormProvider>
+        </Wrapper>
     );
 }
