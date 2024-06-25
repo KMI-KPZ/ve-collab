@@ -5,6 +5,7 @@ import {
     BackendGroup,
     BackendGroupACLEntry,
     BackendUserSnippet,
+    BackendUser,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -78,6 +79,26 @@ export function useGetProfileSnippets(usernames?: string[]): {
 
     return {
         data: isLoading || error ? [] : data.user_snippets,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetOwnProfile(): {
+    data: BackendUser;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/profileinformation`, session?.accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
         isLoading,
         error,
         mutate,

@@ -1,7 +1,6 @@
 export interface PersonalInformation {
     firstName: string;
     lastName: string;
-    institution: string;
     bio: string;
     expertise: string;
     birthday: string;
