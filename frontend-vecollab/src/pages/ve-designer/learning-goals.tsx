@@ -221,7 +221,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         isClearable={true}
                         isMulti
                         closeMenuOnSelect={false}
-                        placeholder="Richtlernziele auswählen oder neue durch Tippen hinzufügen"
+                        placeholder="weitere Kompetenzen auswählen oder neue durch Tippen hinzufügen"
                     />
                 )}
                 control={control}
@@ -321,7 +321,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                             `individualLearningGoals.${index}.learningGoal`
                                         )}
                                         placeholder={
-                                            'Beschreibe die individuellen Lernziele für die Lernenden von ' +
+                                            'Beschreibe die Lernziele für die Lernenden von ' +
                                             findPartnerFirstAndLastName(
                                                 individualLearningGoalPerPartner.username
                                             )
