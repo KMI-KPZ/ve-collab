@@ -61,7 +61,7 @@ export default function Name({ socket }: Props): JSX.Element {
             socket={socket}
             title="Projektname"
             subtitle="Wie soll das Projekt heißen?"
-            description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint eurem Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
+            description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
@@ -76,7 +76,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     {...methods.register('name', {
                         required: {
                             value: true,
-                            message: 'Bitte gebe deiner VE einen Namen.',
+                            message: 'Bitte gebt eurem VE einen Namen.',
                         },
                         maxLength: {
                             value: 50,

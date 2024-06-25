@@ -338,8 +338,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             title="Zielgruppen & Sprachen"
             subtitle="An welche Zielgruppen richtet sich der VE?"
             description={[
-                'Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.',
                 'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, da ihr eure Zielgruppe unter Umständen zum Zeitpunkt der VE-Planung noch nicht genau kennt (z. B. Alter der Teilnehmenden, Sprachen).',
+                'Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.',
             ]}
             tooltip={{
                 text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden',
