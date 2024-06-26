@@ -205,9 +205,15 @@ export default function EditProfile({
         );
         setSuccessPopupOpen(true);
 
-        // perform a reload to propagate the possible change of excluded_from_matching
-        // to the parent (LayoutSection.tsx)
-        router.reload();
+        // trigger a re-fetch of the user's profile data to reflect the changes
+        mutate();
+
+
+        // if excludedFromMatching has changed from the previously saved state, 
+        // reload the page to reflect the changes to the parent (LayoutSection.tsx)
+        if (excludedFromMatching !== userInfo.profile.excluded_from_matching) {
+            router.reload();
+        }
     };
 
     /*
