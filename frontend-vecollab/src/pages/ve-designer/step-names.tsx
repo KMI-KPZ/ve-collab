@@ -97,8 +97,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
         mode: 'onChange',
         defaultValues: {
             stepNames: [
-                { from: '', to: '', name: 'Kennenlernen' },
-                { from: '', to: '', name: 'Evaluation' },
+                { from: '', to: '', name: 'Kennenlernen', workload: 0, learning_goal: '' },
+                { from: '', to: '', name: 'Evaluation', workload: 0, learning_goal: '' },
             ],
         },
     });
@@ -280,6 +280,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         <input
                                             type="number"
                                             {...methods.register(`stepNames.${index}.workload`, {
+                                                validate: {
+                                                    positive: (v) => {
+                                                        return (
+                                                            v >= 0 ||
+                                                            'Der Zeitaufwand kann nicht negativ sein'
+                                                        );
+                                                    },
+                                                },
                                                 setValueAs: (v: string) => parseInt(v),
                                             })}
                                             placeholder="Zeitaufwand in Stunden"
@@ -297,6 +305,38 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
                                         />
                                     </div>
+                                    {methods.formState.errors?.stepNames?.[index]?.from && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.from
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.to && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.to
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.name && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.workload && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message
+                                            }
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex items-center mr-6">
                                     <Image
@@ -316,27 +356,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         alt="deleteStep"
                                     ></Image>
                                 </div>
-                                {methods.formState.errors?.stepNames?.[index]?.from && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {
-                                            methods.formState.errors?.stepNames?.[index]?.from
-                                                ?.message
-                                        }
-                                    </p>
-                                )}
-                                {methods.formState.errors?.stepNames?.[index]?.to && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {methods.formState.errors?.stepNames?.[index]?.to?.message}
-                                    </p>
-                                )}
-                                {methods.formState.errors?.stepNames?.[index]?.name && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {
-                                            methods.formState.errors?.stepNames?.[index]?.name
-                                                ?.message
-                                        }
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </div>
