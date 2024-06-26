@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
@@ -9,9 +9,15 @@ import {
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import CreatableSelect from 'react-select/creatable';
 
 interface FormValues {
-    methodicalApproach: string;
+    methodicalApproaches: MethodicalApproach[];
+}
+
+interface MethodicalApproach {
+    value: string;
+    label: string;
 }
 
 export interface PhysicalMobility {
@@ -21,7 +27,9 @@ export interface PhysicalMobility {
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.methodicalApproach === '';
+    return formValues.methodicalApproaches.every((value) => {
+        return value.value === '' && value.label === '';
+    });
 };
 
 interface Props {
@@ -40,15 +48,17 @@ export default function Methodology({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            methodicalApproach: '',
+            methodicalApproaches: [],
         },
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (plan.methodical_approach !== null) {
-                methods.setValue('methodicalApproach', plan.methodical_approach);
-            }
+            methods.setValue(
+                'methodicalApproaches',
+                plan.methodical_approaches.map((value) => ({ value, label: value }))
+            );
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
@@ -62,26 +72,73 @@ export default function Methodology({ socket }: Props): JSX.Element {
         return [
             {
                 plan_id: router.query.plannerId,
-                field_name: 'methodical_approach',
-                value: data.methodicalApproach,
+                field_name: 'methodical_approaches',
+                value: data.methodicalApproaches.map((value) => value.value),
             },
             {
                 plan_id: router.query.plannerId,
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    methodical_approach: ProgressState.completed,
+                    methodical_approaches: ProgressState.completed,
                 },
             },
         ];
     };
 
+    const options: { value: string; label: string }[] = [
+        {
+            value: 'aufgabenbasiertes Lernen',
+            label: 'aufgabenbasiertes Lernen',
+        },
+        {
+            value: 'problembasiertes / problemorientiertes Lernen',
+            label: 'problembasiertes / problemorientiertes Lernen',
+        },
+        {
+            value: 'forschendes Lernen',
+            label: 'forschendes Lernen',
+        },
+        {
+            value: 'game-based Learning',
+            label: 'game-based Learning',
+        },
+    ];
+
+    function createableSelect(
+        control: any,
+        name: any,
+        options: { value: string; label: string }[]
+    ): JSX.Element {
+        return (
+            <Controller
+                name={name}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <CreatableSelect
+                        onChange={onChange}
+                        onBlur={onBlur}
+                        value={value}
+                        options={options}
+                        isClearable={true}
+                        isMulti
+                        closeMenuOnSelect={false}
+                        placeholder="Ansätze auswählen oder neue durch Tippen hinzufügen"
+                    />
+                )}
+                control={control}
+            />
+        );
+    }
+
     return (
         <Wrapper
             socket={socket}
             title="Methodischer Ansatz"
-            subtitle="Welche methodischen Ansätze kommen im VE zum Einsatz?"
-            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden."
+            subtitle="Welcher methodische Ansatz liegt eurem VA zugrunde?"
+            description={[
+                'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden.',
+                'Falls keines der Vorschläge eurem Ansatz entspricht, könnt ihr durch Schreiben im Feld individuelle Eingaben hinzufügen.',
+            ]}
             tooltip={{
                 text: 'Mehr zu Methodik findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material',
@@ -93,20 +150,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div className="mt-4 flex flex-col justify-center ">
-                <textarea
-                    rows={3}
-                    placeholder="z.B. ..."
-                    className="border border-gray-300 rounded-lg w-full lg:w-1/2 p-2"
-                    {...methods.register('methodicalApproach', {
-                        maxLength: {
-                            value: 500,
-                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                        },
-                    })}
-                />
-                <p className="text-red-600 pt-2">
-                    {methods.formState.errors?.methodicalApproach?.message}
-                </p>
+                {createableSelect(methods.control, 'methodicalApproaches', options)}
             </div>
         </Wrapper>
     );

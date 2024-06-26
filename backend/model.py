@@ -1453,7 +1453,7 @@ class VEPlan:
         "lectures": list,
         "major_learning_goals": list,
         "individual_learning_goals": list,
-        "methodical_approach": (str, type(None)),
+        "methodical_approaches": list,
         "audience": list,
         "languages": list,
         "evaluation": list,
@@ -1488,7 +1488,7 @@ class VEPlan:
         lectures: List[Lecture] = [],
         major_learning_goals: List[str] = [],
         individual_learning_goals: List[IndividualLearningGoal] = [],
-        methodical_approach: str = None,
+        methodical_approaches: List[str] = [],
         audience: List[TargetGroup] = [],
         languages: List[str] = [],
         evaluation: List[Evaluation] = [],
@@ -1548,7 +1548,7 @@ class VEPlan:
         self.lectures = lectures
         self.major_learning_goals = major_learning_goals
         self.individual_learning_goals = individual_learning_goals
-        self.methodical_approach = methodical_approach
+        self.methodical_approaches = methodical_approaches
         self.audience = audience
         self.languages = languages
         self.evaluation = evaluation
@@ -1591,7 +1591,7 @@ class VEPlan:
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "methodical_approach": "not_started",
+                "methodical_approaches": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -1694,7 +1694,7 @@ class VEPlan:
                 individual_learning_goal.to_dict()
                 for individual_learning_goal in self.individual_learning_goals
             ],
-            "methodical_approach": self.methodical_approach,
+            "methodical_approaches": self.methodical_approaches,
             "audience": [target_group.to_dict() for target_group in self.audience],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
@@ -1821,7 +1821,7 @@ class VEPlan:
                         "learning_goal": None,
                     }
                 ],
-                "methodical_approach": None,
+                "methodical_approaches": [],
                 "audience": [
                     {
                         "_id": "object_id_str",
@@ -1901,7 +1901,7 @@ class VEPlan:
                     "topics": "<completed|uncompleted|not_started>",
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
-                    "methodical_approach": "<completed|uncompleted|not_started>",
+                    "methodical_approaches": "<completed|uncompleted|not_started>",
                     "audience": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "evaluation": "<completed|uncompleted|not_started>",

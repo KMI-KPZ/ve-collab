@@ -36,7 +36,7 @@ export interface IPlan {
     learning_env: string | null;
     major_learning_goals: string[];
     individual_learning_goals: {username: string, learning_goal: string}[];
-    methodical_approach: string | null;
+    methodical_approaches: string[];
     lectures: LectureOld[];
     name: string;
     new_content: boolean | null;

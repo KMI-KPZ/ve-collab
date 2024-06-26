@@ -7294,7 +7294,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "lectures": [],
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [],
-            "methodical_approach": "test",
+            "methodical_approaches": ["test"],
             "audience": [],
             "languages": ["test", "test"],
             "evaluation": [],
@@ -7914,7 +7914,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "lectures": [self.lecture.to_dict()],
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
-            "methodical_approach": "test",
+            "methodical_approaches": ["test"],
             "audience": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
@@ -7947,7 +7947,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "methodical_approach": "not_started",
+                "methodical_approaches": "not_started",
                 "audience": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
@@ -8027,7 +8027,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             default_plan.individual_learning_goals,
         )
         self.assertEqual(
-            response_plan.methodical_approach, default_plan.methodical_approach
+            response_plan.methodical_approaches, default_plan.methodical_approaches
         )
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
@@ -8142,7 +8142,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             default_plan.individual_learning_goals,
         )
         self.assertEqual(
-            response_plan.methodical_approach, default_plan.methodical_approach
+            response_plan.methodical_approaches, default_plan.methodical_approaches
         )
         self.assertEqual(response_plan.audience, default_plan.audience)
         self.assertEqual(response_plan.languages, default_plan.languages)
@@ -8980,8 +8980,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "methodical_approach",
-            "value": "updated_methodical_approach",
+            "field_name": "methodical_approaches",
+            "value": ["test", "updated_methodical_approaches"],
         }
 
         response = self.base_checks(
@@ -9083,8 +9083,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "update": [
                 {
                     "plan_id": self.plan_id,
-                    "field_name": "methodical_approach",
-                    "value": "updated_methodical_approach",
+                    "field_name": "methodical_approaches",
+                    "value": ["test", "updated_methodical_approaches"],
                 },
                 {
                     "plan_id": self.plan_id,
