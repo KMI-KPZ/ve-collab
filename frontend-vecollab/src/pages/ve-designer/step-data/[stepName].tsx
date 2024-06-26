@@ -88,8 +88,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
 
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
-        formValues.workload === 0 &&
-        formValues.learning_goal === '' &&
         formValues.learning_activity === '' &&
         formValues.evaluation_tools.every((tool) => {
             return tool === '';
@@ -211,8 +209,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             step.name === stepName
                 ? {
                       ...data,
-                      workload: data.workload,
-                      learning_goal: data.learning_goal,
+                      learning_activity: data.learning_activity,
                       has_tasks: data.has_tasks,
                       tasks: currentStepTransformBackTools,
                   }
