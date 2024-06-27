@@ -28,17 +28,17 @@ export interface PhysicalMobility {
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.learningEnv === ''
-        && (
-            formValues.courseFormat === '' &&
-            formValues.physicalMobilities.every((mobility) => {
-                return (
-                    mobility.location === '' &&
-                    mobility.timestamp_from === '' &&
-                    mobility.timestamp_to === ''
-                );
-            })
-        )
+    return (
+        formValues.learningEnv === '' &&
+        formValues.courseFormat === '' &&
+        formValues.physicalMobilities.every((mobility) => {
+            return (
+                mobility.location === '' &&
+                mobility.timestamp_from === '' &&
+                mobility.timestamp_to === ''
+            );
+        })
+    );
 };
 
 interface Props {
@@ -51,8 +51,8 @@ export default function Methodology({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const prevpage = '/ve-designer/learning-goals'
-    const nextpage = '/ve-designer/methodology'
+    const prevpage = '/ve-designer/learning-goals';
+    const nextpage = '/ve-designer/methodology';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -64,44 +64,37 @@ export default function Methodology({ socket }: Props): JSX.Element {
         },
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.learning_env !== null) {
-            methods.setValue('learningEnv', plan.learning_env);
-        }
-        if (plan.realization !== null) {
-            methods.setValue('courseFormat', plan.realization);
-        }
-        if (plan.physical_mobility !== null) {
-            methods.setValue('usePhysicalMobility', plan.physical_mobility);
-        }
-        if (
-            plan.physical_mobilities !== null &&
-            plan.physical_mobilities.length !== 0
-        ) {
-            const physical_mobilities: PhysicalMobility[] =
-                plan.physical_mobilities.map(
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.learning_env !== null) {
+                methods.setValue('learningEnv', plan.learning_env);
+            }
+            if (plan.realization !== null) {
+                methods.setValue('courseFormat', plan.realization);
+            }
+            if (plan.physical_mobility !== null) {
+                methods.setValue('usePhysicalMobility', plan.physical_mobility);
+            }
+            if (plan.physical_mobilities !== null && plan.physical_mobilities.length !== 0) {
+                const physical_mobilities: PhysicalMobility[] = plan.physical_mobilities.map(
                     (physicalMobility: PhysicalMobility) => {
-                        const { timestamp_from, timestamp_to, location } =
-                            physicalMobility;
+                        const { timestamp_from, timestamp_to, location } = physicalMobility;
                         return {
                             location: location,
                             timestamp_from:
-                                timestamp_from !== null
-                                    ? timestamp_from.split('T')[0]
-                                    : '', // react hook form only takes '2019-12-13'
-                            timestamp_to:
-                                timestamp_to !== null
-                                    ? timestamp_to.split('T')[0]
-                                    : '',
+                                timestamp_from !== null ? timestamp_from.split('T')[0] : '', // react hook form only takes '2019-12-13'
+                            timestamp_to: timestamp_to !== null ? timestamp_to.split('T')[0] : '',
                         };
                     }
                 );
-            methods.setValue('physicalMobilities', physical_mobilities);
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
-    }, [methods]);
+                methods.setValue('physicalMobilities', physical_mobilities);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+        },
+        [methods]
+    );
 
     const { fields, append, remove, update } = useFieldArray({
         name: 'physicalMobilities',
@@ -109,7 +102,9 @@ export default function Methodology({ socket }: Props): JSX.Element {
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -137,11 +132,11 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    learning_env: ProgressState.completed,
-                    realization: ProgressState.completed,
+                    learning_env: progressState,
+                    realization: progressState,
                 },
             },
-        ]
+        ];
     };
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
@@ -276,12 +271,12 @@ export default function Methodology({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title='Digitale Lernumgebung'
-            subtitle='In welcher digitalen Lernumgebung findet der VE statt?'
+            title="Digitale Lernumgebung"
+            subtitle="In welcher digitalen Lernumgebung findet der VE statt?"
             description="Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten."
             tooltip={{
                 text: 'Mehr zu LMS findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge',
             }}
             methods={methods}
             prevpage={prevpage}
@@ -289,7 +284,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className='mt-4'>
+            <div className="mt-4">
                 <textarea
                     rows={3}
                     placeholder="Lernumgebung beschreiben"
@@ -297,8 +292,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     {...methods.register('learningEnv', {
                         maxLength: {
                             value: 500,
-                            message:
-                                'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
                         },
                     })}
                 />
@@ -307,21 +301,30 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 </p>
             </div>
 
-            <div className='mt-4'>
-                <div className={'flex justify-between items-center text-slate-600 text-xl relative'}>
-                In welchem Format / welchen Formaten wird der VE umgesetzt?
-                <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
-                    <Link
-                        target="_blank"
-                        href={'/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'}
-                        className='rounded-full shadow hover:bg-gray-50 p-2 mx-2'
-                    >
-                        <PiBookOpenText size={30} color="#00748f" />
-                    </Link>
-                </Tooltip>
+            <div className="mt-4">
+                <div
+                    className={'flex justify-between items-center text-slate-600 text-xl relative'}
+                >
+                    In welchem Format / welchen Formaten wird der VE umgesetzt?
+                    <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                        <Link
+                            target="_blank"
+                            href={
+                                '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+                            }
+                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                        >
+                            <PiBookOpenText size={30} color="#00748f" />
+                        </Link>
+                    </Tooltip>
                 </div>
-                <p className="mb-8">Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl synchrone als auch asynchrone Phasen geplant sind.</p>
-                <div className='w-full lg:w-1/2'>
+                <p className="mb-8">
+                    Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE
+                    ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per
+                    E-Mail, Padlet etc.) stattfinden oder sowohl synchrone als auch asynchrone
+                    Phasen geplant sind.
+                </p>
+                <div className="w-full lg:w-1/2">
                     <div className="flex items-center">
                         <label htmlFor="courseFormat" className="mr-2">
                             Format:
@@ -339,29 +342,21 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         >
                             <option value="synchron">synchron</option>
                             <option value="asynchron">asynchron</option>
-                            <option value="asynchron und synchron">
-                                asynchron und synchron
-                            </option>
+                            <option value="asynchron und synchron">asynchron und synchron</option>
                         </select>
                     </div>
                 </div>
-                <div className='mt-4 flex w-full lg:w-2/3 items-center'>
+                <div className="mt-4 flex w-full lg:w-2/3 items-center">
                     <p className="">
-                        Wird der VE durch eine physische Mobilität ergänzt /
-                        begleitet?
+                        Wird der VE durch eine physische Mobilität ergänzt / begleitet?
                     </p>
                     <div className="flex w-40 justify-end gap-x-5">
-                        {radioBooleanInput(
-                            methods.control,
-                            `usePhysicalMobility`
-                        )}
+                        {radioBooleanInput(methods.control, `usePhysicalMobility`)}
                     </div>
                 </div>
                 {methods.watch('usePhysicalMobility') && (
-                    <div className='mt-4 rounded shadow p-2 w-full lg:w-2/3'>
-                        <div className="divide-y my-2">
-                            {renderMobilitiesInputs()}
-                        </div>
+                    <div className="mt-4 rounded shadow p-2 w-full lg:w-2/3">
+                        <div className="divide-y my-2">{renderMobilitiesInputs()}</div>
                         <div className="flex justify-center">
                             <button
                                 className="p-4 bg-white rounded-full shadow hover:bg-slate-50"

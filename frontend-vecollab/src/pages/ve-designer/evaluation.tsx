@@ -88,7 +88,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (plan.evaluation.length !== 0) {
-                replace(plan.evaluation)
+                replace(plan.evaluation);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -111,7 +111,9 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return;
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -124,7 +126,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    evaluation: ProgressState.completed,
+                    evaluation: progressState,
                 },
             },
         ];
@@ -255,7 +257,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
         <Wrapper
             socket={socket}
             title="Bewertung / Evaluation"
-            subtitle='Wie kann der VE während der Durchführung oder abschließend bewertet und evaluiert werden?'
+            subtitle="Wie kann der VE während der Durchführung oder abschließend bewertet und evaluiert werden?"
             description="Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden."
             tooltip={{
                 text: 'mehr zu Optionen der Bewertung findest du im Modul VA-Planung > Aushandlungsphase',

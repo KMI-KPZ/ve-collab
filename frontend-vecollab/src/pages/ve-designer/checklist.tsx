@@ -75,10 +75,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
- 
-    const prevpage = '/ve-designer/evaluation'
-    const nextpage = '/ve-designer/step-names'
 
+    const prevpage = '/ve-designer/evaluation';
+    const nextpage = '/ve-designer/step-names';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -129,8 +128,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return;
-
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
         return [
             {
                 plan_id: router.query.plannerId,
@@ -142,7 +142,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    formalities: ProgressState.completed,
+                    formalities: progressState,
                 },
             },
         ];

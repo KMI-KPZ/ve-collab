@@ -157,6 +157,10 @@ export default function Partners({ socket }: Props): JSX.Element {
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
         let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
 
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
+
         if (partners.length >= 1 && partners[0] !== '') {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
@@ -228,7 +232,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    partners: ProgressState.completed,
+                    partners: progressState,
                 },
             },
             {
@@ -344,7 +348,10 @@ export default function Partners({ socket }: Props): JSX.Element {
             socket={socket}
             title="Projektpartner:innen"
             subtitle="Wer ist am Projekt beteiligt?"
-            description={["Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden. Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.", "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind."]}
+            description={[
+                'Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden. Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
+                'Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
+            ]}
             tooltip={{
                 text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Partnersuche',

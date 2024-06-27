@@ -36,8 +36,8 @@ interface FormValues {
     stepNames: StepName[];
 }
 
-const areAllFormValuesEmpty = (stepNames: StepName[]): boolean => {
-    return stepNames.every((broadStep) => {
+const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
+    return stepNamesObject.stepNames.every((broadStep) => {
         return (
             broadStep.name === '' &&
             broadStep.from === '' &&
@@ -181,11 +181,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 learning_goal: broadStep.learning_goal,
             };
         });
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
-            return { [broadStep.name]: ProgressState.notStarted };
-        });
 
-        if (areAllFormValuesEmpty(data.stepNames)) return;
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -198,7 +197,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: sideMenuStateSteps,
+                    steps: progressState,
                 },
             },
         ];

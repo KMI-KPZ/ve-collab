@@ -67,7 +67,9 @@ export default function Methodology({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return;
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -80,7 +82,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    methodical_approaches: ProgressState.completed,
+                    methodical_approaches: progressState,
                 },
             },
         ];
