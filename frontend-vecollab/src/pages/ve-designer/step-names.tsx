@@ -93,12 +93,29 @@ export default function StepNames({ socket }: Props): JSX.Element {
     // const prevpage = '/ve-designer/checklist'
     const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
 
+    const today = new Date().toISOString().split('T')[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().split('T')[0];
+
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             stepNames: [
-                { from: '', to: '', name: 'Kennenlernen', workload: 0, learning_goal: '' },
-                { from: '', to: '', name: 'Evaluation', workload: 0, learning_goal: '' },
+                {
+                    from: yesterday,
+                    to: today,
+                    name: 'Kennenlernen',
+                    workload: 0,
+                    learning_goal: '',
+                },
+                {
+                    from: yesterday,
+                    to: today,
+                    name: 'Evaluation',
+                    workload: 0,
+                    learning_goal: '',
+                },
             ],
         },
     });
