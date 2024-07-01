@@ -190,6 +190,13 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
+        // TODO: plan is not fetched enough -> post request can get through
+        /*const {
+            data: plan,
+            isLoading,
+            error,
+            mutate,
+        } = useGetPlanById(router.query.plannerId as string);*/
 
         // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
         setIsDirty(methods.formState.isDirty);
