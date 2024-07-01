@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
-    ISideProgressBarStateSteps,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
@@ -91,7 +90,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
     const noStepPage = '/ve-designer/no-step';
     // const prevpage = '/ve-designer/checklist'
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
+    // const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
 
     const today = new Date().toISOString().split('T')[0];
     const yesterdayDate = new Date();
@@ -120,23 +119,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
     });
 
-    useEffect(() => {
-        const subs = methods.watch((value, { name }) => {
-            setNextpage((prev) => {
-                if (!value || !value.stepNames || !value.stepNames.length) {
-                    return noStepPage;
-                }
-                if (!methods.formState.isValid) {
-                    return noStepPage;
-                }
-                return `/ve-designer/step-data/${encodeURIComponent(
-                    value.stepNames[0]?.name as string
-                )}`;
-            });
-        });
-        return () => subs.unsubscribe();
-    }, [methods]);
-
     const { fields, append, remove, move, update, replace } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
@@ -160,11 +142,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
 
                 setSteps(plan.steps);
-                setNextpage(
-                    (prev) => `/ve-designer/step-data/${encodeURIComponent(steps[0].name)}`
-                );
-            } else {
-                setNextpage((prev) => `/ve-designer/no-step`);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -398,7 +375,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
             }}
             methods={methods}
             // prevpage={prevpage}
-            nextpage={nextpage}
+            nextpage={
+                `/ve-designer/step-data/${encodeURIComponent(
+                    methods.getValues('stepNames')[0]?.name as string
+                )}` || noStepPage
+            }
             stageInMenu="steps"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
