@@ -467,7 +467,7 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className="basis-20">
+                                            <div className="basis-44">
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
@@ -496,7 +496,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Weiter
+                                                        Speichern & Weiter
                                                     </button>
                                                 )}
                                             </div>
