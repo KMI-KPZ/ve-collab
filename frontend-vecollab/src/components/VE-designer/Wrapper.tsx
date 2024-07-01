@@ -126,7 +126,7 @@ export default function Wrapper({
         data: plan,
         isLoading,
         error,
-        mutate,
+        mutate: mutateGetPlanById,
     } = useGetPlanById(router.query.plannerId as string);
 
     // check access rights or locked plan
@@ -190,19 +190,23 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-        // TODO: plan is not fetched enough -> post request can get through
-        /*const {
-            data: plan,
-            isLoading,
-            error,
-            mutate,
-        } = useGetPlanById(router.query.plannerId as string);*/
-
-        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-        setIsDirty(methods.formState.isDirty);
-        planerDataCallback(plan);
+        mutateGetPlanById().then(() => {
+            // mutate -> refetch stale planData
+            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+            setIsDirty(methods.formState.isDirty);
+            planerDataCallback(plan);
+        });
         setLoading(false);
-    }, [plan, isLoading, error, methods, currentPath, planerDataCallback, session]);
+    }, [
+        plan,
+        isLoading,
+        error,
+        methods,
+        currentPath,
+        planerDataCallback,
+        session,
+        mutateGetPlanById,
+    ]);
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
@@ -228,7 +232,7 @@ export default function Wrapper({
         }
         if (updateAfterSaved) {
             // reload plan
-            await mutate();
+            await mutateGetPlanById();
             // reset formstate.isdirty after save
             methods.reset({}, { keepValues: true });
         }
