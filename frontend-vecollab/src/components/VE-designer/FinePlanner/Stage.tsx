@@ -127,12 +127,7 @@ export default function Stage({ fineStep }: Props) {
                 </div>
                 {watch('has_tasks') && (
                     <div className="mt-4 flex">
-                        <div className="w-1/6 flex mt-8">
-                            <label htmlFor="tasks" className="px-2 py-2">
-                                Aufgabenstellungen
-                            </label>
-                        </div>
-                        <div className="flex flex-col w-5/6">
+                        <div className="flex flex-col w-full">
                             {fields.map((task, taskIndex) => (
                                 <div className="relative" key={task.id}>
                                     <Tasks taskIndex={taskIndex} />
