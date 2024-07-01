@@ -138,7 +138,7 @@ export default function PostProcess({ socket }: Props) {
         <Wrapper
             socket={socket}
             title="Nachbearbeitung"
-            subtitle="kehre hierher zurück, nachdem du den VE durchgeführt hast"
+            subtitle="Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt."
             tooltip={{
                 text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung',
