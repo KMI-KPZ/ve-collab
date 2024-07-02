@@ -99,7 +99,6 @@ export default function PostProcess({ socket }: Props) {
         [methods]
     );
 
-    // TODO may use formValues.data ?!
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         await fetchPOST(
             '/planner/update_fields',
@@ -108,22 +107,22 @@ export default function PostProcess({ socket }: Props) {
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'is_good_practise',
-                        value: methods.getValues('share'),
+                        value: data.share,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'underlying_ve_model',
-                        value: methods.getValues('veModel'),
+                        value: data.veModel,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'reflection',
-                        value: methods.getValues('reflection'),
+                        value: data.reflection,
                     },
                     {
                         plan_id: router.query.plannerId,
                         field_name: 'good_practise_evaluation',
-                        value: methods.getValues('evaluation'),
+                        value: data.evaluation,
                     },
                 ],
             },
@@ -139,7 +138,7 @@ export default function PostProcess({ socket }: Props) {
         <Wrapper
             socket={socket}
             title="Nachbearbeitung"
-            subtitle="kehre hierher zurück, nachdem du den VE durchgeführt hast"
+            subtitle="Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt."
             tooltip={{
                 text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung',
@@ -281,11 +280,15 @@ export default function PostProcess({ socket }: Props) {
                         onClick={async (e) => {
                             e.preventDefault();
                             await onSubmit({} as FormValues);
-                            socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
-                                console.log(response);
-                                // TODO error handling
-                                router.push('/plans');
-                            });
+                            socket.emit(
+                                'drop_plan_lock',
+                                { plan_id: router.query.plannerId },
+                                (response: any) => {
+                                    console.log(response);
+                                    // TODO error handling
+                                    router.push('/plans');
+                                }
+                            );
                         }}
                     >
                         Absenden & zur Übersicht

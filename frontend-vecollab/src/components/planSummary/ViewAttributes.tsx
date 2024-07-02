@@ -158,9 +158,15 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                     </ul>
                     <span className="font-semibold pr-5">Methodischer Ansatz</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {showDataOrEmptySign(plan.methodical_approach)}
-                        </li>
+                    {plan.methodical_approaches.length !== 0 ? (
+                            plan.methodical_approaches.map((approach, index) => (
+                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
+                                    {showDataOrEmptySign(approach)}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                        )}
                     </ul>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
                     <div className="grid grid-cols-2 space-y-2 col-span-3">

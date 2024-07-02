@@ -25,7 +25,7 @@ interface Props {
     subtitle?: string;
     description?: string[] | string;
     tooltip?: { text: string; link: string };
-    methods: UseFormReturn<any, any, undefined>;
+    methods: UseFormReturn<any>;
     children: React.ReactNode;
     prevpage?: string;
     nextpage?: string;
@@ -61,7 +61,7 @@ export default function Wrapper({
     socket,
 }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
     const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
         isOpen: false,
@@ -126,7 +126,7 @@ export default function Wrapper({
         data: plan,
         isLoading,
         error,
-        mutate,
+        mutate: mutateGetPlanById,
     } = useGetPlanById(router.query.plannerId as string);
 
     // check access rights or locked plan
@@ -187,15 +187,26 @@ export default function Wrapper({
             setAlert({
                 message: 'Sie haben keine Berechtigung, um diesen Plan zu bearbeiten.',
                 type: 'error',
-                onClose: setAlert({ open: false }),
+                onClose: () => setAlert({ open: false }),
             });
         }
-
-        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-        setIsDirty(methods.formState.isDirty);
-        planerDataCallback(plan);
+        mutateGetPlanById().then(() => {
+            // mutate -> refetch stale planData
+            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+            setIsDirty(methods.formState.isDirty);
+            planerDataCallback(plan);
+        });
         setLoading(false);
-    }, [plan, isLoading, error, methods, currentPath, planerDataCallback, session]);
+    }, [
+        plan,
+        isLoading,
+        error,
+        methods,
+        currentPath,
+        planerDataCallback,
+        session,
+        mutateGetPlanById,
+    ]);
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
@@ -214,14 +225,14 @@ export default function Wrapper({
                 setAlert({
                     message: 'Fehler beim speichern',
                     type: 'error',
-                    onClose: setAlert({ open: false }),
+                    onClose: () => setAlert({ open: false }),
                 });
                 return false;
             }
         }
         if (updateAfterSaved) {
             // reload plan
-            await mutate();
+            await mutateGetPlanById();
             // reset formstate.isdirty after save
             methods.reset({}, { keepValues: true });
         }
@@ -304,7 +315,7 @@ export default function Wrapper({
     );
 
     if (error) {
-        let errorMessage = '';
+        let errorMessage: string;
         switch (error.apiResponse.reason) {
             case 'plan_doesnt_exist':
                 errorMessage = 'Dieser Plan wurde nicht gefunden.';
@@ -337,7 +348,7 @@ export default function Wrapper({
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
                                 handleContinue={async () => {
-                                    handlePopupContinue();
+                                    await handlePopupContinue();
                                 }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
@@ -357,7 +368,7 @@ export default function Wrapper({
                                         setAlert({
                                             message: 'Gespeichert',
                                             autoclose: 2000,
-                                            onClose: setAlert({ open: false }),
+                                            onClose: () => setAlert({ open: false }),
                                         });
                                     }
                                     setLoading(false);
@@ -444,8 +455,7 @@ export default function Wrapper({
                                                             // valid
                                                             async (data: any) => {
                                                                 await handleSubmit(data, false);
-
-                                                                router.push({
+                                                                await router.push({
                                                                     pathname: prevpage,
                                                                     query: {
                                                                         plannerId:
@@ -467,7 +477,7 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className="basis-20">
+                                            <div className="basis-44">
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
@@ -475,11 +485,8 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                const res = await handleSubmit(
-                                                                    data,
-                                                                    false
-                                                                );
-                                                                router.push({
+                                                                await handleSubmit(data, false);
+                                                                await router.push({
                                                                     pathname: nextpage,
                                                                     query: {
                                                                         plannerId:
@@ -496,7 +503,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Weiter
+                                                        Speichern & Weiter
                                                     </button>
                                                 )}
                                             </div>

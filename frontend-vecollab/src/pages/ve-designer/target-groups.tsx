@@ -110,7 +110,9 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        if (areAllFormValuesEmpty(data)) return;
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -128,8 +130,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    audience: ProgressState.completed,
-                    languages: ProgressState.completed,
+                    audience: progressState,
+                    languages: progressState,
                 },
             },
         ];
@@ -378,8 +380,15 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     In welchen Sprachen findet der VE (hauptsächlich) statt?
                 </div>
                 <div className="mb-8">
-                        <p className="mb-2">Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen könnt.</p>
-                        <p className="mb-2">Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden.</p>
+                    <p className="mb-2">
+                        Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren
+                        Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen
+                        könnt.
+                    </p>
+                    <p className="mb-2">
+                        Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt
+                        ausgefüllt werden.
+                    </p>
                 </div>
                 <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 <button

@@ -24,7 +24,6 @@ interface FormValues {
     lectures: LectureOld[];
 }
 
-
 interface Props {
     socket: Socket;
 }
@@ -34,14 +33,18 @@ const emptyLecture = {
     lecture_type: '',
     lecture_format: '',
     participants_amount: '',
-}
+};
 
-const isEmptyLecture = (lecture: LectureOld) => {
-    return lecture.name === ''
-        && lecture.lecture_type === ''
-        && lecture.lecture_format === ''
-        && (lecture.participants_amount === '' || isNaN(Number(lecture.participants_amount)))
-}
+const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+    return formValues.lectures.every((lecture) => {
+        return (
+            lecture.name === '' &&
+            lecture.lecture_type === '' &&
+            lecture.lecture_format === '' &&
+            (lecture.participants_amount === '' || isNaN(Number(lecture.participants_amount)))
+        );
+    });
+};
 
 Lectures.auth = true;
 export default function Lectures({ socket }: Props): JSX.Element {
@@ -55,9 +58,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            lectures: [
-                emptyLecture,
-            ],
+            lectures: [emptyLecture],
         },
     });
 
@@ -79,20 +80,22 @@ export default function Lectures({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const lectures = data.lectures.filter((l: LectureOld) => !isEmptyLecture(l))
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'lectures',
-                value: lectures
+                value: data.lectures,
             },
             {
                 plan_id: router.query.plannerId,
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    lectures: ProgressState.completed,
+                    lectures: progressState,
                 },
             },
         ];
@@ -100,11 +103,11 @@ export default function Lectures({ socket }: Props): JSX.Element {
 
     const handeleRemove = (index: number) => {
         if (fields.length > 1) {
-            remove(index)
+            remove(index);
         } else {
-            replace(emptyLecture)
+            replace(emptyLecture);
         }
-    }
+    };
 
     const renderLecturesInputs = (): JSX.Element[] => {
         return fields.map((lecture, index) => (

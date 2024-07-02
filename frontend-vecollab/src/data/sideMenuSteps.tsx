@@ -39,9 +39,9 @@ const itemsAllgemein: ISubmenuData[] = [
         id: 'learning_env',
         link: '/ve-designer/learning-env',
     },
-        {
+    {
         text: 'Methodik',
-        id: 'methodology',
+        id: 'methodical_approaches',
         link: '/ve-designer/methodology',
     },
     {
@@ -71,32 +71,32 @@ export const mainMenu: IMenuData[] = [
         link: '',
         image: imageGeneralInformation,
         // submenu: getSubMenu('generally', itemsAllgemein)
-        submenu: itemsAllgemein
+        submenu: itemsAllgemein,
     },
     {
         text: 'Etappenplanung',
         id: 'steps',
         link: '',
         image: imageStagePlanner,
-        submenu: itemsEtappenplaner
+        submenu: itemsEtappenplaner,
     },
     {
         text: 'Abschluss',
         id: 'finish',
         link: '/ve-designer/finish',
         image: imageFinish,
-        submenu: []
+        submenu: [],
     },
     {
         text: 'Nachbearbeitung',
         id: 'post-process',
         link: '/ve-designer/post-process',
         image: imageStagePlanner,
-        submenu: []
+        submenu: [],
     },
 ];
 
 export interface IMenuDataState {
-    id: string,
-    open: boolean
+    id: string;
+    open: boolean;
 }
