@@ -5,7 +5,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
-    ISideProgressBarStateSteps,
     ProgressState,
     ISubmenuData,
 } from '@/interfaces/ve-designer/sideProgressBar';
@@ -67,6 +66,7 @@ export interface IFineStep {
 }
 
 export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
+    _id: '1111',
     timestamp_from: '',
     timestamp_to: '',
     name: '',
@@ -88,8 +88,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
 
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
-        formValues.workload === 0 &&
-        formValues.learning_goal === '' &&
         formValues.learning_activity === '' &&
         formValues.evaluation_tools.every((tool) => {
             return tool === '';
@@ -117,7 +115,7 @@ interface Props {
 FinePlanner.auth = true;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { stepName } = router.query;
+    const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         defaultValues: {
@@ -135,14 +133,12 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [wasInited, setWasInited] = useState<boolean>(false);
-
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (!plan.steps?.length) return;
-            if (wasInited) return
-
+            if (!plan.steps?.length) {
+                return;
+            }
             setSteps(plan.steps);
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
                 (item: IFineStep) => item.name === stepName
@@ -171,31 +167,34 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 if (Object.keys(plan.progress).length) {
                     setSideMenuStepsProgress(plan.progress);
                 }
-                setWasInited(true)
             }
         },
-        [methods, wasInited, stepName]
+        [stepName, methods]
     );
 
     useEffect(() => {
-        const sideMenuStepsDataCopy: ISubmenuData[] = [...sideMenuStepsData];
-        const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
-            // courseFormat generate Finestep methode rausnehmen
-            (item: ISubmenuData): boolean => item.text === currentFineStep.name // with id (encode einfach)
-        ); // -1 if not found
+        if (sideMenuStepsData.length !== 0) {
+            const sideMenuStepsDataCopy: ISubmenuData[] = [...sideMenuStepsData];
+            const currentSideMenuStepIndex: number = sideMenuStepsDataCopy.findIndex(
+                // courseFormat generate Finestep methode rausnehmen
+                (item: ISubmenuData): boolean => {
+                    return item.id === encodeURIComponent(currentFineStep.name);
+                } // with id (encode einfach)
+            ); // -1 if not found
 
-        setNextpage(
-            currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
-                currentSideMenuStepIndex >= 0
-                ? sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link
-                : '/ve-designer/finish'
-        );
+            setNextpage(
+                currentSideMenuStepIndex < sideMenuStepsDataCopy.length - 1 &&
+                    currentSideMenuStepIndex >= 0
+                    ? sideMenuStepsDataCopy[currentSideMenuStepIndex + 1].link
+                    : '/ve-designer/finish'
+            );
 
-        setPrevpage(
-            currentSideMenuStepIndex > 0
-                ? sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link
-                : '/ve-designer/step-names'
-        );
+            setPrevpage(
+                currentSideMenuStepIndex > 0
+                    ? sideMenuStepsDataCopy[currentSideMenuStepIndex - 1].link
+                    : '/ve-designer/step-names'
+            );
+        }
     }, [sideMenuStepsData, currentFineStep]);
 
     const onSubmit: SubmitHandler<IFineStepFrontend> = async (data: IFineStepFrontend) => {
@@ -211,26 +210,20 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             step.name === stepName
                 ? {
                       ...data,
-                      workload: data.workload,
-                      learning_goal: data.learning_goal,
+                      learning_activity: data.learning_activity,
                       has_tasks: data.has_tasks,
                       tasks: currentStepTransformBackTools,
                   }
                 : step
         );
 
-        const stepSlugDecoded = decodeURI(stepName as string);
-
-        const updateStepsProgress = sideMenuStepsProgress.steps.map(
+        // TODO sidebarProgress finesteps still broken
+        /*const updateStepsProgress = sideMenuStepsProgress.steps.map(
             (step: ISideProgressBarStateSteps) =>
-                step[stepSlugDecoded] !== undefined
-                    ? { [stepSlugDecoded]: ProgressState.completed }
-                    : step
-        );
+                step[stepName] !== undefined ? { [stepName]: ProgressState.completed } : step
+        );*/
 
         if (areAllFormValuesEmpty(data)) return;
-
-        setWasInited(false)
 
         return [
             {
@@ -243,7 +236,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: [...updateStepsProgress],
+                    steps: ProgressState.completed,
                 },
             },
         ];

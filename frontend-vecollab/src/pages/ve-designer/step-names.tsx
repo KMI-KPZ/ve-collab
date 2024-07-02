@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
-    ISideProgressBarStateSteps,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
@@ -28,15 +27,23 @@ interface StepName {
     from: string;
     to: string;
     name: string;
+    workload: number;
+    learning_goal: string;
 }
 
 interface FormValues {
     stepNames: StepName[];
 }
 
-const areAllFormValuesEmpty = (stepNames: StepName[]): boolean => {
-    return stepNames.every((broadStep) => {
-        return broadStep.name === '' && broadStep.from === '' && broadStep.to === '';
+const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
+    return stepNamesObject.stepNames.every((broadStep) => {
+        return (
+            broadStep.name === '' &&
+            broadStep.from === '' &&
+            broadStep.to === '' &&
+            broadStep.learning_goal === '' &&
+            broadStep.workload === 0
+        );
     });
 };
 
@@ -66,6 +73,8 @@ const emptyBroadStep: StepName = {
     from: '',
     to: '',
     name: '',
+    workload: 0,
+    learning_goal: '',
 };
 
 interface Props {
@@ -81,65 +90,65 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
     const noStepPage = '/ve-designer/no-step';
     // const prevpage = '/ve-designer/checklist'
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
+    // const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
+
+    const today = new Date().toISOString().split('T')[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().split('T')[0];
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             stepNames: [
-                { from: '', to: '', name: 'Kennenlernen' },
-                { from: '', to: '', name: 'Evaluation' },
+                {
+                    from: yesterday,
+                    to: today,
+                    name: 'Kennenlernen',
+                    workload: 0,
+                    learning_goal: '',
+                },
+                {
+                    from: yesterday,
+                    to: today,
+                    name: 'Evaluation',
+                    workload: 0,
+                    learning_goal: '',
+                },
             ],
         },
     });
-
-    useEffect(() => {
-        const subs = methods.watch((value, { name }) => {
-            setNextpage((prev) => {
-                if (!value || !value.stepNames || !value.stepNames.length) {
-                    return noStepPage;
-                }
-                if (!methods.formState.isValid) {
-                    return noStepPage;
-                }
-                return `/ve-designer/step-data/${encodeURIComponent(
-                    value.stepNames[0]?.name as string
-                )}`;
-            });
-        });
-        return () => subs.unsubscribe();
-    }, [methods]);
 
     const { fields, append, remove, move, update, replace } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        if (plan.steps?.length > 0) {
-            const steps: IFineStep[] = plan.steps;
-            const stepNames: StepName[] = steps.map((step) => {
-                const { timestamp_from, timestamp_to, name } = step;
-                return {
-                    from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                    to: timestamp_to.split('T')[0],
-                    name: name,
-                };
-            });
-            replace(stepNames) // PROBLEM isDirty is initially true
-            // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            if (plan.steps?.length > 0) {
+                const steps: IFineStep[] = plan.steps;
+                const stepNames: StepName[] = steps.map((step) => {
+                    const { timestamp_from, timestamp_to, name, workload, learning_goal } = step;
+                    return {
+                        from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
+                        to: timestamp_to.split('T')[0],
+                        name: name,
+                        workload: workload,
+                        learning_goal: learning_goal,
+                    };
+                });
+                replace(stepNames); // PROBLEM isDirty is initially true
+                // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
 
-            setSteps(plan.steps)
-            setNextpage(prev => `/ve-designer/step-data/${encodeURIComponent(
-                steps[0].name
-            )}`)
-        } else {
-            setNextpage(prev => `/ve-designer/no-step`)
-        }
-        if (Object.keys(plan.progress).length) {
-            setSideMenuStepsProgress(plan.progress)
-        }
-    }, [replace]);
+                setSteps(plan.steps);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+        },
+        [replace]
+    );
 
     const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
@@ -162,13 +171,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 name: broadStep.name,
                 timestamp_from: broadStep.from,
                 timestamp_to: broadStep.to,
+                workload: broadStep.workload,
+                learning_goal: broadStep.learning_goal,
             };
         });
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
-            return { [broadStep.name]: ProgressState.notStarted };
-        });
 
-        if (areAllFormValuesEmpty(data.stepNames)) return;
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
         return [
             {
@@ -181,7 +191,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: sideMenuStateSteps,
+                    steps: progressState,
                 },
             },
         ];
@@ -211,51 +221,117 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
                         <div className="shadow rounded px-2 py-4 my-4">
-                            <div>
-                                <div className="flex justify-center items-center">
-                                    <label>von:</label>
-                                    <input
-                                        type="date"
-                                        {...methods.register(`stepNames.${index}.from`, {
-                                            required: {
-                                                value: true,
-                                                message: 'Bitte fülle das Felde "von" aus',
-                                            },
-                                            validate: (v) => validateDateRange(v, index),
-                                        })}
-                                        className="border border-gray-400 rounded-lg p-2 mx-2"
-                                    />
-                                    <label>bis:</label>
-                                    <input
-                                        type="date"
-                                        {...methods.register(`stepNames.${index}.to`, {
-                                            required: {
-                                                value: true,
-                                                message: 'Bitte fülle das Felde "bis" aus',
-                                            },
-                                        })}
-                                        className="border border-gray-400 rounded-lg p-2 mx-2"
-                                    />
-                                    <input
-                                        type="text"
-                                        {...methods.register(`stepNames.${index}.name`, {
-                                            required: {
-                                                value: true,
-                                                message: 'Bitte fülle das Felde "Name" aus',
-                                            },
-                                            validate: {
-                                                unique: () => {
-                                                    return (
-                                                        !checkIfNamesAreUnique(
-                                                            methods.getValues('stepNames')
-                                                        ) || 'Bitte wähle einen einzigartigen Namen'
-                                                    );
+                            <div className="flex justify-between items-center">
+                                <div className="ml-6">
+                                    <div className="flex items-center">
+                                        <label>von:</label>
+                                        <input
+                                            type="date"
+                                            {...methods.register(`stepNames.${index}.from`, {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Bitte fülle das Felde "von" aus',
                                                 },
-                                            },
-                                        })}
-                                        placeholder="Name, z.B. Kennenlernphase"
-                                        className="border border-gray-400 rounded-lg p-2 mx-2"
-                                    />
+                                                validate: (v) => validateDateRange(v, index),
+                                            })}
+                                            className="border border-gray-400 rounded-lg p-2 mx-2"
+                                        />
+                                        <label className="ml-2">bis:</label>
+                                        <input
+                                            type="date"
+                                            {...methods.register(`stepNames.${index}.to`, {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Bitte fülle das Felde "bis" aus',
+                                                },
+                                            })}
+                                            className="border border-gray-400 rounded-lg p-2 mx-2"
+                                        />
+                                        <label className="ml-2">Name:</label>
+                                        <input
+                                            type="text"
+                                            {...methods.register(`stepNames.${index}.name`, {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Bitte fülle das Felde "Name" aus',
+                                                },
+                                                validate: {
+                                                    unique: () => {
+                                                        return (
+                                                            !checkIfNamesAreUnique(
+                                                                methods.getValues('stepNames')
+                                                            ) ||
+                                                            'Bitte wähle einen einzigartigen Namen'
+                                                        );
+                                                    },
+                                                },
+                                            })}
+                                            placeholder="Name, z.B. Kennenlernphase"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2"
+                                        />
+                                        <label className="ml-2">Zeitaufwand:</label>
+                                        <input
+                                            type="number"
+                                            {...methods.register(`stepNames.${index}.workload`, {
+                                                validate: {
+                                                    positive: (v) => {
+                                                        return (
+                                                            v >= 0 ||
+                                                            'Der Zeitaufwand kann nicht negativ sein'
+                                                        );
+                                                    },
+                                                },
+                                                setValueAs: (v: string) => parseInt(v),
+                                            })}
+                                            placeholder="Zeitaufwand in Stunden"
+                                            className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
+                                        />
+                                        <label className="mr-4">h</label>
+                                    </div>
+                                    <div className="flex items-center mt-2">
+                                        <label>Lernziel(e):</label>
+                                        <input
+                                            {...methods.register(
+                                                `stepNames.${index}.learning_goal`
+                                            )}
+                                            placeholder="mehrere durch Komma trennen"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                        />
+                                    </div>
+                                    {methods.formState.errors?.stepNames?.[index]?.from && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.from
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.to && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.to
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.name && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message
+                                            }
+                                        </p>
+                                    )}
+                                    {methods.formState.errors?.stepNames?.[index]?.workload && (
+                                        <p className="text-red-600 pt-2 flex justify-center">
+                                            {
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message
+                                            }
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex items-center mr-6">
                                     <Image
                                         className="mx-2"
                                         {...provided.dragHandleProps}
@@ -273,27 +349,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         alt="deleteStep"
                                     ></Image>
                                 </div>
-                                {methods.formState.errors?.stepNames?.[index]?.from && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {
-                                            methods.formState.errors?.stepNames?.[index]?.from
-                                                ?.message
-                                        }
-                                    </p>
-                                )}
-                                {methods.formState.errors?.stepNames?.[index]?.to && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {methods.formState.errors?.stepNames?.[index]?.to?.message}
-                                    </p>
-                                )}
-                                {methods.formState.errors?.stepNames?.[index]?.name && (
-                                    <p className="text-red-600 pt-2 flex justify-center">
-                                        {
-                                            methods.formState.errors?.stepNames?.[index]?.name
-                                                ?.message
-                                        }
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -320,7 +375,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
             }}
             methods={methods}
             // prevpage={prevpage}
-            nextpage={nextpage}
+            nextpage={
+                `/ve-designer/step-data/${encodeURIComponent(
+                    methods.getValues('stepNames')[0]?.name as string
+                )}` || noStepPage
+            }
             stageInMenu="steps"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
@@ -344,6 +403,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                             from: '',
                             to: '',
                             name: '',
+                            workload: 0,
+                            learning_goal: '',
                         });
                     }}
                 >

@@ -58,7 +58,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="task_formulation" className="px-2 py-2">
-                        Aufgaben-stellung
+                        Aufgabenstellung
                     </label>
                 </div>
                 <div className="w-5/6">
