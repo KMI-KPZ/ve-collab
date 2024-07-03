@@ -8,7 +8,6 @@ import { Socket } from "socket.io-client";
 import LoadingAnimation from "../LoadingAnimation";
 import ChatRoom from "./ChatRoom";
 import Rooms from "@/components/chat/Rooms";
-import { set } from "date-fns";
 
 interface Props {
     socket: Socket;
