@@ -3,10 +3,8 @@ import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
 import PlannerOverviewItem from './PlannerOverviewItem';
 import { IfilterBy, IsortBy } from '@/pages/plans';
-import { Socket } from 'socket.io-client';
 
 interface Props {
-    socket: Socket;
     plans: PlanPreview[];
     sortBy: IsortBy;
     filterBy: IfilterBy[];
@@ -15,7 +13,6 @@ interface Props {
 }
 
 export function PlansOverview({
-    socket,
     plans,
     sortBy,
     filterBy,
@@ -83,7 +80,6 @@ export function PlansOverview({
                                 className="flex flex-row space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
                             >
                                 <PlannerOverviewItem
-                                    socket={socket}
                                     key={index}
                                     plan={plan}
                                     refetchPlansCallback={refetchPlansCallback}

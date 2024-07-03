@@ -14,17 +14,14 @@ import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
 import ConfirmDialog from '../Confirm';
 import Alert, { AlertState } from '../Alert';
-import { Socket } from 'socket.io-client';
 import { useRouter } from 'next/router';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
-    socket: Socket;
     plan: PlanPreview;
     refetchPlansCallback: () => Promise<void>;
 }
 
-export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback }: Props) {
+export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -67,40 +64,11 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
         });
     };
 
-    const acquireLockAndForward = async (planId: string) => {
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: planId },
-            async (response: any) => {
-                console.log(response);
-                if (response.success && response.status === 200) {
-                    await router.push({
-                        pathname: '/ve-designer/name',
-                        query: { plannerId: planId },
-                    });
-                } else if (!response.success && response.status === 403) {
-                    // exchange username for profile snippet to render full name in error alert
-                    await fetchPOST(
-                        '/profile_snippets',
-                        { usernames: [response.lock_holder] },
-                        session?.accessToken
-                    ).then((data) => {
-                        const foundUserSnippet = data.user_snippets.find(
-                            (snippet: BackendUserSnippet) =>
-                                snippet.username === response.lock_holder
-                        );
-                        const displayName = foundUserSnippet
-                            ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
-                            : response.lock_holder;
-                        setAlert({
-                            message: `Plan wird gerade von ${displayName} bearbeitet`,
-                            autoclose: 5000,
-                            onClose: () => setAlert({ open: false }),
-                        });
-                    });
-                }
-            }
-        );
+    const forward = async (planId: string) => {
+        await router.push({
+            pathname: '/ve-designer/name',
+            query: { plannerId: planId },
+        });
     };
 
     // ensures that we have the username in the next return ...
@@ -142,7 +110,7 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                 {plan.write_access.includes(username) && (
                     <div
                         className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                        onClick={() => acquireLockAndForward(plan._id)}
+                        onClick={() => forward(plan._id)}
                     >
                         <MdEdit className="inline" /> Bearbeiten
                     </div>
@@ -168,7 +136,7 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
-                acquireLockAndForward(plan._id);
+                forward(plan._id);
             }}
             title="Plan bearbeiten"
         >
