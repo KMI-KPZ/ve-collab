@@ -105,10 +105,10 @@ export default function PageCategoryNotSelected(props: Props) {
                                 </div>
                             </Link>
                             <Link href="/learning-material/top-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
+                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
                                     <TbBulb
                                         size={150}
-                                        className="text-white hover:text-ve-collab-orange"
+                                        className="text-white group-hover:text-ve-collab-orange"
                                     />
                                 </div>
                             </Link>
@@ -134,10 +134,10 @@ export default function PageCategoryNotSelected(props: Props) {
                             </Link>
 
                             <Link href="/learning-material/left-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
+                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
                                     <TbClipboardList
                                         size={150}
-                                        className="text-white hover:text-ve-collab-orange"
+                                        className="text-white group-hover:text-ve-collab-orange"
                                     />
                                 </div>
                             </Link>
@@ -168,10 +168,10 @@ export default function PageCategoryNotSelected(props: Props) {
                                 </div>
                             </Link>
                             <Link href="/learning-material/bottom-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
+                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
                                     <GiPuzzle
                                         size={150}
-                                        className="text-white hover:text-ve-collab-orange"
+                                        className="text-white group-hover:text-ve-collab-orange"
                                     />
                                 </div>
                             </Link>
@@ -210,10 +210,10 @@ export default function PageCategoryNotSelected(props: Props) {
                             </Link>
 
                             <Link href="/learning-material/right-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center">
+                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
                                     <FaLaptop
                                         size={150}
-                                        className="text-white hover:text-ve-collab-orange"
+                                        className="text-white group-hover:text-ve-collab-orange"
                                     />
                                 </div>
                             </Link>
