@@ -3,6 +3,8 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
 import { showDataOrEmptySign } from './planOverview';
+import { AuthenticatedFile } from '../AuthenticatedFile';
+import { RxFile } from 'react-icons/rx';
 
 interface Props {
     plan: IPlan;
@@ -57,17 +59,25 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">
-                        Evaluation der Teilnehmenden:
-                    </span>
+                    <span className="text-base font-semibold pr-5">Datei(en):</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.good_practise_evaluation ? (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
-                                {showDataOrEmptySign(plan.good_practise_evaluation)}
-                            </li>
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
+                            {plan.evaluation_file ? (
+                                <AuthenticatedFile
+                                    url={`/uploads/${plan.evaluation_file.file_id}`}
+                                    filename={plan.evaluation_file.file_name}
+                                >
+                                    <div className="flex justify-center">
+                                        <RxFile size={40} />
+                                    </div>
+                                    <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                        {plan.evaluation_file.file_name}
+                                    </div>
+                                </AuthenticatedFile>
+                            ) : (
+                                '/'
+                            )}
+                        </li>
                     </ul>
                 </section>
             ) : (
