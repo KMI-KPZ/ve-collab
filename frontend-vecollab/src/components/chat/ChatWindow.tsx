@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import LoadingAnimation from "../LoadingAnimation";
 import ChatRoom from "./ChatRoom";
 import Rooms from "@/components/chat/Rooms";
+import { set } from "date-fns";
 
 interface Props {
     socket: Socket;
@@ -37,7 +38,14 @@ export default function ChatWindow(
     const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
 
     useEffect(() => {
-        if (loadingRooms || !rooms?.length) return;
+        if (loadingRooms) return;
+
+        // edge case: having no rooms would cause loading animation to spin indefinitely
+        // because of initial true state
+        if(rooms.length === 0){
+            setProfileSnippetsLoading(false);
+            return;
+        }
 
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
