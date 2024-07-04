@@ -118,7 +118,6 @@ export default function Plans({socket}: Props) {
                         </div>
                     ) : (
                         <PlansOverview
-                            socket={socket}
                             plans={sortedPlans}
                             sortBy={sortBy}
                             filterBy={filterBy}

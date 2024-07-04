@@ -2093,27 +2093,24 @@ class PostResourceTest(BaseResourceTestCase):
 
         # add one more post outside of the time frame (lies in the future just for the test)
         post = {
-                "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now() + timedelta(days=1),
-                "text": "test",
-                "space": None,
-                "pinned": False,
-                "isRepost": False,
-                "wordpress_post_id": None,
-                "tags": ["test"],
-                "files": [],
-                "comments": [],
-                "likers": [],
-            }
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now() + timedelta(days=1),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
         self.db.posts.insert_one(post)
-
 
         post_manager = Posts(self.db)
         # this should include the 5 posts and the default one , but not the
         # future one
-        posts = post_manager.get_full_timeline(
-            datetime.now(), 10
-        )
+        posts = post_manager.get_full_timeline(datetime.now(), 10)
         self.assertEqual(len(posts), 6)
 
     def test_get_space_timeline(self):
@@ -5032,7 +5029,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
-            "is_good_practise": True,
+            "is_good_practise": False,
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
@@ -5107,11 +5104,15 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.major_learning_goals, self.default_plan["major_learning_goals"]
                 )
                 self.assertEqual(
-                    [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+                    [
+                        individual_learning_goal.to_dict()
+                        for individual_learning_goal in plan.individual_learning_goals
+                    ],
                     self.default_plan["individual_learning_goals"],
                 )
                 self.assertEqual(
-                    plan.methodical_approaches, self.default_plan["methodical_approaches"]
+                    plan.methodical_approaches,
+                    self.default_plan["methodical_approaches"],
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5189,11 +5190,15 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.major_learning_goals, self.default_plan["major_learning_goals"]
                 )
                 self.assertEqual(
-                    [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+                    [
+                        individual_learning_goal.to_dict()
+                        for individual_learning_goal in plan.individual_learning_goals
+                    ],
                     self.default_plan["individual_learning_goals"],
                 )
                 self.assertEqual(
-                    plan.methodical_approaches, self.default_plan["methodical_approaches"]
+                    plan.methodical_approaches,
+                    self.default_plan["methodical_approaches"],
                 )
                 self.assertEqual(
                     [target_group.to_dict() for target_group in plan.audience],
@@ -5242,6 +5247,27 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.duration, self.step.duration)
                 self.assertIsNotNone(plan.creation_timestamp)
                 self.assertIsNotNone(plan.last_modified)
+
+    def test_get_plan_with_user_good_practise(self):
+        """
+        expect: sucessfully get the plan from the db, both by passing the _id as str,
+        or as an ObjectId. access is granted, because the plan is marked as a
+        good practise example and therefore public
+        """
+
+        # create new good practise plan, user has no dedicated read access
+        good_practise_plan_id = ObjectId()
+        self.db.plans.insert_one(
+            VEPlan(_id=good_practise_plan_id, is_good_practise=True).to_dict()
+        )
+
+        # test with both input types (str and ObjectId)
+        for id_input in [good_practise_plan_id, str(good_practise_plan_id)]:
+            with self.subTest(id_input=id_input):
+                plan = self.planner.get_plan(id_input, "test_user")
+                self.assertIsInstance(plan, VEPlan)
+                self.assertEqual(plan._id, good_practise_plan_id)
+                self.assertTrue(plan.is_good_practise)
 
     def test_get_plan_error_plan_doesnt_exist(self):
         """
@@ -5327,7 +5353,10 @@ class PlanResourceTest(BaseResourceTestCase):
             plan.major_learning_goals, self.default_plan["major_learning_goals"]
         )
         self.assertEqual(
-            [individual_learning_goal.to_dict() for individual_learning_goal in plan.individual_learning_goals],
+            [
+                individual_learning_goal.to_dict()
+                for individual_learning_goal in plan.individual_learning_goals
+            ],
             self.default_plan["individual_learning_goals"],
         )
         self.assertEqual(
@@ -5505,6 +5534,21 @@ class PlanResourceTest(BaseResourceTestCase):
             self.assertIn(
                 plan._id, [self.default_plan["_id"], additional_plans[0]["_id"]]
             )
+
+    def test_get_good_practise_plans(self):
+        """
+        expect: get all plans that are marked as good practise examples
+        """
+
+        # create one more good practise plan
+        additional_good_practise_plan_id = ObjectId()
+        self.db.plans.insert_one(
+            VEPlan(_id=additional_good_practise_plan_id, is_good_practise=True).to_dict()
+        )
+
+        plans = self.planner.get_good_practise_plans()
+        self.assertEqual(len(plans), 1)
+        self.assertEqual(plans[0]._id, additional_good_practise_plan_id)
 
     def test_insert_plan(self):
         """
@@ -5808,9 +5852,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(
             self.plan_id, "major_learning_goals", ["update1", "update2"]
         )
-        self.planner.update_field(
-            self.plan_id, "individual_learning_goals", []
-        )
+        self.planner.update_field(self.plan_id, "individual_learning_goals", [])
         self.planner.update_field(
             self.plan_id,
             "methodical_approaches",
@@ -5858,7 +5900,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
         self.assertEqual(db_state["individual_learning_goals"], [])
-        self.assertEqual(db_state["methodical_approaches"], ["test", "updated_methodical_approaches"])
+        self.assertEqual(
+            db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
+        )
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
@@ -5950,7 +5994,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
         self.assertEqual(db_state["new_content"], True)
         self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
-        self.assertEqual(db_state["methodical_approaches"], ["test", "updated_methodical_approaches"])
+        self.assertEqual(
+            db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
+        )
         self.assertEqual(
             db_state["formalities"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
@@ -6209,7 +6255,10 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         step = Step(name="test").to_dict()
-        step["tasks"] = [Task(task_formulation="test").to_dict(), Task(task_formulation="test").to_dict()]
+        step["tasks"] = [
+            Task(task_formulation="test").to_dict(),
+            Task(task_formulation="test").to_dict(),
+        ]
 
         self.assertRaises(
             NonUniqueTasksError,
@@ -6343,6 +6392,31 @@ class PlanResourceTest(BaseResourceTestCase):
             "image/jpg",
             "user_with_no_access_rights",
         )
+
+    def test_copy_plan(self):
+        """
+        expect: successfully copy plan
+        """
+
+        # copy the plan
+        copied_id = self.planner.copy_plan(self.plan_id)
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], self.default_plan["author"])
+
+        # copy the plan again with a different author
+        copied_id2 = self.planner.copy_plan(self.plan_id, "another_test_user")
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id2})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id2, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], "another_test_user")
 
     def test_set_read_permission(self):
         """

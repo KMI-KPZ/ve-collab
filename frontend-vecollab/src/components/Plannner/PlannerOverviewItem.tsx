@@ -6,7 +6,7 @@ import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
-import { MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
+import { MdShare, MdDelete, MdEdit, MdPublic, MdOutlineCopyAll } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -14,17 +14,14 @@ import LoadingAnimation from '../LoadingAnimation';
 import { PlanOverview } from '../planSummary/planOverview';
 import ConfirmDialog from '../Confirm';
 import Alert, { AlertState } from '../Alert';
-import { Socket } from 'socket.io-client';
 import { useRouter } from 'next/router';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
-    socket: Socket;
     plan: PlanPreview;
     refetchPlansCallback: () => Promise<void>;
 }
 
-export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback }: Props) {
+export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -67,40 +64,11 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
         });
     };
 
-    const acquireLockAndForward = async (planId: string) => {
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: planId },
-            async (response: any) => {
-                console.log(response);
-                if (response.success && response.status === 200) {
-                    await router.push({
-                        pathname: '/ve-designer/name',
-                        query: { plannerId: planId },
-                    });
-                } else if (!response.success && response.status === 403) {
-                    // exchange username for profile snippet to render full name in error alert
-                    await fetchPOST(
-                        '/profile_snippets',
-                        { usernames: [response.lock_holder] },
-                        session?.accessToken
-                    ).then((data) => {
-                        const foundUserSnippet = data.user_snippets.find(
-                            (snippet: BackendUserSnippet) =>
-                                snippet.username === response.lock_holder
-                        );
-                        const displayName = foundUserSnippet
-                            ? `${foundUserSnippet.first_name} ${foundUserSnippet.last_name}`
-                            : response.lock_holder;
-                        setAlert({
-                            message: `Plan wird gerade von ${displayName} bearbeitet`,
-                            autoclose: 5000,
-                            onClose: () => setAlert({ open: false }),
-                        });
-                    });
-                }
-            }
-        );
+    const forward = async (planId: string) => {
+        await router.push({
+            pathname: '/ve-designer/name',
+            query: { plannerId: planId },
+        });
     };
 
     // ensures that we have the username in the next return ...
@@ -142,7 +110,7 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                 {plan.write_access.includes(username) && (
                     <div
                         className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                        onClick={() => acquireLockAndForward(plan._id)}
+                        onClick={() => forward(plan._id)}
                     >
                         <MdEdit className="inline" /> Bearbeiten
                     </div>
@@ -168,7 +136,7 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
-                acquireLockAndForward(plan._id);
+                forward(plan._id);
             }}
             title="Plan bearbeiten"
         >
@@ -209,6 +177,18 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
         </button>
     );
 
+    const CopyButton = () => (
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                createCopy(plan._id);
+            }}
+        >
+            <MdOutlineCopyAll title="Kopie erstellen" />
+        </button>
+    );
+
     const deletePlan = async (planId: string) => {
         const response = await fetchDELETE(
             `/planner/delete?_id=${planId}`,
@@ -219,6 +199,49 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
             refetchPlansCallback(); // refresh plans
         }
         setAlert({ message: 'Plan gelöscht', autoclose: 2000 });
+    };
+
+    const createCopy = async (planId: string) => {
+        const response = await fetchPOST(
+            `/planner/copy`,
+            { plan_id: planId },
+            session?.accessToken
+        );
+        if (response.success === true) {
+            refetchPlansCallback(); // refresh plans
+            setAlert({
+                message: 'Plan kopiert',
+                autoclose: 2000,
+                onClose: () => setAlert({ open: false }),
+            });
+        } else {
+            switch (response.reason) {
+                case 'insufficient_permission':
+                    setAlert({
+                        message: 'Du hast keine Rechte, diesen Plan zu kopieren',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+                case 'plan_doesnt_exist':
+                    setAlert({
+                        message: 'Dieser Plan existiert nicht',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+                default:
+                    setAlert({
+                        message: 'unerwarteter Fehler beim Kopieren des Plans',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+            }
+        }
     };
 
     return (
@@ -253,13 +276,17 @@ export default function PlannerOverviewItem({ socket, plan, refetchPlansCallback
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         {plan.author == username && (
                             <>
-                                <ShareButton />
                                 <EditButton />
+                                <CopyButton />
+                                <ShareButton />
                                 <DeleteButton />
                             </>
                         )}
                         {plan.author != username && plan.write_access.includes(username) && (
-                            <EditButton />
+                            <>
+                                <EditButton />
+                                <CopyButton />
+                            </>
                         )}
                     </div>
                 </div>

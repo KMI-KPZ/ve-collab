@@ -7936,7 +7936,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
-            "is_good_practise": True,
+            "is_good_practise": False,
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
@@ -8062,6 +8062,83 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
+    def test_get_plan_good_practise(self):
+        """
+        expect: successfully request plan by _id, 
+        access is granted because plan is a good practise example
+        and therefore public
+        """
+
+        # add new good practise plan
+        _id = ObjectId()
+        good_practise_plan = VEPlan(
+            _id=_id,
+            is_good_practise=True,
+        ).to_dict()
+        self.db.plans.insert_one(good_practise_plan)
+
+        response = self.base_checks(
+            "GET", "/planner/get?_id={}".format(str(_id)), True, 200
+        )
+        self.assertIn("plan", response)
+        self.assertIsInstance(response["plan"], dict)
+
+        response_plan = VEPlan.from_dict(response["plan"])
+        good_practise_plan = VEPlan.from_dict(good_practise_plan)
+
+        self.assertEqual(response_plan._id, good_practise_plan._id)
+        self.assertEqual(response_plan.author, good_practise_plan.author)
+        self.assertEqual(response_plan.name, good_practise_plan.name)
+        self.assertEqual(response_plan.partners, good_practise_plan.partners)
+        self.assertEqual(response_plan.institutions, good_practise_plan.institutions)
+        self.assertEqual(response_plan.topics, good_practise_plan.topics)
+        self.assertEqual(response_plan.lectures, good_practise_plan.lectures)
+        self.assertEqual(
+            response_plan.major_learning_goals, good_practise_plan.major_learning_goals
+        )
+        self.assertEqual(
+            response_plan.individual_learning_goals,
+            good_practise_plan.individual_learning_goals,
+        )
+        self.assertEqual(
+            response_plan.methodical_approaches,
+            good_practise_plan.methodical_approaches,
+        )
+        self.assertEqual(response_plan.audience, good_practise_plan.audience)
+        self.assertEqual(response_plan.languages, good_practise_plan.languages)
+        self.assertEqual(response_plan.evaluation, good_practise_plan.evaluation)
+        self.assertEqual(response_plan.timestamp_from, good_practise_plan.timestamp_from)
+        self.assertEqual(response_plan.timestamp_to, good_practise_plan.timestamp_to)
+        self.assertEqual(
+            response_plan.involved_parties, good_practise_plan.involved_parties
+        )
+        self.assertEqual(response_plan.realization, good_practise_plan.realization)
+        self.assertEqual(
+            response_plan.physical_mobility, good_practise_plan.physical_mobility
+        )
+        self.assertEqual(
+            response_plan.physical_mobilities, good_practise_plan.physical_mobilities
+        )
+        self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
+        self.assertEqual(response_plan.new_content, good_practise_plan.new_content)
+        self.assertEqual(response_plan.formalities, good_practise_plan.formalities)
+        self.assertEqual(response_plan.duration, good_practise_plan.duration)
+        self.assertEqual(response_plan.workload, good_practise_plan.workload)
+        self.assertEqual(response_plan.steps, good_practise_plan.steps)
+        self.assertEqual(
+            response_plan.is_good_practise, good_practise_plan.is_good_practise
+        )
+        self.assertEqual(
+            response_plan.underlying_ve_model, good_practise_plan.underlying_ve_model
+        )
+        self.assertEqual(response_plan.reflection, good_practise_plan.reflection)
+        self.assertEqual(
+            response_plan.good_practise_evaluation,
+            good_practise_plan.good_practise_evaluation,
+        )
+        self.assertEqual(response_plan.evaluation_file, good_practise_plan.evaluation_file)
+        self.assertEqual(response_plan.progress, good_practise_plan.progress)
+
     def test_get_plan_error_missing_key(self):
         """
         expect: fail message because request is missing _id query param
@@ -8109,11 +8186,20 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(response["plans"]), 1)
         self.assertEqual(response["plans"][0]["_id"], str(self.plan_id))
 
-    def test_get_public_plans_of_user(self):
+    def test_get_good_practise_plans(self):
         """
-        pass because public viewability is not yet implement
+        expect: successfully request all good practise plans
         """
-        pass
+        
+        # add one more plan that is marked as good practise example
+        _id = ObjectId()
+        self.db.plans.insert_one(VEPlan(_id=_id, is_good_practise=True).to_dict())
+
+        response = self.base_checks("GET", "/planner/get_good_practise", True, 200)
+        self.assertIn("plans", response)
+        self.assertIsInstance(response["plans"], list)
+        self.assertEqual(len(response["plans"]), 1)
+        self.assertEqual(response["plans"][0]["_id"], str(_id))
 
     def test_get_all_plans(self):
         """
@@ -9263,6 +9349,117 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+    def test_post_copy_plan_author(self):
+        """
+        expect: successfully copy a plan because user is the author
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": self.plan_id}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+
+    def test_post_copy_plan_good_practise_example(self):
+        """
+        expect: successfully copy a plan because plan is a good practise example
+        """
+
+        # add another plan as good practise example
+        plan = VEPlan(name="test_plan", is_good_practise=True).to_dict()
+        self.db.plans.insert_one(plan)
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": plan["_id"]}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], plan["_id"])
+        self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+
+    def test_post_copy_plan_write_access(self):
+        """
+        expect: successfully copy a plan because user has write access
+        """
+
+        # add another plan with write access for the user
+        plan = VEPlan(name="test_plan", author=[CURRENT_USER.username],write_access=[CURRENT_ADMIN.username]).to_dict()
+        self.db.plans.insert_one(plan)
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": plan["_id"]}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], plan["_id"])
+        self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+
+    def test_post_copy_plan_error_missing_key(self):
+        """
+        expect: fail message because plan_id is missing
+        """
+
+        response = self.base_checks(
+            "POST", "/planner/copy", False, 400, body=self.json_serialize({})
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id")
+
+    def test_post_copy_plan_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            False,
+            409,
+            body=self.json_serialize({"plan_id": ObjectId()}),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_copy_plan_error_insufficient_permission(self):
+        """
+        expect: fail message because user has access to the plan because
+        a) plan is not a good practise example
+        b) user is not the author of the plan
+        c) user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            False,
+            403,
+            body=self.json_serialize({"plan_id": self.plan_id}),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
     def test_post_grant_read_permission(self):
         """

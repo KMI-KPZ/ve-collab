@@ -180,6 +180,25 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "no_logged_in_user"}
 
+        GET /planner/get_good_practise
+            request all plans that are marked as good practise examples
+
+            query params:
+
+            http body:
+
+            returns:
+                200 OK,
+                (the plans in a list of their dictionary representation
+                (= product of `to_dict()` of `VEPlan` instance))
+                {"success": True,
+                 "plans": [<VEPlan.to_dict()>, ...]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
         GET /planner/get_all
             request all plans, requires admin privileges
 
@@ -219,6 +238,10 @@ class VEPlanHandler(BaseHandler):
 
             elif slug == "get_available":
                 self.get_available_plans_for_user(db)
+                return
+
+            elif slug == "get_good_practise":
+                self.get_good_practise_plans(db)
                 return
 
             elif slug == "get_public_of_user":
@@ -1012,6 +1035,45 @@ class VEPlanHandler(BaseHandler):
                 (No plan with the given id exists)
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
+
+        POST /planner/copy
+            Create a copy of an existing plan and return the new plan's id.
+            Copying is only possible if the user either is the author of the plan,
+            has write access to it or the plan is marked as a good practise example.
+
+            query params:
+                None
+
+            http body:
+                {
+                    "plan_id": "<id_of_plan>"
+                }
+            
+            returns:
+                200 OK
+                (the plan was successfully copied)
+                {"success": True,
+                 "copied_id": "<id_of_new_plan>"}
+
+                400 Bad Request
+                (the http body misses a required key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<missing_key>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (No plan with the given id exists)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
         """
 
         # all endpoints except "put_evaluation_file" require a json body
@@ -1319,6 +1381,19 @@ class VEPlanHandler(BaseHandler):
                     http_body["write"],
                 )
                 return
+            
+            elif slug == "copy":
+                if "plan_id" not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                
+                self.copy_plan(db, http_body["plan_id"])
 
             else:
                 self.set_status(404)
@@ -1511,6 +1586,22 @@ class VEPlanHandler(BaseHandler):
             plan.to_dict()
             for plan in planner.get_plans_for_user(self.current_user.username)
         ]
+        self.serialize_and_write({"success": True, "plans": plans})
+
+    def get_good_practise_plans(self, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Request all plans that are marked as good practise.
+
+        Responses:
+            200 OK --> contains all good practise plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [plan.to_dict() for plan in planner.get_good_practise_plans()]
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_public_plans_of_user(self, db: Database, username: str) -> None:
@@ -2113,6 +2204,43 @@ class VEPlanHandler(BaseHandler):
             return
 
         self.write({"success": True})
+
+    def copy_plan(self, db: Database, plan_id: str | ObjectId) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Copy a plan by specifying its _id. Requires being the author of the plan, or
+        having write access to it, or if the plan is marked as good practise.
+
+        Responses:
+            200 OK        --> successfully copied the plan
+            403 Forbidden --> user is not author of the plan
+            409 Conflict  --> no plan with the given _id was found
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        planner = VEPlanResource(db)
+        
+        try:
+            plan = planner.get_plan(plan_id)
+
+            # permission check: author, write access or good practise
+            if plan.is_good_practise is not True:
+                if plan.author != self.current_user.username:
+                    if self.current_user.username not in plan.write_access:
+                        self.set_status(403)
+                        self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                        return
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+
+        copied_plan_id = planner.copy_plan(plan_id, self.current_user.username)
+        
+        self.serialize_and_write({"success": True, "copied_id": copied_plan_id})
 
     def delete_plan(self, db: Database, _id: str | ObjectId) -> None:
         """
