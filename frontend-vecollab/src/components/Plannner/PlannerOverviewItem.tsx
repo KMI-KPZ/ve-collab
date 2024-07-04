@@ -6,7 +6,7 @@ import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
-import { MdShare, MdDelete, MdEdit, MdPublic } from 'react-icons/md';
+import { MdShare, MdDelete, MdEdit, MdPublic, MdOutlineCopyAll } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -177,6 +177,18 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         </button>
     );
 
+    const CopyButton = () => (
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                createCopy(plan._id);
+            }}
+        >
+            <MdOutlineCopyAll title="Kopie erstellen" />
+        </button>
+    );
+
     const deletePlan = async (planId: string) => {
         const response = await fetchDELETE(
             `/planner/delete?_id=${planId}`,
@@ -187,6 +199,49 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             refetchPlansCallback(); // refresh plans
         }
         setAlert({ message: 'Plan gelöscht', autoclose: 2000 });
+    };
+
+    const createCopy = async (planId: string) => {
+        const response = await fetchPOST(
+            `/planner/copy`,
+            { plan_id: planId },
+            session?.accessToken
+        );
+        if (response.success === true) {
+            refetchPlansCallback(); // refresh plans
+            setAlert({
+                message: 'Plan kopiert',
+                autoclose: 2000,
+                onClose: () => setAlert({ open: false }),
+            });
+        } else {
+            switch (response.reason) {
+                case 'insufficient_permission':
+                    setAlert({
+                        message: 'Du hast keine Rechte, diesen Plan zu kopieren',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+                case 'plan_doesnt_exist':
+                    setAlert({
+                        message: 'Dieser Plan existiert nicht',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+                default:
+                    setAlert({
+                        message: 'unerwarteter Fehler beim Kopieren des Plans',
+                        autoclose: 2000,
+                        type: 'error',
+                        onClose: () => setAlert({ open: false }),
+                    });
+                    return;
+            }
+        }
     };
 
     return (
@@ -221,13 +276,17 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         {plan.author == username && (
                             <>
-                                <ShareButton />
                                 <EditButton />
+                                <CopyButton />
+                                <ShareButton />
                                 <DeleteButton />
                             </>
                         )}
                         {plan.author != username && plan.write_access.includes(username) && (
-                            <EditButton />
+                            <>
+                                <EditButton />
+                                <CopyButton />
+                            </>
                         )}
                     </div>
                 </div>

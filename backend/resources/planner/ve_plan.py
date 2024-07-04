@@ -651,6 +651,31 @@ class VEPlanResource:
         )
 
         return _id
+    
+    def copy_plan(self, plan_id: str | ObjectId, new_author: str = None) -> ObjectId:
+        """
+        Create an identical copy of the plan given by its _id and return the _id of the
+        freshly created plan.
+        The new plan's `name` will have " (Kopie)" appended to it and the `author` will be
+        updated to the `new_author` if specified.
+
+        Returns the _id of the freshly created plan.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        plan = self.get_plan(plan_id)
+
+        # create a copy of the plan
+        plan_copy = copy.deepcopy(plan)
+        plan_copy._id = ObjectId()
+        plan_copy.name += " (Kopie)"
+        plan_copy.author = new_author if new_author is not None else plan.author
+
+        # insert the copy into the db
+        return self.insert_plan(plan_copy)
 
     def set_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """

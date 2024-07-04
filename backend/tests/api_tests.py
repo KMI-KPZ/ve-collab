@@ -9350,6 +9350,117 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
 
+    def test_post_copy_plan_author(self):
+        """
+        expect: successfully copy a plan because user is the author
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": self.plan_id}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+
+    def test_post_copy_plan_good_practise_example(self):
+        """
+        expect: successfully copy a plan because plan is a good practise example
+        """
+
+        # add another plan as good practise example
+        plan = VEPlan(name="test_plan", is_good_practise=True).to_dict()
+        self.db.plans.insert_one(plan)
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": plan["_id"]}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], plan["_id"])
+        self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+
+    def test_post_copy_plan_write_access(self):
+        """
+        expect: successfully copy a plan because user has write access
+        """
+
+        # add another plan with write access for the user
+        plan = VEPlan(name="test_plan", author=[CURRENT_USER.username],write_access=[CURRENT_ADMIN.username]).to_dict()
+        self.db.plans.insert_one(plan)
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            True,
+            200,
+            body=self.json_serialize({"plan_id": plan["_id"]}),
+        )
+
+        # expect the copied plan to be in the db
+        db_state = self.db.plans.find_one({"_id": ObjectId(response["copied_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(db_state["_id"], plan["_id"])
+        self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+
+    def test_post_copy_plan_error_missing_key(self):
+        """
+        expect: fail message because plan_id is missing
+        """
+
+        response = self.base_checks(
+            "POST", "/planner/copy", False, 400, body=self.json_serialize({})
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id")
+
+    def test_post_copy_plan_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            False,
+            409,
+            body=self.json_serialize({"plan_id": ObjectId()}),
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_post_copy_plan_error_insufficient_permission(self):
+        """
+        expect: fail message because user has access to the plan because
+        a) plan is not a good practise example
+        b) user is not the author of the plan
+        c) user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/planner/copy",
+            False,
+            403,
+            body=self.json_serialize({"plan_id": self.plan_id}),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
     def test_post_grant_read_permission(self):
         """
         expect: successfully set read permissions for the user

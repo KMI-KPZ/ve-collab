@@ -6393,6 +6393,31 @@ class PlanResourceTest(BaseResourceTestCase):
             "user_with_no_access_rights",
         )
 
+    def test_copy_plan(self):
+        """
+        expect: successfully copy plan
+        """
+
+        # copy the plan
+        copied_id = self.planner.copy_plan(self.plan_id)
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], self.default_plan["author"])
+
+        # copy the plan again with a different author
+        copied_id2 = self.planner.copy_plan(self.plan_id, "another_test_user")
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id2})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id2, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], "another_test_user")
+
     def test_set_read_permission(self):
         """
         expect: successfully set read permission for the user
