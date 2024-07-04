@@ -17,7 +17,16 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
 )
-from model import Evaluation, IndividualLearningGoal, Institution, Lecture, PhysicalMobility, Step, TargetGroup, VEPlan
+from model import (
+    Evaluation,
+    IndividualLearningGoal,
+    Institution,
+    Lecture,
+    PhysicalMobility,
+    Step,
+    TargetGroup,
+    VEPlan,
+)
 import util
 
 
@@ -86,11 +95,12 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         if requesting_username is not None:
-            if requesting_username not in result["read_access"]:
-                raise NoReadAccessError()
+            if result["is_good_practise"] is False or result["is_good_practise"] is None:
+                if requesting_username not in result["read_access"]:
+                    raise NoReadAccessError()
 
         return VEPlan.from_dict(result)
-    
+
     def get_bulk_plans(self, plan_ids: List[str | ObjectId]) -> List[VEPlan]:
         """
         Request multiple plans by specifying their `_id`s in a list.
@@ -149,6 +159,17 @@ class VEPlanResource:
         # omit the "public readability" criteria since access to foreign
         # plans is not yet implemented
         result = self.db.plans.find({"author": username})
+        return [VEPlan.from_dict(res) for res in result]
+
+    def get_good_practise_plans(self) -> List[VEPlan]:
+        """
+        Request all plans that are marked as good practise.
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        result = self.db.plans.find({"is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
     def insert_plan(self, plan: VEPlan) -> ObjectId:

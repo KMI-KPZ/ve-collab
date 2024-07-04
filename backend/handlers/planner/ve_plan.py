@@ -180,6 +180,25 @@ class VEPlanHandler(BaseHandler):
                 {"success": False,
                  "reason": "no_logged_in_user"}
 
+        GET /planner/get_good_practise
+            request all plans that are marked as good practise examples
+
+            query params:
+
+            http body:
+
+            returns:
+                200 OK,
+                (the plans in a list of their dictionary representation
+                (= product of `to_dict()` of `VEPlan` instance))
+                {"success": True,
+                 "plans": [<VEPlan.to_dict()>, ...]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
         GET /planner/get_all
             request all plans, requires admin privileges
 
@@ -219,6 +238,10 @@ class VEPlanHandler(BaseHandler):
 
             elif slug == "get_available":
                 self.get_available_plans_for_user(db)
+                return
+
+            elif slug == "get_good_practise":
+                self.get_good_practise_plans(db)
                 return
 
             elif slug == "get_public_of_user":
@@ -1511,6 +1534,22 @@ class VEPlanHandler(BaseHandler):
             plan.to_dict()
             for plan in planner.get_plans_for_user(self.current_user.username)
         ]
+        self.serialize_and_write({"success": True, "plans": plans})
+
+    def get_good_practise_plans(self, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Request all plans that are marked as good practise.
+
+        Responses:
+            200 OK --> contains all good practise plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [plan.to_dict() for plan in planner.get_good_practise_plans()]
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_public_plans_of_user(self, db: Database, username: str) -> None:
