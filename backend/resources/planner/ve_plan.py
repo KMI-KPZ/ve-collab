@@ -656,8 +656,9 @@ class VEPlanResource:
         """
         Create an identical copy of the plan given by its _id and return the _id of the
         freshly created plan.
-        The new plan's `name` will have " (Kopie)" appended to it and the `author` will be
-        updated to the `new_author` if specified.
+        The new plan's `name` will have " (Kopie)" appended to it, the `author` will be
+        updated to the `new_author` if specified and the read and write access is reset
+        (author only), i.e. private copy.
 
         Returns the _id of the freshly created plan.
 
@@ -668,11 +669,13 @@ class VEPlanResource:
 
         plan = self.get_plan(plan_id)
 
-        # create a copy of the plan
+        # create a private copy of the plan
         plan_copy = copy.deepcopy(plan)
         plan_copy._id = ObjectId()
         plan_copy.name += " (Kopie)"
         plan_copy.author = new_author if new_author is not None else plan.author
+        plan_copy.read_access = [plan_copy.author]
+        plan_copy.write_access = [plan_copy.author]
 
         # insert the copy into the db
         return self.insert_plan(plan_copy)
