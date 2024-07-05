@@ -155,7 +155,7 @@ export default function PostProcess({ socket }: Props) {
                         <p>
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
                             stellen? Jeder kann die Planung finden, anschauen und als Inspiration
-                            für eigene VE's nutzen.
+                            für eigene VE&apos;s nutzen.
                         </p>
                         <p>
                             (Lizenz:{' '}
