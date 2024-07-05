@@ -1,4 +1,4 @@
-import { useGetAvailablePlans } from '@/lib/backend';
+import { fetchGET, useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -9,7 +9,10 @@ import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/Alert';
-import { Socket } from "socket.io-client";
+import { Socket } from 'socket.io-client';
+import Dialog from '@/components/profile/Dialog';
+import { set } from 'date-fns';
+import { PlansOverviewFilterGoodPractise } from '@/components/Plannner/PlansOverviewFilterGoodPractise';
 
 export interface IfilterBy {
     planKey: keyof PlanPreview;
@@ -19,8 +22,8 @@ export interface IfilterBy {
 }
 
 export interface IsortBy {
-    key: keyof PlanPreview,
-    order: 'ASC'|'DESC'
+    key: keyof PlanPreview;
+    order: 'ASC' | 'DESC';
 }
 
 interface Props {
@@ -29,13 +32,23 @@ interface Props {
 
 // authentication is required on this page
 Plans.auth = true;
-export default function Plans({socket}: Props) {
+export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
+    const [isGoodPractiseDialogOpen, setIsGoodPractiseDialogOpen] = useState(false);
+    const [isGoodPractisePlansLoading, setIsGoodPractisePlansLoading] = useState(false);
+    const [goodPractisePlans, setGoodPractisePlans] = useState<PlanPreview[]>([]);
+
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
+    const [sortedGoodPractisePlans, setSortedGoodPractisePlans] = useState<PlanPreview[]>([]);
 
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
+    const [filterByGoodPractise, setFilterByGoodPractise] = useState<IfilterBy[]>([]);
 
-    const [sortBy, setSortBy] = useState<IsortBy>({key: 'creation_timestamp', order: 'ASC'})
+    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'creation_timestamp', order: 'ASC' });
+    const [sortByGoodPractise, setSortByGoodPractise] = useState<IsortBy>({
+        key: 'creation_timestamp',
+        order: 'ASC',
+    });
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
@@ -62,16 +75,48 @@ export default function Plans({socket}: Props) {
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
 
+    useEffect(() => {
+        if (isLoading || !goodPractisePlans.length) return;
+
+        let sortedGoodPractisePlans = goodPractisePlans.sort((a, b) => {
+            let av = a[sortByGoodPractise.key]?.toString() || '';
+            let bv = b[sortByGoodPractise.key]?.toString() || '';
+
+            return sortByGoodPractise.order == 'DESC' ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+
+        if (filterByGoodPractise && filterByGoodPractise.length) {
+            filterByGoodPractise.forEach((filter) => {
+                sortedGoodPractisePlans = sortedGoodPractisePlans.filter((p) => {
+                    return p[filter.planKey] && filter.compare(p[filter.planKey]);
+                });
+            });
+        }
+
+        console.log({ sortedGoodPractisePlans });
+
+        setSortedGoodPractisePlans([...sortedGoodPractisePlans]);
+    }, [goodPractisePlans, isLoading, sortByGoodPractise, filterByGoodPractise]);
+
     const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy(prev => {
+        setSortBy((prev) => {
             return {
                 key: key,
-                order: prev.order == 'ASC' ? 'DESC' : 'ASC'
-            }
-        })
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
+            };
+        });
     };
 
-    const handleFilterBy = ({planKey, compare, id}: IfilterBy) => {
+    const handleSortByGoodPractise = (key: keyof PlanPreview) => {
+        setSortByGoodPractise((prev) => {
+            return {
+                key: key,
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
+            };
+        });
+    };
+
+    const handleFilterBy = ({ planKey, compare, id }: IfilterBy) => {
         if (filterBy.find((f) => f.planKey == planKey)) {
             // update existing filter
             setFilterBy((prev) =>
@@ -80,6 +125,32 @@ export default function Plans({socket}: Props) {
         } else {
             setFilterBy((prev) => [...prev, { id, planKey, compare }]);
         }
+    };
+
+    const handleFilterByGoodPractise = ({ planKey, compare, id }: IfilterBy) => {
+        if (filterByGoodPractise.find((f) => f.planKey == planKey)) {
+            // update existing filter
+            setFilterByGoodPractise((prev) =>
+                prev.map((f) => (f.planKey == planKey ? { id, planKey, compare } : f))
+            );
+        } else {
+            setFilterByGoodPractise((prev) => [...prev, { id, planKey, compare }]);
+        }
+    };
+
+    const handleOpenGoodPractiseDialog = () => {
+        setIsGoodPractiseDialogOpen(true);
+        setIsGoodPractisePlansLoading(true);
+
+        // fetch good practise plans
+        fetchGET('/planner/get_good_practise', session!.accessToken).then((response) => {
+            if (response.success === true) {
+                setGoodPractisePlans(response.plans);
+            } else {
+                // TODO alert
+            }
+            setIsGoodPractisePlansLoading(false);
+        });
     };
 
     return (
@@ -98,19 +169,28 @@ export default function Plans({socket}: Props) {
                             <div>
                                 Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
                             </div>
-                            <Link href={'/matching'} className=' inline-block py-2 px-5 text-ve-collab-blue font-bold'>
-                                <MdKeyboardDoubleArrowRight className='inline' /> zum Matching
+                            <Link
+                                href={'/matching'}
+                                className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
+                            >
+                                <MdKeyboardDoubleArrowRight className="inline" /> zum Matching
                             </Link>
                         </div>
                     </div>
 
                     <PlansOverviewFilter
-                    socket={socket}
+                        socket={socket}
                         filterBy={filterBy}
                         filterByCallback={handleFilterBy}
+                        goodPractiseDialogOpenCallback={handleOpenGoodPractiseDialog}
                     />
 
-                    {typeof error !== 'undefined' && <Alert type='error' message={'Error loading plans. See console for details.'} />}
+                    {typeof error !== 'undefined' && (
+                        <Alert
+                            type="error"
+                            message={'Error loading plans. See console for details.'}
+                        />
+                    )}
 
                     {isLoading ? (
                         <div className="m-12">
@@ -123,10 +203,39 @@ export default function Plans({socket}: Props) {
                             filterBy={filterBy}
                             sortByCallback={handleSortBy}
                             refetchPlansCallback={mutate}
-                    />
+                        />
                     )}
                 </div>
             </div>
+            {isGoodPractiseDialogOpen && (
+                <Dialog
+                    isOpen={isGoodPractiseDialogOpen}
+                    title={'Good Practise Beispiele'}
+                    onClose={() => setIsGoodPractiseDialogOpen(false)}
+                >
+                    <div className="w-[80rem]">
+                        {isGoodPractisePlansLoading ? (
+                            <div className="m-12">
+                                <LoadingAnimation size="small" /> lade Pläne ...
+                            </div>
+                        ) : (
+                            <>
+                                <PlansOverviewFilterGoodPractise
+                                    filterBy={filterByGoodPractise}
+                                    filterByCallback={handleFilterByGoodPractise}
+                                />
+                                <PlansOverview
+                                    plans={sortedGoodPractisePlans}
+                                    sortBy={sortByGoodPractise}
+                                    filterBy={filterByGoodPractise}
+                                    sortByCallback={handleSortByGoodPractise}
+                                    refetchPlansCallback={() => new Promise(() => {})}
+                                />
+                            </>
+                        )}
+                    </div>
+                </Dialog>
+            )}
         </>
     );
 }
