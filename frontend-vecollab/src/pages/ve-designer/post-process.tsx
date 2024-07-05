@@ -150,11 +150,12 @@ export default function PostProcess({ socket }: Props) {
             submitCallback={onSubmit}
         >
             <div className="p-6 w-[60rem] divide-y">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 mr-3">
                     <div>
                         <p>
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
-                            stellen?
+                            stellen? Jeder kann die Planung finden, anschauen und als Inspiration
+                            für eigene VE's nutzen.
                         </p>
                         <p>
                             (Lizenz:{' '}
