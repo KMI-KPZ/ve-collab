@@ -1,21 +1,14 @@
-import { MdAdd } from 'react-icons/md';
-import ButtonNewPlan from './ButtonNewPlan';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
-import { Socket } from 'socket.io-client';
 
 interface Props {
-    socket: Socket;
     filterBy: IfilterBy[];
     filterByCallback: ({ planKey, compare, id }: IfilterBy) => void;
-    goodPractiseDialogOpenCallback: () => void;
 }
 
-export function PlansOverviewFilter({
+export function PlansOverviewFilterGoodPractise({
     filterBy,
     filterByCallback,
-    socket,
-    goodPractiseDialogOpenCallback,
 }: Props) {
     const { data: session } = useSession();
 
@@ -60,25 +53,6 @@ export function PlansOverviewFilter({
                         Eigene
                     </button>
                 </div>
-                <div className="px-2">
-                    <button
-                        className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'otherAuthor')
-                                ? 'text-ve-collab-blue underline'
-                                : ''
-                        }`}
-                        onClick={() =>
-                            filterByCallback({
-                                planKey: 'author',
-                                compare: (planAuthor) =>
-                                    (planAuthor as string) != session?.user.preferred_username,
-                                id: 'otherAuthor',
-                            })
-                        }
-                    >
-                        Mit mir geteilte
-                    </button>
-                </div>
             </div>
 
             <div>
@@ -101,25 +75,6 @@ export function PlansOverviewFilter({
                             id: 'iamAthor',
                         });
                     }}
-                />
-            </div>
-
-            <div
-                className="mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                onClick={() => goodPractiseDialogOpenCallback()}
-            >
-                Good Practice Beispiele
-            </div>
-
-            <div className="ml-auto">
-                <ButtonNewPlan
-                    socket={socket}
-                    className="ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white"
-                    label={
-                        <>
-                            <MdAdd className="inline" /> Neuen Plan starten
-                        </>
-                    }
                 />
             </div>
         </div>
