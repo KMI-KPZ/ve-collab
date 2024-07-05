@@ -279,7 +279,7 @@ export default function PostProcess({ socket }: Props) {
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
                         onClick={async (e) => {
                             e.preventDefault();
-                            await onSubmit({} as FormValues);
+                            await onSubmit(methods.getValues() as FormValues);
                             socket.emit(
                                 'drop_plan_lock',
                                 { plan_id: router.query.plannerId },
