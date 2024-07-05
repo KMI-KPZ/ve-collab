@@ -6407,6 +6407,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertNotEqual(copied_id, self.plan_id)
         self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
         self.assertEqual(db_state["author"], self.default_plan["author"])
+        self.assertEqual(db_state["read_access"], [self.default_plan["author"]])
+        self.assertEqual(db_state["write_access"], [self.default_plan["author"]])
 
         # copy the plan again with a different author
         copied_id2 = self.planner.copy_plan(self.plan_id, "another_test_user")
@@ -6417,6 +6419,8 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertNotEqual(copied_id2, self.plan_id)
         self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
         self.assertEqual(db_state["author"], "another_test_user")
+        self.assertEqual(db_state["read_access"], ["another_test_user"])
+        self.assertEqual(db_state["write_access"], ["another_test_user"])
 
     def test_set_read_permission(self):
         """

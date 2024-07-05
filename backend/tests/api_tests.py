@@ -9369,6 +9369,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertNotEqual(db_state["_id"], self.plan_id)
         self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["read_access"], [CURRENT_ADMIN.username])
+        self.assertEqual(db_state["write_access"], [CURRENT_ADMIN.username])
 
     def test_post_copy_plan_good_practise_example(self):
         """
@@ -9392,6 +9394,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertNotEqual(db_state["_id"], plan["_id"])
         self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["read_access"], [CURRENT_ADMIN.username])
+        self.assertEqual(db_state["write_access"], [CURRENT_ADMIN.username])
 
     def test_post_copy_plan_write_access(self):
         """
@@ -9415,6 +9420,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertNotEqual(db_state["_id"], plan["_id"])
         self.assertEqual(db_state["name"], plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["read_access"], [CURRENT_ADMIN.username])
+        self.assertEqual(db_state["write_access"], [CURRENT_ADMIN.username])
 
     def test_post_copy_plan_error_missing_key(self):
         """
