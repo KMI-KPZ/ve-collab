@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { ChangeEvent, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper from '@/components/VE-designer/Wrapper';
+import Wrapper2 from '@/components/VE-designer/Wrapper2';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
@@ -24,7 +24,10 @@ interface FormValues {
     veModel: string;
     reflection: string;
     evaluation: string;
-    evaluationFile: EvaluationFile;
+    evaluationFile: FileWithOptionalId;
+}
+interface FileWithOptionalId extends File {
+    file_id?: string;
 }
 
 interface Props {
@@ -33,9 +36,8 @@ interface Props {
 
 PostProcess.auth = true;
 export default function PostProcess({ socket }: Props) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
-    const [uploadFile, setUploadFile] = useState<Blob>();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -47,27 +49,15 @@ export default function PostProcess({ socket }: Props) {
         },
     });
 
-    const uploadToClient = (event: ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files[0]) {
-            setUploadFile(event.target.files[0]);
-        }
-    };
-
-    const uploadToBackend = async () => {
-        // allow max 5 MB
-        if (uploadFile!.size > 5242880) {
-            alert('max. 5 MB erlaubt');
-            return;
-        }
-
+    const uploadToBackend = async (file: File) => {
         const body = new FormData();
-        body.append('file', uploadFile!);
+        body.append('file', file);
 
         const headers: { Authorization?: string } = {};
-        headers['Authorization'] = 'Bearer ' + session!.accessToken;
+        headers['Authorization'] = 'Bearer ' + session?.accessToken;
 
         // upload as form data instead of json
-        const response = await fetch(
+        await fetch(
             process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
                 `/planner/put_evaluation_file?plan_id=${router.query.plannerId}`,
             {
@@ -76,11 +66,6 @@ export default function PostProcess({ socket }: Props) {
                 body,
             }
         );
-
-        const responseJson = await response.json();
-        console.log(responseJson);
-
-        setUploadFile(undefined);
     };
 
     const setPlanerData = useCallback(
@@ -91,10 +76,18 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
-            methods.setValue('evaluationFile', plan.evaluation_file as EvaluationFile);
+            const backendFile: EvaluationFile = plan.evaluation_file;
+            if (backendFile !== null) {
+                const randomFile: File = new File([''], backendFile.file_name);
+                const fileWithId: FileWithOptionalId = Object.assign(randomFile, {
+                    id: backendFile.file_id,
+                });
+                methods.setValue('evaluationFile', fileWithId);
+            }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            console.log('backendFile', plan.evaluation_file);
         },
         [methods]
     );
@@ -128,14 +121,55 @@ export default function PostProcess({ socket }: Props) {
             },
             session?.accessToken
         );
-
-        if (uploadFile) {
-            await uploadToBackend();
+        if (data.evaluationFile) {
+            await uploadToBackend(data.evaluationFile);
         }
     };
 
+    function renderFileInput() {
+        return (
+            <>
+                <Controller
+                    name="evaluationFile"
+                    control={methods.control}
+                    rules={{
+                        // = 5MB allowed
+                        validate: (value) => value.size < 5242880 || 'max. 5 MB erlaubt',
+                    }}
+                    render={({ field: { ref, name, onBlur, onChange } }) => (
+                        <>
+                            <label
+                                className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                htmlFor={name}
+                            >
+                                Wähle eine Datei
+                            </label>
+                            <input
+                                id={name}
+                                type="file"
+                                ref={ref}
+                                name={name}
+                                onBlur={onBlur}
+                                onChange={(e) => {
+                                    onChange(e.target?.files?.item(0));
+                                }}
+                                className="hidden"
+                            />
+                        </>
+                    )}
+                />
+                {methods.formState.errors.evaluationFile &&
+                    typeof methods.formState.errors.evaluationFile.message === 'string' && (
+                        <p className="text-red-500">
+                            {methods.formState.errors.evaluationFile.message}
+                        </p>
+                    )}
+            </>
+        );
+    }
+
     return (
-        <Wrapper
+        <Wrapper2
             socket={socket}
             title="Nachbearbeitung"
             subtitle="Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt."
@@ -150,12 +184,15 @@ export default function PostProcess({ socket }: Props) {
             submitCallback={onSubmit}
         >
             <div className="p-6 w-[60rem] divide-y">
-                <div className="flex items-center justify-between mb-3 mr-3">
+                <div className="flex flex-col items-center justify-between mb-3 mr-3">
                     <div>
-                        <p>
+                        <p className="font-medium">
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
-                            stellen? Jeder kann die Planung finden, anschauen und als Inspiration
-                            für eigene VE&apos;s nutzen.
+                            stellen?
+                        </p>
+                        <p>
+                            Jeder kann die Planung finden, anschauen und als Inspiration für eigene
+                            VE&apos;s nutzen.
                         </p>
                         <p>
                             (Lizenz:{' '}
@@ -172,7 +209,7 @@ export default function PostProcess({ socket }: Props) {
                         control={methods.control}
                         name={'share'}
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <div className="flex w-40">
+                            <div className="flex w-40 mb-4">
                                 <label className="px-2 py-2">Ja</label>
                                 <input
                                     type="radio"
@@ -195,44 +232,58 @@ export default function PostProcess({ socket }: Props) {
                 </div>
 
                 {methods.watch('share') == true && (
-                    <ol className="mt-3 pt-6 px-6 list-decimal">
-                        <li className="mb-4">
-                            <p>
-                                Reflexion: Was hat deiner Meinung nach gut funktioniert? Was waren
+                    <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
+                        <li className="mb-4 mt-2">
+                            <p className="font-bold">Reflexion:</p>
+                            <p className="mb-1">
+                                Was hat deiner Meinung nach gut funktioniert? Was waren
                                 Herausforderungen und wie bist du damit umgegangen? Was würdest du
-                                das nächste Mal anders machen? Lasse hier deine eigenen Erfahrungen
-                                und das Feedback deiner Lernenden einfließen. Falls vorhanden,
-                                kannst du eine Datei mit Evaluationsergebnissen hochladen.
+                                das nächste Mal anders machen?
+                            </p>
+                            <p>
+                                Lasse hier deine eigenen Erfahrungen und das Feedback deiner
+                                Lernenden einfließen. Falls vorhanden, kannst du eine Datei mit
+                                Evaluationsergebnissen hochladen.
                             </p>
                             <textarea
-                                className="border border-gray-400 rounded-lg w-full p-2 mt-2"
+                                className="border border-gray-400 rounded-lg w-full p-4 mt-4 mb-6"
                                 rows={5}
                                 placeholder="Beschreibe deine Reflexion"
                                 {...methods.register('reflection')}
                             />
                             {methods.watch('evaluationFile') ? (
                                 <div
-                                    className="max-w-[150px]"
-                                    title={methods.getValues('evaluationFile').file_name}
+                                    className="max-w-[150px] mb-4"
+                                    title={methods.getValues('evaluationFile').name}
                                 >
                                     <AuthenticatedFile
                                         url={`/uploads/${
                                             methods.getValues('evaluationFile').file_id
                                         }`}
-                                        filename={methods.getValues('evaluationFile').file_name}
+                                        filename={methods.getValues('evaluationFile').name}
                                     >
                                         <div className="flex justify-center">
                                             <RxFile size={40} />
                                         </div>
                                         <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
-                                            {methods.getValues('evaluationFile').file_name}
+                                            {methods.getValues('evaluationFile').name}
                                         </div>
                                     </AuthenticatedFile>
                                 </div>
                             ) : (
-                                <p className="px-1 my-1 text-gray-600">keine Datei vorhanden</p>
+                                <p className="my-2 text-gray-600">Keine Datei vorhanden</p>
                             )}
-                            <input type="file" className="my-2" onChange={uploadToClient} />
+                            {renderFileInput()}
+                            {/*<button
+                                // doesn't work yet
+                                className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                onClick={() => {
+                                    methods.resetField('evaluationFile');
+                                    methods.reset({ ...methods.getValues(), evaluationFile: null });
+                                }}
+                            >
+                                Entfernen
+                            </button>*/}
                         </li>
                         <li className="mb-4">
                             <p>
@@ -263,7 +314,7 @@ export default function PostProcess({ socket }: Props) {
                                 VE-Collab)
                             </p>
                             <textarea
-                                className="border border-gray-400 rounded-lg w-full p-2 mt-2"
+                                className="border border-gray-400 rounded-lg w-full p-3 mt-2"
                                 rows={5}
                                 placeholder="Beschreibe das zugrundeliegende VE-Modell"
                                 {...methods.register('veModel')}
@@ -285,7 +336,6 @@ export default function PostProcess({ socket }: Props) {
                                 'drop_plan_lock',
                                 { plan_id: router.query.plannerId },
                                 (response: any) => {
-                                    console.log(response);
                                     // TODO error handling
                                     router.push('/plans');
                                 }
@@ -296,6 +346,6 @@ export default function PostProcess({ socket }: Props) {
                     </button>
                 </div>
             </div>
-        </Wrapper>
+        </Wrapper2>
     );
 }
