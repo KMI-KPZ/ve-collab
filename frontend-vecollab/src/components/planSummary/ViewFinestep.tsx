@@ -49,7 +49,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                 <section>
                     <hr className="h-px my-5 bg-gray-400 border-0" />
                     <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
+                        <div className="w-1/6 flex items-start">
                             <p className="font-semibold px-2 py-2">Zeitumfang:</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
@@ -57,7 +57,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
+                        <div className="w-1/6 flex items-start">
                             <p className="font-semibold px-2 py-2">Lernziel(e):</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
@@ -65,7 +65,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
+                        <div className="w-1/6 flex items-start">
                             <p className="font-semibold px-2 py-2">Lernaktivität(en):</p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
@@ -73,8 +73,10 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                         </div>
                     </div>
                     <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Lernaktivitäten detailert ausgearbeitet:</p>
+                        <div className="w-1/6 flex items-start">
+                            <p className="font-semibold px-2 py-2">
+                                Lernaktivitäten detailert ausgearbeitet:
+                            </p>
                         </div>
                         <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
                             {showDataOrEmptySign(fineStep.has_tasks ? 'Ja' : 'Nein')}
@@ -82,48 +84,36 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                     </div>
                     {fineStep.has_tasks && (
                         <div className="mt-4 flex">
-                            <div className="font-semibold w-1/5 flex items-center px-2 py-2px-2 py-2">
+                            <div className="font-semibold w-1/6 flex items-start px-2 py-2">
                                 Aufgabenstellungen:
                             </div>
-                            {fineStep.tasks.map((task, taskIndex) => (
-                                <div
-                                    className="flex flex-col space-y-1 w-1/2 p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl"
-                                    key={taskIndex}
-                                >
-                                    <div className="flex space-x-8">
-                                        <span className="w-1/4 font-medium">Aufgabenstellung</span>
-                                        <span>{showDataOrEmptySign(task.task_formulation)}</span>
+                            <div className="grid grid-cols-2 col-span-3">
+                                {fineStep.tasks.map((task, taskIndex) => (
+                                    <div
+                                        className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                        key={taskIndex}
+                                    >
+                                        <ul className="space-y-1 mr-2">
+                                            <li className="font-medium">Aufgabenstellung</li>
+                                            <li className="font-medium">Arbeitsform</li>
+                                            <li className="font-medium">Notizen</li>
+                                            <li className="font-medium">Tools</li>
+                                        </ul>
+                                        <ul className="space-y-1">
+                                            <li>{showDataOrEmptySign(task.task_formulation)} </li>
+                                            <li>{showDataOrEmptySign(task.work_mode)}</li>
+                                            <li>{showDataOrEmptySign(task.notes)}</li>
+                                            <li>
+                                                {showDataOrEmptySign(
+                                                    task.tools
+                                                        .filter((element) => element !== '')
+                                                        .join(', ')
+                                                )}
+                                            </li>
+                                        </ul>
                                     </div>
-                                    <div className="flex space-x-8">
-                                        <span className="w-1/4 font-medium">Arbeitsform</span>
-                                        <span>{showDataOrEmptySign(task.work_mode)}</span>
-                                    </div>
-                                    <div className="flex space-x-8">
-                                        <span className="w-1/4 font-medium">Notizen</span>
-                                        <span>{showDataOrEmptySign(task.notes)}</span>
-                                    </div>
-                                    <div className="flex space-x-8">
-                                        <span className="w-1/4 font-medium">Tools</span>
-                                        <span>
-                                            {showDataOrEmptySign(
-                                                task.tools
-                                                    .filter((element) => element !== '')
-                                                    .join(', ')
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex space-x-8">
-                                        <span className="w-1/4 font-medium">Materialien</span>
-                                        <span>
-                                            {showDataOrEmptySign(
-                                                task.materials
-                                                    .filter((element) => element !== '')
-                                                    .join(', ')
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
                 </section>
