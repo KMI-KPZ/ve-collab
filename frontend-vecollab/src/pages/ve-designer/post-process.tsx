@@ -275,7 +275,7 @@ export default function PostProcess({ socket }: Props) {
                             )}
                             {renderFileInput()}
                             {/*<button
-                                // doesn't work yet
+                                // TODO remove button for file, but doesn't work yet
                                 className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
                                 onClick={() => {
                                     methods.resetField('evaluationFile');
