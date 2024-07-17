@@ -240,7 +240,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                     {plan.physical_mobility && plan.physical_mobilities.length > 0 && (
                         <>
                             <span className="font-semibold pr-5">geplante Treffen:</span>
-                            <div className="grid grid-cols-2 space-y-2 col-span-3">
+                            <div className="grid grid-cols-2 col-span-3">
                                 {plan.physical_mobilities.length !== 0 ? (
                                     plan.physical_mobilities.map((mobility, index) => (
                                         <div
