@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper2 from '@/components/VE-designer/Wrapper2';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
@@ -169,7 +169,7 @@ export default function PostProcess({ socket }: Props) {
     }
 
     return (
-        <Wrapper2
+        <Wrapper
             socket={socket}
             title="Nachbearbeitung"
             subtitle="Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt."
@@ -346,6 +346,6 @@ export default function PostProcess({ socket }: Props) {
                     </button>
                 </div>
             </div>
-        </Wrapper2>
+        </Wrapper>
     );
 }
