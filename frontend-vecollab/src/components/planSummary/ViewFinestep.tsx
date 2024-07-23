@@ -91,25 +91,39 @@ export default function ViewFinestep({ fineStep, openAllBoxes }: Props): JSX.Ele
                             <div className="grid grid-cols-2 col-span-3">
                                 {fineStep.tasks.map((task, taskIndex) => (
                                     <div
-                                        className="grid grid-cols-2 p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
+                                        className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
                                         key={taskIndex}
                                     >
                                         <ul className="space-y-1 mr-2">
-                                            <li className="font-medium">Aufgabenstellung</li>
-                                            <li className="font-medium">Arbeitsform</li>
-                                            <li className="font-medium">Notizen</li>
-                                            <li className="font-medium">Tools</li>
-                                        </ul>
-                                        <ul className="space-y-1">
-                                            <li>{showDataOrEmptySign(task.task_formulation)} </li>
-                                            <li>{showDataOrEmptySign(task.work_mode)}</li>
-                                            <li>{showDataOrEmptySign(task.notes)}</li>
-                                            <li>
-                                                {showDataOrEmptySign(
-                                                    task.tools
-                                                        .filter((element) => element !== '')
-                                                        .join(', ')
-                                                )}
+                                            <li className="flex">
+                                                <div className="w-1/2 font-medium">
+                                                    Aufgabenstellung
+                                                </div>
+                                                <div className="w-1/2">
+                                                    {showDataOrEmptySign(task.task_formulation)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 font-medium">Arbeitsform</div>
+                                                <div className="w-1/2">
+                                                    {showDataOrEmptySign(task.work_mode)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 font-medium">Notizen</div>
+                                                <div className="w-1/2">
+                                                    {showDataOrEmptySign(task.notes)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 font-medium">Tools</div>
+                                                <div className="w-1/2">
+                                                    {showDataOrEmptySign(
+                                                        task.tools
+                                                            .filter((element) => element !== '')
+                                                            .join(', ')
+                                                    )}
+                                                </div>
                                             </li>
                                         </ul>
                                     </div>
