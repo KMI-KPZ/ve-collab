@@ -55,7 +55,7 @@ export default function PlanSummaryPDF() {
                         </div>
                     </div>
                     <div className="flex w-full">
-                        <PlanOverview plan={plan} />
+                        <PlanOverview plan={plan} openAllBoxes={true}/>
                     </div>
                 </>)
             }

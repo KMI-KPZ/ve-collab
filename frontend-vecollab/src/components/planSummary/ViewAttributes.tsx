@@ -8,9 +8,10 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 interface Props {
     plan: IPlan;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
+    openAllBoxes?: boolean;
 }
-export default function ViewAttributes({ plan, partnerProfileSnippets }: Props): JSX.Element {
-    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
+export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBoxes }: Props): JSX.Element {
+    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(openAllBoxes ? true : false);
     return (
         <>
             <div

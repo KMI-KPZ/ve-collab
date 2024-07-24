@@ -19,7 +19,7 @@ const saveAsPdf = async (url: string, cookies: any) => {
     return result;
 };
 
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function handler(req: NextApiRequest, res: NextApiResponse){
     const { planId } = req.query; // pass the plan id as query parameter
     const url = new URL(req.url!, `http://${req.headers.host}`);
     const gotoURL = url.protocol + '//' + url.host + '/plan/pdf/' + planId;

@@ -6,9 +6,10 @@ import { showDataOrEmptySign } from './planOverview';
 
 interface Props {
     fineStep: IFineStep;
+    openAllBoxes?: boolean;
 }
 
-export default function ViewFinestep({ fineStep }: Props): JSX.Element {
+export default function ViewFinestep({ fineStep, openAllBoxes }: Props): JSX.Element {
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
             year: 'numeric',
@@ -17,7 +18,7 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
         });
     };
 
-    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
+    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(openAllBoxes ? true : false);
 
     return (
         <div className="p-4 my-8 bg-white border-2 border-gray-400 rounded-3xl">

@@ -8,9 +8,10 @@ import { RxFile } from 'react-icons/rx';
 
 interface Props {
     plan: IPlan;
+    openAllBoxes?: boolean;
 }
-export default function ViewAttributes({ plan }: Props): JSX.Element {
-    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(false);
+export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Element {
+    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(openAllBoxes ? true : false);
 
     return (
         <>
