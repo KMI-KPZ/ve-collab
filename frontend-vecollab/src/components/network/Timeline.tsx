@@ -12,6 +12,7 @@ import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 import { useRouter } from "next/router";
 import { Socket } from "socket.io-client";
+import GeneralError from "../Layout/GeneralError";
 
 interface Props {
     /** User is global admin or admin of current group */
@@ -157,7 +158,7 @@ export default function Timeline({
 
     if (error) {
         console.error(error);
-        return (<>Error loading timeline. See console for details</>)
+        return <GeneralError />
     }
 
     return (

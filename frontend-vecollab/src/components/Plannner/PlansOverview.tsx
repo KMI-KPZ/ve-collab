@@ -65,14 +65,12 @@ export function PlansOverview({
 
                 <div>
                     {plans.length == 0 ? (
-                            <div className="m-12">
-
-                                {filterBy.find((f) => f.id == 'otherAuthor')
-                                    ? "Es wurde noch kein Plan mit Dir geteilt"
-                                    : "Du hast noch keinen Plan erstellt"
-                                }
-                            </div>
-
+                        <div className="m-12">
+                            {filterBy.find((f) => f.id == 'otherAuthor')
+                                ? `Es wurde noch kein ${(filterBy.find((f) => f.id == 'isGoodPractice')) ? '"Good Practice"' : ''} Plan mit Dir geteilt`
+                                : `Du hast noch keinen ${filterBy.find((f) => f.id == 'isGoodPractice') ? '"Good Practice"' : ''} Plan erstellt`
+                            }
+                        </div>
                     ) : (
                         plans.map((plan, index) => (
                             <div

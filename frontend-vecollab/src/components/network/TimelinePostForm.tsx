@@ -485,13 +485,13 @@ export default function TimelinePostForm(
                 )}
 
                 <div className={`flex items-center ${(!postToEdit && !postToRepost && !formHadFocus) ? 'hidden' : ''}`}>
-                    <div className="ml-auto">
-                        {postToEdit && (<button className={`mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg`} onClick={onCancel} type="button">
+                    <div className="ml-auto text-right">
+                        {postToEdit && (<button className={`py-2 px-5 border border-ve-collab-orange rounded-lg`} onClick={onCancel} type="button">
                             Abbrechen
                         </button>)}
                         {(!postToEdit && !postToRepost) && (
                             <>
-                                <div title="Datei oder Plan hinzufügen" className="mx-4 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
+                                <div title="Datei oder Plan hinzufügen" className="mt-2 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
                                     <Dropdown
                                             options={[
                                                 {value: 'local', label: 'lokale Datei' },
@@ -504,7 +504,7 @@ export default function TimelinePostForm(
                                 <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
                             </>
                         )}
-                        <button type="submit" className={`relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''}`}>
+                        <button type="submit" className={`relative py-2 px-5 ml-2 mt-2 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''}`}>
                             {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
                         </button>
                     </div>
