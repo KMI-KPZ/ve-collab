@@ -2,7 +2,7 @@ import AuthenticatedImage from "@/components/AuthenticatedImage";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import TimelinePostText from "@/components/network/TimelinePostText";
 import Timestamp from "@/components/Timestamp";
-import { getSearchResults } from "@/lib/backend";
+import { useGetSearchResults } from "@/lib/backend";
 import { useRouter } from "next/router";
 import { FormEvent, useState } from "react";
 import { MdSearch } from "react-icons/md";
@@ -17,7 +17,7 @@ export default function SearchResult() {
         isLoading,
         error,
         mutate,
-    } = getSearchResults(
+    } = useGetSearchResults(
         router.query.search as string,
         router.query.filter ? (router.query.filter as string).split(',') : undefined
     )
@@ -137,10 +137,10 @@ export default function SearchResult() {
                         {/* TODO pagination!?1 */}
                         <div className="m-2">
                             {data.posts.map((post, i) => {
-                                if (i > postsPagination) return (<></>);
+                                if (i > postsPagination) return;
                                 if (i == postsPagination) {
                                     return (
-                                        <div onClick={e => setPostsPagination(x => x+10)}>Load More</div>
+                                        <div key={i} onClick={e => setPostsPagination(x => x+10)}>Load More</div>
                                     )
                                 }
                                 return (

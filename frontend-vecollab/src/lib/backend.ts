@@ -516,6 +516,29 @@ export function useGetPost(
     };
 }
 
+export function useGetSearchResults(search: string, filterBy?: string[]): {
+    data: {posts: BackendPost[], spaces: BackendGroup[], users: BackendProfile[]};
+    isLoading: boolean;
+    error: APIError;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const defaultFilter = ['posts', 'users', 'spaces']
+    filterBy = (filterBy && filterBy.every(f => defaultFilter.includes(f))) ? filterBy : defaultFilter
+    const filter = filterBy.reduce((acc,cur) => `${acc}${cur}=true&`, '')
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/search?query=${search}&${filter}`, session?.accessToken],
+        ([url, token]) => GETfetcher(url, token)
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export async function fetchGET(relativeUrl: string, accessToken?: string) {
     const headers: { Authorization?: string } = {};
 
@@ -660,27 +683,4 @@ export async function getMaterialNodePath(
     ) as ITopLevelNode;
 
     return { bubble: bubbleNode, category: categoryNode, material: materialNode };
-}
-
-export function getSearchResults(search: string, filterBy?: string[]): {
-    data: {posts: BackendPost[], spaces: BackendGroup[], users: BackendProfile[]};
-    isLoading: boolean;
-    error: APIError;
-    mutate: KeyedMutator<any>;
-} {
-    const { data: session } = useSession();
-    const defaultFilter = ['posts', 'users', 'spaces']
-    filterBy = (filterBy && filterBy.every(f => defaultFilter.includes(f))) ? filterBy : defaultFilter
-    const filter = filterBy.reduce((acc,cur) => `${acc}${cur}=true&`, '')
-    const { data, error, isLoading, mutate } = useSWR(
-        [`/search?query=${search}&${filter}`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token)
-    );
-
-    return {
-        data: isLoading || error ? {} : data,
-        isLoading,
-        error,
-        mutate,
-    };
 }
