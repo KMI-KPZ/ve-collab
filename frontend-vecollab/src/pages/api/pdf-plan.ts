@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import puppeteer from 'puppeteer';
+import puppeteer, { CookieParam } from 'puppeteer';
 
-const saveAsPdf = async (url: string, cookies: any) => {
+const saveAsPdf = async (url: string, cookies: CookieParam[]) => {
     const browser = await puppeteer.launch({
         headless: true,
         executablePath: process.env.CHROME_BIN || undefined,
@@ -13,7 +13,6 @@ const saveAsPdf = async (url: string, cookies: any) => {
     await page.goto(url, {
         waitUntil: 'networkidle0',
     });
-    console.log(await page.cookies());
 
     const result = await page.pdf({
         format: 'a4',
@@ -31,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // transform cookies to puppeteer format ({name: 'cookieName', value: 'cookieValue', domain: 'cookieDomain'})
     const cookies = Object.keys(req.cookies).map((cookieName) => ({
         name: cookieName,
-        value: req.cookies[cookieName],
+        value: req.cookies[cookieName]!,
         domain: url.host,
     }));
 
