@@ -2,7 +2,8 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useRouter } from "next/router";
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
@@ -92,7 +93,7 @@ export default function HeaderSection({
     const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!e.currentTarget.search.value) return;
-        router.push(`/search?query=${e.currentTarget.search.value}`);
+        router.push(`/search?search=${e.currentTarget.search.value}`);
     };
 
     const Menu = () => {
@@ -407,27 +408,30 @@ export default function HeaderSection({
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    <form
-                        className="mx-4 md:mx-1 xl:mx-10 items-stretch hidden lg:flex"
-                        onSubmit={(e) => handleSearchSubmit(e)}
-                    >
-                        <input
-                            className={
-                                'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
-                            }
-                            type="text"
-                            placeholder={'Suchen ...'}
-                            name="search"
-                            autoComplete="off"
-                        />
-                        <button
-                            type="submit"
-                            title="Suchen"
-                            className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
+                    {!router.query.search && (
+                        <form
+                            className="mx-4 md:mx-1 xl:mx-10 items-stretch hidden lg:flex"
+                            onSubmit={(e) => handleSearchSubmit(e)}
                         >
-                            <MdSearch className="text-white" />
-                        </button>
-                    </form>
+                            <input
+                                className={
+                                    'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
+                                }
+                                type="text"
+                                placeholder="Suchen ..."
+                                name="search"
+                                autoComplete="off"
+                                defaultValue={router.query.search ? router.query.search as string : ''}
+                            />
+                            <button
+                                type="submit"
+                                title="Suchen"
+                                className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
+                            >
+                                <MdSearch className="text-white" />
+                            </button>
+                        </form>
+                    )}
                 </div>
 
                 <ul className="md:hidden flex flex-1 items-center justify-end">
