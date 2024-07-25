@@ -205,3 +205,8 @@ iframe {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
   @apply bg-ve-collab-blue;
 }
+
+body{
+  -webkit-print-color-adjust:exact !important;
+  print-color-adjust:exact !important;
+}
