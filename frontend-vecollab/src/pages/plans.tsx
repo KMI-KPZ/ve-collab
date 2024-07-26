@@ -1,4 +1,4 @@
-import { fetchGET, useGetAvailablePlans } from '@/lib/backend';
+import { useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -10,9 +10,6 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/Alert';
 import { Socket } from 'socket.io-client';
-import Dialog from '@/components/profile/Dialog';
-import { set } from 'date-fns';
-import { PlansOverviewFilterGoodPractise } from '@/components/Plannner/PlansOverviewFilterGoodPractise';
 
 export interface IfilterBy {
     /** key from PlanPreview to filter */
@@ -38,7 +35,7 @@ export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
-    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'creation_timestamp', order: 'ASC' });
+    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
