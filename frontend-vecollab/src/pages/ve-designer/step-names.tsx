@@ -20,7 +20,7 @@ import iconUpAndDown from '@/images/icons/ve-designer/upAndDownArrow.png';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
-import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import Dialog from '@/components/profile/Dialog';
 import { fetchGET } from '@/lib/backend';
@@ -30,36 +30,27 @@ import { MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/ButtonPrimary';
 
-interface StepName {
-    timestamp_from: string;
-    timestamp_to: string;
-    name: string;
-    workload: number;
-    learning_goal: string;
-    learning_activity: string;
-}
-
 interface FormValues {
     stepNames: IFineStep[];
 }
 
 const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-    return stepNamesObject.stepNames.every((broadStep) => {
+    return stepNamesObject.stepNames.every((step) => {
         return (
-            broadStep.name === '' &&
-            broadStep.timestamp_from === '' &&
-            broadStep.timestamp_to === '' &&
-            broadStep.learning_goal === '' &&
-            broadStep.workload === 0
+            step.name === '' &&
+            step.timestamp_from === '' &&
+            step.timestamp_to === '' &&
+            step.learning_goal === '' &&
+            step.workload === 0
         );
     });
 };
 
-export const defaultFineStepData: IFineStep = {
+export const emptyStepData: IFineStep = {
     name: '',
-    workload: 0,
     timestamp_from: '',
     timestamp_to: '',
+    workload: 0,
     learning_goal: '',
     learning_activity: '',
     has_tasks: false,
@@ -77,18 +68,6 @@ export const defaultFineStepData: IFineStep = {
     custom_attributes: {},
 };
 
-const emptyBroadStep: IFineStep = {
-    timestamp_from: '',
-    timestamp_to: '',
-    name: '',
-    workload: 0,
-    learning_goal: '',
-    learning_activity: '',
-    evaluation_tools: [],
-    has_tasks: false,
-    tasks: [],
-};
-
 interface Props {
     socket: Socket;
 }
@@ -100,16 +79,18 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
+    const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
-    // const prevpage = '/ve-designer/checklist'
-    // const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false)
 
     const today = new Date().toISOString().split('T')[0];
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = yesterdayDate.toISOString().split('T')[0];
+
+    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
+    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
+    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([])
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -141,21 +122,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (plan.steps?.length > 0) {
-                const steps: IFineStep[] = plan.steps;
-                const stepNames: IFineStep[] = steps.map((step) => {
-                    const { timestamp_from, timestamp_to, name, workload, learning_goal, learning_activity } = step;
-                    return {
-                        timestamp_from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                        timestamp_to: timestamp_to.split('T')[0],
-                        name: name,
-                        workload: workload,
-                        learning_goal: learning_goal,
-                        learning_activity: learning_activity,
-                        evaluation_tools: step.evaluation_tools,
-                        has_tasks: step.has_tasks,
-                        tasks: step.tasks,
+                const stepNames: IFineStep[] =  plan.steps.map((step) => {
+                    return Object.assign({}, step, {
+                        timestamp_from: step.timestamp_from.split('T')[0],
+                        timestamp_to: step.timestamp_to.split('T')[0]
+                    })
 
-                    };
                 });
                 replace(stepNames); // PROBLEM isDirty is initially true
                 // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
@@ -169,41 +141,29 @@ export default function StepNames({ socket }: Props): JSX.Element {
         [replace]
     );
 
-    const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
+    const checkIfNamesAreUnique = (stepNames: IFineStep[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
         return new Set(stepNamesNames).size !== stepNames.length;
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const stepNames: StepName[] = data.stepNames;
         let payload: IFineStep = {
-            ...defaultFineStepData,
+            ...emptyStepData,
         };
-        const stepNamesData = stepNames.map((broadStep) => {
+        const stepNamesData = data.stepNames.map((step) => {
             // TODO ids lieber vergleichen
-            const fineStepBackend = steps.find((fineStep) => fineStep.name === broadStep.name);
+            const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
             }
-            return {
-                ...payload,
-                name: broadStep.name,
-                timestamp_from: broadStep.timestamp_from,
-                timestamp_to: broadStep.timestamp_to,
-                workload: broadStep.workload,
-                learning_goal: broadStep.learning_goal,
-                learning_activity: broadStep.learning_activity,
-            };
+            return Object.assign({}, payload, step)
         });
 
         const progressState = areAllFormValuesEmpty(data)
             ? ProgressState.notStarted
             : ProgressState.completed;
 
-        // steps ist alt
-        console.log('SUBMIT', {steps, stepNames, stepNamesData});
-
-
+        // console.log('SUBMIT', {steps, stepNames: data.stepNames, stepNamesData});
         return [
             {
                 plan_id: router.query.plannerId,
@@ -232,12 +192,103 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
-        } else {
-            update(index, emptyBroadStep);
+        remove(index);
+        // if (fields.length > 1) {
+        //     remove(index);
+        // } else {
+        //     update(index, emptyStepData);
+        // }
+    };
+
+    const onDragEnd = (result: DropResult): void => {
+        if (result.destination) {
+            move(result.source.index, result.destination.index);
         }
     };
+
+    const openStepsImportDialog = () => {
+        if (availPlans.length) return
+        setIsImportStepsDialogOpen(true)
+        setLoadingAvailPlans(true)
+
+        fetchGET('/planner/get_available', session?.accessToken)
+        .then(data => {
+            setAvailPlans( (data.plans as IPlan[]))
+        })
+        .finally(() =>
+            setLoadingAvailPlans(false)
+        )
+    }
+    const toggleStepToImport = (step: IFineStep) => {
+        if (stepsToImport.some(s => s._id == step._id)) {
+            setStepsToImport(prev => prev.filter(s => s._id != step._id))
+        } else {
+            setStepsToImport(prev => [...prev, step])
+        }
+    }
+
+    const handleStepsImport = () => {
+        stepsToImport.map(step => {
+            append(Object.assign({}, step, {
+                timestamp_from: '',
+                timestamp_to: '',
+            }))
+        })
+        setIsImportStepsDialogOpen(false)
+        setStepsToImport([])
+    }
+
+    const ImportStepsDialog = () => {
+        if (loadingAvailPlans) return <LoadingAnimation />
+
+        const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length)
+        if (!plans.length) return <>Es sind noch keine "Good Practice" Pläne mit Etappen zum importieren vorhanden</>
+
+        // TODO add simple filter input?
+
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                <div>Wähle aus den "Good Practice" Plänen Etappen zum importieren aus</div>
+
+                {plans
+                    .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                    .map((plan, i) => (
+                    <div key={plan._id}>
+                        <div
+                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md"
+                        >
+                            <MdNewspaper />
+                            <div className="text-xl font-bold grow-0">{plan.name}</div>
+                            {session?.user.preferred_username != plan.author && (
+                                <div className="text-sm text-gray-500">von {plan.author}</div>
+                            )}
+                            <span className="grow text-right" title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
+                        </div>
+                        {plan.steps.map((step, j) => (
+                            <div key={step._id}
+                                className='ml-10 hover:cursor-pointer flex'
+                                onClick={e => toggleStepToImport(step)}
+                                title='Add/Remove'
+                            >
+                                <input
+                                    type='checkbox'
+                                    className='mr-2'
+                                    checked={stepsToImport.some(s => s._id == step._id)}
+                                    readOnly
+                                />
+                                {step.name} ({step.workload} h)
+                            </div>
+                        ))}
+                    </div>
+                ))}
+                <div className='ml-auto text-right'>
+                    <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setIsImportStepsDialogOpen(false)}>Abbrechen</button>
+                    <ButtonPrimary label={"Importieren"} onClick={() => handleStepsImport()} />
+                    {/* <button type='button' onClick={e => importSteps()}>Importieren</button> */}
+                </div>
+            </div>
+        )
+    }
 
     const renderStepNamesInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
@@ -381,118 +432,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         ));
     };
 
-    const onDragEnd = (result: DropResult): void => {
-        if (result.destination) {
-            move(result.source.index, result.destination.index);
-        }
-    };
-
-    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
-    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
-    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([])
-
-    const openStepsImportDialog = () => {
-        setIsImportStepsDialogOpen(true)
-        if (availPlans.length) return
-
-        setLoadingAvailPlans(true)
-
-        fetchGET('/planner/get_available', session?.accessToken)
-        .then(data => {
-            console.log('plans', data.plans);
-
-            // setAvailPlans( (data.plans as IPlan[]).filter(plan =>
-            //     plan.is_good_practise === true
-            //     && plan.steps.length
-            // ) )
-            setAvailPlans( (data.plans as IPlan[]))
-        })
-        .finally(() =>
-            setLoadingAvailPlans(false)
-        )
-
-
-    }
-    const toggleStepToImport = (step: IFineStep) => {
-        console.log('toogles tep to import', step, stepsToImport);
-        if (stepsToImport.some(s => s._id == step._id)) {
-            setStepsToImport(prev => prev.filter(s => s._id != step._id))
-        } else {
-            setStepsToImport(prev => [...prev, step])
-        }
-
-    }
-
-    const handleStepsImport = () => {
-        console.log('Steps to import:', stepsToImport);
-
-        stepsToImport.map(step => {
-            append({
-                timestamp_from: '',
-                timestamp_to: '',
-                name: step.name,
-                workload: step.workload,
-                learning_goal: step.learning_goal,
-                learning_activity: step.learning_activity,
-                has_tasks: step.has_tasks,
-                evaluation_tools: step.evaluation_tools,
-                tasks: step.tasks
-
-            });
-        })
-        setIsImportStepsDialogOpen(false)
-        setStepsToImport([])
-    }
-
-    const ImportStepsDialog = () => {
-        if (loadingAvailPlans) return <LoadingAnimation />
-
-        const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length)
-        if (!plans.length) return <>Es sind noch keine "Good Practice" Pläne mit Etappen zum importieren vorhanden</>
-
-        // TODO add simple filter input
-        // TODO order by date
-
-        return (
-            <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>Wähle aus den "Good Practice" Plänen Etappen zum importieren aus</div>
-
-                {plans.map((plan, i) => (
-                    <div key={plan._id}>
-                        <div
-                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md"
-                        >
-                            <MdNewspaper />
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
-                            {/* <div className="text-sm text-gray-500 grow">{plan.author}</div> */}
-                            <span title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
-                        </div>
-                        {plan.steps.map((step, j) => (
-                            <div key={step._id}
-                                className='ml-10 hover:cursor-pointer flex'
-                                onClick={e => toggleStepToImport(step)}
-                                title='Add/Remove'
-                            >
-                                <input
-                                    type='checkbox'
-                                    className='mr-2'
-                                    checked={stepsToImport.some(s => s._id == step._id)}
-                                    readOnly
-                                />
-                                {step.name} ({step.workload} h)
-                            </div>
-                        ))}
-                    </div>
-                ))}
-                <div className='ml-auto text-right'>
-                    <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setIsImportStepsDialogOpen(false)}>Abbrechen</button>
-                    <ButtonPrimary label={"Importieren"} onClick={() => handleStepsImport()} />
-                    {/* <button type='button' onClick={e => importSteps()}>Importieren</button> */}
-                </div>
-            </div>
-        )
-    }
-
     return (
         <Wrapper
             socket={socket}
@@ -537,7 +476,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
                     onClick={() => {
-                        append(emptyBroadStep);
+                        append(emptyStepData);
                     }}
                 >
                     <RxPlus size={25} />
@@ -546,7 +485,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                     type='button'
-                    title='Etappen aus vorhandenen "Good Practice" Plänen importieren'
+                    title='Etappen importieren'
                     onClick={e => openStepsImportDialog()}
                 >
                     Import
