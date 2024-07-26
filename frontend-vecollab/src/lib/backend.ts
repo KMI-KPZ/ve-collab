@@ -22,6 +22,10 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
 }
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
+const swrConfig = {
+    revalidateOnFocus: false
+}
+
 interface APIErrorResponse{
     success: boolean;
     reason: string;
@@ -56,11 +60,12 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
         return res;
     });
 
+// TODO duplication of useIsAdminCheck()
 export function useIsGlobalAdmin(accessToken?: string): boolean {
     const { data } = useSWR(
-        [`/admin_check`, accessToken]
-        ,
-        ([url, token]) => GETfetcher(url, token)
+        [`/admin_check`, accessToken],
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
 
     return data?.is_admin || false;
@@ -75,7 +80,8 @@ export function useGetProfileSnippets(usernames?: string[]): {
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
         ['/profile_snippets', session?.accessToken],
-        ([url, token]) => POSTfetcher(url, { usernames }, token)
+        ([url, token]) => POSTfetcher(url, { usernames }, token),
+        swrConfig
     );
 
     return {
@@ -95,7 +101,8 @@ export function useGetOwnProfile(): {
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
         [`/profileinformation`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -114,7 +121,8 @@ export function useGetAvailablePlans(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/planner/get_available', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -134,7 +142,8 @@ export function useGetPlanById(planId: string): {
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
         [`/planner/get?_id=${planId}`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -156,7 +165,8 @@ export function useGetPublicPlansOfCurrentUser(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         [`/planner/get_public_of_user?username=${username}`, accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -181,7 +191,8 @@ export function useGetAllPlans(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/planner/get_all', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -206,7 +217,8 @@ export function useGetMatching(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         shouldFetch ? ['/matching', accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -229,7 +241,8 @@ export function useGetExcludedFromMatching(accessToken?: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         accessToken ? ['/matching_exclusion_info', accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: !accessToken ? false : isLoading || error ? [] : data.excluded_from_matching,
@@ -247,7 +260,8 @@ export function useGetNotifications(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/notifications', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
     return {
         data:
@@ -270,7 +284,8 @@ export function useGetChatrooms(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/chatroom/get_mine', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error ? [] : data.rooms,
@@ -291,7 +306,8 @@ export function useGetChatroomHistory(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         [`/chatroom/get_messages?room_id=${chatroomId}`, accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
     return {
         data: isLoading || error ? [] : data.messages,
@@ -301,6 +317,7 @@ export function useGetChatroomHistory(
     };
 }
 
+// TODO ducplication of isGlobalAdmin()
 export function useGetCheckAdminUser(accessToken: string): {
     data: boolean;
     isLoading: boolean;
@@ -309,7 +326,8 @@ export function useGetCheckAdminUser(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/admin_check', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
     return {
         data: isLoading || error ? false : data.is_admin,
@@ -330,7 +348,8 @@ export function useGetGroup(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         groupId ? [`/spaceadministration/info?id=${groupId}`, accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error || !groupId ? null : data.space,
@@ -348,7 +367,8 @@ export function useGetAllGroups(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/spaceadministration/list', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error ? [] : data.spaces,
@@ -366,7 +386,8 @@ export function useGetMyGroups(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/spaceadministration/my', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error ? [] : data.spaces,
@@ -384,7 +405,8 @@ export function useGetMyGroupInvites(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/spaceadministration/pending_invites', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error ? [] : data.pending_invites,
@@ -402,7 +424,8 @@ export function useGetMyGroupRequests(accessToken: string): {
 } {
     const { data, error, isLoading, mutate } = useSWR(
         ['/spaceadministration/pending_requests', accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error ? [] : data.pending_requests,
@@ -423,7 +446,8 @@ export function useGetMyGroupACLEntry(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         groupId ? [`/space_acl/get?space=${groupId}`, accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
     return {
         data: isLoading || error || !groupId ? null : data.acl_entry,
@@ -460,7 +484,8 @@ export function useGetTimeline(
     endpointUrl += `?to=${toDate}&limit=${limit}`
 
     const { data, error, isLoading, mutate } = useSWR([endpointUrl, accessToken], ([url, token]) =>
-        GETfetcher(url, token)
+        GETfetcher(url, token),
+        Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
 
     return {
@@ -483,7 +508,8 @@ export function useGetPinnedPosts(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         group ? [`/timeline/space/${group}?limit=${limit || 3}`, accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -505,7 +531,8 @@ export function useGetPost(
 } {
     const { data, error, isLoading, mutate } = useSWR(
         post_id ? [`/posts?post_id=${post_id}`, accessToken] : null,
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
@@ -528,7 +555,8 @@ export function useGetSearchResults(search: string, filterBy?: string[]): {
     const filter = filterBy.reduce((acc,cur) => `${acc}${cur}=true&`, '')
     const { data, error, isLoading, mutate } = useSWR(
         [`/search?query=${search}&${filter}`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token)
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
     );
 
     return {
