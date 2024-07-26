@@ -8,9 +8,10 @@ import { RxFile } from 'react-icons/rx';
 
 interface Props {
     plan: IPlan;
+    openAllBoxes?: boolean;
 }
-export default function ViewAttributes({ plan }: Props): JSX.Element {
-    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(false);
+export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Element {
+    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(openAllBoxes ? true : false);
 
     return (
         <>
@@ -37,9 +38,10 @@ export default function ViewAttributes({ plan }: Props): JSX.Element {
                             {plan.is_good_practise ? 'Ja' : 'Nein'}
                         </li>
                     </ul>
-                    <span className="text-base font-semibold pr-5">
+                    <span className="text-base font-semibold pr-5 print:hidden">
                         zugrundeliegendes VE-Modell:
                     </span>
+                    <span className='font-semibold pr-5 hidden print:block'>zugrunde-liegendes VE-Modell:</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.underlying_ve_model ? (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">

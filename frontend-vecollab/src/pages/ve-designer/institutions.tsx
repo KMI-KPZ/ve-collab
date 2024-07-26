@@ -154,11 +154,11 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 },
                             })}
                         >
-                            <option value="Hochschule/Universität/College">
-                                Hochschule/Universität/College
+                            <option value="Hochschule / Universität / College">
+                                Hochschule / Universität / College
                             </option>
-                            <option value="Fachhochschule/University of Applied Sciences">
-                                Fachhochschule/University of Applied Sciences
+                            <option value="Fachhochschule / University of Applied Sciences">
+                                Fachhochschule / University of Applied Sciences
                             </option>
                             <option value="Berufsschule">Berufsschule</option>
                             <option value="Schule – Primärbereich">Schule – Primärbereich</option>

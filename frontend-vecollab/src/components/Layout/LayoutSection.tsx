@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
+import { useRouter } from 'next/router';
 
 interface Props {
     children: React.ReactNode;
@@ -22,12 +23,22 @@ export default function LayoutSection({
 }: Props): JSX.Element {
     const { data: session, status } = useSession();
 
+    const router = useRouter();
+
     const {
         data: excludedFromMatching,
         isLoading,
         error,
         mutate,
     } = useGetExcludedFromMatching(session?.accessToken);
+
+    console.log(router.pathname);
+
+    if(router.pathname === "/plan/pdf/[planId]") {
+        return (
+            <main>{children}</main>
+        )
+    }
 
     return (
         <>

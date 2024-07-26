@@ -8,9 +8,10 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 interface Props {
     plan: IPlan;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
+    openAllBoxes?: boolean;
 }
-export default function ViewAttributes({ plan, partnerProfileSnippets }: Props): JSX.Element {
-    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
+export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBoxes }: Props): JSX.Element {
+    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(openAllBoxes ? true : false);
     return (
         <>
             <div
@@ -59,7 +60,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                         )}
                     </ul>
                     <span className="font-semibold pr-5">Institutionen:</span>
-                    <div className="grid grid-cols-2 col-span-3">
+                    <div className="grid xl:grid-cols-2 col-span-3">
                         {plan.institutions.length !== 0 ? (
                             plan.institutions.map((institution, index) => (
                                 <div
@@ -68,19 +69,19 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 >
                                     <ul className="space-y-1 mr-2">
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Name</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Name</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(institution.name)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Bildungseinrichtung</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Bildungseinrichtung</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(institution.school_type)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Land</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Land</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(institution.country)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Fachbereich</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Fachbereich</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(institution.departments)}</div>
                                         </li>
                                         
@@ -91,8 +92,9 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </div>
-                    <span className="font-semibold pr-5">Lehrveranstaltungen:</span>
-                    <div className="grid grid-cols-2 col-span-3">
+                    <span className="font-semibold pr-5 print:hidden">Lehrveranstaltungen:</span>
+                    <span className="font-semibold pr-5 hidden print:block">Lehr-veranstaltungen:</span>
+                    <div className="grid xl:grid-cols-2 col-span-3">
                         {plan.lectures.length !== 0 ? (
                             plan.lectures.map((lecture, index) => (
                                 <div
@@ -101,19 +103,19 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 >
                                     <ul className="space-y-1 mr-2">
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Name</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Name</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(lecture.name)}</div>
                                         </li>
                                         <li className='flex'>
-                                            <div className='w-1/2 font-medium'>Typ</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Typ</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(lecture.lecture_type)}</div>
                                         </li>
                                         <li className='flex'>
-                                            <div className='w-1/2 font-medium'>Format</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Format</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(lecture.lecture_format)}</div>
                                         </li>
                                         <li className='flex'>
-                                            <div className='w-1/2 font-medium'>Teilnehmendenzahl</div>
+                                            <div className='w-1/2 font-medium print:font-bold'>Teilnehmendenzahl</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(lecture.participants_amount)}</div>
                                         </li>
                                     </ul>
@@ -124,7 +126,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                         )}
                     </div>
                     <span className="font-semibold pr-5">Lernziele (individuell):</span>
-                    <div className="grid grid-cols-2 col-span-3">
+                    <div className="grid col-span-3">
                         {plan.individual_learning_goals.length !== 0 ? (
                             plan.individual_learning_goals.map((goalPerPartner, index) => (
                                 <div
@@ -133,8 +135,8 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 >
                                     <ul className="space-y-1 mr-2">
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Name</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(
+                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Name</div>
+                                            <div className='w-2/3 lg:w-3/4'>{showDataOrEmptySign(
                                                 partnerProfileSnippets[goalPerPartner.username]
                                                     ? partnerProfileSnippets[
                                                           goalPerPartner.username
@@ -147,8 +149,8 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                             )}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Lernziel</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(goalPerPartner.learning_goal)}</div>
+                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Lernziel</div>
+                                            <div className='w-2/3 lg:w-3/4'>{showDataOrEmptySign(goalPerPartner.learning_goal)}</div>
                                         </li>
                                     </ul>
                                 </div>
@@ -182,7 +184,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                         )}
                     </ul>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
-                    <div className="grid grid-cols-2 col-span-3">
+                    <div className="grid xl:grid-cols-2 col-span-3">
                         {plan.audience.length !== 0 ? (
                             plan.audience.map((studyGroup, index) => (
                                 <div
@@ -191,28 +193,28 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 >
                                     <ul className="space-y-1 mr-2">
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Name</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(studyGroup.name)}</div>
+                                            <div className='w-1/3 font-medium print:font-bold'>Name</div>
+                                            <div className='w-2/3'>{showDataOrEmptySign(studyGroup.name)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Alter</div>
-                                            <div className='w-1/2'>
+                                            <div className='w-1/3 font-medium print:font-bold'>Alter</div>
+                                            <div className='w-2/3'>
                                                 {showDataOrEmptySign(studyGroup.age_min)}
                                                 {' - '}
                                                 {showDataOrEmptySign(studyGroup.age_max)}
                                             </div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>VE-Erfahrung</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(studyGroup.experience)}</div>
+                                            <div className='w-1/3 font-medium print:font-bold'>VE-Erfahrung</div>
+                                            <div className='w-2/3'>{showDataOrEmptySign(studyGroup.experience)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Studiengang</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(studyGroup.academic_course)}</div>
+                                            <div className='w-1/3 font-medium print:font-bold'>Studiengang</div>
+                                            <div className='w-2/3'>{showDataOrEmptySign(studyGroup.academic_course)}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/2 font-medium'>Sprachen</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(studyGroup.languages)}</div>
+                                            <div className='w-1/3 font-medium print:font-bold'>Sprachen</div>
+                                            <div className='w-2/3'>{showDataOrEmptySign(studyGroup.languages)}</div>
                                         </li>
                                     </ul>
                                 </div>
@@ -260,7 +262,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                     {plan.physical_mobility && plan.physical_mobilities.length > 0 && (
                         <>
                             <span className="font-semibold pr-5">geplante Treffen:</span>
-                            <div className="grid grid-cols-2 col-span-3">
+                            <div className="grid lg:grid-cols-2 col-span-3">
                                 {plan.physical_mobilities.length !== 0 ? (
                                     plan.physical_mobilities.map((mobility, index) => (
                                         <div
@@ -269,12 +271,12 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                         >
                                             <ul className="space-y-1 mr-2">
                                                 <li className="flex">
-                                                    <div className='w-1/2 font-medium'>Ort</div>
-                                                    <div className='w-1/2'>{showDataOrEmptySign(mobility.location)}</div>
+                                                    <div className='w-1/3 font-medium print:font-bold'>Ort</div>
+                                                    <div className='w-2/3'>{showDataOrEmptySign(mobility.location)}</div>
                                                 </li>
                                                 <li className="flex">
-                                                    <div className='w-1/2 font-medium'>Datum</div>
-                                                    <div className='w-1/2'>
+                                                    <div className='w-1/3 font-medium print:font-bold'>Datum</div>
+                                                    <div className='w-2/3'>
                                                         {showDataOrEmptySign(
                                                             mobility.timestamp_from
                                                                 ? mobility.timestamp_from.split('T')[0]
@@ -299,7 +301,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                     )}
                     <span className="font-semibold pr-5">Digitale Lernumgebung:</span>
                     <ul className="flex flex-col col-span-3 space-y-2 ">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-5">
                             {showDataOrEmptySign(plan.learning_env)}
                         </li>
                     </ul>
