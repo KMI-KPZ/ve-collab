@@ -3,19 +3,18 @@ import ButtonNewPlan from './ButtonNewPlan';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
 import { Socket } from 'socket.io-client';
+import { GiCheckMark } from 'react-icons/gi';
 
 interface Props {
     socket: Socket;
     filterBy: IfilterBy[];
     filterByCallback: ({ planKey, compare, id }: IfilterBy) => void;
-    goodPractiseDialogOpenCallback: () => void;
 }
 
 export function PlansOverviewFilter({
     filterBy,
     filterByCallback,
     socket,
-    goodPractiseDialogOpenCallback,
 }: Props) {
     const { data: session } = useSession();
 
@@ -92,13 +91,14 @@ export function PlansOverviewFilter({
                         filterByCallback({
                             planKey: 'name',
                             compare: (planName) => {
+                                if (!planName) return false
                                 return (planName as string)
                                     .toLocaleLowerCase()
                                     .includes(
                                         (event.target as HTMLInputElement).value.toLowerCase()
                                     );
                             },
-                            id: 'iamAthor',
+                            id: 'searchByName',
                         });
                     }}
                 />
@@ -106,9 +106,25 @@ export function PlansOverviewFilter({
 
             <div
                 className="mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                onClick={() => goodPractiseDialogOpenCallback()}
+                onClick={() => {
+                    if ( filterBy.find((f) => f.id == 'isGoodPractice') ) {
+                        filterByCallback({
+                            planKey: 'is_good_practise',
+                            compare: () => true,
+                            id: 'isAnyPractice',
+                        })
+                    } else {
+                        filterByCallback({
+                            planKey: 'is_good_practise',
+                            compare: (planIsGoodPractice) =>
+                                (planIsGoodPractice as boolean) === true,
+                            id: 'isGoodPractice',
+                        })
+                    }
+                }}
             >
                 Good Practice Beispiele
+                { filterBy.find((f) => f.id == 'isGoodPractice') && <GiCheckMark className='inline ml-2 mb-2' /> }
             </div>
 
             <div className="ml-auto">
