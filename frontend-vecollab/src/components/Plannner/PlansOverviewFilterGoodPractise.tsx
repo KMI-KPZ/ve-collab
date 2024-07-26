@@ -1,20 +1,14 @@
-import { MdAdd } from 'react-icons/md';
-import ButtonNewPlan from './ButtonNewPlan';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
-import { Socket } from 'socket.io-client';
-import { GiCheckMark } from 'react-icons/gi';
 
 interface Props {
-    socket: Socket;
     filterBy: IfilterBy[];
     filterByCallback: ({ planKey, compare, id }: IfilterBy) => void;
 }
 
-export function PlansOverviewFilter({
+export function PlansOverviewFilterGoodPractise({
     filterBy,
     filterByCallback,
-    socket,
 }: Props) {
     const { data: session } = useSession();
 
@@ -59,25 +53,6 @@ export function PlansOverviewFilter({
                         Eigene
                     </button>
                 </div>
-                <div className="px-2">
-                    <button
-                        className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'otherAuthor')
-                                ? 'text-ve-collab-blue underline'
-                                : ''
-                        }`}
-                        onClick={() =>
-                            filterByCallback({
-                                planKey: 'author',
-                                compare: (planAuthor) =>
-                                    (planAuthor as string) != session?.user.preferred_username,
-                                id: 'otherAuthor',
-                            })
-                        }
-                    >
-                        Mit mir geteilte
-                    </button>
-                </div>
             </div>
 
             <div>
@@ -91,51 +66,15 @@ export function PlansOverviewFilter({
                         filterByCallback({
                             planKey: 'name',
                             compare: (planName) => {
-                                if (!planName) return false
                                 return (planName as string)
                                     .toLocaleLowerCase()
                                     .includes(
                                         (event.target as HTMLInputElement).value.toLowerCase()
                                     );
                             },
-                            id: 'searchByName',
+                            id: 'iamAthor',
                         });
                     }}
-                />
-            </div>
-
-            <div
-                className="mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                onClick={() => {
-                    if ( filterBy.find((f) => f.id == 'isGoodPractice') ) {
-                        filterByCallback({
-                            planKey: 'is_good_practise',
-                            compare: () => true,
-                            id: 'isAnyPractice',
-                        })
-                    } else {
-                        filterByCallback({
-                            planKey: 'is_good_practise',
-                            compare: (planIsGoodPractice) =>
-                                (planIsGoodPractice as boolean) === true,
-                            id: 'isGoodPractice',
-                        })
-                    }
-                }}
-            >
-                Good Practice Beispiele
-                { filterBy.find((f) => f.id == 'isGoodPractice') && <GiCheckMark className='inline ml-2 mb-2' /> }
-            </div>
-
-            <div className="ml-auto">
-                <ButtonNewPlan
-                    socket={socket}
-                    className="ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white"
-                    label={
-                        <>
-                            <MdAdd className="inline" /> Neuen Plan starten
-                        </>
-                    }
                 />
             </div>
         </div>

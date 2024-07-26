@@ -10,10 +10,11 @@ import LoadingAnimation from '../LoadingAnimation';
 
 interface Props {
     plan: IPlan;
+    openAllBoxes?: boolean;
 }
 
 PlanOverview.auth = true;
-export function PlanOverview({ plan }: Props): JSX.Element {
+export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
@@ -45,18 +46,18 @@ export function PlanOverview({ plan }: Props): JSX.Element {
 
     return (
         <div className="bg-white rounded-lg p-4 w-full">
-            <ViewAttributes plan={plan} partnerProfileSnippets={partnerProfileSnippets}/>
+            <ViewAttributes plan={plan} partnerProfileSnippets={partnerProfileSnippets} openAllBoxes={openAllBoxes}/>
             <hr className="h-px my-10 bg-gray-400 border-0" />
             <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
             {plan.steps !== undefined && plan.steps.length > 0 ? (
                 plan.steps.map((fineStep, index) => (
-                    <ViewFinestep key={index} fineStep={fineStep} />
+                    <ViewFinestep key={index} fineStep={fineStep} openAllBoxes={openAllBoxes}/>
                 ))
             ) : (
                 <div className="ml-4"> Noch keine erstellt</div>
             )}
             <hr className="h-px my-10 bg-gray-400 border-0" />
-            <ViewAfterVE plan={plan} />
+            <ViewAfterVE plan={plan} openAllBoxes={openAllBoxes}/>
         </div>
     );
 }

@@ -2,10 +2,11 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import router from 'next/router';
 import { Socket } from 'socket.io-client';
+import ButtonPrimary from '../ButtonPrimary';
 
 interface Props {
     socket: Socket;
-    label?: string | JSX.Element;
+    label?: string|JSX.Element;
     children?: JSX.Element;
     className?: string;
 }
@@ -29,16 +30,15 @@ export default function ButtonNewPlan({ label, children, className, socket }: Pr
         );
     };
 
+    const defaulStyle = 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
+
     return (
-        <button
+        <ButtonPrimary
+            label={label}
             onClick={createAndForwardNewPlanner}
-            className={`${
-                className
-                    ? className
-                    : 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
-            }`}
+            className={className ? className : defaulStyle}
         >
-            {children || label}
-        </button>
+            {children}
+        </ButtonPrimary>
     );
 }

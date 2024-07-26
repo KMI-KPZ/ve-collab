@@ -377,7 +377,7 @@ export default function TimelinePost(
                     )}
 
                     {(!group && post.space) && (
-                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1'>
+                        <div className='self-start leading-[1.6rem] text-xs text-gray-500 ml-1 text-nowrap'>
                             <MdDoubleArrow className="inline" /> <Link href={`/group/${post.space}`} className="font-bold align-middle">{GroupnameById(post.space)}</Link>
                         </div>
                     )}

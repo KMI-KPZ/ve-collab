@@ -17,7 +17,16 @@ from exceptions import (
     PlanAlreadyExistsError,
     PlanDoesntExistError,
 )
-from model import Evaluation, IndividualLearningGoal, Institution, Lecture, PhysicalMobility, Step, TargetGroup, VEPlan
+from model import (
+    Evaluation,
+    IndividualLearningGoal,
+    Institution,
+    Lecture,
+    PhysicalMobility,
+    Step,
+    TargetGroup,
+    VEPlan,
+)
 import util
 
 
@@ -86,11 +95,12 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         if requesting_username is not None:
-            if requesting_username not in result["read_access"]:
-                raise NoReadAccessError()
+            if result["is_good_practise"] is False or result["is_good_practise"] is None:
+                if requesting_username not in result["read_access"]:
+                    raise NoReadAccessError()
 
         return VEPlan.from_dict(result)
-    
+
     def get_bulk_plans(self, plan_ids: List[str | ObjectId]) -> List[VEPlan]:
         """
         Request multiple plans by specifying their `_id`s in a list.
@@ -149,6 +159,17 @@ class VEPlanResource:
         # omit the "public readability" criteria since access to foreign
         # plans is not yet implemented
         result = self.db.plans.find({"author": username})
+        return [VEPlan.from_dict(res) for res in result]
+
+    def get_good_practise_plans(self) -> List[VEPlan]:
+        """
+        Request all plans that are marked as good practise.
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        result = self.db.plans.find({"is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
     def insert_plan(self, plan: VEPlan) -> ObjectId:
@@ -630,6 +651,34 @@ class VEPlanResource:
         )
 
         return _id
+    
+    def copy_plan(self, plan_id: str | ObjectId, new_author: str = None) -> ObjectId:
+        """
+        Create an identical copy of the plan given by its _id and return the _id of the
+        freshly created plan.
+        The new plan's `name` will have " (Kopie)" appended to it, the `author` will be
+        updated to the `new_author` if specified and the read and write access is reset
+        (author only), i.e. private copy.
+
+        Returns the _id of the freshly created plan.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        plan = self.get_plan(plan_id)
+
+        # create a private copy of the plan
+        plan_copy = copy.deepcopy(plan)
+        plan_copy._id = ObjectId()
+        plan_copy.name += " (Kopie)"
+        plan_copy.author = new_author if new_author is not None else plan.author
+        plan_copy.read_access = [plan_copy.author]
+        plan_copy.write_access = [plan_copy.author]
+
+        # insert the copy into the db
+        return self.insert_plan(plan_copy)
 
     def set_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """

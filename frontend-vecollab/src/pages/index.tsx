@@ -30,17 +30,23 @@ export default function Home({ socket }: Props): JSX.Element {
                 </p>
 
                 {status != 'loading' && (
-                    <> { session
+                    <> {session
                         ? <>
-                            <ButtonNewPlan socket={socket} label='Neuen VA planen' />
+                            <WhiteBox>
+                                <div className='text-center lg:text-xl p-6'>
+                                    <h2 className='text-2xl mb-4'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
+                                    <ButtonNewPlan socket={socket} label='Neuen VA planen' />
+                                </div>
+                            </WhiteBox>
                             <div className="w-1/2">
-                                <Timeline socket={socket}/>
+                                <Timeline socket={socket} />
                             </div>
-                        </> : <WhiteBox><div className='text-center lg:text-xl'>
-                            <h2 className='text-2xl m-10'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
-                            <p>Logge dich ein, um einen neuen VA zu planen.</p>
-                            <ButtonPrimary label='Login' onClick={() => signIn('keycloak')} classNameExtend='m-10' />
-                        </div></WhiteBox>
+                        </> : <WhiteBox>
+                            <div className='text-center lg:text-xl'>
+                                <h2 className='text-2xl m-10'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
+                                <p>Logge dich ein, um einen neuen VA zu planen.</p>
+                                <ButtonPrimary label='Login' onClick={() => signIn('keycloak')} classNameExtend='m-10' />
+                            </div></WhiteBox>
                     } </>
                 )}
             </div>

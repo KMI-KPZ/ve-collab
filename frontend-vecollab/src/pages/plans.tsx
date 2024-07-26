@@ -1,4 +1,4 @@
-import { useGetAvailablePlans } from '@/lib/backend';
+import { fetchGET, useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -9,18 +9,23 @@ import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/Alert';
-import { Socket } from "socket.io-client";
+import { Socket } from 'socket.io-client';
+import Dialog from '@/components/profile/Dialog';
+import { set } from 'date-fns';
+import { PlansOverviewFilterGoodPractise } from '@/components/Plannner/PlansOverviewFilterGoodPractise';
 
 export interface IfilterBy {
+    /** key from PlanPreview to filter */
     planKey: keyof PlanPreview;
     /** compare function to compare the plan[planKey].planValue of a plan   */
     compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean;
+    /** opti0nal id of your filter function (used in filterBy array) */
     id?: string;
 }
 
 export interface IsortBy {
-    key: keyof PlanPreview,
-    order: 'ASC'|'DESC'
+    key: keyof PlanPreview;
+    order: 'ASC' | 'DESC';
 }
 
 interface Props {
@@ -29,13 +34,11 @@ interface Props {
 
 // authentication is required on this page
 Plans.auth = true;
-export default function Plans({socket}: Props) {
+export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
-
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
-
-    const [sortBy, setSortBy] = useState<IsortBy>({key: 'creation_timestamp', order: 'ASC'})
+    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'creation_timestamp', order: 'ASC' });
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
@@ -52,26 +55,31 @@ export default function Plans({socket}: Props) {
         if (filterBy && filterBy.length) {
             filterBy.forEach((filter) => {
                 sortedPlans = sortedPlans.filter((p) => {
-                    return p[filter.planKey] && filter.compare(p[filter.planKey]);
+                    // return p[filter.planKey] && filter.compare(p[filter.planKey]);
+                    return filter.planKey in p && filter.compare(p[filter.planKey]);
                 });
             });
         }
 
-        console.log({ sortedPlans });
+        // console.log({ filterBy, sortedPlans });
 
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
 
     const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy(prev => {
+        setSortBy((prev) => {
             return {
                 key: key,
-                order: prev.order == 'ASC' ? 'DESC' : 'ASC'
-            }
-        })
+                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
+            };
+        });
     };
 
-    const handleFilterBy = ({planKey, compare, id}: IfilterBy) => {
+    /**
+     * Add filter method or replace existing by planKey
+     * Usage: See description in IfilterBy
+     */
+    const handleFilterBy = ({ planKey, compare, id }: IfilterBy) => {
         if (filterBy.find((f) => f.planKey == planKey)) {
             // update existing filter
             setFilterBy((prev) =>
@@ -98,19 +106,27 @@ export default function Plans({socket}: Props) {
                             <div>
                                 Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
                             </div>
-                            <Link href={'/matching'} className=' inline-block py-2 px-5 text-ve-collab-blue font-bold'>
-                                <MdKeyboardDoubleArrowRight className='inline' /> zum Matching
+                            <Link
+                                href={'/matching'}
+                                className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
+                            >
+                                <MdKeyboardDoubleArrowRight className="inline" /> zum Matching
                             </Link>
                         </div>
                     </div>
 
                     <PlansOverviewFilter
-                    socket={socket}
+                        socket={socket}
                         filterBy={filterBy}
                         filterByCallback={handleFilterBy}
                     />
 
-                    {typeof error !== 'undefined' && <Alert type='error' message={'Error loading plans. See console for details.'} />}
+                    {typeof error !== 'undefined' && (
+                        <Alert
+                            type="error"
+                            message={'Error loading plans. See console for details.'}
+                        />
+                    )}
 
                     {isLoading ? (
                         <div className="m-12">
@@ -118,13 +134,12 @@ export default function Plans({socket}: Props) {
                         </div>
                     ) : (
                         <PlansOverview
-                            socket={socket}
                             plans={sortedPlans}
                             sortBy={sortBy}
                             filterBy={filterBy}
                             sortByCallback={handleSortBy}
                             refetchPlansCallback={mutate}
-                    />
+                        />
                     )}
                 </div>
             </div>
