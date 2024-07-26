@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         domain: url.host,
     }));
 
-    res.setHeader('Content-Disposition', `attachment; filename="file.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="Zusammenfassung.pdf"`);
     res.setHeader('Content-Type', 'application/pdf');
 
     const pdf = await saveAsPdf(gotoURL as string, cookies);
