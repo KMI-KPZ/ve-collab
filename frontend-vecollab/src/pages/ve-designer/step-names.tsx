@@ -242,13 +242,13 @@ export default function StepNames({ socket }: Props): JSX.Element {
         if (loadingAvailPlans) return <LoadingAnimation />
 
         const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length)
-        if (!plans.length) return <>Es sind noch keine "Good Practice" Pläne mit Etappen zum importieren vorhanden</>
+        if (!plans.length) return <>Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren vorhanden</>
 
         // TODO add simple filter input?
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>Wähle aus den "Good Practice" Plänen Etappen zum importieren aus</div>
+                <div>Wähle aus den &quot;Good Practice&quot; Plänen Etappen zum importieren aus</div>
 
                 {plans
                     .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
