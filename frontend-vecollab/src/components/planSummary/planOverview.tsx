@@ -38,6 +38,9 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                 setLoading(false);
             });
         }
+        else {
+            setLoading(false);
+        }
     }, [session, status, plan]);
 
     if (loading) {
