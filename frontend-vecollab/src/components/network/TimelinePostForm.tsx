@@ -6,7 +6,7 @@ import AuthenticatedImage from "../AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
-import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff, MdNewspaper } from "react-icons/md";
+import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff, MdNewspaper, MdPublic } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
 import LoadingAnimation from "../LoadingAnimation";
 import {
@@ -24,8 +24,7 @@ import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
 import Dialog from "../profile/Dialog";
 import Dropdown from "../Dropdown";
-import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
-import Link from "next/link";
+import { IPlan } from "@/interfaces/planner/plannerInterfaces";
 import Timestamp from "../Timestamp";
 import ButtonNewPlan from "../Plannner/ButtonNewPlan";
 import { Socket } from "socket.io-client";
@@ -69,8 +68,8 @@ export default function TimelinePostForm(
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
     const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false)
     const [loadingPlans, setLoadingPlans] = useState<boolean>(true)
-    const [plans, setPlans] = useState<PlanPreview[]>([])
-    const [plansToAttach, setPlansToAttach] = useState<PlanPreview[]>([])
+    const [plans, setPlans] = useState<IPlan[]>([])
+    const [plansToAttach, setPlansToAttach] = useState<IPlan[]>([])
     const domParser = new DOMParser()
 
     useEffect(() => {
@@ -222,23 +221,21 @@ export default function TimelinePostForm(
     }
 
     const openPlanDialog = () => {
-        setIsPlanDialogOpen(true)
         if (plans.length) return
-
+        setIsPlanDialogOpen(true)
         setLoadingPlans(true)
 
         fetchGET('/planner/get_available', session?.accessToken)
         .then(data => setPlans(data.plans))
-
-        setLoadingPlans(false)
+        .finally(() => setLoadingPlans(false))
     }
 
-    const addPlanAttachment = (plan: PlanPreview) => {
+    const addPlanAttachment = (plan: IPlan) => {
         setPlansToAttach(prev => [...prev, plan])
         setIsPlanDialogOpen(false)
     }
 
-    const removePlanAttachment = (plan: PlanPreview) => {
+    const removePlanAttachment = (plan: IPlan) => {
         setPlansToAttach(prev => prev ? prev.filter((a, i) => a._id != plan._id) : [])
     }
 
@@ -334,14 +331,28 @@ export default function TimelinePostForm(
 
         if (!plans.length) return <>Noch keine Pläne erstellt. <ButtonNewPlan socket={socket} label="Neuen Plan erstellen" /></>
 
+        // TODO add simple filter input
+        // TODO order by date
+
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                {plans.map(plan => (
+                {plans
+                    .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                    .map(plan => (
                     <div key={plan._id} className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer" title="Auswählen" onClick={e => {addPlanAttachment(plan)}}>
                         <MdNewspaper />
                         <div className="text-xl font-bold grow-0">{plan.name}</div>
-                        {/* <div className="text-sm text-gray-500 grow">{plan.author}</div> */}
-                        <span title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
+                        {plan.is_good_practise && (
+                            <div className="text-slate-700">
+                                <MdPublic title='Plan ist als "Good Practice" markiert' />
+                            </div>
+                        )}
+                        {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
+                        {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
+                        {session?.user.preferred_username != plan.author && (
+                            <div className="text-sm text-gray-500">von {plan.author}</div>
+                        )}
+                        <span className="grow text-right" title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
                     </div>
                 ))}
             </div>
@@ -371,7 +382,7 @@ export default function TimelinePostForm(
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
-                title={'Deine Pläne'}
+                title={'Plan hinzufügen'}
                 onClose={() => setIsPlanDialogOpen(false)}
             >
                 <div className="w-[40vw]"><PlansDialog /></div>
