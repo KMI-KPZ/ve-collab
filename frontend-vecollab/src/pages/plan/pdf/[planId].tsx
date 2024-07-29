@@ -1,10 +1,12 @@
 import React from 'react';
-import { fetchGET} from '@/lib/backend';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import Link from 'next/link';
 import { GiSadCrab } from 'react-icons/gi';
 import { GetServerSidePropsContext } from 'next';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { PlanOverviewPDF } from '@/components/planSummary/PlanOverviewPDF';
+import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 // This is the component that gets rendered into the PDF of a plan
 // In contrast to the other pages, it is only accessible by directly
@@ -13,10 +15,11 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 interface Props {
     plan: IPlan | null;
+    partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
     error: string | null;
 }
 
-export default function PlanSummaryPDF({ plan, error }: Props) {
+export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets }: Props) {
     const Wrapper = ({ children }: { children: JSX.Element }) => {
         return (
             <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
@@ -72,7 +75,11 @@ export default function PlanSummaryPDF({ plan, error }: Props) {
                     <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
                 </div>
                 <div className="flex w-full">
-                    <PlanOverview plan={plan!} openAllBoxes={true} />
+                    <PlanOverviewPDF
+                        plan={plan!}
+                        openAllBoxes={true}
+                        partnerProfileSnippets={partnerProfileSnippets}
+                    />
                 </div>
             </>
         </Wrapper>
@@ -85,11 +92,21 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     let token = context.req.headers.authorization;
     token = token?.replace('Bearer ', '');
 
-    const res = await fetchGET(`/planner/get?_id=${context.params?.planId}`, token);
-    if (res.success === true) {
+    const planResponse = await fetchGET(`/planner/get?_id=${context.params?.planId}`, token);
+    if (planResponse.success === true) {
+        const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
+            '/profile_snippets',
+            { usernames: [...planResponse.plan.partners, planResponse.plan.author] },
+            token
+        );
+        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+        userSnippetsResponse.user_snippets.forEach((element: BackendUserSnippet) => {
+            partnerSnippets[element.username] = element;
+        });
         return {
             props: {
-                plan: res.plan,
+                plan: planResponse.plan,
+                partnerProfileSnippets: partnerSnippets,
                 error: null,
             },
         };
@@ -97,7 +114,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         return {
             props: {
                 plan: null,
-                error: res.reason ? res.reason : 'fetch_failed',
+                partnerProfileSnippets: {},
+                error: planResponse.reason ? planResponse.reason : 'fetch_failed',
             },
         };
     }
