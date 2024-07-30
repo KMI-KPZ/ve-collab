@@ -33,7 +33,11 @@ export function PlanOverviewPDF({
             <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
             {plan.steps !== undefined && plan.steps.length > 0 ? (
                 plan.steps.map((fineStep, index) => (
-                    <ViewFinestep key={index} fineStep={fineStep} openAllBoxes={openAllBoxes} />
+                    <ViewFinestep
+                        key={index}
+                        fineStep={fineStep}
+                        openAllBoxes={openAllBoxes}
+                    />
                 ))
             ) : (
                 <div className="ml-4"> Noch keine erstellt</div>
