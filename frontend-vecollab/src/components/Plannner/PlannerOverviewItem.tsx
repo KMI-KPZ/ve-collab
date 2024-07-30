@@ -228,7 +228,11 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
         }
-        setAlert({ message: 'Plan gelöscht', autoclose: 2000 });
+        setAlert({
+            message: 'Plan gelöscht',
+            autoclose: 2000,
+            onClose: () => setAlert({ open: false })
+        });
     };
 
     const createCopy = async (planId: string) => {
