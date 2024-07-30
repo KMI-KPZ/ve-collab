@@ -6,9 +6,10 @@ import { showDataOrEmptySign } from './planOverview';
 
 interface Props {
     fineStep: IFineStep;
+    handleImportStep: (step: IFineStep) => void
 }
 
-export default function ViewFinestep({ fineStep }: Props): JSX.Element {
+export default function ViewFinestep({ fineStep, handleImportStep }: Props): JSX.Element {
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
             year: 'numeric',
@@ -42,6 +43,16 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
                         {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_from))}
                         {' - '}
                         {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
+                    </div>
+                    <div>
+                    <button
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        type='button'
+                        title='Etappe importieren'
+                        onClick={e => handleImportStep(fineStep)}
+                    >
+                        Import
+                    </button>
                     </div>
                 </div>
             </div>
