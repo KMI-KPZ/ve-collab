@@ -9,13 +9,19 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Dialog from '../profile/Dialog';
-import { MdNewspaper } from 'react-icons/md';
+import { MdEdit, MdNewspaper } from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import Alert, { AlertState } from '../Alert';
 import { socket } from '@/lib/socket';
+import { FormProvider, useForm } from 'react-hook-form';
+import Link from 'next/link';
 
 interface Props {
     plan: IPlan;
+}
+
+interface FormValues {
+    step: IFineStep;
 }
 
 PlanOverview.auth = true;
@@ -25,6 +31,22 @@ export function PlanOverview({ plan }: Props): JSX.Element {
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
+    const [alert, setAlert] = useState<AlertState>({ open: false });
+    const methods = useForm<FormValues>({ mode: 'onChange' });
+
+    const [importStep2Plan, setImportStep2Plan] = useState<{
+        isOpen: boolean,
+        step: undefined | IFineStep,
+        plan: undefined | IPlan
+    }>({
+        isOpen: false,
+        step: undefined,
+        plan: undefined
+    })
+    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
+    const [loadingImport, setLoadingImport] = useState<boolean>(false)
+    const [importSuccess, setImportSuccess] = useState<boolean>(false)
+    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
 
     useEffect(() => {
         // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
@@ -45,54 +67,35 @@ export function PlanOverview({ plan }: Props): JSX.Element {
         }
     }, [session, status, plan]);
 
-    // const [isImportStepDialogOpen, setIsImportStepDialogOpen] = useState<boolean>(false)
-    const [importStepDialogOpen, setImportStepDialogOpen] = useState<{
-        isOpen: boolean,
-        step: undefined|IFineStep,
-        plan: undefined|IPlan
-    }>({
-        isOpen: false,
-        step: undefined,
-        plan: undefined
-    })
-
-    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
-    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
-    // const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([])
-
     const openImportDialog = (step: IFineStep) => {
-        // setIsImportStepDialogOpen(true)
-        step = Object.assign({}, step, {_id: undefined})
-        setImportStepDialogOpen({isOpen: true, step, plan: undefined})
+        step = Object.assign({}, step, { _id: undefined })
+        setImportStep2Plan({ isOpen: true, step, plan: undefined })
+        methods.setValue('step.name', step.name, { shouldValidate: true, shouldDirty: false });
+        methods.setValue('step.timestamp_from', new Date(step.timestamp_from).toISOString().split('T')[0], { shouldValidate: true, shouldDirty: false });
+        methods.setValue('step.timestamp_to', new Date(step.timestamp_to).toISOString().split('T')[0], { shouldValidate: true, shouldDirty: false });
+
         if (availPlans.length) return
         setLoadingAvailPlans(true)
 
         fetchGET('/planner/get_available', session?.accessToken)
-        .then(data => {
-            setAvailPlans( (data.plans as IPlan[]))
-            // setMyPlans( (data.plans as IPlan[]).filter(plan => plan.write_access .author == session?.user.preferred_username))
-            console.log('data.plans', data.plans);
-
-        })
-        .finally(() =>
-            setLoadingAvailPlans(false)
-        )
-
+            .then(data => {
+                setAvailPlans((data.plans as IPlan[]))
+            })
+            .finally(() =>
+                setLoadingAvailPlans(false)
+            )
     }
 
-    const [alert, setAlert] = useState<AlertState>({ open: false });
-
-    const handleSelectPlan2Import = async (plan: IPlan) => {
-        setImportStepDialogOpen(prev => Object.assign({}, prev, {plan}))
-
-        console.log('Import', {plan, step: importStepDialogOpen.step})
-
-        if ( plan.steps.some(p => p.name == importStepDialogOpen.step!.name ) ) {
+    const handleImportStep2Plan = async (data: FormValues) => {
+        setLoadingImport(true)
+        const step = Object.assign({}, importStep2Plan.step, data.step)
+        if (importStep2Plan.plan!.steps.some(p => p.name == step!.name)) {
             setAlert({
                 message: 'Konnte nicht importieren: Plan enhält bereits eine Etappe mit diesem Namen',
                 type: 'warning',
                 onClose: () => setAlert({ open: false }),
             });
+            setLoadingImport(false)
             return
         }
 
@@ -101,11 +104,11 @@ export function PlanOverview({ plan }: Props): JSX.Element {
             return new Promise((resolve, reject) => {
                 socket.emit(
                     'try_acquire_or_extend_plan_write_lock',
-                    { plan_id: plan._id },
+                    { plan_id: importStep2Plan.plan!._id },
                     async (response: any) => {
-                        console.log('try_acquire_or_extend_plan_write_lock', {response});
+                        // console.log('try_acquire_or_extend_plan_write_lock', { response });
                         if (response.success === true && response.status !== 403) {
-                            resolve(true)
+                            return resolve(true)
                         }
                         reject(false)
                     }
@@ -114,84 +117,225 @@ export function PlanOverview({ plan }: Props): JSX.Element {
         }
 
         const planLock = await getPlanLock()
-        console.log('lock', {planLock});
         if (!planLock) {
             setAlert({
                 message: 'Konnte nicht importieren: Plan wird bereits von einem anderen Benutzer bearbeitet',
                 type: 'warning',
                 onClose: () => setAlert({ open: false }),
             });
+            setLoadingImport(false)
             return
         }
 
         const res = await fetchPOST(
             '/planner/append_step',
             {
-                plan_id: plan._id,
-                step: importStepDialogOpen.step
+                plan_id: importStep2Plan.plan!._id,
+                step: step
             },
             session?.accessToken
         );
-        if (res.success === false) {
+        if (res.success === true) {
+            setImportStep2Plan(prev => Object.assign({}, prev, { isOpen: false }))
+            setImportSuccess(true)
+
+        } else {
             console.log({ res });
             setAlert({
                 message: 'Fehler beim speichern',
                 type: 'error',
                 onClose: () => setAlert({ open: false }),
             });
-            // return false;
-        } else {
-            setAlert({
-                message: 'Etappe hinzugefügt',
-                type: 'info',
-                autoclose: 2000,
-                onClose: () => setAlert({ open: false }),
-            });
         }
+
         socket.emit(
             'drop_plan_lock',
-            { plan_id: plan._id },
-            async (response: any) => {
-                console.log('drop_plan_lock', {response});
-            }
+            { plan_id: importStep2Plan.plan!._id },
         );
-
+        setLoadingImport(false)
     }
 
-    const ChoosePlan2ImportDialog = () => {
-        if (loadingAvailPlans || !session!.user) return <LoadingAnimation />
+    const validateDateRange = (fromValue: string, toValue: string) => {
+        methods.clearErrors('step.timestamp_from')
+        methods.clearErrors('step.timestamp_to')
+        return (new Date(fromValue)) > (new Date(toValue)) ? 'Das Startdatum muss vor dem Enddatum liegen' : true
+    };
 
+    const validateUniqueStepName = (stepName: string) => {
+        if (importStep2Plan.plan?.steps.some(p => p.name == stepName)) {
+            return "Eine Etappe mit diesem Namen existiert in diesem Plan bereits. Wähle einen anderen Namen."
+        }
+        return true
+    }
+
+    const Dialog_Step2PlanChoose = () => {
+        if (loadingAvailPlans || !session!.user) return <LoadingAnimation />
         const plans = availPlans.filter(plan => plan.write_access.includes(session?.user.preferred_username as string))
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>In welchen Plan soll die Etappe importiert werden?</div>
-                <div className="flex flex-col max-h-96 overflow-y-auto">
-
-                </div>
+                <div>In welchen Plan soll die Etappe "{importStep2Plan.step?.name}" importiert werden?</div>
                 {plans
-                    .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                    .sort((a, b) => { return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime()) })
                     .map((plan, i) => (
-                        // <div key={plan._id} onClick={e => handleImportDialog(importStepDialogOpen.step!)}>{plan.name}</div>
-                        <div key={plan._id}>
-                            <div
-                                className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                                title="Auswählen"
-                                onClick={e => handleSelectPlan2Import(plan)}
-                            >
-                                <MdNewspaper />
-                                <div className="text-xl font-bold grow-0">{plan.name}</div>
-                                {/* <div className="text-sm text-gray-500 grow">{plan.author}</div> */}
-                                <span title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
-                            </div>
-                            {/* {importStepDialogOpen.plan?._id == plan._id && (
-                                <div className='ml-4'>Import "{importStepDialogOpen.step?.name}" select date ?!?</div>
-                            )} */}
+                        <div
+                            key={plan._id}
+                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                            title="Auswählen"
+                            onClick={e => {
+                                setImportStep2Plan(prev => Object.assign({}, prev, { plan }))
+                            }}
+                        >
+                            <MdNewspaper />
+                            <div className="text-xl font-bold grow-0">{plan.name}</div>
+                            <span title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
                         </div>
                     ))
                 }
             </div>
         )
+    }
+
+    const Dialog_Step2PlanConfirm = () => {
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                {importStep2Plan.plan!.steps?.length > 0 && (
+                    <div className='flex items-start'>
+                        <span className='mr-2 p-2 font-bold'>Etappen:</span>
+                        <div className='flex flex-wrap gap-y-2'>
+                            {importStep2Plan.plan!.steps?.map(planStep => (
+                                <div key={planStep._id}
+                                    title={`von ${planStep.timestamp_from} bis ${planStep.timestamp_from}`}
+                                    className='rounded-full bg-slate-50 mx-2 p-2 decoration-dotted'
+                                >
+                                    {planStep.name} ({planStep.workload}h)
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <div className='mt-2'>Überprüfe die Daten der Etappe um sie in den Plan zu importieren</div>
+
+                {/* <div
+                        className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                    >
+                        <MdNewspaper />
+                        <div className="text-xl font-bold grow-0">{importStepDialogOpen.plan!.name}</div>
+                        <span title="zuletzt geändert"><Timestamp timestamp={importStepDialogOpen.plan!.last_modified} className='text-sm' /></span>
+                    </div> */}
+
+
+                <FormProvider {...methods}>
+                    <form>
+                        <div className='ml-6 mt-3 items-center flex flex-wrap flex-row gap-y-2'>
+                            <label className="text-right basis-1/4">Name:</label>
+                            <div className='grow basis-3/4'><input
+                                type="text"
+                                {...methods.register(`step.name`, {
+                                    required: {
+                                        value: true,
+                                        message: 'Bitte fülle das Felde "Name" aus',
+                                    },
+                                    validate: (v) => validateUniqueStepName(v),
+                                })}
+                                placeholder="Name, z.B. Kennenlernphase"
+                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                            /></div>
+
+                            <label className="text-right  basis-1/4">von:</label>
+                            <div className='basis-3/4'><input
+                                type="date"
+                                {...methods.register(`step.timestamp_from`, {
+                                    required: {
+                                        value: true,
+                                        message: 'Bitte fülle das Felde "von" aus',
+                                    },
+                                    validate: (v) => validateDateRange(v, methods.watch('step.timestamp_to') ),
+                                })}
+                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                            /></div>
+
+                            <label className="text-right  basis-1/4">bis:</label>
+                            <div className='basis-3/4'><input
+                                type="date"
+                                {...methods.register(`step.timestamp_to`, {
+                                    required: {
+                                        value: true,
+                                        message: 'Bitte fülle das Felde "bis" aus',
+                                    },
+                                    validate: (v) => validateDateRange(methods.watch('step.timestamp_from'), v)
+                                })}
+                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                            /></div>
+                        </div>
+                        <div className="text-red-600 pt-2 flex justify-center">
+                            {methods.formState.errors?.step?.name && (
+                                methods.formState.errors?.step?.name?.message
+                            )}
+                            {methods.formState.errors?.step?.timestamp_from && (
+                                methods.formState.errors?.step?.timestamp_from?.message
+                            )}
+                            {methods.formState.errors?.step?.timestamp_to && (
+                                methods.formState.errors?.step?.timestamp_to?.message
+                            )}
+                        </div>
+                        <div className='text-right mt-2'>
+                            {loadingImport && (<LoadingAnimation size='small' />)}
+                            <button
+                                className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                                onClick={(e) => {
+                                    setImportStep2Plan(prev => Object.assign({}, prev, { plan: undefined }))
+                                }}
+                            >
+                                Zurück
+                            </button>
+                            <button
+                                type="button"
+                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                onClick={methods.handleSubmit(
+                                    // valid
+                                    async (data: any) => {
+                                        await handleImportStep2Plan(data);
+                                    }
+                                )}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </form>
+                </FormProvider>
+            </div>
+        )
+    }
+
+    const Dialog_Step2PlanSuccess = () => {
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                <div>Etappe hinzugefügt</div>
+
+                <div className='mt-4 flex flex-row'>
+                    <Link
+                        className='mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full'
+                        href={{
+                            pathname: '/ve-designer/step-names',
+                            query: { plannerId: importStep2Plan.plan?._id },
+                        }}
+                    >
+                        <MdEdit className="inline" /> Bearbeiten
+                    </Link>
+                    <button
+                        type="button"
+                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        onClick={e => {
+                            setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
+                        }}
+                    >
+                        Schließen
+                    </button>
+                </div>
+
+            </div>
+        );
     }
 
     if (loading) {
@@ -202,16 +346,36 @@ export function PlanOverview({ plan }: Props): JSX.Element {
         <>
             <Alert state={alert} />
 
+            {/* dialog to select target plan */}
             <Dialog
-                isOpen={importStepDialogOpen.isOpen}
-                title={'Import Etappe'}
-                onClose={() => setImportStepDialogOpen({isOpen: false, step: undefined, plan: undefined})}
+                isOpen={importStep2Plan.isOpen && importStep2Plan.plan === undefined}
+                title={`Plan auswählen`}
+                onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
             >
-                <div className="w-[40vw]"><ChoosePlan2ImportDialog /></div>
+                <div className="w-[40vw]"><Dialog_Step2PlanChoose /></div>
+            </Dialog>
+
+            {/* dialog to set date and name of step for import */}
+            <Dialog
+                isOpen={importStep2Plan.isOpen && importStep2Plan.plan !== undefined}
+                title={`Import in "${importStep2Plan.plan?.name}"`}
+                onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
+            >
+                <div className="w-[40vw]"><Dialog_Step2PlanConfirm /></div>
+            </Dialog>
+
+            {/* import success dialog */}
+            <Dialog
+                isOpen={!importStep2Plan.isOpen && importStep2Plan.plan !== undefined && importStep2Plan.step !== undefined}
+                title={`Import in "${importStep2Plan.plan?.name}"`}
+                // onClose={() => setImportSuccess(false)}
+                onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
+            >
+                <div className="w-[40vw]"><Dialog_Step2PlanSuccess /></div>
             </Dialog>
 
             <div className="bg-white rounded-lg p-4 w-full">
-                <ViewAttributes plan={plan} partnerProfileSnippets={partnerProfileSnippets}/>
+                <ViewAttributes plan={plan} partnerProfileSnippets={partnerProfileSnippets} />
                 <hr className="h-px my-10 bg-gray-400 border-0" />
                 <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
                 {plan.steps !== undefined && plan.steps.length > 0 ? (
