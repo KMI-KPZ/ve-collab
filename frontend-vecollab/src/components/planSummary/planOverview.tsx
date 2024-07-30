@@ -174,7 +174,7 @@ export function PlanOverview({ plan }: Props): JSX.Element {
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>In welchen Plan soll die Etappe "{importStep2Plan.step?.name}" importiert werden?</div>
+                <div>In welchen Plan soll die Etappe &quot;{importStep2Plan.step?.name}&quot; importiert werden?</div>
                 {plans
                     .sort((a, b) => { return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime()) })
                     .map((plan, i) => (
@@ -358,7 +358,7 @@ export function PlanOverview({ plan }: Props): JSX.Element {
             {/* dialog to set date and name of step for import */}
             <Dialog
                 isOpen={importStep2Plan.isOpen && importStep2Plan.plan !== undefined}
-                title={`Import in "${importStep2Plan.plan?.name}"`}
+                title={`Import in &quot;${importStep2Plan.plan?.name}&quot;`}
                 onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
             >
                 <div className="w-[40vw]"><Dialog_Step2PlanConfirm /></div>
@@ -367,7 +367,7 @@ export function PlanOverview({ plan }: Props): JSX.Element {
             {/* import success dialog */}
             <Dialog
                 isOpen={!importStep2Plan.isOpen && importStep2Plan.plan !== undefined && importStep2Plan.step !== undefined}
-                title={`Import in "${importStep2Plan.plan?.name}"`}
+                title={`Import in &quot;${importStep2Plan.plan?.name}&quot;`}
                 // onClose={() => setImportSuccess(false)}
                 onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
             >
