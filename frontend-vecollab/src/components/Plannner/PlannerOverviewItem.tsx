@@ -6,7 +6,14 @@ import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
-import { MdShare, MdDelete, MdEdit, MdPublic, MdOutlineCopyAll } from 'react-icons/md';
+import {
+    MdShare,
+    MdDelete,
+    MdEdit,
+    MdPublic,
+    MdOutlineCopyAll,
+    MdOutlineFileDownload,
+} from 'react-icons/md';
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -107,12 +114,35 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
             }}
         >
             <div>
-                {plan.write_access.includes(username) && (
-                    <div
-                        className="absolute top-0 right-10 m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                        onClick={() => forward(plan._id)}
-                    >
-                        <MdEdit className="inline" /> Bearbeiten
+                {plan.write_access.includes(username) ? (
+                    <div className="absolute top-0 right-10 flex">
+                        <div
+                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
+                            onClick={() => forward(plan._id)}
+                        >
+                            <MdEdit className="inline" /> Bearbeiten
+                        </div>
+                        <Link
+                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            href={{
+                                pathname: `/api/pdf-plan`,
+                                query: { planId: plan._id },
+                            }}
+                        >
+                            <MdOutlineFileDownload className="inline" /> Herunterladen
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="absolute top-0 right-10 flex">
+                        <Link
+                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            href={{
+                                pathname: `/api/pdf-plan`,
+                                query: { planId: plan._id },
+                            }}
+                        >
+                            <MdOutlineFileDownload className="inline" /> Herunterladen
+                        </Link>
                     </div>
                 )}
                 <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
