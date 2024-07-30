@@ -207,8 +207,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const openStepsImportDialog = () => {
-        if (availPlans.length) return
         setIsImportStepsDialogOpen(true)
+        if (availPlans.length) return
         setLoadingAvailPlans(true)
 
         fetchGET('/planner/get_available', session?.accessToken)
@@ -230,8 +230,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const handleStepsImport = () => {
         stepsToImport.map(step => {
             append(Object.assign({}, step, {
-                timestamp_from: '',
-                timestamp_to: '',
+                timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
+                timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
             }))
         })
         setIsImportStepsDialogOpen(false)
@@ -284,7 +284,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <div className='ml-auto text-right'>
                     <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setIsImportStepsDialogOpen(false)}>Abbrechen</button>
                     <ButtonPrimary label={"Importieren"} onClick={() => handleStepsImport()} />
-                    {/* <button type='button' onClick={e => importSteps()}>Importieren</button> */}
                 </div>
             </div>
         )
