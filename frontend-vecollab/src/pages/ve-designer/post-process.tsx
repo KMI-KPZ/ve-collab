@@ -101,7 +101,6 @@ export default function PostProcess({ socket }: Props) {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            console.log('backendFile', plan.evaluation_file);
         },
         [methods]
     );
@@ -375,24 +374,6 @@ export default function PostProcess({ socket }: Props) {
                                         </button>
                                     </div>
                                 </div>
-                                // <div
-                                //     className="max-w-[150px] mb-4"
-                                //     title={methods.getValues('literatureFile')!.name}
-                                // >
-                                    // <AuthenticatedFile
-                                    //     url={`/uploads/${
-                                    //         methods.getValues('literatureFile')!.file_id
-                                    //     }`}
-                                    //     filename={methods.getValues('literatureFile')!.name}
-                                    // >
-                                    //     <div className="flex justify-center">
-                                    //         <RxFile size={40} />
-                                    //     </div>
-                                    //     <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
-                                    //         {methods.getValues('literatureFile')!.name}
-                                    //     </div>
-                                    // </AuthenticatedFile>
-                                // </div>
                             ) : (
                                 <p className="mb-2 text-gray-600">Keine Datei vorhanden</p>
                             )}
