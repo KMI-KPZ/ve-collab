@@ -59,17 +59,21 @@ export default function PostProcess({ socket }: Props) {
         },
     });
 
-    const uploadToBackend = async (file: File) => {
+    const uploadToBackend = async (type: "evaluation"|"literature", file: File) => {
         const body = new FormData();
         body.append('file', file);
 
         const headers: { Authorization?: string } = {};
         headers['Authorization'] = 'Bearer ' + session?.accessToken;
 
+        const url = type == "evaluation"
+            ? `/planner/put_evaluation_file?plan_id=${router.query.plannerId}`
+            : `/planner/put_literature_file?plan_id=${router.query.plannerId}`
+
         // upload as form data instead of json
         await fetch(
             process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
-                `/planner/put_evaluation_file?plan_id=${router.query.plannerId}`,
+                url,
             {
                 method: 'POST',
                 headers: headers,
@@ -87,11 +91,6 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
-            if (plan.literature) methods.setValue('literature', plan.literature as string);
-            if (plan.literature_file) {
-                console.log('TODO: add literature file ...', plan.literature_file);
-            }
-
             const backendFile: EvaluationFile = plan.evaluation_file;
             if (backendFile !== null) {
                 const randomFile: File = new File([''], backendFile.file_name);
@@ -99,6 +98,17 @@ export default function PostProcess({ socket }: Props) {
                     id: backendFile.file_id,
                 });
                 methods.setValue('evaluationFile', fileWithId);
+            }
+            if (plan.literature) methods.setValue('literature', plan.literature as string);
+            if (plan.literature_file) {
+                const literatureFile: LiteratureFile = plan.literature_file;
+                if (literatureFile !== null) {
+                    const randomFile: File = new File([''], literatureFile.file_name);
+                    const fileWithId: FileWithOptionalId = Object.assign(randomFile, {
+                        id: literatureFile.file_id,
+                    });
+                    methods.setValue('literatureFile', fileWithId);
+                }
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -119,6 +129,11 @@ export default function PostProcess({ socket }: Props) {
                     },
                     {
                         plan_id: router.query.plannerId,
+                        field_name: 'abstract',
+                        value: data.abstract,
+                    },
+                    {
+                        plan_id: router.query.plannerId,
                         field_name: 'underlying_ve_model',
                         value: data.veModel,
                     },
@@ -132,15 +147,20 @@ export default function PostProcess({ socket }: Props) {
                         field_name: 'good_practise_evaluation',
                         value: data.evaluation,
                     },
+                    {
+                        plan_id: router.query.plannerId,
+                        field_name: 'literature',
+                        value: data.literature,
+                    },
                 ],
             },
             session?.accessToken
         );
         if (data.evaluationFile) {
-            await uploadToBackend(data.evaluationFile);
+            await uploadToBackend("evaluation", data.evaluationFile);
         }
         if (data.literatureFile) {
-            console.log('TODO: upload literature file');
+            await uploadToBackend("literature", data.literatureFile);
         }
     };
 
