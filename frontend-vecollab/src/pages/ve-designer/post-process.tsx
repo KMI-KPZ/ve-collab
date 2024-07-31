@@ -27,6 +27,7 @@ export interface LiteratureFile {
 
 interface FormValues {
     share: boolean;
+    abstract: string;
     veModel: string;
     reflection: string;
     evaluation: string;
@@ -82,6 +83,7 @@ export default function PostProcess({ socket }: Props) {
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
+            methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
@@ -255,6 +257,18 @@ export default function PostProcess({ socket }: Props) {
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
+                            <p>
+                            Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen,
+                            in dem du die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf) ganz kurz zusammenfasst.
+                            </p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder="Kurze Beschreibung deines VE ..."
+                                {...methods.register('abstract')}
+                            />
+                        </li>
+                        <li className="mb-4">
                             <p className="font-bold">Reflexion:</p>
                             <p className="mb-1">
                                 Was hat deiner Meinung nach gut funktioniert? Was waren

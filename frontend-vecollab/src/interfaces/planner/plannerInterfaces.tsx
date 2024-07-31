@@ -24,6 +24,7 @@ export interface IPlan {
     _id: string;
     audience: TargetGroup[];
     author: string;
+    abstract: string;
     creation_timestamp: string;
     duration: number | null;
     formalities: CheckListPartner[];
