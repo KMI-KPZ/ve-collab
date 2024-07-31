@@ -13,8 +13,14 @@ import {
     initialSideProgressBarStates,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
+import { IoMdClose } from 'react-icons/io';
 
 export interface EvaluationFile {
+    file_id: string;
+    file_name: string;
+}
+
+export interface LiteratureFile {
     file_id: string;
     file_name: string;
 }
@@ -25,6 +31,9 @@ interface FormValues {
     reflection: string;
     evaluation: string;
     evaluationFile: FileWithOptionalId;
+    literature?: string;
+    // TODO maybe multiple files?!?
+    literatureFile?: null|FileWithOptionalId;
 }
 interface FileWithOptionalId extends File {
     file_id?: string;
@@ -76,6 +85,11 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
+            if (plan.literature) methods.setValue('literature', plan.literature as string);
+            if (plan.literature_file) {
+                console.log('TODO: add literature file ...', plan.literature_file);
+            }
+
             const backendFile: EvaluationFile = plan.evaluation_file;
             if (backendFile !== null) {
                 const randomFile: File = new File([''], backendFile.file_name);
@@ -124,22 +138,30 @@ export default function PostProcess({ socket }: Props) {
         if (data.evaluationFile) {
             await uploadToBackend(data.evaluationFile);
         }
+        if (data.literatureFile) {
+            console.log('TODO: upload literature file');
+        }
     };
 
-    function renderFileInput() {
+    const removeSelectedFile = (fileId: string) => {
+        methods.setValue('literatureFile', null);
+        methods.clearErrors('literatureFile');
+    }
+
+    function renderFileInput(key: "evaluationFile" | "literatureFile") {
         return (
             <>
                 <Controller
-                    name="evaluationFile"
+                    name={key}
                     control={methods.control}
                     rules={{
-                        // = 5MB allowed
-                        validate: (value) => value.size < 5242880 || 'max. 5 MB erlaubt',
+                        // max 5MB allowed
+                        validate: (value) => !value || value.size < 5242880 || 'max. 5 MB erlaubt'
                     }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
                             <label
-                                className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
                                 htmlFor={name}
                             >
                                 Wähle eine Datei
@@ -158,10 +180,10 @@ export default function PostProcess({ socket }: Props) {
                         </>
                     )}
                 />
-                {methods.formState.errors.evaluationFile &&
-                    typeof methods.formState.errors.evaluationFile.message === 'string' && (
+                {methods.formState.errors[key] &&
+                    typeof methods.formState.errors[key].message === 'string' && (
                         <p className="text-red-500">
-                            {methods.formState.errors.evaluationFile.message}
+                            {methods.formState.errors[key].message}
                         </p>
                     )}
             </>
@@ -246,7 +268,7 @@ export default function PostProcess({ socket }: Props) {
                                 Evaluationsergebnissen hochladen.
                             </p>
                             <textarea
-                                className="border border-gray-400 rounded-lg w-full p-4 mt-4 mb-6"
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
                                 placeholder="Beschreibe deine Reflexion"
                                 {...methods.register('reflection')}
@@ -271,9 +293,9 @@ export default function PostProcess({ socket }: Props) {
                                     </AuthenticatedFile>
                                 </div>
                             ) : (
-                                <p className="my-2 text-gray-600">Keine Datei vorhanden</p>
+                                <p className="mb-2 text-gray-600">Keine Datei vorhanden</p>
                             )}
-                            {renderFileInput()}
+                            {renderFileInput('evaluationFile')}
                             {/*<button
                                 // TODO remove button for file, but doesn't work yet
                                 className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
@@ -320,31 +342,85 @@ export default function PostProcess({ socket }: Props) {
                                 {...methods.register('veModel')}
                             />
                         </li>
+                        <li className="mb-4">
+                            <p>
+                                Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch,
+                                die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.
+                            </p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder="Relevante Literaturangaben"
+                                {...methods.register('literature')}
+                            />
+                            {methods.watch('literatureFile') ? (
+                                <div className="mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                                    <div className="max-w-[250px] mr-4 flex items-center">
+                                        <AuthenticatedFile
+                                            url={`/uploads/${
+                                                methods.getValues('literatureFile')!.file_id
+                                            }`}
+                                            filename={methods.getValues('literatureFile')!.name}
+                                            title={methods.getValues('literatureFile')!.name}
+                                            className='flex'
+                                        >
+                                            <RxFile size={30} className="m-1" />
+                                            <div className="truncate py-2">{methods.getValues('literatureFile')!.name}</div>
+                                        </AuthenticatedFile>
+                                        <button onClick={(e) => {
+                                            e.preventDefault()
+                                            removeSelectedFile(methods.getValues('literatureFile')!.file_id as string)
+                                        }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
+                                                <IoMdClose />
+                                        </button>
+                                    </div>
+                                </div>
+                                // <div
+                                //     className="max-w-[150px] mb-4"
+                                //     title={methods.getValues('literatureFile')!.name}
+                                // >
+                                    // <AuthenticatedFile
+                                    //     url={`/uploads/${
+                                    //         methods.getValues('literatureFile')!.file_id
+                                    //     }`}
+                                    //     filename={methods.getValues('literatureFile')!.name}
+                                    // >
+                                    //     <div className="flex justify-center">
+                                    //         <RxFile size={40} />
+                                    //     </div>
+                                    //     <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                    //         {methods.getValues('literatureFile')!.name}
+                                    //     </div>
+                                    // </AuthenticatedFile>
+                                // </div>
+                            ) : (
+                                <p className="mb-2 text-gray-600">Keine Datei vorhanden</p>
+                            )}
+                            {renderFileInput('literatureFile')}
+                        </li>
                     </ol>
                 )}
             </div>
 
-            <div className="flex justify-between w-full max-w-xl">
-                <div>
-                    <button
-                        type="submit"
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        onClick={async (e) => {
-                            e.preventDefault();
-                            await onSubmit(methods.getValues() as FormValues);
-                            socket.emit(
-                                'drop_plan_lock',
-                                { plan_id: router.query.plannerId },
-                                (response: any) => {
-                                    // TODO error handling
-                                    router.push('/plans');
-                                }
-                            );
-                        }}
-                    >
-                        Absenden & zur Übersicht
-                    </button>
-                </div>
+            <div className="mb-4 text-right w-full">
+                <button
+                    type="submit"
+                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                    onClick={async (e) => {
+                        e.preventDefault();
+                        await onSubmit(methods.getValues() as FormValues);
+                        socket.emit(
+                            'drop_plan_lock',
+                            { plan_id: router.query.plannerId },
+                            (response: any) => {
+                                // TODO error handling
+                                router.push('/plans');
+                            }
+                        );
+                    }}
+                >
+                    Absenden & zur Übersicht
+                </button>
             </div>
         </Wrapper>
     );
