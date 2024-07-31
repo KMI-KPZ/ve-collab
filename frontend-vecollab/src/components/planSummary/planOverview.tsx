@@ -37,16 +37,13 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
 
     const [importStep2Plan, setImportStep2Plan] = useState<{
         isOpen: boolean,
-        step: undefined | IFineStep,
-        plan: undefined | IPlan
+        step?: IFineStep,
+        plan?: IPlan
     }>({
-        isOpen: false,
-        step: undefined,
-        plan: undefined
+        isOpen: false
     })
     const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
     const [loadingImport, setLoadingImport] = useState<boolean>(false)
-    const [importSuccess, setImportSuccess] = useState<boolean>(false)
     const [availPlans, setAvailPlans] = useState<IPlan[]>([])
 
     useEffect(() => {
@@ -72,7 +69,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     }, [session, status, plan]);
 
     const openImportDialog = (step: IFineStep) => {
-        step = Object.assign({}, step, { _id: undefined })
+        step._id = undefined
         setImportStep2Plan({ isOpen: true, step, plan: undefined })
         methods.setValue('step.name', step.name, { shouldValidate: true, shouldDirty: false });
         methods.setValue('step.timestamp_from', new Date(step.timestamp_from).toISOString().split('T')[0], { shouldValidate: true, shouldDirty: false });
@@ -92,7 +89,8 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
 
     const handleImportStep2Plan = async (data: FormValues) => {
         setLoadingImport(true)
-        const step = Object.assign({}, importStep2Plan.step, data.step)
+        const step = {...importStep2Plan.step, ...data.step}
+
         if (importStep2Plan.plan!.steps.some(p => p.name == step!.name)) {
             setAlert({
                 message: 'Konnte nicht importieren: Plan enhält bereits eine Etappe mit diesem Namen',
@@ -140,9 +138,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
             session?.accessToken
         );
         if (res.success === true) {
-            setImportStep2Plan(prev => Object.assign({}, prev, { isOpen: false }))
-            setImportSuccess(true)
-
+            setImportStep2Plan(prev => ({...prev, isOpen: false}))
         } else {
             console.log({ res });
             setAlert({
@@ -187,7 +183,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                             className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
                             title="Auswählen"
                             onClick={e => {
-                                setImportStep2Plan(prev => Object.assign({}, prev, { plan }))
+                                setImportStep2Plan(prev => ({...prev, plan}))
                             }}
                         >
                             <MdNewspaper />
@@ -288,7 +284,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                             <button
                                 className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                                 onClick={(e) => {
-                                    setImportStep2Plan(prev => Object.assign({}, prev, { plan: undefined }))
+                                    setImportStep2Plan(prev => ({...prev, plan: undefined}))
                                 }}
                             >
                                 Zurück
@@ -362,7 +358,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
             {/* dialog to set date and name of step for import */}
             <Dialog
                 isOpen={importStep2Plan.isOpen && importStep2Plan.plan !== undefined}
-                title={`Import in &quot;${importStep2Plan.plan?.name}&quot;`}
+                title={`Import in "${importStep2Plan.plan?.name}"`}
                 onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
             >
                 <div className="w-[40vw]"><Dialog_Step2PlanConfirm /></div>
@@ -371,8 +367,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
             {/* import success dialog */}
             <Dialog
                 isOpen={!importStep2Plan.isOpen && importStep2Plan.plan !== undefined && importStep2Plan.step !== undefined}
-                title={`Import in &quot;${importStep2Plan.plan?.name}&quot;`}
-                // onClose={() => setImportSuccess(false)}
+                title={`Import in "${importStep2Plan.plan?.name}"`}
                 onClose={() => setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })}
             >
                 <div className="w-[40vw]"><Dialog_Step2PlanSuccess /></div>
