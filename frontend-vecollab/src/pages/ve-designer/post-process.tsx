@@ -201,8 +201,7 @@ export default function PostProcess({ socket }: Props) {
                         </>
                     )}
                 />
-                {methods.formState.errors[key] &&
-                    typeof methods.formState.errors[key].message === 'string' && (
+                {methods.formState.errors?.[key]?.message && (
                         <p className="text-red-500">
                             {methods.formState.errors[key].message}
                         </p>
