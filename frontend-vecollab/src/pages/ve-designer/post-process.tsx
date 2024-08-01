@@ -15,12 +15,12 @@ import {
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
 
-export interface EvaluationFile {
+export interface EvaluationFile extends File {
     file_id: string;
     file_name: string;
 }
 
-export interface LiteratureFile {
+export interface LiteratureFile extends File {
     file_id: string;
     file_name: string;
 }
@@ -31,13 +31,10 @@ interface FormValues {
     veModel: string;
     reflection: string;
     evaluation: string;
-    evaluationFile: FileWithOptionalId;
+    evaluationFile: EvaluationFile;
     literature?: string;
     // TODO maybe multiple files?!?
-    literatureFile?: null|FileWithOptionalId;
-}
-interface FileWithOptionalId extends File {
-    file_id?: string;
+    literatureFile?: null|LiteratureFile;
 }
 
 interface Props {
@@ -91,24 +88,10 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
-            const backendFile: EvaluationFile = plan.evaluation_file;
-            if (backendFile !== null) {
-                const randomFile: File = new File([''], backendFile.file_name);
-                const fileWithId: FileWithOptionalId = Object.assign(randomFile, {
-                    id: backendFile.file_id,
-                });
-                methods.setValue('evaluationFile', fileWithId);
-            }
+            methods.setValue('evaluationFile', {...plan.evaluation_file, name: plan.evaluation_file.file_name} as EvaluationFile);
             if (plan.literature) methods.setValue('literature', plan.literature as string);
             if (plan.literature_file) {
-                const literatureFile: LiteratureFile = plan.literature_file;
-                if (literatureFile !== null) {
-                    const randomFile: File = new File([''], literatureFile.file_name);
-                    const fileWithId: FileWithOptionalId = Object.assign(randomFile, {
-                        id: literatureFile.file_id,
-                    });
-                    methods.setValue('literatureFile', fileWithId);
-                }
+                methods.setValue('literatureFile', {...plan.literature_file, name: plan.literature_file.file_name} as LiteratureFile);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -177,7 +160,9 @@ export default function PostProcess({ socket }: Props) {
                     control={methods.control}
                     rules={{
                         // max 5MB allowed
-                        validate: (value) => !value || value.size < 5242880 || 'max. 5 MB erlaubt'
+                        validate: (value) => {
+                            return !value || value.size < 5242880 || 'max. 5 MB erlaubt'
+                        }
                     }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
@@ -193,9 +178,7 @@ export default function PostProcess({ socket }: Props) {
                                 ref={ref}
                                 name={name}
                                 onBlur={onBlur}
-                                onChange={(e) => {
-                                    onChange(e.target?.files?.item(0));
-                                }}
+                                onChange={(e) => onChange(e.target?.files?.item(0))}
                                 className="hidden"
                             />
                         </>
@@ -203,7 +186,7 @@ export default function PostProcess({ socket }: Props) {
                 />
                 {methods.formState.errors?.[key]?.message && (
                         <p className="text-red-500">
-                            {methods.formState.errors[key].message}
+                            {methods.formState.errors?.[key]?.message}
                         </p>
                     )}
             </>
