@@ -53,7 +53,7 @@ export interface IPlan {
     reflection: string | null;
     good_practise_evaluation: string | null;
     literature?: string | null;
-    literature_file?: LiteratureFile | null;
+    literature_files?: LiteratureFile[] | null;
     timestamp_from: string | null;
     timestamp_to: string | null;
     topics: string[];

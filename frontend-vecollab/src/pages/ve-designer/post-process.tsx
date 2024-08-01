@@ -6,7 +6,7 @@ import { fetchPOST } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
     ISideProgressBarStates,
@@ -23,6 +23,7 @@ export interface EvaluationFile extends File {
 export interface LiteratureFile extends File {
     file_id: string;
     file_name: string;
+    name: string;
 }
 
 interface FormValues {
@@ -33,8 +34,7 @@ interface FormValues {
     evaluation: string;
     evaluationFile: EvaluationFile;
     literature?: string;
-    // TODO maybe multiple files?!?
-    literatureFile?: null|LiteratureFile;
+    literatureFiles?: null| { file: File; name: string; size: number; id?: string }[];
 }
 
 interface Props {
@@ -53,7 +53,13 @@ export default function PostProcess({ socket }: Props) {
         mode: 'onChange',
         defaultValues: {
             share: false,
+            literatureFiles: null
         },
+    });
+
+    const { fields: litFiles, append: addLitFile, remove: rmLitFile } = useFieldArray({
+        name: 'literatureFiles',
+        control: methods.control,
     });
 
     const uploadToBackend = async (type: "evaluation"|"literature", file: File) => {
@@ -90,14 +96,21 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('evaluation', plan.good_practise_evaluation as string);
             methods.setValue('evaluationFile', {...plan.evaluation_file, name: plan.evaluation_file.file_name} as EvaluationFile);
             if (plan.literature) methods.setValue('literature', plan.literature as string);
-            if (plan.literature_file) {
-                methods.setValue('literatureFile', {...plan.literature_file, name: plan.literature_file.file_name} as LiteratureFile);
+            if (plan.literature_files) {
+                plan.literature_files.map(file => {
+                    addLitFile({
+                        file: file,
+                        name: file.file_name,
+                        size: file.size,
+                        id: file.file_id
+                    })
+                })
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
         },
-        [methods]
+        [methods, addLitFile]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
@@ -142,21 +155,19 @@ export default function PostProcess({ socket }: Props) {
         if (data.evaluationFile) {
             await uploadToBackend("evaluation", data.evaluationFile);
         }
-        if (data.literatureFile) {
-            await uploadToBackend("literature", data.literatureFile);
+        if (data.literatureFiles) {
+            // TODO check async
+            for (const file of data.literatureFiles) {
+                await uploadToBackend("literature", file.file);
+            }
         }
     };
 
-    const removeSelectedFile = (fileId: string) => {
-        methods.setValue('literatureFile', null);
-        methods.clearErrors('literatureFile');
-    }
-
-    function renderFileInput(key: "evaluationFile" | "literatureFile") {
+    function evaluationFileSelector() {
         return (
             <>
                 <Controller
-                    name={key}
+                    name={'evaluationFile'}
                     control={methods.control}
                     rules={{
                         // max 5MB allowed
@@ -184,9 +195,66 @@ export default function PostProcess({ socket }: Props) {
                         </>
                     )}
                 />
-                {methods.formState.errors?.[key]?.message && (
+                {methods.formState.errors?.evaluationFile?.message && (
                         <p className="text-red-500">
-                            {methods.formState.errors?.[key]?.message}
+                            {methods.formState.errors?.evaluationFile?.message}
+                        </p>
+                    )}
+            </>
+        );
+    }
+
+    function literatureFileSelector() {
+        return (
+            <>
+                <Controller
+                    name={"literatureFiles"}
+                    control={methods.control}
+                    rules={{
+                        // max 5MB allowed
+                        validate: (value) => {
+                            let valid: boolean|string = true
+                            for (const file of value!) {
+                                // TODO does not work yet
+                                if (file.size > 5242880) valid = 'max. 5 MB erlaubt'
+                            }
+                            return valid
+                        }
+                    }}
+                    render={({ field: { ref, name, onBlur, onChange } }) => (
+                        <>
+                            <label
+                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                htmlFor={name}
+                            >
+                                Datei(en) hochladen
+                            </label>
+                            <input
+                                id={name}
+                                type="file"
+                                ref={ref}
+                                name={name}
+                                onBlur={onBlur}
+                                onChange={(e) =>  {
+                                    if (!e.target?.files) return
+                                    for (const file of e.target.files) {
+                                        // TODO max 5
+                                        addLitFile( {
+                                            file: file,
+                                            name: file.name,
+                                            size: file.size
+                                        } )
+                                    }
+                                }}
+                                className="hidden"
+                                multiple
+                            />
+                        </>
+                    )}
+                />
+                {methods.formState.errors?.literatureFiles?.message && (
+                        <p className="text-red-500">
+                            {methods.formState.errors?.literatureFiles?.message}
                         </p>
                     )}
             </>
@@ -310,7 +378,7 @@ export default function PostProcess({ socket }: Props) {
                             ) : (
                                 <p className="mb-2 text-gray-600">Keine Datei vorhanden</p>
                             )}
-                            {renderFileInput('evaluationFile')}
+                            {evaluationFileSelector()}
                             {/*<button
                                 // TODO remove button for file, but doesn't work yet
                                 className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
@@ -368,32 +436,39 @@ export default function PostProcess({ socket }: Props) {
                                 placeholder="Relevante Literaturangaben"
                                 {...methods.register('literature')}
                             />
-                            {methods.watch('literatureFile') ? (
+                            {litFiles.length > 0 && (
                                 <div className="mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                                    <div className="max-w-[250px] mr-4 flex items-center">
-                                        <AuthenticatedFile
-                                            url={`/uploads/${
-                                                methods.getValues('literatureFile')!.file_id
-                                            }`}
-                                            filename={methods.getValues('literatureFile')!.name}
-                                            title={methods.getValues('literatureFile')!.name}
-                                            className='flex'
-                                        >
-                                            <RxFile size={30} className="m-1" />
-                                            <div className="truncate py-2">{methods.getValues('literatureFile')!.name}</div>
-                                        </AuthenticatedFile>
-                                        <button onClick={(e) => {
-                                            e.preventDefault()
-                                            removeSelectedFile(methods.getValues('literatureFile')!.file_id as string)
-                                        }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
-                                                <IoMdClose />
-                                        </button>
-                                    </div>
+                                    {litFiles.map((file, index) => (
+                                        <div key={index} className="max-w-[250px] mr-4 flex items-center">
+                                            <AuthenticatedFile
+                                                url={`/uploads/${
+                                                    file.id
+                                                }`}
+                                                filename={file.name}
+                                                title={file.name}
+                                                className='flex'
+                                            >
+                                                <RxFile size={30} className="m-1" />
+                                                <div className="truncate py-2">{file.name}</div>
+                                            </AuthenticatedFile>
+                                            <button onClick={(e) => {
+                                                e.preventDefault()
+                                                rmLitFile(index)
+                                            }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
+                                                    <IoMdClose />
+                                            </button>
+
+                                            {methods.formState.errors?.literatureFiles?.[index]?.message && (
+                                            <p className="text-red-500">
+                                                {methods.formState.errors?.literatureFiles?.[index]?.message}
+                                            </p>
+                                        )}
+
+                                        </div>
+                                    ))}
                                 </div>
-                            ) : (
-                                <p className="mb-2 text-gray-600">Keine Datei vorhanden</p>
                             )}
-                            {renderFileInput('literatureFile')}
+                            {literatureFileSelector()}
                         </li>
                     </ol>
                 )}
