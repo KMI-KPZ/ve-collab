@@ -26,5 +26,5 @@ rsa==4.9
 six==1.16.0
 toml==0.10.2
 tomli==2.0.1
-tornado==6.3.3
+tornado==6.4.1
 urllib3==1.26.19
