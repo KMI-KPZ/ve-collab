@@ -316,7 +316,7 @@ export default function Wrapper({
                             <Header
                                 socket={socket}
                                 methods={methods}
-                                plan={planerQuery.data}
+                                plan={planerQuery!.data!}
                                 submitCallback={async (data) => {
                                     handleSubmit(data).then(() => {
                                         setAlert({
@@ -344,7 +344,7 @@ export default function Wrapper({
                                         setPopUp({ isOpen: true, continueLink: continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
-                                    plan={planerQuery.data}
+                                    plan={planerQuery!.data!}
                                 />
 
                                 <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
