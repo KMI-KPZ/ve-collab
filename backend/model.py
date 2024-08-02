@@ -1469,6 +1469,7 @@ class VEPlan:
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
         "good_practise_evaluation": (str, type(None)),
+        "abstract": (str, type(None)),
         "evaluation_file": (dict, type(None)),
         "progress": dict,
     }
@@ -1504,6 +1505,7 @@ class VEPlan:
         underlying_ve_model: str = None,
         reflection: str = None,
         good_practise_evaluation: str = None,
+        abstract: str = None,
         evaluation_file: dict = None,
         progress: Dict = {},
     ) -> None:
@@ -1566,6 +1568,7 @@ class VEPlan:
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
         self.good_practise_evaluation = good_practise_evaluation
+        self.abstract = abstract
 
         if evaluation_file:
             if any([key not in evaluation_file for key in ["file_id", "file_name"]]):
@@ -1717,6 +1720,7 @@ class VEPlan:
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
             "good_practise_evaluation": self.good_practise_evaluation,
+            "abstract": self.abstract,
             "evaluation_file": self.evaluation_file,
             "progress": self.progress,
         }
@@ -1891,6 +1895,7 @@ class VEPlan:
                 "underlying_ve_model": None,
                 "reflection": None,
                 "good_practise_evaluation": None,
+                "abstract": None,
                 "evaluation_file": {                // or None instead
                     "file_id": "<object_id_str>",
                     "file_name": "test",

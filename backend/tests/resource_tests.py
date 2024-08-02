@@ -5033,6 +5033,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "abstract": "test",
             "evaluation_file": None,
             "progress": {
                 "name": "not_started",
@@ -5151,6 +5152,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.good_practise_evaluation,
                     self.default_plan["good_practise_evaluation"],
                 )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
                 )
@@ -5237,6 +5239,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.good_practise_evaluation,
                     self.default_plan["good_practise_evaluation"],
                 )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
                 )
@@ -5392,6 +5395,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"]
         )
+        self.assertEqual(plan.abstract, self.default_plan["abstract"])
         self.assertEqual(plan.evaluation_file, self.default_plan["evaluation_file"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
@@ -5447,6 +5451,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "abstract": "test",
                 "evaluation_file": None,
                 "progress": {
                     "name": "not_started",
@@ -5503,6 +5508,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "abstract": "test",
                 "evaluation_file": None,
                 "progress": {
                     "name": "not_started",
@@ -5593,6 +5599,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "abstract": "test",
             "evaluation_file": None,
             "progress": {
                 "name": "not_started",
@@ -5666,6 +5673,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "abstract": "test",
             "evaluation_file": None,
             "progress": {
                 "name": "not_started",
@@ -5869,6 +5877,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(
             self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation"
         )
+        self.planner.update_field(self.plan_id, "abstract", "updated_abstract")
         self.planner.update_field(
             self.plan_id,
             "progress",
@@ -5913,6 +5922,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             db_state["good_practise_evaluation"], "updated_good_practise_evaluation"
         )
+        self.assertEqual(db_state["abstract"], "updated_abstract")
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 

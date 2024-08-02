@@ -7320,6 +7320,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "abstract": "test",
             "evaluation_file": None,
             "progress": {
                 "name": "not_started",
@@ -7940,6 +7941,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "abstract": "test",
             "evaluation_file": None,
             "progress": {
                 "name": "not_started",
@@ -8057,6 +8059,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.good_practise_evaluation,
             default_plan.good_practise_evaluation,
         )
+        self.assertEqual(response_plan.abstract, default_plan.abstract)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
@@ -8064,7 +8067,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
     def test_get_plan_good_practise(self):
         """
-        expect: successfully request plan by _id, 
+        expect: successfully request plan by _id,
         access is granted because plan is a good practise example
         and therefore public
         """
@@ -8136,6 +8139,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.good_practise_evaluation,
             good_practise_plan.good_practise_evaluation,
         )
+        self.assertEqual(response_plan.abstract, good_practise_plan.abstract)
         self.assertEqual(response_plan.evaluation_file, good_practise_plan.evaluation_file)
         self.assertEqual(response_plan.progress, good_practise_plan.progress)
 
@@ -8190,7 +8194,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         expect: successfully request all good practise plans
         """
-        
+
         # add one more plan that is marked as good practise example
         _id = ObjectId()
         self.db.plans.insert_one(VEPlan(_id=_id, is_good_practise=True).to_dict())
@@ -8258,6 +8262,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.good_practise_evaluation,
             default_plan.good_practise_evaluation,
         )
+        self.assertEqual(response_plan.abstract, default_plan.abstract)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)

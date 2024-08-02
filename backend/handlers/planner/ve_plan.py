@@ -372,6 +372,7 @@ class VEPlanHandler(BaseHandler):
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "abstract": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
@@ -600,6 +601,7 @@ class VEPlanHandler(BaseHandler):
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "abstract": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
@@ -1048,7 +1050,7 @@ class VEPlanHandler(BaseHandler):
                 {
                     "plan_id": "<id_of_plan>"
                 }
-            
+
             returns:
                 200 OK
                 (the plan was successfully copied)
@@ -1381,7 +1383,7 @@ class VEPlanHandler(BaseHandler):
                     http_body["write"],
                 )
                 return
-            
+
             elif slug == "copy":
                 if "plan_id" not in http_body:
                     self.set_status(400)
@@ -1392,7 +1394,7 @@ class VEPlanHandler(BaseHandler):
                         }
                     )
                     return
-                
+
                 self.copy_plan(db, http_body["plan_id"])
 
             else:
@@ -2222,7 +2224,7 @@ class VEPlanHandler(BaseHandler):
 
         plan_id = util.parse_object_id(plan_id)
         planner = VEPlanResource(db)
-        
+
         try:
             plan = planner.get_plan(plan_id)
 
@@ -2239,7 +2241,7 @@ class VEPlanHandler(BaseHandler):
             return
 
         copied_plan_id = planner.copy_plan(plan_id, self.current_user.username)
-        
+
         self.serialize_and_write({"success": True, "copied_id": copied_plan_id})
 
     def delete_plan(self, db: Database, _id: str | ObjectId) -> None:
