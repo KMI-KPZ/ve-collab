@@ -10,11 +10,19 @@ interface Props {
     methods: UseFormReturn<any, any, undefined>;
     submitCallback: (data: any) => void;
     handleUnsavedData: (data: any, continueLink: string) => void;
+    handleInvalidData: (data: any, continueLink: string) => void;
     socket: Socket;
     plan: IPlan
 }
 
-export default function Header({ methods, plan, submitCallback, handleUnsavedData, socket }: Props) {
+export default function Header({
+    methods,
+    plan,
+    submitCallback,
+    handleUnsavedData,
+    handleInvalidData,
+    socket
+}: Props) {
     const router = useRouter();
 
     return (
@@ -49,13 +57,13 @@ export default function Header({ methods, plan, submitCallback, handleUnsavedDat
                     className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                     onClick={(e) => {
                         if (methods.formState.isDirty) {
+                            // TODO works at /name but not eg /partners ...
                             handleUnsavedData(null, '/plans');
                         } else {
                             socket.emit(
                                 'drop_plan_lock',
                                 { plan_id: router.query.plannerId },
                                 (response: any) => {
-                                    console.log(response);
                                     // TODO error handling
                                     router.push({
                                         pathname: '/plans',
@@ -77,9 +85,8 @@ export default function Header({ methods, plan, submitCallback, handleUnsavedDat
                             await submitCallback(data);
                         },
                         // invalid form
-                        // TODO open another Popup (data is invalid PopUp)
                         async (data: any) => {
-                            handleUnsavedData(data, '');
+                            handleInvalidData(data, '')
                         }
                     )}
                 >

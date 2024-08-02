@@ -63,7 +63,11 @@ export default function Wrapper({
     const router = useRouter();
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
-    const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
+    const [popUp, setPopUp] = useState<{
+        isOpen: boolean;
+        continueLink: string,
+        type?: "unsaved"|"invalid"
+    }>({
         isOpen: false,
         continueLink: '/plans',
     });
@@ -142,8 +146,6 @@ export default function Wrapper({
             'try_acquire_or_extend_plan_write_lock',
             { plan_id: router.query.plannerId },
             async (response: any) => {
-                console.log(response);
-                setLoading(false);
                 if (response.success === true && response.status !== 403) {
                     return;
                 }
@@ -174,10 +176,6 @@ export default function Wrapper({
                 // router.push('/plans')
             }
         );
-    }, [isLoading, error, socket, router, session]);
-
-    useEffect(() => {
-        if (!plan || isLoading || error) return;
 
         // write access or author check
         if (
@@ -190,27 +188,27 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-        mutateGetPlanById().then(() => {
-            // mutate -> refetch stale planData
-            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-            setIsDirty(methods.formState.isDirty);
-            planerDataCallback(plan);
-        });
-        setLoading(false);
+    }, [plan, isLoading, error, socket, router, session]);
+
+    // call data callback
+    useEffect(() => {
+        if (!plan || isLoading || error) return;
+
+        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+        setIsDirty(methods.formState.isDirty);
+        planerDataCallback(plan);
+        setLoading(false)
     }, [
         plan,
         isLoading,
         error,
-        methods,
-        currentPath,
         planerDataCallback,
-        session,
-        mutateGetPlanById,
+        methods
     ]);
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
-    const handleSubmit = async (data: any, updateAfterSaved = true) => {
+    const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
@@ -230,18 +228,18 @@ export default function Wrapper({
                 return false;
             }
         }
-        if (updateAfterSaved) {
-            // reload plan
-            await mutateGetPlanById();
-            // reset formstate.isdirty after save
-            methods.reset({}, { keepValues: true });
-        }
+        // reload plan
+        await mutateGetPlanById();
+        // reset formstate.isdirty after save
+        methods.reset({}, { keepValues: true });
         return true;
     };
 
+    // handler after we clicked "Weiter" in unsaved/invalid data PopUp
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
+                // release plan if we leave designer
                 socket.emit(
                     'drop_plan_lock',
                     { plan_id: router.query.plannerId },
@@ -263,7 +261,7 @@ export default function Wrapper({
                 });
             }
         } else {
-            setPopUp((prev) => ({ ...prev, isOpen: false }));
+            setPopUp((prev) => ({ ...prev, isOpen: false, type: undefined }));
             setLoading(false);
         }
     };
@@ -344,15 +342,16 @@ export default function Wrapper({
                     <div className="flex flex-col">
                         <Alert state={alert} />
                         <FormProvider {...methods}>
-                            {/* TODO implement an PopUp alternative or invalid data */}
+                            {/* TODO implement an PopUp alternative for invalid data */}
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
+                                type={popUp.type}
                                 handleContinue={async () => {
                                     await handlePopupContinue();
                                 }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
-                                        return { ...prev, isOpen: false };
+                                        return { ...prev, isOpen: false, type: undefined };
                                     });
                                     setLoading(false);
                                 }}
@@ -371,10 +370,12 @@ export default function Wrapper({
                                             onClose: () => setAlert({ open: false }),
                                         });
                                     }
-                                    setLoading(false);
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, continueLink: continueLink });
+                                    setPopUp({ isOpen: true, continueLink });
+                                }}
+                                handleInvalidData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
                                 }}
                             />
 
@@ -382,10 +383,10 @@ export default function Wrapper({
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={async (data) => {
-                                        await handleSubmit(data, false);
+                                        await handleSubmit(data);
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
-                                        setPopUp({ isOpen: true, continueLink: continueLink });
+                                        setPopUp({ isOpen: true, type: "invalid", continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
                                     plan={plan}
@@ -446,15 +447,16 @@ export default function Wrapper({
                                     {(typeof prevpage !== 'undefined' ||
                                         typeof nextpage !== 'undefined') && (
                                         <div className="my-8 border-t py-3 flex justify-between">
-                                            <div className="basis-20">
+                                            <div>
                                                 {typeof prevpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title="Speichern & zurück"
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: prevpage,
                                                                     query: {
@@ -467,6 +469,7 @@ export default function Wrapper({
                                                             async (data: any) => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: prevpage,
                                                                 });
                                                             }
@@ -477,15 +480,16 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className="basis-44">
+                                            <div>
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title='Speichern & Weiter'
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: nextpage,
                                                                     query: {
@@ -498,6 +502,7 @@ export default function Wrapper({
                                                             async () => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: nextpage,
                                                                 });
                                                             }
