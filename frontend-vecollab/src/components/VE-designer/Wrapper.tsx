@@ -146,14 +146,11 @@ export default function Wrapper({
             'try_acquire_or_extend_plan_write_lock',
             { plan_id: router.query.plannerId },
             async (response: any) => {
-                console.log(response);
-                setLoading(false);
                 if (response.success === true && response.status !== 403) {
                     return;
                 }
 
                 if (response.reason === 'plan_locked') {
-                    // TODO do this only once !!!
                     const data = await fetchPOST(
                         '/profile_snippets',
                         { usernames: [response.lock_holder] },
@@ -179,10 +176,6 @@ export default function Wrapper({
                 // router.push('/plans')
             }
         );
-    }, [isLoading, error, socket, router, session]);
-
-    useEffect(() => {
-        if (!plan || isLoading || error) return;
 
         // write access or author check
         if (
@@ -195,27 +188,26 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-        mutateGetPlanById().then(() => {
-            // mutate -> refetch stale planData
-            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-            setIsDirty(methods.formState.isDirty);
-            planerDataCallback(plan);
-        });
-        setLoading(false);
+    }, [plan, isLoading, error, socket, router, session]);
+
+    // call data callback
+    useEffect(() => {
+        if (!plan || isLoading || error) return;
+
+        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+        setIsDirty(methods.formState.isDirty);
+        planerDataCallback(plan);
+        setLoading(false)
     }, [
         plan,
         isLoading,
         error,
-        methods,
-        currentPath,
         planerDataCallback,
-        session,
-        mutateGetPlanById,
     ]);
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
-    const handleSubmit = async (data: any, updateAfterSaved = true) => {
+    const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
@@ -235,12 +227,10 @@ export default function Wrapper({
                 return false;
             }
         }
-        if (updateAfterSaved) {
-            // reload plan
-            await mutateGetPlanById();
-            // reset formstate.isdirty after save
-            methods.reset({}, { keepValues: true });
-        }
+        // reload plan
+        await mutateGetPlanById();
+        // reset formstate.isdirty after save
+        methods.reset({}, { keepValues: true });
         return true;
     };
 
@@ -379,7 +369,6 @@ export default function Wrapper({
                                             onClose: () => setAlert({ open: false }),
                                         });
                                     }
-                                    setLoading(false);
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({ isOpen: true, continueLink });
@@ -393,7 +382,7 @@ export default function Wrapper({
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={async (data) => {
-                                        await handleSubmit(data, false);
+                                        await handleSubmit(data);
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
                                         setPopUp({ isOpen: true, type: "invalid", continueLink });
@@ -466,7 +455,7 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: prevpage,
                                                                     query: {
@@ -499,7 +488,7 @@ export default function Wrapper({
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: nextpage,
                                                                     query: {
