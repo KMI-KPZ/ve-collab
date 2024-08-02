@@ -190,6 +190,12 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
+    }, [error, isLoading, plan, session?.user.preferred_username]);
+
+    useEffect(() => {
+        if (!plan || isLoading || error) return;
+
+        // refetch data
         mutateGetPlanById().then(() => {
             // mutate -> refetch stale planData
             // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
@@ -197,16 +203,9 @@ export default function Wrapper({
             planerDataCallback(plan);
         });
         setLoading(false);
-    }, [
-        plan,
-        isLoading,
-        error,
-        methods,
-        currentPath,
-        planerDataCallback,
-        session,
-        mutateGetPlanById,
-    ]);
+
+        // eslint-disable-next-line
+    }, []); // let [] empty to run only once
 
     // submit formdata
     //  reload plan on current page (mutate) if updateAfterSaved == true
