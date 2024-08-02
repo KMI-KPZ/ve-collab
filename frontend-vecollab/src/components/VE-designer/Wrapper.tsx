@@ -203,6 +203,7 @@ export default function Wrapper({
         isLoading,
         error,
         planerDataCallback,
+        methods
     ]);
 
     // submit formdata

@@ -279,7 +279,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                 setSnippetsLoading(false);
             });
         }
-    }, [isLoading, group, session]);
+    }, [isLoading, group, profileSnipppets, session]);
 
     useEffect(() => {
         if (chosenPermissionUser.value !== '') {

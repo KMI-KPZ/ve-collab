@@ -66,7 +66,7 @@ export default function ChatWindow(
                 setProfileSnippetsLoading(false);
             }
         );
-    }, [loadingRooms, rooms, session]);
+    }, [loadingRooms, open, profileSnippets, rooms, session]);
 
     const handleChatSelect = (chat: string) => {
         setSelectedRoom( rooms.find(room => room._id === chat) )
