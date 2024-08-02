@@ -10,6 +10,7 @@ from typing import Any, Dict, List
 
 from exceptions import (
     InvitationDoesntExistError,
+    MaximumFilesExceededError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -284,6 +285,25 @@ class VEPlanResource:
             self.db.plans.find_one({"_id": plan_id}, projection={"_id": True})
             is not None
         )
+    
+    def _check_below_max_literature_files(self, plan_id: str | ObjectId) -> bool:
+        """
+        Determine if a plan with the given _id has less than 5 literature files.
+
+        Returns True if the plan has less than 5 literature files, False otherwise.
+
+        Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        result = self.db.plans.find_one({"_id": plan_id}, projection={"literature_files": True})
+        if not result:
+            raise PlanDoesntExistError()
+
+        if len(result["literature_files"]) < 5:
+            return True
+        return False
 
     def update_full_plan(
         self, plan: VEPlan, upsert: bool = False, requesting_username: str = None
@@ -652,6 +672,69 @@ class VEPlanResource:
 
         return _id
     
+    def put_literature_file(
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
+        requesting_username: str = None,
+    ) -> ObjectId:
+        """
+        Upload a new literature file to gridfs and associate it with the plan
+        given by its _id. Only a maximum of 5 literature files is allowed per plan.
+        the _id of the uploaded file is stored in the plan's `literature_files` attribute 
+        and can be retrieved using the `GridFSStaticFileHandler`.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns the _id of the uploaded file.
+
+        Raises `PlanDoesntExistError` if no plan with the same _id already exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `MaximumFilesExceededError` if the maximum number of literature files would be larger than
+        5 after the update.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+        
+        if not self._check_below_max_literature_files(plan_id):
+            raise MaximumFilesExceededError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # store file in gridfs
+        fs = gridfs.GridFS(self.db)
+        _id = fs.put(
+            file_content,
+            filename=file_name,
+            content_type=content_type,
+            metadata={"uploader": requesting_username},
+        )
+
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {
+                "$push": {
+                    "literature_files": {
+                        "file_id": _id,
+                        "file_name": file_name,
+                    }
+                }
+            },
+        )
+
+        return _id
+
     def copy_plan(self, plan_id: str | ObjectId, new_author: str = None) -> ObjectId:
         """
         Create an identical copy of the plan given by its _id and return the _id of the

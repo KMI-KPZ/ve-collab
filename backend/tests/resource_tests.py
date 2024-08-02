@@ -22,6 +22,7 @@ from exceptions import (
     FileAlreadyInRepoError,
     FileDoesntExistError,
     InvitationDoesntExistError,
+    MaximumFilesExceededError,
     MessageDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
@@ -5079,6 +5080,38 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertTrue(self.planner._check_plan_exists(self.plan_id))
         self.assertFalse(self.planner._check_plan_exists(ObjectId()))
 
+    def test_check_below_max_literature_files(self):
+        """
+        expect: True is returned if the amount of literature files is below the maximum (5),
+        False otherwise
+        """
+
+        self.assertTrue(self.planner._check_below_max_literature_files(self.plan_id))
+
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+        self.assertFalse(self.planner._check_below_max_literature_files(self.plan_id))
+
+    def test_check_below_max_literature_files_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with this _id exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner._check_below_max_literature_files,
+            ObjectId(),
+        )
+
     def test_get_plan(self):
         """
         expect: sucessfully get the plan from the db, both by passing the _id as str
@@ -6425,6 +6458,106 @@ class PlanResourceTest(BaseResourceTestCase):
             b"test",
             "image/jpg",
             "user_with_no_access_rights",
+        )
+
+    def test_put_literature_file(self):
+        """
+        expect: successfully put literature file into the plan
+        """
+
+        file_id = self.planner.put_literature_file(
+            self.plan_id, "test_file", b"test", "image/jpg", None
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+            db_state["literature_files"],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_literature_file_with_user(self):
+        """
+        expect: successfully put literature file into the plan and passing access checks
+        """
+
+        file_id = self.planner.put_literature_file(
+            self.plan_id, "test_file", b"test", "image/jpg", CURRENT_USER.username
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+            db_state["literature_files"],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.put_literature_file,
+            ObjectId(),
+            "test_file",
+            b"test",
+            "image/jpg",
+            None,
+        )
+
+    def test_put_literature_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.put_literature_file,
+            self.plan_id,
+            "test_file",
+            b"test",
+            "image/jpg",
+            "user_with_no_access_rights",
+        )
+
+    def test_put_literature_file_error_max_files_reached(self):
+        """
+        expect: MaximumFilesExceededError is raised because the maximum amount of
+        literature files has been reached
+        """
+
+        # add 5 plans as max
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self.planner.put_literature_file,
+            self.plan_id,
+            "test_file",
+            b"test",
+            "image/jpg",
+            None,
         )
 
     def test_copy_plan(self):

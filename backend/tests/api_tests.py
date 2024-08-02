@@ -68,6 +68,7 @@ PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
 NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
 NON_UNIQUE_TASKS_ERROR = "non_unique_tasks"
 PLAN_LOCKED_ERROR = "plan_locked"
+MAXIMUM_FILES_EXCEEDED_ERROR = "maximum_files_exceeded"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -9370,6 +9371,200 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+    def test_post_put_literature_file(self):
+        """
+        expect: successfully upload a literature file
+        """
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        # assert file is stored in db
+        fs = gridfs.GridFS(self.db)
+        file = fs.find({"_id": ObjectId(response["inserted_file_id"])})
+        self.assertIsNotNone(file)
+
+        # assert that plan now has the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn("literature_files", db_state)
+        self.assertIn(
+            {
+                "file_id": ObjectId(response["inserted_file_id"]),
+                "file_name": file_name,
+            },
+            db_state["literature_files"],
+        )
+
+    def test_post_put_literature_file_error_missing_key(self):
+        """
+        expect: fail message because no file is supplied or the plan_id is missing
+        """
+
+        # missing file
+        request = MultipartEncoder(fields={})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
+
+        # missing plan_id
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file",
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+    def test_post_put_literature_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # expect plan to not have the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["literature_files"], [])
+
+        # expect file to not be stored in db
+        fs = gridfs.GridFS(self.db)
+        file = fs.find_one({"filename": file_name})
+        self.assertIsNone(file)
+
+    def test_post_put_literature_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
+        self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+    def test_post_put_literature_file_error_maximum_files_exceeded(self):
+        """
+        expect: fail message because the maximum number of literature files is exceeded
+        """
+
+        # assign 5 files to the plan
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file.txt"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+
+        # create file with IO Buffer
+        file_name = "exceeding_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            409,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MAXIMUM_FILES_EXCEEDED_ERROR)
+
+        # expect plan to not have the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["literature_files"]), 5)
+        self.assertNotIn(
+            file_name,
+            [
+                literature_file["file_name"]
+                for literature_file in db_state["literature_files"]
+            ],
+        )
 
     def test_post_copy_plan_author(self):
         """
