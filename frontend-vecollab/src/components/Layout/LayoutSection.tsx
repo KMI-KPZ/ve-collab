@@ -32,8 +32,6 @@ export default function LayoutSection({
         mutate,
     } = useGetExcludedFromMatching(session?.accessToken);
 
-    console.log(router.pathname);
-
     if(router.pathname === "/plan/pdf/[planId]") {
         return (
             <main>{children}</main>
