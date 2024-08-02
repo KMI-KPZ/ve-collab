@@ -280,18 +280,18 @@ export default function Wrapper({
         );
     }
 
-    if (
-        planerQuery.isLoading ||
-        planerQuery.isFetching ||
-        !planerQuery.data ||
-        !router.query.plannerId
-    ) {
-        return (
-            <WrapperBox>
-                <LoadingAnimation />
-            </WrapperBox>
-        );
-    }
+    // if (
+    //     planerQuery.isLoading ||
+    //     planerQuery.isFetching ||
+    //     !planerQuery.data ||
+    //     !router.query.plannerId
+    // ) {
+    //     return (
+    //         <WrapperBox>
+    //             <LoadingAnimation />
+    //         </WrapperBox>
+    //     );
+    // }
 
     return (
         <div className="bg-pattern-left-blue bg-no-repeat" ref={wrapperRef}>
@@ -328,6 +328,9 @@ export default function Wrapper({
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
                                     setPopUp({ isOpen: true, continueLink: continueLink });
+                                }}
+                                handleInvalidData={(data: any, continueLink: string) => {
+                                    // setPopUp({ isOpen: true, type: "invalid", continueLink });
                                 }}
                             />
 
@@ -382,6 +385,15 @@ export default function Wrapper({
                                                     ))}
                                                 </div>
                                             )}
+                                        </>
+                                    )}
+
+                                    {(planerQuery.isLoading || planerQuery.isFetching) && (
+                                        <>
+                                            <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
+                                            <div className="absolute left-1/2 translate-x-1/2 top-10">
+                                                <LoadingAnimation />
+                                            </div>
                                         </>
                                     )}
 
