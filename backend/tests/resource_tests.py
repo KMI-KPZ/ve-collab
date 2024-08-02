@@ -5030,10 +5030,13 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": False,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5143,6 +5146,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     plan.is_good_practise, self.default_plan["is_good_practise"]
                 )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
                 self.assertEqual(
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
@@ -5151,8 +5155,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.good_practise_evaluation,
                     self.default_plan["good_practise_evaluation"],
                 )
+                self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
+                )
+                self.assertEqual(
+                    plan.literature_files, self.default_plan["literature_files"]
                 )
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5229,6 +5237,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(
                     plan.is_good_practise, self.default_plan["is_good_practise"]
                 )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
                 self.assertEqual(
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
@@ -5237,8 +5246,12 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.good_practise_evaluation,
                     self.default_plan["good_practise_evaluation"],
                 )
+                self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
+                )
+                self.assertEqual(
+                    plan.literature_files, self.default_plan["literature_files"]
                 )
                 self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
@@ -5385,6 +5398,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
         self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
+        self.assertEqual(plan.abstract, self.default_plan["abstract"])
         self.assertEqual(
             plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
         )
@@ -5392,7 +5406,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(
             plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"]
         )
+        self.assertEqual(plan.literature, self.default_plan["literature"])
         self.assertEqual(plan.evaluation_file, self.default_plan["evaluation_file"])
+        self.assertEqual(plan.literature_files, self.default_plan["literature_files"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5444,10 +5460,13 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "literature": "test",
                 "evaluation_file": None,
+                "literature_files": [],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5500,10 +5519,13 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
                 "good_practise_evaluation": "test",
+                "literature": "test",
                 "evaluation_file": None,
+                "literature_files": [],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
@@ -5543,7 +5565,9 @@ class PlanResourceTest(BaseResourceTestCase):
         # create one more good practise plan
         additional_good_practise_plan_id = ObjectId()
         self.db.plans.insert_one(
-            VEPlan(_id=additional_good_practise_plan_id, is_good_practise=True).to_dict()
+            VEPlan(
+                _id=additional_good_practise_plan_id, is_good_practise=True
+            ).to_dict()
         )
 
         plans = self.planner.get_good_practise_plans()
@@ -5590,10 +5614,13 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5663,10 +5690,13 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
             "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -5864,11 +5894,13 @@ class PlanResourceTest(BaseResourceTestCase):
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.planner.update_field(self.plan_id, "is_good_practise", False)
+        self.planner.update_field(self.plan_id, "abstract", "updated_abstract")
         self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
         self.planner.update_field(self.plan_id, "reflection", "updated_reflection")
         self.planner.update_field(
             self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation"
         )
+        self.planner.update_field(self.plan_id, "literature", "updated_literature")
         self.planner.update_field(
             self.plan_id,
             "progress",
@@ -5908,11 +5940,13 @@ class PlanResourceTest(BaseResourceTestCase):
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["is_good_practise"], False)
+        self.assertEqual(db_state["abstract"], "updated_abstract")
         self.assertEqual(db_state["underlying_ve_model"], "updated_model")
         self.assertEqual(db_state["reflection"], "updated_reflection")
         self.assertEqual(
             db_state["good_practise_evaluation"], "updated_good_practise_evaluation"
         )
+        self.assertEqual(db_state["literature"], "updated_literature")
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 

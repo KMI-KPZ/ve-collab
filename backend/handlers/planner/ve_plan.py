@@ -369,13 +369,22 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
-                        },,
+                        },
+                        "literature_files": [               // max 5
+                            {
+                                "file_id": "<object_id_str>",
+                                "file_name": "test",
+                            },
+                        ],
+                        ]
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -597,13 +606,21 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
                         "good_practise_evaluation": "test",
+                        "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
                         },
+                        "literature_files": [               // max 5
+                            {
+                                "file_id": "<object_id_str>",
+                                "file_name": "test",
+                            },
+                        ],
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
