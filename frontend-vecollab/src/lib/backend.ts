@@ -23,7 +23,9 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 const swrConfig = {
-    revalidateOnFocus: false
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false
 }
 
 interface APIErrorResponse{
