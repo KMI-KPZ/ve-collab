@@ -10,8 +10,7 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../Dropdown';
 import AuthenticatedImage from '../AuthenticatedImage';
-import { fetchPOST, useIsGlobalAdmin } from '@/lib/backend';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
 
 interface Props {
     notificationEvents: Notification[];
@@ -40,20 +39,7 @@ export default function HeaderSection({
 
     const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
-
-    const [userProfile, setUserProfile] = useState<BackendUserSnippet>();
-
-    useEffect(() => {
-        if (!session?.user) return;
-
-        fetchPOST(
-            '/profile_snippets',
-            { usernames: [session.user.preferred_username] },
-            session.accessToken
-        ).then((data) => {
-            setUserProfile(data.user_snippets[0]);
-        });
-    }, [session]);
+    const {data: userProfile} = useGetOwnProfile()
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -187,7 +173,7 @@ export default function HeaderSection({
                                             <AuthenticatedImage
                                                 imageId={
                                                     userProfile
-                                                        ? userProfile.profile_pic
+                                                        ? userProfile?.profile?.profile_pic
                                                         : 'default_profile_pic.jpg'
                                                 }
                                                 alt={'Benutzerbild'}
@@ -196,10 +182,10 @@ export default function HeaderSection({
                                                 className="rounded-full mr-3"
                                             ></AuthenticatedImage>
                                             <div
-                                                title={`${userProfile?.first_name} ${userProfile?.last_name}`}
+                                                title={`${userProfile?.profile?.first_name} ${userProfile?.profile?.last_name}`}
                                                 className="max-w-[96px] truncate font-semibold"
                                             >
-                                                {userProfile?.first_name} {userProfile?.last_name}
+                                                {userProfile?.profile?.first_name} {userProfile?.profile?.last_name}
                                             </div>
                                             <MdArrowDropDown />
                                         </div>

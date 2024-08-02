@@ -37,7 +37,7 @@ export default function ChatWindow(
     const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
 
     useEffect(() => {
-        if (loadingRooms) return;
+        if (loadingRooms || !open) return;
 
         // edge case: having no rooms would cause loading animation to spin indefinitely
         // because of initial true state
@@ -49,6 +49,7 @@ export default function ChatWindow(
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
 
+        if (profileSnippets.length) return
         // fetch profile snippets
         fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
             (data) => {

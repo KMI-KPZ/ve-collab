@@ -261,13 +261,13 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         if (!isLoading) {
             setToggleInvisible(group.invisible);
 
+            if (profileSnipppets.length) return
             setSnippetsLoading(true);
             fetchPOST(
                 '/profile_snippets',
                 { usernames: [...group.requests, ...group.invites, ...group.members] },
                 session?.accessToken
             ).then((data) => {
-                console.log('get snippets');
                 setProfileSnippets(
                     data.user_snippets.map((snippet: any) => ({
                         name: snippet.first_name + ' ' + snippet.last_name,

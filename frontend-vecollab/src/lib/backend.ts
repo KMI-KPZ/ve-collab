@@ -25,7 +25,8 @@ let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 const swrConfig = {
     revalidateIfStale: false,
     revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateOnReconnect: false,
+    // shouldRetryOnError: false
 }
 
 interface APIErrorResponse{
@@ -73,21 +74,23 @@ export function useIsGlobalAdmin(accessToken?: string): boolean {
     return data?.is_admin || false;
 }
 
-export function useGetProfileSnippets(usernames?: string[]): {
+export function useGetProfileSnippets(usernames: string): {
     data: BackendUserSnippet[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    // get usernames  as comma separated string
+    // to fix SWR request
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        ['/profile_snippets', session?.accessToken],
-        ([url, token]) => POSTfetcher(url, { usernames }, token),
+        usernames ? ['/profile_snippets', session?.accessToken] : null,
+        ([url, token]) => POSTfetcher(url, { usernames: usernames ? usernames.split(",") : "" }, token),
         swrConfig
     );
 
     return {
-        data: isLoading || error ? [] : data.user_snippets,
+        data: isLoading || error || !usernames ? [] : data.user_snippets,
         isLoading,
         error,
         mutate,
