@@ -63,7 +63,11 @@ export default function Wrapper({
     const router = useRouter();
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
-    const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
+    const [popUp, setPopUp] = useState<{
+        isOpen: boolean;
+        continueLink: string,
+        type?: "unsaved"|"invalid"
+    }>({
         isOpen: false,
         continueLink: '/plans',
     });
@@ -149,6 +153,7 @@ export default function Wrapper({
                 }
 
                 if (response.reason === 'plan_locked') {
+                    // TODO do this only once !!!
                     const data = await fetchPOST(
                         '/profile_snippets',
                         { usernames: [response.lock_holder] },
@@ -239,9 +244,11 @@ export default function Wrapper({
         return true;
     };
 
+    // handler after we clicked "Weiter" in unsaved/invalid data PopUp
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
+                // release plan if we leave designer
                 socket.emit(
                     'drop_plan_lock',
                     { plan_id: router.query.plannerId },
@@ -263,7 +270,7 @@ export default function Wrapper({
                 });
             }
         } else {
-            setPopUp((prev) => ({ ...prev, isOpen: false }));
+            setPopUp((prev) => ({ ...prev, isOpen: false, type: undefined }));
             setLoading(false);
         }
     };
@@ -344,15 +351,16 @@ export default function Wrapper({
                     <div className="flex flex-col">
                         <Alert state={alert} />
                         <FormProvider {...methods}>
-                            {/* TODO implement an PopUp alternative or invalid data */}
+                            {/* TODO implement an PopUp alternative for invalid data */}
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
+                                type={popUp.type}
                                 handleContinue={async () => {
                                     await handlePopupContinue();
                                 }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
-                                        return { ...prev, isOpen: false };
+                                        return { ...prev, isOpen: false, type: undefined };
                                     });
                                     setLoading(false);
                                 }}
@@ -374,7 +382,10 @@ export default function Wrapper({
                                     setLoading(false);
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, continueLink: continueLink });
+                                    setPopUp({ isOpen: true, continueLink });
+                                }}
+                                handleInvalidData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
                                 }}
                             />
 
@@ -385,7 +396,7 @@ export default function Wrapper({
                                         await handleSubmit(data, false);
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
-                                        setPopUp({ isOpen: true, continueLink: continueLink });
+                                        setPopUp({ isOpen: true, type: "invalid", continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
                                     plan={plan}
@@ -446,10 +457,11 @@ export default function Wrapper({
                                     {(typeof prevpage !== 'undefined' ||
                                         typeof nextpage !== 'undefined') && (
                                         <div className="my-8 border-t py-3 flex justify-between">
-                                            <div className="basis-20">
+                                            <div>
                                                 {typeof prevpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title="Speichern & zurück"
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
@@ -467,6 +479,7 @@ export default function Wrapper({
                                                             async (data: any) => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: prevpage,
                                                                 });
                                                             }
@@ -477,10 +490,11 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className="basis-44">
+                                            <div>
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title='Speichern & Weiter'
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
@@ -498,6 +512,7 @@ export default function Wrapper({
                                                             async () => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: nextpage,
                                                                 });
                                                             }
