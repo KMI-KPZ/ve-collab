@@ -1606,6 +1606,54 @@ class VEPlanHandler(BaseHandler):
                 (the plan does not have an evaluation file with the given file_id)
                 {"success": False,
                  "reason": "file_doesnt_exist"}
+
+        DELETE /planner/remove_literature_file
+            delete a literature from the list in a plan by specifying the plans _id
+            and the file's _id.
+
+            query params:
+                plan_id: the _id of the plan whose literature file should be removed
+                file_id: the _id of the file that should be removed
+
+            http body:
+
+            returns:
+                200 OK,
+                (file was deleted)
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:plan_id"}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:file_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                403 Forbidden
+                (the plan is locked, i.e. another user is currently editing it)
+                {"success": False,
+                 "reason": "plan_locked"}
+
+                409 Conflict
+                (no plan with the given plan_id was found)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
+
+                409 Conflict
+                (the plan does not have a literature file with the given file_id)
+                {"success": False,
+                 "reason": "file_doesnt_exist"}
         """
         with util.get_mongodb() as db:
             if slug == "delete":
@@ -1671,6 +1719,33 @@ class VEPlanHandler(BaseHandler):
                     return
 
                 self.remove_evaluation_file(db, plan_id, file_id)
+                return
+            
+            elif slug == "remove_literature_file":
+                try:
+                    plan_id = self.get_argument("plan_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                try:
+                    file_id = self.get_argument("file_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "file_id",
+                        }
+                    )
+                    return
+
+                self.remove_literature_file(db, plan_id, file_id)
                 return
 
             else:
@@ -2655,7 +2730,7 @@ class VEPlanHandler(BaseHandler):
         file_id = util.parse_object_id(file_id)
 
         planner = VEPlanResource(db)
-        
+
         try:
             if not planner._check_plan_exists(plan_id):
                 raise PlanDoesntExistError
@@ -2673,6 +2748,67 @@ class VEPlanHandler(BaseHandler):
                 return
 
             planner.remove_evaluation_file(
+                plan_id, file_id, requesting_username=self.current_user.username
+            )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+            return
+        except FileDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": FILE_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def remove_literature_file(
+        self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a literature file from the list in a plan by specifying the 
+        plan's _id and the file's _id.
+
+        Responses:
+            200 OK        --> successfully removed the file
+            403 Forbidden --> user is not author of the plan
+                          --> another user currently holds a write lock on this plan
+            409 Conflict  --> no plan with the given _id was found
+                          --> no file with the given _id was found in the plan
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        planner = VEPlanResource(db)
+        
+        try:
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
+                return
+
+            planner.remove_literature_file(
                 plan_id, file_id, requesting_username=self.current_user.username
             )
 

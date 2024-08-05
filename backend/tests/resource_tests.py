@@ -6659,6 +6659,125 @@ class PlanResourceTest(BaseResourceTestCase):
             None,
         )
 
+    def test_remove_literature_file(self):
+        """
+        expect: successfully remove a literature file from the plan's list
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.planner.remove_literature_file(self.plan_id, file_ids[0])
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_remove_literature_file_with_user(self):
+        """
+        expect: successfully remove a literature file from its list 
+        in the plan and passing access checks
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.planner.remove_literature_file(
+            self.plan_id, file_ids[0], requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_remove_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.remove_literature_file,
+            ObjectId(),
+            ObjectId(),
+        )
+
+    def test_remove_literature_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.remove_literature_file,
+            self.plan_id,
+            file_ids[0],
+            "user_with_no_access_rights",
+        )
+
+    def test_remove_literature_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            FileDoesntExistError,
+            self.planner.remove_literature_file,
+            self.plan_id,
+            ObjectId(),
+        )
+
     def test_copy_plan(self):
         """
         expect: successfully copy plan

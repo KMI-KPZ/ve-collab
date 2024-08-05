@@ -10468,6 +10468,187 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
 
+    def test_delete_remove_literature_file(self):
+        """
+        expect: successfully remove a literature file from the plan and gridfs
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            True,
+            200,
+        )
+
+        # expect the file to be removed from the plan
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+
+        # expect the file to be removed from gridfs
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_delete_remove_literature_file_error_missing_key(self):
+        """
+        expect: fail message because plan_id or file_id is missing
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?file_id={}".format(str(ObjectId())),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}".format(self.plan_id),
+            False,
+            400,
+        )
+        self.assertEqual(response2["reason"], MISSING_KEY_ERROR_SLUG + "file_id")
+
+    def test_delete_remove_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(ObjectId()), str(file_ids[0])
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_literature_file_error_file_doesnt_exist(self):
+        """
+        expect: fail message because plan does not contain a literature file with
+        the given file_id
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(ObjectId())
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], FILE_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_literature_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_remove_literature_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
 
 class VeInvitationHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:

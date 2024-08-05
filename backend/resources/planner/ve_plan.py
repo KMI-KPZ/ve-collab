@@ -786,6 +786,52 @@ class VEPlanResource:
         )
 
         return _id
+    
+    def remove_literature_file(
+        self,
+        plan_id: str | ObjectId,
+        file_id: str | ObjectId,
+        requesting_username: str = None,
+    ) -> None:
+        """ 
+        Remove one literature file from the list in its plan (and gridfs) by specifying 
+        the plan's _id and the file's _id.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `FileDoesntExistError` if no file with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # remove the file from gridfs
+        fs = gridfs.GridFS(self.db)
+        if not fs.exists(file_id):
+            raise FileDoesntExistError()
+
+        fs.delete(file_id)
+
+        # remove the reference from the plan
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"literature_files": {"file_id": file_id}}},
+        )
 
     def copy_plan(self, plan_id: str | ObjectId, new_author: str = None) -> ObjectId:
         """
