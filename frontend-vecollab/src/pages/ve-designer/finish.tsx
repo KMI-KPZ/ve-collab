@@ -16,6 +16,7 @@ interface Props {
 Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
+    // TODO
     const [plan, setPlanData] = useState<IPlan>()
 
     return (
@@ -26,7 +27,10 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             methods={useForm<any>()}
             preventToLeave={false}
             stageInMenu="finish"
-            planerDataCallback={setPlanData}
+            planerDataCallback={(d) => {
+                setPlanData(d)
+                return {}
+            }}
             submitCallback={(d) => {}}
         >
             {typeof plan !== 'undefined' ? <PlanOverview plan={plan} /> : <LoadingAnimation />}
