@@ -60,16 +60,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            targetGroups: [
-                {
-                    name: '',
-                    age_min: '',
-                    age_max: '',
-                    experience: '',
-                    academic_course: '',
-                    languages: '',
-                },
-            ],
+            targetGroups: [{
+                name: '',
+                age_min: '',
+                age_max: '',
+                experience: '',
+                academic_course: '',
+                languages: '',
+            }],
             languages: [{ language: '' }],
         },
     });
@@ -96,15 +94,22 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let data: {[key: string]: any} = {}
+
             if (plan.audience.length !== 0) {
                 replaceTg(plan.audience);
+                data.targetGroups = plan.audience
             }
             if (plan.languages.length !== 0) {
-                replaceLang(plan.languages.map((element: string) => ({ language: element })));
+                const languages = plan.languages.map(language => ({ language }))
+                replaceLang(languages);
+                data.languages = languages
             }
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return data
         },
         [replaceLang, replaceTg]
     );

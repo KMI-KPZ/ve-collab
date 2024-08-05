@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FormProvider, UseFormReturn } from 'react-hook-form';
+import { FieldValues, FormProvider, UseFormProps, UseFormReturn } from 'react-hook-form';
 import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -32,7 +32,7 @@ interface Props {
     preventToLeave?: boolean;
 
     stageInMenu?: string; // TODO make it unrequired
-    planerDataCallback: (data: any) => void;
+    planerDataCallback: (data: any) => FieldValues;
     submitCallback: (data: any) =>
         | unknown
         | Promise<
@@ -74,7 +74,7 @@ export default function Wrapper({
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
-    const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
+    // const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -88,8 +88,8 @@ export default function Wrapper({
         const handleBrowseAway = (nextlink: string) => {
             if (preventToLeave === false) return;
 
-            // form was not changed, but if we clicked outside we should drop the lock
-            if (!methods.formState.isDirty) {
+            // form was not changed, but if we clicked outside we drop the lock
+            if (Object.keys(methods.formState.dirtyFields).length == 0) {
                 if (clickedOutside) {
                     socket.emit(
                         'drop_plan_lock',
@@ -194,10 +194,21 @@ export default function Wrapper({
     useEffect(() => {
         if (!plan || isLoading || error) return;
 
-        // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-        setIsDirty(methods.formState.isDirty);
-        planerDataCallback(plan);
-        setLoading(false)
+        (async () => {
+            const data = await planerDataCallback(plan);
+            if (Object.keys(data).length) {
+                // reset form default values for isDirty check
+                methods.reset(data)
+            }
+
+            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
+            // may works now without this hack?!?
+            // setIsDirty(methods.formState.isDirty);
+            setLoading(false)
+        })();
+
+        return () => {}
+
     }, [
         plan,
         isLoading,

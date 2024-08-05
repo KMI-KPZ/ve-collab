@@ -121,22 +121,23 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let data: {[key: string]: any} = {}
             if (plan.steps?.length > 0) {
-                const stepNames: IFineStep[] =  plan.steps.map((step) => {
+                data.stepNames = plan.steps.map((step) => {
                     return Object.assign({}, step, {
                         timestamp_from: step.timestamp_from.split('T')[0],
                         timestamp_to: step.timestamp_to.split('T')[0]
                     })
 
                 });
-                replace(stepNames); // PROBLEM isDirty is initially true
-                // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
-
+                replace(data.stepNames);
                 setSteps(plan.steps);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+
+            return data
         },
         [replace]
     );

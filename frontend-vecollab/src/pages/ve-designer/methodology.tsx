@@ -54,14 +54,13 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            methods.setValue(
-                'methodicalApproaches',
-                plan.methodical_approaches.map((value) => ({ value, label: value }))
-            );
+            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }))
+            methods.setValue('methodicalApproaches', approaches);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return {methodicalApproaches: approaches}
         },
         [methods]
     );

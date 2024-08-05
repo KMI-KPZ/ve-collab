@@ -83,6 +83,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return {institutions: plan.institutions}
         },
         [replace]
     );

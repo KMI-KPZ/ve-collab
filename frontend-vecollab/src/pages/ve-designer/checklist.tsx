@@ -93,12 +93,14 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let checklistValue = [emptyCheckListPartner]
             if (
                 plan.formalities &&
                 Array.isArray(plan.formalities) &&
                 plan.formalities.length > 0
             ) {
-                methods.setValue('checklist', plan.formalities);
+                checklistValue = plan.formalities
+                methods.setValue('checklist', checklistValue);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -112,6 +114,8 @@ export default function Checklist({ socket }: Props): JSX.Element {
             ).then((snippets: BackendProfileSnippetsResponse) => {
                 setUsersFirstLastNames(snippets.user_snippets);
             });
+
+            return {checklist : checklistValue}
         },
         [methods, session]
     );

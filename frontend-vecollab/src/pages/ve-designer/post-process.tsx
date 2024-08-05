@@ -88,6 +88,8 @@ export default function PostProcess({ socket }: Props) {
                 setSideMenuStepsProgress(plan.progress);
             }
             console.log('backendFile', plan.evaluation_file);
+            // TODO after merge of branch https://github.com/KMI-KPZ/ve-collab/tree/nachVE
+            return {}
         },
         [methods]
     );
