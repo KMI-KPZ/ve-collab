@@ -297,7 +297,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
-                                    <div className="flex items-center">
+                                    <div className="flex flex-wrap items-center">
                                         <label>von:</label>
                                         <input
                                             type="date"

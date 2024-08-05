@@ -183,8 +183,8 @@ export default function PostProcess({ socket }: Props) {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="p-6 w-[60rem] divide-y">
-                <div className="flex flex-col items-center justify-between mb-3 mr-3">
+            <div className="py-6 divide-y">
+                <div className="flex flex-col justify-between mb-3">
                     <div>
                         <p className="font-medium">
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
