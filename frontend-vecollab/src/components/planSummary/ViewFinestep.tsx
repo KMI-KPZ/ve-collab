@@ -26,7 +26,7 @@ export default function ViewFinestep({ fineStep, openAllBoxes, handleImportStep 
     return (
         <div className="border-2 border-gray-400 rounded-3xl p-4 mb-4">
             <div
-                className="flex cursor-pointer justify-start items-center space-x-10"
+                className="flex flex-wrap cursor-pointer justify-start items-center space-x-10"
                 onClick={() => setIsOpenStepSection(!isOpenStepSection)}
             >
                 <Image
