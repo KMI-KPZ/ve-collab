@@ -69,6 +69,7 @@ NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
 NON_UNIQUE_TASKS_ERROR = "non_unique_tasks"
 PLAN_LOCKED_ERROR = "plan_locked"
 MAXIMUM_FILES_EXCEEDED_ERROR = "maximum_files_exceeded"
+FILE_DOESNT_EXIST_ERROR = "file_doesnt_exist"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -10301,6 +10302,171 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect step to still be there
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(len(db_state["steps"]), 1)
+
+    def test_delete_remove_evaluation_file(self):
+        """
+        expect: successfully remove the evaluation file from the plan and gridfs
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            True,
+            200,
+        )
+
+        # expect the file to be removed from the plan
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+
+        # expect the file to be removed from gridfs
+        self.assertFalse(fs.exists(file_id))
+
+    def test_delete_remove_evaluation_file_error_missing_key(self):
+        """
+        expect: fail message because plan_id or file_id is missing
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?file_id={}".format(str(ObjectId())),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}".format(self.plan_id),
+            False,
+            400,
+        )
+        self.assertEqual(response2["reason"], MISSING_KEY_ERROR_SLUG + "file_id")
+
+    def test_delete_remove_evaluation_file_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(ObjectId()), str(file_id)
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_evaluation_file_error_file_doesnt_exist(self):
+        """
+        expect: fail message because plan does not contain an evaluation file with
+        the given file_id
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(ObjectId())
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], FILE_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_evaluation_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_remove_evaluation_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
 
 
 class VeInvitationHandlerTest(BaseApiTestCase):

@@ -9,6 +9,7 @@ from pymongo.errors import DuplicateKeyError
 from typing import Any, Dict, List
 
 from exceptions import (
+    FileDoesntExistError,
     InvitationDoesntExistError,
     MaximumFilesExceededError,
     MissingKeyError,
@@ -96,7 +97,10 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         if requesting_username is not None:
-            if result["is_good_practise"] is False or result["is_good_practise"] is None:
+            if (
+                result["is_good_practise"] is False
+                or result["is_good_practise"] is None
+            ):
                 if requesting_username not in result["read_access"]:
                     raise NoReadAccessError()
 
@@ -285,7 +289,7 @@ class VEPlanResource:
             self.db.plans.find_one({"_id": plan_id}, projection={"_id": True})
             is not None
         )
-    
+
     def _check_below_max_literature_files(self, plan_id: str | ObjectId) -> bool:
         """
         Determine if a plan with the given _id has less than 5 literature files.
@@ -297,7 +301,9 @@ class VEPlanResource:
 
         plan_id = util.parse_object_id(plan_id)
 
-        result = self.db.plans.find_one({"_id": plan_id}, projection={"literature_files": True})
+        result = self.db.plans.find_one(
+            {"_id": plan_id}, projection={"literature_files": True}
+        )
         if not result:
             raise PlanDoesntExistError()
 
@@ -671,7 +677,53 @@ class VEPlanResource:
         )
 
         return _id
-    
+
+    def remove_evaluation_file(
+        self,
+        plan_id: str | ObjectId,
+        file_id: str | ObjectId,
+        requesting_username: str = None,
+    ) -> None:
+        """ 
+        Remove the evaluation file from its plan (and gridfs) by specifying the plan's _id
+        and the file's _id.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `FileDoesntExistError` if no file with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # remove the file from gridfs
+        fs = gridfs.GridFS(self.db)
+        if not fs.exists(file_id):
+            raise FileDoesntExistError()
+
+        fs.delete(file_id)
+
+        # remove the reference from the plan
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$set": {"evaluation_file": None}},
+        )
+
     def put_literature_file(
         self,
         plan_id: str | ObjectId,
@@ -683,7 +735,7 @@ class VEPlanResource:
         """
         Upload a new literature file to gridfs and associate it with the plan
         given by its _id. Only a maximum of 5 literature files is allowed per plan.
-        the _id of the uploaded file is stored in the plan's `literature_files` attribute 
+        the _id of the uploaded file is stored in the plan's `literature_files` attribute
         and can be retrieved using the `GridFSStaticFileHandler`.
 
         If the `requesting_username` is not None, sanity checks will be applied, i.e.
@@ -703,7 +755,7 @@ class VEPlanResource:
 
         if not self._check_plan_exists(plan_id):
             raise PlanDoesntExistError()
-        
+
         if not self._check_below_max_literature_files(plan_id):
             raise MaximumFilesExceededError()
 

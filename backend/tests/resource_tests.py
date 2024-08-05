@@ -6460,6 +6460,105 @@ class PlanResourceTest(BaseResourceTestCase):
             "user_with_no_access_rights",
         )
 
+    def test_remove_evaluation_file(self):
+        """
+        expect: successfully remove an evaluation file from the plan
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.planner.remove_evaluation_file(self.plan_id, file_id)
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+        self.assertFalse(fs.exists(file_id))
+
+    def test_remove_evaluation_file_with_user(self):
+        """
+        expect: successfully remove an evaluation file from the plan and passing access checks
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.planner.remove_evaluation_file(
+            self.plan_id, file_id, requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+        self.assertFalse(fs.exists(file_id))
+
+    def test_remove_evaluation_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.remove_evaluation_file,
+            ObjectId(),
+            ObjectId(),
+        )
+
+    def test_remove_evaluation_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.remove_evaluation_file,
+            self.plan_id,
+            file_id,
+            "user_with_no_access_rights",
+        )
+
+    def test_remove_evaluation_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            FileDoesntExistError,
+            self.planner.remove_evaluation_file,
+            self.plan_id,
+            ObjectId(),
+        )
+
     def test_put_literature_file(self):
         """
         expect: successfully put literature file into the plan
