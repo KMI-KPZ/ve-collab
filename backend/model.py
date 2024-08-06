@@ -1466,10 +1466,13 @@ class VEPlan:
         "formalities": list,
         "steps": list,
         "is_good_practise": (bool, type(None)),
+        "abstract": (str, type(None)),
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
         "good_practise_evaluation": (str, type(None)),
+        "literature": (str, type(None)),
         "evaluation_file": (dict, type(None)),
+        "literature_files": list,
         "progress": dict,
     }
 
@@ -1501,10 +1504,13 @@ class VEPlan:
         formalities: list = [],
         steps: List[Step] = [],
         is_good_practise: bool = None,
+        abstract: str = None,
         underlying_ve_model: str = None,
         reflection: str = None,
         good_practise_evaluation: str = None,
+        literature: str = None,
         evaluation_file: dict = None,
+        literature_files: List[dict] = [],
         progress: Dict = {},
     ) -> None:
         """
@@ -1563,9 +1569,11 @@ class VEPlan:
         if not is_good_practise:
             is_good_practise = False
         self.is_good_practise = is_good_practise
+        self.abstract = abstract
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
         self.good_practise_evaluation = good_practise_evaluation
+        self.literature = literature
 
         if evaluation_file:
             if any([key not in evaluation_file for key in ["file_id", "file_name"]]):
@@ -1580,6 +1588,19 @@ class VEPlan:
             self.evaluation_file = evaluation_file
         else:
             self.evaluation_file = None
+
+        if literature_files:
+            for literature_file in literature_files:
+                if any([key not in literature_file for key in ["file_id", "file_name"]]):
+                    raise MissingKeyError(
+                        "Missing a key in literature_files dictionary",
+                        "file or filename",
+                        "literature_files",
+                    )
+                literature_file["file_id"] = util.parse_object_id(literature_file["file_id"])
+            self.literature_files = literature_files
+        else:
+            self.literature_files = []
 
         if progress:
             # TODO check every expected key is inside as well
@@ -1714,10 +1735,13 @@ class VEPlan:
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
             "is_good_practise": self.is_good_practise,
+            "abstract": self.abstract,
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
             "good_practise_evaluation": self.good_practise_evaluation,
+            "literature": self.literature,
             "evaluation_file": self.evaluation_file,
+            "literature_files": self.literature_files,
             "progress": self.progress,
         }
 
@@ -1888,13 +1912,21 @@ class VEPlan:
                     }
                 ],
                 "is_good_practise": True,
+                "abstract": None,
                 "underlying_ve_model": None,
                 "reflection": None,
                 "good_practise_evaluation": None,
+                "literature": None,
                 "evaluation_file": {                // or None instead
                     "file_id": "<object_id_str>",
                     "file_name": "test",
                 },
+                "literature_files": [               // or None instead
+                    {
+                        "file_id": "<object_id_str>",
+                        "file_name": "test",
+                    }
+                ],
                 "progress": {
                     "name": "<completed|uncompleted|not_started>",
                     "institutions": "<completed|uncompleted|not_started>",
@@ -1966,6 +1998,8 @@ class VEPlan:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
+
+        # handle files
         if "evaluation_file" in params and params["evaluation_file"] is not None:
             if any(
                 [
@@ -1981,6 +2015,19 @@ class VEPlan:
             params["evaluation_file"]["file_id"] = util.parse_object_id(
                 params["evaluation_file"]["file_id"]
             )
+        if "literature_files" in params and params["literature_files"] is not None:
+            for literature_file in params["literature_files"]:
+                if any(
+                    [key not in literature_file for key in ["file_id", "file_name"]]
+                ):
+                    raise MissingKeyError(
+                        "Missing a key in literature_files dictionary",
+                        "file or filename",
+                        "literature_files",
+                    )
+                literature_file["file_id"] = util.parse_object_id(
+                    literature_file["file_id"]
+                )
 
         # if present, handle correct type of creation and modified timestamps
         if "creation_timestamp" in params:

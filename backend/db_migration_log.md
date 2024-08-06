@@ -39,3 +39,21 @@ ve_designer_rework
 26.06.24 09:30
 
 ---
+
+#### Kurzfassung
+db.plan.abstract neu
+db.plan.literature neu
+db.plan.literature_files neu
+
+#### branch
+nachVE
+
+#### Beschreibung
+- Attribt `abstract` ist neu in jedem Plan, Datentyp `str` oder `null`
+- Attribt `literature` ist neu in jedem Plan, Datentyp `str` oder `null`
+- Attribt `literature_files` ist neu in jedem Plan, Datentyp `{file_name: string, file_id: string}[]`
+
+#### letzte Änderung
+02.08.24 11:15
+
+---
