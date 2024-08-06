@@ -55,8 +55,9 @@ export default function Groups() {
         setSearchInput(event.target.value);
         fetchGET(`/search?spaces=true&query=${event.target.value}`, session!.accessToken).then(
             (data) => {
-                console.log(data);
-                setSearchResults(data.spaces);
+                setSearchResults(data.spaces.filter((space: BackendGroup) => {
+                    return !space.members.includes(session!.user?.preferred_username as string)
+                }));
             }
         );
     };
