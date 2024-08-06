@@ -27,38 +27,51 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                 />
                 <div className="text-2xl font-semibold">Eigenschaften</div>
             </div>
-            {isOpenStepSection ? (
-                <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">Partner:innen:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.partners.length !== 0 ? (
-                            plan.partners.map((partner, index) => (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(
-                                        partnerProfileSnippets[partner]
-                                            ? partnerProfileSnippets[partner].first_name +
-                                                  ' ' +
-                                                  partnerProfileSnippets[partner].last_name
-                                            : partner
-                                    )}
-                                </li>
-                            ))
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
-                    <span className="text-base font-semibold pr-5">Externe Beteiligte:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.involved_parties.length !== 0 ? (
-                            plan.involved_parties.map((party, index) => (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(party)}
-                                </li>
-                            ))
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
+
+            <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
+                <span className="font-semibold pr-5">Name:</span>
+                <ul className="flex flex-col space-y-2 col-span-3">
+                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                        {showDataOrEmptySign(plan.name)}
+                    </li>
+                </ul>
+                <span className="font-semibold pr-5">Zusammenfassung:</span>
+                <ul className="flex flex-col space-y-2 col-span-3">
+                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                        {showDataOrEmptySign(plan.abstract)}
+                    </li>
+                </ul>
+                <span className="font-semibold pr-5">Partner:innen:</span>
+                <ul className="flex flex-col space-y-2 col-span-3">
+                    {plan.partners.length !== 0 ? (
+                        plan.partners.map((partner, index) => (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
+                                {showDataOrEmptySign(
+                                    partnerProfileSnippets[partner]
+                                        ? partnerProfileSnippets[partner].first_name +
+                                                ' ' +
+                                                partnerProfileSnippets[partner].last_name
+                                        : partner
+                                )}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                    )}
+                </ul>
+                <span className="text-base font-semibold pr-5">Externe Beteiligte:</span>
+                <ul className="flex flex-col space-y-2 col-span-3">
+                    {plan.involved_parties.length !== 0 ? (
+                        plan.involved_parties.map((party, index) => (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
+                                {showDataOrEmptySign(party)}
+                            </li>
+                        ))
+                    ) : (
+                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                    )}
+                </ul>
+                {isOpenStepSection ? (<>
                     <span className="font-semibold pr-5">Institutionen:</span>
                     <div className="grid xl:grid-cols-2 col-span-3">
                         {plan.institutions.length !== 0 ? (
@@ -84,7 +97,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                             <div className='w-1/2 font-medium print:font-bold'>Fachbereich</div>
                                             <div className='w-1/2'>{showDataOrEmptySign(institution.departments)}</div>
                                         </li>
-                                        
+
                                     </ul>
                                 </div>
                             ))
@@ -139,12 +152,12 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                             <div className='w-2/3 lg:w-3/4'>{showDataOrEmptySign(
                                                 partnerProfileSnippets[goalPerPartner.username]
                                                     ? partnerProfileSnippets[
-                                                          goalPerPartner.username
-                                                      ].first_name +
-                                                          ' ' +
-                                                          partnerProfileSnippets[
-                                                              goalPerPartner.username
-                                                          ].last_name
+                                                            goalPerPartner.username
+                                                        ].first_name +
+                                                            ' ' +
+                                                            partnerProfileSnippets[
+                                                                goalPerPartner.username
+                                                            ].last_name
                                                     : goalPerPartner.username
                                             )}</div>
                                         </li>
@@ -305,47 +318,15 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                             {showDataOrEmptySign(plan.learning_env)}
                         </li>
                     </ul>
-                </section>
-            ) : (
-                <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">Partner:innen:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.partners.length !== 0 ? (
-                            plan.partners.map((partner, index) => (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(
-                                        partnerProfileSnippets[partner]
-                                            ? partnerProfileSnippets[partner].first_name +
-                                                  ' ' +
-                                                  partnerProfileSnippets[partner].last_name
-                                            : partner
-                                    )}
-                                </li>
-                            ))
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
-                    <span className="text-base font-semibold pr-5">Externe Beteiligte:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.involved_parties.length !== 0 ? (
-                            plan.involved_parties.map((party, index) => (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                    {showDataOrEmptySign(party)}
-                                </li>
-                            ))
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
+                </>) : (
                     <span
                         onClick={() => setIsOpenStepSection(!isOpenStepSection)}
                         className="flex flex-col col-span-4  space-y-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
                     >
                         mehr anzeigen...
                     </span>
-                </section>
-            )}
+                )}
+            </section>
         </>
     );
 }
