@@ -5,6 +5,7 @@ import Timestamp from "@/components/Timestamp";
 import { useGetSearchResults } from "@/lib/backend";
 import { useRouter } from "next/router";
 import { FormEvent, useState } from "react";
+import { GiSadCrab } from "react-icons/gi";
 import { MdSearch } from "react-icons/md";
 
 SearchResult.auth = true;
@@ -65,11 +66,24 @@ export default function SearchResult() {
         )
     }
 
-    if (isLoading) return  <Wrapper><div className="mt-4"><LoadingAnimation /></div></Wrapper>
+    if (isLoading) {
+        return  <Wrapper><div className="mt-4"><LoadingAnimation /></div></Wrapper>
+    }
 
-    if (error) return  <Wrapper><div>Es ist ein Fehler aufgetreten</div></Wrapper>
+    if (error) {
+        return  <Wrapper><div>Es ist ein Fehler aufgetreten</div></Wrapper>
+    }
 
-    if (router.query.search && !data.posts.length && !data.users.length && !data.spaces.length) return  <Wrapper><div>Leider nichts gefunden</div></Wrapper>
+    if (router.query.search && !data?.posts?.length && !data?.users?.length && !data?.spaces?.length) {
+        return  (
+            <Wrapper>
+                <div className="flex items-center">
+                    <GiSadCrab size={60} className="m-4" />
+                    <div className="text-xl text-slate-900">Leider nichts gefunden</div>
+                </div>
+            </Wrapper>
+        )
+    }
 
     return (
         <Wrapper>
