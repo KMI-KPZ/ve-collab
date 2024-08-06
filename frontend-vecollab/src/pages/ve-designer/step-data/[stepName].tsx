@@ -137,8 +137,9 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             if (!plan.steps?.length) {
-                return;
+                return {};
             }
+            let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend
             setSteps(plan.steps);
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
                 (item: IFineStep) => item.name === stepName
@@ -157,19 +158,20 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                         };
                     }
                 );
-                const fineStepCopyTransformedTools: IFineStepFrontend = {
+                fineStepCopyTransformedTools = {
                     ...currentFineStepCopy,
                     tasks: transformedTasks,
                 };
                 setCurrentFineStep(fineStepCopyTransformedTools);
-                methods.reset({ ...fineStepCopyTransformedTools });
                 setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
                 if (Object.keys(plan.progress).length) {
                     setSideMenuStepsProgress(plan.progress);
                 }
             }
+
+            return {...fineStepCopyTransformedTools}
         },
-        [stepName, methods]
+        [stepName]
     );
 
     useEffect(() => {

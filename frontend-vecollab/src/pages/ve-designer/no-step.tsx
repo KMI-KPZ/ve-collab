@@ -95,7 +95,7 @@ export default function NoStep({ socket }: Props): JSX.Element {
             methods={useForm<any>()}
             preventToLeave={false}
             stageInMenu="steps"
-            planerDataCallback={(d) => {}}
+            planerDataCallback={(d) => ({})}
             submitCallback={(d) => {}}
         >
             <ActionButtons />

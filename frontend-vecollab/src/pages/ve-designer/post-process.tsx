@@ -102,6 +102,18 @@ export default function PostProcess({ socket }: Props) {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+
+            return {
+                abstract: plan.abstract,
+                share: plan.is_good_practise,
+                veModel: plan.underlying_ve_model,
+                reflection: plan.reflection,
+                evaluation: plan.good_practise_evaluation,
+                evaluationFile: plan.evaluation_file,
+                literature: plan.literature,
+                literatureFiles: plan.literature_files
+
+            }
         },
         [methods, addLitFile, replaceLitFiles]
     );
@@ -202,7 +214,7 @@ export default function PostProcess({ socket }: Props) {
     };
 
     function evaluationFileSelector() {
-        if (methods.watch("evaluationFile")) return (<></>)
+        // if (methods.watch("evaluationFile")) return (<></>)
         return (
             <>
                 <Controller
@@ -326,8 +338,8 @@ export default function PostProcess({ socket }: Props) {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="p-6 w-[60rem] divide-y">
-                <div className="flex flex-col items-center justify-between mb-3 mr-3">
+            <div className="py-6 divide-y">
+                <div className="flex flex-col justify-between mb-3">
                     <div>
                         <p className="font-medium">
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
@@ -406,22 +418,22 @@ export default function PostProcess({ socket }: Props) {
                                 placeholder="Beschreibe deine Reflexion"
                                 {...methods.register('reflection')}
                             />
-                            {methods.watch('evaluationFile') !== undefined ? (
+                            {(methods.watch('evaluationFile')) ? (
                                 <div>
                                     <div
                                         className="max-w-[250px] flex items-center"
-                                        title={methods.watch('evaluationFile')!.file_name}
+                                        title={methods.watch('evaluationFile')?.file_name}
                                     >
                                         <AuthenticatedFile
-                                            url={methods.watch('evaluationFile')!.file_id === undefined
+                                            url={methods.watch('evaluationFile')?.file_id === undefined
                                                 ? ""
-                                                : `/uploads/${methods.watch('evaluationFile')!.file_id}`}
-                                            filename={methods.watch('evaluationFile')!.file_name}
-                                            title={methods.watch('evaluationFile')!.file_name}
+                                                : `/uploads/${methods.watch('evaluationFile')?.file_id}`}
+                                            filename={methods.watch('evaluationFile')?.file_name as string}
+                                            title={methods.watch('evaluationFile')?.file_name}
                                             className='flex'
                                         >
                                             <RxFile size={30} className="m-1" />
-                                            <div className="truncate py-2">{methods.watch('evaluationFile')!.file_name}</div>
+                                            <div className="truncate py-2">{methods.watch('evaluationFile')?.file_name}</div>
                                         </AuthenticatedFile>
 
                                         <button onClick={(e) => {
@@ -440,9 +452,8 @@ export default function PostProcess({ socket }: Props) {
                                     )}
                                 </div>
                             ) : (
-                                <></>
+                                <>{evaluationFileSelector()}</>
                             )}
-                            {evaluationFileSelector()}
                         </li>
                         <li className="mb-4">
                             <p>

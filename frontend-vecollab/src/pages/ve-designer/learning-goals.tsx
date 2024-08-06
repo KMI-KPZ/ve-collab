@@ -91,25 +91,22 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            methods.setValue(
-                'majorLearningGoals',
-                plan.major_learning_goals.map((goals: string) => ({
-                    value: goals,
-                    label: goals,
-                }))
-            );
-            replaceLearnings(
-                plan.individual_learning_goals.map((goal: any) => ({
-                    username: goal.username,
-                    learningGoal: goal.learning_goal,
-                }))
-            );
+            const majGoals = plan.major_learning_goals.map((goals: string) => ({
+                value: goals,
+                label: goals,
+            }))
+            methods.setValue('majorLearningGoals', majGoals);
+
+            const individGoals = plan.individual_learning_goals.map((goal: any) => ({
+                username: goal.username,
+                learningGoal: goal.learning_goal,
+            }))
+            replaceLearnings(individGoals);
+
+            let topics = [{ name: '' }]
             if (plan.topics.length > 0) {
-                replaceTopics(
-                    plan.topics.map((element: string) => ({
-                        name: element,
-                    }))
-                );
+                topics = plan.topics.map((topic: string) => ({ name: topic }))
+                replaceTopics(topics);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -123,6 +120,12 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             ).then((snippets: BackendProfileSnippetsResponse) => {
                 setUsersFirstLastNames(snippets.user_snippets);
             });
+
+            return {
+                majorLearningGoals: majGoals,
+                individualLearningGoals: individGoals,
+                topics
+            }
         },
         [methods, replaceLearnings, replaceTopics, session]
     );

@@ -75,6 +75,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return {lectures: plan.lectures}
         },
         [replace]
     );

@@ -56,8 +56,7 @@ export default function Header({
                 <button
                     className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                     onClick={(e) => {
-                        if (methods.formState.isDirty) {
-                            // TODO works at /name but not eg /partners ...
+                        if (Object.keys(methods.formState.dirtyFields).length > 0) {
                             handleUnsavedData(null, '/plans');
                         } else {
                             socket.emit(
