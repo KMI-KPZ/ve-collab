@@ -4,8 +4,6 @@ import { INode } from '@/interfaces/material/materialInterfaces';
 import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
-import { fetchGET } from '@/lib/backend';
 import Link from 'next/link';
 import { TbBulb, TbClipboardList } from 'react-icons/tb';
 import { GiPuzzle } from 'react-icons/gi';
@@ -17,7 +15,7 @@ interface Props {
 
 // Landing Page: no category (and therefore no learning-material is chosen)
 export default function PageCategoryNotSelected(props: Props) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
 
     const title = 'SELBSTLERNMATERIALIEN';
     const text = 'Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!';
@@ -26,23 +24,11 @@ export default function PageCategoryNotSelected(props: Props) {
     const text3 =
         'Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.';
 
-    const [isUserAdmin, setIsUserAdmin] = useState(false);
-
-    useEffect(() => {
-        if (status === 'loading') {
-            return;
-        }
-
-        if (session) {
-            fetchGET('/admin_check', session.accessToken).then((res) => {
-                setIsUserAdmin(res.is_admin);
-            });
-        }
-    }, [session, status]);
-
     const styleBubbleWrapper = "relative w-72 max-xl:mx-auto max-xl:my-24 xl:absolute"
     const styleBubbleMain = "group block relative h-72 w-72 z-10 rounded-full bg-ve-collab-blue flex justify-center items-center transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110"
     const styleBubbleLeaf = "block absolute h-40 w-40 rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300 hover:-translate-y-105 hover:scale-110"
+
+    const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
     const BubbleLeaf = ({style, i}: {style: string, i: number}) => {
         return (
