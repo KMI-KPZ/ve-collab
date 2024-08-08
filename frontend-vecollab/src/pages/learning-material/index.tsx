@@ -30,16 +30,6 @@ export default function PageCategoryNotSelected(props: Props) {
 
     const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
-    const BubbleLeaf = ({style, i}: {style: string, i: number}) => {
-        return (
-            <Link
-                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][i].text}`}
-                className={`${styleBubbleLeaf} ${style}`}
-            >
-                {props.mapping['top-bubble'][i].text}
-            </Link>
-        )
-    }
 
     return (
         <>
@@ -90,7 +80,15 @@ export default function PageCategoryNotSelected(props: Props) {
                             '-top-8 -right-[6rem]',
                             '-bottom-14 -right-[7rem]',
                             '-bottom-8 -left-[8rem]',
-                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
+                        ].map((style, i) => (
+                            <Link
+                                key={i}
+                                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][i].text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.mapping['top-bubble'][i].text}
+                            </Link>
+                        ))}
                     </div>
 
                     {/* LEFT BUBBLE */}
@@ -104,9 +102,17 @@ export default function PageCategoryNotSelected(props: Props) {
                             />
                         </Link>
                         {[
-                            '-top-16 -left-[5rem]',
+                            '-top-16 -left-[7rem]',
                             '-bottom-14 -right-[7rem]',
-                        ].map((style, i) =>  <BubbleLeaf key={i} style={style} i={i} />)}
+                        ].map((style, i) =>  (
+                            <Link
+                                key={i}
+                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][i].text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.mapping['left-bubble'][i].text}
+                            </Link>
+                        ))}
                     </div>
 
                     {/* RIGHT BUBBLE */}
@@ -124,7 +130,15 @@ export default function PageCategoryNotSelected(props: Props) {
                             '-bottom-16 -right-[7rem]',
                             '-bottom-14 -left-[7rem]',
                             '-top-8 -right-[8rem]',
-                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
+                        ].map((style, i) => (
+                            <Link
+                            key={i}
+                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][i].text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.mapping['right-bubble'][i].text}
+                            </Link>
+                        ))}
                     </div>
 
                     {/* BOTTOM BUBBLE */}
@@ -141,7 +155,15 @@ export default function PageCategoryNotSelected(props: Props) {
                             '-bottom-14 -left-[7rem]',
                             '-top-16 -right-[6rem]',
                             '-bottom-8 -right-[8rem]',
-                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
+                        ].map((style, i) => (
+                            <Link
+                                key={i}
+                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][i].text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.mapping['bottom-bubble'][i].text}
+                            </Link>
+                        ))}
                     </div>
 
                 </div>
