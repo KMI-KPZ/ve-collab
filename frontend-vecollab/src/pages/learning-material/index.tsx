@@ -1,5 +1,5 @@
 import Container from '@/components/Layout/container';
-import { getChildrenOfNode, getTopLevelNodes } from '@/lib/backend';
+import { getChildrenOfNode, getTopLevelNodes, useIsGlobalAdmin } from '@/lib/backend';
 import { INode } from '@/interfaces/material/materialInterfaces';
 import Image from 'next/image';
 import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
@@ -40,6 +40,21 @@ export default function PageCategoryNotSelected(props: Props) {
         }
     }, [session, status]);
 
+    const styleBubbleWrapper = "relative w-72 max-xl:mx-auto max-xl:my-24 xl:absolute"
+    const styleBubbleMain = "group block relative h-72 w-72 z-10 rounded-full bg-ve-collab-blue flex justify-center items-center transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110"
+    const styleBubbleLeaf = "block absolute h-40 w-40 rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300 hover:-translate-y-105 hover:scale-110"
+
+    const BubbleLeaf = ({style, i}: {style: string, i: number}) => {
+        return (
+            <Link
+                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][i].text}`}
+                className={`${styleBubbleLeaf} ${style}`}
+            >
+                {props.mapping['top-bubble'][i].text}
+            </Link>
+        )
+    }
+
     return (
         <>
             <Container>
@@ -71,155 +86,80 @@ export default function PageCategoryNotSelected(props: Props) {
                         </div>
                     )}
                 </div>
-                {/* bubbles */}
-                <div className="relative min-h-[90vh]">
-                    {/* top bubble*/}
-                    <div className="absolute left-1/2 -translate-x-1/2">
-                        <div className="relative">
-                            <Link
-                                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][0].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -top-16 -left-[5rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['top-bubble'][0].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][1].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -top-8 -right-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['top-bubble'][1].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][2].text}`}
-                            >
-                                <div className="h-40 w-40 absolute -z-10 -bottom-14 -right-[7rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['top-bubble'][2].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/top-bubble/${props.mapping['top-bubble'][3].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-8 -left-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['top-bubble'][3].text}
-                                </div>
-                            </Link>
-                            <Link href="/learning-material/top-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
-                                    <TbBulb
-                                        size={150}
-                                        className="text-white group-hover:text-ve-collab-orange"
-                                    />
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                    {/* left bubble*/}
-                    <div className="absolute left-[10%] top-2/3 -translate-y-2/3 -translate-x-[10%]">
-                        <div className="relative">
-                            <Link
-                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][0].text}`}
-                            >
-                                <div className="h-40 w-40 absolute -z-10 -top-[5rem] -left-[5rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['left-bubble'][0].text}
-                                </div>
-                            </Link>
 
-                            <Link
-                                href={`/learning-material/left-bubble/${props.mapping['left-bubble'][1].text}`}
-                            >
-                                <div className="h-40 w-40 absolute -z-10 -bottom-6 -right-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['left-bubble'][1].text}
-                                </div>
-                            </Link>
+                {/* BUBBLES */}
+                <div className="relative min-h-[135vh]">
+                    {/* TOP BUBBLE */}
+                    <div className={`${styleBubbleWrapper} xl:left-[40%] xl:-translate-x-[40%]`}>
+                        <Link href="/learning-material/top-bubble"
+                            className={`${styleBubbleMain}`}
+                        >
+                            <TbBulb
+                                size={150}
+                                className="text-white transition-colors group-hover:text-ve-collab-orange"
+                            />
+                        </Link>
+                        {[
+                            '-top-16 -left-[5rem]',
+                            '-top-8 -right-[6rem]',
+                            '-bottom-14 -right-[7rem]',
+                            '-bottom-8 -left-[8rem]',
+                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
+                    </div>
 
-                            <Link href="/learning-material/left-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
-                                    <TbClipboardList
-                                        size={150}
-                                        className="text-white group-hover:text-ve-collab-orange"
-                                    />
-                                </div>
-                            </Link>
-                        </div>
+                    {/* LEFT BUBBLE */}
+                    <div className={`${styleBubbleWrapper} xl:top-96 `}>
+                        <Link href="/learning-material/left-bubble"
+                            className={`${styleBubbleMain}`}
+                        >
+                            <TbClipboardList
+                                size={150}
+                                className="text-white transition-colors group-hover:text-ve-collab-orange"
+                            />
+                        </Link>
+                        {[
+                            '-top-16 -left-[5rem]',
+                            '-bottom-14 -right-[7rem]',
+                        ].map((style, i) =>  <BubbleLeaf key={i} style={style} i={i} />)}
                     </div>
-                    {/* bottom bubble*/}
-                    <div className="absolute left-[55%] top-[90%] -translate-y-[90%] -translate-x-[55%]">
-                        <div className="relative">
-                            <Link
-                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][0].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 bottom-4 -left-[8rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottom-bubble'][0].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][1].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -top-[5rem] -right-[2rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottom-bubble'][1].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/bottom-bubble/${props.mapping['bottom-bubble'][2].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-6 -right-[6rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['bottom-bubble'][2].text}
-                                </div>
-                            </Link>
-                            <Link href="/learning-material/bottom-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
-                                    <GiPuzzle
-                                        size={150}
-                                        className="text-white group-hover:text-ve-collab-orange"
-                                    />
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                    {/* right bubble*/}
-                    <div className="absolute left-[90%] top-1/3 -translate-y-1/3 -translate-x-[90%]">
-                        <div className="relative">
-                            <Link
-                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][0].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -top-[5rem] -left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['right-bubble'][0].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][1].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-[6rem] -right-[2rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['right-bubble'][1].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][2].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -bottom-[4rem] -left-[4rem] rounded-full bg-white border border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['right-bubble'][2].text}
-                                </div>
-                            </Link>
-                            <Link
-                                href={`/learning-material/right-bubble/${props.mapping['right-bubble'][3].text}`}
-                            >
-                                <div className="h-36 w-36 absolute -z-10 -top-[3rem] -right-[5rem] rounded-full bg-white border border-dashed border-ve-collab-blue flex items-center justify-center text-center text-ve-collab-blue cursor-pointer hover:text-ve-collab-orange hover:border-ve-collab-orange">
-                                    {props.mapping['right-bubble'][3].text}
-                                </div>
-                            </Link>
 
-                            <Link href="/learning-material/right-bubble">
-                                <div className="h-72 w-72 rounded-full bg-ve-collab-blue flex justify-center items-center group">
-                                    <FaLaptop
-                                        size={150}
-                                        className="text-white group-hover:text-ve-collab-orange"
-                                    />
-                                </div>
-                            </Link>
-                        </div>
+                    {/* RIGHT BUBBLE */}
+                    <div className={`${styleBubbleWrapper} xl:top-52 xl:right-0`}>
+                        <Link href="/learning-material/right-bubble"
+                            className={`${styleBubbleMain}`}
+                        >
+                            <FaLaptop
+                                size={150}
+                                className="text-white transition-colors group-hover:text-ve-collab-orange"
+                            />
+                        </Link>
+                        {[
+                            '-top-16 -left-[5rem]',
+                            '-bottom-16 -right-[7rem]',
+                            '-bottom-14 -left-[7rem]',
+                            '-top-8 -right-[8rem]',
+                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
                     </div>
+
+                    {/* BOTTOM BUBBLE */}
+                    <div className={`${styleBubbleWrapper} xl:left-1/2 xl:-translate-x-1/2 xl:top-[35rem]`}>
+                        <Link href="/learning-material/bottom-bubble"
+                            className={`${styleBubbleMain}`}
+                        >
+                            <GiPuzzle
+                                size={150}
+                                className="text-white transition-colors group-hover:text-ve-collab-orange"
+                            />
+                        </Link>
+                        {[
+                            '-bottom-14 -left-[7rem]',
+                            '-top-16 -right-[6rem]',
+                            '-bottom-8 -right-[8rem]',
+                        ].map((style, i) => <BubbleLeaf key={i} style={style} i={i} />)}
+                    </div>
+
                 </div>
+
             </Container>
         </>
     );
