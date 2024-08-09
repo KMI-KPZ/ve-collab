@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FieldValues, FormProvider, UseFormProps, UseFormReturn } from 'react-hook-form';
-import { fetchPOST, useGetPlanById } from '@/lib/backend';
+import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
+import { fetchPOST, useGetAvailablePlans, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '../LoadingAnimation';
@@ -88,7 +88,6 @@ export default function Wrapper({
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
-    // const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -99,13 +98,14 @@ export default function Wrapper({
             clickedOutside = !wrapperRef?.current?.contains(e.target as Node) || false;
         };
 
-        const handleBrowseAway = (nextlink: string) => {
+        const handleBrowseAway = async (nextlink: string) => {
             if (preventToLeave === false) return;
 
             // form was not changed, but if we clicked outside we drop the lock
             if (Object.keys(methods.formState.dirtyFields).length == 0) {
                 if (clickedOutside) {
-                    dropPlanLock(socket, router.query.plannerId as string)
+                    await mutateAvailablePlans()
+                    await dropPlanLock(socket, router.query.plannerId as string)
                 }
                 return;
             }
@@ -139,6 +139,9 @@ export default function Wrapper({
         error,
         mutate: mutateGetPlanById,
     } = useGetPlanById(router.query.plannerId as string);
+
+    // requiered to upldate plans data in /plans
+    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
 
     // check access rights or locked plan
     useEffect(() => {
@@ -207,15 +210,9 @@ export default function Wrapper({
                 // reset form default values for isDirty check
                 methods.reset(data)
             }
-
-            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-            // may works now without this hack?!?
-            // setIsDirty(methods.formState.isDirty);
             setLoading(false)
         })();
-
         return () => {}
-
     }, [
         plan,
         isLoading,
@@ -249,6 +246,7 @@ export default function Wrapper({
         // reload plan
         await mutateGetPlanById();
         // reset formstate.isdirty after save
+        // TODO is this still required since we reset after setPlanerData()?!?
         methods.reset({}, { keepValues: true });
         return true;
     };
@@ -259,6 +257,8 @@ export default function Wrapper({
             if (!popUp.continueLink.startsWith('/ve-designer')) {
                 // release plan if we leave designer
                 await dropPlanLock(socket, router.query.plannerId)
+                // update all plans SWR to update /plans list
+                await mutateAvailablePlans()
                 await router.push({
                     pathname: popUp.continueLink,
                     query: {},
