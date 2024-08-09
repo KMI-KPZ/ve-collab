@@ -45,6 +45,20 @@ interface Props {
     socket: Socket;
 }
 
+export const dropPlanLock = (socket: Socket, plan_id: string | string[] | undefined) => {
+    return new Promise((resolve, reject) => {
+        socket.emit(
+            'drop_plan_lock',
+            { plan_id },
+            (response: any) => {
+                // TODO error handling
+                // console.log(response);
+                resolve(true)
+            }
+        );
+    })
+};
+
 export default function Wrapper({
     title,
     subtitle,
@@ -91,14 +105,7 @@ export default function Wrapper({
             // form was not changed, but if we clicked outside we drop the lock
             if (Object.keys(methods.formState.dirtyFields).length == 0) {
                 if (clickedOutside) {
-                    socket.emit(
-                        'drop_plan_lock',
-                        { plan_id: router.query.plannerId },
-                        (response: any) => {
-                            console.log(response);
-                            // TODO error handling
-                        }
-                    );
+                    dropPlanLock(socket, router.query.plannerId as string)
                 }
                 return;
             }
@@ -251,18 +258,11 @@ export default function Wrapper({
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
                 // release plan if we leave designer
-                socket.emit(
-                    'drop_plan_lock',
-                    { plan_id: router.query.plannerId },
-                    async (response: any) => {
-                        console.log(response);
-                        // TODO error handling
-                        await router.push({
-                            pathname: popUp.continueLink,
-                            query: {},
-                        });
-                    }
-                );
+                await dropPlanLock(socket, router.query.plannerId)
+                await router.push({
+                    pathname: popUp.continueLink,
+                    query: {},
+                });
             } else {
                 await router.push({
                     pathname: popUp.continueLink,
