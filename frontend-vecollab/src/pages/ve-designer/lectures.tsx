@@ -69,13 +69,16 @@ export default function Lectures({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (plan.lectures.length !== 0) {
-                replace(plan.lectures);
-            }
+            const lectures = plan.lectures.length > 0
+                ? plan.lectures
+                : [emptyLecture]
+
+            replace(lectures);
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {lectures: plan.lectures}
+            return {lectures}
         },
         [replace]
     );

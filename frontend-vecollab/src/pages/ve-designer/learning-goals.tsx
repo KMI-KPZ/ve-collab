@@ -247,7 +247,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 <div className="flex flex-col ">
                     {fieldsTopics.map((topic, index) => (
                         <div key={topic.id} className="mt-2 flex flex-col">
-                            <div className="flex mt-2">
+                            <div className="flex">
                                 <div className="grow mr-2">
                                     <input
                                         type="text"

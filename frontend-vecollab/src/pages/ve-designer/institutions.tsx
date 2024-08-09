@@ -56,7 +56,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
     const nextpage = '/ve-designer/lectures';
 
     const methods = useForm<FormValues>({
-        mode: 'onChange'
+        mode: 'onChange',
+        defaultValues: {
+            institutions: [emptyInstitution],
+        },
     });
 
     const { fields, append, remove, replace } = useFieldArray({
@@ -74,11 +77,12 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let institutions: Institution[] = plan.institutions.length > 0
+            let institutions = plan.institutions.length > 0
                 ? plan.institutions
                 : [emptyInstitution]
 
             replace(institutions);
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
