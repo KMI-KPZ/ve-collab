@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import '@/styles/globals.css';
 import '@/styles/networkPostsFormatter.css';
 
@@ -18,6 +18,8 @@ import ChatWindow from '@/components/chat/ChatWindow';
 import NotificationsWindow from '@/components/Notifications/NotificationsWindow';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+export const SocketContext = createContext(socket);
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
@@ -135,6 +137,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                 <QueryClientProvider client={queryClient}>
                     <CookiesProvider defaultSetOptions={{ path: '/' }}>
                         <SocketAuthenticationProvider>
+                            <SocketContext.Provider value={socket}>
+
                             <Head>
                                 <title>Ve Collab</title>
                                 <Favicon />
@@ -198,6 +202,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                     )}
                                 </>
                             </LayoutSection>
+
+                            </SocketContext.Provider>
                         </SocketAuthenticationProvider>
                     </CookiesProvider>
                     <ReactQueryDevtools initialIsOpen={false} />
