@@ -7,6 +7,7 @@ import {
     ISideProgressBarStates,
     ProgressState,
     ISubmenuData,
+    ISideProgressBarStateSteps,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -219,13 +220,17 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 : step
         );
 
-        // TODO sidebarProgress finesteps still broken
-        /*const updateStepsProgress = sideMenuStepsProgress.steps.map(
-            (step: ISideProgressBarStateSteps) =>
-                step[stepName] !== undefined ? { [stepName]: ProgressState.completed } : step
-        );*/
+        const progressState = areAllFormValuesEmpty(data)
+            ? ProgressState.notStarted
+            : ProgressState.completed;
 
-        if (areAllFormValuesEmpty(data)) return;
+        const stepSlugEncoded = encodeURI(stepName as string);
+        const updateStepsProgress = sideMenuStepsProgress.steps.map(
+            (step: ISideProgressBarStateSteps) =>
+                step[stepSlugEncoded] !== undefined
+                    ? { [stepSlugEncoded]: progressState }
+                    : step
+        );
 
         return [
             {
@@ -238,7 +243,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: ProgressState.completed,
+                    steps: [...updateStepsProgress],
                 },
             },
         ];
