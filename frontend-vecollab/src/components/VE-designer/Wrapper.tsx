@@ -89,6 +89,17 @@ export default function Wrapper({
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
 
+    // fetch plan
+    const {
+        data: plan,
+        isLoading,
+        error,
+        mutate: mutateGetPlanById,
+    } = useGetPlanById(router.query.plannerId as string);
+
+    // requiered to upldate plans data in /plans
+    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
+
     // detect window close or a click outside of planer
     useEffect(() => {
         if (!router.isReady) return;
@@ -130,18 +141,7 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, socket, router, preventToLeave]);
-
-    // fetch plan
-    const {
-        data: plan,
-        isLoading,
-        error,
-        mutate: mutateGetPlanById,
-    } = useGetPlanById(router.query.plannerId as string);
-
-    // requiered to upldate plans data in /plans
-    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
+    }, [wrapperRef, methods, socket, router, preventToLeave, mutateAvailablePlans]);
 
     // check access rights or locked plan
     useEffect(() => {
