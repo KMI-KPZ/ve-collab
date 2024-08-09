@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
 
 interface FormValues {
@@ -34,8 +34,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
         formValues.physicalMobilities.every((mobility) => {
             return (
                 mobility.location === '' &&
-                mobility.timestamp_from === '' &&
-                mobility.timestamp_to === ''
+                mobility.timestamp_from === null &&
+                mobility.timestamp_to === null
             );
         })
     );
@@ -228,8 +228,9 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         }
                     </p>
                 </div>
+
                 <button className="ml-3" type="button" onClick={() => handleDelete(index)}>
-                    <RxMinus size={20} />
+                    <RxTrash size={20} />
                 </button>
             </div>
         ));

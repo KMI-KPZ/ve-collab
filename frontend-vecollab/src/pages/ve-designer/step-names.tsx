@@ -5,6 +5,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
@@ -148,6 +149,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const stepNames: IFineStep[] = data.stepNames;
         let payload: IFineStep = {
             ...emptyStepData,
         };
@@ -160,11 +162,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
             return Object.assign({}, payload, step)
         });
 
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
+            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
+        });
+
         const progressState = areAllFormValuesEmpty(data)
             ? ProgressState.notStarted
             : ProgressState.completed;
 
-        // console.log('SUBMIT', {steps, stepNames: data.stepNames, stepNamesData});
         return [
             {
                 plan_id: router.query.plannerId,
@@ -176,7 +181,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: progressState,
+                    stepsGenerally: progressState,
+                    steps: sideMenuStateSteps,
                 },
             },
         ];

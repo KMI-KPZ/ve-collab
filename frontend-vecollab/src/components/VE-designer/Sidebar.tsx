@@ -6,6 +6,7 @@ import {
     ISubmenuData,
     ISideProgressBarStates,
     IMenuData,
+    ISideProgressBarStateSteps,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IMenuDataState, mainMenu } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
@@ -52,7 +53,7 @@ export default function Sidebar({
         const userDefinedSteps = plan.steps.map((step) => {
             return {
                 text: step.name,
-                id: step.name.toLowerCase(),
+                id: encodeURI(step.name),
                 link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
             };
         });
@@ -74,15 +75,15 @@ export default function Sidebar({
         });
     }, [plan]);
 
-    const getProgressState = (id: string): any => {
-        const idDecrypted: string = decodeURI(id);
-        if (
-            plan &&
-            plan.progress !== undefined &&
-            plan.progress[idDecrypted as keyof ISideProgressBarStates] !== undefined
-        ) {
-            return plan.progress[idDecrypted as keyof ISideProgressBarStates];
-        }
+    const getProgressState = (id: string, parentId: string): any => {
+        if (!plan || !plan.progress) return ProgressState.notStarted;
+
+        const progress = (parentId == 'steps' && id !== 'stepsGenerally')
+            ? (plan.progress.steps.find(a => a[id as keyof ISideProgressBarStateSteps])?.[id])
+            : plan.progress[id as keyof ISideProgressBarStates]
+
+        if (progress !== undefined) return progress
+
         return ProgressState.notStarted;
     };
 
@@ -105,7 +106,7 @@ export default function Sidebar({
         )(e);
     };
 
-    const SubMenuItem = ({ item }: { item: ISubmenuData }) => {
+    const SubMenuItem = ({ item, parentId }: { item: ISubmenuData, parentId: string }) => {
         const isCurrentPage = currentPath == item.link;
 
         return (
@@ -122,7 +123,7 @@ export default function Sidebar({
                     {item.text}
                 </p>
                 <span>
-                    {getProgressState(item.id) == ProgressState.completed && (
+                    {getProgressState(item.id, parentId) == ProgressState.completed && (
                         <MdCheckCircleOutline size={20} />
                     )}
                 </span>
@@ -181,7 +182,7 @@ export default function Sidebar({
                         {item.submenu.map((subItem, subIndex) => {
                             return (
                                 <li key={subIndex}>
-                                    <SubMenuItem item={subItem} />
+                                    <SubMenuItem item={subItem} parentId={item.id} />
                                 </li>
                             );
                         })}

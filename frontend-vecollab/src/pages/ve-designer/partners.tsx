@@ -38,7 +38,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length <= 1
+        formValues.partners.every(a => a.value == '')
     );
 };
 
@@ -64,10 +64,6 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        // defaultValues: {
-        //     partners: [{ label: '', value: '' }],
-        //     externalParties: [{ externalParty: '' }],
-        // },
     });
 
     const {

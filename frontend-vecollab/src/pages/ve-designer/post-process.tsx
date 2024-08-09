@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper from '@/components/VE-designer/Wrapper';
+import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
@@ -557,14 +557,8 @@ export default function PostProcess({ socket }: Props) {
                     onClick={async (e) => {
                         e.preventDefault();
                         await onSubmit(methods.getValues() as FormValues);
-                        socket.emit(
-                            'drop_plan_lock',
-                            { plan_id: router.query.plannerId },
-                            (response: any) => {
-                                // TODO error handling
-                                router.push('/plans');
-                            }
-                        );
+                        await dropPlanLock(socket, router.query.plannerId)
+                        await router.push('/plans');
                     }}
                 >
                     Absenden & zur Übersicht

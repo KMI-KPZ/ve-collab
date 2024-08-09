@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
 import ButtonNewPlan from '@/components/Plannner/ButtonNewPlan';
 import ButtonPrimary from '@/components/ButtonPrimary';
 import WhiteBox from '@/components/Layout/WhiteBox';
-import { Socket } from 'socket.io-client';
+import { SocketContext } from './_app';
 
-interface Props {
-    socket: Socket;
-}
-export default function Home({ socket }: Props): JSX.Element {
+export default function Home(): JSX.Element {
     const { data: session, status } = useSession();
+    const socket = useContext(SocketContext);
 
     return (
         <div className="bg-slate-100 bg-pattern-left-blue bg-no-repeat">

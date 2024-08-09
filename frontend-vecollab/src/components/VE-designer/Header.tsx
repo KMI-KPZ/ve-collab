@@ -5,6 +5,9 @@ import { MdEditSquare, MdMeetingRoom } from 'react-icons/md';
 import { UseFormReturn } from 'react-hook-form';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { dropPlanLock } from './Wrapper';
+import { useGetAvailablePlans } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -24,6 +27,9 @@ export default function Header({
     socket
 }: Props) {
     const router = useRouter();
+    const { data: session } = useSession();
+    // requiered to upldate plans data in /plans
+    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -55,21 +61,16 @@ export default function Header({
 
                 <button
                     className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                         if (Object.keys(methods.formState.dirtyFields).length > 0) {
                             handleUnsavedData(null, '/plans');
                         } else {
-                            socket.emit(
-                                'drop_plan_lock',
-                                { plan_id: router.query.plannerId },
-                                (response: any) => {
-                                    // TODO error handling
-                                    router.push({
-                                        pathname: '/plans',
-                                        query: {},
-                                    });
-                                }
-                            );
+                            await dropPlanLock(socket, router.query.plannerId)
+                            await mutateAvailablePlans()
+                            await router.push({
+                                pathname: '/plans',
+                                query: {},
+                            });
                         }
                     }}
                 >
