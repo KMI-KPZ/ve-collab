@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useForm } from 'react-hook-form';
-import Wrapper from '@/components/VE-designer/Wrapper';
+import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
@@ -54,10 +54,8 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                         href={{
                             pathname: `/plans`
                         }}
-                        onClick={() => {
-                            socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
-                                // TODO error handling ?
-                            });
+                        onClick={async () => {
+                            await dropPlanLock(socket, router.query.plannerId)
                         }}
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
                     >
