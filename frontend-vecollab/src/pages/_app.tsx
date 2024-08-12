@@ -16,8 +16,6 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 import ChatWindow from '@/components/chat/ChatWindow';
 import NotificationsWindow from '@/components/Notifications/NotificationsWindow';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 export const SocketContext = createContext(socket);
 
@@ -61,7 +59,6 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     const [chatOpen, setChatOpen] = useState<boolean>(false);
     const [notifOpen, setNotifOpen] = useState<boolean>(false);
 
-    const queryClient = new QueryClient();
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
     // notification badge, the events have to be deleted from its list
@@ -134,11 +131,9 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     return (
         <>
             <SessionProvider session={session} refetchInterval={5 * 60}>
-                <QueryClientProvider client={queryClient}>
-                    <CookiesProvider defaultSetOptions={{ path: '/' }}>
-                        <SocketAuthenticationProvider>
-                            <SocketContext.Provider value={socket}>
-
+                <CookiesProvider defaultSetOptions={{ path: '/' }}>
+                    <SocketAuthenticationProvider>
+                        <SocketContext.Provider value={socket}>
                             <Head>
                                 <title>Ve Collab</title>
                                 <Favicon />
@@ -202,12 +197,9 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
                                     )}
                                 </>
                             </LayoutSection>
-
-                            </SocketContext.Provider>
-                        </SocketAuthenticationProvider>
-                    </CookiesProvider>
-                    <ReactQueryDevtools initialIsOpen={false} />
-                </QueryClientProvider>
+                        </SocketContext.Provider>
+                    </SocketAuthenticationProvider>
+                </CookiesProvider>
             </SessionProvider>
         </>
     );
