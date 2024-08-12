@@ -48,6 +48,7 @@ const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
 };
 
 export const emptyStepData: IFineStep = {
+    _id: undefined,
     name: '',
     timestamp_from: '',
     timestamp_to: '',
@@ -123,6 +124,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             let data: {[key: string]: any} = {}
+
             if (plan.steps?.length > 0) {
                 data.stepNames = plan.steps.map((step) => {
                     return Object.assign({}, step, {
@@ -237,6 +239,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const handleStepsImport = () => {
         stepsToImport.map(step => {
             append(Object.assign({}, step, {
+                _id: undefined,
                 timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
                 timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
             }))
@@ -248,7 +251,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const ImportStepsDialog = () => {
         if (loadingAvailPlans) return <LoadingAnimation />
 
-        const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length)
+        const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length && plan._id != router.query.plannerId)
         if (!plans.length) return <>Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren vorhanden</>
 
         // TODO add simple filter input?
@@ -489,6 +492,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
+                    title='Neue Etappe'
                     onClick={() => {
                         append(emptyStepData);
                     }}
