@@ -12,6 +12,17 @@ import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const InstitutionFormSchema = z.object({
+    name: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+    school_type: z.string().max(200, 'Maximal 200 Buchstaben.'),
+    country: z.string().max(200, 'Maximal 200 Buchstaben.'),
+    departments: z.string().array(),
+});
+
+const InstitutionsFormSchema = z.object({ institutions: InstitutionFormSchema.array() });
 
 export interface Institution {
     name: string;
@@ -24,7 +35,7 @@ interface FormValues {
     institutions: Institution[];
 }
 
-const emptyInstitution = {
+const emptyInstitution: Institution = {
     name: '',
     school_type: '',
     country: '',
@@ -57,6 +68,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(InstitutionsFormSchema),
         defaultValues: {
             institutions: [emptyInstitution],
         },
@@ -77,16 +89,15 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let institutions = plan.institutions.length > 0
-                ? plan.institutions
-                : [emptyInstitution]
+            let institutions =
+                plan.institutions.length > 0 ? plan.institutions : [emptyInstitution];
 
             replace(institutions);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {institutions}
+            return { institutions };
         },
         [replace]
     );
