@@ -5,6 +5,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
@@ -111,7 +112,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     learning_goal: '',
                 },
             ],
-        },
+        }
     });
 
     const { fields, append, remove, move, update, replace } = useFieldArray({
@@ -121,22 +122,23 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let data: {[key: string]: any} = {}
             if (plan.steps?.length > 0) {
-                const stepNames: IFineStep[] =  plan.steps.map((step) => {
+                data.stepNames = plan.steps.map((step) => {
                     return Object.assign({}, step, {
                         timestamp_from: step.timestamp_from.split('T')[0],
                         timestamp_to: step.timestamp_to.split('T')[0]
                     })
 
                 });
-                replace(stepNames); // PROBLEM isDirty is initially true
-                // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
-
+                replace(data.stepNames);
                 setSteps(plan.steps);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+
+            return data
         },
         [replace]
     );
@@ -147,6 +149,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const stepNames: IFineStep[] = data.stepNames;
         let payload: IFineStep = {
             ...emptyStepData,
         };
@@ -159,11 +162,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
             return Object.assign({}, payload, step)
         });
 
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
+            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
+        });
+
         const progressState = areAllFormValuesEmpty(data)
             ? ProgressState.notStarted
             : ProgressState.completed;
 
-        // console.log('SUBMIT', {steps, stepNames: data.stepNames, stepNamesData});
         return [
             {
                 plan_id: router.query.plannerId,
@@ -175,7 +181,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: progressState,
+                    stepsGenerally: progressState,
+                    steps: sideMenuStateSteps,
                 },
             },
         ];
@@ -297,70 +304,78 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
-                                    <div className="flex items-center">
-                                        <label>von:</label>
-                                        <input
-                                            type="date"
-                                            {...methods.register(`stepNames.${index}.timestamp_from`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "von" aus',
-                                                },
-                                                validate: (v) => validateDateRange(v, index),
-                                            })}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">bis:</label>
-                                        <input
-                                            type="date"
-                                            {...methods.register(`stepNames.${index}.timestamp_to`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "bis" aus',
-                                                },
-                                            })}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">Name:</label>
-                                        <input
-                                            type="text"
-                                            {...methods.register(`stepNames.${index}.name`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "Name" aus',
-                                                },
-                                                validate: {
-                                                    unique: () => {
-                                                        return (
-                                                            !checkIfNamesAreUnique(
-                                                                methods.getValues('stepNames')
-                                                            ) ||
-                                                            'Bitte wähle einen einzigartigen Namen'
-                                                        );
+                                    <div className="flex flex-wrap gap-y-2 items-center">
+                                        <div>
+                                            <label>von:</label>
+                                            <input
+                                                type="date"
+                                                {...methods.register(`stepNames.${index}.timestamp_from`, {
+                                                    required: {
+                                                        value: true,
+                                                        message: 'Bitte fülle das Felde "von" aus',
                                                     },
-                                                },
-                                            })}
-                                            placeholder="Name, z.B. Kennenlernphase"
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">Zeitaufwand:</label>
-                                        <input
-                                            type="number"
-                                            {...methods.register(`stepNames.${index}.workload`, {
-                                                validate: {
-                                                    positive: (v) => {
-                                                        return (
-                                                            v >= 0 ||
-                                                            'Der Zeitaufwand kann nicht negativ sein'
-                                                        );
+                                                    validate: (v) => validateDateRange(v, index),
+                                                })}
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">bis:</label>
+                                            <input
+                                                type="date"
+                                                {...methods.register(`stepNames.${index}.timestamp_to`, {
+                                                    required: {
+                                                        value: true,
+                                                        message: 'Bitte fülle das Felde "bis" aus',
                                                     },
-                                                },
-                                                setValueAs: (v: string) => parseInt(v),
-                                            })}
-                                            placeholder="Zeitaufwand in Stunden"
-                                            className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
-                                        />
+                                                })}
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">Name:</label>
+                                            <input
+                                                type="text"
+                                                {...methods.register(`stepNames.${index}.name`, {
+                                                    required: {
+                                                        value: true,
+                                                        message: 'Bitte fülle das Felde "Name" aus',
+                                                    },
+                                                    validate: {
+                                                        unique: () => {
+                                                            return (
+                                                                !checkIfNamesAreUnique(
+                                                                    methods.getValues('stepNames')
+                                                                ) ||
+                                                                'Bitte wähle einen einzigartigen Namen'
+                                                            );
+                                                        },
+                                                    },
+                                                })}
+                                                placeholder="Name, z.B. Kennenlernphase"
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">Zeitaufwand:</label>
+                                            <input
+                                                type="number"
+                                                {...methods.register(`stepNames.${index}.workload`, {
+                                                    validate: {
+                                                        positive: (v) => {
+                                                            return (
+                                                                v >= 0 ||
+                                                                'Der Zeitaufwand kann nicht negativ sein'
+                                                            );
+                                                        },
+                                                    },
+                                                    setValueAs: (v: string) => parseInt(v),
+                                                })}
+                                                placeholder="Zeitaufwand in Stunden"
+                                                className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
+                                            />
                                         <label className="mr-4">h</label>
+                                        </div>
                                     </div>
                                     <div className="flex items-center mt-2">
                                         <label>Lernziel(e):</label>

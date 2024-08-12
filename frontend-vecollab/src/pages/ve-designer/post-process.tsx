@@ -2,32 +2,42 @@ import Link from 'next/link';
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { fetchPOST } from '@/lib/backend';
+import { fetchDELETE } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper from '@/components/VE-designer/Wrapper';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
     ISideProgressBarStates,
     initialSideProgressBarStates,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
+import { IoMdClose } from 'react-icons/io';
 
 export interface EvaluationFile {
-    file_id: string;
+    file: File;
     file_name: string;
+    size: number;
+    file_id?: string;
+}
+
+export interface LiteratureFile {
+    file: File;
+    file_name: string;
+    size: number;
+    file_id?: string;
 }
 
 interface FormValues {
     share: boolean;
+    abstract: string;
     veModel: string;
     reflection: string;
     evaluation: string;
-    evaluationFile: FileWithOptionalId;
-}
-interface FileWithOptionalId extends File {
-    file_id?: string;
+    evaluationFile: undefined | EvaluationFile;
+    literature: string;
+    literatureFiles: undefined | LiteratureFile[];
 }
 
 interface Props {
@@ -42,6 +52,10 @@ export default function PostProcess({ socket }: Props) {
         initialSideProgressBarStates
     );
 
+    const [changedEvFile, setChangedEvFile] = useState<boolean>(false)
+    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>()
+    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([])
+
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
@@ -49,17 +63,148 @@ export default function PostProcess({ socket }: Props) {
         },
     });
 
-    const uploadToBackend = async (file: File) => {
+    const { fields: litFiles, append: addLitFile, remove: rmLitFile, replace: replaceLitFiles } = useFieldArray({
+        name: 'literatureFiles',
+        control: methods.control,
+    });
+
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            setChangedEvFile(false)
+            setOriginalEvFile(undefined)
+            replaceLitFiles([])
+
+            if (plan.is_good_practise !== null) {
+                methods.setValue('share', plan.is_good_practise);
+            }
+            methods.setValue('abstract', plan.abstract as string);
+            methods.setValue('veModel', plan.underlying_ve_model as string);
+            methods.setValue('reflection', plan.reflection as string);
+            methods.setValue('evaluation', plan.good_practise_evaluation as string);
+
+            if (plan.evaluation_file) {
+                const evaluationFile = {...plan.evaluation_file, file: new File([''], plan.evaluation_file.file_name)}
+                methods.setValue('evaluationFile', evaluationFile );
+                setOriginalEvFile(evaluationFile)
+            }
+
+            if (plan.literature) methods.setValue('literature', plan.literature as string);
+            if (plan.literature_files) {
+                plan.literature_files.map(file => {
+                    addLitFile({
+                        file: new File([''], file.file_name),
+                        file_name: file.file_name,
+                        size: file.size,
+                        file_id: file.file_id
+                    })
+                })
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+
+            return {
+                abstract: plan.abstract,
+                share: plan.is_good_practise,
+                veModel: plan.underlying_ve_model,
+                reflection: plan.reflection,
+                evaluation: plan.good_practise_evaluation,
+                evaluationFile: plan.evaluation_file,
+                literature: plan.literature,
+                literatureFiles: plan.literature_files
+
+            }
+        },
+        [methods, addLitFile, replaceLitFiles]
+    );
+
+    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        if (changedEvFile && originalEvFile) {
+            await removeFromBackend("evaluation", originalEvFile)
+        }
+
+        if (data.evaluationFile?.file) {
+            await uploadToBackend("evaluation", data.evaluationFile!);
+        }
+
+        if (deletedLitFiles.length) {
+            deletedLitFiles.map(async file => {
+                await removeFromBackend("literature", file)
+            })
+        }
+        if (data.literatureFiles) {
+            for (const file of data.literatureFiles) {
+                await uploadToBackend("literature", file);
+            }
+        }
+
+        return [
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'is_good_practise',
+                value: data.share,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'abstract',
+                value: data.abstract,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'underlying_ve_model',
+                value: data.veModel,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'reflection',
+                value: data.reflection,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'good_practise_evaluation',
+                value: data.evaluation,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'literature',
+                value: data.literature,
+            },
+        ]
+    };
+
+    const removeFromBackend = async (type: "evaluation"|"literature", file: EvaluationFile|LiteratureFile) => {
+        // if file doesnt has a file_id it wasnt yet uploaded
+        if (!file.file_id) return true
+
+        const url = type == "evaluation"
+            ? `/planner/remove_evaluation_file`
+            : `/planner/remove_literature_file`
+
+        return await fetchDELETE(
+            `${url}?plan_id=${router.query.plannerId}&file_id=${file.file_id}`,
+            {},
+            session?.accessToken
+        );
+    }
+
+    const uploadToBackend = async (type: "evaluation"|"literature", file: EvaluationFile|LiteratureFile) => {
+        // if file already has a file_id it was already uploaded
+        if (file.file_id) return true
+
         const body = new FormData();
-        body.append('file', file);
+        body.append('file', file.file);
 
         const headers: { Authorization?: string } = {};
         headers['Authorization'] = 'Bearer ' + session?.accessToken;
 
+        const url = type == "evaluation"
+            ? `/planner/put_evaluation_file`
+            : `/planner/put_literature_file`
+
         // upload as form data instead of json
-        await fetch(
+        return await fetch(
             process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
-                `/planner/put_evaluation_file?plan_id=${router.query.plannerId}`,
+                url + `?plan_id=${router.query.plannerId}`,
             {
                 method: 'POST',
                 headers: headers,
@@ -68,81 +213,26 @@ export default function PostProcess({ socket }: Props) {
         );
     };
 
-    const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            if (plan.is_good_practise !== null) {
-                methods.setValue('share', plan.is_good_practise);
-            }
-            methods.setValue('veModel', plan.underlying_ve_model as string);
-            methods.setValue('reflection', plan.reflection as string);
-            methods.setValue('evaluation', plan.good_practise_evaluation as string);
-            const backendFile: EvaluationFile = plan.evaluation_file;
-            if (backendFile !== null) {
-                const randomFile: File = new File([''], backendFile.file_name);
-                const fileWithId: FileWithOptionalId = Object.assign(randomFile, {
-                    id: backendFile.file_id,
-                });
-                methods.setValue('evaluationFile', fileWithId);
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
-            console.log('backendFile', plan.evaluation_file);
-        },
-        [methods]
-    );
-
-    const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        await fetchPOST(
-            '/planner/update_fields',
-            {
-                update: [
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'is_good_practise',
-                        value: data.share,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'underlying_ve_model',
-                        value: data.veModel,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'reflection',
-                        value: data.reflection,
-                    },
-                    {
-                        plan_id: router.query.plannerId,
-                        field_name: 'good_practise_evaluation',
-                        value: data.evaluation,
-                    },
-                ],
-            },
-            session?.accessToken
-        );
-        if (data.evaluationFile) {
-            await uploadToBackend(data.evaluationFile);
-        }
-    };
-
-    function renderFileInput() {
+    function evaluationFileSelector() {
+        // if (methods.watch("evaluationFile")) return (<></>)
         return (
             <>
                 <Controller
-                    name="evaluationFile"
+                    name={'evaluationFile'}
                     control={methods.control}
                     rules={{
-                        // = 5MB allowed
-                        validate: (value) => value.size < 5242880 || 'max. 5 MB erlaubt',
+                        // max 5MB allowed
+                        validate: (value) => {
+                            return (!value?.size || value.size < 5242880) || 'max. 5 MB erlaubt'
+                        }
                     }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
                             <label
-                                className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
                                 htmlFor={name}
                             >
-                                Wähle eine Datei
+                                Datei hinzufügen
                             </label>
                             <input
                                 id={name}
@@ -151,19 +241,84 @@ export default function PostProcess({ socket }: Props) {
                                 name={name}
                                 onBlur={onBlur}
                                 onChange={(e) => {
-                                    onChange(e.target?.files?.item(0));
+                                    const file = e.target?.files?.item(0)
+                                    if (!file) return
+                                    setChangedEvFile(true)
+                                    onChange({
+                                        file: file,
+                                        file_name: file.name,
+                                        size: file.size
+                                    })
                                 }}
                                 className="hidden"
                             />
                         </>
                     )}
                 />
-                {methods.formState.errors.evaluationFile &&
-                    typeof methods.formState.errors.evaluationFile.message === 'string' && (
-                        <p className="text-red-500">
-                            {methods.formState.errors.evaluationFile.message}
-                        </p>
+            </>
+        );
+    }
+
+    function literatureFileSelector() {
+        if (litFiles.length >= 5) return (<></>)
+        return (
+            <>
+                <Controller
+                    name={"literatureFiles"}
+                    control={methods.control}
+                    rules={{
+                        // max 5MB allowed
+                        validate: (value) => {
+                            if (!value) return
+
+                            let i = 0
+                            for (const file of value!) {
+                                if (file.size > 5242880) {
+                                    methods.setError(`literatureFiles.${i}.file`, {type: "custom", message: 'max. 5 MB erlaubt'})
+                                }
+                                i++
+                            }
+                            return true
+                        }
+                    }}
+                    render={({ field: { ref, name, onBlur, onChange } }) => (
+                        <>
+                            <label
+                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                htmlFor={name}
+                            >
+                                Datei(en) hinzufügen
+                            </label>
+                            <input
+                                id={name}
+                                type="file"
+                                ref={ref}
+                                name={name}
+                                onBlur={onBlur}
+                                onChange={(e) =>  {
+                                    if (!e.target?.files) return
+                                    methods.clearErrors(`literatureFiles`)
+                                    let i = 0
+                                    for (const file of e.target.files) {
+                                        if (i < 5) {
+                                            addLitFile( {
+                                                file: file,
+                                                file_name: file.name,
+                                                size: file.size
+                                            } )
+                                        } else {
+                                            methods.setError(`literatureFiles`, {type: "custom", message: 'max. 5 Dateien erlaubt'})
+                                        }
+                                        i++
+                                    }
+                                    // onChange(newFiles)
+                                }}
+                                className="hidden"
+                                multiple
+                            />
+                        </>
                     )}
+                />
             </>
         );
     }
@@ -183,8 +338,8 @@ export default function PostProcess({ socket }: Props) {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className="p-6 w-[60rem] divide-y">
-                <div className="flex flex-col items-center justify-between mb-3 mr-3">
+            <div className="py-6 divide-y">
+                <div className="flex flex-col justify-between mb-3">
                     <div>
                         <p className="font-medium">
                             Möchtest du euren VE als Good Practice der Community zur Verfügung
@@ -234,6 +389,18 @@ export default function PostProcess({ socket }: Props) {
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
+                            <p>
+                            Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen,
+                            in dem du die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf) ganz kurz zusammenfasst.
+                            </p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder="Kurze Beschreibung deines VE ..."
+                                {...methods.register('abstract')}
+                            />
+                        </li>
+                        <li className="mb-4">
                             <p className="font-bold">Reflexion:</p>
                             <p className="mb-1">
                                 Was hat deiner Meinung nach gut funktioniert? Was waren
@@ -246,44 +413,47 @@ export default function PostProcess({ socket }: Props) {
                                 Evaluationsergebnissen hochladen.
                             </p>
                             <textarea
-                                className="border border-gray-400 rounded-lg w-full p-4 mt-4 mb-6"
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
                                 placeholder="Beschreibe deine Reflexion"
                                 {...methods.register('reflection')}
                             />
-                            {methods.watch('evaluationFile') ? (
-                                <div
-                                    className="max-w-[150px] mb-4"
-                                    title={methods.getValues('evaluationFile').name}
-                                >
-                                    <AuthenticatedFile
-                                        url={`/uploads/${
-                                            methods.getValues('evaluationFile').file_id
-                                        }`}
-                                        filename={methods.getValues('evaluationFile').name}
+                            {(methods.watch('evaluationFile')) ? (
+                                <div>
+                                    <div
+                                        className="max-w-[250px] flex items-center"
+                                        title={methods.watch('evaluationFile')?.file_name}
                                     >
-                                        <div className="flex justify-center">
-                                            <RxFile size={40} />
-                                        </div>
-                                        <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
-                                            {methods.getValues('evaluationFile').name}
-                                        </div>
-                                    </AuthenticatedFile>
+                                        <AuthenticatedFile
+                                            url={methods.watch('evaluationFile')?.file_id === undefined
+                                                ? ""
+                                                : `/uploads/${methods.watch('evaluationFile')?.file_id}`}
+                                            filename={methods.watch('evaluationFile')?.file_name as string}
+                                            title={methods.watch('evaluationFile')?.file_name}
+                                            className='flex'
+                                        >
+                                            <RxFile size={30} className="m-1" />
+                                            <div className="truncate py-2">{methods.watch('evaluationFile')?.file_name}</div>
+                                        </AuthenticatedFile>
+
+                                        <button onClick={(e) => {
+                                            e.preventDefault()
+                                            methods.clearErrors("evaluationFile")
+                                            setChangedEvFile(true)
+                                            methods.setValue("evaluationFile", undefined)
+                                        }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
+                                                <IoMdClose />
+                                        </button>
+                                    </div>
+                                    {methods.formState.errors?.evaluationFile?.message && (
+                                        <p className="text-red-500">
+                                            {methods.formState.errors?.evaluationFile?.message}
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
-                                <p className="my-2 text-gray-600">Keine Datei vorhanden</p>
+                                <>{evaluationFileSelector()}</>
                             )}
-                            {renderFileInput()}
-                            {/*<button
-                                // TODO remove button for file, but doesn't work yet
-                                className="cursor-pointer bg-ve-collab-blue text-white px-4 py-2 rounded-md shadow-lg hover:bg-opacity-60"
-                                onClick={() => {
-                                    methods.resetField('evaluationFile');
-                                    methods.reset({ ...methods.getValues(), evaluationFile: null });
-                                }}
-                            >
-                                Entfernen
-                            </button>*/}
                         </li>
                         <li className="mb-4">
                             <p>
@@ -320,31 +490,79 @@ export default function PostProcess({ socket }: Props) {
                                 {...methods.register('veModel')}
                             />
                         </li>
+                        <li className="mb-4">
+                            <p>
+                                Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch,
+                                die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.
+                            </p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder="Relevante Literaturangaben"
+                                {...methods.register('literature')}
+                            />
+                            {litFiles.length > 0 && (
+                                <div>
+                                    <div className="mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                                        {litFiles.map((file, index) => (
+                                            <div key={index} className="max-w-[250px] mr-4 flex flex-wrap items-center">
+                                                <div className="flex truncate items-center">
+                                                    <AuthenticatedFile
+                                                        url={`/uploads/${
+                                                            file.id
+                                                        }`}
+                                                        filename={file.file_name}
+                                                        title={file.file_name}
+                                                        className='flex truncate'
+                                                    >
+                                                        <RxFile size={30} className="m-1" />
+                                                        <div className="truncate py-2">{file.file_name}</div>
+                                                    </AuthenticatedFile>
+                                                    <button onClick={(e) => {
+                                                        e.preventDefault()
+                                                        methods.clearErrors(`literatureFiles.${index}.file`)
+                                                        setDeletedLitFiles(prev => [...prev, file])
+                                                        rmLitFile(index)
+                                                    }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
+                                                            <IoMdClose />
+                                                    </button>
+                                                </div>
+
+                                                {methods.formState.errors?.literatureFiles?.[index]?.file?.message && (
+                                                    <p className="text-red-500">
+                                                        {methods.formState.errors?.literatureFiles?.[index]?.file?.message}
+                                                    </p>
+                                                )}
+
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {methods.formState.errors?.literatureFiles?.message && (
+                                        <p className="text-red-500">
+                                            {methods.formState.errors?.literatureFiles?.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                            {literatureFileSelector()}
+                        </li>
                     </ol>
                 )}
             </div>
 
-            <div className="flex justify-between w-full max-w-xl">
-                <div>
-                    <button
-                        type="submit"
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                        onClick={async (e) => {
-                            e.preventDefault();
-                            await onSubmit(methods.getValues() as FormValues);
-                            socket.emit(
-                                'drop_plan_lock',
-                                { plan_id: router.query.plannerId },
-                                (response: any) => {
-                                    // TODO error handling
-                                    router.push('/plans');
-                                }
-                            );
-                        }}
-                    >
-                        Absenden & zur Übersicht
-                    </button>
-                </div>
+            <div className="mb-4 text-right w-full">
+                <button
+                    type="submit"
+                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
+                    onClick={async (e) => {
+                        e.preventDefault();
+                        await onSubmit(methods.getValues() as FormValues);
+                        await dropPlanLock(socket, router.query.plannerId)
+                        await router.push('/plans');
+                    }}
+                >
+                    Absenden & zur Übersicht
+                </button>
             </div>
         </Wrapper>
     );

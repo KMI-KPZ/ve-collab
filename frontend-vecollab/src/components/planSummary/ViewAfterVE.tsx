@@ -61,9 +61,9 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">Datei(en):</span>
+                    <span className="text-base font-semibold pr-5">Datei zur Reflexion:</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
+                        <li className="flex w-fit rounded-lg p-2 whitespace-pre-line">
                             {plan.evaluation_file ? (
                                 <AuthenticatedFile
                                     url={`/uploads/${plan.evaluation_file.file_id}`}
@@ -77,7 +77,44 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                                     </div>
                                 </AuthenticatedFile>
                             ) : (
-                                '/'
+                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                            )}
+                        </li>
+                    </ul>
+                    <span className="text-base font-semibold pr-5">Relevante Literaturangaben:</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
+                        {plan.literature ? (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
+                                {showDataOrEmptySign(plan.literature)}
+                            </li>
+                        ) : (
+                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
+                        )}
+                    </ul>
+                    <span className="text-base font-semibold pr-5">Dateien zu Literaturangaben:</span>
+                    <ul className="flex flex-col space-y-2 col-span-3">
+                        <li className="flex w-fit rounded-lg p-2 whitespace-pre-line">
+                            {(plan.literature_files && plan.literature_files.length) ? (
+                                <>
+                                    {plan.literature_files.map((file, index) => {
+                                        return (
+                                            <AuthenticatedFile
+                                                key={index}
+                                                url={`/uploads/${file.file_id}`}
+                                                filename={file.file_name}
+                                            >
+                                                <div className="flex justify-center">
+                                                    <RxFile size={40} />
+                                                </div>
+                                                <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                    {file.file_name}
+                                                </div>
+                                            </AuthenticatedFile>
+                                        );
+                                    })}
+                                </>
+                            ) : (
+                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                             )}
                         </li>
                     </ul>

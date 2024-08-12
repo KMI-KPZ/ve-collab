@@ -38,7 +38,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length <= 1
+        formValues.partners.every(a => a.value == '')
     );
 };
 
@@ -64,10 +64,6 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        // defaultValues: {
-        //     partners: [{ label: '', value: '' }],
-        //     externalParties: [{ externalParty: '' }],
-        // },
     });
 
     const {
@@ -93,7 +89,9 @@ export default function Partners({ socket }: Props): JSX.Element {
     });
 
     const setPlanerData = useCallback(
-        (plan: IPlan) => {
+        async (plan: IPlan) => {
+            let partners = [{ label: '', value: '' }]
+            let extPartners = [{ externalParty: '' }]
             if (plan.formalities && Array.isArray(plan.formalities)) {
                 setFormalConditions(plan.formalities);
             }
@@ -104,22 +102,20 @@ export default function Partners({ socket }: Props): JSX.Element {
                 setIndividualLearningGoals(plan.individual_learning_goals);
             }
             if (plan.involved_parties.length !== 0) {
-                replaceExternalParties(
-                    plan.involved_parties.map((element: string) => ({
-                        externalParty: element,
-                    }))
-                );
+                extPartners = plan.involved_parties.map(exp => ({ externalParty: exp }))
+                replaceExternalParties(extPartners);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
             if (plan.partners.length !== 0) {
-                fetchPOST(
+                const snippets: BackendProfileSnippetsResponse = await fetchPOST(
                     '/profile_snippets',
                     { usernames: plan.partners },
                     session?.accessToken
-                ).then((snippets: BackendProfileSnippetsResponse) => {
-                    const usernameWithFirstAndLastName = plan.partners.map(
+                )
+                if (snippets) {
+                    partners = plan.partners.map(
                         (partner: string): Partner => {
                             const findFullUsername = snippets.user_snippets.find(
                                 (backendUser: BackendUserSnippet) =>
@@ -141,10 +137,14 @@ export default function Partners({ socket }: Props): JSX.Element {
                                     value: partner,
                                 };
                             }
-                        }
-                    );
-                    replacePartners(usernameWithFirstAndLastName);
-                });
+                        });
+                    replacePartners(partners);
+                }
+            }
+
+            return {
+                partners: partners,
+                externalParties: extPartners
             }
         },
         [replaceExternalParties, replacePartners, session]

@@ -26,7 +26,7 @@ export default function ViewFinestep({ fineStep, openAllBoxes, handleImportStep 
     return (
         <div className="border-2 border-gray-400 rounded-3xl p-4 mb-4">
             <div
-                className="flex cursor-pointer justify-start items-center space-x-10"
+                className="flex flex-wrap cursor-pointer justify-start items-center space-x-10"
                 onClick={() => setIsOpenStepSection(!isOpenStepSection)}
             >
                 <Image
@@ -52,9 +52,9 @@ export default function ViewFinestep({ fineStep, openAllBoxes, handleImportStep 
                 {typeof handleImportStep !== 'undefined' && (
                     <div>
                         <button
-                            className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 print:hidden"
                             type='button'
-                            title='Etappe exportieren'
+                            title='Diese Etappe in eigenen Plan übernehmen'
                             onClick={e => {
                                 e.preventDefault()
                                 e.stopPropagation()

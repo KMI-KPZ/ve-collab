@@ -15,6 +15,7 @@ import Alert, { AlertState } from '../Alert';
 import { socket } from '@/lib/socket';
 import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { dropPlanLock } from '../VE-designer/Wrapper';
 
 interface Props {
     plan: IPlan;
@@ -148,10 +149,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
             });
         }
 
-        socket.emit(
-            'drop_plan_lock',
-            { plan_id: importStep2Plan.plan!._id },
-        );
+        await dropPlanLock(socket, importStep2Plan.plan!._id)
         setLoadingImport(false)
     }
 

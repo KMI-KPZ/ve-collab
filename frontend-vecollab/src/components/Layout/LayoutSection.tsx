@@ -47,7 +47,7 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main>
-                {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}
+                {(!isLoading && excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
                 <>{children}</>
             </main>
             <FooterSection />

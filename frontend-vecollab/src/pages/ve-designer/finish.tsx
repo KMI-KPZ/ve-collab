@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React from 'react';
-import { useGetPlanById } from '@/lib/backend';
+import React, { useState } from 'react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useForm } from 'react-hook-form';
-import Wrapper from '@/components/VE-designer/Wrapper';
+import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 
 interface Props {
     socket: Socket;
@@ -16,7 +16,8 @@ interface Props {
 Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
-    const { data: plan, isLoading } = useGetPlanById(router.query.plannerId as string);
+    // TODO
+    const [plan, setPlanData] = useState<IPlan>()
 
     return (
         <Wrapper
@@ -26,10 +27,13 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             methods={useForm<any>()}
             preventToLeave={false}
             stageInMenu="finish"
-            planerDataCallback={(d) => {}}
+            planerDataCallback={(d) => {
+                setPlanData(d)
+                return {}
+            }}
             submitCallback={(d) => {}}
         >
-            {isLoading ? <LoadingAnimation /> : <PlanOverview plan={plan} />}
+            {typeof plan !== 'undefined' ? <PlanOverview plan={plan} /> : <LoadingAnimation />}
             {feedbackFormURL && (
                 <div className="mt-4 font-bold text-lg">
                     Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns{' '}
@@ -50,10 +54,8 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                         href={{
                             pathname: `/plans`
                         }}
-                        onClick={() => {
-                            socket.emit('drop_plan_lock', { plan_id: router.query.plannerId }, (response: any) => {
-                                // TODO error handling ?
-                            });
+                        onClick={async () => {
+                            await dropPlanLock(socket, router.query.plannerId)
                         }}
                         className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
                     >

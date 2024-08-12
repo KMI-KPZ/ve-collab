@@ -77,12 +77,16 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (plan.institutions.length !== 0) {
-                replace(plan.institutions);
-            }
+            let institutions = plan.institutions.length > 0
+                ? plan.institutions
+                : [emptyInstitution]
+
+            replace(institutions);
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return {institutions}
         },
         [replace]
     );
