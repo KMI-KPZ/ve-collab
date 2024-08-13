@@ -97,9 +97,6 @@ export default function Wrapper({
         mutate: mutateGetPlanById,
     } = useGetPlanById(router.query.plannerId as string);
 
-    // requiered to upldate plans data in /plans
-    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
-
     // detect window close or a click outside of planer
     useEffect(() => {
         if (!router.isReady) return;
@@ -109,23 +106,18 @@ export default function Wrapper({
             clickedOutside = !wrapperRef?.current?.contains(e.target as Node) || false;
         };
 
-        const handleBrowseAway = async (nextlink: string) => {
+        const handleBrowseAway = (nextlink: string) => {
             if (preventToLeave === false) return;
 
-            // form was not changed, but if we clicked outside we drop the lock
-            if (Object.keys(methods.formState.dirtyFields).length == 0) {
-                if (clickedOutside) {
-                    await mutateAvailablePlans()
-                    await dropPlanLock(socket, router.query.plannerId as string)
-                }
-                return;
-            }
-
-            // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
-                setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
-                router.events.emit('routeChangeError');
-                throw 'routeChange aborted.';
+                if (Object.keys(methods.formState.dirtyFields).length == 0) {
+                    dropPlanLock(socket, router.query.plannerId as string)
+                } else {
+                    setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
+                    router.events.emit('routeChangeError');
+                    throw 'routeChange aborted.';
+                }
+
             }
         };
 
@@ -141,7 +133,7 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, socket, router, preventToLeave, mutateAvailablePlans]);
+    }, [wrapperRef, methods, socket, router, preventToLeave]);
 
     // check access rights or locked plan
     useEffect(() => {
@@ -200,7 +192,7 @@ export default function Wrapper({
         }
     }, [plan, isLoading, error, socket, router, session]);
 
-    // call data callback
+    // call data callback and rest form defaults for correct form valdation (form.isDirty)
     useEffect(() => {
         if (!plan || isLoading || error) return;
 
@@ -221,8 +213,7 @@ export default function Wrapper({
         methods
     ]);
 
-    // submit formdata
-    //  reload plan on current page (mutate) if updateAfterSaved == true
+    // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
@@ -243,7 +234,7 @@ export default function Wrapper({
                 return false;
             }
         }
-        // reload plan
+        // reload plan data
         await mutateGetPlanById();
         // reset formstate.isdirty after save
         // TODO is this still required since we reset after setPlanerData()?!?
@@ -258,7 +249,6 @@ export default function Wrapper({
                 // release plan if we leave designer
                 await dropPlanLock(socket, router.query.plannerId)
                 // update all plans SWR to update /plans list
-                await mutateAvailablePlans()
                 await router.push({
                     pathname: popUp.continueLink,
                     query: {},
