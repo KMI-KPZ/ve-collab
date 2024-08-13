@@ -5,7 +5,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import ViewAfterVE from './ViewAfterVE';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
-import { fetchGET, fetchPOST, useGetPlanById } from '@/lib/backend';
+import { fetchGET, fetchPOST } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Dialog from '../profile/Dialog';
@@ -48,10 +48,6 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
     const [loadingImport, setLoadingImport] = useState<boolean>(false)
     const [availPlans, setAvailPlans] = useState<IPlan[]>([])
-
-    const {
-        mutate: mutatePlan,
-    } = useGetPlanById(plan._id);
 
     useEffect(() => {
         if (!session) return
@@ -333,22 +329,13 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                             pathname: '/ve-designer/step-names',
                             query: { plannerId: importStep2Plan.plan?._id }
                         }}
-                        onClick={async (e) => {
-                            e.preventDefault()
-                            await mutatePlan()
-                            await router.push({
-                                pathname: '/ve-designer/step-names',
-                                query: { plannerId: importStep2Plan.plan?._id },
-                            });
-                        }}
                     >
                         <MdEdit className="inline" /> Den Plan bearbeiten
                     </Link>
                     <button
                         type="button"
                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                        onClick={async (e) => {
-                            await mutatePlan()
+                        onClick={(e) => {
                             setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
                         }}
                     >
