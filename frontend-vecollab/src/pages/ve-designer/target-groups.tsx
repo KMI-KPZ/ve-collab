@@ -12,11 +12,57 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const TargetGroupsFormSchema = z.object({
+    targetGroups: z
+        .object({
+            name: z.string().max(300, 'Ein gültiger Name darf maximal 300 Buchstaben lang sein.'),
+            age_min: z
+                .number({
+                    invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+                })
+                .int('Bitte geben sie eine ganze Zahl ein.')
+                .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
+                .lte(150, 'Bitte geben sie eine realistische Zahl ein.'),
+            age_max: z
+                .number({
+                    invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+                })
+                .int('Bitte geben sie eine ganze Zahl ein.')
+                .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
+                .lte(150, 'Bitte geben sie eine realistische Zahl ein.'),
+            experience: z
+                .string()
+                .max(800, 'Ein gültiger Name darf maximal 800 Buchstaben lang sein.'),
+            // TODO string array
+            academic_course: z
+                .string()
+                .max(400, 'Ein gültiger Name darf maximal 400 Buchstaben lang sein.'),
+            // TODO string array
+            languages: z
+                .string()
+                .max(400, 'Ein gültiger Name darf maximal 400 Buchstaben lang sein.'),
+        })
+        .refine((data) => data.age_min <= data.age_max, {
+            message: 'Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.',
+            path: ['age_max'], // This will show the error message at the age_min field
+        })
+        .array(),
+    languages: z
+        .object({
+            language: z
+                .string()
+                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+        })
+        .array(),
+});
 
 export interface TargetGroup {
     name: string;
-    age_min: string;
-    age_max: string;
+    age_min: number;
+    age_max: number;
     experience: string;
     academic_course: string;
     languages: string;
@@ -36,8 +82,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
     formValues.targetGroups.every((targetGroup) => {
         return (
             targetGroup.name === '' &&
-            targetGroup.age_min === '' &&
-            targetGroup.age_max === '' &&
+            targetGroup.age_min === 0 &&
+            targetGroup.age_max === 0 &&
             targetGroup.experience === '' &&
             targetGroup.academic_course === '' &&
             targetGroup.languages === ''
@@ -50,13 +96,13 @@ interface Props {
 
 const emptyTG = {
     name: '',
-    age_min: '',
-    age_max: '',
+    age_min: 0,
+    age_max: 0,
     experience: '',
     academic_course: '',
     languages: '',
-}
-const emptyLanguage = { language: '' }
+};
+const emptyLanguage = { language: '' };
 
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
@@ -69,6 +115,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(TargetGroupsFormSchema),
         defaultValues: {
             targetGroups: [emptyTG],
             languages: [emptyLanguage],
@@ -97,20 +144,19 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const targetGroups = plan.audience.length > 0
-                ? plan.audience
-                : [emptyTG]
-            replaceTg(targetGroups)
+            const targetGroups = plan.audience.length > 0 ? plan.audience : [emptyTG];
+            replaceTg(targetGroups);
 
-            const languages = plan.languages.length > 0
-                ? plan.languages.map(language => ({ language }))
-                : [emptyLanguage]
-            replaceLang(languages)
+            const languages =
+                plan.languages.length > 0
+                    ? plan.languages.map((language) => ({ language }))
+                    : [emptyLanguage];
+            replaceLang(languages);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {targetGroups, languages}
+            return { targetGroups, languages };
         },
         [replaceLang, replaceTg]
     );
@@ -143,13 +189,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         ];
     };
 
-    const handleRemoveTg = (index: number) => fieldsTg.length > 1
-        ? removeTg(index)
-        : replaceTg(emptyTG)
+    const handleRemoveTg = (index: number) =>
+        fieldsTg.length > 1 ? removeTg(index) : replaceTg(emptyTG);
 
-    const handleRemoveLang = (index: number) => fieldsLang.length > 1
-        ? removeLang(index)
-        : replaceLang(emptyLanguage);
+    const handleRemoveLang = (index: number) =>
+        fieldsLang.length > 1 ? removeLang(index) : replaceLang(emptyLanguage);
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fieldsTg.map((targetGroup, index) => (
@@ -163,13 +207,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.name`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.name`)}
                             placeholder="Name eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -189,19 +227,12 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_min`, {
-                                    maxLength: {
-                                        value: 4,
-                                        message: 'Bitte geben sie eine realistische Zahl ein',
-                                    },
-                                    pattern: {
-                                        value: /^\d+$/,
-                                        message: 'Bitte nur ganze postive Zahlen',
-                                    },
+                                    valueAsNumber: true,
                                 })}
                                 placeholder="von"
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
-                            <p className="text-red-600 pt-2">
+                            <p className="text-red-600 pt-2 mr-4">
                                 {methods.formState.errors?.targetGroups?.[index]?.age_min?.message}
                             </p>
                         </div>
@@ -209,14 +240,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_max`, {
-                                    maxLength: {
-                                        value: 4,
-                                        message: 'Bitte geben sie eine realistische Zahl ein',
-                                    },
-                                    pattern: {
-                                        value: /^\d+$/,
-                                        message: 'Bitte nur ganze postive Zahlen',
-                                    },
+                                    valueAsNumber: true,
                                 })}
                                 placeholder="bis"
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
@@ -236,13 +260,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <textarea
                             rows={3}
-                            {...methods.register(`targetGroups.${index}.experience`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.experience`)}
                             placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -260,13 +278,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.academic_course`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.academic_course`)}
                             placeholder="Studiengang eingeben, mehrere durch Komma trennen"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -287,13 +299,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.languages`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.languages`)}
                             placeholder="mehrere durch Komma trennen"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -324,16 +330,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                         type="text"
                         placeholder="Sprache eingeben"
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
-                        {...methods.register(`languages.${index}.language`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                            pattern: {
-                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
-                            },
-                        })}
+                        {...methods.register(`languages.${index}.language`)}
                     />
                     <button type="button" onClick={() => handleRemoveLang(index)}>
                         <RxMinus size={20} />
