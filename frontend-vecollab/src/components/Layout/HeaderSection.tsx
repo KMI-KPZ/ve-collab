@@ -39,7 +39,7 @@ export default function HeaderSection({
 
     const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
-    const {data: userProfile} = useGetOwnProfile()
+    const {data: userProfile} = useGetOwnProfile(session ? session.accessToken : '')
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
