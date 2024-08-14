@@ -23,10 +23,7 @@ if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
 let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 const swrConfig = {
-    revalidateIfStale: false,
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    // shouldRetryOnError: false
 }
 
 interface APIErrorResponse{
@@ -131,7 +128,7 @@ export function useGetAvailablePlans(accessToken: string): {
     );
 
     return {
-        data: isLoading || error ? [] : data.plans,
+        data: !data || isLoading || error ? [] : data.plans,
         isLoading,
         error,
         mutate,
@@ -152,7 +149,7 @@ export function useGetPlanById(planId: string): {
     );
 
     return {
-        data: isLoading || error ? {} : data.plan,
+        data: !data || isLoading || error ? {} : data.plan,
         isLoading,
         error,
         mutate,
@@ -244,13 +241,14 @@ export function useGetExcludedFromMatching(accessToken?: string): {
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        accessToken ? ['/matching_exclusion_info', accessToken] : null,
+        session ? ['/matching_exclusion_info', session.accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
     return {
-        data: !accessToken ? false : isLoading || error ? [] : data.excluded_from_matching,
+        data: !session || isLoading || error || !data ? [] : data.excluded_from_matching,
         isLoading,
         error,
         mutate,
@@ -293,7 +291,7 @@ export function useGetChatrooms(accessToken: string): {
         swrConfig
     );
     return {
-        data: isLoading || error ? [] : data.rooms,
+        data: !data || isLoading || error ? [] : data.rooms,
         isLoading,
         error,
         mutate,
@@ -322,7 +320,7 @@ export function useGetChatroomHistory(
     };
 }
 
-// TODO ducplication of isGlobalAdmin()
+// TODO ducplication of isGlobalAdmin()?
 export function useGetCheckAdminUser(accessToken: string): {
     data: boolean;
     isLoading: boolean;
@@ -494,7 +492,7 @@ export function useGetTimeline(
     );
 
     return {
-        data: isLoading || error ? [] : data.posts,
+        data: !data || isLoading || error ? [] : data.posts,
         isLoading,
         error,
         mutate,

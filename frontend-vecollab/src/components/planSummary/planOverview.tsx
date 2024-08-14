@@ -16,6 +16,7 @@ import { socket } from '@/lib/socket';
 import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { dropPlanLock } from '../VE-designer/Wrapper';
+import { useRouter } from 'next/router';
 
 interface Props {
     plan: IPlan;
@@ -28,7 +29,8 @@ interface FormValues {
 
 PlanOverview.auth = true;
 export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
@@ -48,26 +50,41 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     const [availPlans, setAvailPlans] = useState<IPlan[]>([])
 
     useEffect(() => {
-        // to minimize backend load, request the data only if session is valid (the other useEffect will handle session re-initiation)
-        if (session) {
-            // fetch profile snippets to be able to display the full name instead of username only
-            fetchPOST(
-                '/profile_snippets',
-                { usernames: [...plan.partners, plan.author] },
-                session.accessToken
-            ).then((snippets: BackendProfileSnippetsResponse) => {
-                let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-                snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                    partnerSnippets[element.username] = element;
-                });
-                setPartnerProfileSnippets(partnerSnippets);
-                setLoading(false);
+        if (!session) return
+
+        // fetch profile snippets to be able to display the full name instead of username only
+        fetchPOST(
+            '/profile_snippets',
+            { usernames: [...plan.partners, plan.author] },
+            session.accessToken
+        ).then((snippets: BackendProfileSnippetsResponse) => {
+            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                partnerSnippets[element.username] = element;
             });
-        }
-        else {
+            setPartnerProfileSnippets(partnerSnippets);
+        }).finally(() => {
             setLoading(false);
-        }
-    }, [session, status, plan]);
+        });
+    }, [session, plan]);
+
+    useEffect(() => {
+        if (!session || !plan) return
+
+        // fetch profile snippets to be able to display the full name instead of username only
+        fetchPOST(
+            '/profile_snippets',
+            { usernames: [...plan.partners, plan.author] },
+            session.accessToken
+        ).then((snippets: BackendProfileSnippetsResponse) => {
+            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
+                partnerSnippets[element.username] = element;
+            });
+            setPartnerProfileSnippets(partnerSnippets);
+            setLoading(false);
+        });
+    }, [session, plan]);
 
     const openImportDialog = (step: IFineStep) => {
         step._id = undefined
@@ -168,7 +185,10 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
 
     const Dialog_Step2PlanChoose = () => {
         if (loadingAvailPlans || !session!.user) return <LoadingAnimation />
-        const plans = availPlans.filter(plan => plan.write_access.includes(session?.user.preferred_username as string))
+        const plans = availPlans.filter(p =>
+            p.write_access.includes(session?.user.preferred_username as string)
+            && p._id != plan._id
+        )
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
@@ -213,15 +233,6 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                     </div>
                 )}
                 <div className='mt-2'>Überprüfe die Daten der Etappe um sie in den Plan zu importieren</div>
-
-                {/* <div
-                        className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                    >
-                        <MdNewspaper />
-                        <div className="text-xl font-bold grow-0">{importStepDialogOpen.plan!.name}</div>
-                        <span title="zuletzt geändert"><Timestamp timestamp={importStepDialogOpen.plan!.last_modified} className='text-sm' /></span>
-                    </div> */}
-
 
                 <FormProvider {...methods}>
                     <form>
@@ -309,22 +320,22 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     const Dialog_Step2PlanSuccess = () => {
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>Etappe hinzugefügt</div>
+                <div>Etappe  &quot;{importStep2Plan.step?.name}&quot; hinzugefügt</div>
 
                 <div className='mt-4 flex flex-row'>
                     <Link
                         className='mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full'
                         href={{
                             pathname: '/ve-designer/step-names',
-                            query: { plannerId: importStep2Plan.plan?._id },
+                            query: { plannerId: importStep2Plan.plan?._id }
                         }}
                     >
-                        <MdEdit className="inline" /> Bearbeiten
+                        <MdEdit className="inline" /> Den Plan bearbeiten
                     </Link>
                     <button
                         type="button"
                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                        onClick={e => {
+                        onClick={(e) => {
                             setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
                         }}
                     >

@@ -27,9 +27,6 @@ export default function Header({
     socket
 }: Props) {
     const router = useRouter();
-    const { data: session } = useSession();
-    // requiered to upldate plans data in /plans
-    const { mutate: mutateAvailablePlans } = useGetAvailablePlans(session!.accessToken);
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -66,7 +63,6 @@ export default function Header({
                             handleUnsavedData(null, '/plans');
                         } else {
                             await dropPlanLock(socket, router.query.plannerId)
-                            await mutateAvailablePlans()
                             await router.push({
                                 pathname: '/plans',
                                 query: {},
