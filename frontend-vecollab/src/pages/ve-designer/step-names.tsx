@@ -135,6 +135,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 });
                 replace(data.stepNames);
                 setSteps(plan.steps);
+                // DIRTY hack to initial set the size of our textareas
+                setTimeout(() => {
+                    plan.steps?.map((step, i) =>
+                        adjustTextareaSize(document.querySelector(`textarea[name='stepNames.${i}.learning_goal']`) )
+                    )
+                }, 1);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -246,6 +252,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
         })
         setIsImportStepsDialogOpen(false)
         setStepsToImport([])
+    }
+
+    const adjustTextareaSize = (el: HTMLTextAreaElement | null ) => {
+        if (!el) return
+        el.style.height = "0px";
+        el.style.height = el.scrollHeight + "px";
     }
 
     const ImportStepsDialog = () => {
@@ -382,13 +394,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     </div>
                                     <div className="flex items-center mt-2">
                                         <label>Lernziel(e):</label>
-                                        <input
-                                            {...methods.register(
-                                                `stepNames.${index}.learning_goal`
-                                            )}
+                                        <textarea
+                                            {...methods.register(`stepNames.${index}.learning_goal`)}
+                                            rows={1}
                                             placeholder="mehrere durch Komma trennen"
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
-                                        />
+                                            onChange={e => {
+                                                adjustTextareaSize(e.currentTarget)
+                                            }}
+                                    />
                                     </div>
                                     {methods.formState.errors?.stepNames?.[index]?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
