@@ -6,6 +6,7 @@ import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
+import ContactBanner from '../ContactBanner';
 
 interface Props {
     children: React.ReactNode;
@@ -45,6 +46,7 @@ export default function LayoutSection({
             />
             <main>
                 {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
+                <ContactBanner />
                 <>{children}</>
             </main>
             <FooterSection />
