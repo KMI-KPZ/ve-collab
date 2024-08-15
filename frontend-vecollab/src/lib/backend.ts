@@ -61,9 +61,9 @@ const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToke
     });
 
 // TODO duplication of useIsAdminCheck()
-export function useIsGlobalAdmin(accessToken?: string): boolean {
+export function useIsGlobalAdmin(accessToken: string): boolean {
     const { data } = useSWR(
-        [`/admin_check`, accessToken],
+        accessToken ? [`/admin_check`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
@@ -94,15 +94,14 @@ export function useGetProfileSnippets(usernames: string): {
     };
 }
 
-export function useGetOwnProfile(): {
+export function useGetOwnProfile(accessToken: string): {
     data: BackendUser;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        [`/profileinformation`, session?.accessToken],
+        accessToken ? [`/profileinformation`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
@@ -235,20 +234,20 @@ export function useGetMatching(
     };
 }
 
-export function useGetExcludedFromMatching(accessToken?: string): {
+export function useGetExcludedFromMatching(accessToken: string): {
     data: boolean;
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const { data: session } = useSession();
-    const { data, error, isLoading, mutate } = useSWR(
-        session ? ['/matching_exclusion_info', session.accessToken] : null,
+    const { data, isLoading, error, mutate } = useSWR(
+        accessToken ? ['/matching_exclusion_info', accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
+
     return {
-        data: !session || isLoading || error || !data ? [] : data.excluded_from_matching,
+        data: isLoading || error ? false : data?.excluded_from_matching,
         isLoading,
         error,
         mutate,

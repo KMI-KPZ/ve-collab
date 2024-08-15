@@ -26,11 +26,8 @@ export default function LayoutSection({
     const router = useRouter();
 
     const {
-        data: excludedFromMatching,
-        isLoading,
-        error,
-        mutate,
-    } = useGetExcludedFromMatching(session?.accessToken);
+        data: excludedFromMatching
+    } = useGetExcludedFromMatching(session ? session.accessToken : '');
 
     if(router.pathname === "/plan/pdf/[planId]") {
         return (
@@ -47,7 +44,7 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main>
-                {(!isLoading && excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
+                {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
                 <>{children}</>
             </main>
             <FooterSection />
