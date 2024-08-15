@@ -308,6 +308,7 @@ class Step:
         "evaluation_tools": list,
         "attachments": list,
         "custom_attributes": dict,
+        "original_plan": (str, type(None)),
     }
 
     def __init__(
@@ -324,6 +325,7 @@ class Step:
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
         custom_attributes: Dict = {},
+        original_plan: str = None,
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -384,6 +386,7 @@ class Step:
             util.parse_object_id(attachment) for attachment in attachments
         ]
         self.custom_attributes = custom_attributes
+        self.original_plan = original_plan
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -416,6 +419,7 @@ class Step:
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
             "custom_attributes": self.custom_attributes,
+            "original_plan": self.original_plan,
         }
 
     @classmethod
@@ -1909,6 +1913,7 @@ class VEPlan:
                         "evaluation_tools": [],
                         "attachments": [],
                         "custom_attributes": {},
+                        "original_plan": None,
                     }
                 ],
                 "is_good_practise": True,

@@ -68,6 +68,7 @@ export const emptyStepData: IFineStep = {
     evaluation_tools: [],
     attachments: [],
     custom_attributes: {},
+    original_plan: '',
 };
 
 interface Props {
@@ -228,11 +229,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
             setLoadingAvailPlans(false)
         )
     }
-    const toggleStepToImport = (step: IFineStep) => {
+    const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
         if (stepsToImport.some(s => s._id == step._id)) {
             setStepsToImport(prev => prev.filter(s => s._id != step._id))
         } else {
-            setStepsToImport(prev => [...prev, step])
+            setStepsToImport(prev => [...prev, {
+                ...step,
+                original_plan: plan._id
+            }])
         }
     }
 
@@ -241,8 +245,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
             append(Object.assign({}, step, {
                 _id: undefined,
                 timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
-                timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
-            }))
+                timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0]
+            } as IFineStep))
         })
         setIsImportStepsDialogOpen(false)
         setStepsToImport([])
@@ -277,7 +281,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         {plan.steps.map((step, j) => (
                             <div key={step._id}
                                 className='ml-10 hover:cursor-pointer flex'
-                                onClick={e => toggleStepToImport(step)}
+                                onClick={e => toggleStepToImport(plan, step)}
                                 title='Add/Remove'
                             >
                                 <input

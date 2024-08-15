@@ -5,7 +5,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import ViewAfterVE from './ViewAfterVE';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchPOST, useGetAvailablePlans } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Dialog from '../profile/Dialog';
@@ -45,9 +45,9 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     }>({
         isOpen: false
     })
-    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
     const [loadingImport, setLoadingImport] = useState<boolean>(false)
-    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
+    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
+    // TODO. const { data: partnerProfileSnippets } = useGetProfileSnippets(session!.accessToken)
 
     useEffect(() => {
         if (!session) return
@@ -92,17 +92,6 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
         methods.setValue('step.name', step.name, { shouldValidate: true, shouldDirty: false });
         methods.setValue('step.timestamp_from', new Date(step.timestamp_from).toISOString().split('T')[0], { shouldValidate: true, shouldDirty: false });
         methods.setValue('step.timestamp_to', new Date(step.timestamp_to).toISOString().split('T')[0], { shouldValidate: true, shouldDirty: false });
-
-        if (availPlans.length) return
-        setLoadingAvailPlans(true)
-
-        fetchGET('/planner/get_available', session?.accessToken)
-            .then(data => {
-                setAvailPlans((data.plans as IPlan[]))
-            })
-            .finally(() =>
-                setLoadingAvailPlans(false)
-            )
     }
 
     const handleImportStep2Plan = async (data: FormValues) => {
@@ -184,8 +173,8 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     }
 
     const Dialog_Step2PlanChoose = () => {
-        if (loadingAvailPlans || !session!.user) return <LoadingAnimation />
-        const plans = availPlans.filter(p =>
+        if (!availablePlans.length || !session!.user) return <LoadingAnimation />
+        const plans = availablePlans.filter(p =>
             p.write_access.includes(session?.user.preferred_username as string)
             && p._id != plan._id
         )
@@ -393,6 +382,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
                             openAllBoxes={openAllBoxes}
                             fineStep={fineStep}
                             handleImportStep={openImportDialog}
+                            availablePlans={availablePlans}
                         />
                     ))
                 ) : (
