@@ -235,7 +235,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         } else {
             setStepsToImport(prev => [...prev, {
                 ...step,
-                original_plan: plan._id
+                original_plan: step.original_plan === '' ? plan._id : step.original_plan
             }])
         }
     }
