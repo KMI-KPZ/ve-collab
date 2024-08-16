@@ -5,9 +5,7 @@ import { MdEditSquare, MdMeetingRoom } from 'react-icons/md';
 import { UseFormReturn } from 'react-hook-form';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { dropPlanLock } from './Wrapper';
-import { useGetAvailablePlans } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
+import { dropPlanLock } from './PlanSocket';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;

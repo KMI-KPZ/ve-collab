@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
-import { fetchPOST, useGetAvailablePlans, useGetPlanById } from '@/lib/backend';
+import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '../LoadingAnimation';
@@ -19,6 +19,8 @@ import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
+import { dropPlanLock, getPlanLock } from './PlanSocket';
+import { SocketIOServerResponse } from '@/interfaces/socketio';
 
 interface Props {
     title: string;
@@ -44,20 +46,6 @@ interface Props {
           >;
     socket: Socket;
 }
-
-export const dropPlanLock = (socket: Socket, plan_id: string | string[] | undefined) => {
-    return new Promise((resolve, reject) => {
-        socket.emit(
-            'drop_plan_lock',
-            { plan_id },
-            (response: any) => {
-                // TODO error handling
-                // console.log(response);
-                resolve(true)
-            }
-        );
-    })
-};
 
 export default function Wrapper({
     title,
@@ -144,40 +132,12 @@ export default function Wrapper({
             return;
         }
 
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: router.query.plannerId },
-            async (response: any) => {
-                if (response.success === true && response.status !== 403) {
-                    return;
-                }
-
-                if (response.reason === 'plan_locked') {
-                    const data = await fetchPOST(
-                        '/profile_snippets',
-                        { usernames: [response.lock_holder] },
-                        session?.accessToken
-                    );
-                    const userSnippet = data.user_snippets.find(
-                        (snippet: BackendUserSnippet) => snippet.username === response.lock_holder
-                    );
-                    const displayName = userSnippet
-                        ? `${userSnippet.first_name} ${userSnippet.last_name}`
-                        : response.lock_holder;
-                    setAlert({
-                        message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
-                        autoclose: 10000,
-                        onClose: () => setAlert({ open: false }),
-                    });
-                    return;
-                }
-                if (!response.success && response.status === 401) {
-                    // TODO handle re-authenticate
-                }
-                // show "Plan not found" message instead (see bottom)
-                // router.push('/plans')
+        getPlanLock(socket, router.query.plannerId)
+        .catch(response => {
+            if (response.reason === 'plan_locked') {
+                planIsLockedMessage(response)
             }
-        );
+        })
 
         // write access or author check
         if (
@@ -190,7 +150,7 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-    }, [plan, isLoading, error, socket, router, session]);
+    }, [plan, isLoading, getPlanLock, error, socket, router, session]);
 
     // call data callback and rest form defaults for correct form valdation (form.isDirty)
     useEffect(() => {
@@ -266,6 +226,26 @@ export default function Wrapper({
             setLoading(false);
         }
     };
+
+    const planIsLockedMessage = async (response: SocketIOServerResponse) => {
+        const data = await fetchPOST(
+            '/profile_snippets',
+            { usernames: [response.lock_holder] },
+            session?.accessToken
+        );
+        const userSnippet = data.user_snippets.find(
+            (snippet: BackendUserSnippet) => snippet.username === response.lock_holder
+        );
+        const displayName = userSnippet
+            ? `${userSnippet.first_name} ${userSnippet.last_name}`
+            : response.lock_holder;
+        setAlert({
+            message: `Dieser Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+            // autoclose: 10000,
+            type: 'warning',
+            onClose: () => setAlert({ open: false }),
+        });
+    }
 
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
