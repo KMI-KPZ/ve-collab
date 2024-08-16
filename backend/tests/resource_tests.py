@@ -161,6 +161,7 @@ class BaseResourceTestCase(TestCase):
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
             custom_attributes={"test": "test"},
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:

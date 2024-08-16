@@ -57,3 +57,17 @@ nachVE
 02.08.24 11:15
 
 ---
+
+#### Kurzfassung
+db.plan.steps.original_plan neu
+
+#### branch
+stepsImport
+
+#### Beschreibung
+- Attribt `original_plan` ist neu in jedem Step von einem Plan, Datentyp `str`, `ObjectId` oder `null`
+
+#### letzte Änderung
+16.08.24 09:30
+
+---

@@ -308,7 +308,7 @@ class Step:
         "evaluation_tools": list,
         "attachments": list,
         "custom_attributes": dict,
-        "original_plan": (str, type(None)),
+        "original_plan": (str, ObjectId, type(None)),
     }
 
     def __init__(
@@ -325,7 +325,7 @@ class Step:
         evaluation_tools: List[str] = [],
         attachments: List[ObjectId] = [],
         custom_attributes: Dict = {},
-        original_plan: str = None,
+        original_plan: str | ObjectId = None,
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -386,7 +386,7 @@ class Step:
             util.parse_object_id(attachment) for attachment in attachments
         ]
         self.custom_attributes = custom_attributes
-        self.original_plan = original_plan
+        self.original_plan = util.parse_object_id(original_plan) if original_plan else None
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -419,7 +419,7 @@ class Step:
             "evaluation_tools": self.evaluation_tools,
             "attachments": self.attachments,
             "custom_attributes": self.custom_attributes,
-            "original_plan": self.original_plan,
+            "original_plan": self.original_plan
         }
 
     @classmethod
@@ -442,7 +442,8 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`, 
+        `"original_plan"`.
         However only `name` requires a value, all other attributes may be
         initialized with None (description/learning_goal), 0 (duration/workload),
         False (has_tasks) or [] (tasks/attachements).
@@ -531,6 +532,10 @@ class Step:
         params["attachments"] = [
             util.parse_object_id(attachment) for attachment in params["attachments"]
         ]
+
+        # handle correct type of original_plan
+        if "original_plan" in params and params["original_plan"]:
+            params["original_plan"] = util.parse_object_id(params["original_plan"])
 
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects

@@ -394,6 +394,7 @@ class StepModelTest(TestCase):
         self.assertEqual(step.evaluation_tools, [])
         self.assertEqual(step.attachments, [])
         self.assertEqual(step.custom_attributes, {})
+        self.assertEqual(step.original_plan, None)
         self.assertIsInstance(step._id, ObjectId)
 
     def test_init(self):
@@ -407,6 +408,7 @@ class StepModelTest(TestCase):
         timestamp_to = datetime(2023, 1, 8)
         task = Task()
         custom_attributes = {"test": "test"}
+        original_plan = ObjectId()
         step = Step(
             _id=_id,
             name="test",
@@ -420,6 +422,7 @@ class StepModelTest(TestCase):
             evaluation_tools=["test", "test"],
             attachments=[attachment_id],
             custom_attributes=custom_attributes,
+            original_plan=original_plan
         )
 
         self.assertEqual(step.name, "test")
@@ -435,14 +438,18 @@ class StepModelTest(TestCase):
         self.assertEqual(step.attachments, [attachment_id])
         self.assertEqual(step._id, _id)
         self.assertEqual(step.custom_attributes, custom_attributes)
+        self.assertEqual(step.original_plan, original_plan)
 
         # test again, but this time let the timestamps be parsed from str's
         # into datetime objects and let _id be system-derived
-        step2 = Step(timestamp_from="2023-01-01", timestamp_to="2023-01-08")
+        # and let the original_plan be transformed into an ObjectId
+        original_plan = ObjectId()
+        step2 = Step(timestamp_from="2023-01-01", timestamp_to="2023-01-08", original_plan=str(original_plan))
         self.assertEqual(step2.timestamp_from, timestamp_from)
         self.assertEqual(step2.timestamp_to, timestamp_to)
         self.assertEqual(step2.duration, timedelta(days=7))
         self.assertIsInstance(step2._id, ObjectId)
+        self.assertEqual(step2.original_plan, original_plan)
 
     def test_to_dict(self):
         """
@@ -467,6 +474,7 @@ class StepModelTest(TestCase):
         self.assertIn("evaluation_tools", step_dict)
         self.assertIn("attachments", step_dict)
         self.assertIn("custom_attributes", step_dict)
+        self.assertIn("original_plan", step_dict)
         self.assertIsInstance(step_dict["_id"], ObjectId)
         self.assertEqual(step_dict["name"], None)
         self.assertEqual(step_dict["workload"], 0)
@@ -480,6 +488,12 @@ class StepModelTest(TestCase):
         self.assertEqual(step_dict["evaluation_tools"], [])
         self.assertEqual(step_dict["attachments"], [])
         self.assertEqual(step_dict["custom_attributes"], {})
+        self.assertEqual(step_dict["original_plan"], None)
+
+        original_plan = ObjectId()
+        step2 = Step(original_plan=original_plan)
+        step_dict2 = step2.to_dict()
+        self.assertEqual(step_dict2["original_plan"], original_plan)
 
     def test_from_dict(self):
         """
@@ -488,6 +502,7 @@ class StepModelTest(TestCase):
 
         attachment_id = ObjectId()
         _id = ObjectId()
+        original_plan = ObjectId()
         step_dict = {
             "_id": _id,
             "name": "test",
@@ -501,6 +516,7 @@ class StepModelTest(TestCase):
             "evaluation_tools": ["test", "test"],
             "attachments": [attachment_id],
             "custom_attributes": {"test": "test"},
+            "original_plan": original_plan
         }
 
         step = Step.from_dict(step_dict.copy())
@@ -521,10 +537,12 @@ class StepModelTest(TestCase):
         self.assertEqual(step.evaluation_tools, step_dict["evaluation_tools"])
         self.assertEqual(step.attachments, step_dict["attachments"])
         self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
+        self.assertEqual(step.original_plan, original_plan)
 
         # test again without supplying _ids for step and task
         task_dict = Task().to_dict()
         del task_dict["_id"]
+        original_plan = ObjectId()
         step_dict = {
             "name": "test",
             "workload": 10,
@@ -537,6 +555,7 @@ class StepModelTest(TestCase):
             "evaluation_tools": ["test", "test"],
             "attachments": [attachment_id],
             "custom_attributes": {"test": "test"},
+            "original_plan": str(original_plan)
         }
         step = Step.from_dict(step_dict.copy())
 
@@ -554,6 +573,7 @@ class StepModelTest(TestCase):
         self.assertEqual(step.custom_attributes, step_dict["custom_attributes"])
         self.assertEqual(step.learning_goal, step_dict["learning_goal"])
         self.assertEqual(step.learning_activity, step_dict["learning_activity"])
+        self.assertEqual(step.original_plan, original_plan)
         self.assertEqual(step.has_tasks, step_dict["has_tasks"])
         self.assertIsInstance(step.tasks, list)
         self.assertEqual(len(step.tasks), 1)
@@ -587,6 +607,7 @@ class StepModelTest(TestCase):
             "tasks": [Task().to_dict()],
             "evaluation_tools": ["test", "test"],
             "custom_attributes": {"test": "test"},
+            "original_plan": ObjectId()
         }
         self.assertRaises(MissingKeyError, Step.from_dict, step_dict)
 
@@ -609,6 +630,7 @@ class StepModelTest(TestCase):
             "evaluation_tools": ["test", "test"],
             "attachments": [],
             "custom_attributes": {},
+            "original_plan": ObjectId()
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -659,6 +681,10 @@ class StepModelTest(TestCase):
         step_dict["custom_attributes"] = "test"
         self.assertRaises(TypeError, Step.from_dict, step_dict)
         step_dict["custom_attributes"] = {}
+
+        step_dict["original_plan"] = 123
+        self.assertRaises(TypeError, Step.from_dict, step_dict)
+        step_dict["original_plan"] = ObjectId()
 
     def test_check_unique_tasks(self):
         """
@@ -1701,6 +1727,7 @@ class VEPlanModelTest(TestCase):
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
             custom_attributes={"test": "test"},
+            original_plan=ObjectId()
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -2331,6 +2358,7 @@ class VEPlanModelTest(TestCase):
                     "evaluation_tools": step.evaluation_tools,
                     "attachments": step.attachments,
                     "custom_attributes": step.custom_attributes,
+                    "original_plan": step.original_plan,
                 }
             ],
             "is_good_practise": True,
@@ -2486,6 +2514,7 @@ class VEPlanModelTest(TestCase):
                     "evaluation_tools": step.evaluation_tools,
                     "attachments": step.attachments,
                     "custom_attributes": step.custom_attributes,
+                    "original_plan": step.original_plan,
                 }
             ],
             "is_good_practise": True,

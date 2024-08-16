@@ -7807,6 +7807,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             evaluation_tools=["test", "test"],
             attachments=[ObjectId()],
             custom_attributes={"test": "test"},
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -8960,6 +8961,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "evaluation_tools": [],
                     "attachments": [],
                     "custom_attributes": {},
+                    "original_plan": None,
                 },
                 {
                     "_id": ObjectId(),
@@ -8975,6 +8977,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "evaluation_tools": [],
                     "attachments": [],
                     "custom_attributes": {},
+                    "original_plan": None,
                 },
             ],
         }
@@ -9014,6 +9017,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "evaluation_tools": [],
                     "attachments": [],
                     "custom_attributes": {},
+                    "original_plan": None,
                 },
             ],
         }
