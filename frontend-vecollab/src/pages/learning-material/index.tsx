@@ -129,7 +129,7 @@ export default function PageCategoryNotSelected(props: Props) {
                             '-top-16 -left-[5rem]',
                             '-bottom-16 -right-[7rem]',
                             '-bottom-14 -left-[7rem]',
-                            '-top-8 -right-[8rem]',
+                            '-top-8 -right-[8rem] border-dashed',
                         ].map((style, i) => (
                             <Link
                             key={i}
