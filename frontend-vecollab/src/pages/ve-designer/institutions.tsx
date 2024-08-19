@@ -276,28 +276,28 @@ export default function Institutions({ socket }: Props): JSX.Element {
     }
 
     const ImportDialog = () => {
-        const [selection, setSelection] = useState<{[key: number]: Institution|undefined}>({})
+        const [selection, setSelection] = useState<{[key: number]: Institution}>({})
 
         const toggleImport = (index: number, institution: Institution) => {
-            console.log('toggleImport', {index, selection_: selection});
-
             if (typeof selection[index] === 'undefined') {
                 setSelection(prev => ({...prev, [index]: institution}))
             } else {
-                setSelection(prev => ({...prev, [index]: undefined}))
+                setSelection(prev => {
+                    // remove selection[index], return the rest
+                    const {[index]: rm, ...rest} = prev;
+                    return rest;
+                })
             }
         }
         const handleImport = () => {
-            for (const i in selection) {
-                if (typeof selection[i] !== 'undefined') {
-                    prepend({
-                        country: selection[i].country,
+            prepend(Object.keys(selection).map((i: any) => {
+                return {
+                    country: selection[i].country,
                         name: selection[i].name,
                         school_type: selection[i].school_type,
                         departments: selection[i].departments
-                    })
                 }
-            }
+            }))
             setImportDialog(prev => ({...prev, isOpen: false}))
         }
 
