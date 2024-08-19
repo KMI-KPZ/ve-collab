@@ -51,7 +51,7 @@ const itemsAllgemein: ISubmenuData[] = [
     },
     {
         text: 'Checkliste',
-        id: 'formalities',
+        id: 'checklist',
         link: '/ve-designer/checklist',
     },
 ];

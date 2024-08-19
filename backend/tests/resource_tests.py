@@ -5015,7 +5015,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -5052,7 +5052,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -5172,7 +5172,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
-                self.assertEqual(plan.formalities, self.default_plan["formalities"])
+                self.assertEqual(plan.checklist, self.default_plan["checklist"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -5263,7 +5263,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
                 self.assertEqual(plan.new_content, self.default_plan["new_content"])
-                self.assertEqual(plan.formalities, self.default_plan["formalities"])
+                self.assertEqual(plan.checklist, self.default_plan["checklist"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -5426,7 +5426,7 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
         self.assertEqual(plan.new_content, self.default_plan["new_content"])
-        self.assertEqual(plan.formalities, self.default_plan["formalities"])
+        self.assertEqual(plan.checklist, self.default_plan["checklist"])
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
@@ -5482,7 +5482,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
-                "formalities": [
+                "checklist": [
                     {
                         "username": "test_user",
                         "technology": False,
@@ -5514,7 +5514,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "realization": "not_started",
                     "learning_env": "not_started",
                     "new_content": "not_started",
-                    "formalities": "not_started",
+                    "checklist": "not_started",
                     "steps": "not_started",
                 },
             },
@@ -5541,7 +5541,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
                 "new_content": False,
-                "formalities": [
+                "checklist": [
                     {
                         "username": "test_user",
                         "technology": False,
@@ -5573,7 +5573,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "realization": "not_started",
                     "learning_env": "not_started",
                     "new_content": "not_started",
-                    "formalities": "not_started",
+                    "checklist": "not_started",
                     "steps": "not_started",
                 },
             },
@@ -5636,7 +5636,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -5668,7 +5668,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -5712,7 +5712,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -5744,7 +5744,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -5923,7 +5923,7 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
-            "formalities",
+            "checklist",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.planner.update_field(self.plan_id, "is_good_practise", False)
@@ -5949,7 +5949,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         )
@@ -5969,7 +5969,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
         )
         self.assertEqual(
-            db_state["formalities"],
+            db_state["checklist"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["is_good_practise"], False)
@@ -6026,7 +6026,7 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.planner.update_field(
             self.plan_id,
-            "formalities",
+            "checklist",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
         )
@@ -6047,7 +6047,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
             requesting_username="test_user",
@@ -6065,7 +6065,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
         )
         self.assertEqual(
-            db_state["formalities"],
+            db_state["checklist"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["progress"]["name"], "completed")

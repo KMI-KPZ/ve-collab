@@ -1463,7 +1463,7 @@ class VEPlan:
         "physical_mobilities": list,
         "learning_env": (str, type(None)),
         "new_content": (bool, type(None)),
-        "formalities": list,
+        "checklist": list,
         "steps": list,
         "is_good_practise": (bool, type(None)),
         "abstract": (str, type(None)),
@@ -1501,7 +1501,7 @@ class VEPlan:
         physical_mobilities: List[PhysicalMobility] = [],
         learning_env: str = None,
         new_content: bool = None,
-        formalities: list = [],
+        checklist: list = [],
         steps: List[Step] = [],
         is_good_practise: bool = None,
         abstract: str = None,
@@ -1517,7 +1517,7 @@ class VEPlan:
         Initialization of a `VEPlan` object.
 
         Sets the function arguments as corresponding instance attributes.
-        Formalities is a dict expected to contain the keys "technology" and
+        checklist is a dict expected to contain the keys "technology" and
         "exam_regulations" with either True, False or None value respectively.
 
         If `_id` is given, the indication is conveyed that this instance represents
@@ -1620,7 +1620,7 @@ class VEPlan:
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": [
                     {"step_id": step._id, "progress": "not_started"}
                     for step in self.steps
@@ -1631,39 +1631,39 @@ class VEPlan:
         if not self._check_unique_step_names(self.steps):
             raise NonUniqueStepsError
 
-        if formalities:
-            self.formalities = formalities
-            for formality in self.formalities:
-                # ensure that each formality entry is associated with a user
-                if "username" not in formality:
+        if checklist:
+            self.checklist = checklist
+            for checklist_item in self.checklist:
+                # ensure that each checklist_item entry is associated with a user
+                if "username" not in checklist_item:
                     raise MissingKeyError(
-                        "Missing key 'username' in formalities dictionary",
+                        "Missing key 'username' in checklist dictionary",
                         "username",
-                        "formalities",
+                        "checklist",
                     )
 
                 # ensure that the username is also a partner of the plan
                 if not (
-                    formality["username"] in self.partners
-                    or formality["username"] == self.author
+                    checklist_item["username"] in self.partners
+                    or checklist_item["username"] == self.author
                 ):
                     raise ValueError(
-                        "username '{}' in formalities is not a partner of the plan".format(
-                            formality["username"]
+                        "username '{}' in checklist is not a partner of the plan".format(
+                            checklist_item["username"]
                         )
                     )
 
                 # ensure that any other values are of type bool or None
-                for attr, value in formality.items():
+                for attr, value in checklist_item.items():
                     if attr != "username":
                         if not isinstance(value, (bool, type(None))):
                             raise TypeError(
-                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)
                                 )
                             )
         else:
-            self.formalities = []
+            self.checklist = []
 
         self.workload = 0
 
@@ -1730,7 +1730,7 @@ class VEPlan:
             ],
             "learning_env": self.learning_env,
             "new_content": self.new_content,
-            "formalities": [formality for formality in self.formalities],
+            "checklist": [checklist_item for checklist_item in self.checklist],
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1776,7 +1776,7 @@ class VEPlan:
         """
         initialize a VEPlan object from a dictionary containing the expected attributes.
         This dictionary has to atleast contain all the keys that can be presented to `__init__`,
-        however their values may be None, except for formalities (this dict has to contain the keys
+        however their values may be None, except for checklist (this dict has to contain the keys
         "technology" and "exam_regulations", but their values can be None again).
         Note that `steps` is a list of
         dictionaries that in turn have to satisfy the `from_dict()` method
@@ -1882,7 +1882,7 @@ class VEPlan:
                 ],
                 "learning_env": None,
                 "new_content": None,
-                "formalities": [{
+                "checklist": [{
                     "username": "partnerX",
                     "technology": None|True|False,
                     "exam_regulations": None|True|False,
@@ -1941,7 +1941,7 @@ class VEPlan:
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
                     "new_content": "<completed|uncompleted|not_started>",
-                    "formalities": "<completed|uncompleted|not_started>",
+                    "checklist": "<completed|uncompleted|not_started>",
                     "steps": "<completed|uncompleted|not_started>",
                 },
             }
@@ -2037,36 +2037,36 @@ class VEPlan:
         if "last_modified" in params:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
 
-        # handle correct type of formalities
-        if "formalities" in params:
-            for formality in params["formalities"]:
-                # ensure that each formality entry is associated with a user
-                if "username" not in formality:
+        # handle correct type of checklist
+        if "checklist" in params:
+            for checklist_item in params["checklist"]:
+                # ensure that each checklist_item entry is associated with a user
+                if "username" not in checklist_item:
                     raise MissingKeyError(
-                        "Missing key 'username' in formalities dictionary",
+                        "Missing key 'username' in checklist dictionary",
                         "username",
-                        "formalities",
+                        "checklist",
                     )
 
                 # ensure that the username is also a partner of the plan
                 if "author" not in params:
                     params["author"] = None
                 if not (
-                    formality["username"] in params["partners"]
-                    or formality["username"] == params["author"]
+                    checklist_item["username"] in params["partners"]
+                    or checklist_item["username"] == params["author"]
                 ):
                     raise ValueError(
-                        "username '{}' in formalities is not a partner of the plan".format(
-                            formality["username"]
+                        "username '{}' in checklist is not a partner of the plan".format(
+                            checklist_item["username"]
                         )
                     )
 
                 # ensure that any other values are of type bool or None
-                for attr, value in formality.items():
+                for attr, value in checklist_item.items():
                     if attr != "username":
                         if not isinstance(value, (bool, type(None))):
                             raise TypeError(
-                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)
                                 )
                             )

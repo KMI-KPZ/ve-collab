@@ -57,3 +57,31 @@ nachVE
 02.08.24 11:15
 
 ---
+
+#### Kurzfassung
+db.plan.audience --> db.plan.target_groups
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribt `audience` wird umbenannt zu `target_groups`
+
+#### letzte Änderung
+19.08.24 15:00
+
+---
+
+#### Kurzfassung
+db.plan.formalities --> db.plan.checklist
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribt `formalities` wird umbenannt zu `checklist`
+
+#### letzte Änderung
+19.08.24 15:00
+
+---

@@ -7308,7 +7308,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "physical_mobilities": [],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7339,7 +7339,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -7931,7 +7931,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7963,7 +7963,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -8052,7 +8052,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -8134,7 +8134,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
         self.assertEqual(response_plan.new_content, good_practise_plan.new_content)
-        self.assertEqual(response_plan.formalities, good_practise_plan.formalities)
+        self.assertEqual(response_plan.checklist, good_practise_plan.checklist)
         self.assertEqual(response_plan.duration, good_practise_plan.duration)
         self.assertEqual(response_plan.workload, good_practise_plan.workload)
         self.assertEqual(response_plan.steps, good_practise_plan.steps)
@@ -8265,7 +8265,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
         self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -8414,7 +8414,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         expect: successfully insert a new plan with no attributes set
         except for the automations on partners, author, evaluation,
-        individual_learning_goals and formalities
+        individual_learning_goals and checklist
         """
 
         response = self.base_checks(
@@ -8445,9 +8445,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["individual_learning_goals"][0]["username"], CURRENT_ADMIN.username
         )
-        self.assertIsNotNone(db_state["formalities"])
-        self.assertEqual(len(db_state["formalities"]), 1)
-        self.assertEqual(db_state["formalities"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["checklist"])
+        self.assertEqual(len(db_state["checklist"]), 1)
+        self.assertEqual(db_state["checklist"][0]["username"], CURRENT_ADMIN.username)
 
     def test_post_update_plan(self):
         """
@@ -8604,10 +8604,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
-        # again with formalities dict attribute
+        # again with checklist dict attribute
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "formalities",
+            "field_name": "checklist",
             "value": [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -8630,7 +8630,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"],
+            db_state["checklist"],
             [
                 {
                     "username": CURRENT_ADMIN.username,

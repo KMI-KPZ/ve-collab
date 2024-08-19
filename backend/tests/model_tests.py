@@ -1671,7 +1671,7 @@ class VEPlanModelTest(TestCase):
             "realization": "not_started",
             "learning_env": "not_started",
             "new_content": "not_started",
-            "formalities": "not_started",
+            "checklist": "not_started",
             "steps": [],
         }
         return super().setUp()
@@ -1804,7 +1804,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.physical_mobilities, [])
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, None)
-        self.assertEqual(plan.formalities, [])
+        self.assertEqual(plan.checklist, [])
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.is_good_practise, False)
         self.assertIsNone(plan.abstract)
@@ -1895,7 +1895,7 @@ class VEPlanModelTest(TestCase):
             physical_mobilities=physical_mobilities,
             learning_env="test",
             new_content=True,
-            formalities=[
+            checklist=[
                 {"username": "test", "technology": True, "exam_regulations": False}
             ],
             steps=steps,
@@ -1921,7 +1921,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         )
@@ -1948,7 +1948,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.new_content, True)
         self.assertEqual(
-            plan.formalities,
+            plan.checklist,
             [{"username": "test", "technology": True, "exam_regulations": False}],
         )
         self.assertEqual(plan.steps, steps)
@@ -1992,7 +1992,7 @@ class VEPlanModelTest(TestCase):
             physical_mobilities=physical_mobilities,
             learning_env="test",
             new_content=True,
-            formalities=[],
+            checklist=[],
             steps=steps,
             is_good_practise=True,
             abstract="test",
@@ -2016,7 +2016,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         )
@@ -2038,7 +2038,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.physical_mobilities, physical_mobilities)
         self.assertEqual(plan.learning_env, "test")
         self.assertEqual(plan.new_content, True)
-        self.assertEqual(plan.formalities, [])
+        self.assertEqual(plan.checklist, [])
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.is_good_practise, True)
@@ -2055,20 +2055,20 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.timestamp_to, None)
         self.assertEqual(plan.duration, None)
 
-    def test_init_formalities_type_safety(self):
+    def test_init_checklist_type_safety(self):
         """
-        check that, if specified, formalities are type-safe
+        check that, if specified, checklist are type-safe
         """
 
         # username is missing
-        self.assertRaises(MissingKeyError, VEPlan, formalities=[{"technology": True}])
+        self.assertRaises(MissingKeyError, VEPlan, checklist=[{"technology": True}])
 
         # ValueError because user is not a partner or author of the plan
         self.assertRaises(
             ValueError,
             VEPlan,
             author="test",
-            formalities=[
+            checklist=[
                 {"username": "not_test", "technology": False, "exam_regulations": True}
             ],
         )
@@ -2078,7 +2078,7 @@ class VEPlanModelTest(TestCase):
             TypeError,
             VEPlan,
             author="test",
-            formalities=[
+            checklist=[
                 {"username": "test", "technology": None, "exam_regulations": 123}
             ],
         )
@@ -2161,7 +2161,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("physical_mobilities", plan_dict)
         self.assertIn("learning_env", plan_dict)
         self.assertIn("new_content", plan_dict)
-        self.assertIn("formalities", plan_dict)
+        self.assertIn("checklist", plan_dict)
         self.assertIn("duration", plan_dict)
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
@@ -2199,7 +2199,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertIsNone(plan_dict["learning_env"])
         self.assertIsNone(plan_dict["new_content"])
-        self.assertEqual(plan_dict["formalities"], [])
+        self.assertEqual(plan_dict["checklist"], [])
         self.assertEqual(plan_dict["workload"], 10)
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
@@ -2310,7 +2310,7 @@ class VEPlanModelTest(TestCase):
             ],
             "learning_env": None,
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test",
                     "technology": None,
@@ -2355,7 +2355,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -2383,7 +2383,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities,
+            plan.checklist,
             [{"username": "test", "technology": None, "exam_regulations": None}],
         )
         self.assertEqual(plan._id, _id)
@@ -2466,7 +2466,7 @@ class VEPlanModelTest(TestCase):
             ],
             "learning_env": None,
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test",
                     "technology": None,
@@ -2510,7 +2510,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -2542,7 +2542,7 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.learning_env)
         self.assertEqual(plan.new_content, False)
         self.assertEqual(
-            plan.formalities,
+            plan.checklist,
             [{"username": "test", "technology": None, "exam_regulations": None}],
         )
         self.assertEqual(plan.duration, step.duration)
@@ -2599,7 +2599,7 @@ class VEPlanModelTest(TestCase):
             "physical_mobilities": [],
             "learning_env": None,
             "new_content": None,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test",
                     "technology": None,
@@ -2628,7 +2628,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -2659,7 +2659,7 @@ class VEPlanModelTest(TestCase):
             "physical_mobilities": [],
             "learning_env": None,
             "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test",
                     "technology": None,
@@ -2689,7 +2689,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -2767,9 +2767,9 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["new_content"] = True
 
-        plan_dict["formalities"] = "test"
+        plan_dict["checklist"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["formalities"] = dict()
+        plan_dict["checklist"] = dict()
 
         plan_dict["steps"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2836,7 +2836,7 @@ class VEPlanModelTest(TestCase):
             "physical_mobilities": [],
             "learning_env": None,
             "new_content": None,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test",
                     "technology": None,
@@ -2869,7 +2869,7 @@ class VEPlanModelTest(TestCase):
                 "realization": "not_started",
                 "learning_env": "not_started",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }

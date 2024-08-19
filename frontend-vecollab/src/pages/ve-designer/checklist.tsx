@@ -95,11 +95,11 @@ export default function Checklist({ socket }: Props): JSX.Element {
         (plan: IPlan) => {
             let checklistValue = [emptyCheckListPartner]
             if (
-                plan.formalities &&
-                Array.isArray(plan.formalities) &&
-                plan.formalities.length > 0
+                plan.checklist &&
+                Array.isArray(plan.checklist) &&
+                plan.checklist.length > 0
             ) {
-                checklistValue = plan.formalities
+                checklistValue = plan.checklist
                 methods.setValue('checklist', checklistValue);
             }
             if (Object.keys(plan.progress).length) {
@@ -138,7 +138,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
         return [
             {
                 plan_id: router.query.plannerId,
-                field_name: 'formalities',
+                field_name: 'checklist',
                 value: data.checklist,
             },
             {
@@ -146,7 +146,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    formalities: progressState,
+                    checklist: progressState,
                 },
             },
         ];

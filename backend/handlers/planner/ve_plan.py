@@ -344,7 +344,7 @@ class VEPlanHandler(BaseHandler):
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
-                        "formalities": {{
+                        "checklist": {{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -404,7 +404,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
                             "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -468,7 +468,7 @@ class VEPlanHandler(BaseHandler):
             a user.
             The only automation that is already applied is that the author is added to the
             `partners` field an in-turn the partners-dependent fields `evaluation`,
-            `individual_learning_goals` and `formalities` are also initiated (empty) for the author.
+            `individual_learning_goals` and `checklist` are also initiated (empty) for the author.
 
             query params:
                 None
@@ -581,7 +581,7 @@ class VEPlanHandler(BaseHandler):
                         "learning_env": "test",
                         "tools": ["test"],
                         "new_content": False,
-                        "formalities": [{
+                        "checklist": [{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -640,7 +640,7 @@ class VEPlanHandler(BaseHandler):
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
                             "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -1195,7 +1195,7 @@ class VEPlanHandler(BaseHandler):
                     individual_learning_goals=[
                         IndividualLearningGoal(username=self.current_user.username)
                     ],
-                    formalities=[{"username": self.current_user.username}],
+                    checklist=[{"username": self.current_user.username}],
                 )
 
                 self.insert_plan(db, plan)

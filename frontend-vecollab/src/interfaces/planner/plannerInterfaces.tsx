@@ -27,7 +27,7 @@ export interface IPlan {
     abstract: string | null;
     creation_timestamp: string;
     duration: number | null;
-    formalities: CheckListPartner[];
+    checklist: CheckListPartner[];
     institutions: Institution[];
     involved_parties: string[];
     languages: string[];
