@@ -22,7 +22,7 @@ export interface PlanPreview {
 
 export interface IPlan {
     _id: string;
-    audience: TargetGroup[];
+    target_groups: TargetGroup[];
     author: string;
     abstract: string | null;
     creation_timestamp: string;

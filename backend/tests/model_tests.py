@@ -1664,7 +1664,7 @@ class VEPlanModelTest(TestCase):
             "lectures": "not_started",
             "learning_goals": "not_started",
             "methodical_approaches": "not_started",
-            "audience": "not_started",
+            "target_groups": "not_started",
             "languages": "not_started",
             "evaluation": "not_started",
             "involved_parties": "not_started",
@@ -1795,7 +1795,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.major_learning_goals, [])
         self.assertEqual(plan.individual_learning_goals, [])
         self.assertEqual(plan.methodical_approaches, [])
-        self.assertEqual(plan.audience, [])
+        self.assertEqual(plan.target_groups, [])
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.evaluation, [])
         self.assertEqual(plan.involved_parties, [])
@@ -1886,7 +1886,7 @@ class VEPlanModelTest(TestCase):
             major_learning_goals=["test", "test"],
             individual_learning_goals=individual_learning_goals,
             methodical_approaches=["test"],
-            audience=target_groups,
+            target_groups=target_groups,
             languages=["test", "test"],
             evaluation=evaluation,
             involved_parties=["test", "test"],
@@ -1914,7 +1914,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -1938,7 +1938,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.major_learning_goals, ["test", "test"])
         self.assertEqual(plan.individual_learning_goals, individual_learning_goals)
         self.assertEqual(plan.methodical_approaches, ["test"])
-        self.assertEqual(plan.audience, target_groups)
+        self.assertEqual(plan.target_groups, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.evaluation, evaluation)
         self.assertEqual(plan.involved_parties, ["test", "test"])
@@ -1983,7 +1983,7 @@ class VEPlanModelTest(TestCase):
             major_learning_goals=["test", "test"],
             individual_learning_goals=individual_learning_goals,
             methodical_approaches=["test"],
-            audience=target_groups,
+            target_groups=target_groups,
             languages=["test", "test"],
             evaluation=evaluation,
             involved_parties=["test", "test"],
@@ -2009,7 +2009,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -2029,7 +2029,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.major_learning_goals, ["test", "test"])
         self.assertEqual(plan.individual_learning_goals, individual_learning_goals)
         self.assertEqual(plan.methodical_approaches, ["test"])
-        self.assertEqual(plan.audience, target_groups)
+        self.assertEqual(plan.target_groups, target_groups)
         self.assertEqual(plan.languages, ["test", "test"])
         self.assertEqual(plan.evaluation, evaluation)
         self.assertEqual(plan.involved_parties, ["test", "test"])
@@ -2150,7 +2150,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("major_learning_goals", plan_dict)
         self.assertIn("individual_learning_goals", plan_dict)
         self.assertIn("methodical_approaches", plan_dict)
-        self.assertIn("audience", plan_dict)
+        self.assertIn("target_groups", plan_dict)
         self.assertIn("languages", plan_dict)
         self.assertIn("evaluation", plan_dict)
         self.assertIn("timestamp_from", plan_dict)
@@ -2188,7 +2188,7 @@ class VEPlanModelTest(TestCase):
             plan_dict["individual_learning_goals"], [individual_learning_goal.to_dict()]
         )
         self.assertEqual(plan_dict["methodical_approaches"], [])
-        self.assertEqual(plan_dict["audience"], [])
+        self.assertEqual(plan_dict["target_groups"], [])
         self.assertEqual(plan_dict["languages"], [])
         self.assertEqual(plan_dict["evaluation"], [])
         self.assertEqual(plan_dict["involved_parties"], [])
@@ -2274,7 +2274,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "methodical_approaches": ["test"],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": target_group._id,
                     "name": target_group.name,
@@ -2348,7 +2348,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -2373,7 +2373,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.major_learning_goals, ["test", "test"])
         self.assertEqual(plan.individual_learning_goals, [individual_learning_goal])
         self.assertEqual(plan.methodical_approaches, ["test"])
-        self.assertEqual(plan.audience, [target_group])
+        self.assertEqual(plan.target_groups, [target_group])
         self.assertEqual(plan.languages, [])
         self.assertEqual(plan.evaluation, [evaluation])
         self.assertEqual(plan.involved_parties, [])
@@ -2433,7 +2433,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "methodical_approaches": ["test"],
-            "audience": [
+            "target_groups": [
                 {
                     "name": target_group.name,
                     "age_min": target_group.age_min,
@@ -2503,7 +2503,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -2560,7 +2560,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.literature_files, [])
         self.assertIsInstance(plan._id, ObjectId)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
-        self.assertIsInstance(plan.audience[0]._id, ObjectId)
+        self.assertIsInstance(plan.target_groups[0]._id, ObjectId)
         self.assertIsInstance(plan.lectures[0]._id, ObjectId)
         self.assertIsInstance(plan.institutions[0]._id, ObjectId)
         self.assertIsInstance(plan.evaluation[0]._id, ObjectId)
@@ -2590,7 +2590,7 @@ class VEPlanModelTest(TestCase):
             "major_learning_goals": [],
             "individual_learning_goals": [],
             "methodical_approaches": [],
-            "audience": [],
+            "target_groups": [],
             "languages": [],
             "evaluation": [],
             "involved_parties": [],
@@ -2621,7 +2621,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -2650,7 +2650,7 @@ class VEPlanModelTest(TestCase):
             "major_learning_goals": [],
             "individual_learning_goals": [],
             "methodical_approaches": [],
-            "audience": [],
+            "target_groups": [],
             "languages": [],
             "evaluation": [],
             "involved_parties": [],
@@ -2682,7 +2682,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -2731,9 +2731,9 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["methodical_approaches"] = []
 
-        plan_dict["audience"] = dict()
+        plan_dict["target_groups"] = dict()
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["audience"] = list()
+        plan_dict["target_groups"] = list()
 
         plan_dict["languages"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
@@ -2827,7 +2827,7 @@ class VEPlanModelTest(TestCase):
             "major_learning_goals": [],
             "individual_learning_goals": [],
             "methodical_approaches": [],
-            "audience": [],
+            "target_groups": [],
             "languages": [],
             "evaluation": [],
             "involved_parties": [],
@@ -2862,7 +2862,7 @@ class VEPlanModelTest(TestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",

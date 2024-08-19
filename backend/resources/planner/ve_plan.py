@@ -382,7 +382,7 @@ class VEPlanResource:
         a VEPlan as indicated by `VEPlan.EXPECTED_DICT_ENTRIES`, except `evaluation_file`,
         which has a separate updating function (`put_evaluation_file`).
 
-        In case of a compound attribute like steps, audience, ... the full
+        In case of a compound attribute like steps, target_groups, ... the full
         attributes of this object have to be passed within a list (because
         usually there might be more than one of those), otherwise a `MissingKeyError`
         might be raised.
@@ -421,7 +421,7 @@ class VEPlanResource:
         if field_name in [
             "institutions",
             "lectures",
-            "audience",
+            "target_groups",
             "physical_mobilities",
             "evaluation",
             "individual_learning_goals",
@@ -437,7 +437,7 @@ class VEPlanResource:
             key_object_mapper = {
                 "institutions": Institution,
                 "lectures": Lecture,
-                "audience": TargetGroup,
+                "target_groups": TargetGroup,
                 "physical_mobilities": PhysicalMobility,
                 "evaluation": Evaluation,
                 "individual_learning_goals": IndividualLearningGoal,

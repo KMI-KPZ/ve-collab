@@ -1454,7 +1454,7 @@ class VEPlan:
         "major_learning_goals": list,
         "individual_learning_goals": list,
         "methodical_approaches": list,
-        "audience": list,
+        "target_groups": list,
         "languages": list,
         "evaluation": list,
         "involved_parties": list,
@@ -1492,7 +1492,7 @@ class VEPlan:
         major_learning_goals: List[str] = [],
         individual_learning_goals: List[IndividualLearningGoal] = [],
         methodical_approaches: List[str] = [],
-        audience: List[TargetGroup] = [],
+        target_groups: List[TargetGroup] = [],
         languages: List[str] = [],
         evaluation: List[Evaluation] = [],
         involved_parties: List[str] = [],
@@ -1555,7 +1555,7 @@ class VEPlan:
         self.major_learning_goals = major_learning_goals
         self.individual_learning_goals = individual_learning_goals
         self.methodical_approaches = methodical_approaches
-        self.audience = audience
+        self.target_groups = target_groups
         self.languages = languages
         self.evaluation = evaluation
         self.involved_parties = involved_parties
@@ -1613,7 +1613,7 @@ class VEPlan:
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -1689,7 +1689,7 @@ class VEPlan:
         """
         Serialize the attributes of this `VEPlan` into a dictionary.
         Calls `to_dict` on every step in the steps-list, on every
-        target group in the audience list, on all institutions and on
+        target group in the target_groups list, on all institutions and on
         all lectures to serialize those as well.
 
         The duration-attribute will be transformed from a `datetime.timedelta`
@@ -1716,7 +1716,7 @@ class VEPlan:
                 for individual_learning_goal in self.individual_learning_goals
             ],
             "methodical_approaches": self.methodical_approaches,
-            "audience": [target_group.to_dict() for target_group in self.audience],
+            "target_groups": [target_group.to_dict() for target_group in self.target_groups],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
             "timestamp_from": self.timestamp_from,
@@ -1781,7 +1781,7 @@ class VEPlan:
         Note that `steps` is a list of
         dictionaries that in turn have to satisfy the `from_dict()` method
         of the `Step` class. The steps inside a VEPlan have to have unique names!
-        Same thing applies for the audience list. This list has to contain dictionaries that
+        Same thing applies for the target_groups list. This list has to contain dictionaries that
         satisfy `TargetGroup.from_dict()` and also have to have unique "title"-attributes.
         `institutions` and `lectures` work exactly analogous, but there are no uniqueness-constraints.
 
@@ -1846,7 +1846,7 @@ class VEPlan:
                     }
                 ],
                 "methodical_approaches": [],
-                "audience": [
+                "target_groups": [
                     {
                         "_id": "object_id_str",
                         "name": None,
@@ -1934,7 +1934,7 @@ class VEPlan:
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
                     "methodical_approaches": "<completed|uncompleted|not_started>",
-                    "audience": "<completed|uncompleted|not_started>",
+                    "target_groups": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "evaluation": "<completed|uncompleted|not_started>",
                     "involved_parties": "<completed|uncompleted|not_started>",
@@ -2078,12 +2078,12 @@ class VEPlan:
             raise NonUniqueStepsError
         del params["steps"]
 
-        # also build the audience manually
-        audience = [
+        # also build the target_groups manually
+        target_groups = [
             TargetGroup.from_dict(target_group_dict)
-            for target_group_dict in params["audience"]
+            for target_group_dict in params["target_groups"]
         ]
-        del params["audience"]
+        del params["target_groups"]
 
         # also build the institutions
         institutions = [
@@ -2151,7 +2151,7 @@ class VEPlan:
         # build VEPlan and set remaining values
         instance = cls(
             steps=steps,
-            audience=audience,
+            target_groups=target_groups,
             institutions=institutions,
             evaluation=evaluations,
             individual_learning_goals=individual_learning_goals,

@@ -28,7 +28,7 @@ export interface ISideProgressBarStates {
     institutions: ProgressState;
     topics: ProgressState;
     lectures: ProgressState;
-    audience: ProgressState;
+    target_groups: ProgressState;
     languages: ProgressState;
     involved_parties: ProgressState;
     realization: ProgressState;
@@ -48,7 +48,7 @@ export const initialSideProgressBarStates: ISideProgressBarStates = {
     institutions: ProgressState.notStarted,
     topics: ProgressState.notStarted,
     lectures: ProgressState.notStarted,
-    audience: ProgressState.notStarted,
+    target_groups: ProgressState.notStarted,
     languages: ProgressState.notStarted,
     involved_parties: ProgressState.notStarted,
     realization: ProgressState.notStarted,

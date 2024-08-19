@@ -7297,7 +7297,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [],
             "methodical_approaches": ["test"],
-            "audience": [],
+            "target_groups": [],
             "languages": ["test", "test"],
             "evaluation": [],
             "timestamp_from": datetime.now(),
@@ -7332,7 +7332,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -7920,7 +7920,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -7956,7 +7956,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -8037,7 +8037,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8115,7 +8115,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.methodical_approaches,
             good_practise_plan.methodical_approaches,
         )
-        self.assertEqual(response_plan.audience, good_practise_plan.audience)
+        self.assertEqual(response_plan.target_groups, good_practise_plan.target_groups)
         self.assertEqual(response_plan.languages, good_practise_plan.languages)
         self.assertEqual(response_plan.evaluation, good_practise_plan.evaluation)
         self.assertEqual(
@@ -8250,7 +8250,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8671,7 +8671,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8696,22 +8696,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8735,16 +8735,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages2")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages2")
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -8816,7 +8816,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # also test an invalid object id within a compound object
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": "123",
@@ -8883,7 +8883,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # experience is mistakenly a list
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": ObjectId(),
@@ -8913,7 +8913,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # age_min is missing
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",

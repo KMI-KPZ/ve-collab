@@ -26,7 +26,7 @@ const itemsAllgemein: ISubmenuData[] = [
     },
     {
         text: 'Zielgruppe & Sprache',
-        id: 'audience',
+        id: 'target_groups',
         link: '/ve-designer/target-groups',
     },
     {

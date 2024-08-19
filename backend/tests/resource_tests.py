@@ -5004,7 +5004,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -5045,7 +5045,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -5151,8 +5151,8 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["methodical_approaches"],
                 )
                 self.assertEqual(
-                    [target_group.to_dict() for target_group in plan.audience],
-                    self.default_plan["audience"],
+                    [target_group.to_dict() for target_group in plan.target_groups],
+                    self.default_plan["target_groups"],
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
@@ -5242,8 +5242,8 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["methodical_approaches"],
                 )
                 self.assertEqual(
-                    [target_group.to_dict() for target_group in plan.audience],
-                    self.default_plan["audience"],
+                    [target_group.to_dict() for target_group in plan.target_groups],
+                    self.default_plan["target_groups"],
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
@@ -5409,8 +5409,8 @@ class PlanResourceTest(BaseResourceTestCase):
             plan.methodical_approaches, self.default_plan["methodical_approaches"]
         )
         self.assertEqual(
-            [target_group.to_dict() for target_group in plan.audience],
-            self.default_plan["audience"],
+            [target_group.to_dict() for target_group in plan.target_groups],
+            self.default_plan["target_groups"],
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
         self.assertEqual(
@@ -5471,7 +5471,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "major_learning_goals": ["test", "test"],
                 "individual_learning_goals": [self.individual_learning_goal.to_dict()],
                 "methodical_approaches": ["test"],
-                "audience": [self.target_group.to_dict()],
+                "target_groups": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
@@ -5507,7 +5507,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "lectures": "not_started",
                     "learning_goals": "not_started",
                     "methodical_approaches": "not_started",
-                    "audience": "not_started",
+                    "target_groups": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
                     "involved_parties": "not_started",
@@ -5530,7 +5530,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "major_learning_goals": ["test", "test"],
                 "individual_learning_goals": [self.individual_learning_goal.to_dict()],
                 "methodical_approaches": ["test"],
-                "audience": [self.target_group.to_dict()],
+                "target_groups": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
@@ -5566,7 +5566,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     "lectures": "not_started",
                     "learning_goals": "not_started",
                     "methodical_approaches": "not_started",
-                    "audience": "not_started",
+                    "target_groups": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
                     "involved_parties": "not_started",
@@ -5625,7 +5625,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -5661,7 +5661,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -5701,7 +5701,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -5737,7 +5737,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -5942,7 +5942,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -6040,7 +6040,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
@@ -6090,16 +6090,16 @@ class PlanResourceTest(BaseResourceTestCase):
         # in creation_timestamp and last_modified being equal, despite correctly being
         # executed after each other
         time.sleep(0.1)
-        self.planner.update_field(self.plan_id, "audience", [tg.to_dict()])
+        self.planner.update_field(self.plan_id, "target_groups", [tg.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], tg.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["languages"], tg.languages)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
+        self.assertEqual(db_state["target_groups"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -6117,18 +6117,18 @@ class PlanResourceTest(BaseResourceTestCase):
         # in creation_timestamp and last_modified being equal, despite correctly being
         # executed after each other
         time.sleep(0.1)
-        self.planner.update_field(self.plan_id, "audience", [tg2.to_dict()])
+        self.planner.update_field(self.plan_id, "target_groups", [tg2.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
-        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], tg2.academic_course
+            db_state["target_groups"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["languages"], tg2.languages)
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object_with_user(self):
@@ -6151,17 +6151,17 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "audience", [tg.to_dict()], requesting_username="test_user"
+            self.plan_id, "target_groups", [tg.to_dict()], requesting_username="test_user"
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], tg.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["languages"], tg.languages)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
+        self.assertEqual(db_state["target_groups"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -6180,19 +6180,19 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "audience", [tg2.to_dict()], requesting_username="test_user"
+            self.plan_id, "target_groups", [tg2.to_dict()], requesting_username="test_user"
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
-        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], tg2.academic_course
+            db_state["target_groups"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["languages"], tg2.languages)
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):
