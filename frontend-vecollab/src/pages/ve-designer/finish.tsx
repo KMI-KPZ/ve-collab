@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { PlanOverview } from '@/components/planSummary/planOverview';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import { useForm } from 'react-hook-form';
-import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
 
 interface Props {
     socket: Socket;

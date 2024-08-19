@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
+import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
 
 export interface EvaluationFile {
     file: File;
