@@ -382,7 +382,7 @@ class VEPlanResource:
         a VEPlan as indicated by `VEPlan.EXPECTED_DICT_ENTRIES`, except `evaluation_file`,
         which has a separate updating function (`put_evaluation_file`).
 
-        In case of a compound attribute like steps, audience, ... the full
+        In case of a compound attribute like steps, target_groups, ... the full
         attributes of this object have to be passed within a list (because
         usually there might be more than one of those), otherwise a `MissingKeyError`
         might be raised.
@@ -421,7 +421,7 @@ class VEPlanResource:
         if field_name in [
             "institutions",
             "lectures",
-            "audience",
+            "target_groups",
             "physical_mobilities",
             "evaluation",
             "individual_learning_goals",
@@ -437,7 +437,7 @@ class VEPlanResource:
             key_object_mapper = {
                 "institutions": Institution,
                 "lectures": Lecture,
-                "audience": TargetGroup,
+                "target_groups": TargetGroup,
                 "physical_mobilities": PhysicalMobility,
                 "evaluation": Evaluation,
                 "individual_learning_goals": IndividualLearningGoal,
@@ -485,29 +485,29 @@ class VEPlanResource:
                     )
                 )
 
-            # formalities is another special case that enforces keys in the dict
-            if field_name == "formalities":
-                for formality in value_copy:
-                    # ensure that each formality entry is associated with a user
-                    if "username" not in formality:
+            # checklist is another special case that enforces keys in the dict
+            if field_name == "checklist":
+                for checklist_item in value_copy:
+                    # ensure that each checklist_item entry is associated with a user
+                    if "username" not in checklist_item:
                         raise MissingKeyError(
-                            "Missing key 'username' in formalities dictionary",
+                            "Missing key 'username' in checklist dictionary",
                             "username",
-                            "formalities",
+                            "checklist",
                         )
 
                     # ensure that the username is also a partner of the plan
                     if not self._check_user_is_author_or_partner(
-                        plan_id, formality["username"]
+                        plan_id, checklist_item["username"]
                     ):
                         raise ValueError(
-                            "username '{}' in formalities is not a partner of the plan".format(
-                                formality["username"]
+                            "username '{}' in checklist is not a partner of the plan".format(
+                                checklist_item["username"]
                             )
                         )
 
                     # ensure that any other values are of type bool or None
-                    for attr, value in formality.items():
+                    for attr, value in checklist_item.items():
                         if attr != "username":
                             if not isinstance(value, (bool, type(None))):
                                 raise TypeError(

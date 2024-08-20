@@ -274,7 +274,7 @@ class VEPlanHandler(BaseHandler):
         POST /planner/insert
             insert a new plan into the db. To do this, the safest approach is
             to omit any _id fields (not only for the plan itself, but also for steps,
-            tasks, audience, institutions and lectures) and let the system create them.
+            tasks, target_groups, institutions and lectures) and let the system create them.
 
             HTTP Body:
                 Supply a JSON containing the dictionary representation of a `VEPlan`,
@@ -289,7 +289,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
@@ -310,7 +310,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "methodical_approaches": ["test"],
-                        "audience": [
+                        "target_groups": [
                             {
                                 "name": "test",
                                 "age_min": 30,
@@ -343,8 +343,7 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
-                        "formalities": {{
+                        "checklist": {{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -367,9 +366,6 @@ class VEPlanHandler(BaseHandler):
                                         "materials": ["test"]
                                     }
                                 ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"},
                                 "original_plan": "<object_id_str>"
                             }
                         ],
@@ -377,7 +373,6 @@ class VEPlanHandler(BaseHandler):
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
                         "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
@@ -397,15 +392,14 @@ class VEPlanHandler(BaseHandler):
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approaches": "<completed|uncompleted|not_started>",
-                            "audience": "<completed|uncompleted|not_started>",
+                            "target_groups": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -413,7 +407,7 @@ class VEPlanHandler(BaseHandler):
                 The only really necessary values are the "name"-keys of the steps and the "task_formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
-                keys of complex attributes like "audience" should be supplied nonetheless, only
+                keys of complex attributes like "target_groups" should be supplied nonetheless, only
                 primitive attributes are meant).
 
                 Keep in mind, that some plan attributes are derived from it's steps (timestamp_from,
@@ -469,7 +463,7 @@ class VEPlanHandler(BaseHandler):
             a user.
             The only automation that is already applied is that the author is added to the
             `partners` field an in-turn the partners-dependent fields `evaluation`,
-            `individual_learning_goals` and `formalities` are also initiated (empty) for the author.
+            `individual_learning_goals` and `checklist` are also initiated (empty) for the author.
 
             query params:
                 None
@@ -503,7 +497,7 @@ class VEPlanHandler(BaseHandler):
             update an existing plan by overwriting all attributes, i.e. the HTTP body has to
             contain all required attributes and the plan will be fully overwritten by those.
             Adding to that, your payload has to include the _id of the plan you want to update.
-            _ids of other attributes (steps, tasks, audience, institutions, lectures) may be supplied,
+            _ids of other attributes (steps, tasks, target_groups, institutions, lectures) may be supplied,
             but can be omitted to be regenerated by the system (all associated linked data
             to those attributes like e.g. comments will be lost though).
 
@@ -527,7 +521,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
@@ -548,7 +542,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "methodical_approaches": ["test"],
-                        "audience": [
+                        "target_groups": [
                             {
                                 "name": "test",
                                 "age_min": 30,
@@ -581,8 +575,7 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
-                        "formalities": [{
+                        "checklist": [{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -605,9 +598,6 @@ class VEPlanHandler(BaseHandler):
                                         "materials": ["test"]
                                     }
                                 ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"},
                                 "original_plan": "<object_id_str>"
                             }
                         ],
@@ -615,7 +605,6 @@ class VEPlanHandler(BaseHandler):
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
                         "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
@@ -634,15 +623,14 @@ class VEPlanHandler(BaseHandler):
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approaches": "<completed|uncompleted|not_started>",
-                            "audience": "<completed|uncompleted|not_started>",
+                            "target_groups": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -650,7 +638,7 @@ class VEPlanHandler(BaseHandler):
                 The only really necessary values are the "name"-keys of the steps and the "task-formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
-                keys of complex attributes like "audience" should be supplied nonetheless, only
+                keys of complex attributes like "target_groups" should be supplied nonetheless, only
                 primitive attributes are meant).
 
                 The attachments list is somewhat special, as this list holds references
@@ -705,7 +693,7 @@ class VEPlanHandler(BaseHandler):
             The values are type-checked and also semantic checks like unique step names or tasks
             are enforced with respective error messages.
 
-            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            If you want to update one of the object-like attributes of a VEPlan (e.g. target_groups,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
@@ -798,7 +786,7 @@ class VEPlanHandler(BaseHandler):
             The values are type-checked and also semantic checks like unique step names or tasks
             are enforced with respective error messages.
 
-            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            If you want to update one of the object-like attributes of a VEPlan (e.g. target_groups,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
@@ -929,9 +917,6 @@ class VEPlanHandler(BaseHandler):
                                 "materials": ["test"]
                             }
                         ],
-                        "evaluation_tools": ["test"],
-                        "attachments": ["<object_id_str>", "<object_id_str>"],
-                        "custom_attributes": {"my_attr": "my_value"},
                         "original_plan": "<object_id_str>"
                     }
                 }
@@ -1198,7 +1183,7 @@ class VEPlanHandler(BaseHandler):
                     individual_learning_goals=[
                         IndividualLearningGoal(username=self.current_user.username)
                     ],
-                    formalities=[{"username": self.current_user.username}],
+                    checklist=[{"username": self.current_user.username}],
                 )
 
                 self.insert_plan(db, plan)
@@ -2012,7 +1997,7 @@ class VEPlanHandler(BaseHandler):
         Update a single field (i.e. attribute) of a VEPlan by specifying the _id of
         the plan that should be updated (`plan_id`), the identifier which field should
         be updated (`field_name`) and the corresponding `value` that should be set.
-        If you plan to update one of the attribute that are object-like, e.g. audience,
+        If you plan to update one of the attribute that are object-like, e.g. target_groups,
         lectures, etc. be sure to supply a list of all the dictionaries, as they are
         overwritten and not appended. Though, you may use the separate append-endpoints
         instead.

@@ -7297,7 +7297,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [],
             "methodical_approaches": ["test"],
-            "audience": [],
+            "target_groups": [],
             "languages": ["test", "test"],
             "evaluation": [],
             "timestamp_from": datetime.now(),
@@ -7307,8 +7307,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7322,7 +7321,6 @@ class TimelineHandlerTest(BaseApiTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -7332,14 +7330,13 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -7804,9 +7801,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
-            evaluation_tools=["test", "test"],
-            attachments=[ObjectId()],
-            custom_attributes={"test": "test"},
             original_plan=ObjectId(),
         )
 
@@ -7832,7 +7826,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=["test", "test"],
+            department="test",
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -7921,7 +7915,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -7931,8 +7925,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7946,7 +7939,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -7957,14 +7949,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -8038,7 +8029,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8052,8 +8043,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -8063,10 +8053,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.literature_files, default_plan.literature_files)
@@ -8116,7 +8102,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.methodical_approaches,
             good_practise_plan.methodical_approaches,
         )
-        self.assertEqual(response_plan.audience, good_practise_plan.audience)
+        self.assertEqual(response_plan.target_groups, good_practise_plan.target_groups)
         self.assertEqual(response_plan.languages, good_practise_plan.languages)
         self.assertEqual(response_plan.evaluation, good_practise_plan.evaluation)
         self.assertEqual(
@@ -8134,8 +8120,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, good_practise_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
-        self.assertEqual(response_plan.new_content, good_practise_plan.new_content)
-        self.assertEqual(response_plan.formalities, good_practise_plan.formalities)
+        self.assertEqual(response_plan.checklist, good_practise_plan.checklist)
         self.assertEqual(response_plan.duration, good_practise_plan.duration)
         self.assertEqual(response_plan.workload, good_practise_plan.workload)
         self.assertEqual(response_plan.steps, good_practise_plan.steps)
@@ -8147,10 +8132,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, good_practise_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, good_practise_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            good_practise_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, good_practise_plan.literature)
         self.assertEqual(
             response_plan.evaluation_file, good_practise_plan.evaluation_file
@@ -8251,7 +8232,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8265,8 +8246,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
@@ -8276,10 +8256,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.literature_files, default_plan.literature_files)
@@ -8415,7 +8391,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         expect: successfully insert a new plan with no attributes set
         except for the automations on partners, author, evaluation,
-        individual_learning_goals and formalities
+        individual_learning_goals and checklist
         """
 
         response = self.base_checks(
@@ -8446,9 +8422,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["individual_learning_goals"][0]["username"], CURRENT_ADMIN.username
         )
-        self.assertIsNotNone(db_state["formalities"])
-        self.assertEqual(len(db_state["formalities"]), 1)
-        self.assertEqual(db_state["formalities"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["checklist"])
+        self.assertEqual(len(db_state["checklist"]), 1)
+        self.assertEqual(db_state["checklist"][0]["username"], CURRENT_ADMIN.username)
 
     def test_post_update_plan(self):
         """
@@ -8605,10 +8581,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
-        # again with formalities dict attribute
+        # again with checklist dict attribute
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "formalities",
+            "field_name": "checklist",
             "value": [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -8631,7 +8607,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"],
+            db_state["checklist"],
             [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -8672,7 +8648,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8697,22 +8673,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8736,16 +8712,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages2")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages2")
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -8817,7 +8793,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # also test an invalid object id within a compound object
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": "123",
@@ -8884,7 +8860,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # experience is mistakenly a list
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": ObjectId(),
@@ -8914,7 +8890,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # age_min is missing
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8958,9 +8934,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                     "original_plan": None,
                 },
                 {
@@ -8974,9 +8947,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                     "original_plan": None,
                 },
             ],
@@ -9014,9 +8984,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                         Task(task_formulation="test").to_dict(),
                         Task(task_formulation="test").to_dict(),
                     ],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                     "original_plan": None,
                 },
             ],

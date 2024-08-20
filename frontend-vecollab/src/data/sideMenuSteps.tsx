@@ -26,7 +26,7 @@ const itemsAllgemein: ISubmenuData[] = [
     },
     {
         text: 'Zielgruppe & Sprache',
-        id: 'audience',
+        id: 'target_groups',
         link: '/ve-designer/target-groups',
     },
     {
@@ -51,7 +51,7 @@ const itemsAllgemein: ISubmenuData[] = [
     },
     {
         text: 'Checkliste',
-        id: 'formalities',
+        id: 'checklist',
         link: '/ve-designer/checklist',
     },
 ];

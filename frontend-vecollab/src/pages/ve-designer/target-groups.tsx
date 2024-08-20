@@ -97,8 +97,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const targetGroups = plan.audience.length > 0
-                ? plan.audience
+            const targetGroups = plan.target_groups.length > 0
+                ? plan.target_groups
                 : [emptyTG]
             replaceTg(targetGroups)
 
@@ -123,7 +123,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         return [
             {
                 plan_id: router.query.plannerId,
-                field_name: 'audience',
+                field_name: 'target_groups',
                 value: data.targetGroups,
             },
             {
@@ -136,7 +136,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    audience: progressState,
+                    target_groups: progressState,
                     languages: progressState,
                 },
             },
