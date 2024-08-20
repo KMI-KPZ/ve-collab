@@ -6,7 +6,7 @@ import { LectureOld } from '@/pages/ve-designer/lectures';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import { EvaluationFile, LiteratureFile } from '@/pages/ve-designer/post-process';
-import { PhysicalMobility } from '@/pages/ve-designer/methodology';
+import { PhysicalMobility } from '@/pages/ve-designer/learning-env';
 
 export interface PlanPreview {
     _id: string;
@@ -36,7 +36,7 @@ export interface IPlan {
     last_modified: string;
     learning_env: string | null;
     major_learning_goals: string[];
-    individual_learning_goals: {username: string, learning_goal: string}[];
+    individual_learning_goals: { username: string; learning_goal: string }[];
     methodical_approaches: string[];
     lectures: LectureOld[];
     name: string;
