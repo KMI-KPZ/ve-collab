@@ -20,12 +20,6 @@ interface MethodicalApproach {
     label: string;
 }
 
-export interface PhysicalMobility {
-    location: string;
-    timestamp_from: string;
-    timestamp_to: string;
-}
-
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return formValues.methodicalApproaches.every((value) => {
         return value.value === '' && value.label === '';
@@ -54,13 +48,13 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }))
+            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }));
             methods.setValue('methodicalApproaches', approaches);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {methodicalApproaches: approaches}
+            return { methodicalApproaches: approaches };
         },
         [methods]
     );
