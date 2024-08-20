@@ -40,7 +40,6 @@ export interface IPlan {
     methodical_approaches: string[];
     lectures: LectureOld[];
     name: string;
-    new_content: boolean | null;
     partners: string[];
     physical_mobility: boolean | null;
     physical_mobilities: PhysicalMobility[];

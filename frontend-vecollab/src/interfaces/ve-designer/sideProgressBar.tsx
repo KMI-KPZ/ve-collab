@@ -33,7 +33,6 @@ export interface ISideProgressBarStates {
     involved_parties: ProgressState;
     realization: ProgressState;
     learning_env: ProgressState;
-    new_content: ProgressState;
     checklist: ProgressState;
     steps: ISideProgressBarStateSteps[];
 }
@@ -53,7 +52,6 @@ export const initialSideProgressBarStates: ISideProgressBarStates = {
     involved_parties: ProgressState.notStarted,
     realization: ProgressState.notStarted,
     learning_env: ProgressState.notStarted,
-    new_content: ProgressState.notStarted,
     checklist: ProgressState.notStarted,
     steps: [],
 };

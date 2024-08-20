@@ -343,7 +343,6 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
                         "checklist": {{
                             "username": "username1",
                             "technology": False,
@@ -403,7 +402,6 @@ class VEPlanHandler(BaseHandler):
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
                             "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
@@ -580,7 +578,6 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
                         "checklist": [{
                             "username": "username1",
                             "technology": False,
@@ -639,7 +636,6 @@ class VEPlanHandler(BaseHandler):
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
                             "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },

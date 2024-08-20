@@ -99,3 +99,17 @@ backend_attribute_renaming
 20.08.24 09:30
 
 ---
+
+#### Kurzfassung
+db.plan.new_content gelöscht
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribut `new_content` wird gelöscht
+
+#### letzte Änderung
+20.08.24 11:00
+
+---

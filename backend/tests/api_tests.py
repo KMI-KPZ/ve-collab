@@ -7307,7 +7307,6 @@ class TimelineHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [],
             "learning_env": "test",
-            "new_content": False,
             "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -7338,7 +7337,6 @@ class TimelineHandlerTest(BaseApiTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
                 "checklist": "not_started",
                 "steps": "not_started",
             },
@@ -7930,7 +7928,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
             "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -7962,7 +7959,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
                 "checklist": "not_started",
                 "steps": "not_started",
             },
@@ -8051,7 +8047,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
@@ -8133,7 +8128,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, good_practise_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
-        self.assertEqual(response_plan.new_content, good_practise_plan.new_content)
         self.assertEqual(response_plan.checklist, good_practise_plan.checklist)
         self.assertEqual(response_plan.duration, good_practise_plan.duration)
         self.assertEqual(response_plan.workload, good_practise_plan.workload)
@@ -8264,7 +8258,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
         self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)

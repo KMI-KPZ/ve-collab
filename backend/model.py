@@ -1462,7 +1462,6 @@ class VEPlan:
         "physical_mobility": (bool, type(None)),
         "physical_mobilities": list,
         "learning_env": (str, type(None)),
-        "new_content": (bool, type(None)),
         "checklist": list,
         "steps": list,
         "is_good_practise": (bool, type(None)),
@@ -1500,7 +1499,6 @@ class VEPlan:
         physical_mobility: bool = None,
         physical_mobilities: List[PhysicalMobility] = [],
         learning_env: str = None,
-        new_content: bool = None,
         checklist: list = [],
         steps: List[Step] = [],
         is_good_practise: bool = None,
@@ -1561,7 +1559,6 @@ class VEPlan:
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
-        self.new_content = new_content
         self.steps = steps
         self.physical_mobility = physical_mobility
         self.physical_mobilities = physical_mobilities
@@ -1619,7 +1616,6 @@ class VEPlan:
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
                 "checklist": "not_started",
                 "steps": [
                     {"step_id": step._id, "progress": "not_started"}
@@ -1729,7 +1725,6 @@ class VEPlan:
                 for physical_mobility in self.physical_mobilities
             ],
             "learning_env": self.learning_env,
-            "new_content": self.new_content,
             "checklist": [checklist_item for checklist_item in self.checklist],
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
@@ -1881,7 +1876,6 @@ class VEPlan:
                     }
                 ],
                 "learning_env": None,
-                "new_content": None,
                 "checklist": [{
                     "username": "partnerX",
                     "technology": None|True|False,
@@ -1940,7 +1934,6 @@ class VEPlan:
                     "involved_parties": "<completed|uncompleted|not_started>",
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
-                    "new_content": "<completed|uncompleted|not_started>",
                     "checklist": "<completed|uncompleted|not_started>",
                     "steps": "<completed|uncompleted|not_started>",
                 },
