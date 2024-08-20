@@ -13,6 +13,58 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const LearningEnvFormSchema = z.object({
+    learningEnv: z.string().max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
+    courseFormat: z.string().max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
+    usePhysicalMobility: z.boolean({
+        required_error: 'Bitte Ja oder Nein auswählen',
+        invalid_type_error: 'Bitte Ja oder Nein auswählen',
+    }),
+    physicalMobilities: z
+        .object({
+            location: z
+                .string()
+                .max(400, 'Ein gültiges Thema darf maximal 400 Buchstaben lang sein.'),
+            timestamp_from: z.string().date('Bitte ein gültiges Datum eingeben'), // it is still a string
+            timestamp_to: z.string().date('Bitte ein gültiges Datum eingeben'),
+        })
+        .refine(
+            (data) =>
+                new Date(data.timestamp_from) >= new Date(1950, 0) &&
+                new Date(data.timestamp_from) <= new Date(2100, 0),
+            {
+                message: 'Von: Bitte geben sie ein realistisches Datum an',
+                path: ['timestamp_from'], // This will attach the error message to the `timestamp_from` field
+            }
+        )
+        .refine(
+            (data) =>
+                new Date(data.timestamp_to) >= new Date(1950, 0) &&
+                new Date(data.timestamp_to) <= new Date(2100, 0),
+            {
+                message: 'Bis: Bitte geben sie ein realistisches Datum an',
+                path: ['timestamp_to'],
+            }
+        )
+        .superRefine((data, ctx) => {
+            if (data.timestamp_from > data.timestamp_to) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                    path: ['timestamp_from'],
+                });
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                    path: ['timestamp_to'],
+                });
+            }
+        })
+        .array(),
+});
 
 interface FormValues {
     learningEnv: string;
@@ -23,7 +75,7 @@ interface FormValues {
 
 export interface PhysicalMobility {
     location: string;
-    timestamp_from: string;
+    timestamp_from: string; // dates are still strings (in zod & react hook form & html input field)
     timestamp_to: string;
 }
 
@@ -34,8 +86,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
         formValues.physicalMobilities.every((mobility) => {
             return (
                 mobility.location === '' &&
-                mobility.timestamp_from === null &&
-                mobility.timestamp_to === null
+                mobility.timestamp_from === '' &&
+                mobility.timestamp_to === ''
             );
         })
     );
@@ -56,57 +108,54 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(LearningEnvFormSchema),
         defaultValues: {
             learningEnv: '',
             courseFormat: '',
             usePhysicalMobility: false,
-            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }]
+            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
         },
+    });
+
+    const { fields, append, remove, update, replace } = useFieldArray({
+        name: 'physicalMobilities',
+        control: methods.control,
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let data: {[key: string]: any} = {}
+            let data: { [key: string]: any } = {};
             if (plan.learning_env !== null) {
                 methods.setValue('learningEnv', plan.learning_env);
-                data.learningEnv = plan.learning_env
+                data.learningEnv = plan.learning_env;
             }
             if (plan.realization !== null) {
                 methods.setValue('courseFormat', plan.realization);
-                data.courseFormat = plan.realization
+                data.courseFormat = plan.realization;
             }
             if (plan.physical_mobility !== null) {
                 methods.setValue('usePhysicalMobility', plan.physical_mobility);
-                data.usePhysicalMobility = plan.physical_mobility
+                data.usePhysicalMobility = plan.physical_mobility;
             }
-            if (plan.physical_mobilities !== null && plan.physical_mobilities.length !== 0) {
-                const physical_mobilities: PhysicalMobility[] = plan.physical_mobilities.map(
-                    (physicalMobility: PhysicalMobility) => {
-                        const { timestamp_from, timestamp_to, location } = physicalMobility;
-                        return {
-                            location: location,
-                            timestamp_from:
-                                timestamp_from !== null ? timestamp_from.split('T')[0] : '', // react hook form only takes '2019-12-13'
-                            timestamp_to: timestamp_to !== null ? timestamp_to.split('T')[0] : '',
-                        };
-                    }
-                );
-                methods.setValue('physicalMobilities', physical_mobilities);
-                data.physicalMobilities = plan.physical_mobilities
+
+            if (plan.physical_mobilities?.length > 0) {
+                data.physicalMobilities = plan.physical_mobilities.map((physicalMobilityObject) => {
+                    return Object.assign({}, physicalMobilityObject, {
+                        timestamp_from: physicalMobilityObject.timestamp_from.split('T')[0],
+                        timestamp_to: physicalMobilityObject.timestamp_to.split('T')[0],
+                    });
+                });
+                replace(data.physicalMobilities);
             }
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
 
-            return data
+            return data;
         },
-        [methods]
+        [methods, replace]
     );
-
-    const { fields, append, remove, update } = useFieldArray({
-        name: 'physicalMobilities',
-        control: methods.control,
-    });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const progressState = areAllFormValuesEmpty(data)
@@ -146,14 +195,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
         ];
     };
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const toValue = methods.watch(`physicalMobilities.${indexFromTo}.timestamp_to`);
-        if (fromValue === '' || toValue === '') return true;
-        return new Date(fromValue) > new Date(toValue)
-            ? 'Das Startdatum muss vor dem Enddatum liegen'
-            : true;
-    };
-
     const handleDelete = (index: number): void => {
         if (fields.length > 1) {
             remove(index);
@@ -172,13 +213,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Ort eingeben"
                             className="border border-gray-400 rounded-lg p-2 w-full"
-                            {...methods.register(`physicalMobilities.${index}.location`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`physicalMobilities.${index}.location`)}
                         />
                     </div>
                     <p className="flex justify-center text-red-600 pb-2">
@@ -189,14 +224,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <p className="mr-4">von:</p>
                             <input
                                 type="date"
-                                {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                    validate: (v) => validateDateRange(v, index),
-                                })}
+                                {...methods.register(`physicalMobilities.${index}.timestamp_from`)}
                                 className="border border-gray-400 rounded-lg p-2 mr-2"
                             />
                         </div>
@@ -204,13 +232,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <p className="mr-4">bis:</p>
                             <input
                                 type="date"
-                                {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
-                                })}
+                                {...methods.register(`physicalMobilities.${index}.timestamp_to`)}
                                 className="border border-gray-400 rounded-lg p-2 ml-2"
                             />
                         </div>
@@ -236,6 +258,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
         ));
     };
 
+    // TODO normal radio button
     function radioBooleanInput(control: any, name: any): JSX.Element {
         return (
             <Controller
@@ -297,12 +320,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     rows={3}
                     placeholder="Lernumgebung beschreiben"
                     className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
-                    {...methods.register('learningEnv', {
-                        maxLength: {
-                            value: 500,
-                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                        },
-                    })}
+                    {...methods.register('learningEnv')}
                 />
                 <p className="text-red-600 pt-2">
                     {methods.formState.errors?.learningEnv?.message}
@@ -340,13 +358,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         <select
                             placeholder="Auswählen..."
                             className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
-                            {...methods.register(`courseFormat`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`courseFormat`)}
                         >
                             <option value="synchron">synchron</option>
                             <option value="asynchron">asynchron</option>
