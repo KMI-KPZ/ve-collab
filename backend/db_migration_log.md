@@ -129,3 +129,17 @@ backend_attribute_renaming
 20.08.24 11:30
 
 ---
+
+#### Kurzfassung
+db.plan.good_practise_evaluation gelöscht
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribut `good_practise_evaluation` wird gelöscht
+
+#### letzte Änderung
+20.08.24 11:45
+
+---
