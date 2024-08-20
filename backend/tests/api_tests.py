@@ -7321,7 +7321,6 @@ class TimelineHandlerTest(BaseApiTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -7939,7 +7938,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -8054,10 +8052,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.literature_files, default_plan.literature_files)
@@ -8137,10 +8131,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, good_practise_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, good_practise_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            good_practise_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, good_practise_plan.literature)
         self.assertEqual(
             response_plan.evaluation_file, good_practise_plan.evaluation_file
@@ -8265,10 +8255,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
         self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
         self.assertEqual(response_plan.literature_files, default_plan.literature_files)

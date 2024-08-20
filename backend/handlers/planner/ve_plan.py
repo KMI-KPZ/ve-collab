@@ -372,7 +372,6 @@ class VEPlanHandler(BaseHandler):
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
                         "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
@@ -604,7 +603,6 @@ class VEPlanHandler(BaseHandler):
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
                         "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",

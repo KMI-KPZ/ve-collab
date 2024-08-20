@@ -50,7 +50,6 @@ export interface IPlan {
     is_good_practise: boolean;
     underlying_ve_model: string | null;
     reflection: string | null;
-    good_practise_evaluation: string | null;
     literature?: string | null;
     literature_files?: LiteratureFile[] | null;
     timestamp_from: string | null;

@@ -1753,7 +1753,6 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan.abstract)
         self.assertIsNone(plan.underlying_ve_model)
         self.assertIsNone(plan.reflection)
-        self.assertIsNone(plan.good_practise_evaluation)
         self.assertIsNone(plan.literature)
         self.assertIsNone(plan.evaluation_file)
         self.assertEqual(plan.literature_files, [])
@@ -1845,7 +1844,6 @@ class VEPlanModelTest(TestCase):
             abstract="test",
             underlying_ve_model="test",
             reflection="test",
-            good_practise_evaluation="test",
             literature="test",
             evaluation_file=evaluation_file,
             literature_files=literature_files,
@@ -1896,7 +1894,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.literature, "test")
         self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.literature_files, literature_files)
@@ -1937,7 +1934,6 @@ class VEPlanModelTest(TestCase):
             abstract="test",
             underlying_ve_model="test",
             reflection="test",
-            good_practise_evaluation="test",
             literature="test",
             evaluation_file=evaluation_file,
             literature_files=literature_files,
@@ -1982,7 +1978,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.literature, "test")
         self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.literature_files, literature_files)
@@ -2105,7 +2100,6 @@ class VEPlanModelTest(TestCase):
         self.assertIn("abstract", plan_dict)
         self.assertIn("underlying_ve_model", plan_dict)
         self.assertIn("reflection", plan_dict)
-        self.assertIn("good_practise_evaluation", plan_dict)
         self.assertIn("literature", plan_dict)
         self.assertIn("evaluation_file", plan_dict)
         self.assertIn("literature_files", plan_dict)
@@ -2142,7 +2136,6 @@ class VEPlanModelTest(TestCase):
         self.assertIsNone(plan_dict["abstract"])
         self.assertIsNone(plan_dict["underlying_ve_model"])
         self.assertIsNone(plan_dict["reflection"])
-        self.assertIsNone(plan_dict["good_practise_evaluation"])
         self.assertIsNone(plan_dict["literature"])
         self.assertIsNone(plan_dict["evaluation_file"])
         self.assertEqual(plan_dict["literature_files"], [])
@@ -2268,7 +2261,6 @@ class VEPlanModelTest(TestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": evaluation_file,
             "literature_files": literature_files,
@@ -2321,7 +2313,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.literature, "test")
         self.assertEqual(plan.evaluation_file, evaluation_file)
         self.assertEqual(plan.literature_files, literature_files)
@@ -2417,7 +2408,6 @@ class VEPlanModelTest(TestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -2477,7 +2467,6 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
-        self.assertEqual(plan.good_practise_evaluation, "test")
         self.assertEqual(plan.literature, "test")
         self.assertIsNone(plan.evaluation_file)
         self.assertEqual(plan.literature_files, [])
@@ -2532,7 +2521,6 @@ class VEPlanModelTest(TestCase):
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "good_practise_evaluation": None,
             "literature": None,
             "evaluation_file": None,
             "literature_files": [],
@@ -2591,7 +2579,6 @@ class VEPlanModelTest(TestCase):
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "good_practise_evaluation": None,
             "literature": None,
             "evaluation_file": None,
             "literature_files": [],
@@ -2706,10 +2693,6 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["reflection"] = None
 
-        plan_dict["good_practise_evaluation"] = 123
-        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
-        plan_dict["good_practise_evaluation"] = None
-
         plan_dict["literature"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["literature"] = None
@@ -2765,7 +2748,6 @@ class VEPlanModelTest(TestCase):
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,
-            "good_practise_evaluation": None,
             "literature": None,
             "evaluation_file": None,
             "literature_files": [],

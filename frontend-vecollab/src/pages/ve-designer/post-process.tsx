@@ -80,7 +80,6 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
-            methods.setValue('evaluation', plan.good_practise_evaluation as string);
 
             if (plan.evaluation_file) {
                 const evaluationFile = {...plan.evaluation_file, file: new File([''], plan.evaluation_file.file_name)}
@@ -108,7 +107,6 @@ export default function PostProcess({ socket }: Props) {
                 share: plan.is_good_practise,
                 veModel: plan.underlying_ve_model,
                 reflection: plan.reflection,
-                evaluation: plan.good_practise_evaluation,
                 evaluationFile: plan.evaluation_file,
                 literature: plan.literature,
                 literatureFiles: plan.literature_files
@@ -158,11 +156,6 @@ export default function PostProcess({ socket }: Props) {
                 plan_id: router.query.plannerId,
                 field_name: 'reflection',
                 value: data.reflection,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'good_practise_evaluation',
-                value: data.evaluation,
             },
             {
                 plan_id: router.query.plannerId,

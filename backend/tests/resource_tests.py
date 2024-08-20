@@ -5030,7 +5030,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -5178,10 +5177,6 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
-                self.assertEqual(
-                    plan.good_practise_evaluation,
-                    self.default_plan["good_practise_evaluation"],
-                )
                 self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
@@ -5268,10 +5263,6 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
-                self.assertEqual(
-                    plan.good_practise_evaluation,
-                    self.default_plan["good_practise_evaluation"],
-                )
                 self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
@@ -5428,9 +5419,6 @@ class PlanResourceTest(BaseResourceTestCase):
             plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
         )
         self.assertEqual(plan.reflection, self.default_plan["reflection"])
-        self.assertEqual(
-            plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"]
-        )
         self.assertEqual(plan.literature, self.default_plan["literature"])
         self.assertEqual(plan.evaluation_file, self.default_plan["evaluation_file"])
         self.assertEqual(plan.literature_files, self.default_plan["literature_files"])
@@ -5487,7 +5475,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
-                "good_practise_evaluation": "test",
                 "literature": "test",
                 "evaluation_file": None,
                 "literature_files": [],
@@ -5544,7 +5531,6 @@ class PlanResourceTest(BaseResourceTestCase):
                 "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
-                "good_practise_evaluation": "test",
                 "literature": "test",
                 "evaluation_file": None,
                 "literature_files": [],
@@ -5637,7 +5623,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -5711,7 +5696,6 @@ class PlanResourceTest(BaseResourceTestCase):
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
             "literature": "test",
             "evaluation_file": None,
             "literature_files": [],
@@ -5913,9 +5897,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "abstract", "updated_abstract")
         self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
         self.planner.update_field(self.plan_id, "reflection", "updated_reflection")
-        self.planner.update_field(
-            self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation"
-        )
         self.planner.update_field(self.plan_id, "literature", "updated_literature")
         self.planner.update_field(
             self.plan_id,
@@ -5957,9 +5938,6 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["abstract"], "updated_abstract")
         self.assertEqual(db_state["underlying_ve_model"], "updated_model")
         self.assertEqual(db_state["reflection"], "updated_reflection")
-        self.assertEqual(
-            db_state["good_practise_evaluation"], "updated_good_practise_evaluation"
-        )
         self.assertEqual(db_state["literature"], "updated_literature")
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])

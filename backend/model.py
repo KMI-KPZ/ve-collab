@@ -1445,7 +1445,6 @@ class VEPlan:
         "abstract": (str, type(None)),
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
-        "good_practise_evaluation": (str, type(None)),
         "literature": (str, type(None)),
         "evaluation_file": (dict, type(None)),
         "literature_files": list,
@@ -1482,7 +1481,6 @@ class VEPlan:
         abstract: str = None,
         underlying_ve_model: str = None,
         reflection: str = None,
-        good_practise_evaluation: str = None,
         literature: str = None,
         evaluation_file: dict = None,
         literature_files: List[dict] = [],
@@ -1546,7 +1544,6 @@ class VEPlan:
         self.abstract = abstract
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
-        self.good_practise_evaluation = good_practise_evaluation
         self.literature = literature
 
         if evaluation_file:
@@ -1710,7 +1707,6 @@ class VEPlan:
             "abstract": self.abstract,
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
-            "good_practise_evaluation": self.good_practise_evaluation,
             "literature": self.literature,
             "evaluation_file": self.evaluation_file,
             "literature_files": self.literature_files,
@@ -1883,7 +1879,6 @@ class VEPlan:
                 "abstract": None,
                 "underlying_ve_model": None,
                 "reflection": None,
-                "good_practise_evaluation": None,
                 "literature": None,
                 "evaluation_file": {                // or None instead
                     "file_id": "<object_id_str>",
