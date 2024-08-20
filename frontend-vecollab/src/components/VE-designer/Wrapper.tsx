@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
-import { fetchPOST, useGetAvailablePlans, useGetPlanById } from '@/lib/backend';
+import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import LoadingAnimation from '../LoadingAnimation';
@@ -23,7 +23,7 @@ import { GiSadCrab } from 'react-icons/gi';
 interface Props {
     title: string;
     subtitle?: string;
-    description?: string[] | string;
+    description?: JSX.Element | string[] | string;
     tooltip?: { text: string; link: string };
     methods: UseFormReturn<any>;
     children: React.ReactNode;
@@ -430,6 +430,9 @@ export default function Wrapper({
                                                         </p>
                                                     ))}
                                                 </div>
+                                            )}
+                                            {React.isValidElement(description) && (
+                                                <>{description}</>
                                             )}
                                         </>
                                     )}

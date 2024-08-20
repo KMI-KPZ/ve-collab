@@ -12,6 +12,10 @@ import {
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { useSession } from 'next-auth/react';
+import { useGetAvailablePlans } from '@/lib/backend';
+import Link from 'next/link';
+import { MdArrowOutward } from 'react-icons/md';
 
 export interface ITask {
     task_formulation: string;
@@ -46,6 +50,7 @@ export interface IFineStepFrontend {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITaskFrontend[];
+    original_plan: string;
 }
 
 export interface IFineStep {
@@ -58,6 +63,7 @@ export interface IFineStep {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITask[];
+    original_plan: string;
 }
 
 export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
@@ -78,6 +84,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
             materials: [{ name: '' }, { name: '' }],
         },
     ],
+    original_plan: '',
 };
 
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
@@ -106,6 +113,7 @@ interface Props {
 FinePlanner.auth = true;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { data: session } = useSession();
     const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
@@ -124,6 +132,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -245,12 +254,36 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         }));
     };
 
+    const originalPlan = availablePlans.find(a => a._id == currentFineStep.original_plan)
+
+    let description = (
+        <>
+            {currentFineStep.original_plan !== '' && (
+                <p className='my-2'>
+                    <span className="font-bold">Importiert aus: </span>&nbsp;
+                    {typeof originalPlan !== 'undefined'
+                        ? (
+                            <Link href={`/plan/${originalPlan?._id}`} target='_blank'>
+                                {originalPlan?.name}
+                                <MdArrowOutward className='inline' />
+                            </Link>)
+                        : (<>Plan nicht mehr vorhanden</>)}
+                </p>
+            )}
+            <p className="text-xl text-slate-600">Feinplanung</p>
+            <p className="mb-8">
+                Beschreibt nun die einzelnen Etappen genauer.
+                Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen,
+                beschreibt bitte auch die einzelnen Lernaktivitäten näher.
+            </p>
+        </>
+    )
+
     return (
         <Wrapper
             socket={socket}
             title={`Etappe: ${currentFineStep.name}`}
-            subtitle="Feinplanung"
-            description="Beschreibt nun die einzelnen Etappen genauer. Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen, beschreibt bitte auch die einzelnen Lernaktivitäten näher."
+            description={description}
             tooltip={{
                 text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
                 link: '/learning-material/left-bubble/Etappenplanung',

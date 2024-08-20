@@ -158,6 +158,7 @@ class BaseResourceTestCase(TestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:

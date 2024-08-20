@@ -65,6 +65,7 @@ export const emptyStepData: IFineStep = {
             materials: ['', ''],
         },
     ],
+    original_plan: '',
 };
 
 interface Props {
@@ -230,11 +231,17 @@ export default function StepNames({ socket }: Props): JSX.Element {
             })
             .finally(() => setLoadingAvailPlans(false));
     };
-    const toggleStepToImport = (step: IFineStep) => {
+    const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
         if (stepsToImport.some((s) => s._id == step._id)) {
             setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
         } else {
-            setStepsToImport((prev) => [...prev, step]);
+            setStepsToImport((prev) => [
+                ...prev,
+                {
+                    ...step,
+                    original_plan: step.original_plan === '' ? plan._id : step.original_plan,
+                },
+            ]);
         }
     };
 
@@ -245,7 +252,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     _id: undefined,
                     timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
                     timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
-                })
+                } as IFineStep)
             );
         });
         setIsImportStepsDialogOpen(false);
@@ -304,7 +311,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div
                                     key={step._id}
                                     className="ml-10 hover:cursor-pointer flex"
-                                    onClick={(e) => toggleStepToImport(step)}
+                                    onClick={(e) => toggleStepToImport(plan, step)}
                                     title="Add/Remove"
                                 >
                                     <input

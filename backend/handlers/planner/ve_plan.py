@@ -365,7 +365,8 @@ class VEPlanHandler(BaseHandler):
                                         "tools": ["test"],
                                         "materials": ["test"]
                                     }
-                                ]
+                                ],
+                                "original_plan": "<object_id_str>"
                             }
                         ],
                         "is_good_practise": True,
@@ -596,7 +597,8 @@ class VEPlanHandler(BaseHandler):
                                         "tools": ["test"],
                                         "materials": ["test"]
                                     }
-                                ]
+                                ],
+                                "original_plan": "<object_id_str>"
                             }
                         ],
                         "is_good_practise": True,
@@ -914,7 +916,8 @@ class VEPlanHandler(BaseHandler):
                                 "tools": ["test"],
                                 "materials": ["test"]
                             }
-                        ]
+                        ],
+                        "original_plan": "<object_id_str>"
                     }
                 }
 
@@ -1705,7 +1708,7 @@ class VEPlanHandler(BaseHandler):
 
                 self.remove_evaluation_file(db, plan_id, file_id)
                 return
-            
+
             elif slug == "remove_literature_file":
                 try:
                     plan_id = self.get_argument("plan_id")
@@ -2700,7 +2703,7 @@ class VEPlanHandler(BaseHandler):
         is requested. It just de-crowds the handler function and should therefore
         not be called manually anywhere else.
 
-        Remove an evaluation file from a plan by specifying the plan's _id and 
+        Remove an evaluation file from a plan by specifying the plan's _id and
         the file's _id.
 
         Responses:
@@ -2761,7 +2764,7 @@ class VEPlanHandler(BaseHandler):
         is requested. It just de-crowds the handler function and should therefore
         not be called manually anywhere else.
 
-        Remove a literature file from the list in a plan by specifying the 
+        Remove a literature file from the list in a plan by specifying the
         plan's _id and the file's _id.
 
         Responses:
@@ -2776,7 +2779,7 @@ class VEPlanHandler(BaseHandler):
         file_id = util.parse_object_id(file_id)
 
         planner = VEPlanResource(db)
-        
+
         try:
             if not planner._check_plan_exists(plan_id):
                 raise PlanDoesntExistError

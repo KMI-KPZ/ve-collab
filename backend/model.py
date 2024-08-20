@@ -305,6 +305,7 @@ class Step:
         "learning_activity": (str, type(None)),
         "has_tasks": bool,
         "tasks": list,
+        "original_plan": (str, ObjectId, type(None)),
     }
 
     def __init__(
@@ -318,6 +319,7 @@ class Step:
         learning_activity: str = None,
         has_tasks: bool = False,
         tasks: List[Task] = [],
+        original_plan: str | ObjectId = None,
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -373,6 +375,8 @@ class Step:
         if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
+        self.original_plan = util.parse_object_id(original_plan) if original_plan else None
+
     def __str__(self) -> str:
         return str(self.__dict__)
 
@@ -400,7 +404,8 @@ class Step:
             "learning_goal": self.learning_goal,
             "learning_activity": self.learning_activity,
             "has_tasks": self.has_tasks,
-            "tasks": [task.to_dict() for task in self.tasks]
+            "tasks": [task.to_dict() for task in self.tasks],
+            "original_plan": self.original_plan
         }
 
     @classmethod
@@ -423,9 +428,9 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"has_tasks"`, `"tasks"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"original_plan"`.
         However only `name` requires a value, all other attributes may be
-        initialized with None (description/learning_goal), 0 (duration/workload),
+        initialized with None (description/learning_goal/original_plan), 0 (duration/workload),
         False (has_tasks) or [] (tasks).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
@@ -504,6 +509,10 @@ class Step:
             params["duration"] = None
         else:
             params["duration"] = params["timestamp_to"] - params["timestamp_from"]
+
+        # handle correct type of original_plan
+        if "original_plan" in params and params["original_plan"]:
+            params["original_plan"] = util.parse_object_id(params["original_plan"])
 
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
@@ -1873,6 +1882,7 @@ class VEPlan:
                                 "materials": [],
                             }
                         ],
+                        "original_plan": None,
                     }
                 ],
                 "is_good_practise": True,

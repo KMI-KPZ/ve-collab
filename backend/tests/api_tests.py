@@ -7801,6 +7801,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -8933,6 +8934,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
+                    "original_plan": None,
                 },
                 {
                     "_id": ObjectId(),
@@ -8945,6 +8947,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
+                    "original_plan": None,
                 },
             ],
         }
@@ -8981,6 +8984,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                         Task(task_formulation="test").to_dict(),
                         Task(task_formulation="test").to_dict(),
                     ],
+                    "original_plan": None,
                 },
             ],
         }
