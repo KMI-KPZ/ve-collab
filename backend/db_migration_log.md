@@ -19,7 +19,7 @@ db.plan.steps.learning_activity neu
 fineplanner_field_revival
 
 #### Beschreibung
-- Attribt `learning_activity` ist neu in jedem `Step`, Datentyp `str` oder `null`
+- Attribut `learning_activity` ist neu in jedem `Step`, Datentyp `str` oder `null`
 
 #### letzte Änderung
 05.06.24 09:30
@@ -33,7 +33,7 @@ db.plan.methodical_approach --> db.plan.methodical_approaches
 ve_designer_rework
 
 #### Beschreibung
-- Attribt `methodical_approach` wird umbenannt zu `methodical_approaches` und erhält Datentyp `string[]`
+- Attribut `methodical_approach` wird umbenannt zu `methodical_approaches` und erhält Datentyp `string[]`
 
 #### letzte Änderung
 26.06.24 09:30
@@ -49,9 +49,9 @@ db.plan.literature_files neu
 nachVE
 
 #### Beschreibung
-- Attribt `abstract` ist neu in jedem Plan, Datentyp `str` oder `null`
-- Attribt `literature` ist neu in jedem Plan, Datentyp `str` oder `null`
-- Attribt `literature_files` ist neu in jedem Plan, Datentyp `{file_name: string, file_id: string}[]`
+- Attribut `abstract` ist neu in jedem Plan, Datentyp `str` oder `null`
+- Attribut `literature` ist neu in jedem Plan, Datentyp `str` oder `null`
+- Attribut `literature_files` ist neu in jedem Plan, Datentyp `{file_name: string, file_id: string}[]`
 
 #### letzte Änderung
 02.08.24 11:15
@@ -65,7 +65,7 @@ db.plan.audience --> db.plan.target_groups
 backend_attribute_renaming
 
 #### Beschreibung
-- Attribt `audience` wird umbenannt zu `target_groups`
+- Attribut `audience` wird umbenannt zu `target_groups`
 
 #### letzte Änderung
 19.08.24 15:00
@@ -79,9 +79,23 @@ db.plan.formalities --> db.plan.checklist
 backend_attribute_renaming
 
 #### Beschreibung
-- Attribt `formalities` wird umbenannt zu `checklist`
+- Attribut `formalities` wird umbenannt zu `checklist`
 
 #### letzte Änderung
 19.08.24 15:00
+
+---
+
+#### Kurzfassung
+db.plan.institutions.departments --> db.plan.institutions.department
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribut `departments` von institutions wird umbenannt zu `department` und erhält Datentyp `str`
+
+#### letzte Änderung
+20.08.24 09:30
 
 ---

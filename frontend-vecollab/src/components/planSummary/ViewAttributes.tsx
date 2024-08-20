@@ -95,7 +95,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                         </li>
                                         <li className="flex">
                                             <div className='w-1/2 font-medium print:font-bold'>Fachbereich</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(institution.departments)}</div>
+                                            <div className='w-1/2'>{showDataOrEmptySign(institution.department)}</div>
                                         </li>
 
                                     </ul>

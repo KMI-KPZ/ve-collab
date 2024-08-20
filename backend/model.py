@@ -752,7 +752,7 @@ class Institution:
         "name": (str, type(None)),
         "school_type": (str, type(None)),
         "country": (str, type(None)),
-        "departments": list,
+        "department": (str, type(None)),
     }
 
     def __init__(
@@ -761,7 +761,7 @@ class Institution:
         name: str = None,
         school_type: str = None,
         country: str = None,
-        departments: List[str] = [],
+        department: str = None,
     ) -> None:
         """
         Initialization of an `Institution` instance.
@@ -788,7 +788,7 @@ class Institution:
         self.name = name
         self.school_type = school_type
         self.country = country
-        self.departments = departments
+        self.department = department
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -812,7 +812,7 @@ class Institution:
             "name": self.name,
             "school_type": self.school_type,
             "country": self.country,
-            "departments": self.departments,
+            "department": self.department,
         }
 
     @classmethod
@@ -820,9 +820,9 @@ class Institution:
         """
         initialize an `Institution`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"name"`, `"school_type"`, `"country"`, `"departments"`.
+        `"name"`, `"school_type"`, `"country"`, `"department"`.
         However no values are required, any attributes may be
-        initialized with None (name/school_type/country) or [] (departments).
+        initialized with None (name/school_type/country/department).
 
         Returns an instance of `Institution`.
 
@@ -1824,7 +1824,7 @@ class VEPlan:
                         "name": None,
                         "school_type": None,
                         "country": None,
-                        "departments": [],
+                        "department": None,
                     }
                 ],
                 "topics": [],

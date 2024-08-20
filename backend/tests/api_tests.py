@@ -7831,7 +7831,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=["test", "test"],
+            department="test",
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:

@@ -289,7 +289,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
@@ -526,7 +526,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
