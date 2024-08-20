@@ -158,9 +158,6 @@ class BaseResourceTestCase(TestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
-            evaluation_tools=["test", "test"],
-            attachments=[ObjectId()],
-            custom_attributes={"test": "test"},
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -6077,7 +6074,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
         self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
         self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["target_groups"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(
+            db_state["target_groups"][0]["academic_course"], tg.academic_course
+        )
         self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -6130,7 +6129,10 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "target_groups", [tg.to_dict()], requesting_username="test_user"
+            self.plan_id,
+            "target_groups",
+            [tg.to_dict()],
+            requesting_username="test_user",
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -6139,7 +6141,9 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
         self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
         self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["target_groups"][0]["academic_course"], tg.academic_course)
+        self.assertEqual(
+            db_state["target_groups"][0]["academic_course"], tg.academic_course
+        )
         self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -6159,7 +6163,10 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "target_groups", [tg2.to_dict()], requesting_username="test_user"
+            self.plan_id,
+            "target_groups",
+            [tg2.to_dict()],
+            requesting_username="test_user",
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
@@ -6671,7 +6678,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
     def test_remove_literature_file_with_user(self):
         """
-        expect: successfully remove a literature file from its list 
+        expect: successfully remove a literature file from its list
         in the plan and passing access checks
         """
 

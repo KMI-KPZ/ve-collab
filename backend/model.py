@@ -305,9 +305,6 @@ class Step:
         "learning_activity": (str, type(None)),
         "has_tasks": bool,
         "tasks": list,
-        "evaluation_tools": list,
-        "attachments": list,
-        "custom_attributes": dict,
     }
 
     def __init__(
@@ -321,9 +318,6 @@ class Step:
         learning_activity: str = None,
         has_tasks: bool = False,
         tasks: List[Task] = [],
-        evaluation_tools: List[str] = [],
-        attachments: List[ObjectId] = [],
-        custom_attributes: Dict = {},
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -379,12 +373,6 @@ class Step:
         if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
-        self.evaluation_tools = evaluation_tools
-        self.attachments = [
-            util.parse_object_id(attachment) for attachment in attachments
-        ]
-        self.custom_attributes = custom_attributes
-
     def __str__(self) -> str:
         return str(self.__dict__)
 
@@ -412,10 +400,7 @@ class Step:
             "learning_goal": self.learning_goal,
             "learning_activity": self.learning_activity,
             "has_tasks": self.has_tasks,
-            "tasks": [task.to_dict() for task in self.tasks],
-            "evaluation_tools": self.evaluation_tools,
-            "attachments": self.attachments,
-            "custom_attributes": self.custom_attributes,
+            "tasks": [task.to_dict() for task in self.tasks]
         }
 
     @classmethod
@@ -438,17 +423,14 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`.
         However only `name` requires a value, all other attributes may be
         initialized with None (description/learning_goal), 0 (duration/workload),
-        False (has_tasks) or [] (tasks/attachements).
+        False (has_tasks) or [] (tasks).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
         unique `"task-formulation"`-attributes within this step.
-
-        The `attachments`-key is a list containing ObjectId's which are
-        references to files that are stored separately in GridFS.
 
         Returns an instance of `Step`.
 
@@ -522,11 +504,6 @@ class Step:
             params["duration"] = None
         else:
             params["duration"] = params["timestamp_to"] - params["timestamp_from"]
-
-        # handle correct types of attachments
-        params["attachments"] = [
-            util.parse_object_id(attachment) for attachment in params["attachments"]
-        ]
 
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
@@ -1900,9 +1877,6 @@ class VEPlan:
                                 "materials": [],
                             }
                         ],
-                        "evaluation_tools": [],
-                        "attachments": [],
-                        "custom_attributes": {},
                     }
                 ],
                 "is_good_practise": True,

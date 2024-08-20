@@ -46,9 +46,6 @@ export interface IFineStepFrontend {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITaskFrontend[];
-    evaluation_tools: string[];
-    attachments?: string[];
-    custom_attributes?: Record<string, string>;
 }
 
 export interface IFineStep {
@@ -61,9 +58,6 @@ export interface IFineStep {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITask[];
-    evaluation_tools: string[];
-    attachments?: string[];
-    custom_attributes?: Record<string, string>;
 }
 
 export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
@@ -74,7 +68,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     workload: 0,
     learning_goal: '',
     learning_activity: '',
-    evaluation_tools: ['', ''],
     has_tasks: false,
     tasks: [
         {
@@ -90,9 +83,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
 const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
     return (
         formValues.learning_activity === '' &&
-        formValues.evaluation_tools.every((tool) => {
-            return tool === '';
-        }) &&
         formValues.tasks.every((task) => {
             return (
                 task.task_formulation === '' &&
@@ -140,7 +130,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             if (!plan.steps?.length) {
                 return {};
             }
-            let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend
+            let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
                 (item: IFineStep) => item.name === stepName
@@ -170,7 +160,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 }
             }
 
-            return {...fineStepCopyTransformedTools}
+            return { ...fineStepCopyTransformedTools };
         },
         [stepName]
     );
@@ -227,9 +217,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         const stepSlugEncoded = encodeURI(stepName as string);
         const updateStepsProgress = sideMenuStepsProgress.steps.map(
             (step: ISideProgressBarStateSteps) =>
-                step[stepSlugEncoded] !== undefined
-                    ? { [stepSlugEncoded]: progressState }
-                    : step
+                step[stepSlugEncoded] !== undefined ? { [stepSlugEncoded]: progressState } : step
         );
 
         return [

@@ -7802,9 +7802,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
-            evaluation_tools=["test", "test"],
-            attachments=[ObjectId()],
-            custom_attributes={"test": "test"},
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -8950,9 +8947,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                 },
                 {
                     "_id": ObjectId(),
@@ -8965,9 +8959,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                 },
             ],
         }
@@ -9004,9 +8995,6 @@ class VEPlanHandlerTest(BaseApiTestCase):
                         Task(task_formulation="test").to_dict(),
                         Task(task_formulation="test").to_dict(),
                     ],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
                 },
             ],
         }

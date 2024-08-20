@@ -365,10 +365,7 @@ class VEPlanHandler(BaseHandler):
                                         "tools": ["test"],
                                         "materials": ["test"]
                                     }
-                                ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"}
+                                ]
                             }
                         ],
                         "is_good_practise": True,
@@ -600,10 +597,7 @@ class VEPlanHandler(BaseHandler):
                                         "tools": ["test"],
                                         "materials": ["test"]
                                     }
-                                ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"}
+                                ]
                             }
                         ],
                         "is_good_practise": True,
@@ -922,10 +916,7 @@ class VEPlanHandler(BaseHandler):
                                 "tools": ["test"],
                                 "materials": ["test"]
                             }
-                        ],
-                        "evaluation_tools": ["test"],
-                        "attachments": ["<object_id_str>", "<object_id_str>"],
-                        "custom_attributes": {"my_attr": "my_value"}
+                        ]
                     }
                 }
 

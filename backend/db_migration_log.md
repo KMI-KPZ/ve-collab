@@ -113,3 +113,19 @@ backend_attribute_renaming
 20.08.24 11:00
 
 ---
+
+#### Kurzfassung
+db.plan.steps.evaluation_tools, db.plan.steps.attachments, db.plan.steps.custom_attributes gelöscht
+
+#### branch
+backend_attribute_renaming
+
+#### Beschreibung
+- Attribut `evaluation_tools` von Steps wird gelöscht
+- Attribut `attachments` von Steps wird gelöscht
+- Attribut `custom_attributes` von Steps wird gelöscht
+
+#### letzte Änderung
+20.08.24 11:30
+
+---
