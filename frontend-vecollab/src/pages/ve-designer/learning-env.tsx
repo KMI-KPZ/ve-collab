@@ -258,7 +258,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
         ));
     };
 
-    // TODO normal radio button
     function radioBooleanInput(control: any, name: any): JSX.Element {
         return (
             <Controller
