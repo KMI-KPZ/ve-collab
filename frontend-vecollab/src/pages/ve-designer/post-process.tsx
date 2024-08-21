@@ -52,8 +52,6 @@ export default function PostProcess({ socket }: Props) {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [backToOverview, setBackToOverview] = useState<boolean>(false)
-
     const [changedEvFile, setChangedEvFile] = useState<boolean>(false)
     const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>()
     const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([])
@@ -69,15 +67,6 @@ export default function PostProcess({ socket }: Props) {
         name: 'literatureFiles',
         control: methods.control,
     });
-
-    useEffect(() => {
-        // route back to /plans after click submit button
-        // TODO how to call Wrapper.handleSubmit manually!?!
-        if (methods.formState.isSubmitSuccessful && backToOverview) {
-            dropPlanLock(socket, router.query.plannerId)
-            .then(d => router.push('/plans'))
-        }
-    }, [router, socket, backToOverview, methods.formState.isSubmitSuccessful])
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -344,6 +333,8 @@ export default function PostProcess({ socket }: Props) {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
+            nextpage='/plans'
+            nextpageBtnLabel='Absenden & Schließen'
             preventToLeave={false}
             stageInMenu="post-process"
             planerDataCallback={setPlanerData}
@@ -561,17 +552,6 @@ export default function PostProcess({ socket }: Props) {
                 )}
             </div>
 
-            <div className="mb-4 text-right w-full">
-                <button
-                    type="submit"
-                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                    onClick={e => {
-                        setBackToOverview(true)
-                    }}
-                >
-                    Absenden & zur Übersicht
-                </button>
-            </div>
         </Wrapper>
     );
 }
