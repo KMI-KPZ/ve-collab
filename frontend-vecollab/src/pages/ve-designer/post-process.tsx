@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
@@ -52,6 +52,7 @@ export default function PostProcess({ socket }: Props) {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [backToOverview, setBackToOverview] = useState<boolean>(false)
 
     const [changedEvFile, setChangedEvFile] = useState<boolean>(false)
     const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>()
@@ -68,6 +69,15 @@ export default function PostProcess({ socket }: Props) {
         name: 'literatureFiles',
         control: methods.control,
     });
+
+    useEffect(() => {
+        // route back to /plans after click submit button
+        // TODO how to call Wrapper.handleSubmit manually!?!
+        if (methods.formState.isSubmitSuccessful && backToOverview) {
+            dropPlanLock(socket, router.query.plannerId)
+            .then(d => router.push('/plans'))
+        }
+    }, [router, socket, backToOverview, methods.formState.isSubmitSuccessful])
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -555,11 +565,8 @@ export default function PostProcess({ socket }: Props) {
                 <button
                     type="submit"
                     className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                    onClick={async (e) => {
-                        e.preventDefault();
-                        await onSubmit(methods.getValues() as FormValues);
-                        await dropPlanLock(socket, router.query.plannerId)
-                        await router.push('/plans');
+                    onClick={e => {
+                        setBackToOverview(true)
                     }}
                 >
                     Absenden & zur Übersicht

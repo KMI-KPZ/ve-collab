@@ -20,7 +20,6 @@ import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
 import { dropPlanLock, getPlanLock } from './PlanSocket';
-import { SocketIOServerResponse } from '@/interfaces/socketio';
 
 interface Props {
     title: string;
@@ -30,7 +29,9 @@ interface Props {
     methods: UseFormReturn<any>;
     children: React.ReactNode;
     prevpage?: string;
+    prevPageBtnLabel?: string;
     nextpage?: string;
+    nextpageBtnLabel?: string
     preventToLeave?: boolean;
 
     stageInMenu?: string; // TODO make it unrequired
@@ -55,7 +56,9 @@ export default function Wrapper({
     children,
     methods,
     prevpage,
+    prevPageBtnLabel,
     nextpage,
+    nextpageBtnLabel,
     stageInMenu = 'generally',
     preventToLeave = true,
     planerDataCallback,
@@ -372,7 +375,23 @@ export default function Wrapper({
                                     plan={plan}
                                 />
 
-                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
+                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4" onSubmit={methods.handleSubmit(
+                                        // valid
+                                        async (data: any) => {
+                                            await handleSubmit(data);
+                                            await router.push({
+                                                pathname: nextpage,
+                                                query: {
+                                                    plannerId:
+                                                        router.query.plannerId,
+                                                },
+                                            });
+                                        },
+                                        // invalid
+                                        async () => {
+                                            setPopUp({ isOpen: true, type: "invalid", continueLink: nextpage || '/plans' });
+                                        }
+                                    )}>
                                     <Breadcrumb />
 
                                     <div className={'flex justify-between items-start mt-2 mb-2'}>
@@ -455,7 +474,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Zurück
+                                                        {prevPageBtnLabel || 'Zurück'}
                                                     </button>
                                                 )}
                                             </div>
@@ -488,7 +507,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Speichern & Weiter
+                                                        {nextpageBtnLabel || 'Speichern & Weiter'}
                                                     </button>
                                                 )}
                                             </div>
