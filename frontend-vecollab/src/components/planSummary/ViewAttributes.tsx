@@ -162,7 +162,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                             )}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Lernziel</div>
+                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Lernziele</div>
                                             <div className='w-2/3 lg:w-3/4'>{showDataOrEmptySign(goalPerPartner.learning_goal)}</div>
                                         </li>
                                     </ul>
