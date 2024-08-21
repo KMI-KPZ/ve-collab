@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
-import Wrapper, { dropPlanLock } from '@/components/VE-designer/Wrapper';
+import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
+import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
 
 export interface EvaluationFile {
     file: File;
@@ -51,7 +52,6 @@ export default function PostProcess({ socket }: Props) {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-
     const [changedEvFile, setChangedEvFile] = useState<boolean>(false)
     const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>()
     const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([])
@@ -326,6 +326,8 @@ export default function PostProcess({ socket }: Props) {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
+            nextpage='/plans'
+            nextpageBtnLabel='Absenden & Schließen'
             preventToLeave={false}
             stageInMenu="post-process"
             planerDataCallback={setPlanerData}
@@ -543,20 +545,6 @@ export default function PostProcess({ socket }: Props) {
                 )}
             </div>
 
-            <div className="mb-4 text-right w-full">
-                <button
-                    type="submit"
-                    className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg mr-2"
-                    onClick={async (e) => {
-                        e.preventDefault();
-                        await onSubmit(methods.getValues() as FormValues);
-                        await dropPlanLock(socket, router.query.plannerId)
-                        await router.push('/plans');
-                    }}
-                >
-                    Absenden & zur Übersicht
-                </button>
-            </div>
         </Wrapper>
     );
 }

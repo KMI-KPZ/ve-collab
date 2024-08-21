@@ -1,4 +1,4 @@
-import { fetchGET, fetchPOST } from "@/lib/backend";
+import { fetchGET, fetchPOST, useGetOwnProfile } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
@@ -58,7 +58,6 @@ export default function TimelinePostForm(
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
-    const [userProfileSnippet, setUserProfileSnippet] = useState<BackendUserSnippet>();
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
     const [selectedLinkText, setSelectedLinkText] = useState<{
         parentNode: Node,
@@ -72,14 +71,7 @@ export default function TimelinePostForm(
     const [plansToAttach, setPlansToAttach] = useState<IPlan[]>([])
     const domParser = new DOMParser()
 
-    useEffect(() => {
-        if (!session?.user) return;
-
-        fetchPOST('/profile_snippets', { usernames: [session.user.preferred_username] }, session.accessToken)
-        .then((data) => {
-            setUserProfileSnippet(data.user_snippets[0])
-        });
-    }, [session]);
+    const {data: userProfileSnippet} = useGetOwnProfile(session!.accessToken)
 
     useEffect(() => {
         if (postToEdit) {
@@ -412,7 +404,7 @@ export default function TimelinePostForm(
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
-                            imageId={userProfileSnippet ? userProfileSnippet.profile_pic : "default_profile_pic.jpg"}
+                            imageId={userProfileSnippet ? userProfileSnippet?.profile?.profile_pic : "default_profile_pic.jpg"}
                             alt={'Benutzerbild'}
                             width={40}
                             height={40}

@@ -12,6 +12,13 @@ import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { useSession } from 'next-auth/react';
+import { fetchGET } from '@/lib/backend';
+import { BackendUser } from '@/interfaces/api/apiInterfaces';
+import Dialog from '@/components/profile/Dialog';
+import Link from 'next/link';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import ButtonPrimary from '@/components/ButtonPrimary';
 
 export interface Institution {
     name: string;
@@ -49,29 +56,36 @@ interface Props {
 Institutions.auth = true;
 export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { data: session } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
+    const [importDialog, setImportDialog] = useState<{
+        isOpen: boolean,
+        institutions: Institution[] | undefined
+    }>({
+        isOpen: false,
+        institutions: undefined
+    })
+
     const prevpage = '/ve-designer/partners';
     const nextpage = '/ve-designer/lectures';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            institutions: [emptyInstitution],
+            institutions: [],
         },
     });
 
-    const { fields, append, remove, replace } = useFieldArray({
+    const { fields, prepend, append, remove, replace } = useFieldArray({
         name: 'institutions',
         control: methods.control,
     });
 
     const handleRemoveLecture = (i: number) => {
-        if (fields.length > 1) {
+        if (fields.length > 0) {
             remove(i);
-        } else {
-            replace(emptyInstitution);
         }
     };
 
@@ -79,7 +93,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
         (plan: IPlan) => {
             let institutions = plan.institutions.length > 0
                 ? plan.institutions
-                : [emptyInstitution]
+                : []
 
             replace(institutions);
 
@@ -241,6 +255,93 @@ export default function Institutions({ socket }: Props): JSX.Element {
         ));
     };
 
+    const openImportDialog = async () => {
+        setImportDialog(prev => ({...prev, isOpen: true}))
+        if (importDialog.institutions?.length) return
+
+        fetchGET('/profileinformation', session?.accessToken)
+        .then((data: BackendUser) => {
+            const institutions = data.profile.institutions.map(institution => {
+                return {
+                    country: institution.country,
+                    name: institution.name,
+                    school_type: institution.school_type,
+                    department: institution.department,
+                }
+            })
+            setImportDialog(prev => ({...prev, institutions}))
+        })
+        // TODO handle error case!!!
+    }
+
+    const ImportDialog = () => {
+        const [selection, setSelection] = useState<{[key: number]: Institution}>({})
+
+        const toggleImport = (index: number, institution: Institution) => {
+            if (typeof selection[index] === 'undefined') {
+                setSelection(prev => ({...prev, [index]: institution}))
+            } else {
+                setSelection(prev => {
+                    // remove selection[index], return the rest
+                    const {[index]: rm, ...rest} = prev;
+                    return rest;
+                })
+            }
+        }
+        const handleImport = () => {
+            prepend(Object.keys(selection).map((i: any) => {
+                return {
+                    country: selection[i].country,
+                        name: selection[i].name,
+                        school_type: selection[i].school_type,
+                        department: selection[i].department
+                }
+            }))
+            setImportDialog(prev => ({...prev, isOpen: false}))
+        }
+
+        if (importDialog.institutions === undefined) return <LoadingAnimation />
+
+        if (!importDialog.institutions.length) {
+            return (
+                <div>
+                    <p>Es sind noch keine Institutionen im Profil hinterlegt.</p>
+                    <Link href={'/profile/edit'} target='_blank'>
+                        <span className='border border-white bg-black/75 text-white rounded-lg px-3 py-1' >
+                            Profil bearbeiten
+                        </span>
+                    </Link>
+                </div>
+            )
+        }
+
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                {importDialog.institutions.map(((institution, i) => {
+                    return (
+                        <div key={i}
+                            className='ml-10 hover:cursor-pointer flex'
+                            onClick={e => toggleImport(i, institution)}
+                            title='Add/Remove'
+                        >
+                            <input
+                                type='checkbox'
+                                className='mr-2'
+                                checked={typeof selection[i] !== 'undefined'}
+                                readOnly
+                            />
+                            {institution.name} {institution.department && (<>({institution.department})</>)}
+                        </div>
+                    )
+                }))}
+                <div className='ml-auto text-right'>
+                    <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setImportDialog(prev => ({...prev, isOpen: false}))}>Abbrechen</button>
+                    <ButtonPrimary label={"Importieren"} onClick={() => handleImport()} />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <Wrapper
             socket={socket}
@@ -253,8 +354,25 @@ export default function Institutions({ socket }: Props): JSX.Element {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
+            <Dialog
+                isOpen={importDialog.isOpen}
+                title={'Institutionen importieren'}
+                onClose={() => setImportDialog(prev => ({...prev, isOpen: false}))}
+            >
+                <div className="w-[40vw]"><ImportDialog /></div>
+            </Dialog>
+
             <div className={'px-4 w-full lg:w-2/3'}>
+                <button
+                    className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                    type='button'
+                    title='Institionen aus Profil importieren'
+                    onClick={e => openImportDialog()}
+                >
+                    Importieren
+                </button>
                 <div className="divide-y">{renderInstitutionInputs()}</div>
+
                 <div className="flex justify-center">
                     <button
                         className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"

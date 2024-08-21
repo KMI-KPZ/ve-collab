@@ -3,9 +3,9 @@ import ViewAttributes from '@/components/planSummary/ViewAttributes';
 import ViewFinestep from '@/components/planSummary/ViewFinestep';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import ViewAfterVE from './ViewAfterVE';
-import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
-import { fetchPOST, useGetAvailablePlans } from '@/lib/backend';
+import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/backend';
 import LoadingAnimation from '../LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Dialog from '../profile/Dialog';
@@ -15,8 +15,7 @@ import Alert, { AlertState } from '../Alert';
 import { socket } from '@/lib/socket';
 import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
-import { dropPlanLock } from '../VE-designer/Wrapper';
-import { useRouter } from 'next/router';
+import { dropPlanLock } from '../VE-designer/PlanSocket';
 
 interface Props {
     plan: IPlan;
@@ -30,8 +29,6 @@ interface FormValues {
 PlanOverview.auth = true;
 export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     const { data: session } = useSession();
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
@@ -47,44 +44,17 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
     })
     const [loadingImport, setLoadingImport] = useState<boolean>(false)
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
-    // TODO. const { data: partnerProfileSnippets } = useGetProfileSnippets(session!.accessToken)
+    const {data: partnerUserSnippets, isLoading} = useGetProfileSnippets([...plan.partners, plan.author], session!.accessToken)
 
     useEffect(() => {
-        if (!session) return
+        if (!partnerUserSnippets?.length) return
 
-        // fetch profile snippets to be able to display the full name instead of username only
-        fetchPOST(
-            '/profile_snippets',
-            { usernames: [...plan.partners, plan.author] },
-            session.accessToken
-        ).then((snippets: BackendProfileSnippetsResponse) => {
-            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                partnerSnippets[element.username] = element;
-            });
-            setPartnerProfileSnippets(partnerSnippets);
-        }).finally(() => {
-            setLoading(false);
-        });
-    }, [session, plan]);
-
-    useEffect(() => {
-        if (!session || !plan) return
-
-        // fetch profile snippets to be able to display the full name instead of username only
-        fetchPOST(
-            '/profile_snippets',
-            { usernames: [...plan.partners, plan.author] },
-            session.accessToken
-        ).then((snippets: BackendProfileSnippetsResponse) => {
-            let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
-            snippets.user_snippets.forEach((element: BackendUserSnippet) => {
-                partnerSnippets[element.username] = element;
-            });
-            setPartnerProfileSnippets(partnerSnippets);
-            setLoading(false);
-        });
-    }, [session, plan]);
+        let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};
+        partnerUserSnippets.map(user => {
+            partnerSnippets[user.username] = user;
+        })
+        setPartnerProfileSnippets(partnerSnippets);
+    }, [partnerUserSnippets])
 
     const openImportDialog = (step: IFineStep) => {
         step._id = undefined
@@ -336,7 +306,7 @@ export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
         );
     }
 
-    if (loading) {
+    if (isLoading) {
         return <LoadingAnimation />;
     }
 

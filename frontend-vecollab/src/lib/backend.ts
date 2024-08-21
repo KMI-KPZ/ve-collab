@@ -71,18 +71,15 @@ export function useIsGlobalAdmin(accessToken: string): boolean {
     return data?.is_admin || false;
 }
 
-export function useGetProfileSnippets(usernames: string): {
+export function useGetProfileSnippets(usernames: string[], accessToken: string): {
     data: BackendUserSnippet[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    // get usernames  as comma separated string
-    // to fix SWR request
-    const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        usernames ? ['/profile_snippets', session?.accessToken] : null,
-        ([url, token]) => POSTfetcher(url, { usernames: usernames ? usernames.split(",") : "" }, token),
+        usernames ? ['/profile_snippets', accessToken] : null,
+        ([url, token]) => POSTfetcher(url, { usernames: usernames ? usernames : "" }, token),
         swrConfig
     );
 
