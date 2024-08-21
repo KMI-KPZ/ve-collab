@@ -9,7 +9,9 @@ from pymongo.database import Database
 import tornado.web
 
 from error_reasons import (
+    FILE_DOESNT_EXIST,
     INSUFFICIENT_PERMISSIONS,
+    MAXIMUM_FILES_EXCEEDED,
     MISSING_KEY_IN_HTTP_BODY_SLUG,
     MISSING_KEY_SLUG,
     NON_UNIQUE_STEP_NAMES,
@@ -19,6 +21,8 @@ from error_reasons import (
     PLAN_LOCKED,
 )
 from exceptions import (
+    FileDoesntExistError,
+    MaximumFilesExceededError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -270,7 +274,7 @@ class VEPlanHandler(BaseHandler):
         POST /planner/insert
             insert a new plan into the db. To do this, the safest approach is
             to omit any _id fields (not only for the plan itself, but also for steps,
-            tasks, audience, institutions and lectures) and let the system create them.
+            tasks, target_groups, institutions and lectures) and let the system create them.
 
             HTTP Body:
                 Supply a JSON containing the dictionary representation of a `VEPlan`,
@@ -285,7 +289,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
@@ -306,7 +310,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "methodical_approaches": ["test"],
-                        "audience": [
+                        "target_groups": [
                             {
                                 "name": "test",
                                 "age_min": 30,
@@ -339,8 +343,7 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
-                        "formalities": {{
+                        "checklist": {{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -363,19 +366,25 @@ class VEPlanHandler(BaseHandler):
                                         "materials": ["test"]
                                     }
                                 ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"}
+                                "original_plan": "<object_id_str>"
                             }
                         ],
                         "is_good_practise": True,
+                        "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
+                        "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
-                        },,
+                        },
+                        "literature_files": [               // max 5
+                            {
+                                "file_id": "<object_id_str>",
+                                "file_name": "test",
+                            },
+                        ],
+                        ]
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -383,15 +392,14 @@ class VEPlanHandler(BaseHandler):
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approaches": "<completed|uncompleted|not_started>",
-                            "audience": "<completed|uncompleted|not_started>",
+                            "target_groups": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -399,7 +407,7 @@ class VEPlanHandler(BaseHandler):
                 The only really necessary values are the "name"-keys of the steps and the "task_formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
-                keys of complex attributes like "audience" should be supplied nonetheless, only
+                keys of complex attributes like "target_groups" should be supplied nonetheless, only
                 primitive attributes are meant).
 
                 Keep in mind, that some plan attributes are derived from it's steps (timestamp_from,
@@ -455,7 +463,7 @@ class VEPlanHandler(BaseHandler):
             a user.
             The only automation that is already applied is that the author is added to the
             `partners` field an in-turn the partners-dependent fields `evaluation`,
-            `individual_learning_goals` and `formalities` are also initiated (empty) for the author.
+            `individual_learning_goals` and `checklist` are also initiated (empty) for the author.
 
             query params:
                 None
@@ -489,7 +497,7 @@ class VEPlanHandler(BaseHandler):
             update an existing plan by overwriting all attributes, i.e. the HTTP body has to
             contain all required attributes and the plan will be fully overwritten by those.
             Adding to that, your payload has to include the _id of the plan you want to update.
-            _ids of other attributes (steps, tasks, audience, institutions, lectures) may be supplied,
+            _ids of other attributes (steps, tasks, target_groups, institutions, lectures) may be supplied,
             but can be omitted to be regenerated by the system (all associated linked data
             to those attributes like e.g. comments will be lost though).
 
@@ -513,7 +521,7 @@ class VEPlanHandler(BaseHandler):
                                 "name": "test",
                                 "school_type": "test",
                                 "country": "test",
-                                "departments": ["test", "test"],
+                                "department": "test",
                             }
                         ],
                         "topic": "test",
@@ -534,7 +542,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "methodical_approaches": ["test"],
-                        "audience": [
+                        "target_groups": [
                             {
                                 "name": "test",
                                 "age_min": 30,
@@ -567,8 +575,7 @@ class VEPlanHandler(BaseHandler):
                         ],
                         "learning_env": "test",
                         "tools": ["test"],
-                        "new_content": False,
-                        "formalities": [{
+                        "checklist": [{
                             "username": "username1",
                             "technology": False,
                             "exam_regulations": False,
@@ -591,19 +598,24 @@ class VEPlanHandler(BaseHandler):
                                         "materials": ["test"]
                                     }
                                 ],
-                                "evaluation_tools": ["test"],
-                                "attachments": ["<object_id_str>", "<object_id_str>"],
-                                "custom_attributes": {"my_attr": "my_value"}
+                                "original_plan": "<object_id_str>"
                             }
                         ],
                         "is_good_practise": True,
+                        "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
-                        "good_practise_evaluation": "test",
+                        "literature": "test",
                         "evaluation_file": {                // or None instead
                             "file_id": "<object_id_str>",
                             "file_name": "test",
                         },
+                        "literature_files": [               // max 5
+                            {
+                                "file_id": "<object_id_str>",
+                                "file_name": "test",
+                            },
+                        ],
                         "progress": {
                             "name": "<completed|uncompleted|not_started>",
                             "institutions": "<completed|uncompleted|not_started>",
@@ -611,15 +623,14 @@ class VEPlanHandler(BaseHandler):
                             "lectures": "<completed|uncompleted|not_started>",
                             "learning_goals": "<completed|uncompleted|not_started>",
                             "methodical_approaches": "<completed|uncompleted|not_started>",
-                            "audience": "<completed|uncompleted|not_started>",
+                            "target_groups": "<completed|uncompleted|not_started>",
                             "languages": "<completed|uncompleted|not_started>",
                             "evaluation": "<completed|uncompleted|not_started>",
                             "involved_parties": "<completed|uncompleted|not_started>",
                             "realization": "<completed|uncompleted|not_started>",
                             "learning_env": "<completed|uncompleted|not_started>",
                             "tools": "<completed|uncompleted|not_started>",
-                            "new_content": "<completed|uncompleted|not_started>",
-                            "formalities": "<completed|uncompleted|not_started>",
+                            "checklist": "<completed|uncompleted|not_started>",
                             "steps": "<completed|uncompleted|not_started>",
                         },
                     }
@@ -627,7 +638,7 @@ class VEPlanHandler(BaseHandler):
                 The only really necessary values are the "name"-keys of the steps and the "task-formulation"-keys
                 of tasks, they have to be unique to each other in this list, otherwise an error is thrown.
                 Any other base attribute may have a null, or in case of a list, a [] value (the
-                keys of complex attributes like "audience" should be supplied nonetheless, only
+                keys of complex attributes like "target_groups" should be supplied nonetheless, only
                 primitive attributes are meant).
 
                 The attachments list is somewhat special, as this list holds references
@@ -682,7 +693,7 @@ class VEPlanHandler(BaseHandler):
             The values are type-checked and also semantic checks like unique step names or tasks
             are enforced with respective error messages.
 
-            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            If you want to update one of the object-like attributes of a VEPlan (e.g. target_groups,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
@@ -775,7 +786,7 @@ class VEPlanHandler(BaseHandler):
             The values are type-checked and also semantic checks like unique step names or tasks
             are enforced with respective error messages.
 
-            If you want to update one of the object-like attributes of a VEPlan (e.g. audience,
+            If you want to update one of the object-like attributes of a VEPlan (e.g. target_groups,
             lectures, steps, ...), pay attention to supply all of those objects in a list (as
             there are naturally multiple possible as per model), because they will be overwritten
             (i.e. if you want to append a new step, send all other already existing steps as well).
@@ -906,9 +917,7 @@ class VEPlanHandler(BaseHandler):
                                 "materials": ["test"]
                             }
                         ],
-                        "evaluation_tools": ["test"],
-                        "attachments": ["<object_id_str>", "<object_id_str>"],
-                        "custom_attributes": {"my_attr": "my_value"}
+                        "original_plan": "<object_id_str>"
                     }
                 }
 
@@ -948,6 +957,55 @@ class VEPlanHandler(BaseHandler):
                 (No plan was found with the given plan_id)
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
+
+        POST /planner/put_literature_file
+            Upload a file and store it in the given plan's `literature_files` attribute.
+            The file will be stored in the gridfs and the plan's `literature_files` attribute
+            will contain the ObjectId of the uploaded file. Use this id to request the actual
+            file from gridfs using the static file endpoint (`GridFSStaticFileHandler`).
+
+            Each plan is allowed to have up to 5 literature files attached to it.
+
+            query params:
+                plan_id: the id of the plan to which the file should be attached
+
+            http body:
+                the file itself, as multipart/form-data
+
+            returns:
+                200 OK
+                (the file was successfully uploaded and attached to the plan)
+                {"success": True}
+
+                400 Bad Request
+                (the request misses the plan_id query parameter)
+                {"success": False,
+                 "reason": "missing_key:plan_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (No plan was found with the given plan_id)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
+
+                409 Conflict
+                (The plan already has 5 literature files attached)
+                {"success": False,
+                 "reason": "maximum_files_exceeded"}
+
+                409 Conflict
+                (then plan is locked, i.e. another user is currently editing it)
+                {"success": False,
+                 "reason": "plan_locked"}
 
         POST /planner/grant_access
             As the author of a plan, grant another user read and/or write access to
@@ -1048,7 +1106,7 @@ class VEPlanHandler(BaseHandler):
                 {
                     "plan_id": "<id_of_plan>"
                 }
-            
+
             returns:
                 200 OK
                 (the plan was successfully copied)
@@ -1076,8 +1134,8 @@ class VEPlanHandler(BaseHandler):
                  "reason": "plan_doesnt_exist"}
         """
 
-        # all endpoints except "put_evaluation_file" require a json body
-        if slug != "put_evaluation_file":
+        # all endpoints except file uploads require a json body
+        if slug not in ["put_evaluation_file", "put_literature_file"]:
             try:
                 http_body = json.loads(self.request.body)
             except json.JSONDecodeError:
@@ -1125,7 +1183,7 @@ class VEPlanHandler(BaseHandler):
                     individual_learning_goals=[
                         IndividualLearningGoal(username=self.current_user.username)
                     ],
-                    formalities=[{"username": self.current_user.username}],
+                    checklist=[{"username": self.current_user.username}],
                 )
 
                 self.insert_plan(db, plan)
@@ -1276,6 +1334,35 @@ class VEPlanHandler(BaseHandler):
                 )
                 return
 
+            elif slug == "put_literature_file":
+                try:
+                    plan_id = self.get_argument("plan_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                if (
+                    "file" not in self.request.files
+                    or not self.request.files["file"][0]
+                ):
+                    self.set_status(400)
+                    self.write({"success": False, "reason": "missing_file:file"})
+                    return
+
+                file_obj = self.request.files["file"][0]
+                self.put_literature_file(
+                    plan_id,
+                    file_obj["filename"],
+                    file_obj["body"],
+                    file_obj["content_type"],
+                )
+                return
+
             elif slug == "grant_access":
                 if "plan_id" not in http_body:
                     self.set_status(400)
@@ -1381,7 +1468,7 @@ class VEPlanHandler(BaseHandler):
                     http_body["write"],
                 )
                 return
-            
+
             elif slug == "copy":
                 if "plan_id" not in http_body:
                     self.set_status(400)
@@ -1392,7 +1479,7 @@ class VEPlanHandler(BaseHandler):
                         }
                     )
                     return
-                
+
                 self.copy_plan(db, http_body["plan_id"])
 
             else:
@@ -1459,6 +1546,102 @@ class VEPlanHandler(BaseHandler):
                 (no plan with the given _id was found)
                 {"success": False,
                  "reason": "plan_doesnt_exist"}
+
+        DELETE /planner/remove_evaluation_file
+            delete an evaluation from a plan by specifying the plans _id
+            and the file's _id.
+
+            query params:
+                plan_id: the _id of the plan whose evaluation file should be removed
+                file_id: the _id of the file that should be removed
+
+            http body:
+
+            returns:
+                200 OK,
+                (file was deleted)
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:plan_id"}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:file_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                403 Forbidden
+                (the plan is locked, i.e. another user is currently editing it)
+                {"success": False,
+                 "reason": "plan_locked"}
+
+                409 Conflict
+                (no plan with the given plan_id was found)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
+
+                409 Conflict
+                (the plan does not have an evaluation file with the given file_id)
+                {"success": False,
+                 "reason": "file_doesnt_exist"}
+
+        DELETE /planner/remove_literature_file
+            delete a literature from the list in a plan by specifying the plans _id
+            and the file's _id.
+
+            query params:
+                plan_id: the _id of the plan whose literature file should be removed
+                file_id: the _id of the file that should be removed
+
+            http body:
+
+            returns:
+                200 OK,
+                (file was deleted)
+                {"success": True}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:plan_id"}
+
+                400 Bad Request
+                {"success": False,
+                 "reason": "missing_key:file_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (you don't have write access to the plan)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                403 Forbidden
+                (the plan is locked, i.e. another user is currently editing it)
+                {"success": False,
+                 "reason": "plan_locked"}
+
+                409 Conflict
+                (no plan with the given plan_id was found)
+                {"success": False,
+                 "reason": "plan_doesnt_exist"}
+
+                409 Conflict
+                (the plan does not have a literature file with the given file_id)
+                {"success": False,
+                 "reason": "file_doesnt_exist"}
         """
         with util.get_mongodb() as db:
             if slug == "delete":
@@ -1498,6 +1681,60 @@ class VEPlanHandler(BaseHandler):
                         }
                     )
                     return
+
+            elif slug == "remove_evaluation_file":
+                try:
+                    plan_id = self.get_argument("plan_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                try:
+                    file_id = self.get_argument("file_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "file_id",
+                        }
+                    )
+                    return
+
+                self.remove_evaluation_file(db, plan_id, file_id)
+                return
+
+            elif slug == "remove_literature_file":
+                try:
+                    plan_id = self.get_argument("plan_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "plan_id",
+                        }
+                    )
+                    return
+                try:
+                    file_id = self.get_argument("file_id")
+                except tornado.web.MissingArgumentError:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_SLUG + "file_id",
+                        }
+                    )
+                    return
+
+                self.remove_literature_file(db, plan_id, file_id)
+                return
 
             else:
                 self.set_status(404)
@@ -1760,7 +1997,7 @@ class VEPlanHandler(BaseHandler):
         Update a single field (i.e. attribute) of a VEPlan by specifying the _id of
         the plan that should be updated (`plan_id`), the identifier which field should
         be updated (`field_name`) and the corresponding `value` that should be set.
-        If you plan to update one of the attribute that are object-like, e.g. audience,
+        If you plan to update one of the attribute that are object-like, e.g. target_groups,
         lectures, etc. be sure to supply a list of all the dictionaries, as they are
         overwritten and not appended. Though, you may use the separate append-endpoints
         instead.
@@ -2094,6 +2331,74 @@ class VEPlanHandler(BaseHandler):
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
 
+    def put_literature_file(
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
+    ) -> None:
+        """
+        add a new literature file to the plan.
+        each plan has an own attribute `literature_files`, where the _id of the corresponding
+        file will be stored (up to a maximum of 5 files).
+        using this _id of the file that was just stored, you can retrieve the actual content
+        of the file using the `StaticFileHandler` on the uploads-endpoint using
+        /uploads/<file_id>
+        :param space_id: the _id of the space where to upload the new file
+        :param file_name: the name of the new file
+        :param file_content: the body of the file as raw bytes
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        with util.get_mongodb() as db:
+            planner = VEPlanResource(db)
+            try:
+                if not planner._check_plan_exists(plan_id):
+                    raise PlanDoesntExistError
+
+                if not planner._check_below_max_literature_files(plan_id):
+                    raise MaximumFilesExceededError
+
+                # if another holds a write lock on the plan, deny the update
+                if not self._check_lock_is_held(plan_id):
+                    self.set_status(403)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": PLAN_LOCKED,
+                            "lock_holder": self._get_lock_holder(plan_id),
+                        }
+                    )
+                    return
+
+                file_id = planner.put_literature_file(
+                    plan_id,
+                    file_name,
+                    file_content,
+                    content_type,
+                    self.current_user.username,
+                )
+
+                # after a successful update, extend the lock expiry
+                self._extend_lock(plan_id)
+            except PlanDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+                return
+            except NoWriteAccessError:
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+            except MaximumFilesExceededError:
+                self.set_status(409)
+                self.write({"success": False, "reason": MAXIMUM_FILES_EXCEEDED})
+                return
+
+        self.set_status(200)
+        self.serialize_and_write({"success": True, "inserted_file_id": file_id})
+
     def grant_acces_right(
         self,
         db: Database,
@@ -2222,7 +2527,7 @@ class VEPlanHandler(BaseHandler):
 
         plan_id = util.parse_object_id(plan_id)
         planner = VEPlanResource(db)
-        
+
         try:
             plan = planner.get_plan(plan_id)
 
@@ -2231,7 +2536,9 @@ class VEPlanHandler(BaseHandler):
                 if plan.author != self.current_user.username:
                     if self.current_user.username not in plan.write_access:
                         self.set_status(403)
-                        self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                        self.write(
+                            {"success": False, "reason": INSUFFICIENT_PERMISSIONS}
+                        )
                         return
         except PlanDoesntExistError:
             self.set_status(409)
@@ -2239,7 +2546,7 @@ class VEPlanHandler(BaseHandler):
             return
 
         copied_plan_id = planner.copy_plan(plan_id, self.current_user.username)
-        
+
         self.serialize_and_write({"success": True, "copied_id": copied_plan_id})
 
     def delete_plan(self, db: Database, _id: str | ObjectId) -> None:
@@ -2384,6 +2691,128 @@ class VEPlanHandler(BaseHandler):
         except NoWriteAccessError:
             self.set_status(403)
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+            return
+
+        self.write({"success": True})
+
+    def remove_evaluation_file(
+        self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove an evaluation file from a plan by specifying the plan's _id and
+        the file's _id.
+
+        Responses:
+            200 OK        --> successfully removed the file
+            403 Forbidden --> user is not author of the plan
+                          --> another user currently holds a write lock on this plan
+            409 Conflict  --> no plan with the given _id was found
+                          --> no file with the given _id was found in the plan
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        planner = VEPlanResource(db)
+
+        try:
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
+                return
+
+            planner.remove_evaluation_file(
+                plan_id, file_id, requesting_username=self.current_user.username
+            )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+            return
+        except FileDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": FILE_DOESNT_EXIST})
+            return
+
+        self.write({"success": True})
+
+    def remove_literature_file(
+        self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
+    ) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Remove a literature file from the list in a plan by specifying the
+        plan's _id and the file's _id.
+
+        Responses:
+            200 OK        --> successfully removed the file
+            403 Forbidden --> user is not author of the plan
+                          --> another user currently holds a write lock on this plan
+            409 Conflict  --> no plan with the given _id was found
+                          --> no file with the given _id was found in the plan
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        planner = VEPlanResource(db)
+
+        try:
+            if not planner._check_plan_exists(plan_id):
+                raise PlanDoesntExistError
+
+            # if another holds a write lock on the plan, deny the update
+            if not self._check_lock_is_held(plan_id):
+                self.set_status(403)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": PLAN_LOCKED,
+                        "lock_holder": self._get_lock_holder(plan_id),
+                    }
+                )
+                return
+
+            planner.remove_literature_file(
+                plan_id, file_id, requesting_username=self.current_user.username
+            )
+
+            # after a successful update, extend the lock expiry
+            self._extend_lock(plan_id)
+        except PlanDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
+            return
+        except NoWriteAccessError:
+            self.set_status(403)
+            self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+            return
+        except FileDoesntExistError:
+            self.set_status(409)
+            self.write({"success": False, "reason": FILE_DOESNT_EXIST})
             return
 
         self.write({"success": True})

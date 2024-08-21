@@ -48,6 +48,16 @@ interface Props {
     socket: Socket;
 }
 
+const emptyTG = {
+    name: '',
+    age_min: '',
+    age_max: '',
+    experience: '',
+    academic_course: '',
+    languages: '',
+}
+const emptyLanguage = { language: '' }
+
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
@@ -60,17 +70,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            targetGroups: [
-                {
-                    name: '',
-                    age_min: '',
-                    age_max: '',
-                    experience: '',
-                    academic_course: '',
-                    languages: '',
-                },
-            ],
-            languages: [{ language: '' }],
+            targetGroups: [emptyTG],
+            languages: [emptyLanguage],
         },
     });
 
@@ -96,15 +97,20 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (plan.audience.length !== 0) {
-                replaceTg(plan.audience);
-            }
-            if (plan.languages.length !== 0) {
-                replaceLang(plan.languages.map((element: string) => ({ language: element })));
-            }
+            const targetGroups = plan.target_groups.length > 0
+                ? plan.target_groups
+                : [emptyTG]
+            replaceTg(targetGroups)
+
+            const languages = plan.languages.length > 0
+                ? plan.languages.map(language => ({ language }))
+                : [emptyLanguage]
+            replaceLang(languages)
+
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+            return {targetGroups, languages}
         },
         [replaceLang, replaceTg]
     );
@@ -117,7 +123,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         return [
             {
                 plan_id: router.query.plannerId,
-                field_name: 'audience',
+                field_name: 'target_groups',
                 value: data.targetGroups,
             },
             {
@@ -130,12 +136,20 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    audience: progressState,
+                    target_groups: progressState,
                     languages: progressState,
                 },
             },
         ];
     };
+
+    const handleRemoveTg = (index: number) => fieldsTg.length > 1
+        ? removeTg(index)
+        : replaceTg(emptyTG)
+
+    const handleRemoveLang = (index: number) => fieldsLang.length > 1
+        ? removeLang(index)
+        : replaceLang(emptyLanguage);
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fieldsTg.map((targetGroup, index) => (
@@ -291,7 +305,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="flex justify-end items-center">
                     <Image
                         className="mx-2 cursor-pointer m-2 "
-                        onClick={() => removeTg(index)}
+                        onClick={() => handleRemoveTg(index)}
                         src={trash}
                         width={20}
                         height={20}
@@ -305,7 +319,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     const renderLanguagesInputs = (): JSX.Element[] => {
         return fieldsLang.map((language, index) => (
             <div key={language.id}>
-                <div className="flex items-center w-full">
+                <div className="flex my-2 items-center w-full">
                     <input
                         type="text"
                         placeholder="Sprache eingeben"
@@ -321,7 +335,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             },
                         })}
                     />
-                    <button type="button" onClick={() => removeLang(index)}>
+                    <button type="button" onClick={() => handleRemoveLang(index)}>
                         <RxMinus size={20} />
                     </button>
                 </div>
@@ -360,14 +374,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                         className="p-2 m-2 bg-white rounded-full shadow"
                         type="button"
                         onClick={() => {
-                            appendTg({
-                                name: '',
-                                age_min: '',
-                                age_max: '',
-                                experience: '',
-                                academic_course: '',
-                                languages: '',
-                            });
+                            appendTg(emptyTG);
                         }}
                     >
                         <RxPlus size={24} />
@@ -395,9 +402,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     className="p-2 m-2 bg-white rounded-full shadow"
                     type="button"
                     onClick={() => {
-                        appendLang({
-                            language: '',
-                        });
+                        appendLang(emptyLanguage);
                     }}
                 >
                     <RxPlus size={20} />

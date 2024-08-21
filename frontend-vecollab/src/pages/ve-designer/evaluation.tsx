@@ -56,27 +56,29 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     const prevpage = '/ve-designer/methodology';
     const nextpage = '/ve-designer/checklist';
 
+    const defaultEvaluationValue = [
+        {
+            username: 'Dozent*in 1',
+            is_graded: false,
+            task_type: '',
+            assessment_type: '',
+            evaluation_while: '',
+            evaluation_after: '',
+        },
+        {
+            username: 'Dozent*in 2',
+            is_graded: false,
+            task_type: '',
+            assessment_type: '',
+            evaluation_while: '',
+            evaluation_after: '',
+        },
+    ]
+
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
-            evaluationPerPartner: [
-                {
-                    username: 'Dozent*in 1',
-                    is_graded: false,
-                    task_type: '',
-                    assessment_type: '',
-                    evaluation_while: '',
-                    evaluation_after: '',
-                },
-                {
-                    username: 'Dozent*in 2',
-                    is_graded: false,
-                    task_type: '',
-                    assessment_type: '',
-                    evaluation_while: '',
-                    evaluation_after: '',
-                },
-            ],
+            evaluationPerPartner: defaultEvaluationValue,
         },
     });
 
@@ -87,8 +89,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let data: {[key: string]: any} = {}
+
             if (plan.evaluation.length !== 0) {
                 replace(plan.evaluation);
+                data.evaluationPerPartner = plan.evaluation
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -106,6 +111,8 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 });
                 setPartnerProfileSnippets(partnerSnippets);
             });
+
+            return data
         },
         [replace, session]
     );

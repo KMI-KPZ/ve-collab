@@ -109,7 +109,7 @@ export default function EditProfile({
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
-    const { data: userInfo, isLoading, error, mutate } = useGetOwnProfile();
+    const { data: userInfo, isLoading, error, mutate } = useGetOwnProfile(session!.accessToken);
 
     useEffect(() => {
         if (isLoading) return;
@@ -209,7 +209,7 @@ export default function EditProfile({
         mutate();
 
 
-        // if excludedFromMatching has changed from the previously saved state, 
+        // if excludedFromMatching has changed from the previously saved state,
         // reload the page to reflect the changes to the parent (LayoutSection.tsx)
         if (excludedFromMatching !== userInfo.profile.excluded_from_matching) {
             router.reload();

@@ -5,6 +5,7 @@ import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     initialSideProgressBarStates,
     ISideProgressBarStates,
+    ISideProgressBarStateSteps,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
@@ -22,36 +23,36 @@ import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-
-interface StepName {
-    from: string;
-    to: string;
-    name: string;
-    workload: number;
-    learning_goal: string;
-}
+import Dialog from '@/components/profile/Dialog';
+import { fetchGET } from '@/lib/backend';
+import LoadingAnimation from '@/components/LoadingAnimation';
+import Timestamp from '@/components/Timestamp';
+import { MdNewspaper } from 'react-icons/md';
+import { useSession } from 'next-auth/react';
+import ButtonPrimary from '@/components/ButtonPrimary';
 
 interface FormValues {
-    stepNames: StepName[];
+    stepNames: IFineStep[];
 }
 
 const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-    return stepNamesObject.stepNames.every((broadStep) => {
+    return stepNamesObject.stepNames.every((step) => {
         return (
-            broadStep.name === '' &&
-            broadStep.from === '' &&
-            broadStep.to === '' &&
-            broadStep.learning_goal === '' &&
-            broadStep.workload === 0
+            step.name === '' &&
+            step.timestamp_from === '' &&
+            step.timestamp_to === '' &&
+            step.learning_goal === '' &&
+            step.workload === 0
         );
     });
 };
 
-export const defaultFineStepData: IFineStep = {
+export const emptyStepData: IFineStep = {
+    _id: undefined,
     name: '',
-    workload: 0,
     timestamp_from: '',
     timestamp_to: '',
+    workload: 0,
     learning_goal: '',
     learning_activity: '',
     has_tasks: false,
@@ -64,17 +65,7 @@ export const defaultFineStepData: IFineStep = {
             materials: ['', ''],
         },
     ],
-    evaluation_tools: [],
-    attachments: [],
-    custom_attributes: {},
-};
-
-const emptyBroadStep: StepName = {
-    from: '',
-    to: '',
-    name: '',
-    workload: 0,
-    learning_goal: '',
+    original_plan: '',
 };
 
 interface Props {
@@ -83,34 +74,38 @@ interface Props {
 
 StepNames.auth = true;
 export default function StepNames({ socket }: Props): JSX.Element {
+    const { data: session } = useSession();
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const [steps, setSteps] = useState<IFineStep[]>([defaultFineStepData]);
+    const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
-    // const prevpage = '/ve-designer/checklist'
-    // const [nextpage, setNextpage] = useState<string>('/ve-designer/no-step');
+    const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
 
     const today = new Date().toISOString().split('T')[0];
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = yesterdayDate.toISOString().split('T')[0];
 
+    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true);
+    const [availPlans, setAvailPlans] = useState<IPlan[]>([]);
+    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([]);
+
     const methods = useForm<FormValues>({
         mode: 'onChange',
         defaultValues: {
             stepNames: [
                 {
-                    from: yesterday,
-                    to: today,
+                    timestamp_from: yesterday,
+                    timestamp_to: today,
                     name: 'Kennenlernen',
                     workload: 0,
                     learning_goal: '',
                 },
                 {
-                    from: yesterday,
-                    to: today,
+                    timestamp_from: yesterday,
+                    timestamp_to: today,
                     name: 'Evaluation',
                     workload: 0,
                     learning_goal: '',
@@ -126,54 +121,56 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            if (plan.steps?.length > 0) {
-                const steps: IFineStep[] = plan.steps;
-                const stepNames: StepName[] = steps.map((step) => {
-                    const { timestamp_from, timestamp_to, name, workload, learning_goal } = step;
-                    return {
-                        from: timestamp_from.split('T')[0], // react hook form only takes '2019-12-13'
-                        to: timestamp_to.split('T')[0],
-                        name: name,
-                        workload: workload,
-                        learning_goal: learning_goal,
-                    };
-                });
-                replace(stepNames); // PROBLEM isDirty is initially true
-                // methods.resetField("stepNames", {defaultValue: stepNames}) // PROBLEM: does not trigger isDirty if I just rename a step ...
+            let data: { [key: string]: any } = {};
 
+            if (plan.steps?.length > 0) {
+                data.stepNames = plan.steps.map((step) => {
+                    return Object.assign({}, step, {
+                        timestamp_from: step.timestamp_from.split('T')[0],
+                        timestamp_to: step.timestamp_to.split('T')[0],
+                    });
+                });
+                replace(data.stepNames);
                 setSteps(plan.steps);
+                // DIRTY hack to initial set the size of our textareas
+                setTimeout(() => {
+                    plan.steps?.map((step, i) =>
+                        adjustTextareaSize(
+                            document.querySelector(`textarea[name='stepNames.${i}.learning_goal']`)
+                        )
+                    );
+                }, 1);
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+
+            return data;
         },
         [replace]
     );
 
-    const checkIfNamesAreUnique = (stepNames: StepName[]): boolean => {
+    const checkIfNamesAreUnique = (stepNames: IFineStep[]): boolean => {
         const stepNamesNames = stepNames.map((stepName) => stepName.name);
         return new Set(stepNamesNames).size !== stepNames.length;
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const stepNames: StepName[] = data.stepNames;
+        const stepNames: IFineStep[] = data.stepNames;
         let payload: IFineStep = {
-            ...defaultFineStepData,
+            ...emptyStepData,
         };
-        const stepNamesData = stepNames.map((broadStep) => {
+        const stepNamesData = data.stepNames.map((step) => {
             // TODO ids lieber vergleichen
-            const fineStepBackend = steps.find((fineStep) => fineStep.name === broadStep.name);
+            const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
             }
-            return {
-                ...payload,
-                name: broadStep.name,
-                timestamp_from: broadStep.from,
-                timestamp_to: broadStep.to,
-                workload: broadStep.workload,
-                learning_goal: broadStep.learning_goal,
-            };
+            return Object.assign({}, payload, step);
+        });
+
+        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
+            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
         });
 
         const progressState = areAllFormValuesEmpty(data)
@@ -191,7 +188,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'progress',
                 value: {
                     ...sideMenuStepsProgress,
-                    steps: progressState,
+                    stepsGenerally: progressState,
+                    steps: sideMenuStateSteps,
                 },
             },
         ];
@@ -199,7 +197,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const validateDateRange = (fromValue: string, indexFromTo: number) => {
         const fromDate = new Date(fromValue);
-        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.to`));
+        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.timestamp_to`));
         if (fromDate > toDate) {
             return 'Das Startdatum muss vor dem Enddatum liegen';
         } else {
@@ -208,11 +206,137 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
-        } else {
-            update(index, emptyBroadStep);
+        remove(index);
+        // if (fields.length > 1) {
+        //     remove(index);
+        // } else {
+        //     update(index, emptyStepData);
+        // }
+    };
+
+    const onDragEnd = (result: DropResult): void => {
+        if (result.destination) {
+            move(result.source.index, result.destination.index);
         }
+    };
+
+    const openStepsImportDialog = () => {
+        setIsImportStepsDialogOpen(true);
+        if (availPlans.length) return;
+        setLoadingAvailPlans(true);
+
+        fetchGET('/planner/get_available', session?.accessToken)
+            .then((data) => {
+                setAvailPlans(data.plans as IPlan[]);
+            })
+            .finally(() => setLoadingAvailPlans(false));
+    };
+    const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
+        if (stepsToImport.some((s) => s._id == step._id)) {
+            setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
+        } else {
+            setStepsToImport((prev) => [
+                ...prev,
+                {
+                    ...step,
+                    original_plan: step.original_plan === '' ? plan._id : step.original_plan,
+                },
+            ]);
+        }
+    };
+
+    const handleStepsImport = () => {
+        stepsToImport.map((step) => {
+            append(
+                Object.assign({}, step, {
+                    _id: undefined,
+                    timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
+                    timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
+                } as IFineStep)
+            );
+        });
+        setIsImportStepsDialogOpen(false);
+        setStepsToImport([]);
+    };
+
+    const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
+        if (!el) return;
+        el.style.height = '0px';
+        el.style.height = el.scrollHeight + 'px';
+    };
+
+    const ImportStepsDialog = () => {
+        if (loadingAvailPlans) return <LoadingAnimation />;
+
+        const plans = availPlans.filter(
+            (plan) =>
+                plan.is_good_practise && plan.steps.length && plan._id != router.query.plannerId
+        );
+        if (!plans.length)
+            return (
+                <>
+                    Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren
+                    vorhanden
+                </>
+            );
+
+        // TODO add simple filter input?
+
+        return (
+            <div className="flex flex-col max-h-96 overflow-y-auto">
+                <div>
+                    Wähle aus den &quot;Good Practice&quot; Plänen Etappen zum importieren aus
+                </div>
+
+                {plans
+                    .sort((a, b) => {
+                        return (
+                            new Date(b.last_modified).getTime() -
+                            new Date(a.last_modified).getTime()
+                        );
+                    })
+                    .map((plan, i) => (
+                        <div key={plan._id}>
+                            <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
+                                <MdNewspaper />
+                                <div className="text-xl font-bold grow-0">{plan.name}</div>
+                                {session?.user.preferred_username != plan.author && (
+                                    <div className="text-sm text-gray-500">von {plan.author}</div>
+                                )}
+                                <span className="grow text-right" title="zuletzt geändert">
+                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                </span>
+                            </div>
+                            {plan.steps.map((step, j) => (
+                                <div
+                                    key={step._id}
+                                    className="ml-10 hover:cursor-pointer flex"
+                                    onClick={(e) => toggleStepToImport(plan, step)}
+                                    title="Add/Remove"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="mr-2"
+                                        checked={stepsToImport.some((s) => s._id == step._id)}
+                                        readOnly
+                                    />
+                                    {step.name} ({step.workload} h)
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                <div className="ml-auto text-right">
+                    <button
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        onClick={(e) => setIsImportStepsDialogOpen(false)}
+                    >
+                        Abbrechen
+                    </button>
+                    <ButtonPrimary label={'Importieren'} onClick={() => handleStepsImport()} />
+                </div>
+            </div>
+        );
     };
 
     const renderStepNamesInputs = (): JSX.Element[] => {
@@ -223,94 +347,119 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
-                                    <div className="flex items-center">
-                                        <label>von:</label>
-                                        <input
-                                            type="date"
-                                            {...methods.register(`stepNames.${index}.from`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "von" aus',
-                                                },
-                                                validate: (v) => validateDateRange(v, index),
-                                            })}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">bis:</label>
-                                        <input
-                                            type="date"
-                                            {...methods.register(`stepNames.${index}.to`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "bis" aus',
-                                                },
-                                            })}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">Name:</label>
-                                        <input
-                                            type="text"
-                                            {...methods.register(`stepNames.${index}.name`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Bitte fülle das Felde "Name" aus',
-                                                },
-                                                validate: {
-                                                    unique: () => {
-                                                        return (
-                                                            !checkIfNamesAreUnique(
-                                                                methods.getValues('stepNames')
-                                                            ) ||
-                                                            'Bitte wähle einen einzigartigen Namen'
-                                                        );
+                                    <div className="flex flex-wrap gap-y-2 items-center">
+                                        <div>
+                                            <label>von:</label>
+                                            <input
+                                                type="date"
+                                                {...methods.register(
+                                                    `stepNames.${index}.timestamp_from`,
+                                                    {
+                                                        required: {
+                                                            value: true,
+                                                            message:
+                                                                'Bitte fülle das Felde "von" aus',
+                                                        },
+                                                        validate: (v) =>
+                                                            validateDateRange(v, index),
+                                                    }
+                                                )}
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">bis:</label>
+                                            <input
+                                                type="date"
+                                                {...methods.register(
+                                                    `stepNames.${index}.timestamp_to`,
+                                                    {
+                                                        required: {
+                                                            value: true,
+                                                            message:
+                                                                'Bitte fülle das Felde "bis" aus',
+                                                        },
+                                                    }
+                                                )}
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">Name:</label>
+                                            <input
+                                                type="text"
+                                                {...methods.register(`stepNames.${index}.name`, {
+                                                    required: {
+                                                        value: true,
+                                                        message: 'Bitte fülle das Felde "Name" aus',
                                                     },
-                                                },
-                                            })}
-                                            placeholder="Name, z.B. Kennenlernphase"
-                                            className="border border-gray-400 rounded-lg p-2 mx-2"
-                                        />
-                                        <label className="ml-2">Zeitaufwand:</label>
-                                        <input
-                                            type="number"
-                                            {...methods.register(`stepNames.${index}.workload`, {
-                                                validate: {
-                                                    positive: (v) => {
-                                                        return (
-                                                            v >= 0 ||
-                                                            'Der Zeitaufwand kann nicht negativ sein'
-                                                        );
+                                                    validate: {
+                                                        unique: () => {
+                                                            return (
+                                                                !checkIfNamesAreUnique(
+                                                                    methods.getValues('stepNames')
+                                                                ) ||
+                                                                'Bitte wähle einen einzigartigen Namen'
+                                                            );
+                                                        },
                                                     },
-                                                },
-                                                setValueAs: (v: string) => parseInt(v),
-                                            })}
-                                            placeholder="Zeitaufwand in Stunden"
-                                            className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
-                                        />
-                                        <label className="mr-4">h</label>
+                                                })}
+                                                placeholder="Name, z.B. Kennenlernphase"
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="ml-2">Zeitaufwand:</label>
+                                            <input
+                                                type="number"
+                                                {...methods.register(
+                                                    `stepNames.${index}.workload`,
+                                                    {
+                                                        validate: {
+                                                            positive: (v) => {
+                                                                return (
+                                                                    v >= 0 ||
+                                                                    'Der Zeitaufwand kann nicht negativ sein'
+                                                                );
+                                                            },
+                                                        },
+                                                        setValueAs: (v: string) => parseInt(v),
+                                                    }
+                                                )}
+                                                placeholder="Zeitaufwand in Stunden"
+                                                className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
+                                            />
+                                            <label className="mr-4">h</label>
+                                        </div>
                                     </div>
                                     <div className="flex items-center mt-2">
                                         <label>Lernziel(e):</label>
-                                        <input
+                                        <textarea
                                             {...methods.register(
                                                 `stepNames.${index}.learning_goal`
                                             )}
+                                            rows={1}
                                             placeholder="mehrere durch Komma trennen"
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            onChange={(e) => {
+                                                adjustTextareaSize(e.currentTarget);
+                                            }}
                                         />
                                     </div>
-                                    {methods.formState.errors?.stepNames?.[index]?.from && (
+                                    {methods.formState.errors?.stepNames?.[index]
+                                        ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.from
-                                                    ?.message
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message
                                             }
                                         </p>
                                     )}
-                                    {methods.formState.errors?.stepNames?.[index]?.to && (
+                                    {methods.formState.errors?.stepNames?.[index]?.timestamp_to && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.to
-                                                    ?.message
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message
                                             }
                                         </p>
                                     )}
@@ -357,12 +506,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         ));
     };
 
-    const onDragEnd = (result: DropResult): void => {
-        if (result.destination) {
-            move(result.source.index, result.destination.index);
-        }
-    };
-
     return (
         <Wrapper
             socket={socket}
@@ -384,6 +527,16 @@ export default function StepNames({ socket }: Props): JSX.Element {
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
+            <Dialog
+                isOpen={isImportStepsDialogOpen}
+                title={'Etappen Import'}
+                onClose={() => setIsImportStepsDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
+            </Dialog>
+
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="stepNames-items">
                     {(provided: DroppableProvided) => (
@@ -396,19 +549,23 @@ export default function StepNames({ socket }: Props): JSX.Element {
             </DragDropContext>
             <div className="flex justify-center">
                 <button
-                    className="p-2 m-2 bg-white rounded-full shadow"
+                    className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
+                    title="Neue Etappe"
                     onClick={() => {
-                        append({
-                            from: '',
-                            to: '',
-                            name: '',
-                            workload: 0,
-                            learning_goal: '',
-                        });
+                        append(emptyStepData);
                     }}
                 >
                     <RxPlus size={25} />
+                </button>
+
+                <button
+                    className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                    type="button"
+                    title="Etappen importieren"
+                    onClick={(e) => openStepsImportDialog()}
+                >
+                    Import
                 </button>
             </div>
         </Wrapper>

@@ -5,7 +5,7 @@ import { Institution } from '@/pages/ve-designer/institutions';
 import { LectureOld } from '@/pages/ve-designer/lectures';
 import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
-import { EvaluationFile } from '@/pages/ve-designer/post-process';
+import { EvaluationFile, LiteratureFile } from '@/pages/ve-designer/post-process';
 import { PhysicalMobility } from '@/pages/ve-designer/methodology';
 
 export interface PlanPreview {
@@ -22,11 +22,12 @@ export interface PlanPreview {
 
 export interface IPlan {
     _id: string;
-    audience: TargetGroup[];
+    target_groups: TargetGroup[];
     author: string;
+    abstract: string | null;
     creation_timestamp: string;
     duration: number | null;
-    formalities: CheckListPartner[];
+    checklist: CheckListPartner[];
     institutions: Institution[];
     involved_parties: string[];
     languages: string[];
@@ -39,7 +40,6 @@ export interface IPlan {
     methodical_approaches: string[];
     lectures: LectureOld[];
     name: string;
-    new_content: boolean | null;
     partners: string[];
     physical_mobility: boolean | null;
     physical_mobilities: PhysicalMobility[];
@@ -50,7 +50,8 @@ export interface IPlan {
     is_good_practise: boolean;
     underlying_ve_model: string | null;
     reflection: string | null;
-    good_practise_evaluation: string | null;
+    literature?: string | null;
+    literature_files?: LiteratureFile[] | null;
     timestamp_from: string | null;
     timestamp_to: string | null;
     topics: string[];

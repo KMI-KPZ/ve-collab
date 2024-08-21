@@ -9,7 +9,9 @@ from pymongo.errors import DuplicateKeyError
 from typing import Any, Dict, List
 
 from exceptions import (
+    FileDoesntExistError,
     InvitationDoesntExistError,
+    MaximumFilesExceededError,
     MissingKeyError,
     NoReadAccessError,
     NoWriteAccessError,
@@ -95,7 +97,10 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         if requesting_username is not None:
-            if result["is_good_practise"] is False or result["is_good_practise"] is None:
+            if (
+                result["is_good_practise"] is False
+                or result["is_good_practise"] is None
+            ):
                 if requesting_username not in result["read_access"]:
                     raise NoReadAccessError()
 
@@ -285,6 +290,27 @@ class VEPlanResource:
             is not None
         )
 
+    def _check_below_max_literature_files(self, plan_id: str | ObjectId) -> bool:
+        """
+        Determine if a plan with the given _id has less than 5 literature files.
+
+        Returns True if the plan has less than 5 literature files, False otherwise.
+
+        Raises `PlanDoesntExistError`if no such plan with the given `plan_id` is found.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        result = self.db.plans.find_one(
+            {"_id": plan_id}, projection={"literature_files": True}
+        )
+        if not result:
+            raise PlanDoesntExistError()
+
+        if len(result["literature_files"]) < 5:
+            return True
+        return False
+
     def update_full_plan(
         self, plan: VEPlan, upsert: bool = False, requesting_username: str = None
     ) -> ObjectId:
@@ -356,7 +382,7 @@ class VEPlanResource:
         a VEPlan as indicated by `VEPlan.EXPECTED_DICT_ENTRIES`, except `evaluation_file`,
         which has a separate updating function (`put_evaluation_file`).
 
-        In case of a compound attribute like steps, audience, ... the full
+        In case of a compound attribute like steps, target_groups, ... the full
         attributes of this object have to be passed within a list (because
         usually there might be more than one of those), otherwise a `MissingKeyError`
         might be raised.
@@ -395,7 +421,7 @@ class VEPlanResource:
         if field_name in [
             "institutions",
             "lectures",
-            "audience",
+            "target_groups",
             "physical_mobilities",
             "evaluation",
             "individual_learning_goals",
@@ -411,7 +437,7 @@ class VEPlanResource:
             key_object_mapper = {
                 "institutions": Institution,
                 "lectures": Lecture,
-                "audience": TargetGroup,
+                "target_groups": TargetGroup,
                 "physical_mobilities": PhysicalMobility,
                 "evaluation": Evaluation,
                 "individual_learning_goals": IndividualLearningGoal,
@@ -459,29 +485,29 @@ class VEPlanResource:
                     )
                 )
 
-            # formalities is another special case that enforces keys in the dict
-            if field_name == "formalities":
-                for formality in value_copy:
-                    # ensure that each formality entry is associated with a user
-                    if "username" not in formality:
+            # checklist is another special case that enforces keys in the dict
+            if field_name == "checklist":
+                for checklist_item in value_copy:
+                    # ensure that each checklist_item entry is associated with a user
+                    if "username" not in checklist_item:
                         raise MissingKeyError(
-                            "Missing key 'username' in formalities dictionary",
+                            "Missing key 'username' in checklist dictionary",
                             "username",
-                            "formalities",
+                            "checklist",
                         )
 
                     # ensure that the username is also a partner of the plan
                     if not self._check_user_is_author_or_partner(
-                        plan_id, formality["username"]
+                        plan_id, checklist_item["username"]
                     ):
                         raise ValueError(
-                            "username '{}' in formalities is not a partner of the plan".format(
-                                formality["username"]
+                            "username '{}' in checklist is not a partner of the plan".format(
+                                checklist_item["username"]
                             )
                         )
 
                     # ensure that any other values are of type bool or None
-                    for attr, value in formality.items():
+                    for attr, value in checklist_item.items():
                         if attr != "username":
                             if not isinstance(value, (bool, type(None))):
                                 raise TypeError(
@@ -651,7 +677,162 @@ class VEPlanResource:
         )
 
         return _id
+
+    def remove_evaluation_file(
+        self,
+        plan_id: str | ObjectId,
+        file_id: str | ObjectId,
+        requesting_username: str = None,
+    ) -> None:
+        """ 
+        Remove the evaluation file from its plan (and gridfs) by specifying the plan's _id
+        and the file's _id.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `FileDoesntExistError` if no file with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # remove the file from gridfs
+        fs = gridfs.GridFS(self.db)
+        if not fs.exists(file_id):
+            raise FileDoesntExistError()
+
+        fs.delete(file_id)
+
+        # remove the reference from the plan
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$set": {"evaluation_file": None}},
+        )
+
+    def put_literature_file(
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
+        requesting_username: str = None,
+    ) -> ObjectId:
+        """
+        Upload a new literature file to gridfs and associate it with the plan
+        given by its _id. Only a maximum of 5 literature files is allowed per plan.
+        the _id of the uploaded file is stored in the plan's `literature_files` attribute
+        and can be retrieved using the `GridFSStaticFileHandler`.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns the _id of the uploaded file.
+
+        Raises `PlanDoesntExistError` if no plan with the same _id already exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `MaximumFilesExceededError` if the maximum number of literature files would be larger than
+        5 after the update.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        if not self._check_below_max_literature_files(plan_id):
+            raise MaximumFilesExceededError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # store file in gridfs
+        fs = gridfs.GridFS(self.db)
+        _id = fs.put(
+            file_content,
+            filename=file_name,
+            content_type=content_type,
+            metadata={"uploader": requesting_username},
+        )
+
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {
+                "$push": {
+                    "literature_files": {
+                        "file_id": _id,
+                        "file_name": file_name,
+                    }
+                }
+            },
+        )
+
+        return _id
     
+    def remove_literature_file(
+        self,
+        plan_id: str | ObjectId,
+        file_id: str | ObjectId,
+        requesting_username: str = None,
+    ) -> None:
+        """ 
+        Remove one literature file from the list in its plan (and gridfs) by specifying 
+        the plan's _id and the file's _id.
+
+        If the `requesting_username` is not None, sanity checks will be applied, i.e.
+        this user has to have write access to the plan (determined by his name being in the
+        write_access list). If this is not the case, a `NoWriteAccessError` is thrown.
+
+        Returns nothing.
+
+        Raises `PlanDoesntExistError` if no plan with the given _id exists.
+        Raises `NoWriteAccessError` if the requesting username (if supplied) has no write access
+        to the plan.
+        Raises `FileDoesntExistError` if no file with the given _id exists.
+        """
+
+        plan_id = util.parse_object_id(plan_id)
+        file_id = util.parse_object_id(file_id)
+
+        if not self._check_plan_exists(plan_id):
+            raise PlanDoesntExistError()
+
+        # if a user is given, check if he/she has appropriate write access
+        if requesting_username is not None:
+            if not self._check_write_access(plan_id, requesting_username):
+                raise NoWriteAccessError()
+
+        # remove the file from gridfs
+        fs = gridfs.GridFS(self.db)
+        if not fs.exists(file_id):
+            raise FileDoesntExistError()
+
+        fs.delete(file_id)
+
+        # remove the reference from the plan
+        self.db.plans.update_one(
+            {"_id": plan_id},
+            {"$pull": {"literature_files": {"file_id": file_id}}},
+        )
+
     def copy_plan(self, plan_id: str | ObjectId, new_author: str = None) -> ObjectId:
         """
         Create an identical copy of the plan given by its _id and return the _id of the

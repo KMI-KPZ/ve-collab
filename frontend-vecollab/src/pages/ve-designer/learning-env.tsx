@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
 
 interface FormValues {
@@ -34,8 +34,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
         formValues.physicalMobilities.every((mobility) => {
             return (
                 mobility.location === '' &&
-                mobility.timestamp_from === '' &&
-                mobility.timestamp_to === ''
+                mobility.timestamp_from === null &&
+                mobility.timestamp_to === null
             );
         })
     );
@@ -60,20 +60,24 @@ export default function Methodology({ socket }: Props): JSX.Element {
             learningEnv: '',
             courseFormat: '',
             usePhysicalMobility: false,
-            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }],
+            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }]
         },
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
+            let data: {[key: string]: any} = {}
             if (plan.learning_env !== null) {
                 methods.setValue('learningEnv', plan.learning_env);
+                data.learningEnv = plan.learning_env
             }
             if (plan.realization !== null) {
                 methods.setValue('courseFormat', plan.realization);
+                data.courseFormat = plan.realization
             }
             if (plan.physical_mobility !== null) {
                 methods.setValue('usePhysicalMobility', plan.physical_mobility);
+                data.usePhysicalMobility = plan.physical_mobility
             }
             if (plan.physical_mobilities !== null && plan.physical_mobilities.length !== 0) {
                 const physical_mobilities: PhysicalMobility[] = plan.physical_mobilities.map(
@@ -88,10 +92,13 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     }
                 );
                 methods.setValue('physicalMobilities', physical_mobilities);
+                data.physicalMobilities = plan.physical_mobilities
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
+
+            return data
         },
         [methods]
     );
@@ -221,8 +228,9 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         }
                     </p>
                 </div>
+
                 <button className="ml-3" type="button" onClick={() => handleDelete(index)}>
-                    <RxMinus size={20} />
+                    <RxTrash size={20} />
                 </button>
             </div>
         ));

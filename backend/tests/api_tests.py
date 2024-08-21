@@ -68,6 +68,8 @@ PLAN_ALREADY_EXISTS_ERROR = "plan_already_exists"
 NON_UNIQUE_STEPS_ERROR = "non_unique_step_names"
 NON_UNIQUE_TASKS_ERROR = "non_unique_tasks"
 PLAN_LOCKED_ERROR = "plan_locked"
+MAXIMUM_FILES_EXCEEDED_ERROR = "maximum_files_exceeded"
+FILE_DOESNT_EXIST_ERROR = "file_doesnt_exist"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -7295,7 +7297,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [],
             "methodical_approaches": ["test"],
-            "audience": [],
+            "target_groups": [],
             "languages": ["test", "test"],
             "evaluation": [],
             "timestamp_from": datetime.now(),
@@ -7305,8 +7307,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7317,24 +7318,25 @@ class TimelineHandlerTest(BaseApiTestCase):
             "workload": 10,
             "steps": [],
             "is_good_practise": True,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -7799,9 +7801,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
-            evaluation_tools=["test", "test"],
-            attachments=[ObjectId()],
-            custom_attributes={"test": "test"},
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -7826,7 +7826,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=["test", "test"],
+            department="test",
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -7915,7 +7915,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "major_learning_goals": ["test", "test"],
             "individual_learning_goals": [self.individual_learning_goal.to_dict()],
             "methodical_approaches": ["test"],
-            "audience": [self.target_group.to_dict()],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -7925,8 +7925,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": CURRENT_ADMIN.username,
                     "technology": False,
@@ -7937,10 +7936,12 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": False,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
@@ -7948,14 +7949,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -8029,7 +8029,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8043,28 +8043,26 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
         self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.abstract, default_plan.abstract)
         self.assertEqual(
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
+        self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
+        self.assertEqual(response_plan.literature_files, default_plan.literature_files)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
 
     def test_get_plan_good_practise(self):
         """
-        expect: successfully request plan by _id, 
+        expect: successfully request plan by _id,
         access is granted because plan is a good practise example
         and therefore public
         """
@@ -8104,10 +8102,12 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.methodical_approaches,
             good_practise_plan.methodical_approaches,
         )
-        self.assertEqual(response_plan.audience, good_practise_plan.audience)
+        self.assertEqual(response_plan.target_groups, good_practise_plan.target_groups)
         self.assertEqual(response_plan.languages, good_practise_plan.languages)
         self.assertEqual(response_plan.evaluation, good_practise_plan.evaluation)
-        self.assertEqual(response_plan.timestamp_from, good_practise_plan.timestamp_from)
+        self.assertEqual(
+            response_plan.timestamp_from, good_practise_plan.timestamp_from
+        )
         self.assertEqual(response_plan.timestamp_to, good_practise_plan.timestamp_to)
         self.assertEqual(
             response_plan.involved_parties, good_practise_plan.involved_parties
@@ -8120,23 +8120,25 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, good_practise_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
-        self.assertEqual(response_plan.new_content, good_practise_plan.new_content)
-        self.assertEqual(response_plan.formalities, good_practise_plan.formalities)
+        self.assertEqual(response_plan.checklist, good_practise_plan.checklist)
         self.assertEqual(response_plan.duration, good_practise_plan.duration)
         self.assertEqual(response_plan.workload, good_practise_plan.workload)
         self.assertEqual(response_plan.steps, good_practise_plan.steps)
         self.assertEqual(
             response_plan.is_good_practise, good_practise_plan.is_good_practise
         )
+        self.assertEqual(response_plan.abstract, good_practise_plan.abstract)
         self.assertEqual(
             response_plan.underlying_ve_model, good_practise_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, good_practise_plan.reflection)
+        self.assertEqual(response_plan.literature, good_practise_plan.literature)
         self.assertEqual(
-            response_plan.good_practise_evaluation,
-            good_practise_plan.good_practise_evaluation,
+            response_plan.evaluation_file, good_practise_plan.evaluation_file
         )
-        self.assertEqual(response_plan.evaluation_file, good_practise_plan.evaluation_file)
+        self.assertEqual(
+            response_plan.literature_files, good_practise_plan.literature_files
+        )
         self.assertEqual(response_plan.progress, good_practise_plan.progress)
 
     def test_get_plan_error_missing_key(self):
@@ -8190,7 +8192,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         expect: successfully request all good practise plans
         """
-        
+
         # add one more plan that is marked as good practise example
         _id = ObjectId()
         self.db.plans.insert_one(VEPlan(_id=_id, is_good_practise=True).to_dict())
@@ -8230,7 +8232,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan.methodical_approaches, default_plan.methodical_approaches
         )
-        self.assertEqual(response_plan.audience, default_plan.audience)
+        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
         self.assertEqual(response_plan.languages, default_plan.languages)
         self.assertEqual(response_plan.evaluation, default_plan.evaluation)
         self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
@@ -8244,21 +8246,19 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan.physical_mobilities, default_plan.physical_mobilities
         )
         self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.new_content, default_plan.new_content)
-        self.assertEqual(response_plan.formalities, default_plan.formalities)
+        self.assertEqual(response_plan.checklist, default_plan.checklist)
         self.assertEqual(response_plan.duration, default_plan.duration)
         self.assertEqual(response_plan.workload, default_plan.workload)
         self.assertEqual(response_plan.steps, default_plan.steps)
         self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
+        self.assertEqual(response_plan.abstract, default_plan.abstract)
         self.assertEqual(
             response_plan.underlying_ve_model, default_plan.underlying_ve_model
         )
         self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(
-            response_plan.good_practise_evaluation,
-            default_plan.good_practise_evaluation,
-        )
+        self.assertEqual(response_plan.literature, default_plan.literature)
         self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
+        self.assertEqual(response_plan.literature_files, default_plan.literature_files)
         self.assertEqual(response_plan.progress, default_plan.progress)
         self.assertIsNotNone(response_plan.creation_timestamp)
         self.assertIsNotNone(response_plan.last_modified)
@@ -8391,7 +8391,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         expect: successfully insert a new plan with no attributes set
         except for the automations on partners, author, evaluation,
-        individual_learning_goals and formalities
+        individual_learning_goals and checklist
         """
 
         response = self.base_checks(
@@ -8422,9 +8422,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["individual_learning_goals"][0]["username"], CURRENT_ADMIN.username
         )
-        self.assertIsNotNone(db_state["formalities"])
-        self.assertEqual(len(db_state["formalities"]), 1)
-        self.assertEqual(db_state["formalities"][0]["username"], CURRENT_ADMIN.username)
+        self.assertIsNotNone(db_state["checklist"])
+        self.assertEqual(len(db_state["checklist"]), 1)
+        self.assertEqual(db_state["checklist"][0]["username"], CURRENT_ADMIN.username)
 
     def test_post_update_plan(self):
         """
@@ -8581,10 +8581,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
-        # again with formalities dict attribute
+        # again with checklist dict attribute
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "formalities",
+            "field_name": "checklist",
             "value": [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -8607,7 +8607,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
         self.assertEqual(
-            db_state["formalities"],
+            db_state["checklist"],
             [
                 {
                     "username": CURRENT_ADMIN.username,
@@ -8648,7 +8648,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8673,22 +8673,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8712,16 +8712,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": ObjectId(payload["plan_id"])})
         self.assertIsNotNone(db_state)
-        self.assertEqual(len(db_state["audience"]), 1)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], "updated_name")
-        self.assertEqual(db_state["audience"][0]["age_min"], "10")
-        self.assertEqual(db_state["audience"][0]["age_max"], "20")
-        self.assertEqual(db_state["audience"][0]["experience"], "updated_experience")
+        self.assertEqual(len(db_state["target_groups"]), 1)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
+        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
+        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], "updated_academic_course"
+            db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["audience"][0]["languages"], "updated_languages2")
+        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages2")
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -8793,7 +8793,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # also test an invalid object id within a compound object
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": "123",
@@ -8860,7 +8860,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # experience is mistakenly a list
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "_id": ObjectId(),
@@ -8890,7 +8890,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # age_min is missing
         payload = {
             "plan_id": self.plan_id,
-            "field_name": "audience",
+            "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
@@ -8934,9 +8934,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
+                    "original_plan": None,
                 },
                 {
                     "_id": ObjectId(),
@@ -8949,9 +8947,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "learning_activity": None,
                     "has_tasks": False,
                     "tasks": [],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
+                    "original_plan": None,
                 },
             ],
         }
@@ -8988,9 +8984,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                         Task(task_formulation="test").to_dict(),
                         Task(task_formulation="test").to_dict(),
                     ],
-                    "evaluation_tools": [],
-                    "attachments": [],
-                    "custom_attributes": {},
+                    "original_plan": None,
                 },
             ],
         }
@@ -9350,6 +9344,200 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
 
+    def test_post_put_literature_file(self):
+        """
+        expect: successfully upload a literature file
+        """
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            True,
+            200,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+        # assert file is stored in db
+        fs = gridfs.GridFS(self.db)
+        file = fs.find({"_id": ObjectId(response["inserted_file_id"])})
+        self.assertIsNotNone(file)
+
+        # assert that plan now has the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn("literature_files", db_state)
+        self.assertIn(
+            {
+                "file_id": ObjectId(response["inserted_file_id"]),
+                "file_name": file_name,
+            },
+            db_state["literature_files"],
+        )
+
+    def test_post_put_literature_file_error_missing_key(self):
+        """
+        expect: fail message because no file is supplied or the plan_id is missing
+        """
+
+        # missing file
+        request = MultipartEncoder(fields={})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
+
+        # missing plan_id
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file",
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+    def test_post_put_literature_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # expect plan to not have the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(db_state["literature_files"], [])
+
+        # expect file to not be stored in db
+        fs = gridfs.GridFS(self.db)
+        file = fs.find_one({"filename": file_name})
+        self.assertIsNone(file)
+
+    def test_post_put_literature_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create file with IO Buffer
+        file_name = "test_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            403,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
+        self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+    def test_post_put_literature_file_error_maximum_files_exceeded(self):
+        """
+        expect: fail message because the maximum number of literature files is exceeded
+        """
+
+        # assign 5 files to the plan
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file.txt"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+
+        # create file with IO Buffer
+        file_name = "exceeding_file.txt"
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
+        # encode file as formdata
+        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
+
+        response = self.base_checks(
+            "POST",
+            "/planner/put_literature_file?plan_id={}".format(str(self.plan_id)),
+            False,
+            409,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MAXIMUM_FILES_EXCEEDED_ERROR)
+
+        # expect plan to not have the file
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertEqual(len(db_state["literature_files"]), 5)
+        self.assertNotIn(
+            file_name,
+            [
+                literature_file["file_name"]
+                for literature_file in db_state["literature_files"]
+            ],
+        )
+
     def test_post_copy_plan_author(self):
         """
         expect: successfully copy a plan because user is the author
@@ -9404,7 +9592,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
 
         # add another plan with write access for the user
-        plan = VEPlan(name="test_plan", author=[CURRENT_USER.username],write_access=[CURRENT_ADMIN.username]).to_dict()
+        plan = VEPlan(
+            name="test_plan",
+            author=[CURRENT_USER.username],
+            write_access=[CURRENT_ADMIN.username],
+        ).to_dict()
         self.db.plans.insert_one(plan)
 
         response = self.base_checks(
@@ -9432,7 +9624,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "POST", "/planner/copy", False, 400, body=self.json_serialize({})
         )
-        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id")
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id"
+        )
 
     def test_post_copy_plan_error_plan_doesnt_exist(self):
         """
@@ -10080,6 +10274,352 @@ class VEPlanHandlerTest(BaseApiTestCase):
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertEqual(len(db_state["steps"]), 1)
 
+    def test_delete_remove_evaluation_file(self):
+        """
+        expect: successfully remove the evaluation file from the plan and gridfs
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            True,
+            200,
+        )
+
+        # expect the file to be removed from the plan
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+
+        # expect the file to be removed from gridfs
+        self.assertFalse(fs.exists(file_id))
+
+    def test_delete_remove_evaluation_file_error_missing_key(self):
+        """
+        expect: fail message because plan_id or file_id is missing
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?file_id={}".format(str(ObjectId())),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}".format(self.plan_id),
+            False,
+            400,
+        )
+        self.assertEqual(response2["reason"], MISSING_KEY_ERROR_SLUG + "file_id")
+
+    def test_delete_remove_evaluation_file_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(ObjectId()), str(file_id)
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_evaluation_file_error_file_doesnt_exist(self):
+        """
+        expect: fail message because plan does not contain an evaluation file with
+        the given file_id
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(ObjectId())
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], FILE_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_evaluation_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_remove_evaluation_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_evaluation_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_id)
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
+
+    def test_delete_remove_literature_file(self):
+        """
+        expect: successfully remove a literature file from the plan and gridfs
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            True,
+            200,
+        )
+
+        # expect the file to be removed from the plan
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+
+        # expect the file to be removed from gridfs
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_delete_remove_literature_file_error_missing_key(self):
+        """
+        expect: fail message because plan_id or file_id is missing
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?file_id={}".format(str(ObjectId())),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
+
+        response2 = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}".format(self.plan_id),
+            False,
+            400,
+        )
+        self.assertEqual(response2["reason"], MISSING_KEY_ERROR_SLUG + "file_id")
+
+    def test_delete_remove_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: fail message because no plan with the id exists
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(ObjectId()), str(file_ids[0])
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_literature_file_error_file_doesnt_exist(self):
+        """
+        expect: fail message because plan does not contain a literature file with
+        the given file_id
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(ObjectId())
+            ),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], FILE_DOESNT_EXIST_ERROR)
+
+    def test_delete_remove_literature_file_error_insufficient_permission(self):
+        """
+        expect: fail message because user has no write access to the plan
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_remove_literature_file_error_plan_locked(self):
+        """
+        expect: fail message because plan is locked by another user
+        """
+
+        # set lock to other user
+        global_vars.plan_write_lock_map[self.plan_id] = {
+            "username": CURRENT_USER.username,
+            "expires": datetime.now() + timedelta(hours=1),
+        }
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        response = self.base_checks(
+            "DELETE",
+            "/planner/remove_literature_file?plan_id={}&file_id={}".format(
+                str(self.plan_id), str(file_ids[0])
+            ),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
 
 class VeInvitationHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:

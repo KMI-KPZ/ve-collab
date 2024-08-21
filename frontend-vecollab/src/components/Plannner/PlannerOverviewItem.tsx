@@ -10,10 +10,10 @@ import {
     MdShare,
     MdDelete,
     MdEdit,
-    MdPublic,
     MdOutlineCopyAll,
     MdOutlineFileDownload,
 } from 'react-icons/md';
+import { GrStatusGood } from 'react-icons/gr'
 import Timestamp from '../Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -228,7 +228,11 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
         }
-        setAlert({ message: 'Plan gelöscht', autoclose: 2000 });
+        setAlert({
+            message: 'Plan gelöscht',
+            autoclose: 2000,
+            onClose: () => setAlert({ open: false })
+        });
     };
 
     const createCopy = async (planId: string) => {
@@ -295,7 +299,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                     </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
-                            <MdPublic title='Plan ist als "Good Practice" markiert' />
+                            <GrStatusGood title='Plan ist als "Good Practice" markiert' />
                         </div>
                     )}
                     {/* {(plan.author == username && plan.read_access.length > 1) && (

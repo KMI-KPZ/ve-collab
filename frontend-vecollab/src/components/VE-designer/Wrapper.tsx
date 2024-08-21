@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FormProvider, UseFormReturn } from 'react-hook-form';
+import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
 import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -23,7 +23,7 @@ import { GiSadCrab } from 'react-icons/gi';
 interface Props {
     title: string;
     subtitle?: string;
-    description?: string[] | string;
+    description?: JSX.Element | string[] | string;
     tooltip?: { text: string; link: string };
     methods: UseFormReturn<any>;
     children: React.ReactNode;
@@ -32,7 +32,7 @@ interface Props {
     preventToLeave?: boolean;
 
     stageInMenu?: string; // TODO make it unrequired
-    planerDataCallback: (data: any) => void;
+    planerDataCallback: (data: any) => FieldValues;
     submitCallback: (data: any) =>
         | unknown
         | Promise<
@@ -44,6 +44,20 @@ interface Props {
           >;
     socket: Socket;
 }
+
+export const dropPlanLock = (socket: Socket, plan_id: string | string[] | undefined) => {
+    return new Promise((resolve, reject) => {
+        socket.emit(
+            'drop_plan_lock',
+            { plan_id },
+            (response: any) => {
+                // TODO error handling
+                // console.log(response);
+                resolve(true)
+            }
+        );
+    })
+};
 
 export default function Wrapper({
     title,
@@ -63,14 +77,25 @@ export default function Wrapper({
     const router = useRouter();
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
-    const [popUp, setPopUp] = useState<{ isOpen: boolean; continueLink: string }>({
+    const [popUp, setPopUp] = useState<{
+        isOpen: boolean;
+        continueLink: string,
+        type?: "unsaved"|"invalid"
+    }>({
         isOpen: false,
         continueLink: '/plans',
     });
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
-    const [isDirty, setIsDirty] = useState<boolean>(false); // NOTE: unused but required for correct isDirty state check ;(
+
+    // fetch plan
+    const {
+        data: plan,
+        isLoading,
+        error,
+        mutate: mutateGetPlanById,
+    } = useGetPlanById(router.query.plannerId as string);
 
     // detect window close or a click outside of planer
     useEffect(() => {
@@ -84,26 +109,15 @@ export default function Wrapper({
         const handleBrowseAway = (nextlink: string) => {
             if (preventToLeave === false) return;
 
-            // form was not changed, but if we clicked outside we should drop the lock
-            if (!methods.formState.isDirty) {
-                if (clickedOutside) {
-                    socket.emit(
-                        'drop_plan_lock',
-                        { plan_id: router.query.plannerId },
-                        (response: any) => {
-                            console.log(response);
-                            // TODO error handling
-                        }
-                    );
-                }
-                return;
-            }
-
-            // unsaved changes, confirmation popup before leaving/dropping lock
             if (clickedOutside) {
-                setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
-                router.events.emit('routeChangeError');
-                throw 'routeChange aborted.';
+                if (Object.keys(methods.formState.dirtyFields).length == 0) {
+                    dropPlanLock(socket, router.query.plannerId as string)
+                } else {
+                    setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
+                    router.events.emit('routeChangeError');
+                    throw 'routeChange aborted.';
+                }
+
             }
         };
 
@@ -121,14 +135,6 @@ export default function Wrapper({
         };
     }, [wrapperRef, methods, socket, router, preventToLeave]);
 
-    // fetch plan
-    const {
-        data: plan,
-        isLoading,
-        error,
-        mutate: mutateGetPlanById,
-    } = useGetPlanById(router.query.plannerId as string);
-
     // check access rights or locked plan
     useEffect(() => {
         if (isLoading || !session || error) return;
@@ -142,8 +148,6 @@ export default function Wrapper({
             'try_acquire_or_extend_plan_write_lock',
             { plan_id: router.query.plannerId },
             async (response: any) => {
-                console.log(response);
-                setLoading(false);
                 if (response.success === true && response.status !== 403) {
                     return;
                 }
@@ -174,10 +178,6 @@ export default function Wrapper({
                 // router.push('/plans')
             }
         );
-    }, [isLoading, error, socket, router, session]);
-
-    useEffect(() => {
-        if (!plan || isLoading || error) return;
 
         // write access or author check
         if (
@@ -190,27 +190,31 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-        mutateGetPlanById().then(() => {
-            // mutate -> refetch stale planData
-            // BUGFIX: if we do not log isDirty here, our first change will not trigger the form to be dirty ...
-            setIsDirty(methods.formState.isDirty);
-            planerDataCallback(plan);
-        });
-        setLoading(false);
+    }, [plan, isLoading, error, socket, router, session]);
+
+    // call data callback and rest form defaults for correct form valdation (form.isDirty)
+    useEffect(() => {
+        if (!plan || isLoading || error) return;
+
+        (async () => {
+            const data = await planerDataCallback(plan);
+            if (Object.keys(data).length) {
+                // reset form default values for isDirty check
+                methods.reset(data)
+            }
+            setLoading(false)
+        })();
+        return () => {}
     }, [
         plan,
         isLoading,
         error,
-        methods,
-        currentPath,
         planerDataCallback,
-        session,
-        mutateGetPlanById,
+        methods
     ]);
 
-    // submit formdata
-    //  reload plan on current page (mutate) if updateAfterSaved == true
-    const handleSubmit = async (data: any, updateAfterSaved = true) => {
+    // submit formdata & reload plan
+    const handleSubmit = async (data: any) => {
         setLoading(true);
         const fields = await submitCallback(data);
 
@@ -230,30 +234,25 @@ export default function Wrapper({
                 return false;
             }
         }
-        if (updateAfterSaved) {
-            // reload plan
-            await mutateGetPlanById();
-            // reset formstate.isdirty after save
-            methods.reset({}, { keepValues: true });
-        }
+        // reload plan data
+        await mutateGetPlanById();
+        // reset formstate.isdirty after save
+        // TODO is this still required since we reset after setPlanerData()?!?
+        methods.reset({}, { keepValues: true });
         return true;
     };
 
+    // handler after we clicked "Weiter" in unsaved/invalid data PopUp
     const handlePopupContinue = async () => {
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
-                socket.emit(
-                    'drop_plan_lock',
-                    { plan_id: router.query.plannerId },
-                    async (response: any) => {
-                        console.log(response);
-                        // TODO error handling
-                        await router.push({
-                            pathname: popUp.continueLink,
-                            query: {},
-                        });
-                    }
-                );
+                // release plan if we leave designer
+                await dropPlanLock(socket, router.query.plannerId)
+                // update all plans SWR to update /plans list
+                await router.push({
+                    pathname: popUp.continueLink,
+                    query: {},
+                });
             } else {
                 await router.push({
                     pathname: popUp.continueLink,
@@ -263,7 +262,7 @@ export default function Wrapper({
                 });
             }
         } else {
-            setPopUp((prev) => ({ ...prev, isOpen: false }));
+            setPopUp((prev) => ({ ...prev, isOpen: false, type: undefined }));
             setLoading(false);
         }
     };
@@ -344,15 +343,16 @@ export default function Wrapper({
                     <div className="flex flex-col">
                         <Alert state={alert} />
                         <FormProvider {...methods}>
-                            {/* TODO implement an PopUp alternative or invalid data */}
+                            {/* TODO implement an PopUp alternative for invalid data */}
                             <PopupSaveData
                                 isOpen={popUp.isOpen}
+                                type={popUp.type}
                                 handleContinue={async () => {
                                     await handlePopupContinue();
                                 }}
                                 handleCancel={() => {
                                     setPopUp((prev) => {
-                                        return { ...prev, isOpen: false };
+                                        return { ...prev, isOpen: false, type: undefined };
                                     });
                                     setLoading(false);
                                 }}
@@ -371,10 +371,12 @@ export default function Wrapper({
                                             onClose: () => setAlert({ open: false }),
                                         });
                                     }
-                                    setLoading(false);
                                 }}
                                 handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, continueLink: continueLink });
+                                    setPopUp({ isOpen: true, continueLink });
+                                }}
+                                handleInvalidData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
                                 }}
                             />
 
@@ -382,10 +384,10 @@ export default function Wrapper({
                                 <Sidebar
                                     methods={methods}
                                     submitCallback={async (data) => {
-                                        await handleSubmit(data, false);
+                                        await handleSubmit(data);
                                     }}
                                     handleInvalidData={(data: any, continueLink: string) => {
-                                        setPopUp({ isOpen: true, continueLink: continueLink });
+                                        setPopUp({ isOpen: true, type: "invalid", continueLink });
                                     }}
                                     stageInMenu={stageInMenu}
                                     plan={plan}
@@ -429,6 +431,9 @@ export default function Wrapper({
                                                     ))}
                                                 </div>
                                             )}
+                                            {React.isValidElement(description) && (
+                                                <>{description}</>
+                                            )}
                                         </>
                                     )}
 
@@ -446,15 +451,16 @@ export default function Wrapper({
                                     {(typeof prevpage !== 'undefined' ||
                                         typeof nextpage !== 'undefined') && (
                                         <div className="my-8 border-t py-3 flex justify-between">
-                                            <div className="basis-20">
+                                            <div>
                                                 {typeof prevpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title="Speichern & zurück"
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: prevpage,
                                                                     query: {
@@ -467,6 +473,7 @@ export default function Wrapper({
                                                             async (data: any) => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: prevpage,
                                                                 });
                                                             }
@@ -477,15 +484,16 @@ export default function Wrapper({
                                                 )}
                                             </div>
 
-                                            <div className="basis-44">
+                                            <div>
                                                 {typeof nextpage !== 'undefined' && (
                                                     <button
                                                         type="button"
+                                                        title='Speichern & Weiter'
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
                                                             async (data: any) => {
-                                                                await handleSubmit(data, false);
+                                                                await handleSubmit(data);
                                                                 await router.push({
                                                                     pathname: nextpage,
                                                                     query: {
@@ -498,6 +506,7 @@ export default function Wrapper({
                                                             async () => {
                                                                 setPopUp({
                                                                     isOpen: true,
+                                                                    type: "invalid",
                                                                     continueLink: nextpage,
                                                                 });
                                                             }

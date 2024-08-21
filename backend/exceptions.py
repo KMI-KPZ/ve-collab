@@ -115,6 +115,12 @@ class PlanAlreadyExistsError(Exception):
     pass
 
 
+class MaximumFilesExceededError(Exception):
+    """The maximum number of files in a repository has been exceeded"""
+
+    pass
+
+
 class NoReadAccessError(Exception):
     """a user has no read access to a VEPlan"""
 

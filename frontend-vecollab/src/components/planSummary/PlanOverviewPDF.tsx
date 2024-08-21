@@ -15,12 +15,14 @@ interface Props {
     partnerProfileSnippets: {
         [Key: string]: BackendUserSnippet;
     };
+    availablePlans: IPlan[]
 }
 
 export function PlanOverviewPDF({
     plan,
     openAllBoxes,
     partnerProfileSnippets,
+    availablePlans
 }: Props): JSX.Element {
     return (
         <div className="bg-white rounded-lg p-4 w-full">
@@ -33,7 +35,12 @@ export function PlanOverviewPDF({
             <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
             {plan.steps !== undefined && plan.steps.length > 0 ? (
                 plan.steps.map((fineStep, index) => (
-                    <ViewFinestep key={index} fineStep={fineStep} openAllBoxes={openAllBoxes} />
+                    <ViewFinestep
+                        key={index}
+                        fineStep={fineStep}
+                        openAllBoxes={openAllBoxes}
+                        availablePlans={availablePlans}
+                    />
                 ))
             ) : (
                 <div className="ml-4"> Noch keine erstellt</div>

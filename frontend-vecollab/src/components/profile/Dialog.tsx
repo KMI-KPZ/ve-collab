@@ -21,7 +21,7 @@ export default function Dialog({ isOpen, title, onClose, children }: Props) {
     return (
         <>
             {isOpen ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-40 flex items-center justify-center">
                     <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
                     <div className="relative bg-white rounded-lg p-6">
                         <div className="flex justify-between items-center mb-4">

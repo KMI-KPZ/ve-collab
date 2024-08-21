@@ -6,6 +6,7 @@ import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
+import ContactBanner from '../ContactBanner';
 
 interface Props {
     children: React.ReactNode;
@@ -26,13 +27,8 @@ export default function LayoutSection({
     const router = useRouter();
 
     const {
-        data: excludedFromMatching,
-        isLoading,
-        error,
-        mutate,
-    } = useGetExcludedFromMatching(session?.accessToken);
-
-    console.log(router.pathname);
+        data: excludedFromMatching
+    } = useGetExcludedFromMatching(session ? session.accessToken : '');
 
     if(router.pathname === "/plan/pdf/[planId]") {
         return (
@@ -49,7 +45,8 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main>
-                {!isLoading && excludedFromMatching && <ExcludedFromMatchingBanner />}
+                {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
+                <ContactBanner />
                 <>{children}</>
             </main>
             <FooterSection />

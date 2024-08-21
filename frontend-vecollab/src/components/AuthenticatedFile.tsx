@@ -34,9 +34,15 @@ export function AuthenticatedFile({ url, filename, title, children, className }:
 
     return (
         <>
-            <a role="button" ref={link} title={title} onClick={handleAction} className={className}>
-                {children}
-            </a>
+            {url != "" ? (
+                <a role="button" ref={link} title={title} onClick={handleAction} className={className}>
+                    {children}
+                </a>
+            ) : (
+                <div title={title} className={className}>
+                    {children}
+                </div>
+            )}
         </>
     );
 }
