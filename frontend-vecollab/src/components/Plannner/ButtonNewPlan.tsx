@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import router from 'next/router';
 import { Socket } from 'socket.io-client';
 import ButtonPrimary from '../ButtonPrimary';
+import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 
 interface Props {
     socket: Socket;
@@ -15,19 +16,19 @@ export default function ButtonNewPlan({ label, children, className, socket }: Pr
 
     const createAndForwardNewPlanner = async () => {
         const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: newPlanner.inserted_id },
-            async (response: any) => {
-                console.log(response);
-                if (response.success) {
-                    await router.push({
-                        pathname: '/ve-designer/name',
-                        query: { plannerId: newPlanner.inserted_id },
-                    });
-                }
-            }
-        );
+
+        getPlanLock(socket, newPlanner.inserted_id)
+        .then((response) => {
+            router.push({
+                pathname: '/ve-designer/name',
+                query: { plannerId: newPlanner.inserted_id },
+            });
+        })
+        .catch((response) => {
+            // TODO print error
+            console.log({response});
+
+        })
     };
 
     const defaulStyle = 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'

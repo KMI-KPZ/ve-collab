@@ -19,6 +19,7 @@ import Alert, { AlertState } from '../Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
+import { dropPlanLock, getPlanLock } from './PlanSocket';
 
 interface Props {
     title: string;
@@ -28,7 +29,9 @@ interface Props {
     methods: UseFormReturn<any>;
     children: React.ReactNode;
     prevpage?: string;
+    prevPageBtnLabel?: string;
     nextpage?: string;
+    nextpageBtnLabel?: string
     preventToLeave?: boolean;
 
     stageInMenu?: string; // TODO make it unrequired
@@ -45,20 +48,6 @@ interface Props {
     socket: Socket;
 }
 
-export const dropPlanLock = (socket: Socket, plan_id: string | string[] | undefined) => {
-    return new Promise((resolve, reject) => {
-        socket.emit(
-            'drop_plan_lock',
-            { plan_id },
-            (response: any) => {
-                // TODO error handling
-                // console.log(response);
-                resolve(true)
-            }
-        );
-    })
-};
-
 export default function Wrapper({
     title,
     subtitle,
@@ -67,7 +56,9 @@ export default function Wrapper({
     children,
     methods,
     prevpage,
+    prevPageBtnLabel,
     nextpage,
+    nextpageBtnLabel,
     stageInMenu = 'generally',
     preventToLeave = true,
     planerDataCallback,
@@ -144,20 +135,16 @@ export default function Wrapper({
             return;
         }
 
-        socket.emit(
-            'try_acquire_or_extend_plan_write_lock',
-            { plan_id: router.query.plannerId },
-            async (response: any) => {
-                if (response.success === true && response.status !== 403) {
-                    return;
-                }
-
-                if (response.reason === 'plan_locked') {
-                    const data = await fetchPOST(
-                        '/profile_snippets',
-                        { usernames: [response.lock_holder] },
-                        session?.accessToken
-                    );
+        getPlanLock(socket, router.query.plannerId)
+        .catch(response => {
+            if (response.reason === 'plan_locked') {
+                // const data = await
+                fetchPOST(
+                    '/profile_snippets',
+                    { usernames: [response.lock_holder] },
+                    session?.accessToken
+                )
+                .then(data => {
                     const userSnippet = data.user_snippets.find(
                         (snippet: BackendUserSnippet) => snippet.username === response.lock_holder
                     );
@@ -165,19 +152,14 @@ export default function Wrapper({
                         ? `${userSnippet.first_name} ${userSnippet.last_name}`
                         : response.lock_holder;
                     setAlert({
-                        message: `Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
-                        autoclose: 10000,
+                        message: `Dieser Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+                        // autoclose: 10000,
+                        type: 'warning',
                         onClose: () => setAlert({ open: false }),
                     });
-                    return;
-                }
-                if (!response.success && response.status === 401) {
-                    // TODO handle re-authenticate
-                }
-                // show "Plan not found" message instead (see bottom)
-                // router.push('/plans')
+                })
             }
-        );
+        })
 
         // write access or author check
         if (
@@ -393,7 +375,23 @@ export default function Wrapper({
                                     plan={plan}
                                 />
 
-                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4">
+                                <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4" onSubmit={methods.handleSubmit(
+                                        // valid
+                                        async (data: any) => {
+                                            await handleSubmit(data);
+                                            await router.push({
+                                                pathname: nextpage,
+                                                query: {
+                                                    plannerId:
+                                                        router.query.plannerId,
+                                                },
+                                            });
+                                        },
+                                        // invalid
+                                        async () => {
+                                            setPopUp({ isOpen: true, type: "invalid", continueLink: nextpage || '/plans' });
+                                        }
+                                    )}>
                                     <Breadcrumb />
 
                                     <div className={'flex justify-between items-start mt-2 mb-2'}>
@@ -479,7 +477,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Zurück
+                                                        {prevPageBtnLabel || 'Zurück'}
                                                     </button>
                                                 )}
                                             </div>
@@ -512,7 +510,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        Speichern & Weiter
+                                                        {nextpageBtnLabel || 'Speichern & Weiter'}
                                                     </button>
                                                 )}
                                             </div>

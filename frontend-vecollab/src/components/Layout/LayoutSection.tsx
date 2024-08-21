@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import HeaderSection from '@/components/Layout/HeaderSection';
 import FooterSection from '@/components/Layout/FooterSection';
 import { useSession } from 'next-auth/react';
@@ -6,7 +6,7 @@ import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
-import ContactBanner from '../ContactBanner';
+import FeedbackBanner from '../FeedbackBanner';
 
 interface Props {
     children: React.ReactNode;
@@ -46,7 +46,7 @@ export default function LayoutSection({
             />
             <main>
                 {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
-                <ContactBanner />
+                <FeedbackBanner />
                 <>{children}</>
             </main>
             <FooterSection />
