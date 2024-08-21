@@ -266,7 +266,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                     country: institution.country,
                     name: institution.name,
                     school_type: institution.school_type,
-                    departments: [institution.department],
+                    department: institution.department,
                 }
             })
             setImportDialog(prev => ({...prev, institutions}))
@@ -294,7 +294,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                     country: selection[i].country,
                         name: selection[i].name,
                         school_type: selection[i].school_type,
-                        departments: selection[i].departments
+                        department: selection[i].department
                 }
             }))
             setImportDialog(prev => ({...prev, isOpen: false}))
@@ -330,7 +330,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 checked={typeof selection[i] !== 'undefined'}
                                 readOnly
                             />
-                            {institution.name} {institution.departments && (<>({institution.departments})</>)}
+                            {institution.name} {institution.department && (<>({institution.department})</>)}
                         </div>
                     )
                 }))}
