@@ -294,7 +294,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 name={name}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <AsyncCreatableSelect
-                        className="grow"
+                        className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadOptions}
