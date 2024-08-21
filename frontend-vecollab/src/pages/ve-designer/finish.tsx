@@ -27,6 +27,8 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             subtitle="Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!"
             methods={useForm<any>()}
             preventToLeave={false}
+            nextpage='/ve-designer/post-process'
+            nextpageBtnLabel='Zur Nachbearbeitung'
             stageInMenu="finish"
             planerDataCallback={(d) => {
                 setPlanData(d)
@@ -49,31 +51,6 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                     wissen!
                 </div>
             )}
-            <div className="flex justify-around w-full mt-10">
-                <div>
-                    <Link
-                        href={{
-                            pathname: `/plans`
-                        }}
-                        onClick={async () => {
-                            await dropPlanLock(socket, router.query.plannerId)
-                        }}
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
-                    >
-                        Weiter zur Übersicht
-                    </Link>
-
-                    <Link
-                        href={{
-                            pathname: `/ve-designer/post-process`,
-                            query: { plannerId: router.query.plannerId },
-                        }}
-                        className="items-end bg-ve-collab-orange text-white py-3 px-5 rounded-lg ml-2"
-                    >
-                        zur Nachbearbeitung
-                    </Link>
-                </div>
-            </div>
         </Wrapper>
     );
 }
