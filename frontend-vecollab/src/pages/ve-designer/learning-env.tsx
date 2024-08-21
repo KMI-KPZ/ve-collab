@@ -45,6 +45,12 @@ interface Props {
     socket: Socket;
 }
 
+const emptyPysicalMobility: PhysicalMobility = {
+    location: '',
+    timestamp_from: '',
+    timestamp_to: ''
+}
+
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
@@ -60,7 +66,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             learningEnv: '',
             courseFormat: '',
             usePhysicalMobility: false,
-            physicalMobilities: [{ location: '', timestamp_from: '', timestamp_to: '' }]
+            physicalMobilities: [emptyPysicalMobility]
         },
     });
 
@@ -92,7 +98,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     }
                 );
                 methods.setValue('physicalMobilities', physical_mobilities);
-                data.physicalMobilities = plan.physical_mobilities
+                data.physicalMobilities = physical_mobilities
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -103,7 +109,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
         [methods]
     );
 
-    const { fields, append, remove, update } = useFieldArray({
+    const { fields, append, remove, update, replace } = useFieldArray({
         name: 'physicalMobilities',
         control: methods.control,
     });
@@ -158,7 +164,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
         if (fields.length > 1) {
             remove(index);
         } else {
-            update(index, { location: '', timestamp_from: '', timestamp_to: '' });
+            update(index, emptyPysicalMobility);
         }
     };
 
@@ -190,11 +196,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <input
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
                                     validate: (v) => validateDateRange(v, index),
                                 })}
                                 className="border border-gray-400 rounded-lg p-2 mr-2"
@@ -205,11 +206,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <input
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
-                                    maxLength: {
-                                        value: 500,
-                                        message:
-                                            'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                    },
                                 })}
                                 className="border border-gray-400 rounded-lg p-2 ml-2"
                             />
@@ -370,11 +366,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                                 className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {
-                                    append({
-                                        location: '',
-                                        timestamp_from: '',
-                                        timestamp_to: '',
-                                    });
+                                    append(emptyPysicalMobility);
                                 }}
                             >
                                 <RxPlus size={20} />
