@@ -305,9 +305,7 @@ class Step:
         "learning_activity": (str, type(None)),
         "has_tasks": bool,
         "tasks": list,
-        "evaluation_tools": list,
-        "attachments": list,
-        "custom_attributes": dict,
+        "original_plan": (str, ObjectId, type(None)),
     }
 
     def __init__(
@@ -321,9 +319,7 @@ class Step:
         learning_activity: str = None,
         has_tasks: bool = False,
         tasks: List[Task] = [],
-        evaluation_tools: List[str] = [],
-        attachments: List[ObjectId] = [],
-        custom_attributes: Dict = {},
+        original_plan: str | ObjectId = None,
     ) -> None:
         """
         Initialization of a `Step` instance.
@@ -379,11 +375,7 @@ class Step:
         if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
-        self.evaluation_tools = evaluation_tools
-        self.attachments = [
-            util.parse_object_id(attachment) for attachment in attachments
-        ]
-        self.custom_attributes = custom_attributes
+        self.original_plan = util.parse_object_id(original_plan) if original_plan else None
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -413,9 +405,7 @@ class Step:
             "learning_activity": self.learning_activity,
             "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
-            "evaluation_tools": self.evaluation_tools,
-            "attachments": self.attachments,
-            "custom_attributes": self.custom_attributes,
+            "original_plan": self.original_plan
         }
 
     @classmethod
@@ -438,17 +428,14 @@ class Step:
         initialize a `Step`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
         `"name"`, `"duration"`, `"workload"`, `"description"`,
-        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"attachments"`, `"custom_attributes"`.
+        `"learning_goal"`, `"has_tasks"`, `"tasks"`, `"original_plan"`.
         However only `name` requires a value, all other attributes may be
-        initialized with None (description/learning_goal), 0 (duration/workload),
-        False (has_tasks) or [] (tasks/attachements).
+        initialized with None (description/learning_goal/original_plan), 0 (duration/workload),
+        False (has_tasks) or [] (tasks).
 
         If tasks are supplied, they have to be in a list of dictionary-representations
         that are parseable by `Task.from_dict()`. Additionally, those tasks have to have
         unique `"task-formulation"`-attributes within this step.
-
-        The `attachments`-key is a list containing ObjectId's which are
-        references to files that are stored separately in GridFS.
 
         Returns an instance of `Step`.
 
@@ -523,10 +510,9 @@ class Step:
         else:
             params["duration"] = params["timestamp_to"] - params["timestamp_from"]
 
-        # handle correct types of attachments
-        params["attachments"] = [
-            util.parse_object_id(attachment) for attachment in params["attachments"]
-        ]
+        # handle correct type of original_plan
+        if "original_plan" in params and params["original_plan"]:
+            params["original_plan"] = util.parse_object_id(params["original_plan"])
 
         # build tasks objects, asserting that the names of the tasks are unique,
         # gotta do this manually, since __dict__.update doesn't initialize nested objects
@@ -752,7 +738,7 @@ class Institution:
         "name": (str, type(None)),
         "school_type": (str, type(None)),
         "country": (str, type(None)),
-        "departments": list,
+        "department": (str, type(None)),
     }
 
     def __init__(
@@ -761,7 +747,7 @@ class Institution:
         name: str = None,
         school_type: str = None,
         country: str = None,
-        departments: List[str] = [],
+        department: str = None,
     ) -> None:
         """
         Initialization of an `Institution` instance.
@@ -788,7 +774,7 @@ class Institution:
         self.name = name
         self.school_type = school_type
         self.country = country
-        self.departments = departments
+        self.department = department
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -812,7 +798,7 @@ class Institution:
             "name": self.name,
             "school_type": self.school_type,
             "country": self.country,
-            "departments": self.departments,
+            "department": self.department,
         }
 
     @classmethod
@@ -820,9 +806,9 @@ class Institution:
         """
         initialize an `Institution`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"name"`, `"school_type"`, `"country"`, `"departments"`.
+        `"name"`, `"school_type"`, `"country"`, `"department"`.
         However no values are required, any attributes may be
-        initialized with None (name/school_type/country) or [] (departments).
+        initialized with None (name/school_type/country/department).
 
         Returns an instance of `Institution`.
 
@@ -1454,7 +1440,7 @@ class VEPlan:
         "major_learning_goals": list,
         "individual_learning_goals": list,
         "methodical_approaches": list,
-        "audience": list,
+        "target_groups": list,
         "languages": list,
         "evaluation": list,
         "involved_parties": list,
@@ -1462,14 +1448,12 @@ class VEPlan:
         "physical_mobility": (bool, type(None)),
         "physical_mobilities": list,
         "learning_env": (str, type(None)),
-        "new_content": (bool, type(None)),
-        "formalities": list,
+        "checklist": list,
         "steps": list,
         "is_good_practise": (bool, type(None)),
         "abstract": (str, type(None)),
         "underlying_ve_model": (str, type(None)),
         "reflection": (str, type(None)),
-        "good_practise_evaluation": (str, type(None)),
         "literature": (str, type(None)),
         "evaluation_file": (dict, type(None)),
         "literature_files": list,
@@ -1492,7 +1476,7 @@ class VEPlan:
         major_learning_goals: List[str] = [],
         individual_learning_goals: List[IndividualLearningGoal] = [],
         methodical_approaches: List[str] = [],
-        audience: List[TargetGroup] = [],
+        target_groups: List[TargetGroup] = [],
         languages: List[str] = [],
         evaluation: List[Evaluation] = [],
         involved_parties: List[str] = [],
@@ -1500,14 +1484,12 @@ class VEPlan:
         physical_mobility: bool = None,
         physical_mobilities: List[PhysicalMobility] = [],
         learning_env: str = None,
-        new_content: bool = None,
-        formalities: list = [],
+        checklist: list = [],
         steps: List[Step] = [],
         is_good_practise: bool = None,
         abstract: str = None,
         underlying_ve_model: str = None,
         reflection: str = None,
-        good_practise_evaluation: str = None,
         literature: str = None,
         evaluation_file: dict = None,
         literature_files: List[dict] = [],
@@ -1517,7 +1499,7 @@ class VEPlan:
         Initialization of a `VEPlan` object.
 
         Sets the function arguments as corresponding instance attributes.
-        Formalities is a dict expected to contain the keys "technology" and
+        checklist is a dict expected to contain the keys "technology" and
         "exam_regulations" with either True, False or None value respectively.
 
         If `_id` is given, the indication is conveyed that this instance represents
@@ -1555,13 +1537,12 @@ class VEPlan:
         self.major_learning_goals = major_learning_goals
         self.individual_learning_goals = individual_learning_goals
         self.methodical_approaches = methodical_approaches
-        self.audience = audience
+        self.target_groups = target_groups
         self.languages = languages
         self.evaluation = evaluation
         self.involved_parties = involved_parties
         self.realization = realization
         self.learning_env = learning_env
-        self.new_content = new_content
         self.steps = steps
         self.physical_mobility = physical_mobility
         self.physical_mobilities = physical_mobilities
@@ -1572,7 +1553,6 @@ class VEPlan:
         self.abstract = abstract
         self.underlying_ve_model = underlying_ve_model
         self.reflection = reflection
-        self.good_practise_evaluation = good_practise_evaluation
         self.literature = literature
 
         if evaluation_file:
@@ -1613,14 +1593,13 @@ class VEPlan:
                 "lectures": "not_started",
                 "learning_goals": "not_started",
                 "methodical_approaches": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": [
                     {"step_id": step._id, "progress": "not_started"}
                     for step in self.steps
@@ -1631,39 +1610,39 @@ class VEPlan:
         if not self._check_unique_step_names(self.steps):
             raise NonUniqueStepsError
 
-        if formalities:
-            self.formalities = formalities
-            for formality in self.formalities:
-                # ensure that each formality entry is associated with a user
-                if "username" not in formality:
+        if checklist:
+            self.checklist = checklist
+            for checklist_item in self.checklist:
+                # ensure that each checklist_item entry is associated with a user
+                if "username" not in checklist_item:
                     raise MissingKeyError(
-                        "Missing key 'username' in formalities dictionary",
+                        "Missing key 'username' in checklist dictionary",
                         "username",
-                        "formalities",
+                        "checklist",
                     )
 
                 # ensure that the username is also a partner of the plan
                 if not (
-                    formality["username"] in self.partners
-                    or formality["username"] == self.author
+                    checklist_item["username"] in self.partners
+                    or checklist_item["username"] == self.author
                 ):
                     raise ValueError(
-                        "username '{}' in formalities is not a partner of the plan".format(
-                            formality["username"]
+                        "username '{}' in checklist is not a partner of the plan".format(
+                            checklist_item["username"]
                         )
                     )
 
                 # ensure that any other values are of type bool or None
-                for attr, value in formality.items():
+                for attr, value in checklist_item.items():
                     if attr != "username":
                         if not isinstance(value, (bool, type(None))):
                             raise TypeError(
-                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)
                                 )
                             )
         else:
-            self.formalities = []
+            self.checklist = []
 
         self.workload = 0
 
@@ -1689,7 +1668,7 @@ class VEPlan:
         """
         Serialize the attributes of this `VEPlan` into a dictionary.
         Calls `to_dict` on every step in the steps-list, on every
-        target group in the audience list, on all institutions and on
+        target group in the target_groups list, on all institutions and on
         all lectures to serialize those as well.
 
         The duration-attribute will be transformed from a `datetime.timedelta`
@@ -1716,7 +1695,7 @@ class VEPlan:
                 for individual_learning_goal in self.individual_learning_goals
             ],
             "methodical_approaches": self.methodical_approaches,
-            "audience": [target_group.to_dict() for target_group in self.audience],
+            "target_groups": [target_group.to_dict() for target_group in self.target_groups],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
             "timestamp_from": self.timestamp_from,
@@ -1729,8 +1708,7 @@ class VEPlan:
                 for physical_mobility in self.physical_mobilities
             ],
             "learning_env": self.learning_env,
-            "new_content": self.new_content,
-            "formalities": [formality for formality in self.formalities],
+            "checklist": [checklist_item for checklist_item in self.checklist],
             "duration": self.duration.total_seconds() if self.duration else None,
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
@@ -1738,7 +1716,6 @@ class VEPlan:
             "abstract": self.abstract,
             "underlying_ve_model": self.underlying_ve_model,
             "reflection": self.reflection,
-            "good_practise_evaluation": self.good_practise_evaluation,
             "literature": self.literature,
             "evaluation_file": self.evaluation_file,
             "literature_files": self.literature_files,
@@ -1776,12 +1753,12 @@ class VEPlan:
         """
         initialize a VEPlan object from a dictionary containing the expected attributes.
         This dictionary has to atleast contain all the keys that can be presented to `__init__`,
-        however their values may be None, except for formalities (this dict has to contain the keys
+        however their values may be None, except for checklist (this dict has to contain the keys
         "technology" and "exam_regulations", but their values can be None again).
         Note that `steps` is a list of
         dictionaries that in turn have to satisfy the `from_dict()` method
         of the `Step` class. The steps inside a VEPlan have to have unique names!
-        Same thing applies for the audience list. This list has to contain dictionaries that
+        Same thing applies for the target_groups list. This list has to contain dictionaries that
         satisfy `TargetGroup.from_dict()` and also have to have unique "title"-attributes.
         `institutions` and `lectures` work exactly analogous, but there are no uniqueness-constraints.
 
@@ -1824,7 +1801,7 @@ class VEPlan:
                         "name": None,
                         "school_type": None,
                         "country": None,
-                        "departments": [],
+                        "department": None,
                     }
                 ],
                 "topics": [],
@@ -1846,7 +1823,7 @@ class VEPlan:
                     }
                 ],
                 "methodical_approaches": [],
-                "audience": [
+                "target_groups": [
                     {
                         "_id": "object_id_str",
                         "name": None,
@@ -1881,8 +1858,7 @@ class VEPlan:
                     }
                 ],
                 "learning_env": None,
-                "new_content": None,
-                "formalities": [{
+                "checklist": [{
                     "username": "partnerX",
                     "technology": None|True|False,
                     "exam_regulations": None|True|False,
@@ -1906,16 +1882,13 @@ class VEPlan:
                                 "materials": [],
                             }
                         ],
-                        "evaluation_tools": [],
-                        "attachments": [],
-                        "custom_attributes": {},
+                        "original_plan": None,
                     }
                 ],
                 "is_good_practise": True,
                 "abstract": None,
                 "underlying_ve_model": None,
                 "reflection": None,
-                "good_practise_evaluation": None,
                 "literature": None,
                 "evaluation_file": {                // or None instead
                     "file_id": "<object_id_str>",
@@ -1934,14 +1907,13 @@ class VEPlan:
                     "lectures": "<completed|uncompleted|not_started>",
                     "learning_goals": "<completed|uncompleted|not_started>",
                     "methodical_approaches": "<completed|uncompleted|not_started>",
-                    "audience": "<completed|uncompleted|not_started>",
+                    "target_groups": "<completed|uncompleted|not_started>",
                     "languages": "<completed|uncompleted|not_started>",
                     "evaluation": "<completed|uncompleted|not_started>",
                     "involved_parties": "<completed|uncompleted|not_started>",
                     "realization": "<completed|uncompleted|not_started>",
                     "learning_env": "<completed|uncompleted|not_started>",
-                    "new_content": "<completed|uncompleted|not_started>",
-                    "formalities": "<completed|uncompleted|not_started>",
+                    "checklist": "<completed|uncompleted|not_started>",
                     "steps": "<completed|uncompleted|not_started>",
                 },
             }
@@ -2037,36 +2009,36 @@ class VEPlan:
         if "last_modified" in params:
             params["last_modified"] = util.parse_datetime(params["last_modified"])
 
-        # handle correct type of formalities
-        if "formalities" in params:
-            for formality in params["formalities"]:
-                # ensure that each formality entry is associated with a user
-                if "username" not in formality:
+        # handle correct type of checklist
+        if "checklist" in params:
+            for checklist_item in params["checklist"]:
+                # ensure that each checklist_item entry is associated with a user
+                if "username" not in checklist_item:
                     raise MissingKeyError(
-                        "Missing key 'username' in formalities dictionary",
+                        "Missing key 'username' in checklist dictionary",
                         "username",
-                        "formalities",
+                        "checklist",
                     )
 
                 # ensure that the username is also a partner of the plan
                 if "author" not in params:
                     params["author"] = None
                 if not (
-                    formality["username"] in params["partners"]
-                    or formality["username"] == params["author"]
+                    checklist_item["username"] in params["partners"]
+                    or checklist_item["username"] == params["author"]
                 ):
                     raise ValueError(
-                        "username '{}' in formalities is not a partner of the plan".format(
-                            formality["username"]
+                        "username '{}' in checklist is not a partner of the plan".format(
+                            checklist_item["username"]
                         )
                     )
 
                 # ensure that any other values are of type bool or None
-                for attr, value in formality.items():
+                for attr, value in checklist_item.items():
                     if attr != "username":
                         if not isinstance(value, (bool, type(None))):
                             raise TypeError(
-                                "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
+                                "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)
                                 )
                             )
@@ -2078,12 +2050,12 @@ class VEPlan:
             raise NonUniqueStepsError
         del params["steps"]
 
-        # also build the audience manually
-        audience = [
+        # also build the target_groups manually
+        target_groups = [
             TargetGroup.from_dict(target_group_dict)
-            for target_group_dict in params["audience"]
+            for target_group_dict in params["target_groups"]
         ]
-        del params["audience"]
+        del params["target_groups"]
 
         # also build the institutions
         institutions = [
@@ -2151,7 +2123,7 @@ class VEPlan:
         # build VEPlan and set remaining values
         instance = cls(
             steps=steps,
-            audience=audience,
+            target_groups=target_groups,
             institutions=institutions,
             evaluation=evaluations,
             individual_learning_goals=individual_learning_goals,

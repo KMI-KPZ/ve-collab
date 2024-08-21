@@ -95,7 +95,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                         </li>
                                         <li className="flex">
                                             <div className='w-1/2 font-medium print:font-bold'>Fachbereich</div>
-                                            <div className='w-1/2'>{showDataOrEmptySign(institution.departments)}</div>
+                                            <div className='w-1/2'>{showDataOrEmptySign(institution.department)}</div>
                                         </li>
 
                                     </ul>
@@ -162,7 +162,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                                             )}</div>
                                         </li>
                                         <li className="flex">
-                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Lernziel</div>
+                                            <div className='w-1/3 lg:w-1/4 font-medium print:font-bold'>Lernziele</div>
                                             <div className='w-2/3 lg:w-3/4'>{showDataOrEmptySign(goalPerPartner.learning_goal)}</div>
                                         </li>
                                     </ul>
@@ -198,8 +198,8 @@ export default function ViewAttributes({ plan, partnerProfileSnippets, openAllBo
                     </ul>
                     <span className="font-semibold pr-5">Zielgruppen:</span>
                     <div className="grid xl:grid-cols-2 col-span-3">
-                        {plan.audience.length !== 0 ? (
-                            plan.audience.map((studyGroup, index) => (
+                        {plan.target_groups.length !== 0 ? (
+                            plan.target_groups.map((studyGroup, index) => (
                                 <div
                                     key={index}
                                     className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"

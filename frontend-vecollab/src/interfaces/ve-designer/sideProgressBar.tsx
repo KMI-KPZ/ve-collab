@@ -28,13 +28,12 @@ export interface ISideProgressBarStates {
     institutions: ProgressState;
     topics: ProgressState;
     lectures: ProgressState;
-    audience: ProgressState;
+    target_groups: ProgressState;
     languages: ProgressState;
     involved_parties: ProgressState;
     realization: ProgressState;
     learning_env: ProgressState;
-    new_content: ProgressState;
-    formalities: ProgressState;
+    checklist: ProgressState;
     steps: ISideProgressBarStateSteps[];
 }
 
@@ -48,12 +47,11 @@ export const initialSideProgressBarStates: ISideProgressBarStates = {
     institutions: ProgressState.notStarted,
     topics: ProgressState.notStarted,
     lectures: ProgressState.notStarted,
-    audience: ProgressState.notStarted,
+    target_groups: ProgressState.notStarted,
     languages: ProgressState.notStarted,
     involved_parties: ProgressState.notStarted,
     realization: ProgressState.notStarted,
     learning_env: ProgressState.notStarted,
-    new_content: ProgressState.notStarted,
-    formalities: ProgressState.notStarted,
+    checklist: ProgressState.notStarted,
     steps: [],
 };

@@ -92,8 +92,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         async (plan: IPlan) => {
             let partners = [{ label: '', value: '' }]
             let extPartners = [{ externalParty: '' }]
-            if (plan.formalities && Array.isArray(plan.formalities)) {
-                setFormalConditions(plan.formalities);
+            if (plan.checklist && Array.isArray(plan.checklist)) {
+                setFormalConditions(plan.checklist);
             }
             if (plan.evaluation && Array.isArray(plan.evaluation)) {
                 setEvaluationInfo(plan.evaluation);
@@ -237,7 +237,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             },
             {
                 plan_id: router.query.plannerId,
-                field_name: 'formalities',
+                field_name: 'checklist',
                 value: updateFormalConditions,
             },
             {

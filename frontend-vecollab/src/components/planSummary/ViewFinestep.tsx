@@ -3,14 +3,21 @@ import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
 import { showDataOrEmptySign } from './planOverview';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import Link from 'next/link';
+import { MdArrowOutward } from 'react-icons/md';
 
 interface Props {
     fineStep: IFineStep;
     openAllBoxes?: boolean;
     handleImportStep?: (step: IFineStep) => void
+    availablePlans: IPlan[]
 }
 
-export default function ViewFinestep({ fineStep, openAllBoxes, handleImportStep }: Props): JSX.Element {
+export default function ViewFinestep({ fineStep, openAllBoxes, availablePlans, handleImportStep }: Props): JSX.Element {
+
+    const originalPlan = availablePlans.find(a => a._id == fineStep.original_plan)
+
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
             year: 'numeric',
@@ -149,6 +156,32 @@ export default function ViewFinestep({ fineStep, openAllBoxes, handleImportStep 
                                 </div>
                             </>
                         )}
+
+                        {fineStep.original_plan !== '' && (
+                            <>
+                                <span className="text-base font-semibold pr-5">Etappe importiert aus:</span>
+
+
+                                <ul className="flex flex-col space-y-2 col-span-3">
+                                    <li className="flex items-center w-fit bg-slate-200 rounded-lg p-2">
+                                        {typeof originalPlan !== 'undefined'
+                                            ? (
+                                                <Link href={`/plan/${originalPlan?._id}`} target='_blank'>
+                                                    {originalPlan?.name}
+                                                    <MdArrowOutward className='inline' />
+                                                </Link>)
+                                            : (<>Plan nicht mehr vorhanden</>)}
+                                    </li>
+                                </ul>
+                                <span className="text-base font-semibold pr-5">Autor des original Plans:</span>
+                                <ul className="flex flex-col space-y-2 col-span-3">
+                                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                        {showDataOrEmptySign(originalPlan?.author)}
+                                    </li>
+                                </ul>
+                            </>
+                        )}
+
                     </section>
                 </>
             )}

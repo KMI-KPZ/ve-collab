@@ -24,7 +24,7 @@ import { dropPlanLock, getPlanLock } from './PlanSocket';
 interface Props {
     title: string;
     subtitle?: string;
-    description?: string[] | string;
+    description?: JSX.Element | string[] | string;
     tooltip?: { text: string; link: string };
     methods: UseFormReturn<any>;
     children: React.ReactNode;
@@ -428,6 +428,9 @@ export default function Wrapper({
                                                         </p>
                                                     ))}
                                                 </div>
+                                            )}
+                                            {React.isValidElement(description) && (
+                                                <>{description}</>
                                             )}
                                         </>
                                     )}

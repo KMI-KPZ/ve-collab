@@ -16,10 +16,11 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 interface Props {
     plan: IPlan | null;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
+    availablePlans: IPlan[];
     error: string | null;
 }
 
-export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets }: Props) {
+export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
     const Wrapper = ({ children }: { children: JSX.Element }) => {
         return (
             <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
@@ -79,6 +80,8 @@ export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets }: 
                         plan={plan!}
                         openAllBoxes={true}
                         partnerProfileSnippets={partnerProfileSnippets}
+                        availablePlans={availablePlans}
+
                     />
                 </div>
             </>
@@ -94,6 +97,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     const planResponse = await fetchGET(`/planner/get?_id=${context.params?.planId}`, token);
     if (planResponse.success === true) {
+        const availablePlansResponse = await fetchGET('/planner/get_available', token)
         const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
             '/profile_snippets',
             { usernames: [...planResponse.plan.partners, planResponse.plan.author] },
@@ -107,6 +111,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             props: {
                 plan: planResponse.plan,
                 partnerProfileSnippets: partnerSnippets,
+                availablePlans: availablePlansResponse.plans,
                 error: null,
             },
         };
@@ -115,6 +120,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             props: {
                 plan: null,
                 partnerProfileSnippets: {},
+                availablePlans: [],
                 error: planResponse.reason ? planResponse.reason : 'fetch_failed',
             },
         };

@@ -24,7 +24,7 @@ export interface Institution {
     name: string;
     school_type: string;
     country: string;
-    departments: string[]; // TODO fit to profileInterface..Institutions
+    department: string;
 }
 
 interface FormValues {
@@ -35,7 +35,7 @@ const emptyInstitution = {
     name: '',
     school_type: '',
     country: '',
-    departments: [],
+    department: '',
 };
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
@@ -44,7 +44,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
             institution.name === '' &&
             institution.school_type === '' &&
             institution.country === '' &&
-            institution.departments.every((department) => department === '')
+            institution.department === ''
         );
     });
 };
@@ -226,7 +226,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Fachbereich eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
-                            {...methods.register(`institutions.${index}.departments.0`, {
+                            {...methods.register(`institutions.${index}.department`, {
                                 maxLength: {
                                     value: 500,
                                     message:
@@ -236,8 +236,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         />
                         <p className="text-red-600 pt-2">
                             {
-                                methods.formState.errors?.institutions?.[index]?.departments?.[0]
-                                    ?.message
+                                methods.formState.errors?.institutions?.[index]?.department?.message
                             }
                         </p>
                     </div>
@@ -383,7 +382,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 name: '',
                                 school_type: '',
                                 country: '',
-                                departments: [],
+                                department: '',
                             });
                         }}
                     >

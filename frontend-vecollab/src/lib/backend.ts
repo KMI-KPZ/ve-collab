@@ -112,7 +112,7 @@ export function useGetOwnProfile(accessToken: string): {
 }
 
 export function useGetAvailablePlans(accessToken: string): {
-    data: PlanPreview[];
+    data: IPlan[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;

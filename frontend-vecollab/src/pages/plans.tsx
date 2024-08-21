@@ -95,7 +95,7 @@ export default function Plans({ socket }: Props) {
                         <div>
                             <div className={'font-bold text-4xl mb-2'}>Pläne</div>
                             <div className={'text-gray-500 text-xl'}>
-                                Übersicht Deiner oder mit Dir geteilten Pläne
+                                Übersicht deiner und mit dir geteilter Pläne
                             </div>
                         </div>
 

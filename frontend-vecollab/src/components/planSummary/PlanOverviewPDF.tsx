@@ -15,12 +15,14 @@ interface Props {
     partnerProfileSnippets: {
         [Key: string]: BackendUserSnippet;
     };
+    availablePlans: IPlan[]
 }
 
 export function PlanOverviewPDF({
     plan,
     openAllBoxes,
     partnerProfileSnippets,
+    availablePlans
 }: Props): JSX.Element {
     return (
         <div className="bg-white rounded-lg p-4 w-full">
@@ -37,6 +39,7 @@ export function PlanOverviewPDF({
                         key={index}
                         fineStep={fineStep}
                         openAllBoxes={openAllBoxes}
+                        availablePlans={availablePlans}
                     />
                 ))
             ) : (
