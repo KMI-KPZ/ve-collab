@@ -42,6 +42,14 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
     const [planSummary, setPlanSummary] = useState<IPlan>();
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
 
+    // BACKLOG: remember this cool useSWRMutation to trigger changes
+    // const getPlanById = async (url: string, { arg }: { arg: string }) => {
+    //     await fetchGET(`${url}?_id=${arg}`, session?.accessToken)
+    // }
+    // const { trigger: triggerGetPlanById } = useSWRMutation('/planner/get', getPlanById )
+    // await triggerGetPlanById(plan._id)
+
+
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
         // refetch plans to have all up-to-date information without having to reload the page
