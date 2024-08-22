@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -10,6 +10,18 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import CreatableSelect from 'react-select/creatable';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const MethFormSchema = z.object({
+    methodicalApproaches: z.array(
+        z.object({
+            value: z.string().max(100, 'Ein gültiger Name darf maximal 100 Buchstaben lang sein.'),
+            label: z.string().max(100, 'Ein gültiger Name darf maximal 100 Buchstaben lang sein.'),
+            __isNew__: z.boolean().optional(), // This is a flag for react-select library
+        })
+    ),
+});
 
 interface FormValues {
     methodicalApproaches: MethodicalApproach[];
@@ -41,9 +53,24 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(MethFormSchema),
         defaultValues: {
             methodicalApproaches: [],
         },
+    });
+
+    useEffect(() => {
+        console.log('data', methods.watch('methodicalApproaches'));
+        console.log('errors', methods.formState.errors.methodicalApproaches);
+        const length = methods.formState.errors.methodicalApproaches?.length || 0;
+        if (methods.formState.errors.methodicalApproaches !== undefined) {
+            for (let i = 0; i < length; i++) {
+                console.log(
+                    'errors',
+                    methods.formState.errors.methodicalApproaches[i]?.value?.message
+                );
+            }
+        }
     });
 
     const setPlanerData = useCallback(
@@ -64,6 +91,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             ? ProgressState.notStarted
             : ProgressState.completed;
 
+        console.log(data.methodicalApproaches);
         return [
             {
                 plan_id: router.query.plannerId,
@@ -106,22 +134,34 @@ export default function Methodology({ socket }: Props): JSX.Element {
         options: { value: string; label: string }[]
     ): JSX.Element {
         return (
-            <Controller
-                name={name}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <CreatableSelect
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={options}
-                        isClearable={true}
-                        isMulti
-                        closeMenuOnSelect={false}
-                        placeholder="Ansätze auswählen oder neue durch Tippen hinzufügen"
-                    />
-                )}
-                control={control}
-            />
+            <>
+                <Controller
+                    name={name}
+                    render={({ field: { onChange, onBlur, value, ref } }) => (
+                        <CreatableSelect
+                            ref={ref}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            value={value}
+                            options={options}
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder="Ansätze auswählen oder neue durch Tippen hinzufügen"
+                        />
+                    )}
+                    control={control}
+                />
+                {Array.isArray(methods.formState.errors.methodicalApproaches) &&
+                    methods.formState.errors.methodicalApproaches.map(
+                        (error, index) =>
+                            error?.value?.message && (
+                                <p key={index} className="text-red-600 pt-2">
+                                    {error.value.message}
+                                </p>
+                            )
+                    )}
+            </>
         );
     }
 
