@@ -158,13 +158,13 @@ export default function HeaderSection({
                                     options={[
                                         {
                                             value: 'profil',
-                                            label: 'Profil',
-                                            title: 'Profil bearbeiten',
+                                            label: 'Profil bearbeiten',
+                                            title: 'Eigenes Profil bearbeiten',
                                         },
                                         {
                                             value: 'contact',
-                                            label: 'Kontakt',
-                                            title: 'Kontakt per Mail ...',
+                                            label: 'Kontakt per Mail...',
+                                            title: 'Kontaktiere uns per Mail ...',
                                         },
                                         { value: 'logout', label: 'Abmelden' },
                                     ]}
