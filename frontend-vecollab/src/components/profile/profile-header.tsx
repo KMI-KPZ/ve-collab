@@ -168,11 +168,11 @@ export default function ProfileHeader({
                             {' '}
                             <span>VE-Einladung</span>
                         </button>
-                        <button className={'h-12 ml-2'}>
+                        {/* <button className={'h-12 ml-2'}>
                             <span>
                                 <RxDotsVertical size={30} color={''} />
                             </span>
-                        </button>
+                        </button> */}
                         <Dialog
                             isOpen={isInvitationDialogOpen}
                             title={`zum VE einladen`}
