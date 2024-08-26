@@ -263,9 +263,9 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                     <span className="font-bold">Importiert aus: </span>&nbsp;
                     {typeof originalPlan !== 'undefined'
                         ? (
-                            <Link href={`/plan/${originalPlan?._id}`} target='_blank'>
+                            <Link className='group' href={`/plan/${originalPlan?._id}`} target='_blank'>
                                 {originalPlan?.name}
-                                <MdArrowOutward className='inline' />
+                                <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
                             </Link>)
                         : (<>Plan nicht mehr vorhanden</>)}
                 </p>
