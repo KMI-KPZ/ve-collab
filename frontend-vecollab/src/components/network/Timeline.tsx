@@ -116,13 +116,14 @@ export default function Timeline({
     const fetchNextPosts = useCallback((force: boolean=false) => {
         if (!allPosts.length || isLoadingTimeline) return
         if (force !== true && fetchCount % 3 == 0) return
+        if (newFetchedPosts.length < perFetchLimit) return
 
         setIsLoadingTimeline(true)
         const newToDate = new Date(allPosts[allPosts.length - 1].creation_date)
         newToDate.setMilliseconds(newToDate.getMilliseconds()+1)
 
         setToDate(newToDate)
-    }, [allPosts, isLoadingTimeline, fetchCount])
+    }, [allPosts, newFetchedPosts, isLoadingTimeline, fetchCount])
 
     const updatePosts = (posts: BackendPost[]) => {
         setIsLoadingTimeline(true)
