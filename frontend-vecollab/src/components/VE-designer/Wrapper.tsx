@@ -178,16 +178,28 @@ export default function Wrapper({
     useEffect(() => {
         if (!plan || isLoading || error) return;
 
+        let willRouteChange: boolean = false;
+
         (async () => {
             const data = await planerDataCallback(plan);
             if (Object.keys(data).length) {
                 // reset form default values for isDirty check
                 methods.reset(data)
             }
-            setLoading(false)
+            // fix: do not remove loader if we'll change the route
+            setTimeout(() => {
+                if (!willRouteChange) setLoading(false)
+            }, 1);
         })();
-        return () => {}
+
+        const handleRouteChange = (url: string) => willRouteChange = true;
+
+        router.events.on('routeChangeStart', handleRouteChange)
+        return () => {
+            router.events.off('routeChangeStart', handleRouteChange)
+        }
     }, [
+        router,
         plan,
         isLoading,
         error,
