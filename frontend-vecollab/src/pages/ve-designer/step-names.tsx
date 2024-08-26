@@ -30,6 +30,78 @@ import Timestamp from '@/components/Timestamp';
 import { MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/ButtonPrimary';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const StepNameFormSchema = z
+    .object({
+        name: z
+            .string()
+            .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.')
+            .min(1, { message: 'Ein Etappen-Name ist erforderlich' }),
+        timestamp_from: z.string().date('Bitte ein gültiges Datum eingeben'), // it is still a string
+        timestamp_to: z.string().date('Bitte ein gültiges Datum eingeben'),
+        workload: z
+            .number({
+                invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+            })
+            .int('Bitte geben sie eine ganze Zahl ein.')
+            .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
+            .lte(999, 'Bitte geben sie eine realistische Zahl ein.'),
+    })
+    .refine(
+        (data) =>
+            new Date(data.timestamp_from) >= new Date(1950, 0) &&
+            new Date(data.timestamp_from) <= new Date(2100, 0),
+        {
+            message: 'Von: Bitte geben sie ein realistisches Datum an',
+            path: ['timestamp_from'], // This will attach the error message to the `timestamp_from` field
+        }
+    )
+    .refine(
+        (data) =>
+            new Date(data.timestamp_to) >= new Date(1950, 0) &&
+            new Date(data.timestamp_to) <= new Date(2100, 0),
+        {
+            message: 'Bis: Bitte geben sie ein realistisches Datum an',
+            path: ['timestamp_to'],
+        }
+    )
+    .superRefine((data, ctx) => {
+        if (new Date(data.timestamp_from) > new Date(data.timestamp_to)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                path: ['timestamp_from'],
+            });
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                path: ['timestamp_to'],
+            });
+        }
+    });
+
+const StepNamesFormSchema = z
+    .object({
+        stepNames: z.array(StepNameFormSchema).min(1, 'Es muss mindestens eine Etappe geben.'),
+    })
+    .superRefine((data, ctx) => {
+        // check unique step names
+        const stepNames = data.stepNames.map((step) => step.name);
+        const uniqueStepNames = new Set(stepNames);
+        if (uniqueStepNames.size !== stepNames.length) {
+            data.stepNames.forEach((step, index) => {
+                if (stepNames.indexOf(step.name) !== index) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: 'Bitte wählen Sie für jede Etappe einen einzigartigen Namen',
+                        path: ['stepNames', index, 'name'],
+                    });
+                }
+            });
+        }
+    });
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -82,19 +154,20 @@ export default function StepNames({ socket }: Props): JSX.Element {
     );
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
-    const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false)
+    const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
 
     const today = new Date().toISOString().split('T')[0];
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = yesterdayDate.toISOString().split('T')[0];
 
-    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true)
-    const [availPlans, setAvailPlans] = useState<IPlan[]>([])
-    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([])
+    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true);
+    const [availPlans, setAvailPlans] = useState<IPlan[]>([]);
+    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(StepNamesFormSchema),
         defaultValues: {
             stepNames: [
                 {
@@ -112,24 +185,23 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     learning_goal: '',
                 },
             ],
-        }
+        },
     });
 
-    const { fields, append, remove, move, update, replace } = useFieldArray({
+    const { fields, append, remove, move, replace, update } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let data: {[key: string]: any} = {}
+            let data: { [key: string]: any } = {};
             if (plan.steps?.length > 0) {
                 data.stepNames = plan.steps.map((step) => {
                     return Object.assign({}, step, {
                         timestamp_from: step.timestamp_from.split('T')[0],
-                        timestamp_to: step.timestamp_to.split('T')[0]
-                    })
-
+                        timestamp_to: step.timestamp_to.split('T')[0],
+                    });
                 });
                 replace(data.stepNames);
                 setSteps(plan.steps);
@@ -138,15 +210,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 setSideMenuStepsProgress(plan.progress);
             }
 
-            return data
+            return data;
         },
         [replace]
     );
-
-    const checkIfNamesAreUnique = (stepNames: IFineStep[]): boolean => {
-        const stepNamesNames = stepNames.map((stepName) => stepName.name);
-        return new Set(stepNamesNames).size !== stepNames.length;
-    };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
@@ -159,7 +226,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             if (fineStepBackend !== undefined) {
                 payload = fineStepBackend;
             }
-            return Object.assign({}, payload, step)
+            return Object.assign({}, payload, step);
         });
 
         const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
@@ -188,23 +255,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
         ];
     };
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const fromDate = new Date(fromValue);
-        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.timestamp_to`));
-        if (fromDate > toDate) {
-            return 'Das Startdatum muss vor dem Enddatum liegen';
-        } else {
-            return true;
-        }
-    };
-
     const handleDelete = (index: number): void => {
-        remove(index);
-        // if (fields.length > 1) {
-        //     remove(index);
-        // } else {
-        //     update(index, emptyStepData);
-        // }
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, emptyStepData);
+        }
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -214,87 +270,107 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const openStepsImportDialog = () => {
-        setIsImportStepsDialogOpen(true)
-        if (availPlans.length) return
-        setLoadingAvailPlans(true)
+        setIsImportStepsDialogOpen(true);
+        if (availPlans.length) return;
+        setLoadingAvailPlans(true);
 
         fetchGET('/planner/get_available', session?.accessToken)
-        .then(data => {
-            setAvailPlans( (data.plans as IPlan[]))
-        })
-        .finally(() =>
-            setLoadingAvailPlans(false)
-        )
-    }
+            .then((data) => {
+                setAvailPlans(data.plans as IPlan[]);
+            })
+            .finally(() => setLoadingAvailPlans(false));
+    };
     const toggleStepToImport = (step: IFineStep) => {
-        if (stepsToImport.some(s => s._id == step._id)) {
-            setStepsToImport(prev => prev.filter(s => s._id != step._id))
+        if (stepsToImport.some((s) => s._id == step._id)) {
+            setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
         } else {
-            setStepsToImport(prev => [...prev, step])
+            setStepsToImport((prev) => [...prev, step]);
         }
-    }
+    };
 
     const handleStepsImport = () => {
-        stepsToImport.map(step => {
-            append(Object.assign({}, step, {
-                timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
-                timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
-            }))
-        })
-        setIsImportStepsDialogOpen(false)
-        setStepsToImport([])
-    }
+        stepsToImport.map((step) => {
+            append(
+                Object.assign({}, step, {
+                    timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
+                    timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
+                })
+            );
+        });
+        setIsImportStepsDialogOpen(false);
+        setStepsToImport([]);
+    };
 
     const ImportStepsDialog = () => {
-        if (loadingAvailPlans) return <LoadingAnimation />
+        if (loadingAvailPlans) return <LoadingAnimation />;
 
-        const plans = availPlans.filter(plan => plan.is_good_practise && plan.steps.length)
-        if (!plans.length) return <>Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren vorhanden</>
+        const plans = availPlans.filter((plan) => plan.is_good_practise && plan.steps.length);
+        if (!plans.length)
+            return (
+                <>
+                    Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren
+                    vorhanden
+                </>
+            );
 
         // TODO add simple filter input?
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>Wähle aus den &quot;Good Practice&quot; Plänen Etappen zum importieren aus</div>
+                <div>
+                    Wähle aus den &quot;Good Practice&quot; Plänen Etappen zum importieren aus
+                </div>
 
                 {plans
-                    .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
-                    .map((plan, i) => (
-                    <div key={plan._id}>
-                        <div
-                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md"
-                        >
-                            <MdNewspaper />
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
-                            {session?.user.preferred_username != plan.author && (
-                                <div className="text-sm text-gray-500">von {plan.author}</div>
-                            )}
-                            <span className="grow text-right" title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
-                        </div>
-                        {plan.steps.map((step, j) => (
-                            <div key={step._id}
-                                className='ml-10 hover:cursor-pointer flex'
-                                onClick={e => toggleStepToImport(step)}
-                                title='Add/Remove'
-                            >
-                                <input
-                                    type='checkbox'
-                                    className='mr-2'
-                                    checked={stepsToImport.some(s => s._id == step._id)}
-                                    readOnly
-                                />
-                                {step.name} ({step.workload} h)
+                    .sort((a, b) => {
+                        return (
+                            new Date(b.last_modified).getTime() -
+                            new Date(a.last_modified).getTime()
+                        );
+                    })
+                    .map((plan) => (
+                        <div key={plan._id}>
+                            <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
+                                <MdNewspaper />
+                                <div className="text-xl font-bold grow-0">{plan.name}</div>
+                                {session?.user.preferred_username != plan.author && (
+                                    <div className="text-sm text-gray-500">von {plan.author}</div>
+                                )}
+                                <span className="grow text-right" title="zuletzt geändert">
+                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                </span>
                             </div>
-                        ))}
-                    </div>
-                ))}
-                <div className='ml-auto text-right'>
-                    <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setIsImportStepsDialogOpen(false)}>Abbrechen</button>
-                    <ButtonPrimary label={"Importieren"} onClick={() => handleStepsImport()} />
+                            {plan.steps.map((step) => (
+                                <div
+                                    key={step._id}
+                                    className="ml-10 hover:cursor-pointer flex"
+                                    onClick={() => toggleStepToImport(step)}
+                                    title="Add/Remove"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="mr-2"
+                                        checked={stepsToImport.some((s) => s._id == step._id)}
+                                        readOnly
+                                    />
+                                    {step.name} ({step.workload} h)
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                <div className="ml-auto text-right">
+                    <button
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        onClick={() => setIsImportStepsDialogOpen(false)}
+                    >
+                        Abbrechen
+                    </button>
+                    <ButtonPrimary label={'Importieren'} onClick={() => handleStepsImport()} />
                 </div>
             </div>
-        )
-    }
+        );
+    };
 
     const renderStepNamesInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
@@ -309,13 +385,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label>von:</label>
                                             <input
                                                 type="date"
-                                                {...methods.register(`stepNames.${index}.timestamp_from`, {
-                                                    required: {
-                                                        value: true,
-                                                        message: 'Bitte fülle das Felde "von" aus',
-                                                    },
-                                                    validate: (v) => validateDateRange(v, index),
-                                                })}
+                                                {...methods.register(
+                                                    `stepNames.${index}.timestamp_from`
+                                                )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
@@ -323,12 +395,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label className="ml-2">bis:</label>
                                             <input
                                                 type="date"
-                                                {...methods.register(`stepNames.${index}.timestamp_to`, {
-                                                    required: {
-                                                        value: true,
-                                                        message: 'Bitte fülle das Felde "bis" aus',
-                                                    },
-                                                })}
+                                                {...methods.register(
+                                                    `stepNames.${index}.timestamp_to`
+                                                )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
@@ -336,22 +405,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label className="ml-2">Name:</label>
                                             <input
                                                 type="text"
-                                                {...methods.register(`stepNames.${index}.name`, {
-                                                    required: {
-                                                        value: true,
-                                                        message: 'Bitte fülle das Felde "Name" aus',
-                                                    },
-                                                    validate: {
-                                                        unique: () => {
-                                                            return (
-                                                                !checkIfNamesAreUnique(
-                                                                    methods.getValues('stepNames')
-                                                                ) ||
-                                                                'Bitte wähle einen einzigartigen Namen'
-                                                            );
-                                                        },
-                                                    },
-                                                })}
+                                                {...methods.register(`stepNames.${index}.name`)}
                                                 placeholder="Name, z.B. Kennenlernphase"
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -360,21 +414,16 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label className="ml-2">Zeitaufwand:</label>
                                             <input
                                                 type="number"
-                                                {...methods.register(`stepNames.${index}.workload`, {
-                                                    validate: {
-                                                        positive: (v) => {
-                                                            return (
-                                                                v >= 0 ||
-                                                                'Der Zeitaufwand kann nicht negativ sein'
-                                                            );
-                                                        },
-                                                    },
-                                                    setValueAs: (v: string) => parseInt(v),
-                                                })}
+                                                {...methods.register(
+                                                    `stepNames.${index}.workload`,
+                                                    {
+                                                        valueAsNumber: true,
+                                                    }
+                                                )}
                                                 placeholder="Zeitaufwand in Stunden"
                                                 className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
                                             />
-                                        <label className="mr-4">h</label>
+                                            <label className="mr-4">h</label>
                                         </div>
                                     </div>
                                     <div className="flex items-center mt-2">
@@ -387,19 +436,20 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
                                         />
                                     </div>
-                                    {methods.formState.errors?.stepNames?.[index]?.timestamp_from && (
+                                    {methods.formState.errors?.stepNames?.[index]
+                                        ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.timestamp_from
-                                                    ?.message
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.timestamp_to && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.timestamp_to
-                                                    ?.message
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message
                                             }
                                         </p>
                                     )}
@@ -472,7 +522,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 title={'Etappen Import'}
                 onClose={() => setIsImportStepsDialogOpen(false)}
             >
-                <div className="w-[40vw]"><ImportStepsDialog /></div>
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
             </Dialog>
 
             <DragDropContext onDragEnd={onDragEnd}>
@@ -498,9 +550,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
                 <button
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                    type='button'
-                    title='Etappen importieren'
-                    onClick={e => openStepsImportDialog()}
+                    type="button"
+                    title="Etappen importieren"
+                    onClick={() => openStepsImportDialog()}
                 >
                     Import
                 </button>
