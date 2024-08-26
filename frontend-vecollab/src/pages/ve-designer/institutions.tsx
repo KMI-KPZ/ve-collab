@@ -347,7 +347,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
             socket={socket}
             title="Institution"
             subtitle="In welchen Institutionen wird der VE umgesetzt?"
-            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, gibt euch aber einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche."
+            description="Überblick beteiligter Einrichtungen und der entsprechenden Fachbereiche."
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -363,17 +363,34 @@ export default function Institutions({ socket }: Props): JSX.Element {
             </Dialog>
 
             <div className={'px-4 w-full lg:w-2/3'}>
-                <button
-                    className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                    type='button'
-                    title='Institionen aus Profil importieren'
-                    onClick={e => openImportDialog()}
-                >
-                    Importieren
-                </button>
+                <div className="flex">
+                    <button
+                        className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        type='button'
+                        title='Institionen aus Profil importieren'
+                        onClick={e => openImportDialog()}
+                    >
+                        Importieren
+                    </button>
+                    {fields.length == 0 && (<button
+                            className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {
+                                append({
+                                    name: '',
+                                    school_type: '',
+                                    country: '',
+                                    department: '',
+                                });
+                            }}
+                        >
+                            Neu
+                    </button>)}
+                </div>
+
                 <div className="divide-y">{renderInstitutionInputs()}</div>
 
-                <div className="flex justify-center">
+                {fields.length > 0 && (<div className="flex justify-center">
                     <button
                         className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                         type="button"
@@ -388,7 +405,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                     >
                         <RxPlus size={25} />
                     </button>
-                </div>
+                </div>)}
             </div>
         </Wrapper>
     );

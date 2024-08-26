@@ -25,7 +25,7 @@ export default function Matching() {
                 <div>
                     <h1 className="text-center font-bold text-4xl mb-2">Matching</h1>
                     <div className="text-center mb-14 w-[30rem]">
-                        Klicke auf den Button, um deine Top 5 passenden poteniziellen Partner,
+                        Klicke auf den Button, um deine Top 5 passenden potenziellen Partner,
                         basierend auf deinem Profil, zu bekommen.
                     </div>
                     <div className="flex justify-around w-full mb-8">

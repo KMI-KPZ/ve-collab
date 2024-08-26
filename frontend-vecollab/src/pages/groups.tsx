@@ -159,11 +159,11 @@ export default function Groups() {
                                                         : 'Keine Beschreibung vorhanden'}
                                                 </div>
                                             </div>
-                                            <div className="flex ml-auto px-2 items-center justify-center">
+                                            {/* <div className="flex ml-auto px-2 items-center justify-center">
                                                 <button>
                                                     <RxDotsVertical size={25} />
                                                 </button>
-                                            </div>
+                                            </div> */}
                                         </Link>
                                     </div>
                                 ))}

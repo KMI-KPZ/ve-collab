@@ -84,7 +84,7 @@ export default function VeInvitationNotification({
                         timestamp={notification.creation_timestamp}
                     />
                 </div>
-                <div className="flex ml-auto px-2 items-center justify-center">
+                {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
                             console.log('hi');
@@ -92,7 +92,7 @@ export default function VeInvitationNotification({
                     >
                         <RxDotsVertical size={25} />
                     </button>
-                </div>
+                </div> */}
             </li>
             <Dialog
                 isOpen={isNotificationsDialogOpen}

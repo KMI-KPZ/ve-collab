@@ -76,7 +76,9 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                         <div className="h-screen overflow-y-auto">
                             {isLoading && <LoadingAnimation />}
                             <ul className="divide-y">
-                                {plans.map((plan) => (
+                                {plans
+                                .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                                .map((plan) => (
                                     <li className="py-2" key={plan._id}>
                                         <div className="flex">
                                             <div className="mx-2">
