@@ -50,7 +50,7 @@ const LearningEnvFormSchema = z.object({
             }
         )
         .superRefine((data, ctx) => {
-            if (data.timestamp_from > data.timestamp_to) {
+            if (new Date(data.timestamp_from) > new Date(data.timestamp_to)) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
