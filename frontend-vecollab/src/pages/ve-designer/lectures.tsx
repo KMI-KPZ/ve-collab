@@ -244,14 +244,13 @@ export default function Lectures({ socket }: Props): JSX.Element {
             socket={socket}
             title="Lehrveranstaltungen"
             subtitle="Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?"
-            description="Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden (z. B. die Zahl der Teilnehmenden)."
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
-            <div className={'rounded shadow px-4 w-full lg:w-2/3'}>
+            <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
                 <div className="divide-y">{renderLecturesInputs()}</div>
                 <div className="flex justify-center">
                     <button
