@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -59,20 +59,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
         },
     });
 
-    useEffect(() => {
-        console.log('data', methods.watch('methodicalApproaches'));
-        console.log('errors', methods.formState.errors.methodicalApproaches);
-        const length = methods.formState.errors.methodicalApproaches?.length || 0;
-        if (methods.formState.errors.methodicalApproaches !== undefined) {
-            for (let i = 0; i < length; i++) {
-                console.log(
-                    'errors',
-                    methods.formState.errors.methodicalApproaches[i]?.value?.message
-                );
-            }
-        }
-    });
-
     const setPlanerData = useCallback(
         (plan: IPlan) => {
             const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }));
@@ -90,8 +76,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
         const progressState = areAllFormValuesEmpty(data)
             ? ProgressState.notStarted
             : ProgressState.completed;
-
-        console.log(data.methodicalApproaches);
         return [
             {
                 plan_id: router.query.plannerId,
