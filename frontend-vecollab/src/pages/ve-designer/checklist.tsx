@@ -13,6 +13,24 @@ import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const CheckListPartnerFormSchema = z.object({
+    username: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+    time: z.boolean(),
+    format: z.boolean(),
+    topic: z.boolean(),
+    goals: z.boolean(),
+    languages: z.boolean(),
+    media: z.boolean(),
+    technicalEquipment: z.boolean(),
+    evaluation: z.boolean(),
+    institutionalRequirements: z.boolean(),
+    dataProtection: z.boolean(),
+});
+
+const CheckListPartnersFormSchema = z.object({ checklist: CheckListPartnerFormSchema.array() });
 
 export interface CheckListPartner {
     username: string;
@@ -70,7 +88,7 @@ interface Props {
 Checklist.auth = true;
 export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -81,6 +99,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(CheckListPartnersFormSchema),
         defaultValues: {
             checklist: [emptyCheckListPartner],
         },
@@ -93,13 +112,13 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let checklistValue = [emptyCheckListPartner]
+            let checklistValue = [emptyCheckListPartner];
             if (
                 plan.formalities &&
                 Array.isArray(plan.formalities) &&
                 plan.formalities.length > 0
             ) {
-                checklistValue = plan.formalities
+                checklistValue = plan.formalities;
                 methods.setValue('checklist', checklistValue);
             }
             if (Object.keys(plan.progress).length) {
@@ -115,7 +134,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 setUsersFirstLastNames(snippets.user_snippets);
             });
 
-            return {checklist : checklistValue}
+            return { checklist: checklistValue };
         },
         [methods, session]
     );
