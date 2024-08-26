@@ -12,6 +12,39 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const EvaluationFormSchema = z.object({
+    evaluationPerPartner: z.array(
+        z.object({
+            username: z
+                .string()
+                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.')
+                .nullable(),
+            is_graded: z.boolean({
+                required_error: 'Bitte Ja oder Nein auswählen',
+                invalid_type_error: 'Bitte Ja oder Nein auswählen',
+            }),
+            task_type: z
+                .string()
+                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .nullable(),
+            assessment_type: z
+                .string()
+                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .nullable(),
+            evaluation_while: z
+                .string()
+                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .nullable(),
+            evaluation_after: z
+                .string()
+                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .nullable(),
+        })
+    ),
+});
 
 export interface EvaluationPerPartner {
     username: string;
@@ -45,7 +78,7 @@ interface Props {
 Evaluation.auth = true;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -73,10 +106,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             evaluation_while: '',
             evaluation_after: '',
         },
-    ]
+    ];
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(EvaluationFormSchema),
         defaultValues: {
             evaluationPerPartner: defaultEvaluationValue,
         },
@@ -89,11 +123,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let data: {[key: string]: any} = {}
+            let data: { [key: string]: any } = {};
 
             if (plan.evaluation.length !== 0) {
                 replace(plan.evaluation);
-                data.evaluationPerPartner = plan.evaluation
+                data.evaluationPerPartner = plan.evaluation;
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -112,7 +146,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 setPartnerProfileSnippets(partnerSnippets);
             });
 
-            return data
+            return data;
         },
         [replace, session]
     );
@@ -213,6 +247,12 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         )}
                                     />
                                 </div>
+                                <p className="flex justify-center text-red-600 pb-2">
+                                    {
+                                        methods.formState.errors?.evaluationPerPartner?.[index]
+                                            ?.task_type?.message
+                                    }
+                                </p>
                                 <div className="flex items-center justify-between my-1">
                                     <p className="">Art der Bewertung</p>
                                     <input
@@ -224,6 +264,13 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         placeholder="z.B. benotet, unbenotet"
                                     />
                                 </div>
+
+                                <p className="flex justify-center text-red-600 pb-2">
+                                    {
+                                        methods.formState.errors?.evaluationPerPartner?.[index]
+                                            ?.assessment_type?.message
+                                    }
+                                </p>
                             </>
                         )}
                         <p className="mt-10 mb-1">Wie erfolgt die Evaluation des VE?</p>
@@ -241,6 +288,12 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder="z. B. Teaching Analysis Poll, Feedback-Runden, etc."
                             />
                         </div>
+                        <p className="flex justify-center text-red-600 pb-2">
+                            {
+                                methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.evaluation_while?.message
+                            }
+                        </p>
                         <div className="flex items-center justify-between my-1">
                             <div>
                                 <p>nach dem VE</p>
@@ -254,6 +307,12 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder="z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
                             />
                         </div>
+                        <p className="flex justify-center text-red-600 pb-2">
+                            {
+                                methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.evaluation_after?.message
+                            }
+                        </p>
                     </div>
                 </div>
             </div>
