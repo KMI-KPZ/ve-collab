@@ -77,7 +77,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                             {isLoading && <LoadingAnimation />}
                             <ul className="divide-y">
                                 {plans
-                                // .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                                .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
                                 .map((plan) => (
                                     <li className="py-2" key={plan._id}>
                                         <div className="flex">
