@@ -22,6 +22,7 @@ import { PlanOverview } from '../planSummary/planOverview';
 import ConfirmDialog from '../Confirm';
 import Alert, { AlertState } from '../Alert';
 import { useRouter } from 'next/router';
+import { FaEye } from 'react-icons/fa';
 
 interface Props {
     plan: PlanPreview;
@@ -169,16 +170,16 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
         </Dialog>
     );
 
-    const EditButton = () => (
+    const ViewButton = () => (
         <div
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
-                forward(plan._id);
+                openPlanSummary()
             }}
-            title="Plan bearbeiten"
+            title="Zusammenfassung anzeigen"
         >
-            <MdEdit />
+            <FaEye />
         </div>
     );
 
@@ -297,7 +298,10 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
 
             <div
                 className="grow p-3 font-normal text-base group hover:cursor-pointer"
-                onClick={() => openPlanSummary()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    forward(plan._id);
+                }}
             >
                 <div className="flex items-center">
                     <div className="mr-2 py-1 font-bold whitespace-nowrap">
@@ -318,7 +322,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         {plan.author == username && (
                             <>
-                                <EditButton />
+                                <ViewButton />
                                 <CopyButton />
                                 <ShareButton />
                                 <DeleteButton />
@@ -326,7 +330,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                         )}
                         {plan.author != username && plan.write_access.includes(username) && (
                             <>
-                                <EditButton />
+                                <ViewButton />
                                 <CopyButton />
                             </>
                         )}
