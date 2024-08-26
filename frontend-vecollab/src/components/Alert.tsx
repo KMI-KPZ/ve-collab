@@ -62,7 +62,8 @@ interface AlertNever {
 export default function Alert({state, open=true, type='info', children, message, autoclose, onClose}: AlertState|AlertStateState) {
 
     const typedStyles = {
-        info: 'bg-ve-collab-blue/[.85] ',
+        // info: 'bg-ve-collab-blue ',
+        info: 'bg-[#0294b7]/[.85]',
         warning: 'bg-ve-collab-orange/[.85] ',
         error: 'bg-red-500/[.85]'
     }
@@ -98,8 +99,8 @@ export default function Alert({state, open=true, type='info', children, message,
     if (!iamOpen) return (<></>)
 
     return (
-        <div className="fixed inset-x-0 bottom-0 w-full z-50 items-center">
-            <div className={`${typedStyles[_type||'info']} absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex text-white rounded-xl p-2 border border-2 border-slate-50 shadow-white/25`}>
+        <div className="fixed inset-x-0 bottom-0 w-full z-50 items-center" style={{color: 'red'}}>
+            <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex rounded-xl p-2 border border-2 border-slate-50 shadow-white/25 text-slate-50 ${typedStyles[_type||'info']}`}>
                 <div className='m-2 font-bold'>{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
