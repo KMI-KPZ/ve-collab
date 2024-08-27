@@ -48,6 +48,9 @@ const StepNameFormSchema = z
             .int('Bitte geben sie eine ganze Zahl ein.')
             .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
             .lte(999, 'Bitte geben sie eine realistische Zahl ein.'),
+        learning_goal: z
+            .string()
+            .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.'),
     })
     .refine(
         (data) =>
@@ -236,6 +239,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
         const progressState = areAllFormValuesEmpty(data)
             ? ProgressState.notStarted
             : ProgressState.completed;
+
+        console.log(data);
 
         return [
             {
