@@ -240,8 +240,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
             ? ProgressState.notStarted
             : ProgressState.completed;
 
-        console.log(data);
-
         return [
             {
                 plan_id: router.query.plannerId,

@@ -12,6 +12,58 @@ import {
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const FineStepFormSchema = z.object({
+    timestamp_from: z.string(),
+    timestamp_to: z.string(),
+    name: z.string(),
+    workload: z.number().int(),
+    learning_goal: z.string(),
+    // above: previous data from step-names
+    learning_activity: z
+        .string()
+        .max(1000, 'Ein gültige Lernaktivität darf maximal 1000 Buchstaben lang sein.'),
+    has_tasks: z.boolean(),
+    tasks: z
+        .array(
+            z.object({
+                task_formulation: z
+                    .string()
+                    .max(500, 'Ein gültige Lernaktivität darf maximal 500 Buchstaben lang sein.'),
+                work_mode: z
+                    .string()
+                    .max(500, 'Ein gültige Arbeitsform darf maximal 500 Buchstaben lang sein.'),
+                notes: z
+                    .string()
+                    .max(1000, 'Ein gültige Notitz darf maximal 1000 Buchstaben lang sein.'),
+                tools: z.array(
+                    z.object({
+                        name: z
+                            .string()
+                            .max(200, 'Ein gültiges Tool darf maximal 200 Buchstaben lang sein.'),
+                    })
+                ),
+                materials: z.array(
+                    z.object({
+                        name: z
+                            .string()
+                            .max(
+                                200,
+                                'Ein gültiges Material darf maximal 200 Buchstaben lang sein.'
+                            ),
+                    })
+                ),
+            })
+        )
+        .min(1, 'Es muss mindestens eine Aufgabe geben.'),
+    duration: z.number().nullable(), // can be sometimes null maybe backend to slow to update
+    // todo below attributes unused ???
+    evaluation_tools: z.any(),
+    attachments: z.any(),
+    custom_attributes: z.any(),
+});
 
 export interface ITask {
     task_formulation: string;
@@ -119,6 +171,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
+        resolver: zodResolver(FineStepFormSchema),
         defaultValues: {
             ...defaultFormValueDataFineStepFrontend,
         },
@@ -140,7 +193,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             if (!plan.steps?.length) {
                 return {};
             }
-            let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend
+            let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
                 (item: IFineStep) => item.name === stepName
@@ -170,7 +223,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 }
             }
 
-            return {...fineStepCopyTransformedTools}
+            return { ...fineStepCopyTransformedTools };
         },
         [stepName]
     );
@@ -227,11 +280,8 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         const stepSlugEncoded = encodeURI(stepName as string);
         const updateStepsProgress = sideMenuStepsProgress.steps.map(
             (step: ISideProgressBarStateSteps) =>
-                step[stepSlugEncoded] !== undefined
-                    ? { [stepSlugEncoded]: progressState }
-                    : step
+                step[stepSlugEncoded] !== undefined ? { [stepSlugEncoded]: progressState } : step
         );
-
         return [
             {
                 plan_id: router.query.plannerId,
