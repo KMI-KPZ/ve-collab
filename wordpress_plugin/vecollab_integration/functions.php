@@ -1,16 +1,7 @@
 <?php
 
 /*
-* enable jQuery
-*/
-function vecollab_enqueue_scripts()
-{
-    wp_enqueue_script('jquery');
-}
-add_action('wp_enqueue_scripts', 'vecollab_enqueue_scripts');
-
-/*
- * Callback for shortcode [vecollab_response_form id=""]
+ * Callback for shortcode [vecollab_response_form id="" show_others_responses=<true|false>]
  * Adds a text area and submit to the page to gather responses to questions
  * The shortcode expects an id to be passed as a parameter to identify the question.
  */
@@ -23,29 +14,44 @@ function vecollab_inject_response_form($atts = [], $content = null)
 	$shortcode_atts = shortcode_atts(
 		array(
 			'id' => NULL,
+            'show_others_responses' => false
 		), $atts, 'vecollab_response_form'
 	);
 
     $admin_url = esc_url( admin_url('admin-post.php') );
+    $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
 
     $html = '
-        <form action="?><?php echo esc_url( admin_url(\'admin-post.php\') ); ?><?php" method="POST">
+        <form action="' . $admin_url . '" method="POST">
             <textarea
-                style="width: 100%; border: 1px solid #a0a0a0; border-radius: 0.25rem; padding: 0.5rem 0.25rem;"
+                class="responseTextarea"
                 rows="5"
                 placeholder="Tippen Sie Ihre Antwort hier ein"
-                value=""
-                onchange=""
                 id="' . $shortcode_atts['id'] . '"
             ></textarea>
-            <button
-                type="submit"
-                style="background-color: #c4560b; color: #fff; padding: 0.5rem 1rem; border-radius: 0.25rem;"
-                onclick="saveInCookie();"
-            >
-                Speichern
-            </button>
+            <div class="btnWrapper">
+                <button
+                    type="submit"
+                    class="orangeBtn"
+                    onclick="saveInCookie();"
+                >
+                    Speichern
+                </button>';
+    if($shortcode_atts['show_others_responses']){
+        $html .= '<button
+                    type="button"
+                    class="orangeBtn"
+                    id="show_other_answers"
+                >
+                    Was haben andere geantwortet?
+                </button>';
+    }
+    $html .='</div>
             <input type="hidden" name="action" value="vecollab_response_form">
+            <div id="other_answers" style="display: none; margin-top: 8px;">
+                <span>Andere Nutzende antworteten:</span>
+                <ul id="other_answers_list"></ul>
+            </div>
         </form>
         <script>
             function saveInCookie(){
@@ -90,7 +96,31 @@ function vecollab_inject_response_form($atts = [], $content = null)
                 if(cookie !== null){
                     console.log(cookie);
                     document.getElementById("' . $shortcode_atts['id'] . '").value = cookie;
-                }   
+                }
+                    
+                $("#show_other_answers").click(function(){
+                    $.ajax({
+                        type: "POST",
+                        url: "'. $admin_ajax_url . '",
+                        data: {
+                            action: "vecollab_get_random_responses",
+                            id: "' . $shortcode_atts['id'] . '"
+                        },
+                        success: function(data){
+                            // render the responses
+                            console.log(data);
+                            $("#other_answers_list").empty();
+                            data.responses.forEach(function(response){
+                                $("#other_answers_list").append("<li>" + response.response + "</li>");
+                            });
+                            $("#other_answers").show();
+                        },
+                        error: function(data){
+                            console.log(data);
+                        }
+                    });
+                });
+
             });    
         </script>
     ';
@@ -127,5 +157,98 @@ function vecollab_response_form_handler(){
 }
 add_action( 'admin_post_nopriv_vecollab_response_form', 'vecollab_response_form_handler' );
 add_action( 'admin_post_vecollab_response_form', 'vecollab_response_form_handler' );
+
+/*
+* Ajax callback function to get random responses from the db
+*/
+function vecollab_get_random_responses(){
+    $id = $_POST['id'];
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'vecollab_responses';
+
+    // get 5 random responses
+    $responses = $wpdb->get_results(
+        "SELECT * FROM " . $table_name . " WHERE question_id = '" . $id . "' ORDER BY RAND() LIMIT 5;"
+    );
+    //echo_log($responses);
+    $return = array(
+        "responses" => $responses
+    );
+
+    wp_send_json($return);
+}
+add_action('wp_ajax_vecollab_get_random_responses', 'vecollab_get_random_responses');
+add_action('wp_ajax_nopriv_vecollab_get_random_responses', 'vecollab_get_random_responses');
+
+
+/*
+* Callback for shortcode [vecollab_my_response id=""]
+* Renders the response of the current user to the question with the given id that is stored
+* in the browser cookie
+*/
+function vecollab_inject_my_response($atts = [], $content = null){
+    // normalize attribute keys, lowercase
+	$atts = array_change_key_case( (array) $atts, CASE_LOWER );
+
+    // set parameters
+	$shortcode_atts = shortcode_atts(
+		array(
+			'id' => NULL,
+            'show_others_responses' => false
+		), $atts, 'vecollab_response_form'
+	);
+
+    $cookie_name = $shortcode_atts['id'];
+    $answer = $_COOKIE[$cookie_name];
+
+    $html = '<p>' . $answer . '</p>';
+
+    if($shortcode_atts['show_others_responses']){
+        $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
+        $html .= 
+            '<button
+                type="button"
+                class="orangeBtn"
+                id="show_other_answers"
+            >
+                Was haben andere geantwortet?
+            </button>
+            <div id="other_answers" style="display: none; margin-top: 8px;">
+                <span>Andere Nutzende antworteten:</span>
+                <ul id="other_answers_list"></ul>
+            </div>
+            <script>
+                jQuery(document).ready(function($){
+                    $("#show_other_answers").click(function(){
+                        $.ajax({
+                            type: "POST",
+                            url: "'. $admin_ajax_url . '",
+                            data: {
+                                action: "vecollab_get_random_responses",
+                                id: "' . $shortcode_atts['id'] . '"
+                            },
+                            success: function(data){
+                                // render the responses
+                                console.log(data);
+                                $("#other_answers_list").empty();
+                                data.responses.forEach(function(response){
+                                    $("#other_answers_list").append("<li>" + response.response + "</li>");
+                                });
+                                $("#other_answers").show();
+                            },
+                            error: function(data){
+                                console.log(data);
+                            }
+                        });
+                    });
+                });
+            </script>
+            ';
+    }
+
+    return $html;
+}
+add_shortcode('vecollab_my_response', 'vecollab_inject_my_response');
 
 ?>

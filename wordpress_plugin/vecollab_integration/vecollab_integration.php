@@ -16,6 +16,16 @@
 }
 
 /*
+* enable jQuery and load js and css
+*/
+function vecollab_enqueue_scripts()
+{
+    wp_enqueue_script('jquery');
+    wp_enqueue_style('vecollab-styles', plugin_dir_url(__FILE__) . 'style.css');
+}
+add_action('wp_enqueue_scripts', 'vecollab_enqueue_scripts');
+
+/*
 * when the plugin is activated, create a table in the db to store responses
 */
 function vecollab_create_table_on_plugin_install(){
@@ -35,9 +45,6 @@ function vecollab_create_table_on_plugin_install(){
 }
 register_activation_hook( __FILE__, 'vecollab_create_table_on_plugin_install' );
 
-#include 'discussion_button_injector.php';
-#include 'custom_metadata.php';
-#include 'settings.php';
 include 'functions.php';
 
 ?>
