@@ -49,7 +49,7 @@ function vecollab_activation_hook()
 
     // schedule the cron job to clean up the responses (only keep 1000 most recent responses)
     if (! wp_next_scheduled('vecollab_clean_up_responses')) {
-        wp_schedule_event(time(), 'five_seconds', 'vecollab_clean_up_responses');
+        wp_schedule_event(time(), 'daily', 'vecollab_clean_up_responses');
     }
 }
 
@@ -63,9 +63,10 @@ function vecollab_clean_up_responses_handler()
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'vecollab_responses';
-    $sql = "DELETE FROM " . $table_name . " WHERE id NOT IN (SELECT id FROM (SELECT id FROM " . $table_name . " ORDER BY id DESC LIMIT 1000) foo)";
-    $wpdb->query($sql);
-    echo '<pre>'.print_r( "cleaned up", true ).'</pre>';
+    $wpdb->query(
+        $wpdb->prepare("DELETE FROM $table_name WHERE id NOT IN (SELECT id FROM (SELECT id FROM $table_name ORDER BY id DESC LIMIT 1000) foo)")
+    );
+    echo '<pre>' . print_r("cleaned up", true) . '</pre>';
 }
 add_action('vecollab_clean_up_responses', 'vecollab_clean_up_responses_handler');
 
@@ -78,16 +79,5 @@ function vecollab_deactivation_hook()
 {
     wp_clear_scheduled_hook('vecollab_clean_up_responses');
 }
-
-add_filter('cron_schedules', 'example_add_cron_interval');
-function example_add_cron_interval($schedules)
-{
-    $schedules['five_seconds'] = array(
-        'interval' => 5,
-        'display'  => esc_html__('Every Five Seconds'),
-    );
-    return $schedules;
-}
-
 
 include 'functions.php';

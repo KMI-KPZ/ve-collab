@@ -173,8 +173,8 @@ function vecollab_response_form_handler(){
     global $wpdb;
     $table_name = $wpdb->prefix . 'vecollab_responses';
 
-    $response = $_POST['response'];
-    $question_id = $_POST['id'];
+    $response = sanitize_textarea_field($_POST['response']);
+    $question_id = sanitize_text_field($_POST['id']);
 
     $wpdb->insert(
         $table_name,
@@ -191,16 +191,16 @@ add_action( 'admin_post_vecollab_response_form', 'vecollab_response_form_handler
 * Ajax callback function to get random responses from the db
 */
 function vecollab_get_random_responses(){
-    $id = $_POST['id'];
+    $id = sanitize_text_field($_POST['id']);
     
     global $wpdb;
     $table_name = $wpdb->prefix . 'vecollab_responses';
 
     // get 5 random responses
     $responses = $wpdb->get_results(
-        "SELECT * FROM " . $table_name . " WHERE question_id = '" . $id . "' ORDER BY RAND() LIMIT 5;"
+        $wpdb->prepare("SELECT * FROM $table_name WHERE question_id = %s ORDER BY RAND() LIMIT 5", $id)
     );
-    //echo_log($responses);
+
     $return = array(
         "responses" => $responses
     );
