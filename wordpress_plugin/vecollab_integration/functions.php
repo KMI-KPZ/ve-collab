@@ -1,9 +1,38 @@
 <?php
 
 /*
+* send the height of the document to the parent window 
+* used to make the iframe full size in the parent when embedded
+*/
+function send_doc_height() {
+    echo '<script type="text/javascript">
+            let lastSize = 0
+            function sendDocHeight(event) {
+                const el = document.querySelector("html");
+                const styles = window.getComputedStyle(el);
+                const margin = parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"]);
+
+                const height = Math.ceil(el.offsetHeight + margin);
+                if (height != lastSize) {
+                    window.parent.postMessage({
+                        type: "resize",
+                        value: height
+                    }, "*");
+                }
+
+            }
+            window.addEventListener("load", sendDocHeight);
+            window.addEventListener("resize", sendDocHeight);
+        </script>';
+}
+add_action( 'wp_footer', 'send_doc_height' );
+
+/*
  * Callback for shortcode [vecollab_response_form id="" show_others_responses=<true|false>]
  * Adds a text area and submit to the page to gather responses to questions
  * The shortcode expects an id to be passed as a parameter to identify the question.
+ * Optionally, the shortcode can be set to show other responses to the question. It will display
+ * 5 random responses to the question.
  */
 function vecollab_inject_response_form($atts = [], $content = null)
 {
