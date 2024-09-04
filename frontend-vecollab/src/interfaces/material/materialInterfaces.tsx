@@ -9,7 +9,7 @@ export interface INode {
 }
 
 export type ITopLevelNode = Overwrite<INode, { parent: 0; droppable: false }>;
- 
+
 
 export interface IMaterialNode extends INode {
     droppable: false;
@@ -17,4 +17,9 @@ export interface IMaterialNode extends INode {
         description: string;
         url: string;
     };
+}
+
+
+export interface INodeWithLections extends INode {
+    lections: INode[];
 }
