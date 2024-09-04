@@ -6,6 +6,7 @@ interface Props {
         value: string,
         label: string,
         title?: string,
+        liClasses?: string,
         icon?: JSX.Element }[]
         | JSX.Element[];
     icon?: JSX.Element
@@ -59,7 +60,7 @@ export default function Dropdown({
                             ? (<li key={i}
                                 title={element.title}
                                 onClick={() => _handleSelect(element.value)}
-                                className="flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg"
+                                className={`flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg ${element.liClasses}`}
                                 >
                                     {element.icon}
                                     <span className="mx-2 truncate">{element.label}</span>
