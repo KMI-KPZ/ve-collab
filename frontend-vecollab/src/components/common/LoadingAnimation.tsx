@@ -1,4 +1,4 @@
-import styles from "@/components/LoadingAnimation.module.css"
+import styles from "@/components/common/LoadingAnimation.module.css"
 
 export default function LoadingAnimation({size} : {size?: 'normal' | 'small'}) {
     return (

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
-import { AuthenticatedFile } from '@/components/AuthenticatedFile';
+import { AuthenticatedFile } from '@/components/common/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';

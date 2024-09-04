@@ -25,11 +25,11 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import Dialog from '@/components/profile/Dialog';
 import { fetchGET } from '@/lib/backend';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import Timestamp from '@/components/Timestamp';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import Timestamp from '@/components/common/Timestamp';
 import { MdArrowOutward, MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
-import ButtonPrimary from '@/components/ButtonPrimary';
+import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import Link from 'next/link';
 
 interface FormValues {

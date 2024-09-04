@@ -1,6 +1,6 @@
 import React from 'react';
-import HeaderSection from '@/components/Layout/HeaderSection';
-import FooterSection from '@/components/Layout/FooterSection';
+import HeaderSection from '@/components/layout/HeaderSection';
+import FooterSection from '@/components/layout/FooterSection';
 import { useSession } from 'next-auth/react';
 import ExcludedFromMatchingBanner from '../profile/ExcludedFromMatchingBanner';
 import { useGetExcludedFromMatching } from '@/lib/backend';

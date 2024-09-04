@@ -2,7 +2,7 @@ import { useGetChatroomHistory } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import ChatMessage from './ChatMessage';
 import InputArea from './InputArea';

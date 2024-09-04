@@ -14,13 +14,13 @@ import {
     MdOutlineFileDownload,
 } from 'react-icons/md';
 import { GrStatusGood } from 'react-icons/gr'
-import Timestamp from '../Timestamp';
+import Timestamp from '../common/Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
-import LoadingAnimation from '../LoadingAnimation';
-import { PlanOverview } from '../planSummary/planOverview';
-import ConfirmDialog from '../Confirm';
-import Alert, { AlertState } from '../Alert';
+import LoadingAnimation from '../common/LoadingAnimation';
+import { PlanSummary } from '../planSummary/PlanSummary';
+import ConfirmDialog from '../common/dialogs/Confirm';
+import Alert, { AlertState } from '../common/dialogs/Alert';
 import { useRouter } from 'next/router';
 import { FaEye } from 'react-icons/fa';
 
@@ -29,7 +29,7 @@ interface Props {
     refetchPlansCallback: () => Promise<void>;
 }
 
-export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Props) {
+export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -161,7 +161,7 @@ export default function PlannerOverviewItem({ plan, refetchPlansCallback }: Prop
                         <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
                             <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
                             <div className="flex w-full">
-                                <PlanOverview plan={planSummary!} />
+                                <PlanSummary plan={planSummary!} />
                             </div>
                         </div>
                     )}

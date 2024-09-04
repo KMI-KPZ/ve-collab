@@ -4,7 +4,7 @@ import { useDragOver } from '@minoru/react-dnd-treeview';
 import { RxDropdownMenu } from 'react-icons/rx';
 import { FaFile } from 'react-icons/fa';
 import Dialog from '../profile/Dialog';
-import BoxHeadline from '../BoxHeadline';
+import BoxHeadline from '../common/BoxHeadline';
 
 export type Metadata = {
     name: string;

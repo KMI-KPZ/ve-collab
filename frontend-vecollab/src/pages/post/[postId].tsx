@@ -1,4 +1,4 @@
-import LoadingAnimation from "@/components/LoadingAnimation";
+import LoadingAnimation from "@/components/common/LoadingAnimation";
 import TimelinePost from "@/components/network/TimelinePost";
 import { BackendPost } from "@/interfaces/api/apiInterfaces";
 import { useGetAllGroups, useGetMyGroupACLEntry, useGetPost, useGetGroup, useIsGlobalAdmin } from "@/lib/backend";

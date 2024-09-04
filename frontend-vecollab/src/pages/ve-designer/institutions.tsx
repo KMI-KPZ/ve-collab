@@ -17,8 +17,8 @@ import { fetchGET } from '@/lib/backend';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
 import Dialog from '@/components/profile/Dialog';
 import Link from 'next/link';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import ButtonPrimary from '@/components/ButtonPrimary';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 
 export interface Institution {
     name: string;

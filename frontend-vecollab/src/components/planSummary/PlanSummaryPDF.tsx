@@ -18,7 +18,7 @@ interface Props {
     availablePlans: IPlan[]
 }
 
-export function PlanOverviewPDF({
+export function PlanSummaryPDF({
     plan,
     openAllBoxes,
     partnerProfileSnippets,

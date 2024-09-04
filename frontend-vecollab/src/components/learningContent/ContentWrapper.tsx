@@ -2,10 +2,10 @@ import { INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { MdArrowRight, MdHome } from 'react-icons/md';
 import { useRouter } from 'next/router';
-import WhiteBox from '../Layout/WhiteBox';
-import Dropdown from '../Dropdown';
-import Container from '../Layout/container';
+import Dropdown from '../common/Dropdown';
 import { getClusterIconBySlug, getClusterSlugByRouteQuery } from '@/pages/learning-material';
+import WhiteBox from '../common/WhiteBox';
+import Container from '../common/Container';
 
 interface Props {
     headerChildren?: JSX.Element

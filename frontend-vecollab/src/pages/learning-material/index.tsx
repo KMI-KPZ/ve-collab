@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { TbBulb, TbClipboardList } from 'react-icons/tb';
 import { GiPuzzle } from 'react-icons/gi';
 import { FaLaptop } from 'react-icons/fa';
-import { Tooltip } from '@/components/Tooltip';
+import { Tooltip } from '@/components/common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 
 export const ClusterRouteMapping: {[key: string]: {route: number, slug: string}} = {

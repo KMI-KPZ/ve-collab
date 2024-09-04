@@ -6,8 +6,8 @@ import { RxDotsVertical } from 'react-icons/rx';
 import Dialog from '../profile/Dialog';
 import { fetchPOST } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
-import Timestamp from '@/components/Timestamp';
-import Alert from '../Alert';
+import Timestamp from '@/components/common/Timestamp';
+import Alert from '../common/dialogs/Alert';
 
 interface Props {
     notification: Notification;

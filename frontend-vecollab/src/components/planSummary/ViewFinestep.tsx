@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
-import { showDataOrEmptySign } from './planOverview';
+import { showDataOrEmptySign } from './PlanSummary';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';

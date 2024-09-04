@@ -1,7 +1,7 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import Container from '@/components/Layout/container';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import Timestamp from '@/components/Timestamp';
+import WhiteBox from '@/components/common/WhiteBox';
+import Container from '@/components/common/Container';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import Timestamp from '@/components/common/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';

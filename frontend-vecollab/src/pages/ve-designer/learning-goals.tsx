@@ -9,7 +9,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
-import { Tooltip } from '@/components/Tooltip';
+import { Tooltip } from '@/components/common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import { Socket } from "socket.io-client";
-import LoadingAnimation from "../LoadingAnimation";
+import LoadingAnimation from "../common/LoadingAnimation";
 import ChatRoom from "./ChatRoom";
 import Rooms from "@/components/chat/Rooms";
 

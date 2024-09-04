@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
-import { showDataOrEmptySign } from './planOverview';
-import { AuthenticatedFile } from '../AuthenticatedFile';
+import { showDataOrEmptySign } from './PlanSummary';
+import { AuthenticatedFile } from '../common/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 
 interface Props {

@@ -6,7 +6,7 @@ import {
     ISideProgressBarStates,
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { Tooltip } from '@/components/Tooltip';
+import { Tooltip } from '@/components/common/Tooltip';
 import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
 import Wrapper from '@/components/VE-designer/Wrapper';

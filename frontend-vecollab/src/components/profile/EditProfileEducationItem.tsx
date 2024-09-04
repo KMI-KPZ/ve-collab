@@ -1,6 +1,6 @@
 import { Education } from '@/interfaces/profile/profileInterfaces';
-import SlateBox from '../Layout/SlateBox';
 import EditProfileItemRow from './EditProfileItemRow';
+import SlateBox from '../common/SlateBox';
 
 interface Props {
     education: Education;

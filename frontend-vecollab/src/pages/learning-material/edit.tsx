@@ -1,5 +1,4 @@
-import BoxHeadline from '@/components/BoxHeadline';
-import WhiteBox from '@/components/Layout/WhiteBox';
+import WhiteBox from '@/components/common/WhiteBox';
 import React, { useEffect, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import {
@@ -15,8 +14,9 @@ import { CustomDragPreview } from '@/components/learningContent/CustomDragPrevie
 import Dialog from '@/components/profile/Dialog';
 import { fetchGET, fetchPOST, useGetCheckAdminUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import Alert from '@/components/Alert';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import Alert from '@/components/common/dialogs/Alert';
+import BoxHeadline from '@/components/common/BoxHeadline';
 
 export type Metadata = {
     name: string;

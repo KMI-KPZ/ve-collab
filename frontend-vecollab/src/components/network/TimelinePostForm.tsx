@@ -2,13 +2,13 @@ import { fetchGET, fetchPOST, useGetOwnProfile } from "@/lib/backend";
 import { useSession } from "next-auth/react";
 import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
 import { IoIosSend, IoMdClose } from "react-icons/io";
-import AuthenticatedImage from "../AuthenticatedImage";
+import AuthenticatedImage from "../common/AuthenticatedImage";
 import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import PostHeader from "./PostHeader";
 import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff, MdNewspaper, MdPublic } from "react-icons/md";
 import { RxFile } from "react-icons/rx";
-import LoadingAnimation from "../LoadingAnimation";
+import LoadingAnimation from "../common/LoadingAnimation";
 import {
     BtnBold,
     BtnItalic,
@@ -23,10 +23,10 @@ import {
 import TimelinePostText from "./TimelinePostText";
 import { sanitizedText } from "./sanitizedText";
 import Dialog from "../profile/Dialog";
-import Dropdown from "../Dropdown";
+import Dropdown from "../common/Dropdown";
 import { IPlan } from "@/interfaces/planner/plannerInterfaces";
-import Timestamp from "../Timestamp";
-import ButtonNewPlan from "../Plannner/ButtonNewPlan";
+import Timestamp from "../common/Timestamp";
+import ButtonNewPlan from "../plans/ButtonNewPlan";
 import { Socket } from "socket.io-client";
 
 interface Props {

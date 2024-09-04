@@ -8,8 +8,8 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
-import Dropdown from '../Dropdown';
-import AuthenticatedImage from '../AuthenticatedImage';
+import Dropdown from '../common/Dropdown';
+import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
 
 interface Props {

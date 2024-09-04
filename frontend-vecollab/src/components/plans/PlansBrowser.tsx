@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
-import PlannerOverviewItem from './PlannerOverviewItem';
+import PlansBrowserItem from './PlansBrowserItem';
 import { IfilterBy, IsortBy } from '@/pages/plans';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
     refetchPlansCallback: () => Promise<void>;
 }
 
-export function PlansOverview({
+export function PlansBrowser({
     plans,
     sortBy,
     filterBy,
@@ -77,7 +77,7 @@ export function PlansOverview({
                                 key={index}
                                 className="flex flex-row space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
                             >
-                                <PlannerOverviewItem
+                                <PlansBrowserItem
                                     key={index}
                                     plan={plan}
                                     refetchPlansCallback={refetchPlansCallback}

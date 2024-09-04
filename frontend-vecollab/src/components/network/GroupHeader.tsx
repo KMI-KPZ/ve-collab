@@ -1,4 +1,4 @@
-import AuthenticatedImage from '../AuthenticatedImage';
+import AuthenticatedImage from '../common/AuthenticatedImage';
 import { RxTrash } from 'react-icons/rx';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -6,14 +6,14 @@ import { fetchDELETE, fetchGET, fetchPOST, useGetGroup } from '@/lib/backend';
 import { ChangeEvent, useEffect, useState } from 'react';
 import Dialog from '../profile/Dialog';
 import Tabs from '../profile/Tabs';
-import BoxHeadline from '../BoxHeadline';
+import BoxHeadline from '../common/BoxHeadline';
 import AvatarEditor from '../profile/AvatarEditor';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 import Select from 'react-select';
 import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
-import Dropdown from '../Dropdown';
+import Dropdown from '../common/Dropdown';
 
 interface Props {
     userIsAdmin: () => boolean;

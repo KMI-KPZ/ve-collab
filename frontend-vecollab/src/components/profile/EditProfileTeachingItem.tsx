@@ -1,5 +1,5 @@
 import { Course } from '@/interfaces/profile/profileInterfaces';
-import SlateBox from '../Layout/SlateBox';
+import SlateBox from '../common/SlateBox';
 import EditProfileItemRow from './EditProfileItemRow';
 
 interface Props {

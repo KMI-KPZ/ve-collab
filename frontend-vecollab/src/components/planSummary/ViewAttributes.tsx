@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
 import Image from 'next/image';
-import { showDataOrEmptySign } from './planOverview';
+import { showDataOrEmptySign } from './PlanSummary';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {

@@ -1,7 +1,7 @@
 import { BackendPostAuthor } from "@/interfaces/api/apiInterfaces";
-import AuthenticatedImage from "../AuthenticatedImage";
+import AuthenticatedImage from "../common/AuthenticatedImage";
 import Link from "next/link";
-import Timestamp from '@/components/Timestamp';
+import Timestamp from '@/components/common/Timestamp';
 
 interface Props {
     author: BackendPostAuthor,

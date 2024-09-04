@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import { PlansOverview } from '@/components/Plannner/PlansOverview';
-import { PlansOverviewFilter } from '@/components/Plannner/PlansOverviewFilter';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { PlansBrowser } from '@/components/plans/PlansBrowser';
+import { PlansBrowserFilter } from '@/components/plans/PlansBrowserFilter';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
-import Alert from '@/components/Alert';
+import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
 
 export interface IfilterBy {
@@ -37,6 +37,7 @@ export default function Plans({ socket }: Props) {
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
+    // TODO add author full name  (in backend)
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
     useEffect(() => {
@@ -89,7 +90,7 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
+            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue bg-no-repeat">
                 <div className="container mx-auto mb-14 px-5 p-12">
                     <div className="flex justify-between mb-6">
                         <div>
@@ -112,7 +113,7 @@ export default function Plans({ socket }: Props) {
                         </div>
                     </div>
 
-                    <PlansOverviewFilter
+                    <PlansBrowserFilter
                         socket={socket}
                         filterBy={filterBy}
                         filterByCallback={handleFilterBy}
@@ -130,7 +131,7 @@ export default function Plans({ socket }: Props) {
                             <LoadingAnimation size="small" /> lade Pläne ...
                         </div>
                     ) : (
-                        <PlansOverview
+                        <PlansBrowser
                             plans={sortedPlans}
                             sortBy={sortBy}
                             filterBy={filterBy}
