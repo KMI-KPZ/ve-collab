@@ -1,13 +1,12 @@
 import { RxDotsVertical } from 'react-icons/rx';
 import { Notification } from '@/interfaces/socketio';
 import { useEffect, useState } from 'react';
-import { fetchGET, fetchPOST } from '@/lib/backend';
+import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import Dialog from '../profile/Dialog';
 import Link from 'next/link';
-import Timestamp from '@/components/Timestamp';
+import Timestamp from '@/components/common/Timestamp';
 
 interface Props {
     notification: Notification;
@@ -15,7 +14,7 @@ interface Props {
     removeNotificationCallback: (notificationId: string) => void;
 }
 
-export default function VeInvitationNotification({
+export default function GroupInvitationNotification({
     notification,
     acknowledgeNotificationCallback,
     removeNotificationCallback,
@@ -23,7 +22,6 @@ export default function VeInvitationNotification({
     const { data: session } = useSession();
 
     const [invitedFromUser, setInvitedFromUser] = useState<UserSnippet>();
-    const [invitedVePlan, setInvitedVePlan] = useState<PlanPreview>();
 
     const [isNotificationsDialogOpen, setIsNotificationsDialogOpen] = useState(false);
 
@@ -36,17 +34,25 @@ export default function VeInvitationNotification({
     };
 
     const replyInvitation = (accept: boolean) => {
-        fetchPOST(
-            '/ve_invitation/reply',
-            { invitation_id: notification.payload.invitation_id, accepted: accept },
-            session?.accessToken
-        );
+        if (accept) {
+            fetchPOST(
+                `/spaceadministration/accept_invite?id=${notification.payload.space_id}`,
+                {},
+                session?.accessToken
+            );
+        } else {
+            fetchPOST(
+                `/spaceadministration/decline_invite?id=${notification.payload.space_id}`,
+                {},
+                session?.accessToken
+            );
+        }
     };
 
     useEffect(() => {
         fetchPOST(
             '/profile_snippets',
-            { usernames: [notification.payload.from] },
+            { usernames: [notification.payload.invitation_sender] },
             session?.accessToken
         ).then((data) => {
             setInvitedFromUser({
@@ -56,13 +62,6 @@ export default function VeInvitationNotification({
                 institution: data.user_snippets[0].institution,
             });
         });
-        if (notification.payload.plan_id !== null) {
-            fetchGET(`/planner/get?_id=${notification.payload.plan_id}`, session?.accessToken).then(
-                (data) => {
-                    setInvitedVePlan(data.plan);
-                }
-            );
-        }
     }, [notification, session]);
 
     return (
@@ -76,8 +75,8 @@ export default function VeInvitationNotification({
                     }}
                 >
                     <p>
-                        Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen:{' '}
-                        <b>{invitedVePlan?.name}</b>
+                        Du wurdest von <b>{invitedFromUser?.name}</b> in die Gruppe{' '}
+                        <b>{notification.payload.space_name}</b> eingeladen
                     </p>
                     <Timestamp
                         className="text-sm text-gray-500"
@@ -96,43 +95,33 @@ export default function VeInvitationNotification({
             </li>
             <Dialog
                 isOpen={isNotificationsDialogOpen}
-                title={'neue VE-Einladung'}
+                title={'neue Gruppen-Einladung'}
                 onClose={() => {
                     removeNotificationCallback(notification._id);
                     handleCloseNotificationsDialog();
                 }}
             >
-                <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+                <div className="w-[30rem] min-h-[10rem] relative">
                     <div>
                         <p>
                             <Link href={`/profile/user/${invitedFromUser?.preferredUsername}`}>
                                 <b>{invitedFromUser?.name}</b>
                             </Link>{' '}
-                            hat dich eingeladen:
+                            hat dich in die Gruppe{' '}
+                            <Link href={`/group/${notification.payload.space_id}`}>
+                                <b>{notification.payload.space_name}</b>
+                            </Link>{' '}
+                            eingeladen.
+                        </p>
+                        <p className="my-4">
+                            Du kannst die Einladung sofort beantworten, oder später in deinen{' '}
+                            <Link href={'/groups'}>
+                                {/* TODO direct link to correct tab in spaces overview*/}
+                                <b>gesammelten Anfragen</b>
+                            </Link>
+                            .
                         </p>
                     </div>
-                    <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
-                        <p className="text-slate-700">{notification.payload.message}</p>
-                    </div>
-                    {invitedVePlan !== undefined && (
-                        <div>
-                            <p>
-                                <Link href={`/profile/user/${invitedFromUser?.preferredUsername}`}>
-                                    <b>{invitedFromUser?.name}</b>
-                                </Link>{' '}
-                                hat bereits vorgearbeitet, sieh dir den zugehörigen Plan an:
-                            </p>
-                            <div className="flex my-4 justify-center text-slate-900 text-xl font-bold">
-                                {/* todo this should link to a read-only view of the plan*/}
-                                <Link
-                                    target="_blank"
-                                    href={`/ve-designer/name?plannerId=${notification.payload.plan_id}`}
-                                >
-                                    {invitedVePlan?.name}
-                                </Link>
-                            </div>
-                        </div>
-                    )}
                     <div className="flex absolute bottom-0 w-full">
                         <button
                             className={

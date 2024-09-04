@@ -1,7 +1,7 @@
-import AuthenticatedImage from "@/components/AuthenticatedImage";
-import LoadingAnimation from "@/components/LoadingAnimation";
+import AuthenticatedImage from "@/components/common/AuthenticatedImage";
+import LoadingAnimation from "@/components/common/LoadingAnimation";
 import TimelinePostText from "@/components/network/TimelinePostText";
-import Timestamp from "@/components/Timestamp";
+import Timestamp from "@/components/common/Timestamp";
 import { useGetSearchResults } from "@/lib/backend";
 import { useRouter } from "next/router";
 import { FormEvent, useState } from "react";

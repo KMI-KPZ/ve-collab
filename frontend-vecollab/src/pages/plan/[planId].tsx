@@ -1,15 +1,15 @@
 import React from 'react';
 import { useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import { PlanOverview } from '@/components/planSummary/planOverview';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Link from 'next/link';
 import { MdEdit, MdOutlineFileDownload } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import { GiSadCrab } from 'react-icons/gi';
+import { PlanSummary } from '@/components/planSummary/PlanSummary';
 
-PlanSummary.auth = true;
-export default function PlanSummary() {
+Plan.auth = true;
+export default function Plan() {
     const { data: session } = useSession();
 
     const router = useRouter();
@@ -82,7 +82,7 @@ export default function PlanSummary() {
                         <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
                     </div>
                     <div className="flex w-full">
-                        <PlanOverview plan={plan} />
+                        <PlanSummary plan={plan} />
                     </div>
                 </>
             )}

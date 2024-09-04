@@ -3,7 +3,7 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText, getNodeByText } from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { getClusterSlugByRouteQuery } from '../..';
 
 interface Props {

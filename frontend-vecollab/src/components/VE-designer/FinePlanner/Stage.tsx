@@ -1,5 +1,5 @@
 import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
-import WhiteBox from '@/components/Layout/WhiteBox';
+import WhiteBox from '@/components/common/WhiteBox';
 import React from 'react';
 import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/[stepName]';
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';

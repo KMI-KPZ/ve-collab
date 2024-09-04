@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import BoxHeadline from '@/components/BoxHeadline';
+import BoxHeadline from '@/components/common/BoxHeadline';
 import PersonalInformationItem from './PersonalInformationItem';
 import TagBox from './TagBox';
 

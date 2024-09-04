@@ -4,10 +4,10 @@ import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from '@/components/AuthenticatedImage';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
-import Alert from '../Alert';
+import Alert from '../common/dialogs/Alert';
 
 interface Props {
     name: string;

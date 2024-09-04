@@ -3,7 +3,7 @@ import '@/styles/globals.css';
 import '@/styles/networkPostsFormatter.css';
 
 import type { AppProps } from 'next/app';
-import LayoutSection from '@/components/Layout/LayoutSection';
+import LayoutSection from '@/components/layout/LayoutSection';
 import Head from 'next/head';
 import { SessionProvider, signIn, useSession } from 'next-auth/react';
 import Favicon from '@/components/metaTags/Favicon';
@@ -12,10 +12,10 @@ import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
 import { NextComponentType, NextPageContext } from 'next';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
+import NotificationsWindow from '@/components/notifications/NotificationsWindow';
 import ChatWindow from '@/components/chat/ChatWindow';
-import NotificationsWindow from '@/components/Notifications/NotificationsWindow';
 
 export const SocketContext = createContext(socket);
 

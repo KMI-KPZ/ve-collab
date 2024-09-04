@@ -3,9 +3,9 @@ import { fetchPOST } from '@/lib/backend';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import EditAccessUserSnippet from './EditAccessUserSnippet';
-import { AlertState } from '../Alert';
+import { AlertState } from '../common/dialogs/Alert';
 
 interface Props {
     closeDialogCallback: () => void;

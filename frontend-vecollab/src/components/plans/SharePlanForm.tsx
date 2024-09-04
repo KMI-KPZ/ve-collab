@@ -3,7 +3,7 @@ import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import { AlertState } from '../Alert';
+import { AlertState } from '../common/dialogs/Alert';
 
 interface Props {
     closeDialogCallback: () => void;

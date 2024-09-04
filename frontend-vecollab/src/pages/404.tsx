@@ -1,4 +1,3 @@
-import Alert from "@/components/Alert";
 import Link from "next/link";
 import { GiSadCrab } from "react-icons/gi";
 

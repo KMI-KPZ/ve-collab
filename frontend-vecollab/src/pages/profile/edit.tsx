@@ -1,5 +1,5 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import WhiteBox from '@/components/common/WhiteBox';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
@@ -22,7 +22,7 @@ import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings'
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { DropdownList } from '@/interfaces/dropdowns';
-import Alert from '@/components/Alert';
+import Alert from '@/components/common/dialogs/Alert';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',

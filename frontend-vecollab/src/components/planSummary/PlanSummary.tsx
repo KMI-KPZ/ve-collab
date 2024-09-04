@@ -6,12 +6,12 @@ import ViewAfterVE from './ViewAfterVE';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/backend';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import Dialog from '../profile/Dialog';
 import { MdEdit, MdNewspaper } from 'react-icons/md';
-import Timestamp from '../Timestamp';
-import Alert, { AlertState } from '../Alert';
+import Timestamp from '../common/Timestamp';
+import Alert, { AlertState } from '../common/dialogs/Alert';
 import { socket } from '@/lib/socket';
 import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
@@ -26,8 +26,8 @@ interface FormValues {
     step: IFineStep;
 }
 
-PlanOverview.auth = true;
-export function PlanOverview({ plan, openAllBoxes }: Props): JSX.Element {
+PlanSummary.auth = true;
+export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
     const { data: session } = useSession();
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;

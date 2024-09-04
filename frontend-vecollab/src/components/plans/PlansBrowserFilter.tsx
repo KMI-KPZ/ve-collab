@@ -11,7 +11,7 @@ interface Props {
     filterByCallback: ({ planKey, compare, id }: IfilterBy) => void;
 }
 
-export function PlansOverviewFilter({
+export function PlansBrowserFilter({
     filterBy,
     filterByCallback,
     socket,

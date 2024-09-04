@@ -1,11 +1,11 @@
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import { MdClose } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
-import AllNotifications from '@/components/Notifications/AllNotifications';
-import GroupInvitationNotification from '@/components/Notifications/GroupInvitationNotification';
-import GroupJoinRequestNotification from '@/components/Notifications/GroupJoinRequestNotification';
-import VeInvitationNotification from '@/components/Notifications/VeInvitationNotification';
-import VeInvitationReplyNotification from '@/components/Notifications/VeInvitationReplyNotification';
+import AllNotifications from '@/components/notifications/AllNotifications';
+import GroupInvitationNotification from '@/components/notifications/GroupInvitationNotification';
+import GroupJoinRequestNotification from '@/components/notifications/GroupJoinRequestNotification';
+import VeInvitationNotification from '@/components/notifications/VeInvitationNotification';
+import VeInvitationReplyNotification from '@/components/notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
 

@@ -7,7 +7,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { TooltipList } from '@/components/TooltipList';
+import { TooltipList } from '@/components/common/TooltipList';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';

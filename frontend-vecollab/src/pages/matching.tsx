@@ -1,6 +1,6 @@
-import AuthenticatedImage from '@/components/AuthenticatedImage';
-import BoxHeadline from '@/components/BoxHeadline';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
+import BoxHeadline from '@/components/common/BoxHeadline';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { useGetMatching } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';

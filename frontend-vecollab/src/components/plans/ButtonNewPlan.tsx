@@ -2,7 +2,7 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import router from 'next/router';
 import { Socket } from 'socket.io-client';
-import ButtonPrimary from '../ButtonPrimary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 
 interface Props {

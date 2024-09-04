@@ -1,11 +1,11 @@
-import Container from '@/components/Layout/container';
+import Container from '@/components/common/Container';
 import PersonalData from '@/components/profile/PersonalData';
 import ProfileBanner from '@/components/profile/profile-banner';
 import ProfileHeader from '@/components/profile/profile-header';
-import WhiteBox from '@/components/Layout/WhiteBox';
+import WhiteBox from '@/components/common/WhiteBox';
 import VEVitrine from '@/components/profile/VEVitrine';
 import ExtendedPersonalInformation from '@/components/profile/ExtendedPersonalInformation';
-import BoxHeadline from '@/components/BoxHeadline';
+import BoxHeadline from '@/components/common/BoxHeadline';
 import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
@@ -19,7 +19,7 @@ import {
     ResearchAndTeachingInformation,
 } from '@/interfaces/profile/profileInterfaces';
 import Timeline from '@/components/network/Timeline';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { Socket } from 'socket.io-client';
 
 interface Props {

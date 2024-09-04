@@ -1,8 +1,8 @@
 import React from 'react';
-import AuthenticatedImage from '@/components/AuthenticatedImage';
-import BoxHeadline from '@/components/BoxHeadline';
-import WhiteBox from '@/components/Layout/WhiteBox';
-import Container from '@/components/Layout/container';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
+import BoxHeadline from '@/components/common/BoxHeadline';
+import WhiteBox from '@/components/common/WhiteBox';
+import Container from '@/components/common/Container';
 import Dialog from '@/components/profile/Dialog';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import {

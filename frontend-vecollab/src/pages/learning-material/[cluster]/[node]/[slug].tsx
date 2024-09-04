@@ -4,7 +4,7 @@ import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText, getNodeByText } 
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import Dropdown from '@/components/Dropdown';
+import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import { getClusterSlugByRouteQuery } from '../..';

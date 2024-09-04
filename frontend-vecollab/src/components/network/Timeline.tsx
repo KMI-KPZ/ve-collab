@@ -1,18 +1,18 @@
 import { fetchGET, useGetAllGroups, useGetPinnedPosts, useGetTimeline } from "@/lib/backend";
 import { useSession } from "next-auth/react";
-import LoadingAnimation from "../LoadingAnimation";
+import LoadingAnimation from "../common/LoadingAnimation";
 import TimelinePost from "./TimelinePost";
 import { useCallback, useEffect, useState } from "react";
 import TimelinePostForm from "./TimelinePostForm";
 import { BackendPost, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
-import Timestamp from "../Timestamp";
+import Timestamp from "../common/Timestamp";
 import { HiOutlineCalendar } from "react-icons/hi";
 import React from "react";
 import { TiPin } from "react-icons/ti";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 import { useRouter } from "next/router";
 import { Socket } from "socket.io-client";
-import GeneralError from "../Layout/GeneralError";
+import GeneralError from "../common/GeneralError";
 
 interface Props {
     /** User is global admin or admin of current group */
