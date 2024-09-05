@@ -66,6 +66,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         mode: 'onChange',
     });
 
+    const [planAuthor, setPlanAuthor] = useState<string>()
+
     const {
         fields: fieldsPartners,
         append: appendPartners,
@@ -90,6 +92,8 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
+            setPlanAuthor(plan.author)
+
             let partners = [{ label: '', value: '' }]
             let extPartners = [{ externalParty: '' }]
             if (plan.checklist && Array.isArray(plan.checklist)) {
@@ -363,15 +367,25 @@ export default function Partners({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div>
-                <p className="text-xl text-slate-600 mb-2">Partner:innen</p>
-                {fieldsPartners.map((partner, index) => (
-                    <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
-                        <button onClick={() => handleDeletePartners(index)}>
-                            <RxMinus size={20} />
-                        </button>
-                    </div>
-                ))}
+                <p className="text-xl text-slate-600 mb-2">Beteiligte</p>
+                {fieldsPartners.map((partner, index) => {
+                    return (
+                        <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                            {partner.value == planAuthor
+                                ? (
+                                    <div className='p-2'>{partner.label}</div>
+                                ) : (
+                                    <>
+                                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
+                                        <button onClick={() => handleDeletePartners(index)}>
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </>
+                                )
+                            }
+                        </div>
+                    )
+                })}
                 <div className="mt-4">
                     <button
                         className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
