@@ -92,7 +92,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
-            setPlanAuthor(plan.author)
+            setPlanAuthor(plan.author.username)
 
             let partners = [{ label: '', value: '' }]
             let extPartners = [{ externalParty: '' }]
