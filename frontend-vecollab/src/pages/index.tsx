@@ -5,10 +5,13 @@ import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import WhiteBox from '@/components/common/WhiteBox';
 import { SocketContext } from './_app';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export default function Home(): JSX.Element {
     const { data: session, status } = useSession();
     const socket = useContext(SocketContext);
+    const { t } = useTranslation('common')
 
     return (
         <div className="bg-slate-100 bg-pattern-left-blue bg-no-repeat">
@@ -33,7 +36,7 @@ export default function Home(): JSX.Element {
                             <WhiteBox>
                                 <div className='text-center lg:text-xl p-6'>
                                     <h2 className='text-2xl mb-4'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
-                                    <ButtonNewPlan socket={socket} label='Neuen VA planen' />
+                                    <ButtonNewPlan socket={socket} label={t('btn_new_va')} />
                                 </div>
                             </WhiteBox>
                             <div className="w-1/2">
@@ -51,3 +54,13 @@ export default function Home(): JSX.Element {
         </div>
     );
 }
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+      props: {
+        ...(await serverSideTranslations(locale ?? 'en', [
+          'common',
+        ])),
+      },
+    }
+  }
