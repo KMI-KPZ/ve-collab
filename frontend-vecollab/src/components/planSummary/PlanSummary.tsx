@@ -44,7 +44,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
     })
     const [loadingImport, setLoadingImport] = useState<boolean>(false)
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
-    const {data: partnerUserSnippets, isLoading} = useGetProfileSnippets([...plan.partners, plan.author], session!.accessToken)
+    const {data: partnerUserSnippets, isLoading} = useGetProfileSnippets([...plan.partners, plan.author.username], session!.accessToken)
 
     useEffect(() => {
         if (!partnerUserSnippets?.length) return

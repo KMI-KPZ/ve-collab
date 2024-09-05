@@ -164,7 +164,7 @@ export default function Wrapper({
         // write access or author check
         if (
             !plan.write_access.includes(session?.user.preferred_username!) &&
-            plan.author !== session?.user.preferred_username!
+            plan.author.username !== session?.user.preferred_username!
         ) {
             setAlert({
                 message: 'Sie haben keine Berechtigung, um diesen Plan zu bearbeiten.',

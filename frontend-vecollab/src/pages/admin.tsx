@@ -33,7 +33,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
         fetchPOST(
             '/profile_snippets',
             {
-                usernames: [...new Set(plans.map((plan) => plan.author))],
+                usernames: [...new Set(plans.map((plan) => plan.author.username))],
             },
             session!.accessToken
         ).then((data) => {
@@ -96,16 +96,16 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                                     <div className="text-md text-gray-500">
                                                         {userProfileSnippets?.find(
                                                             (snippet) =>
-                                                                snippet.username === plan.author
+                                                                snippet.username === plan.author.username
                                                         )?.first_name +
                                                             ' ' +
                                                             userProfileSnippets?.find(
                                                                 (snippet) =>
-                                                                    snippet.username === plan.author
+                                                                    snippet.username === plan.author.username
                                                             )?.last_name}
                                                     </div>
                                                     <div className="text-md text-gray-500">
-                                                        {plan.author}
+                                                        {plan.author.first_name} {plan.author.last_name}
                                                     </div>
                                                 </Link>
                                             </div>

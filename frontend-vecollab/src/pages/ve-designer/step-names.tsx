@@ -304,8 +304,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     {plan.name}
                                     <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
                                 </Link>
-                                {session?.user.preferred_username != plan.author && (
-                                    <div className="text-sm text-gray-500">von {plan.author}</div>
+                                {session?.user.preferred_username != plan.author.username && (
+                                    <div className="text-sm text-gray-500">von {plan.author.first_name} {plan.author.last_name}</div>
                                 )}
                                 <span className="grow text-right" title="zuletzt geändert">
                                     <Timestamp timestamp={plan.last_modified} className="text-sm" />
