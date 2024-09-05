@@ -341,8 +341,8 @@ export default function TimelinePostForm(
                         )}
                         {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
                         {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
-                        {session?.user.preferred_username != plan.author && (
-                            <div className="text-sm text-gray-500">von {plan.author}</div>
+                        {session?.user.preferred_username != plan.author.username && (
+                            <div className="text-sm text-gray-500">von {plan.author.first_name} {plan.author.last_name}</div>
                         )}
                         <span className="grow text-right" title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
                     </div>
@@ -477,7 +477,7 @@ export default function TimelinePostForm(
                             <div className="mr-4 flex items-center gap-x-4 gap-y-6" key={index}>
                                 <MdNewspaper size={30} />
                                 <div className="truncate font-bold grow-0">{plan.name}</div>
-                                <div className="text-sm text-gray-500 gro">{plan.author}</div>
+                                <div className="text-sm text-gray-500 gro">{plan.author.first_name} {plan.author.last_name}</div>
                                 <Timestamp timestamp={plan.last_modified} className='text-sm' />
                                 <button onClick={() => removePlanAttachment(plan)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Plan Entfernen">
                                         <IoMdClose />

@@ -102,7 +102,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             // fetch profile snippets to be able to display the full name instead of username only
             fetchPOST(
                 '/profile_snippets',
-                { usernames: [...plan.partners, plan.author] },
+                { usernames: [...plan.partners, plan.author.username] },
                 session?.accessToken
             ).then((snippets: BackendProfileSnippetsResponse) => {
                 let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};

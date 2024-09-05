@@ -297,7 +297,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             </div>
 
             <div
-                className="grow p-3 font-normal text-base group hover:cursor-pointer"
+                className="grow font-normal text-base group hover:cursor-pointer"
                 onClick={(e) => {
                     e.stopPropagation();
                     forward(plan._id);
@@ -320,7 +320,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                         </div>
                     )} */}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {plan.author == username && (
+                        {plan.author.username == username && (
                             <>
                                 <ViewButton />
                                 <CopyButton />
@@ -328,7 +328,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                                 <DeleteButton />
                             </>
                         )}
-                        {plan.author != username && plan.write_access.includes(username) && (
+                        {plan.author.username != username && plan.write_access.includes(username) && (
                             <>
                                 <ViewButton />
                                 <CopyButton />
@@ -338,12 +338,12 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 </div>
             </div>
 
-            <div className="basis-1/6">
-                {plan.author === username ? (
-                    <>{plan.author}</>
+            <div className="basis-1/6 truncate">
+                {plan.author.username === username ? (
+                    <>{plan.author.first_name} {plan.author.last_name}</>
                 ) : (
-                    <span title={`Plan geteilt von ${plan.author}`}>
-                        <MdShare className="inline m-1 text-slate-900" /> {plan.author}
+                    <span title={`Plan geteilt von ${plan.author.first_name} ${plan.author.last_name}`}>
+                        <MdShare className="inline m-1 text-slate-900" /> {plan.author.first_name} {plan.author.last_name}
                     </span>
                 )}
             </div>

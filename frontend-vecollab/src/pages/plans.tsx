@@ -10,12 +10,13 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 export interface IfilterBy {
     /** key from PlanPreview to filter */
     planKey: keyof PlanPreview;
     /** compare function to compare the plan[planKey].planValue of a plan   */
-    compare: (planValue: string | string[] | boolean | ISideProgressBarStates) => boolean;
+    compare: (planValue: string | string[] | boolean | ISideProgressBarStates | BackendUserSnippet) => boolean;
     /** opti0nal id of your filter function (used in filterBy array) */
     id?: string;
 }
@@ -53,7 +54,6 @@ export default function Plans({ socket }: Props) {
         if (filterBy && filterBy.length) {
             filterBy.forEach((filter) => {
                 sortedPlans = sortedPlans.filter((p) => {
-                    // return p[filter.planKey] && filter.compare(p[filter.planKey]);
                     return filter.planKey in p && filter.compare(p[filter.planKey]);
                 });
             });
