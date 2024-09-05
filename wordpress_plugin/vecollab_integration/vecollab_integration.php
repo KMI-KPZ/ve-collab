@@ -27,6 +27,18 @@ function vecollab_enqueue_scripts()
 add_action('wp_enqueue_scripts', 'vecollab_enqueue_scripts');
 
 /*
+* add header meta to pages
+*/
+function vecollab_add_meta_tags()
+{   
+    // prevents the page from being indexed by search engines
+    // import because we only want the correspoding plattform pages to be
+    // indexed, not these embeds
+    echo '<meta name="googlebot" content="noindex,indexifembedded" />';
+}
+add_action('wp_head', 'vecollab_add_meta_tags');
+
+/*
 * when the plugin is activated, create a table in the db to store responses
 * and start the cron job to periodically clean up the responses
 */

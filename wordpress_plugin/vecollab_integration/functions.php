@@ -51,7 +51,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
     $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
 
     $html = '
-        <form action="' . $admin_url . '" method="POST">
+        <form id="form_' . $shortcode_atts['id'] . '" action="' . $admin_url . '" method="POST">
             <textarea
                 class="responseTextarea"
                 rows="5"
@@ -62,11 +62,10 @@ function vecollab_inject_response_form($atts = [], $content = null)
                 <button
                     type="submit"
                     class="orangeBtn"
-                    onclick="saveInCookie();"
                 >
                     Speichern
                 </button>';
-    if($shortcode_atts['show_others_responses']){
+    if($shortcode_atts['show_others_responses'] === "true"){
         $html .= '<button
                     type="button"
                     class="orangeBtn"
@@ -83,14 +82,6 @@ function vecollab_inject_response_form($atts = [], $content = null)
             </div>
         </form>
         <script>
-            function saveInCookie(){
-                let text = document.getElementById("' . $shortcode_atts['id'] . '").value;
-                let d = new Date();
-                d.setTime(d.getTime() + (365*24*60*60*1000));
-                let expires = "expires="+ d.toUTCString();
-                document.cookie = "' . $shortcode_atts['id'] . '" + "=" + text + "; " + expires;
-            }
-            
             function getCookie(name) {
                 const nameEQ = name + "=";
                 for (const cookie of document.cookie.split("; ")) {
@@ -104,8 +95,17 @@ function vecollab_inject_response_form($atts = [], $content = null)
             }
 
             jQuery(document).ready(function($){
-                $("form").submit(function(e){
+                $("#form_' . $shortcode_atts['id'] . '").submit(function(e){
                     e.preventDefault();
+                    
+                    // save the given answer in a cookie
+                    let text = document.getElementById("' . $shortcode_atts['id'] . '").value;
+                    let d = new Date();
+                    d.setTime(d.getTime() + (365*24*60*60*1000));
+                    let expires = "expires="+ d.toUTCString();
+                    document.cookie = "' . $shortcode_atts['id'] . '" + "=" + text + "; " + expires + "; SameSite=None; Secure";
+
+                    // send the answer to the server for storage
                     $.ajax({
                         type: "POST",
                         url: "'. $admin_url . '",
@@ -233,7 +233,7 @@ function vecollab_inject_my_response($atts = [], $content = null){
 
     $html = '<p>' . $answer . '</p>';
 
-    if($shortcode_atts['show_others_responses']){
+    if($shortcode_atts['show_others_responses'] === "true"){
         $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
         $html .= 
             '<button
