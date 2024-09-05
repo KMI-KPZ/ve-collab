@@ -1792,8 +1792,22 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
+        profile_manager = Profiles(db)
         try:
             plan = planner.get_plan(_id, requesting_username=self.current_user.username)
+            plan_dict = plan.to_dict()
+            if plan.author:
+                author_snippet = profile_manager.get_profile_snippets([plan.author])[0]
+            else:
+                author_snippet = {
+                    "username": None,
+                    "first_name": None,
+                    "last_name": None,
+                    "institution": None,
+                    "profile_pic": None,
+                }
+            plan_dict["author"] = author_snippet
+
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -1803,7 +1817,7 @@ class VEPlanHandler(BaseHandler):
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
-        self.serialize_and_write({"success": True, "plan": plan.to_dict()})
+        self.serialize_and_write({"success": True, "plan": plan_dict})
 
     def get_available_plans_for_user(self, db: Database) -> None:
         """
@@ -1841,6 +1855,8 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_good_practise_plans()]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_public_plans_of_user(self, db: Database, username: str) -> None:
@@ -1858,6 +1874,8 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_public_plans_of_user(username)]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_all_plans(self, db: Database) -> None:
@@ -1881,9 +1899,19 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_all()]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def add_profile_information_to_author(self, plans: List[VEPlan]) -> List[VEPlan]:
+        """
+        helper function to enhace the authors (which are only usernames) of the given
+        plans with additional profile information, which are username, first_name, last_name,
+        institution and profile_pic.
+
+        Returns the plans with the enhanced author information.
+        """
+
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
 
@@ -1900,10 +1928,11 @@ class VEPlanHandler(BaseHandler):
             for plan in plans:
                 plan["author"] = next(
                     (
-                       profile
-                       for profile in profile_snippets
-                       if profile["username"] == plan["author"]
-                    ), [None]
+                        profile
+                        for profile in profile_snippets
+                        if profile["username"] == plan["author"]
+                    ),
+                    [None],
                 )
 
         return plans

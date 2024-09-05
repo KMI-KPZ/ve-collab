@@ -206,8 +206,8 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 ],
                 "chosen_institution_id": current_admin_institution_id,
                 "profile_pic": "default_profile_pic.jpg",
-                "first_name": None,
-                "last_name": None,
+                "first_name": "CURRENT",
+                "last_name": "ADMIN",
                 "gender": None,
                 "address": None,
                 "birthday": None,
@@ -8010,55 +8010,110 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIn("plan", response)
         self.assertIsInstance(response["plan"], dict)
 
-        response_plan = VEPlan.from_dict(response["plan"])
+        response_plan = response["plan"]
         default_plan = VEPlan.from_dict(self.default_plan)
-        self.assertEqual(response_plan._id, default_plan._id)
-        self.assertEqual(response_plan.author, default_plan.author)
-        self.assertEqual(response_plan.name, default_plan.name)
-        self.assertEqual(response_plan.partners, default_plan.partners)
-        self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topics, default_plan.topics)
-        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(ObjectId(response_plan["_id"]), default_plan._id)
+        self.assertIn("username", response_plan["author"])
+        self.assertIn("first_name", response_plan["author"])
+        self.assertIn("last_name", response_plan["author"])
+        self.assertIn("profile_pic", response_plan["author"])
+        self.assertEqual(response_plan["author"]["username"], default_plan.author)
         self.assertEqual(
-            response_plan.major_learning_goals, default_plan.major_learning_goals
+            response_plan["author"]["first_name"],
+            self.test_profiles[CURRENT_ADMIN.username]["first_name"],
         )
         self.assertEqual(
-            response_plan.individual_learning_goals,
+            response_plan["author"]["last_name"],
+            self.test_profiles[CURRENT_ADMIN.username]["last_name"],
+        )
+        self.assertEqual(
+            response_plan["author"]["profile_pic"],
+            self.test_profiles[CURRENT_ADMIN.username]["profile_pic"],
+        )
+        self.assertEqual(response_plan["name"], default_plan.name)
+        self.assertEqual(response_plan["partners"], default_plan.partners)
+        self.assertEqual(
+            [Institution.from_dict(inst) for inst in response_plan["institutions"]],
+            default_plan.institutions,
+        )
+        self.assertEqual(response_plan["topics"], default_plan.topics)
+        self.assertEqual(
+            [Lecture.from_dict(lecture) for lecture in response_plan["lectures"]],
+            default_plan.lectures,
+        )
+        self.assertEqual(
+            response_plan["major_learning_goals"], default_plan.major_learning_goals
+        )
+        self.assertEqual(
+            [
+                IndividualLearningGoal.from_dict(goal)
+                for goal in response_plan["individual_learning_goals"]
+            ],
             default_plan.individual_learning_goals,
         )
         self.assertEqual(
-            response_plan.methodical_approaches, default_plan.methodical_approaches
-        )
-        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
-        self.assertEqual(response_plan.languages, default_plan.languages)
-        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
-        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
-        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
-        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
-        self.assertEqual(response_plan.realization, default_plan.realization)
-        self.assertEqual(
-            response_plan.physical_mobility, default_plan.physical_mobility
+            response_plan["methodical_approaches"], default_plan.methodical_approaches
         )
         self.assertEqual(
-            response_plan.physical_mobilities, default_plan.physical_mobilities
+            [TargetGroup.from_dict(tg) for tg in response_plan["target_groups"]],
+            default_plan.target_groups,
         )
-        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.checklist, default_plan.checklist)
-        self.assertEqual(response_plan.duration, default_plan.duration)
-        self.assertEqual(response_plan.workload, default_plan.workload)
-        self.assertEqual(response_plan.steps, default_plan.steps)
-        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
-        self.assertEqual(response_plan.abstract, default_plan.abstract)
+        self.assertEqual(response_plan["languages"], default_plan.languages)
         self.assertEqual(
-            response_plan.underlying_ve_model, default_plan.underlying_ve_model
+            [
+                Evaluation.from_dict(evaluation)
+                for evaluation in response_plan["evaluation"]
+            ],
+            default_plan.evaluation,
         )
-        self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(response_plan.literature, default_plan.literature)
-        self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
-        self.assertEqual(response_plan.literature_files, default_plan.literature_files)
-        self.assertEqual(response_plan.progress, default_plan.progress)
-        self.assertIsNotNone(response_plan.creation_timestamp)
-        self.assertIsNotNone(response_plan.last_modified)
+        self.assertEqual(
+            datetime.fromisoformat(response_plan["timestamp_from"]),
+            default_plan.timestamp_from,
+        )
+        self.assertEqual(
+            datetime.fromisoformat(response_plan["timestamp_to"]),
+            default_plan.timestamp_to,
+        )
+        self.assertEqual(
+            response_plan["involved_parties"], default_plan.involved_parties
+        )
+        self.assertEqual(response_plan["realization"], default_plan.realization)
+        self.assertEqual(
+            response_plan["physical_mobility"], default_plan.physical_mobility
+        )
+        self.assertEqual(
+            [
+                PhysicalMobility.from_dict(pm)
+                for pm in response_plan["physical_mobilities"]
+            ],
+            default_plan.physical_mobilities,
+        )
+        self.assertEqual(response_plan["learning_env"], default_plan.learning_env)
+        self.assertEqual(response_plan["checklist"], default_plan.checklist)
+        self.assertAlmostEqual(
+            response_plan["duration"], default_plan.duration.total_seconds()
+        )
+        self.assertEqual(response_plan["workload"], default_plan.workload)
+        self.assertEqual(
+            [Step.from_dict(step) for step in response_plan["steps"]],
+            default_plan.steps,
+        )
+        self.assertEqual(
+            response_plan["is_good_practise"], default_plan.is_good_practise
+        )
+        self.assertEqual(response_plan["abstract"], default_plan.abstract)
+        self.assertEqual(
+            response_plan["underlying_ve_model"], default_plan.underlying_ve_model
+        )
+        self.assertEqual(response_plan["reflection"], default_plan.reflection)
+        self.assertEqual(response_plan["literature"], default_plan.literature)
+        self.assertEqual(response_plan["evaluation_file"], default_plan.evaluation_file)
+        self.assertEqual(
+            response_plan["literature_files"], default_plan.literature_files
+        )
+        self.assertEqual(response_plan["progress"], default_plan.progress)
+        self.assertIsNotNone(response_plan["creation_timestamp"])
+        self.assertIsNotNone(response_plan["last_modified"])
 
     def test_get_plan_good_practise(self):
         """
@@ -8081,65 +8136,102 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIn("plan", response)
         self.assertIsInstance(response["plan"], dict)
 
-        response_plan = VEPlan.from_dict(response["plan"])
+        response_plan = response["plan"]
         good_practise_plan = VEPlan.from_dict(good_practise_plan)
 
-        self.assertEqual(response_plan._id, good_practise_plan._id)
-        self.assertEqual(response_plan.author, good_practise_plan.author)
-        self.assertEqual(response_plan.name, good_practise_plan.name)
-        self.assertEqual(response_plan.partners, good_practise_plan.partners)
-        self.assertEqual(response_plan.institutions, good_practise_plan.institutions)
-        self.assertEqual(response_plan.topics, good_practise_plan.topics)
-        self.assertEqual(response_plan.lectures, good_practise_plan.lectures)
+        self.assertEqual(ObjectId(response_plan["_id"]), good_practise_plan._id)
+        self.assertIn("username", response_plan["author"])
+        self.assertIn("first_name", response_plan["author"])
+        self.assertIn("last_name", response_plan["author"])
+        self.assertIn("profile_pic", response_plan["author"])
+        self.assertEqual(response_plan["author"]["username"], good_practise_plan.author)
         self.assertEqual(
-            response_plan.major_learning_goals, good_practise_plan.major_learning_goals
+            response_plan["author"]["first_name"],
+            None,
         )
         self.assertEqual(
-            response_plan.individual_learning_goals,
+            response_plan["author"]["last_name"],
+            None,
+        )
+        self.assertEqual(
+            response_plan["author"]["profile_pic"],
+            None,
+        )
+        self.assertEqual(response_plan["name"], good_practise_plan.name)
+        self.assertEqual(response_plan["partners"], good_practise_plan.partners)
+        self.assertEqual(
+            [Institution.from_dict(inst) for inst in response_plan["institutions"]],
+            good_practise_plan.institutions,
+        )
+        self.assertEqual(response_plan["topics"], good_practise_plan.topics)
+        self.assertEqual(
+            [Lecture.from_dict(lecture) for lecture in response_plan["lectures"]],
+            good_practise_plan.lectures,
+        )
+        self.assertEqual(
+            response_plan["major_learning_goals"],
+            good_practise_plan.major_learning_goals,
+        )
+        self.assertEqual(
+            [
+                IndividualLearningGoal.from_dict(goal)
+                for goal in response_plan["individual_learning_goals"]
+            ],
             good_practise_plan.individual_learning_goals,
         )
         self.assertEqual(
-            response_plan.methodical_approaches,
+            response_plan["methodical_approaches"],
             good_practise_plan.methodical_approaches,
         )
-        self.assertEqual(response_plan.target_groups, good_practise_plan.target_groups)
-        self.assertEqual(response_plan.languages, good_practise_plan.languages)
-        self.assertEqual(response_plan.evaluation, good_practise_plan.evaluation)
         self.assertEqual(
-            response_plan.timestamp_from, good_practise_plan.timestamp_from
+            [TargetGroup.from_dict(tg) for tg in response_plan["target_groups"]],
+            good_practise_plan.target_groups,
         )
-        self.assertEqual(response_plan.timestamp_to, good_practise_plan.timestamp_to)
+        self.assertEqual(response_plan["languages"], good_practise_plan.languages)
         self.assertEqual(
-            response_plan.involved_parties, good_practise_plan.involved_parties
-        )
-        self.assertEqual(response_plan.realization, good_practise_plan.realization)
-        self.assertEqual(
-            response_plan.physical_mobility, good_practise_plan.physical_mobility
+            [
+                Evaluation.from_dict(evaluation)
+                for evaluation in response_plan["evaluation"]
+            ],
+            good_practise_plan.evaluation,
         )
         self.assertEqual(
-            response_plan.physical_mobilities, good_practise_plan.physical_mobilities
+            response_plan["involved_parties"], good_practise_plan.involved_parties
         )
-        self.assertEqual(response_plan.learning_env, good_practise_plan.learning_env)
-        self.assertEqual(response_plan.checklist, good_practise_plan.checklist)
-        self.assertEqual(response_plan.duration, good_practise_plan.duration)
-        self.assertEqual(response_plan.workload, good_practise_plan.workload)
-        self.assertEqual(response_plan.steps, good_practise_plan.steps)
+        self.assertEqual(response_plan["realization"], good_practise_plan.realization)
         self.assertEqual(
-            response_plan.is_good_practise, good_practise_plan.is_good_practise
-        )
-        self.assertEqual(response_plan.abstract, good_practise_plan.abstract)
-        self.assertEqual(
-            response_plan.underlying_ve_model, good_practise_plan.underlying_ve_model
-        )
-        self.assertEqual(response_plan.reflection, good_practise_plan.reflection)
-        self.assertEqual(response_plan.literature, good_practise_plan.literature)
-        self.assertEqual(
-            response_plan.evaluation_file, good_practise_plan.evaluation_file
+            response_plan["physical_mobility"], good_practise_plan.physical_mobility
         )
         self.assertEqual(
-            response_plan.literature_files, good_practise_plan.literature_files
+            [
+                PhysicalMobility.from_dict(pm)
+                for pm in response_plan["physical_mobilities"]
+            ],
+            good_practise_plan.physical_mobilities,
         )
-        self.assertEqual(response_plan.progress, good_practise_plan.progress)
+        self.assertEqual(response_plan["learning_env"], good_practise_plan.learning_env)
+        self.assertEqual(response_plan["checklist"], good_practise_plan.checklist)
+        self.assertEqual(response_plan["workload"], good_practise_plan.workload)
+        self.assertEqual(
+            [Step.from_dict(step) for step in response_plan["steps"]],
+            good_practise_plan.steps,
+        )
+        self.assertEqual(
+            response_plan["is_good_practise"], good_practise_plan.is_good_practise
+        )
+        self.assertEqual(response_plan["abstract"], good_practise_plan.abstract)
+        self.assertEqual(
+            response_plan["underlying_ve_model"], good_practise_plan.underlying_ve_model
+        )
+        self.assertEqual(response_plan["reflection"], good_practise_plan.reflection)
+        self.assertEqual(response_plan["literature"], good_practise_plan.literature)
+        self.assertEqual(
+            response_plan["evaluation_file"], good_practise_plan.evaluation_file
+        )
+        self.assertEqual(
+            response_plan["literature_files"], good_practise_plan.literature_files
+        )
+        self.assertEqual(response_plan["progress"], good_practise_plan.progress)
 
     def test_get_plan_error_missing_key(self):
         """
@@ -8213,55 +8305,110 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsInstance(response["plans"], list)
         self.assertEqual(len(response["plans"]), 1)
 
-        response_plan = VEPlan.from_dict(response["plans"][0])
+        response_plan = response["plans"][0]
         default_plan = VEPlan.from_dict(self.default_plan)
-        self.assertEqual(response_plan._id, default_plan._id)
-        self.assertEqual(response_plan.author, default_plan.author)
-        self.assertEqual(response_plan.name, default_plan.name)
-        self.assertEqual(response_plan.partners, default_plan.partners)
-        self.assertEqual(response_plan.institutions, default_plan.institutions)
-        self.assertEqual(response_plan.topics, default_plan.topics)
-        self.assertEqual(response_plan.lectures, default_plan.lectures)
+        self.assertEqual(ObjectId(response_plan["_id"]), default_plan._id)
+        self.assertIn("username", response_plan["author"])
+        self.assertIn("first_name", response_plan["author"])
+        self.assertIn("last_name", response_plan["author"])
+        self.assertIn("profile_pic", response_plan["author"])
+        self.assertEqual(response_plan["author"]["username"], default_plan.author)
         self.assertEqual(
-            response_plan.major_learning_goals, default_plan.major_learning_goals
+            response_plan["author"]["first_name"],
+            self.test_profiles[CURRENT_ADMIN.username]["first_name"],
         )
         self.assertEqual(
-            response_plan.individual_learning_goals,
+            response_plan["author"]["last_name"],
+            self.test_profiles[CURRENT_ADMIN.username]["last_name"],
+        )
+        self.assertEqual(
+            response_plan["author"]["profile_pic"],
+            self.test_profiles[CURRENT_ADMIN.username]["profile_pic"],
+        )
+        self.assertEqual(response_plan["name"], default_plan.name)
+        self.assertEqual(response_plan["partners"], default_plan.partners)
+        self.assertEqual(
+            [Institution.from_dict(inst) for inst in response_plan["institutions"]],
+            default_plan.institutions,
+        )
+        self.assertEqual(response_plan["topics"], default_plan.topics)
+        self.assertEqual(
+            [Lecture.from_dict(lecture) for lecture in response_plan["lectures"]],
+            default_plan.lectures,
+        )
+        self.assertEqual(
+            response_plan["major_learning_goals"], default_plan.major_learning_goals
+        )
+        self.assertEqual(
+            [
+                IndividualLearningGoal.from_dict(goal)
+                for goal in response_plan["individual_learning_goals"]
+            ],
             default_plan.individual_learning_goals,
         )
         self.assertEqual(
-            response_plan.methodical_approaches, default_plan.methodical_approaches
-        )
-        self.assertEqual(response_plan.target_groups, default_plan.target_groups)
-        self.assertEqual(response_plan.languages, default_plan.languages)
-        self.assertEqual(response_plan.evaluation, default_plan.evaluation)
-        self.assertEqual(response_plan.timestamp_from, default_plan.timestamp_from)
-        self.assertEqual(response_plan.timestamp_to, default_plan.timestamp_to)
-        self.assertEqual(response_plan.involved_parties, default_plan.involved_parties)
-        self.assertEqual(response_plan.realization, default_plan.realization)
-        self.assertEqual(
-            response_plan.physical_mobility, default_plan.physical_mobility
+            response_plan["methodical_approaches"], default_plan.methodical_approaches
         )
         self.assertEqual(
-            response_plan.physical_mobilities, default_plan.physical_mobilities
+            [TargetGroup.from_dict(tg) for tg in response_plan["target_groups"]],
+            default_plan.target_groups,
         )
-        self.assertEqual(response_plan.learning_env, default_plan.learning_env)
-        self.assertEqual(response_plan.checklist, default_plan.checklist)
-        self.assertEqual(response_plan.duration, default_plan.duration)
-        self.assertEqual(response_plan.workload, default_plan.workload)
-        self.assertEqual(response_plan.steps, default_plan.steps)
-        self.assertEqual(response_plan.is_good_practise, default_plan.is_good_practise)
-        self.assertEqual(response_plan.abstract, default_plan.abstract)
+        self.assertEqual(response_plan["languages"], default_plan.languages)
         self.assertEqual(
-            response_plan.underlying_ve_model, default_plan.underlying_ve_model
+            [
+                Evaluation.from_dict(evaluation)
+                for evaluation in response_plan["evaluation"]
+            ],
+            default_plan.evaluation,
         )
-        self.assertEqual(response_plan.reflection, default_plan.reflection)
-        self.assertEqual(response_plan.literature, default_plan.literature)
-        self.assertEqual(response_plan.evaluation_file, default_plan.evaluation_file)
-        self.assertEqual(response_plan.literature_files, default_plan.literature_files)
-        self.assertEqual(response_plan.progress, default_plan.progress)
-        self.assertIsNotNone(response_plan.creation_timestamp)
-        self.assertIsNotNone(response_plan.last_modified)
+        self.assertEqual(
+            datetime.fromisoformat(response_plan["timestamp_from"]),
+            default_plan.timestamp_from,
+        )
+        self.assertEqual(
+            datetime.fromisoformat(response_plan["timestamp_to"]),
+            default_plan.timestamp_to,
+        )
+        self.assertEqual(
+            response_plan["involved_parties"], default_plan.involved_parties
+        )
+        self.assertEqual(response_plan["realization"], default_plan.realization)
+        self.assertEqual(
+            response_plan["physical_mobility"], default_plan.physical_mobility
+        )
+        self.assertEqual(
+            [
+                PhysicalMobility.from_dict(pm)
+                for pm in response_plan["physical_mobilities"]
+            ],
+            default_plan.physical_mobilities,
+        )
+        self.assertEqual(response_plan["learning_env"], default_plan.learning_env)
+        self.assertEqual(response_plan["checklist"], default_plan.checklist)
+        self.assertAlmostEqual(
+            response_plan["duration"], default_plan.duration.total_seconds()
+        )
+        self.assertEqual(response_plan["workload"], default_plan.workload)
+        self.assertEqual(
+            [Step.from_dict(step) for step in response_plan["steps"]],
+            default_plan.steps,
+        )
+        self.assertEqual(
+            response_plan["is_good_practise"], default_plan.is_good_practise
+        )
+        self.assertEqual(response_plan["abstract"], default_plan.abstract)
+        self.assertEqual(
+            response_plan["underlying_ve_model"], default_plan.underlying_ve_model
+        )
+        self.assertEqual(response_plan["reflection"], default_plan.reflection)
+        self.assertEqual(response_plan["literature"], default_plan.literature)
+        self.assertEqual(response_plan["evaluation_file"], default_plan.evaluation_file)
+        self.assertEqual(
+            response_plan["literature_files"], default_plan.literature_files
+        )
+        self.assertEqual(response_plan["progress"], default_plan.progress)
+        self.assertIsNotNone(response_plan["creation_timestamp"])
+        self.assertIsNotNone(response_plan["last_modified"])
 
     def test_get_all_plans_error_insufficient_permissions(self):
         """
@@ -8678,7 +8825,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
         self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
         self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
-        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
+        self.assertEqual(
+            db_state["target_groups"][0]["experience"], "updated_experience"
+        )
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
@@ -8717,11 +8866,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
         self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
         self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
-        self.assertEqual(db_state["target_groups"][0]["experience"], "updated_experience")
+        self.assertEqual(
+            db_state["target_groups"][0]["experience"], "updated_experience"
+        )
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages2")
+        self.assertEqual(
+            db_state["target_groups"][0]["languages"], "updated_languages2"
+        )
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
@@ -10620,6 +10773,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
+
 
 class VeInvitationHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
