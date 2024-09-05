@@ -1823,6 +1823,8 @@ class VEPlanHandler(BaseHandler):
             plan.to_dict()
             for plan in planner.get_plans_for_user(self.current_user.username)
         ]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_good_practise_plans(self, db: Database) -> None:
@@ -1880,6 +1882,31 @@ class VEPlanHandler(BaseHandler):
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_all()]
         self.serialize_and_write({"success": True, "plans": plans})
+
+    def add_profile_information_to_author(self, plans: List[VEPlan]) -> List[VEPlan]:
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+
+            # collect all usernames that we have to request the profile information for, avoiding duplicates
+            usernames_to_request = []
+            for plan in plans:
+                if plan["author"] not in usernames_to_request:
+                    usernames_to_request.append(plan["author"])
+
+            profile_snippets = profile_manager.get_profile_snippets(
+                usernames_to_request
+            )
+
+            for plan in plans:
+                plan["author"] = next(
+                    (
+                       profile
+                       for profile in profile_snippets
+                       if profile["username"] == plan["author"]
+                    ), [None]
+                )
+
+        return plans
 
     def insert_plan(self, db: Database, plan: VEPlan) -> None:
         """

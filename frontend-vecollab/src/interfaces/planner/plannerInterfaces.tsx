@@ -7,11 +7,12 @@ import { CheckListPartner } from '@/pages/ve-designer/checklist';
 import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import { EvaluationFile, LiteratureFile } from '@/pages/ve-designer/post-process';
 import { PhysicalMobility } from '@/pages/ve-designer/methodology';
+import { BackendUserSnippet } from '../api/apiInterfaces';
 
 export interface PlanPreview {
     _id: string;
     name: string;
-    author: string;
+    author: BackendUserSnippet;
     read_access: string[];
     write_access: string[];
     creation_timestamp: string;
@@ -23,7 +24,7 @@ export interface PlanPreview {
 export interface IPlan {
     _id: string;
     target_groups: TargetGroup[];
-    author: string;
+    author: BackendUserSnippet;
     abstract: string | null;
     creation_timestamp: string;
     duration: number | null;
