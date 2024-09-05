@@ -300,7 +300,11 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 className="grow font-normal text-base group hover:cursor-pointer"
                 onClick={(e) => {
                     e.stopPropagation();
-                    forward(plan._id);
+                    if (plan.write_access.includes(username)) {
+                        forward(plan._id);
+                    } else {
+                        openPlanSummary()
+                    }
                 }}
             >
                 <div className="flex items-center">
