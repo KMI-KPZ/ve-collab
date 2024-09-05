@@ -62,7 +62,7 @@ export default function ContentWrapper({
                                                         key: node.id,
                                                         label: node.text,
                                                         value: node.id.toString(),
-                                                        liClasses: `w-fit max-w-full my-2 mx-2 truncate px-4 py-2
+                                                        liClasses: `max-w-full my-2 mx-2 truncate px-4 py-2
                                                             hover:text-ve-collab-orange hover:!bg-white transition-colors
                                                             ${categorySlug == node.text ? "font-bold" : ""}`
                                                     }
