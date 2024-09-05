@@ -223,7 +223,10 @@ export default function Wrapper({
                 setAlert({
                     message: 'Fehler beim speichern',
                     type: 'error',
-                    onClose: () => setAlert({ open: false }),
+                    onClose: () => {
+                        setAlert({ open: false })
+                        setLoading(false)
+                    },
                 });
                 return false;
             }
