@@ -273,22 +273,23 @@ export default function Partners({ socket }: Props): JSX.Element {
         }
     };
 
-    const loadOptions = (
+    const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
         if (inputValue.length > 1) {
-            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
-                (data: BackendSearchResponse) => {
-                    callback(
-                        data.users.map((user) => ({
-                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                            value: user.username,
-                        }))
-                    );
-                }
-            );
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken)
+            .then((data: BackendSearchResponse) => {
+                callback(
+                    data.users
+                    .filter((user: BackendUserSnippet) => !fieldsPartners.some(a => a.value == user.username) )
+                    .map((user) => ({
+                        label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                        value: user.username,
+                    }))
+                );
+            });
         }
     };
 
@@ -301,7 +302,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
-                        loadOptions={loadOptions}
+                        loadOptions={loadUsers}
                         onChange={onChange}
                         onBlur={onBlur}
                         value={value}
