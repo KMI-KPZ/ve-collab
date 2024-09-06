@@ -25,6 +25,12 @@ export default function Header({
     socket
 }: Props) {
     const router = useRouter();
+    const changeToLanguage = router.locale === 'en' ? 'de' : 'en'
+
+    const onToggleLanguage = () => {
+        const { pathname, asPath, query } = router
+        router.push({ pathname, query }, asPath, { locale: changeToLanguage })
+    }
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -35,6 +41,14 @@ export default function Header({
             </div>
 
             <div className="">
+                <button
+                    onClick={onToggleLanguage}
+                    className="mx-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                    title='Sprache wechseln'
+                >
+                    {changeToLanguage == "de" ? "EN" : "DE"}
+                </button>
+
                 <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
                     <button
                         type="submit"
