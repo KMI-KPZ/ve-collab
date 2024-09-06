@@ -9,6 +9,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 interface FormValues {
     name: string;
@@ -21,6 +23,7 @@ interface Props {
 Name.auth = true;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation('common')
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -60,8 +63,8 @@ export default function Name({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Projektname"
-            subtitle="Wie soll das Projekt heißen?"
+            title={t("designer_name_title")}
+            subtitle={t("designer_name_subtitle")}
             description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
             methods={methods}
             nextpage="/ve-designer/partners"
@@ -93,4 +96,14 @@ export default function Name({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+            ])),
+        },
+    }
 }

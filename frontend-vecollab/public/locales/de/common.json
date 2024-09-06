@@ -1,3 +1,8 @@
 {
-  "btn_new_va": "Neuen VA planen"
+  "btn_new_va": "Neuen VA planen",
+  "plans": "Pläne",
+  "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
+  "designer_name_title": "Projektname",
+  "designer_name_subtitle": "Wie soll das Projekt heißen?"
+
 }

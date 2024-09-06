@@ -1,12 +1,10 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
-import { INode, INodeWithLections } from '@/interfaces/material/materialInterfaces';
+import { getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
+import { INodeWithLections } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 import { RxDot } from 'react-icons/rx';
-import { notFound } from 'next/navigation';
 import { getClusterSlugByRouteQuery } from '..';
 
 interface Props {

@@ -11,6 +11,8 @@ import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar
 import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export interface IfilterBy {
     /** key from PlanPreview to filter */
@@ -34,6 +36,7 @@ interface Props {
 Plans.auth = true;
 export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
@@ -94,9 +97,9 @@ export default function Plans({ socket }: Props) {
                 <div className="container mx-auto mb-14 px-5 p-12">
                     <div className="flex justify-between mb-6">
                         <div>
-                            <div className={'font-bold text-4xl mb-2'}>Pläne</div>
+                            <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                             <div className={'text-gray-500 text-xl'}>
-                                Übersicht deiner und mit dir geteilter Pläne
+                                {t("plans_overview_subtitle")}
                             </div>
                         </div>
 
@@ -143,4 +146,14 @@ export default function Plans({ socket }: Props) {
             </div>
         </>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+            ])),
+        },
+    }
 }

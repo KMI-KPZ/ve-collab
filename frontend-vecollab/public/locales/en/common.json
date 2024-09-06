@@ -1,3 +1,7 @@
 {
-  "btn_new_va": "Start a new VE"
+  "btn_new_va": "Start a new VE",
+  "plans": "Plans",
+  "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
+  "designer_name_title": "Projectname",
+  "designer_name_subtitle": "What should your project be called?"
 }
