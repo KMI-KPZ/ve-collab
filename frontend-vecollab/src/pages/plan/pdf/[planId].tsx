@@ -100,7 +100,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         const availablePlansResponse = await fetchGET('/planner/get_available', token)
         const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
             '/profile_snippets',
-            { usernames: [...planResponse.plan.partners, planResponse.plan.author] },
+            { usernames: [...planResponse.plan.partners, planResponse.plan.author.username] },
             token
         );
         let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};

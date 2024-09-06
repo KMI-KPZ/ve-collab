@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
 import { Socket } from 'socket.io-client';
 import { GiCheckMark } from 'react-icons/gi';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     socket: Socket;
@@ -50,8 +51,9 @@ export function PlansBrowserFilter({
                         onClick={() =>
                             filterByCallback({
                                 planKey: 'author',
-                                compare: (planAuthor) =>
-                                    (planAuthor as string) == session?.user.preferred_username,
+                                compare: (planAuthor: any): planAuthor is BackendUserSnippet => {
+                                    return (planAuthor.username as string) == session?.user.preferred_username
+                                },
                                 id: 'iamAuthor',
                             })
                         }
@@ -69,8 +71,9 @@ export function PlansBrowserFilter({
                         onClick={() =>
                             filterByCallback({
                                 planKey: 'author',
-                                compare: (planAuthor) =>
-                                    (planAuthor as string) != session?.user.preferred_username,
+                                compare: (planAuthor: any): planAuthor is BackendUserSnippet => {
+                                    return (planAuthor.username as string) != session?.user.preferred_username
+                                },
                                 id: 'otherAuthor',
                             })
                         }
