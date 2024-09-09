@@ -5434,10 +5434,10 @@ class PlanResourceTest(BaseResourceTestCase):
     def test_get_plans_for_user(self):
         """
         expect: only show plans that the user is allowed to see, i.e. their
-        own and those with read/write permissions.
+        own and those with read/write permissions and good practise examples.
         """
 
-        # insert 2 more plans with different authorships
+        # insert 3 more plans with different authorships
         additional_plans = [
             {
                 "_id": ObjectId(),
@@ -5552,17 +5552,78 @@ class PlanResourceTest(BaseResourceTestCase):
                     "steps": "not_started",
                 },
             },
+            {
+                "_id": ObjectId(),
+                "creation_timestamp": datetime.now(),
+                "last_modified": datetime.now(),
+                "name": "user",
+                "partners": ["test_user"],
+                "institutions": [self.institution.to_dict()],
+                "topics": ["test"],
+                "lectures": [self.lecture.to_dict()],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approaches": ["test"],
+                "target_groups": [self.target_group.to_dict()],
+                "languages": ["test", "test"],
+                "evaluation": [self.evaluation.to_dict()],
+                "timestamp_from": self.step.timestamp_from,
+                "timestamp_to": self.step.timestamp_to,
+                "involved_parties": ["test", "test"],
+                "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
+                "learning_env": "test",
+                "checklist": [
+                    {
+                        "username": "test_user",
+                        "technology": False,
+                        "exam_regulations": False,
+                    }
+                ],
+                "duration": self.step.duration.total_seconds(),
+                "workload": self.step.workload,
+                "steps": [self.step.to_dict()],
+                "is_good_practise": False,
+                "abstract": "test",
+                "underlying_ve_model": "test",
+                "reflection": "test",
+                "literature": "test",
+                "evaluation_file": None,
+                "literature_files": [],
+                "progress": {
+                    "name": "not_started",
+                    "institutions": "not_started",
+                    "topics": "not_started",
+                    "lectures": "not_started",
+                    "learning_goals": "not_started",
+                    "methodical_approaches": "not_started",
+                    "target_groups": "not_started",
+                    "languages": "not_started",
+                    "evaluation": "not_started",
+                    "involved_parties": "not_started",
+                    "realization": "not_started",
+                    "learning_env": "not_started",
+                    "checklist": "not_started",
+                    "steps": "not_started",
+                },
+            },
         ]
         self.db.plans.insert_many(additional_plans)
 
         plans = self.planner.get_plans_for_user("test_admin")
         # since one of the plans belong to the user and he has read_access to the default one,
-        # we expect the result to be filtered accordingly (2 results here)
-        self.assertEqual(len(plans), 2)
+        # we expect the result to be filtered accordingly (3 results here)
+        self.assertEqual(len(plans), 3)
         plan = plans[0]
         for plan in plans:
             self.assertIn(
-                plan._id, [self.default_plan["_id"], additional_plans[0]["_id"]]
+                plan._id,
+                [
+                    self.default_plan["_id"],
+                    additional_plans[0]["_id"],
+                    additional_plans[1]["_id"],
+                ],
             )
 
     def test_get_good_practise_plans(self):
