@@ -8176,17 +8176,22 @@ class VEPlanHandlerTest(BaseApiTestCase):
     def test_get_available_plans(self):
         """
         expect: successfully request all plans the user is allowed to view, i.e.
-        own and with read/write permissions
+        own and with read/write permissions and good practise examples
         """
 
-        # add one more plan to db that is should not be viewable
+        # add one more plan to db that is should not be viewable and one that is
+        # viewable because its a gpe
         self.db.plans.insert_one(VEPlan(author=CURRENT_USER.username).to_dict())
+        gpe_id = ObjectId()
+        self.db.plans.insert_one(VEPlan(_id=gpe_id, is_good_practise=True).to_dict())
 
         response = self.base_checks("GET", "/planner/get_available", True, 200)
         self.assertIn("plans", response)
         self.assertIsInstance(response["plans"], list)
-        self.assertEqual(len(response["plans"]), 1)
-        self.assertEqual(response["plans"][0]["_id"], str(self.plan_id))
+        self.assertEqual(len(response["plans"]), 2)
+        response_ids = [plan["_id"] for plan in response["plans"]]
+        self.assertIn(str(self.plan_id), response_ids)
+        self.assertIn(str(gpe_id), response_ids)
 
     def test_get_good_practise_plans(self):
         """
