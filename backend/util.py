@@ -1,6 +1,9 @@
 from contextlib import contextmanager
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 import logging
+import smtplib
 from typing import Dict, Optional
 
 from bson import ObjectId
@@ -168,3 +171,24 @@ def json_serialize_response(dictionary: dict) -> dict:
                     elem = json_serialize_response(elem)
 
     return dictionary
+
+def send_email(recipient: str, subject: str, text: str) -> None:
+    """
+    Send an Email to the recipient with the specified subject and text.
+    TODO HTML support + layouting
+    """
+
+    mailserver = smtplib.SMTP(global_vars.smtp_host, global_vars.smtp_port)
+    mailserver.starttls()
+    mailserver.login(global_vars.smtp_username, global_vars.smtp_password)
+
+    msg = MIMEMultipart('alternative')
+    msg['From'] = "VE-Collab Plattform NoReply"
+    msg['To'] = recipient
+    msg['Subject'] = subject
+
+    part1 = MIMEText(text, 'plain')
+    msg.attach(part1)
+
+    mailserver.sendmail(global_vars.smtp_username,recipient, msg.as_string())
+    mailserver.quit()
