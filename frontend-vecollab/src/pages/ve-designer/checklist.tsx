@@ -7,7 +7,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { TooltipList } from '@/components/TooltipList';
+import { TooltipList } from '@/components/common/TooltipList';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -109,7 +109,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
             // fetch profile snippets to be able to display the full name instead of username only
             fetchPOST(
                 '/profile_snippets',
-                { usernames: [...plan.partners, plan.author] },
+                { usernames: [...plan.partners, plan.author.username] },
                 session?.accessToken
             ).then((snippets: BackendProfileSnippetsResponse) => {
                 setUsersFirstLastNames(snippets.user_snippets);

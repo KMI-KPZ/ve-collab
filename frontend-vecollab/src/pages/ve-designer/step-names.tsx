@@ -25,11 +25,12 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import Dialog from '@/components/profile/Dialog';
 import { fetchGET } from '@/lib/backend';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import Timestamp from '@/components/Timestamp';
-import { MdNewspaper } from 'react-icons/md';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import Timestamp from '@/components/common/Timestamp';
+import { MdArrowOutward, MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
-import ButtonPrimary from '@/components/ButtonPrimary';
+import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
+import Link from 'next/link';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -299,9 +300,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div key={plan._id}>
                             <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
                                 <MdNewspaper />
-                                <div className="text-xl font-bold grow-0">{plan.name}</div>
-                                {session?.user.preferred_username != plan.author && (
-                                    <div className="text-sm text-gray-500">von {plan.author}</div>
+                                <Link className='text-xl font-bold grow-0 group' href={`/plan/${plan._id}`} target='_blank'>
+                                    {plan.name}
+                                    <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
+                                </Link>
+                                {session?.user.preferred_username != plan.author.username && (
+                                    <div className="text-sm text-gray-500">von {plan.author.first_name} {plan.author.last_name}</div>
                                 )}
                                 <span className="grow text-right" title="zuletzt geändert">
                                     <Timestamp timestamp={plan.last_modified} className="text-sm" />

@@ -134,7 +134,8 @@ class VEPlanResource:
     def get_plans_for_user(self, username: str) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
-        i.e. their own plans and those that he/she has read or write access to.
+        i.e. their own plans and those that he/she has read or write access to and those
+        that are marked as good practise examples (read only).
 
         Returns a list of `VEPlan` objects, or an empty list, if there are no plans
         that match the criteria.
@@ -147,6 +148,7 @@ class VEPlanResource:
                     {"author": username},
                     {"read_access": username},
                     {"write_access": username},
+                    {"is_good_practise": True},
                 ]
             }
         )

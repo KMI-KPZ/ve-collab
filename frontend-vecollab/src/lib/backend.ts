@@ -13,7 +13,7 @@ import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
-import { IMaterialNode, INode, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
+import { IMaterialNode, INode, INodeWithLections, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -682,6 +682,11 @@ export async function getTopLevelNodes(): Promise<ITopLevelNode[]> {
     return taxonomy.filter((node: any) => node.parent === 0) as ITopLevelNode[];
 }
 
+export async function getNodeByText(nodeText: string): Promise<INode> {
+    const taxonomy = await fetchTaxonomy();
+    return taxonomy.find((node: any) => node.text === nodeText) as INode;
+}
+
 export async function getChildrenOfNode(nodeId: number): Promise<INode[]> {
     const taxonomy = await fetchTaxonomy();
     return taxonomy.filter((node: any) => node.parent === nodeId);
@@ -691,6 +696,12 @@ export async function getChildrenOfNodeByText(nodeText: string): Promise<INode[]
     const taxonomy = await fetchTaxonomy();
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as INode[];
+}
+
+export async function getSiblingsOfNodeByText(nodeText: string): Promise<INode[]> {
+    const taxonomy = await fetchTaxonomy();
+    const node = taxonomy.find((node: INode) => node.text === nodeText);
+    return node ? taxonomy.filter((a: any) => a.parent === node.parent) : [];
 }
 
 export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IMaterialNode[]> {
@@ -710,4 +721,17 @@ export async function getMaterialNodePath(
     ) as ITopLevelNode;
 
     return { bubble: bubbleNode, category: categoryNode, material: materialNode };
+}
+
+export async function getNodesOfNodeWithLections(node: INode): Promise<undefined|INodeWithLections[]> {
+
+    if (!node) return [] as INodeWithLections[]
+
+    const taxonomy = await fetchTaxonomy();
+    const nodes = taxonomy.filter(n => n.parent === node.id);
+
+    return nodes.map(n => {
+        const lections = taxonomy.filter(m => m.parent == n.id)
+        return {...n, lections}
+    }) as INodeWithLections[]
 }

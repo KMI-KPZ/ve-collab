@@ -4,20 +4,20 @@ import { HiHeart, HiOutlineHeart } from "react-icons/hi";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { IoIosSend } from "react-icons/io";
-import Dropdown from "../Dropdown";
+import Dropdown from "../common/Dropdown";
 import { BackendPost, BackendPostAuthor, BackendPostComment, BackendPostFile, BackendGroup, BackendGroupACLEntry } from "@/interfaces/api/apiInterfaces";
 import { useRef } from 'react'
 import { MdAudioFile, MdDeleteOutline, MdDoubleArrow, MdModeEdit, MdOutlineDocumentScanner, MdOutlineKeyboardDoubleArrowDown, MdShare, MdThumbUp, MdVideoFile } from "react-icons/md";
 import { TiArrowForward, TiPin, TiPinOutline } from "react-icons/ti";
 import TimelinePostForm from "./TimelinePostForm";
 import PostHeader from "./PostHeader";
-import { AuthenticatedFile } from "../AuthenticatedFile";
+import { AuthenticatedFile } from "../common/AuthenticatedFile";
 import { RxFile, RxFileText } from "react-icons/rx";
 import TimelinePostText from "./TimelinePostText";
-import AuthenticatedImage from "../AuthenticatedImage";
+import AuthenticatedImage from "../common/AuthenticatedImage";
 import { KeyedMutator } from "swr";
-import Alert from "../Alert";
-import ConfirmDialog from "../Confirm";
+import Alert from "../common/dialogs/Alert";
+import ConfirmDialog from "../common/dialogs/Confirm";
 import { PlanPreview } from "@/interfaces/planner/plannerInterfaces";
 import { Socket } from "socket.io-client";
 

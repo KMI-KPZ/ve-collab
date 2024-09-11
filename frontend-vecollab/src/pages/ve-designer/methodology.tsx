@@ -137,7 +137,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
             title="Methodischer Ansatz"
             subtitle="Welcher methodische Ansatz liegt eurem VA zugrunde?"
             description={[
-                'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden.',
                 'Falls keines der Vorschläge eurem Ansatz entspricht, könnt ihr durch Schreiben im Feld individuelle Eingaben hinzufügen.',
             ]}
             tooltip={{

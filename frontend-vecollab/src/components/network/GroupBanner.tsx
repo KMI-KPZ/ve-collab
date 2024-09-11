@@ -6,9 +6,9 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST, useGetGroup } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '../LoadingAnimation';
-import AuthenticatedImage from '../AuthenticatedImage';
-import BoxHeadline from '../BoxHeadline';
+import LoadingAnimation from '../common/LoadingAnimation';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import BoxHeadline from '../common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 
 interface Props {

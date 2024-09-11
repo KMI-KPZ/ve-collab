@@ -2,7 +2,7 @@ import { Dispatch, FormEvent, SetStateAction } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditProfileHeadline from './EditProfileHeadline';
-import SlateBox from '../Layout/SlateBox';
+import SlateBox from '../common/SlateBox';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileItemRow from './EditProfileItemRow';
 import Swapper from './Swapper';
@@ -10,7 +10,7 @@ import { VEWindowItem } from '@/interfaces/profile/profileInterfaces';
 import { useGetPublicPlansOfCurrentUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Select from 'react-select';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
     items: VEWindowItem[];

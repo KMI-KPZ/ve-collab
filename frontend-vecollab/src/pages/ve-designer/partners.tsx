@@ -66,6 +66,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         mode: 'onChange',
     });
 
+    const [planAuthor, setPlanAuthor] = useState<string>()
+
     const {
         fields: fieldsPartners,
         append: appendPartners,
@@ -90,6 +92,8 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
+            setPlanAuthor(plan.author.username)
+
             let partners = [{ label: '', value: '' }]
             let extPartners = [{ externalParty: '' }]
             if (plan.checklist && Array.isArray(plan.checklist)) {
@@ -269,22 +273,23 @@ export default function Partners({ socket }: Props): JSX.Element {
         }
     };
 
-    const loadOptions = (
+    const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
         if (inputValue.length > 1) {
-            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
-                (data: BackendSearchResponse) => {
-                    callback(
-                        data.users.map((user) => ({
-                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                            value: user.username,
-                        }))
-                    );
-                }
-            );
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken)
+            .then((data: BackendSearchResponse) => {
+                callback(
+                    data.users
+                    .filter((user: BackendUserSnippet) => !fieldsPartners.some(a => a.value == user.username) )
+                    .map((user) => ({
+                        label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                        value: user.username,
+                    }))
+                );
+            });
         }
     };
 
@@ -297,7 +302,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
-                        loadOptions={loadOptions}
+                        loadOptions={loadUsers}
                         onChange={onChange}
                         onBlur={onBlur}
                         value={value}
@@ -349,7 +354,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             title="Projektpartner:innen"
             subtitle="Wer ist am Projekt beteiligt?"
             description={[
-                'Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden. Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
+                'Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.',
                 'Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
             ]}
             tooltip={{
@@ -363,15 +368,25 @@ export default function Partners({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div>
-                <p className="text-xl text-slate-600 mb-2">Partner:innen</p>
-                {fieldsPartners.map((partner, index) => (
-                    <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
-                        <button onClick={() => handleDeletePartners(index)}>
-                            <RxMinus size={20} />
-                        </button>
-                    </div>
-                ))}
+                <p className="text-xl text-slate-600 mb-2">Beteiligte</p>
+                {fieldsPartners.map((partner, index) => {
+                    return (
+                        <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                            {partner.value == planAuthor
+                                ? (
+                                    <div className='p-2'>{partner.label}</div>
+                                ) : (
+                                    <>
+                                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
+                                        <button onClick={() => handleDeletePartners(index)}>
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </>
+                                )
+                            }
+                        </div>
+                    )
+                })}
                 <div className="mt-4">
                     <button
                         className="p-2 bg-white rounded-full shadow hover:bg-slate-50"

@@ -3,19 +3,19 @@ import { FieldValues, FormProvider, UseFormReturn } from 'react-hook-form';
 import { fetchPOST, useGetPlanById } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
-import Container from '../Layout/container';
-import WhiteBox from '../Layout/WhiteBox';
+import Container from '../common/Container';
+import WhiteBox from '../common/WhiteBox';
 import { MdArrowForwardIos } from 'react-icons/md';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
 import { mainMenu } from '@/data/sideMenuSteps';
-import { Tooltip } from '../Tooltip';
+import { Tooltip } from '../common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
-import Alert, { AlertState } from '../Alert';
+import Alert, { AlertState } from '../common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
@@ -164,7 +164,7 @@ export default function Wrapper({
         // write access or author check
         if (
             !plan.write_access.includes(session?.user.preferred_username!) &&
-            plan.author !== session?.user.preferred_username!
+            plan.author.username !== session?.user.preferred_username!
         ) {
             setAlert({
                 message: 'Sie haben keine Berechtigung, um diesen Plan zu bearbeiten.',
@@ -178,16 +178,28 @@ export default function Wrapper({
     useEffect(() => {
         if (!plan || isLoading || error) return;
 
+        let willRouteChange: boolean = false;
+
         (async () => {
             const data = await planerDataCallback(plan);
             if (Object.keys(data).length) {
                 // reset form default values for isDirty check
                 methods.reset(data)
             }
-            setLoading(false)
+            // fix: do not remove loader if we'll change the route
+            setTimeout(() => {
+                if (!willRouteChange) setLoading(false)
+            }, 1);
         })();
-        return () => {}
+
+        const handleRouteChange = (url: string) => willRouteChange = true;
+
+        router.events.on('routeChangeStart', handleRouteChange)
+        return () => {
+            router.events.off('routeChangeStart', handleRouteChange)
+        }
     }, [
+        router,
         plan,
         isLoading,
         error,
@@ -211,7 +223,10 @@ export default function Wrapper({
                 setAlert({
                     message: 'Fehler beim speichern',
                     type: 'error',
-                    onClose: () => setAlert({ open: false }),
+                    onClose: () => {
+                        setAlert({ open: false })
+                        setLoading(false)
+                    },
                 });
                 return false;
             }

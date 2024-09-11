@@ -166,7 +166,8 @@ class VEPlanHandler(BaseHandler):
         GET /planner/get_available
             request all plans that are available to the current user,
             i.e. their own plans and those that he/she has read or write
-            access to.
+            access to and those that are marked as good practise examples
+            (read only).
 
             query params:
 
@@ -1792,8 +1793,22 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
+        profile_manager = Profiles(db)
         try:
             plan = planner.get_plan(_id, requesting_username=self.current_user.username)
+            plan_dict = plan.to_dict()
+            if plan.author:
+                author_snippet = profile_manager.get_profile_snippets([plan.author])[0]
+            else:
+                author_snippet = {
+                    "username": None,
+                    "first_name": None,
+                    "last_name": None,
+                    "institution": None,
+                    "profile_pic": None,
+                }
+            plan_dict["author"] = author_snippet
+
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -1803,7 +1818,7 @@ class VEPlanHandler(BaseHandler):
             self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
             return
 
-        self.serialize_and_write({"success": True, "plan": plan.to_dict()})
+        self.serialize_and_write({"success": True, "plan": plan_dict})
 
     def get_available_plans_for_user(self, db: Database) -> None:
         """
@@ -1812,7 +1827,8 @@ class VEPlanHandler(BaseHandler):
         not be called manually anywhere else.
 
         Request all available plans for the current user, i.e. their own plans and
-        those that he/she has read/write access to.
+        those that he/she has read/write access to and those that are marked as
+        good practise examples (read only).
 
         Responses:
             200 OK --> contains all available plans in a list of dictionaries
@@ -1823,6 +1839,8 @@ class VEPlanHandler(BaseHandler):
             plan.to_dict()
             for plan in planner.get_plans_for_user(self.current_user.username)
         ]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_good_practise_plans(self, db: Database) -> None:
@@ -1839,6 +1857,8 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_good_practise_plans()]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_public_plans_of_user(self, db: Database, username: str) -> None:
@@ -1856,6 +1876,8 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_public_plans_of_user(username)]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
 
     def get_all_plans(self, db: Database) -> None:
@@ -1879,7 +1901,43 @@ class VEPlanHandler(BaseHandler):
 
         planner = VEPlanResource(db)
         plans = [plan.to_dict() for plan in planner.get_all()]
+        plans = self.add_profile_information_to_author(plans)
+
         self.serialize_and_write({"success": True, "plans": plans})
+
+    def add_profile_information_to_author(self, plans: List[VEPlan]) -> List[VEPlan]:
+        """
+        helper function to enhace the authors (which are only usernames) of the given
+        plans with additional profile information, which are username, first_name, last_name,
+        institution and profile_pic.
+
+        Returns the plans with the enhanced author information.
+        """
+
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+
+            # collect all usernames that we have to request the profile information for, avoiding duplicates
+            usernames_to_request = []
+            for plan in plans:
+                if plan["author"] not in usernames_to_request:
+                    usernames_to_request.append(plan["author"])
+
+            profile_snippets = profile_manager.get_profile_snippets(
+                usernames_to_request
+            )
+
+            for plan in plans:
+                plan["author"] = next(
+                    (
+                        profile
+                        for profile in profile_snippets
+                        if profile["username"] == plan["author"]
+                    ),
+                    [None],
+                )
+
+        return plans
 
     def insert_plan(self, db: Database, plan: VEPlan) -> None:
         """

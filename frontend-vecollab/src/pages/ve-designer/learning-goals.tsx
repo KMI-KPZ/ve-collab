@@ -9,7 +9,7 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
-import { Tooltip } from '@/components/Tooltip';
+import { Tooltip } from '@/components/common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
@@ -115,7 +115,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             // fetch profile snippets to be able to display the full name instead of username only
             fetchPOST(
                 '/profile_snippets',
-                { usernames: [...plan.partners, plan.author] },
+                { usernames: [...plan.partners, plan.author.username] },
                 session?.accessToken
             ).then((snippets: BackendProfileSnippetsResponse) => {
                 setUsersFirstLastNames(snippets.user_snippets);

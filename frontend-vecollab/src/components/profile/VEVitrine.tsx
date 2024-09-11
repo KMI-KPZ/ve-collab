@@ -1,5 +1,5 @@
 import { VEWindowItem } from '@/interfaces/profile/profileInterfaces';
-import BoxHeadline from '@/components/BoxHeadline';
+import BoxHeadline from '@/components/common/BoxHeadline';
 import VEVitrineItem from './VEVitrineItem';
 
 interface Props {

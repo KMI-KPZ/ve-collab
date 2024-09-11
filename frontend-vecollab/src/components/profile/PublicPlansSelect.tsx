@@ -3,7 +3,7 @@ import { fetchGET } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useState, useEffect, SetStateAction, Dispatch } from 'react';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
     chosenPlanId: string;
@@ -41,7 +41,7 @@ export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Pro
                 setChosenPlanId(data.plans[0]._id)
             }
         });
-        
+
     }, [session, setChosenPlanId]);
     return (
         <>

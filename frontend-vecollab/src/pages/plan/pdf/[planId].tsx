@@ -1,12 +1,12 @@
 import React from 'react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { PlanOverview } from '@/components/planSummary/planOverview';
+import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import Link from 'next/link';
 import { GiSadCrab } from 'react-icons/gi';
 import { GetServerSidePropsContext } from 'next';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { PlanOverviewPDF } from '@/components/planSummary/PlanOverviewPDF';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { PlanSummaryPDF } from '@/components/planSummary/PlanSummaryPDF';
 
 // This is the component that gets rendered into the PDF of a plan
 // In contrast to the other pages, it is only accessible by directly
@@ -20,7 +20,7 @@ interface Props {
     error: string | null;
 }
 
-export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
+export default function PDFPlan({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
     const Wrapper = ({ children }: { children: JSX.Element }) => {
         return (
             <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
@@ -76,7 +76,7 @@ export default function PlanSummaryPDF({ plan, error, partnerProfileSnippets, av
                     <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
                 </div>
                 <div className="flex w-full">
-                    <PlanOverviewPDF
+                    <PlanSummaryPDF
                         plan={plan!}
                         openAllBoxes={true}
                         partnerProfileSnippets={partnerProfileSnippets}
@@ -100,7 +100,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         const availablePlansResponse = await fetchGET('/planner/get_available', token)
         const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
             '/profile_snippets',
-            { usernames: [...planResponse.plan.partners, planResponse.plan.author] },
+            { usernames: [...planResponse.plan.partners, planResponse.plan.author.username] },
             token
         );
         let partnerSnippets: { [Key: string]: BackendUserSnippet } = {};

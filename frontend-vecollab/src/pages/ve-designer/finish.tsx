@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { PlanOverview } from '@/components/planSummary/planOverview';
-import LoadingAnimation from '@/components/LoadingAnimation';
+import { PlanSummary } from '@/components/planSummary/PlanSummary';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
@@ -36,7 +36,7 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             }}
             submitCallback={(d) => {}}
         >
-            {typeof plan !== 'undefined' ? <PlanOverview plan={plan} /> : <LoadingAnimation />}
+            {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
             {feedbackFormURL && (
                 <div className="mt-4 font-bold text-lg">
                     Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns{' '}

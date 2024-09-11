@@ -1,7 +1,7 @@
-import WhiteBox from '@/components/Layout/WhiteBox';
-import Container from '@/components/Layout/container';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import Timestamp from '@/components/Timestamp';
+import WhiteBox from '@/components/common/WhiteBox';
+import Container from '@/components/common/Container';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
+import Timestamp from '@/components/common/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
@@ -33,7 +33,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
         fetchPOST(
             '/profile_snippets',
             {
-                usernames: [...new Set(plans.map((plan) => plan.author))],
+                usernames: [...new Set(plans.map((plan) => plan.author.username))],
             },
             session!.accessToken
         ).then((data) => {
@@ -76,7 +76,9 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                         <div className="h-screen overflow-y-auto">
                             {isLoading && <LoadingAnimation />}
                             <ul className="divide-y">
-                                {plans.map((plan) => (
+                                {plans
+                                .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
+                                .map((plan) => (
                                     <li className="py-2" key={plan._id}>
                                         <div className="flex">
                                             <div className="mx-2">
@@ -94,16 +96,16 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                                     <div className="text-md text-gray-500">
                                                         {userProfileSnippets?.find(
                                                             (snippet) =>
-                                                                snippet.username === plan.author
+                                                                snippet.username === plan.author.username
                                                         )?.first_name +
                                                             ' ' +
                                                             userProfileSnippets?.find(
                                                                 (snippet) =>
-                                                                    snippet.username === plan.author
+                                                                    snippet.username === plan.author.username
                                                             )?.last_name}
                                                     </div>
                                                     <div className="text-md text-gray-500">
-                                                        {plan.author}
+                                                        {plan.author.first_name} {plan.author.last_name}
                                                     </div>
                                                 </Link>
                                             </div>

@@ -3,6 +3,7 @@ import logging
 import logging.handlers
 import os
 
+import bson.json_util
 from dotenv import load_dotenv
 import gridfs
 from keycloak import KeycloakOpenID, KeycloakAdmin
@@ -285,6 +286,43 @@ def load_default_taxonomy_if_exists() -> None:
                 logger.info("Loaded default taxonomy from assets folder")
 
 
+def load_default_good_practise_examples_if_exists() -> None:
+    """
+    load all default good practise examples from the assets folder
+    into the db that dont already exist
+    """
+
+    # no default good practise examples file exists, skip
+    if not os.path.isfile("assets/default_good_practise_plans.json"):
+        logger.warning(
+            "tried to load default good practise examples from assets folder, but no file found"
+        )
+        return
+
+    with util.get_mongodb() as db:
+        with open("assets/default_good_practise_plans.json", "r") as f:
+            good_practise_examples = json.load(f)
+            if "good_practise_plans" in good_practise_examples:
+                insert_count = 0
+                for gpe in good_practise_examples["good_practise_plans"]:
+                    try:
+                        # due to the fact that gpe's were exported from a previous
+                        # active db, they have extended json syntax v2 that cannot be
+                        # directly inserted into the db.
+                        # thats why we dump them back to string and load with the bson
+                        # utilities to get a valid bson document
+                        db.plans.insert_one(bson.json_util.loads(json.dumps(gpe)))
+                        insert_count += 1
+                    except pymongo.errors.DuplicateKeyError:
+                        pass
+                if insert_count > 0:
+                    logger.info(
+                        "Loaded {} default good practise examples from assets folder".format(
+                            insert_count
+                        )
+                    )
+
+
 def set_global_vars() -> None:
     """
     setup global_vars from env properties
@@ -470,6 +508,9 @@ def main():
 
     # load default taxonomy if none exists
     load_default_taxonomy_if_exists()
+
+    # load those good practise examples that dont already exist
+    load_default_good_practise_examples_if_exists()
 
     # write tornado access log to separate logfile
     hook_tornado_access_log()

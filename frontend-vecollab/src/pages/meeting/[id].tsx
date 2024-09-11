@@ -1,4 +1,4 @@
-import LoadingAnimation from '@/components/LoadingAnimation';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { JitsiMeeting } from '@jitsi/react-sdk';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';

@@ -7,17 +7,17 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import AuthenticatedImage from '@/components/AuthenticatedImage';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Swapper from './Swapper';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
 import { DropdownList } from '@/interfaces/dropdowns';
 import { set } from 'date-fns';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
-import { Tooltip } from '../Tooltip';
-import ConfirmDialog from '../Confirm';
+import { Tooltip } from '../common/Tooltip';
+import ConfirmDialog from '../common/dialogs/Confirm';
 
 interface Props {
     personalInformation: PersonalInformation;

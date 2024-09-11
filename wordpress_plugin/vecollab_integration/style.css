@@ -1,0 +1,23 @@
+.orangeBtn {
+  background-color: #c4560b;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+}
+
+.orangeBtn:hover {
+  box-shadow: inset 0 -5px 0 rgba(146, 45, 10, 1);
+  cursor: pointer;
+}
+
+.btnWrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.responseTextarea {
+  width: 100%;
+  border: 1px solid #a0a0a0;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.25rem;
+}
