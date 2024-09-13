@@ -398,7 +398,6 @@ def set_global_vars() -> None:
             username=global_vars.keycloak_admin_username,
             password=global_vars.keycloak_admin_password,
             verify=True,
-            auto_refresh_token=["get", "put", "post", "delete"],
         )
 
 
