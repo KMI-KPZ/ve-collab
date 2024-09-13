@@ -21,19 +21,19 @@ export default function BubbleSelected(props: Props) {
         <ContentWrapper
             contentChildren={<>
                 <div className='my-6 -mx-4 px-6 text-3xl font-semibold text-slate-600'>
-                    Kategorien und Lektionen
+                    Module & Kapitel
                 </div>
 
                 {/* <div className='my-6 -mx-4 text-3xl font-semibold text-slate-600 underline decoration-ve-collab-blue decoration-3 underline-offset-6'>
-                    Kategorien und Lektionen
+                    Module & Kapitel
                 </div> */}
 
                 {/* <div className='font-semibold text-3xl text-white text-center my-6 bg-ve-collab-blue rounded-full py-3 -mx-4'>
-                    Kategorien und Lektionen
+                    Module & Kapitel
                 </div> */}
 
                 {/* <div className='w-fit my-6 py-3 -mx-4 px-4 font-semibold text-3xl text-slate-600 border-b-4 border-ve-collab-blue rounded-md bg-ve-collab-blue-light'>
-                    Kategorien und Lektionen
+                    Module & Kapitel
                 </div> */}
 
                 <div className='mx-10 px-6 mb-6 flex flex-row flex-wrap gap-x-8 gap-y-4'>
@@ -47,7 +47,7 @@ export default function BubbleSelected(props: Props) {
                                 </div>
                                 <ul className=''>
                                     {node.lections.length == 0 && (
-                                        <div className='italic my-2 text-wrap'>Leider gibt es noch keine Inhalte für diese Kategorie</div>
+                                        <div className='italic my-2 text-wrap'>Leider gibt es noch keine Inhalte für dieses Modul</div>
                                     )}
                                     {node.lections.map(lection => (
                                         <li key={lection.id} className='max-w-full truncate'>
