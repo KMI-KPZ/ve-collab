@@ -144,18 +144,6 @@ export default function PageCategoryNotSelected(props: Props) {
                                     </Link>
                                 </div>
                             )}
-                            <Tooltip tooltipsText={"Mehr Infos …"}>
-                                <Link
-                                    href={"/"}
-                                    className="rounded-full shadow bg-slate-50 hover:bg-gray-50 p-2 mx-2"
-                                >
-                                    <PiBookOpenText
-                                        size={30}
-                                        color="#00748f"
-                                        className="inline relative"
-                                    />
-                                </Link>
-                            </Tooltip>
                         </div>
                     </div>
 
