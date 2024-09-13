@@ -268,7 +268,7 @@ export default function Edit() {
                                             Bubbles sind die höchste Ebene und nicht modifizierbar,
                                             auf erster Ebene keine anderen Knoten außer die Bubbles!
                                             Darunter beliebig viele Hierarchieebenen nebeneinander
-                                            (= die Kategorien), die wiederum die Lehrinhalt-Knoten
+                                            (= die Module), die wiederum die Lehrinhalt-Knoten
                                             enthalten. Bei korrekter Struktur ergibt sich eine
                                             maximale Baumtiefe von 3: Bubble - Hierarchieebene -
                                             Lehrinhalt

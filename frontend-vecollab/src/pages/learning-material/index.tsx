@@ -80,25 +80,25 @@ export default function PageCategoryNotSelected(props: Props) {
             {/* TOP BUBBLE */}
             {Bubble(1, 'xl:left-[37%] xl:-translate-x-1/1',
                 [
-                    '-top-[1.5rem] -left-[5rem]',
-                    'top-[.5rem] -right-[6.5rem]',
-                    '-bottom-[2.5rem] -right-[7rem]',
-                    '-bottom-[.5rem] -left-[10rem]',
+                    '-top-[1.5rem] -left-[5rem]', //einfuehrung
+                    'top-[.5rem] -right-[6.5rem]', // potenziale
+                    '-bottom-[2.2rem] -right-[7rem]', // herausforderungen
+                    '-bottom-[.5rem] -left-[10rem]', // beispiele aus der praxis
                 ]
             )}
 
             {/* LEFT BUBBLE */}
             {Bubble(2, 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2',
                 [
-                    '-top-[2rem] -left-[7rem]',
-                    '-bottom-[1.5rem] -right-[5rem]',
+                    '-top-[1.5rem] -left-[5rem]', // va-planung
+                    '-bottom-[1.5rem] -right-[5rem]', // evaluation
                 ]
             )}
 
             {/* RIGHT BUBBLE */}
             {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2',
                 [
-                    '-top-[3rem] -left-[5rem]', // digitale medien
+                    '-top-[2.5rem] -left-[5rem]', // digitale medien
                     '-bottom-[3.5rem] -right-[7rem]', // datenschutz
                     'bottom-0 -left-[4rem]', // tools
                     'top-0 -right-[4rem]', // oer
@@ -108,7 +108,7 @@ export default function PageCategoryNotSelected(props: Props) {
             {/* BOTTOM BUBBLE */}
             {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2',
                 [
-                    '-bottom-[.5rem] -left-[11rem]', // interaktion
+                    '-bottom-[.5rem] -left-[10.5rem]', // interaktion
                     '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                     '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
                 ]
@@ -144,18 +144,6 @@ export default function PageCategoryNotSelected(props: Props) {
                                     </Link>
                                 </div>
                             )}
-                            <Tooltip tooltipsText={"Mehr Infos …"}>
-                                <Link
-                                    href={"/"}
-                                    className="rounded-full shadow bg-slate-50 hover:bg-gray-50 p-2 mx-2"
-                                >
-                                    <PiBookOpenText
-                                        size={30}
-                                        color="#00748f"
-                                        className="inline relative"
-                                    />
-                                </Link>
-                            </Tooltip>
                         </div>
                     </div>
 
