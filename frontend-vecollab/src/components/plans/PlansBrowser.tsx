@@ -3,6 +3,7 @@ import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
 import PlansBrowserItem from './PlansBrowserItem';
 import { IfilterBy, IsortBy } from '@/pages/plans';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     plans: PlanPreview[];
@@ -17,8 +18,9 @@ export function PlansBrowser({
     sortBy,
     filterBy,
     sortByCallback,
-    refetchPlansCallback
+    refetchPlansCallback,
 }: Props) {
+    const { t } = useTranslation('common');
 
     const SortArrow = ({ by }: { by: keyof PlanPreview }) => {
         if (by != sortBy.key) return <></>;
@@ -38,27 +40,27 @@ export function PlansBrowser({
         <>
             <div className="rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
-                    <div className="basis-1/12 text-center">Progress</div>
+                    <div className="basis-1/12 text-center">{t('plans_table_progress')}</div>
                     <div
                         className="grow hover:underline hover:cursor-pointer group"
                         onClick={() => sortByCallback('name')}
                     >
-                        Name
+                        {t('plans_table_name')}
                         <SortArrow by="name" />
                     </div>
-                    <div className="basis-1/6">Autor</div>
+                    <div className="basis-1/6">{t('plans_table_author')}</div>
                     <div
                         className="basis-1/6 hover:underline hover:cursor-pointer group"
                         onClick={() => sortByCallback('last_modified')}
                     >
-                        Geändert
+                        {t('plans_table_last_modified')}
                         <SortArrow by="last_modified" />
                     </div>
                     <div
                         className="basis-1/6 hover:underline hover:cursor-pointer group"
                         onClick={() => sortByCallback('creation_timestamp')}
                     >
-                        Erstellt
+                        {t('plans_table_created')}
                         <SortArrow by="creation_timestamp" />
                     </div>
                 </div>
@@ -67,9 +69,12 @@ export function PlansBrowser({
                     {plans.length == 0 ? (
                         <div className="m-12">
                             {filterBy.find((f) => f.id == 'otherAuthor')
-                                ? `Es wurde noch kein ${(filterBy.find((f) => f.id == 'isGoodPractice')) ? '"Good Practice"' : ''} Plan mit Dir geteilt`
-                                : `Du hast noch keinen ${filterBy.find((f) => f.id == 'isGoodPractice') ? '"Good Practice"' : ''} Plan erstellt`
-                            }
+                                ? filterBy.find((f) => f.id == 'isGoodPractice')
+                                    ? t('plans_no_good_practise_plan_shared')
+                                    : t('plans_no_plan_shared')
+                                : filterBy.find((f) => f.id == 'isGoodPractice')
+                                ? t('plans_no_good_practise_plan_created')
+                                : t('plans_no_plan_created')}
                         </div>
                     ) : (
                         plans.map((plan, index) => (
@@ -86,7 +91,6 @@ export function PlansBrowser({
                         ))
                     )}
                 </div>
-
             </div>
         </>
     );

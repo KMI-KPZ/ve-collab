@@ -5,6 +5,7 @@ import { IfilterBy } from '@/pages/plans';
 import { Socket } from 'socket.io-client';
 import { GiCheckMark } from 'react-icons/gi';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
@@ -18,6 +19,7 @@ export function PlansBrowserFilter({
     socket,
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
 
     return (
         <div className="mb-4 flex items-center">
@@ -38,7 +40,7 @@ export function PlansBrowserFilter({
                             })
                         }
                     >
-                        Alle
+                        {t("plans_filter_all")}
                     </button>
                 </div>
                 <div className="px-2">
@@ -58,7 +60,7 @@ export function PlansBrowserFilter({
                             })
                         }
                     >
-                        Eigene
+                        {t("plans_filter_my")}
                     </button>
                 </div>
                 <div className="px-2">
@@ -78,7 +80,7 @@ export function PlansBrowserFilter({
                             })
                         }
                     >
-                        Mit mir geteilte
+                        {t("plans_filter_shared")}
                     </button>
                 </div>
             </div>
@@ -87,7 +89,7 @@ export function PlansBrowserFilter({
                 <input
                     className={'border border-[#cccccc] rounded-l px-2 py-1'}
                     type="text"
-                    placeholder={'Nach Titel filtern ...'}
+                    placeholder={t("plans_filter_title_placeholder")}
                     name="search"
                     autoComplete="off"
                     onKeyUp={(event) => {
@@ -126,7 +128,7 @@ export function PlansBrowserFilter({
                     }
                 }}
             >
-                Good Practice Beispiele
+                {t("plans_filter_good_practice_examples")}
                 { filterBy.find((f) => f.id == 'isGoodPractice') && <GiCheckMark className='inline ml-2 mb-2' /> }
             </div>
 
@@ -136,7 +138,7 @@ export function PlansBrowserFilter({
                     className="ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white"
                     label={
                         <>
-                            <MdAdd className="inline" /> Neuen Plan starten
+                            <MdAdd className="inline" /> {t("plans_btn_new_plan")}
                         </>
                     }
                 />

@@ -105,13 +105,13 @@ export default function Plans({ socket }: Props) {
 
                         <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
                             <div>
-                                Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
+                                {t("matching_question")}
                             </div>
                             <Link
                                 href={'/matching'}
                                 className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
                             >
-                                <MdKeyboardDoubleArrowRight className="inline" /> zum Matching
+                                <MdKeyboardDoubleArrowRight className="inline" /> {t("go_matching")}
                             </Link>
                         </div>
                     </div>
@@ -131,7 +131,7 @@ export default function Plans({ socket }: Props) {
 
                     {isLoading ? (
                         <div className="m-12">
-                            <LoadingAnimation size="small" /> lade Pläne ...
+                            <LoadingAnimation size="small" /> {t("loading_plans")}
                         </div>
                     ) : (
                         <PlansBrowser
