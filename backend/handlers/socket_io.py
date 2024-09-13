@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Dict, List, Optional
 
-import jose
-import keycloak
 from tornado.options import options
 
 import global_vars
@@ -165,13 +163,8 @@ async def authenticate(sid, data):
     else:
         try:
             token_info = util.validate_keycloak_jwt(data["token"])
-        except keycloak.KeycloakGetError:
-            return {
-                "status": 401,
-                "success": False,
-                "reason": "keycloak_public_key_not_retrieveable",
-            }
-        except jose.exceptions.JWTError:
+        except Exception as e:
+            logger.error(e)
             return {"status": 401, "success": False, "reason": "jwt_invalid"}
 
     # save the session
