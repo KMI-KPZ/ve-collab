@@ -23,6 +23,7 @@ import ConfirmDialog from '../common/dialogs/Confirm';
 import Alert, { AlertState } from '../common/dialogs/Alert';
 import { useRouter } from 'next/router';
 import { FaEye } from 'react-icons/fa';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     plan: PlanPreview;
@@ -32,6 +33,7 @@ interface Props {
 export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation('common');
 
     const username = session?.user.preferred_username;
 
@@ -91,17 +93,17 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     if (!session || !username) return <></>;
 
     const ShareDialog = () => (
-        <Dialog isOpen={isShareDialogOpen} title={`Teilen`} onClose={handleCloseShareDialog}>
+        <Dialog isOpen={isShareDialogOpen} title={t('plans_share_dialog_title')} onClose={handleCloseShareDialog}>
             <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
-                    <div tabname="Neu">
+                    <div tabname={t("plans_share_dialog_tabname_new")}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             planId={plan._id}
                             setAlert={setAlert}
                         />
                     </div>
-                    <div tabname="Verwalten">
+                    <div tabname={t("plans_share_dialog_tabname_manage")}>
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
