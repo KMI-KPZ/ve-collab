@@ -7,9 +7,9 @@ interface Props {
     className?: string;
     classNameExtend?: string;
 }
-export default function ButtonPrimary({ label, children, onClick, className, classNameExtend }: Props) {
+export default function ButtonSecondary({ label, children, onClick, className, classNameExtend }: Props) {
 
-    const defaulStyle = 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
+    const defaulStyle = 'py-2 px-4 rounded-lg bg-white border border-ve-collab-orange'
 
     return (
         <Button
