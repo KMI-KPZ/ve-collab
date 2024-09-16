@@ -43,13 +43,11 @@ export default function Groups() {
         data: myGroupInvites,
         mutate: mutateMyGroupInvites,
     } = useGetMyGroupInvites(session!.accessToken);
-    // console.log(myGroupInvites);
 
     const {
         data: myGroupRequests,
         mutate: mutateMyGroupRequests,
     } = useGetMyGroupRequests(session!.accessToken);
-    // console.log(myGroupRequests);
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
