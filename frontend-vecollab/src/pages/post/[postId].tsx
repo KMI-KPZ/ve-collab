@@ -9,6 +9,7 @@ import { useState } from "react";
 import { MdOutlineDeleteForever } from "react-icons/md";
 import { GiSadCrab } from 'react-icons/gi';
 import { Socket } from "socket.io-client";
+import GeneralError from "@/components/common/GeneralError";
 
 /**
  * Single post view
@@ -56,12 +57,8 @@ export default function Post({ socket }: Props): JSX.Element {
 
     const Wrapper = ({children}: {children: JSX.Element}) => {
         return (
-            <div className="bg-slate-100">
-            <div className="flex flex-col m-auto p-12 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
-                <div className="w-1/2">
-                    {children}
-                </div>
-                </div>
+            <div className="m-auto p-12 items-center w-1/2">
+                {children}
             </div>
         )
     }
@@ -73,16 +70,12 @@ export default function Post({ socket }: Props): JSX.Element {
     )
 
     if (error) {
-        console.error(error);
-        return (
-            <Wrapper>
-                <div className="font-bold text-xl text-slate-900">Error loading post. See console for details</div>
-            </Wrapper>
-        )
+        console.error({error});
+        return <Wrapper><GeneralError /></Wrapper>
     }
 
     if (isLoadingPost) { // || isLoading
-        return (<Wrapper><LoadingAnimation /></Wrapper>)
+        return <Wrapper><LoadingAnimation /></Wrapper>
     }
 
     if (deleted) {
