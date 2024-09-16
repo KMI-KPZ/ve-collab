@@ -6,14 +6,8 @@ import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
-import {
-    MdShare,
-    MdDelete,
-    MdEdit,
-    MdOutlineCopyAll,
-    MdOutlineFileDownload,
-} from 'react-icons/md';
-import { GrStatusGood } from 'react-icons/gr'
+import { MdShare, MdDelete, MdEdit, MdOutlineCopyAll, MdOutlineFileDownload } from 'react-icons/md';
+import { GrStatusGood } from 'react-icons/gr';
 import Timestamp from '../common/Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -51,7 +45,6 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     // }
     // const { trigger: triggerGetPlanById } = useSWRMutation('/planner/get', getPlanById )
     // await triggerGetPlanById(plan._id)
-
 
     const handleCloseShareDialog = async () => {
         setIsShareDialogOpen(false);
@@ -93,17 +86,21 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     if (!session || !username) return <></>;
 
     const ShareDialog = () => (
-        <Dialog isOpen={isShareDialogOpen} title={t('plans_share_dialog_title')} onClose={handleCloseShareDialog}>
+        <Dialog
+            isOpen={isShareDialogOpen}
+            title={t('plans_share_dialog_title')}
+            onClose={handleCloseShareDialog}
+        >
             <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
-                    <div tabname={t("plans_share_dialog_tabname_new")}>
+                    <div tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             planId={plan._id}
                             setAlert={setAlert}
                         />
                     </div>
-                    <div tabname={t("plans_share_dialog_tabname_manage")}>
+                    <div tabname={t('plans_share_dialog_tabname_manage')}>
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
@@ -118,7 +115,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     const SummaryDialog = () => (
         <Dialog
             isOpen={isSummaryOpen}
-            title="Zusammenfassung"
+            title={t('summary')}
             onClose={() => {
                 setSummaryOpen(false);
                 setPlanSummary(undefined);
@@ -131,7 +128,8 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                             className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
                             onClick={() => forward(plan._id)}
                         >
-                            <MdEdit className="inline" /> Bearbeiten
+                            <MdEdit className="inline" />
+                            {t('edit')}
                         </div>
                         <Link
                             className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
@@ -140,7 +138,8 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                                 query: { planId: plan._id },
                             }}
                         >
-                            <MdOutlineFileDownload className="inline" /> Herunterladen
+                            <MdOutlineFileDownload className="inline" />
+                            {t('download')}
                         </Link>
                     </div>
                 ) : (
@@ -152,7 +151,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                                 query: { planId: plan._id },
                             }}
                         >
-                            <MdOutlineFileDownload className="inline" /> Herunterladen
+                            <MdOutlineFileDownload className="inline" /> {t('download')}
                         </Link>
                     </div>
                 )}
@@ -177,9 +176,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
-                openPlanSummary()
+                openPlanSummary();
             }}
-            title="Zusammenfassung anzeigen"
+            title={t('show_summary')}
         >
             <FaEye />
         </div>
@@ -193,7 +192,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 setAskDeletion(true);
             }}
         >
-            <MdDelete title="Plan löschen" />
+            <MdDelete title={t('delete_plan')} />
         </button>
     );
 
@@ -208,12 +207,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             {plan.read_access.length > 1 ? (
                 <MdShare
                     className="text-green-600"
-                    title={`Plan geteilt mit ${plan.read_access.length - 1} Benutzer${
-                        plan.read_access.length > 2 ? 'n' : ''
-                    }`}
+                    title={
+                        plan.read_access.length > 2
+                            ? t('plans_shared_with_x_users', { count: plan.read_access.length - 1 })
+                            : t('plans_shared_with_1_user')
+                    }
                 />
             ) : (
-                <MdShare title="Plan teilen" />
+                <MdShare title={t('share_plan')} />
             )}
         </button>
     );
@@ -226,7 +227,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 createCopy(plan._id);
             }}
         >
-            <MdOutlineCopyAll title="Kopie erstellen" />
+            <MdOutlineCopyAll title={t("create_copy")} />
         </button>
     );
 
@@ -240,9 +241,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             refetchPlansCallback(); // refresh plans
         }
         setAlert({
-            message: 'Plan gelöscht',
+            message: t("plans_alert_deleted"),
             autoclose: 2000,
-            onClose: () => setAlert({ open: false })
+            onClose: () => setAlert({ open: false }),
         });
     };
 
@@ -255,7 +256,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
             setAlert({
-                message: 'Plan kopiert',
+                message: t("plans_alert_copied"),
                 autoclose: 2000,
                 onClose: () => setAlert({ open: false }),
             });
@@ -263,7 +264,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             switch (response.reason) {
                 case 'insufficient_permission':
                     setAlert({
-                        message: 'Du hast keine Rechte, diesen Plan zu kopieren',
+                        message: t("plans_alert_copy_insufficient_permission"),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -271,7 +272,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     return;
                 case 'plan_doesnt_exist':
                     setAlert({
-                        message: 'Dieser Plan existiert nicht',
+                        message: t("plans_alert_doesnt_exist"),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -279,7 +280,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     return;
                 default:
                     setAlert({
-                        message: 'unerwarteter Fehler beim Kopieren des Plans',
+                        message: t("plans_alert_copy_unexpected_error"),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -305,7 +306,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     if (plan.write_access.includes(username)) {
                         forward(plan._id);
                     } else {
-                        openPlanSummary()
+                        openPlanSummary();
                     }
                 }}
             >
@@ -317,14 +318,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
-                            <GrStatusGood title='Plan ist als "Good Practice" markiert' />
+                            <GrStatusGood title={t("plans_marked_as_good_practise")} />
                         </div>
                     )}
-                    {/* {(plan.author == username && plan.read_access.length > 1) && (
-                        <div className='mr-2 text-lime-600'>
-                            <MdShare title={`Plan geteilt mit ${plan.read_access.length-1} Benutzer${plan.read_access.length > 2 ? "n" : ""}`} />
-                        </div>
-                    )} */}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         {plan.author.username == username && (
                             <>
@@ -334,22 +330,28 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                                 <DeleteButton />
                             </>
                         )}
-                        {plan.author.username != username && plan.write_access.includes(username) && (
-                            <>
-                                <ViewButton />
-                                <CopyButton />
-                            </>
-                        )}
+                        {plan.author.username != username &&
+                            plan.write_access.includes(username) && (
+                                <>
+                                    <ViewButton />
+                                    <CopyButton />
+                                </>
+                            )}
                     </div>
                 </div>
             </div>
 
             <div className="basis-1/6 truncate">
                 {plan.author.username === username ? (
-                    <>{plan.author.first_name} {plan.author.last_name}</>
+                    <>
+                        {plan.author.first_name} {plan.author.last_name}
+                    </>
                 ) : (
-                    <span title={`Plan geteilt von ${plan.author.first_name} ${plan.author.last_name}`}>
-                        <MdShare className="inline m-1 text-slate-900" /> {plan.author.first_name} {plan.author.last_name}
+                    <span
+                        title={t("plans_shared_by", {name: `${plan.author.first_name} ${plan.author.last_name}`})}
+                    >
+                        <MdShare className="inline m-1 text-slate-900" /> {plan.author.first_name}{' '}
+                        {plan.author.last_name}
                     </span>
                 )}
             </div>
@@ -368,7 +370,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
 
             {askDeletion && (
                 <ConfirmDialog
-                    message="Plan löschen?"
+                    message={t("plans_confirm_delete")}
                     callback={(proceed) => {
                         if (proceed) deletePlan(plan._id);
                         setAskDeletion(false);

@@ -1,4 +1,6 @@
 {
+  "yes": "Ja",
+  "no": "Nein",
   "btn_new_va": "Neuen VA planen",
   "plans": "Pläne",
   "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
@@ -37,5 +39,22 @@
   "plans_share_dialog_alert_set": "Plan freigegeben",
   "plans_share_dialog_alert_update": "Freigabeeinstellungen geändert",
   "plans_share_dialog_alert_revoke": "Freigabe entzogen",
-  "plans_share_dialog_text_nobody_access": "Niemand anderes hat Zugriff auf diesen Plan"
+  "plans_share_dialog_text_nobody_access": "Niemand anderes hat Zugriff auf diesen Plan",
+  "summary": "Zusammenfassung",
+  "show_summary": "Zusammenfassung anzeigen",
+  "edit": "Bearbeiten",
+  "download": "Herunterladen",
+  "delete_plan": "Plan löschen",
+  "share_plan": "Plan teilen",
+  "plans_shared_with_1_user": "Plan geteilt mit 1 Nutzer:in",
+  "plans_shared_with_x_users": "Plan geteilt mit {{count}} Nutzer:innen",
+  "create_copy": "Kopie erstellen",
+  "plans_alert_deleted": "Plan gelöscht",
+  "plans_alert_copied": "Plan kopiert",
+  "plans_alert_copy_insufficient_permission": "Du hast keine Rechte, um diesen Plan zu kopieren",
+  "plans_alert_doesnt_exist": "Dieser Plan existiert nicht",
+  "plans_alert_copy_unexpected_error": "unerwarteter Fehler beim Kopieren des Plans",
+  "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' markiert",
+  "plans_shared_by": "Plan geteilt von {{name}}",
+  "plans_confirm_delete": "Plan löschen?"
 }

@@ -1,4 +1,6 @@
 {
+  "yes": "Yes",
+  "no": "No",
   "btn_new_va": "Start a new VE",
   "plans": "Plans",
   "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
@@ -37,5 +39,22 @@
   "plans_share_dialog_alert_set": "Access granted",
   "plans_share_dialog_alert_update": "Access settings updated",
   "plans_share_dialog_alert_revoke": "Access revoked",
-  "plans_share_dialog_text_nobody_access": "Nobody has access to this plan"
+  "plans_share_dialog_text_nobody_access": "Nobody has access to this plan",
+  "summary": "Summary",
+  "show_summary": "Show summary",
+  "edit": "Edit",
+  "download": "Download",
+  "delete_plan": "Delete plan",
+  "share_plan": "Share plan",
+  "plans_shared_with_1_user": "Plan shared with 1 user",
+  "plans_shared_with_x_users": "Plan shared with {{count}} users",
+  "create_copy": "Create a copy",
+  "plans_alert_deleted": "Plan deleted",
+  "plans_alert_copied": "Plan copied",
+  "plans_alert_copy_insufficient_permission": "You do not have permissions to copy this plan",
+  "plans_alert_doesnt_exist": "This plan does not exist",
+  "plans_alert_copy_unexpected_error": "An unexpected error occured while copying the plan",
+  "plans_marked_as_good_practise": "Plan is marked as 'good practice example'",
+  "plans_shared_by": "Plan shared by {{name}}",
+  "plans_confirm_delete": "Delete plan?"
 }
