@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -12,6 +13,8 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export interface TargetGroup {
     name: string;
@@ -61,6 +64,7 @@ const emptyLanguage = { language: '' }
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation('common')
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -157,7 +161,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            Bezeichnung
+                            {t('name')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -166,11 +170,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.name`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder="Name eingeben"
+                            placeholder={t('enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -181,7 +184,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="age" className="px-2 py-2">
-                            Alter
+                            {t('age')}
                         </label>
                     </div>
                     <div className="w-3/4 flex">
@@ -191,14 +194,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_min`, {
                                     maxLength: {
                                         value: 4,
-                                        message: 'Bitte geben sie eine realistische Zahl ein',
+                                        message: t('designer_field_realistic_number'),
                                     },
                                     pattern: {
                                         value: /^\d+$/,
-                                        message: 'Bitte nur ganze postive Zahlen',
+                                        message:t('designer_field_only_positive_number'),
                                     },
                                 })}
-                                placeholder="von"
+                                placeholder={t('from')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -211,14 +214,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_max`, {
                                     maxLength: {
                                         value: 4,
-                                        message: 'Bitte geben sie eine realistische Zahl ein',
+                                        message: t('designer_field_realistic_number'),
                                     },
                                     pattern: {
                                         value: /^\d+$/,
-                                        message: 'Bitte nur ganze postive Zahlen',
+                                        message: t('designer_field_only_positive_number'),
                                     },
                                 })}
-                                placeholder="bis"
+                                placeholder={t('to')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -230,7 +233,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="experience" className="px-2 py-2">
-                            VE-Projektrelevante Erfahrungen
+                            {t('designer_target_relevant_exp')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -239,11 +242,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.experience`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
+                            placeholder={t('designer_target_relevant_exp_placeh')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -254,7 +256,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="academic_course" className="px-2 py-2">
-                            Studiengang
+                            {t('designer_target_degree')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -263,11 +265,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.academic_course`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder="Studiengang eingeben, mehrere durch Komma trennen"
+                            placeholder={t('designer_target_degree_placeh')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -281,7 +282,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="languages" className="px-2 py-2">
-                            Sprachen
+                            {t('designer_target_languages')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -290,11 +291,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.languages`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder="mehrere durch Komma trennen"
+                            placeholder={t('designer_target_languages_placeh')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -322,16 +322,16 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="flex my-2 items-center w-full">
                     <input
                         type="text"
-                        placeholder="Sprache eingeben"
+                        placeholder={t('enter_language')}
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
                         {...methods.register(`languages.${index}.language`, {
                             maxLength: {
                                 value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                message: t('designer_field_maxlength500'),
                             },
                             pattern: {
                                 value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":,&()!?-',
+                                message: t('designer_field_no_special_chars'),
                             },
                         })}
                     />
@@ -351,14 +351,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Zielgruppen & Sprachen"
-            subtitle="An welche Zielgruppen richtet sich der VE?"
-            description={[
-                'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, da ihr eure Zielgruppe unter Umständen zum Zeitpunkt der VE-Planung noch nicht genau kennt (z. B. Alter der Teilnehmenden, Sprachen).',
-                'Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.',
-            ]}
+            title={t('designer_target_title')}
+            subtitle={t('designer_target_subtitle')}
+            description={t('designer_target_description')}
             tooltip={{
-                text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden',
+                text: t('designer_target_tootltip'),
                 link: '',
             }}
             methods={methods}
@@ -383,20 +380,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             </div>
 
             <div className="">
-                <div className="text-xl text-slate-600">
-                    In welchen Sprachen findet der VE (hauptsächlich) statt?
-                </div>
-                <div className="mb-8">
-                    <p className="mb-2">
-                        Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren
-                        Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen
-                        könnt.
-                    </p>
-                    <p className="mb-2">
-                        Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt
-                        ausgefüllt werden.
-                    </p>
-                </div>
+                <div className="text-xl text-slate-600">{t('designer_target_language_title')}</div>
+                <div className="mb-8">{t('designer_target_language_description')}</div>
                 <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow"
@@ -410,4 +395,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+            ])),
+        },
+    }
 }

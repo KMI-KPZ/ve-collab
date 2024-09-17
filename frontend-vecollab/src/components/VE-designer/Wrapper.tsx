@@ -260,7 +260,8 @@ export default function Wrapper({
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenu().find((a) => a.id == stageInMenu);
-        let subMenuItem = mainMenuItem?.submenu.find((a) => a.link == currentPath);
+        if (!mainMenuItem) return <></>;
+        let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
             const currentStep = plan.steps.find((a) =>
@@ -278,7 +279,7 @@ export default function Wrapper({
 
         return (
             <div className="text-normale py-2 flex items-center text-slate-500">
-                <MdArrowForwardIos size={15} /> {t(mainMenuItem!.text)}
+                <MdArrowForwardIos size={15} /> {t(mainMenuItem.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
                         <MdArrowForwardIos size={15} /> {t(subMenuItem.text)}
