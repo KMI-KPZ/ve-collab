@@ -20,6 +20,24 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const PartnersFormSchema = z.object({
+    partners: z
+        .object({
+            label: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+            value: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+        })
+        .array(),
+    externalParties: z
+        .object({
+            externalParty: z
+                .string()
+                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+        })
+        .array(),
+});
 
 export interface FormValues {
     partners: Partner[];
@@ -38,7 +56,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.every(a => a.value == '')
+        formValues.partners.every((a) => a.value == '')
     );
 };
 
@@ -48,7 +66,7 @@ interface Props {
 
 Partners.auth = true;
 export default function Partners({ socket }: Props): JSX.Element {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
@@ -64,6 +82,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(PartnersFormSchema),
     });
 
     const {
@@ -90,8 +109,8 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
-            let partners = [{ label: '', value: '' }]
-            let extPartners = [{ externalParty: '' }]
+            let partners = [{ label: '', value: '' }];
+            let extPartners = [{ externalParty: '' }];
             if (plan.formalities && Array.isArray(plan.formalities)) {
                 setFormalConditions(plan.formalities);
             }
@@ -102,7 +121,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 setIndividualLearningGoals(plan.individual_learning_goals);
             }
             if (plan.involved_parties.length !== 0) {
-                extPartners = plan.involved_parties.map(exp => ({ externalParty: exp }))
+                extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
             }
             if (Object.keys(plan.progress).length) {
@@ -113,39 +132,37 @@ export default function Partners({ socket }: Props): JSX.Element {
                     '/profile_snippets',
                     { usernames: plan.partners },
                     session?.accessToken
-                )
+                );
                 if (snippets) {
-                    partners = plan.partners.map(
-                        (partner: string): Partner => {
-                            const findFullUsername = snippets.user_snippets.find(
-                                (backendUser: BackendUserSnippet) =>
-                                    backendUser.username === partner
-                            );
-                            if (findFullUsername !== undefined) {
-                                return {
-                                    label:
-                                        findFullUsername.first_name +
-                                        ' ' +
-                                        findFullUsername.last_name +
-                                        ' - ' +
-                                        findFullUsername.username,
-                                    value: findFullUsername.username,
-                                };
-                            } else {
-                                return {
-                                    label: partner,
-                                    value: partner,
-                                };
-                            }
-                        });
+                    partners = plan.partners.map((partner: string): Partner => {
+                        const findFullUsername = snippets.user_snippets.find(
+                            (backendUser: BackendUserSnippet) => backendUser.username === partner
+                        );
+                        if (findFullUsername !== undefined) {
+                            return {
+                                label:
+                                    findFullUsername.first_name +
+                                    ' ' +
+                                    findFullUsername.last_name +
+                                    ' - ' +
+                                    findFullUsername.username,
+                                value: findFullUsername.username,
+                            };
+                        } else {
+                            return {
+                                label: partner,
+                                value: partner,
+                            };
+                        }
+                    });
                     replacePartners(partners);
                 }
             }
 
             return {
                 partners: partners,
-                externalParties: extPartners
-            }
+                externalParties: extPartners,
+            };
         },
         [replaceExternalParties, replacePartners, session]
     );
@@ -323,12 +340,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         type="text"
                         placeholder="Externen eingeben"
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                        })}
+                        {...methods.register(`externalParties.${index}.externalParty`)}
                     />
                     <button type="button" onClick={() => handleDeleteExternalParties(index)}>
                         <RxMinus size={20} />
