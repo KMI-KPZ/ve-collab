@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import React from 'react';
 
 interface PopupProps {
@@ -13,6 +14,8 @@ export default function PopupSaveData({
     handleContinue,
     handleCancel,
 }: PopupProps): JSX.Element {
+    const { t } = useTranslation('common');
+
     return (
         <>
             {isOpen && (
@@ -21,17 +24,18 @@ export default function PopupSaveData({
                         <div className="p-4">
                             {type == "unsaved" ? (
                                 <>
-                                    <h5 className="text-xl font-medium mb-4">Ungespeicherte Daten</h5>
+                                    <h5 className="text-xl font-medium mb-4">{t("designer_wrapper_unsaved_changes")}</h5>
                                     <p className="text-gray-700 mb-6">
-                                        Deine Änderungen auf der aktuellen Seite werden nicht gespeichert und gehen verloren.<br />
-                                        Bist du sicher?
+                                        {t("designer_wrapper_unsaved_changes_text")}
+                                        <br />
+                                        {t("are_you_sure")}
                                     </p>
                                 </>
                             ) : (
                                 <>
-                                    <h5 className="text-xl font-medium mb-4">Invalide Daten</h5>
+                                    <h5 className="text-xl font-medium mb-4">{t("designer_wrapper_invalid_data")}</h5>
                                     <p className="text-gray-700 mb-6">
-                                        Deine Eingaben sind nicht zulässig und können nicht gespeichert werden.
+                                        {t("designer_wrapper_invalid_data_text")}
                                     </p>
                                 </>
                             )}
@@ -42,17 +46,16 @@ export default function PopupSaveData({
                                     className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                     onClick={handleCancel}
                                 >
-                                    Zurück
+                                    {t("back")}
                                 </button>
                                 <button
                                     type="button"
                                     className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                                     onClick={handleContinue}
                                 >
-                                    Weiter ohne speichern
+                                    {t("proceed_without_saving")}
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>

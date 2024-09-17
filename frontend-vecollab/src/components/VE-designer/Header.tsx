@@ -6,6 +6,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { dropPlanLock } from './PlanSocket';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -13,7 +14,7 @@ interface Props {
     handleUnsavedData: (data: any, continueLink: string) => void;
     handleInvalidData: (data: any, continueLink: string) => void;
     socket: Socket;
-    plan: IPlan
+    plan: IPlan;
 }
 
 export default function Header({
@@ -22,15 +23,17 @@ export default function Header({
     submitCallback,
     handleUnsavedData,
     handleInvalidData,
-    socket
+    socket,
 }: Props) {
     const router = useRouter();
-    const changeToLanguage = router.locale === 'en' ? 'de' : 'en'
+    const { t } = useTranslation('common');
+
+    const changeToLanguage = router.locale === 'en' ? 'de' : 'en';
 
     const onToggleLanguage = () => {
-        const { pathname, asPath, query } = router
-        router.push({ pathname, query }, asPath, { locale: changeToLanguage })
-    }
+        const { pathname, asPath, query } = router;
+        router.push({ pathname, query }, asPath, { locale: changeToLanguage });
+    };
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -44,9 +47,9 @@ export default function Header({
                 <button
                     onClick={onToggleLanguage}
                     className="mx-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
-                    title='Sprache wechseln'
+                    title="Sprache wechseln"
                 >
-                    {changeToLanguage == "de" ? "EN" : "DE"}
+                    {changeToLanguage == 'de' ? 'EN' : 'DE'}
                 </button>
 
                 <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
@@ -74,7 +77,7 @@ export default function Header({
                         if (Object.keys(methods.formState.dirtyFields).length > 0) {
                             handleUnsavedData(null, '/plans');
                         } else {
-                            await dropPlanLock(socket, router.query.plannerId)
+                            await dropPlanLock(socket, router.query.plannerId);
                             await router.push({
                                 pathname: '/plans',
                                 query: {},
@@ -82,7 +85,7 @@ export default function Header({
                         }
                     }}
                 >
-                    Beenden
+                    {t("exit")}
                 </button>
 
                 <button
@@ -94,11 +97,11 @@ export default function Header({
                         },
                         // invalid form
                         async (data: any) => {
-                            handleInvalidData(data, '')
+                            handleInvalidData(data, '');
                         }
                     )}
                 >
-                    Speichern
+                    {t("save")}
                 </button>
             </div>
         </div>
