@@ -14,8 +14,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 // TODO trotzdem testen 5Mb einbauen, trotzdem hochgeladen iwie
-// TODO Array size check -> funzt nicht
-// TODO array error message anzeigen
+// TODO nur im Array -> size check funzt nicht
 /*TODO kein Popup bei weiter*/
 const PostProcessSchema = z.object({
     share: z.boolean(),
@@ -39,7 +38,7 @@ const PostProcessSchema = z.object({
             size: z
                 .number()
                 .int()
-                .max(5242880, 'Max. 5 MB erlaubt. Bitte wählen sie eine kleinere Datei')
+                .max(5242880, 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.')
                 .optional(),
             file_id: z.string().optional(),
         })
@@ -47,12 +46,18 @@ const PostProcessSchema = z.object({
     literature: z.string().nullable(),
     literatureFiles: z
         .array(
-            z.object({
-                file: z.any().optional(),
-                file_name: z.string(),
-                size: z.number().int().max(5242880, 'max. 5 MB erlaubt').optional(),
-                file_id: z.string().optional(),
-            })
+            z
+                .object({
+                    file: z.any().optional(),
+                    file_name: z.string(),
+                    size: z.number().int().optional(),
+                    file_id: z.string().optional(),
+                })
+                .refine((data) => data.size !== undefined && data.size <= 5242880, {
+                    // 25.470.060
+                    message: 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.',
+                    path: ['size'], // This will attach the error message to the `size` field
+                })
         )
         .max(4, 'max. 4 Dateien erlaubt')
         .nullable(),
@@ -120,8 +125,6 @@ export default function PostProcess({ socket }: Props) {
             setOriginalEvFile(undefined);
             replaceLitFiles([]);
 
-            console.log('get', plan.evaluation_file);
-
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
@@ -165,13 +168,15 @@ export default function PostProcess({ socket }: Props) {
         [methods, addLitFile, replaceLitFiles]
     );
 
+    // TODO Delete
     useEffect(() => {
         console.log('errors', methods.formState.errors);
         console.log('values', methods.getValues());
-        console.log(methods.formState.errors?.evaluationFile?.size?.message);
+        console.log('files', methods.formState.errors?.literatureFiles);
     });
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        // TODO Delete
         console.log('submit', data);
         if (changedEvFile && originalEvFile) {
             await removeFromBackend('evaluation', originalEvFile);
@@ -586,11 +591,11 @@ export default function PostProcess({ socket }: Props) {
                                                 </div>
 
                                                 {methods.formState.errors?.literatureFiles?.[index]
-                                                    ?.file?.message && (
+                                                    ?.size?.message && (
                                                     <p className="text-red-500">
                                                         {
                                                             methods.formState.errors
-                                                                ?.literatureFiles?.[index]?.file
+                                                                ?.literatureFiles?.[index]?.size
                                                                 ?.message
                                                         }
                                                     </p>
