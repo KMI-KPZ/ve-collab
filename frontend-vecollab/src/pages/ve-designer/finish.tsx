@@ -8,6 +8,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
@@ -17,49 +19,52 @@ interface Props {
 Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation('common');
+
     // TODO
-    const [plan, setPlanData] = useState<IPlan>()
+    const [plan, setPlanData] = useState<IPlan>();
 
     return (
         <Wrapper
             socket={socket}
-            title="Fertig"
-            subtitle="Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!"
+            title={t('designer_finish_title')}
+            subtitle={t('designer_finish_subtitle')}
             methods={useForm<any>()}
             preventToLeave={false}
-            nextpage='/ve-designer/post-process'
-            nextpageBtnLabel='Zur Nachbearbeitung'
+            nextpage="/ve-designer/post-process"
+            nextpageBtnLabel={t('designer_finish_to_post_process')}
             stageInMenu="finish"
             planerDataCallback={(d) => {
-                setPlanData(d)
-                return {}
+                setPlanData(d);
+                return {};
             }}
             submitCallback={(d) => {}}
         >
             {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
             {feedbackFormURL && (
                 <div className="mt-4 font-bold text-lg">
-                    Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns{' '}
+                    {t('designer_finish_feedback_1')}
                     <a
                         className="underline text-ve-collab-orange"
                         href={feedbackFormURL}
                         target="_blank"
                         rel="noreferrer"
                     >
-                        hier
+                        {t('here')}
                     </a>{' '}
-                    wissen!
+                    {t('designer_finish_feedback_2')}
                 </div>
             )}
         </Wrapper>
     );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ locale }: { locale: any }) {
     const feedbackFormURL = process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL;
     return {
         props: {
             feedbackFormURL: feedbackFormURL ?? null,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 }

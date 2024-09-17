@@ -172,7 +172,7 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-    }, [plan, isLoading, error, socket, router, session]);
+    }, [plan, isLoading, error, socket, router, session, t]);
 
     // call data callback and rest form defaults for correct form valdation (form.isDirty)
     useEffect(() => {
