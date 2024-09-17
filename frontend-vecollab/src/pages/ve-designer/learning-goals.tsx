@@ -28,7 +28,8 @@ const LearningGoalsFormSchema = z.object({
                 .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
             learningGoal: z
                 .string()
-                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
+                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.')
+                .nullable(),
         })
         .array(),
     majorLearningGoals: z
