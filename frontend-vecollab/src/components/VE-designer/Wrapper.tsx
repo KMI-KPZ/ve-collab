@@ -278,10 +278,10 @@ export default function Wrapper({
 
         return (
             <div className="text-normale py-2 flex items-center text-slate-500">
-                <MdArrowForwardIos size={15} /> {mainMenuItem?.text}
+                <MdArrowForwardIos size={15} /> {t(mainMenuItem!.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
-                        <MdArrowForwardIos size={15} /> {subMenuItem.text}
+                        <MdArrowForwardIos size={15} /> {t(subMenuItem.text)}
                     </>
                 )}
             </div>
