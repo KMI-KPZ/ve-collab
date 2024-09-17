@@ -65,7 +65,7 @@ export default function Name({ socket }: Props): JSX.Element {
             socket={socket}
             title={t("designer_name_title")}
             subtitle={t("designer_name_subtitle")}
-            description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
+            description={t('designer_name_description')}
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
@@ -80,15 +80,15 @@ export default function Name({ socket }: Props): JSX.Element {
                     {...methods.register('name', {
                         required: {
                             value: true,
-                            message: 'Bitte gebt eurem VE einen Namen.',
+                            message: t('designer_name_err_empty'),
                         },
                         maxLength: {
                             value: 50,
-                            message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
+                            message: t('designer_name_err_maxlength'),
                         },
                         pattern: {
                             value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                            message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
+                            message: t('designer_name_err_type'),
                         },
                     })}
                 />

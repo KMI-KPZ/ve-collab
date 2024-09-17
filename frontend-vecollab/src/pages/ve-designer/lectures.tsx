@@ -12,6 +12,8 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export interface LectureOld {
     name: string;
@@ -49,6 +51,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
 Lectures.auth = true;
 export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation('common')
+
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -119,7 +123,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            Name
+                            {t('designer_lectures_name')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -128,11 +132,10 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.name`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder="Name eingeben"
+                            placeholder={t('enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -143,7 +146,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="type" className="px-2 py-2">
-                            Typ
+                            {t('designer_lectures_type')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -151,15 +154,13 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.lecture_type`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
-                            placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value="Pflichtveranstaltung">Pflichtveranstaltung</option>
-                            <option value="Wahlveranstaltung">Wahlveranstaltung</option>
+                            <option value={t('designer_lectures_compulsory')}>{t('designer_lectures_compulsory')}</option>
+                            <option value={t('designer_lectures_elective')}>{t('designer_lectures_elective')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.lectures?.[index]?.lecture_type?.message}
@@ -169,7 +170,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="format" className="px-2 py-2">
-                            Format
+                            {t('designer_lectures_format')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -177,16 +178,15 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.lecture_format`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('designer_field_maxlength500'),
                                 },
                             })}
                             placeholder="z.B. online, hybrid, präsenz"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value="Präsenz">Präsenz</option>
-                            <option value="Online">Online</option>
-                            <option value="Hybrid">Hybrid</option>
+                            <option value={t('designer_lectures_face2face')}>{t('designer_lectures_face2face')}</option>
+                            <option value={t('designer_lectures_online')}>{t('designer_lectures_online')}</option>
+                            <option value={t('designer_lectures_hybrid')}>{t('designer_lectures_hybrid')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.lectures?.[index]?.lecture_format?.message}
@@ -196,7 +196,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/2 flex items-center">
                         <label htmlFor="participants" className="px-2 py-2">
-                            Teilnehmendenanzahl
+                            {t('designer_lectures_numbers_of_part')}
                         </label>
                     </div>
                     <div className="w-1/2">
@@ -206,15 +206,15 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.participants_amount`, {
                                 maxLength: {
                                     value: 4,
-                                    message: 'Bitte geben sie eine realistische Zahl ein',
+                                    message: t('designer_field_realistic_number'),
                                 },
                                 pattern: {
                                     value: /^\d+$/,
-                                    message: 'Bitte nur ganze postive Zahlen',
+                                    message: t('designer_field_only_positive_number'),
                                 },
                                 setValueAs: (v) => parseInt(v),
                             })}
-                            placeholder="Anzahl eingeben"
+                            placeholder={t('designer_lectures_enter_numbers_of_part')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -242,8 +242,8 @@ export default function Lectures({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Lehrveranstaltungen"
-            subtitle="Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?"
+            title={t('designer_lectures_title')}
+            subtitle={t('designer_lectures_subtitle')}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -271,4 +271,14 @@ export default function Lectures({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+            ])),
+        },
+    }
 }

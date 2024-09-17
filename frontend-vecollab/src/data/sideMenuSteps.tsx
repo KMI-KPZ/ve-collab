@@ -71,7 +71,6 @@ const itemsEtappenplaner = (): ISubmenuData[] => {
 export const mainMenu = (): IMenuData[] => {
     return [
         {
-            // text: t('sidebar_general'),
             text: 'sidebar_general',
             id: 'generally',
             link: '',

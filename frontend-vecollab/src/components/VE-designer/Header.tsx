@@ -47,7 +47,7 @@ export default function Header({
                 <button
                     onClick={onToggleLanguage}
                     className="mx-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
-                    title="Sprache wechseln"
+                    title={t('change_language')}
                 >
                     {changeToLanguage == 'de' ? 'EN' : 'DE'}
                 </button>
@@ -56,7 +56,7 @@ export default function Header({
                     <button
                         type="submit"
                         className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
-                        title="Kollaboratives Pad öffnen"
+                        title={t('open_collaborative_pad')}
                     >
                         <MdEditSquare className="inline" /> Pad
                     </button>
@@ -65,7 +65,7 @@ export default function Header({
                     <button
                         type="submit"
                         className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        title="Jitsi Raum betreten"
+                        title={t('enter_jtsi')}
                     >
                         <MdMeetingRoom className="inline" /> Video
                     </button>
