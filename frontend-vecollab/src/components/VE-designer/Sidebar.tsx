@@ -35,7 +35,7 @@ export default function Sidebar({
     const { t } = useTranslation('common');
 
     // init menu open states
-    let menuStates: IMenuDataState[] = mainMenu(t).map((a) => {
+    let menuStates: IMenuDataState[] = mainMenu().map((a) => {
         return { id: a.id, open: true };
     });
 
@@ -48,7 +48,7 @@ export default function Sidebar({
         }));
     };
 
-    const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu(t));
+    const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu());
 
     useEffect(() => {
         if (!plan?.steps || !mainMenu?.length) return;
@@ -62,7 +62,7 @@ export default function Sidebar({
         });
         if (!userDefinedSteps.length) return;
 
-        const defaultSteps = mainMenu(t).find((a) => a.id == 'steps')?.submenu || [];
+        const defaultSteps = mainMenu().find((a) => a.id == 'steps')?.submenu || [];
 
         // adding user defined steps to steps menu item
         setMainMenuData((prev) => {
@@ -124,7 +124,7 @@ export default function Sidebar({
                         isCurrentPage ? 'text-ve-collab-blue font-extrabold' : ''
                     }`}
                 >
-                    {item.text}
+                    {t(item.text)}
                 </p>
                 <span>
                     {getProgressState(item.id, parentId) == ProgressState.completed && (
@@ -169,7 +169,7 @@ export default function Sidebar({
                             isCurrentPage ? 'font-bold' : ''
                         }`}
                     >
-                        {item.text}
+                        {t(item.text)}
                     </span>
                     {item.submenu.length > 0 && (
                         <>

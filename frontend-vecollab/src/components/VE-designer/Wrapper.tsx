@@ -259,7 +259,7 @@ export default function Wrapper({
 
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
-        const mainMenuItem = mainMenu(t).find((a) => a.id == stageInMenu);
+        const mainMenuItem = mainMenu().find((a) => a.id == stageInMenu);
         let subMenuItem = mainMenuItem?.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
