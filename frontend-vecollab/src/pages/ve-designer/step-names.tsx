@@ -31,6 +31,8 @@ import { MdArrowOutward, MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import Link from 'next/link';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -95,6 +97,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(StepNamesFormSchema),
         defaultValues: {
             stepNames: [
                 {
@@ -115,7 +118,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
     });
 
-    const { fields, append, remove, move, update, replace } = useFieldArray({
+    const { fields, append, remove, move, replace, update } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
@@ -135,7 +138,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 setSteps(plan.steps);
                 // DIRTY hack to initial set the size of our textareas
                 setTimeout(() => {
-                    plan.steps?.map((step, i) =>
+                    plan.steps?.map((_, i) =>
                         adjustTextareaSize(
                             document.querySelector(`textarea[name='stepNames.${i}.learning_goal']`)
                         )
@@ -150,11 +153,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
         [replace]
     );
-
-    const checkIfNamesAreUnique = (stepNames: IFineStep[]): boolean => {
-        const stepNamesNames = stepNames.map((stepName) => stepName.name);
-        return new Set(stepNamesNames).size !== stepNames.length;
-    };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
@@ -196,23 +194,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
         ];
     };
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const fromDate = new Date(fromValue);
-        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.timestamp_to`));
-        if (fromDate > toDate) {
-            return 'Das Startdatum muss vor dem Enddatum liegen';
-        } else {
-            return true;
-        }
-    };
-
     const handleDelete = (index: number): void => {
-        remove(index);
-        // if (fields.length > 1) {
-        //     remove(index);
-        // } else {
-        //     update(index, emptyStepData);
-        // }
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, emptyStepData);
+        }
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -296,26 +283,32 @@ export default function StepNames({ socket }: Props): JSX.Element {
                             new Date(a.last_modified).getTime()
                         );
                     })
-                    .map((plan, i) => (
+                    .map((plan) => (
                         <div key={plan._id}>
                             <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
                                 <MdNewspaper />
-                                <Link className='text-xl font-bold grow-0 group' href={`/plan/${plan._id}`} target='_blank'>
+                                <Link
+                                    className="text-xl font-bold grow-0 group"
+                                    href={`/plan/${plan._id}`}
+                                    target="_blank"
+                                >
                                     {plan.name}
-                                    <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
+                                    <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
                                 </Link>
                                 {session?.user.preferred_username != plan.author.username && (
-                                    <div className="text-sm text-gray-500">von {plan.author.first_name} {plan.author.last_name}</div>
+                                    <div className="text-sm text-gray-500">
+                                        von {plan.author.first_name} {plan.author.last_name}
+                                    </div>
                                 )}
                                 <span className="grow text-right" title="zuletzt geändert">
                                     <Timestamp timestamp={plan.last_modified} className="text-sm" />
                                 </span>
                             </div>
-                            {plan.steps.map((step, j) => (
+                            {plan.steps.map((step) => (
                                 <div
                                     key={step._id}
                                     className="ml-10 hover:cursor-pointer flex"
-                                    onClick={(e) => toggleStepToImport(plan, step)}
+                                    onClick={() => toggleStepToImport(plan, step)}
                                     title="Add/Remove"
                                 >
                                     <input
@@ -333,7 +326,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     <button
                         type="button"
                         className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
-                        onClick={(e) => setIsImportStepsDialogOpen(false)}
+                        onClick={() => setIsImportStepsDialogOpen(false)}
                     >
                         Abbrechen
                     </button>
@@ -357,16 +350,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_from`,
-                                                    {
-                                                        required: {
-                                                            value: true,
-                                                            message:
-                                                                'Bitte fülle das Felde "von" aus',
-                                                        },
-                                                        validate: (v) =>
-                                                            validateDateRange(v, index),
-                                                    }
+                                                    `stepNames.${index}.timestamp_from`
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -376,14 +360,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_to`,
-                                                    {
-                                                        required: {
-                                                            value: true,
-                                                            message:
-                                                                'Bitte fülle das Felde "bis" aus',
-                                                        },
-                                                    }
+                                                    `stepNames.${index}.timestamp_to`
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -392,22 +369,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label className="ml-2">Name:</label>
                                             <input
                                                 type="text"
-                                                {...methods.register(`stepNames.${index}.name`, {
-                                                    required: {
-                                                        value: true,
-                                                        message: 'Bitte fülle das Felde "Name" aus',
-                                                    },
-                                                    validate: {
-                                                        unique: () => {
-                                                            return (
-                                                                !checkIfNamesAreUnique(
-                                                                    methods.getValues('stepNames')
-                                                                ) ||
-                                                                'Bitte wähle einen einzigartigen Namen'
-                                                            );
-                                                        },
-                                                    },
-                                                })}
+                                                {...methods.register(`stepNames.${index}.name`)}
                                                 placeholder="Name, z.B. Kennenlernphase"
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -418,17 +380,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 type="number"
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
-                                                    {
-                                                        validate: {
-                                                            positive: (v) => {
-                                                                return (
-                                                                    v >= 0 ||
-                                                                    'Der Zeitaufwand kann nicht negativ sein'
-                                                                );
-                                                            },
-                                                        },
-                                                        setValueAs: (v: string) => parseInt(v),
-                                                    }
+                                                    { valueAsNumber: true }
                                                 )}
                                                 placeholder="Zeitaufwand in Stunden"
                                                 className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
@@ -567,7 +519,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                     type="button"
                     title="Etappen importieren"
-                    onClick={(e) => openStepsImportDialog()}
+                    onClick={() => openStepsImportDialog()}
                 >
                     Import
                 </button>

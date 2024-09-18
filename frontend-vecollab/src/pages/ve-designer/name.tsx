@@ -9,6 +9,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { NameFormSchema } from '../../zod-schemas/nameSchema';
 
 interface FormValues {
     name: string;
@@ -25,7 +27,10 @@ export default function Name({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
 
-    const methods = useForm<FormValues>({ mode: 'onChange' });
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(NameFormSchema),
+    });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -34,7 +39,7 @@ export default function Name({ socket }: Props): JSX.Element {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {name: plan.name}
+            return { name: plan.name };
         },
         [methods]
     );
@@ -62,7 +67,7 @@ export default function Name({ socket }: Props): JSX.Element {
             socket={socket}
             title="Projektname"
             subtitle="Wie soll das Projekt heißen?"
-            description='Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.'
+            description="Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht."
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
@@ -74,20 +79,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     placeholder="Name eingeben"
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
-                    {...methods.register('name', {
-                        required: {
-                            value: true,
-                            message: 'Bitte gebt eurem VE einen Namen.',
-                        },
-                        maxLength: {
-                            value: 50,
-                            message: 'Das Feld darf nicht mehr als 50 Buchstaben enthalten.',
-                        },
-                        pattern: {
-                            value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                            message: 'Nur folgende Sonderzeichen sind zulässig: _*+\'":&()!?,-',
-                        },
-                    })}
+                    {...methods.register('name')}
                 />
                 <p className="text-red-600 pt-2">{methods.formState.errors.name?.message}</p>
             </div>

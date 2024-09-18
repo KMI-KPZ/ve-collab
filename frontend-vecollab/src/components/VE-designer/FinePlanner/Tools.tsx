@@ -15,18 +15,12 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
         <div className="flex gap-5">
             <input
                 type="text"
-                {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`, {
-                    maxLength: {
-                        value: 500,
-                        message: 'Bitte nicht mehr als 500 Zeichen.',
-                    },
-                })}
+                {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`)}
                 placeholder="Welche Tools können verwendet werden?"
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button
                 type="button"
-                className=""
                 onClick={() => {
                     removeItem(toolIndex);
                 }}
@@ -34,7 +28,7 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
                 <RxMinus size={20} />
             </button>
             <p className="text-red-600 pt-2">
-                {formState.errors?.tasks?.[taskIndex]?.tools?.[toolIndex]?.message}
+                {formState.errors?.tasks?.[taskIndex]?.tools?.[toolIndex]?.name?.message}
             </p>
         </div>
     );

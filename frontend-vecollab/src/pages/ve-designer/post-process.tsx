@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
@@ -8,13 +8,8 @@ import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import {
-    ISideProgressBarStates,
-    initialSideProgressBarStates,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
-import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
 
 export interface EvaluationFile {
     file: File;
@@ -49,12 +44,9 @@ PostProcess.auth = true;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
-    const [changedEvFile, setChangedEvFile] = useState<boolean>(false)
-    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>()
-    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([])
+    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);
+    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();
+    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -63,16 +55,21 @@ export default function PostProcess({ socket }: Props) {
         },
     });
 
-    const { fields: litFiles, append: addLitFile, remove: rmLitFile, replace: replaceLitFiles } = useFieldArray({
+    const {
+        fields: litFiles,
+        append: addLitFile,
+        remove: rmLitFile,
+        replace: replaceLitFiles,
+    } = useFieldArray({
         name: 'literatureFiles',
         control: methods.control,
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            setChangedEvFile(false)
-            setOriginalEvFile(undefined)
-            replaceLitFiles([])
+            setChangedEvFile(false);
+            setOriginalEvFile(undefined);
+            replaceLitFiles([]);
 
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
@@ -82,24 +79,24 @@ export default function PostProcess({ socket }: Props) {
             methods.setValue('reflection', plan.reflection as string);
 
             if (plan.evaluation_file) {
-                const evaluationFile = {...plan.evaluation_file, file: new File([''], plan.evaluation_file.file_name)}
-                methods.setValue('evaluationFile', evaluationFile );
-                setOriginalEvFile(evaluationFile)
+                const evaluationFile = {
+                    ...plan.evaluation_file,
+                    file: new File([''], plan.evaluation_file.file_name),
+                };
+                methods.setValue('evaluationFile', evaluationFile);
+                setOriginalEvFile(evaluationFile);
             }
 
             if (plan.literature) methods.setValue('literature', plan.literature as string);
             if (plan.literature_files) {
-                plan.literature_files.map(file => {
+                plan.literature_files.map((file) => {
                     addLitFile({
                         file: new File([''], file.file_name),
                         file_name: file.file_name,
                         size: file.size,
-                        file_id: file.file_id
-                    })
-                })
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
+                        file_id: file.file_id,
+                    });
+                });
             }
 
             return {
@@ -109,30 +106,29 @@ export default function PostProcess({ socket }: Props) {
                 reflection: plan.reflection,
                 evaluationFile: plan.evaluation_file,
                 literature: plan.literature,
-                literatureFiles: plan.literature_files
-
-            }
+                literatureFiles: plan.literature_files,
+            };
         },
         [methods, addLitFile, replaceLitFiles]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         if (changedEvFile && originalEvFile) {
-            await removeFromBackend("evaluation", originalEvFile)
+            await removeFromBackend('evaluation', originalEvFile);
         }
 
         if (data.evaluationFile?.file) {
-            await uploadToBackend("evaluation", data.evaluationFile!);
+            await uploadToBackend('evaluation', data.evaluationFile!);
         }
 
         if (deletedLitFiles.length) {
-            deletedLitFiles.map(async file => {
-                await removeFromBackend("literature", file)
-            })
+            deletedLitFiles.map(async (file) => {
+                await removeFromBackend('literature', file);
+            });
         }
         if (data.literatureFiles) {
             for (const file of data.literatureFiles) {
-                await uploadToBackend("literature", file);
+                await uploadToBackend('literature', file);
             }
         }
 
@@ -162,27 +158,34 @@ export default function PostProcess({ socket }: Props) {
                 field_name: 'literature',
                 value: data.literature,
             },
-        ]
+        ];
     };
 
-    const removeFromBackend = async (type: "evaluation"|"literature", file: EvaluationFile|LiteratureFile) => {
+    const removeFromBackend = async (
+        type: 'evaluation' | 'literature',
+        file: EvaluationFile | LiteratureFile
+    ) => {
         // if file doesnt has a file_id it wasnt yet uploaded
-        if (!file.file_id) return true
+        if (!file.file_id) return true;
 
-        const url = type == "evaluation"
-            ? `/planner/remove_evaluation_file`
-            : `/planner/remove_literature_file`
+        const url =
+            type == 'evaluation'
+                ? `/planner/remove_evaluation_file`
+                : `/planner/remove_literature_file`;
 
         return await fetchDELETE(
             `${url}?plan_id=${router.query.plannerId}&file_id=${file.file_id}`,
             {},
             session?.accessToken
         );
-    }
+    };
 
-    const uploadToBackend = async (type: "evaluation"|"literature", file: EvaluationFile|LiteratureFile) => {
+    const uploadToBackend = async (
+        type: 'evaluation' | 'literature',
+        file: EvaluationFile | LiteratureFile
+    ) => {
         // if file already has a file_id it was already uploaded
-        if (file.file_id) return true
+        if (file.file_id) return true;
 
         const body = new FormData();
         body.append('file', file.file);
@@ -190,14 +193,12 @@ export default function PostProcess({ socket }: Props) {
         const headers: { Authorization?: string } = {};
         headers['Authorization'] = 'Bearer ' + session?.accessToken;
 
-        const url = type == "evaluation"
-            ? `/planner/put_evaluation_file`
-            : `/planner/put_literature_file`
+        const url =
+            type == 'evaluation' ? `/planner/put_evaluation_file` : `/planner/put_literature_file`;
 
         // upload as form data instead of json
         return await fetch(
-            process.env.NEXT_PUBLIC_BACKEND_BASE_URL +
-                url + `?plan_id=${router.query.plannerId}`,
+            process.env.NEXT_PUBLIC_BACKEND_BASE_URL + url + `?plan_id=${router.query.plannerId}`,
             {
                 method: 'POST',
                 headers: headers,
@@ -216,8 +217,8 @@ export default function PostProcess({ socket }: Props) {
                     rules={{
                         // max 5MB allowed
                         validate: (value) => {
-                            return (!value?.size || value.size < 5242880) || 'max. 5 MB erlaubt'
-                        }
+                            return !value?.size || value.size < 5242880 || 'max. 5 MB erlaubt';
+                        },
                     }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
@@ -234,14 +235,14 @@ export default function PostProcess({ socket }: Props) {
                                 name={name}
                                 onBlur={onBlur}
                                 onChange={(e) => {
-                                    const file = e.target?.files?.item(0)
-                                    if (!file) return
-                                    setChangedEvFile(true)
+                                    const file = e.target?.files?.item(0);
+                                    if (!file) return;
+                                    setChangedEvFile(true);
                                     onChange({
                                         file: file,
                                         file_name: file.name,
-                                        size: file.size
-                                    })
+                                        size: file.size,
+                                    });
                                 }}
                                 className="hidden"
                             />
@@ -253,28 +254,31 @@ export default function PostProcess({ socket }: Props) {
     }
 
     function literatureFileSelector() {
-        if (litFiles.length >= 5) return (<></>)
+        if (litFiles.length >= 5) return <></>;
         return (
             <>
                 <Controller
-                    name={"literatureFiles"}
+                    name={'literatureFiles'}
                     control={methods.control}
                     rules={{
                         // max 5MB allowed
                         validate: (value) => {
-                            if (!value) return
+                            if (!value) return;
 
-                            let i = 0
+                            let i = 0;
                             for (const file of value!) {
                                 if (file.size > 5242880) {
-                                    methods.setError(`literatureFiles.${i}.file`, {type: "custom", message: 'max. 5 MB erlaubt'})
+                                    methods.setError(`literatureFiles.${i}.file`, {
+                                        type: 'custom',
+                                        message: 'max. 5 MB erlaubt',
+                                    });
                                 }
-                                i++
+                                i++;
                             }
-                            return true
-                        }
+                            return true;
+                        },
                     }}
-                    render={({ field: { ref, name, onBlur, onChange } }) => (
+                    render={({ field: { ref, name, onBlur } }) => (
                         <>
                             <label
                                 className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
@@ -288,21 +292,24 @@ export default function PostProcess({ socket }: Props) {
                                 ref={ref}
                                 name={name}
                                 onBlur={onBlur}
-                                onChange={(e) =>  {
-                                    if (!e.target?.files) return
-                                    methods.clearErrors(`literatureFiles`)
-                                    let i = 0
+                                onChange={(e) => {
+                                    if (!e.target?.files) return;
+                                    methods.clearErrors(`literatureFiles`);
+                                    let i = 0;
                                     for (const file of e.target.files) {
                                         if (i < 5) {
-                                            addLitFile( {
+                                            addLitFile({
                                                 file: file,
                                                 file_name: file.name,
-                                                size: file.size
-                                            } )
+                                                size: file.size,
+                                            });
                                         } else {
-                                            methods.setError(`literatureFiles`, {type: "custom", message: 'max. 5 Dateien erlaubt'})
+                                            methods.setError(`literatureFiles`, {
+                                                type: 'custom',
+                                                message: 'max. 5 Dateien erlaubt',
+                                            });
                                         }
-                                        i++
+                                        i++;
                                     }
                                     // onChange(newFiles)
                                 }}
@@ -326,8 +333,8 @@ export default function PostProcess({ socket }: Props) {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
-            nextpage='/plans'
-            nextpageBtnLabel='Absenden & Schließen'
+            nextpage="/plans"
+            nextpageBtnLabel="Absenden & Schließen"
             preventToLeave={false}
             stageInMenu="post-process"
             planerDataCallback={setPlanerData}
@@ -385,8 +392,9 @@ export default function PostProcess({ socket }: Props) {
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
                             <p>
-                            Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen,
-                            in dem du die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf) ganz kurz zusammenfasst.
+                                Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen, in dem du
+                                die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf)
+                                ganz kurz zusammenfasst.
                             </p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
@@ -413,31 +421,44 @@ export default function PostProcess({ socket }: Props) {
                                 placeholder="Beschreibe deine Reflexion"
                                 {...methods.register('reflection')}
                             />
-                            {(methods.watch('evaluationFile')) ? (
+                            {methods.watch('evaluationFile') ? (
                                 <div>
                                     <div
                                         className="max-w-[250px] flex items-center"
                                         title={methods.watch('evaluationFile')?.file_name}
                                     >
                                         <AuthenticatedFile
-                                            url={methods.watch('evaluationFile')?.file_id === undefined
-                                                ? ""
-                                                : `/uploads/${methods.watch('evaluationFile')?.file_id}`}
-                                            filename={methods.watch('evaluationFile')?.file_name as string}
+                                            url={
+                                                methods.watch('evaluationFile')?.file_id ===
+                                                undefined
+                                                    ? ''
+                                                    : `/uploads/${
+                                                          methods.watch('evaluationFile')?.file_id
+                                                      }`
+                                            }
+                                            filename={
+                                                methods.watch('evaluationFile')?.file_name as string
+                                            }
                                             title={methods.watch('evaluationFile')?.file_name}
-                                            className='flex'
+                                            className="flex"
                                         >
                                             <RxFile size={30} className="m-1" />
-                                            <div className="truncate py-2">{methods.watch('evaluationFile')?.file_name}</div>
+                                            <div className="truncate py-2">
+                                                {methods.watch('evaluationFile')?.file_name}
+                                            </div>
                                         </AuthenticatedFile>
 
-                                        <button onClick={(e) => {
-                                            e.preventDefault()
-                                            methods.clearErrors("evaluationFile")
-                                            setChangedEvFile(true)
-                                            methods.setValue("evaluationFile", undefined)
-                                        }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
-                                                <IoMdClose />
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                methods.clearErrors('evaluationFile');
+                                                setChangedEvFile(true);
+                                                methods.setValue('evaluationFile', undefined);
+                                            }}
+                                            className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                            title="Datei Entfernen"
+                                        >
+                                            <IoMdClose />
                                         </button>
                                     </div>
                                     {methods.formState.errors?.evaluationFile?.message && (
@@ -487,8 +508,9 @@ export default function PostProcess({ socket }: Props) {
                         </li>
                         <li className="mb-4">
                             <p>
-                                Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch,
-                                die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.
+                                Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an
+                                oder lade Artikel hoch, die du der Community zur Verfügung stellen
+                                möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.
                             </p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
@@ -500,35 +522,51 @@ export default function PostProcess({ socket }: Props) {
                                 <div>
                                     <div className="mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                                         {litFiles.map((file, index) => (
-                                            <div key={index} className="max-w-[250px] mr-4 flex flex-wrap items-center">
+                                            <div
+                                                key={index}
+                                                className="max-w-[250px] mr-4 flex flex-wrap items-center"
+                                            >
                                                 <div className="flex truncate items-center">
                                                     <AuthenticatedFile
-                                                        url={`/uploads/${
-                                                            file.id
-                                                        }`}
+                                                        url={`/uploads/${file.id}`}
                                                         filename={file.file_name}
                                                         title={file.file_name}
-                                                        className='flex truncate'
+                                                        className="flex truncate"
                                                     >
                                                         <RxFile size={30} className="m-1" />
-                                                        <div className="truncate py-2">{file.file_name}</div>
+                                                        <div className="truncate py-2">
+                                                            {file.file_name}
+                                                        </div>
                                                     </AuthenticatedFile>
-                                                    <button onClick={(e) => {
-                                                        e.preventDefault()
-                                                        methods.clearErrors(`literatureFiles.${index}.file`)
-                                                        setDeletedLitFiles(prev => [...prev, file])
-                                                        rmLitFile(index)
-                                                    }} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
-                                                            <IoMdClose />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            methods.clearErrors(
+                                                                `literatureFiles.${index}.file`
+                                                            );
+                                                            setDeletedLitFiles((prev) => [
+                                                                ...prev,
+                                                                file,
+                                                            ]);
+                                                            rmLitFile(index);
+                                                        }}
+                                                        className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                                        title="Datei Entfernen"
+                                                    >
+                                                        <IoMdClose />
                                                     </button>
                                                 </div>
 
-                                                {methods.formState.errors?.literatureFiles?.[index]?.file?.message && (
+                                                {methods.formState.errors?.literatureFiles?.[index]
+                                                    ?.file?.message && (
                                                     <p className="text-red-500">
-                                                        {methods.formState.errors?.literatureFiles?.[index]?.file?.message}
+                                                        {
+                                                            methods.formState.errors
+                                                                ?.literatureFiles?.[index]?.file
+                                                                ?.message
+                                                        }
                                                     </p>
                                                 )}
-
                                             </div>
                                         ))}
                                     </div>
@@ -544,7 +582,6 @@ export default function PostProcess({ socket }: Props) {
                     </ol>
                 )}
             </div>
-
         </Wrapper>
     );
 }
