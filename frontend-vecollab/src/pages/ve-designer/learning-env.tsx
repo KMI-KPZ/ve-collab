@@ -13,6 +13,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LearningEnvFormSchema } from '../../zod-schemas/learningEnvSchema';
 
 interface FormValues {
     learningEnv: string;
@@ -34,8 +36,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
         formValues.physicalMobilities.every((mobility) => {
             return (
                 mobility.location === '' &&
-                mobility.timestamp_from === null &&
-                mobility.timestamp_to === null
+                mobility.timestamp_from === '' &&
+                mobility.timestamp_to === ''
             );
         })
     );
@@ -48,8 +50,8 @@ interface Props {
 const emptyPysicalMobility: PhysicalMobility = {
     location: '',
     timestamp_from: '',
-    timestamp_to: ''
-}
+    timestamp_to: '',
+};
 
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
@@ -62,57 +64,57 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(LearningEnvFormSchema),
         defaultValues: {
             learningEnv: '',
             courseFormat: '',
             usePhysicalMobility: false,
-            physicalMobilities: [emptyPysicalMobility]
+            physicalMobilities: [emptyPysicalMobility],
         },
     });
-
-    const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            let data: {[key: string]: any} = {}
-            if (plan.learning_env !== null) {
-                methods.setValue('learningEnv', plan.learning_env);
-                data.learningEnv = plan.learning_env
-            }
-            if (plan.realization !== null) {
-                methods.setValue('courseFormat', plan.realization);
-                data.courseFormat = plan.realization
-            }
-            if (plan.physical_mobility !== null) {
-                methods.setValue('usePhysicalMobility', plan.physical_mobility);
-                data.usePhysicalMobility = plan.physical_mobility
-            }
-            if (plan.physical_mobilities !== null && plan.physical_mobilities.length !== 0) {
-                const physical_mobilities: PhysicalMobility[] = plan.physical_mobilities.map(
-                    (physicalMobility: PhysicalMobility) => {
-                        const { timestamp_from, timestamp_to, location } = physicalMobility;
-                        return {
-                            location: location,
-                            timestamp_from:
-                                timestamp_from !== null ? timestamp_from.split('T')[0] : '', // react hook form only takes '2019-12-13'
-                            timestamp_to: timestamp_to !== null ? timestamp_to.split('T')[0] : '',
-                        };
-                    }
-                );
-                methods.setValue('physicalMobilities', physical_mobilities);
-                data.physicalMobilities = physical_mobilities
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
-
-            return data
-        },
-        [methods]
-    );
 
     const { fields, append, remove, update, replace } = useFieldArray({
         name: 'physicalMobilities',
         control: methods.control,
     });
+
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            let data: { [key: string]: any } = {};
+            if (plan.learning_env !== null) {
+                methods.setValue('learningEnv', plan.learning_env);
+                data.learningEnv = plan.learning_env;
+            }
+            if (plan.realization !== null) {
+                methods.setValue('courseFormat', plan.realization);
+                data.courseFormat = plan.realization;
+            }
+            if (plan.physical_mobility !== null) {
+                methods.setValue('usePhysicalMobility', plan.physical_mobility);
+                data.usePhysicalMobility = plan.physical_mobility;
+            }
+            if (plan.physical_mobilities?.length > 0) {
+                data.physicalMobilities = plan.physical_mobilities.map((physicalMobilityObject) => {
+                    return Object.assign({}, physicalMobilityObject, {
+                        location: physicalMobilityObject.location,
+                        timestamp_from: physicalMobilityObject.timestamp_from
+                            ? physicalMobilityObject.timestamp_from.split('T')[0]
+                            : '',
+                        timestamp_to: physicalMobilityObject.timestamp_to
+                            ? physicalMobilityObject.timestamp_to.split('T')[0]
+                            : '',
+                    });
+                });
+                replace(data.physicalMobilities);
+            }
+            if (Object.keys(plan.progress).length) {
+                setSideMenuStepsProgress(plan.progress);
+            }
+
+            return data;
+        },
+        [methods, replace]
+    );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const progressState = areAllFormValuesEmpty(data)
@@ -152,14 +154,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
         ];
     };
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const toValue = methods.watch(`physicalMobilities.${indexFromTo}.timestamp_to`);
-        if (fromValue === '' || toValue === '') return true;
-        return new Date(fromValue) > new Date(toValue)
-            ? 'Das Startdatum muss vor dem Enddatum liegen'
-            : true;
-    };
-
     const handleDelete = (index: number): void => {
         if (fields.length > 1) {
             remove(index);
@@ -178,13 +172,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Ort eingeben"
                             className="border border-gray-400 rounded-lg p-2 w-full"
-                            {...methods.register(`physicalMobilities.${index}.location`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`physicalMobilities.${index}.location`)}
                         />
                     </div>
                     <p className="flex justify-center text-red-600 pb-2">
@@ -195,9 +183,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <p className="mr-4">von:</p>
                             <input
                                 type="date"
-                                {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
-                                    validate: (v) => validateDateRange(v, index),
-                                })}
+                                {...methods.register(`physicalMobilities.${index}.timestamp_from`)}
                                 className="border border-gray-400 rounded-lg p-2 mr-2"
                             />
                         </div>
@@ -205,8 +191,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             <p className="mr-4">bis:</p>
                             <input
                                 type="date"
-                                {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
-                                })}
+                                {...methods.register(`physicalMobilities.${index}.timestamp_to`)}
                                 className="border border-gray-400 rounded-lg p-2 ml-2"
                             />
                         </div>
@@ -293,12 +278,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     rows={3}
                     placeholder="Lernumgebung beschreiben"
                     className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
-                    {...methods.register('learningEnv', {
-                        maxLength: {
-                            value: 500,
-                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                        },
-                    })}
+                    {...methods.register('learningEnv')}
                 />
                 <p className="text-red-600 pt-2">
                     {methods.formState.errors?.learningEnv?.message}
@@ -336,13 +316,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         <select
                             placeholder="Auswählen..."
                             className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
-                            {...methods.register(`courseFormat`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`courseFormat`)}
                         >
                             <option value="synchron">synchron</option>
                             <option value="asynchron">asynchron</option>

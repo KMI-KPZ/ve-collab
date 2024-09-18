@@ -20,6 +20,8 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 
 export interface FormValues {
     partners: Partner[];
@@ -38,7 +40,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.every(a => a.value == '')
+        formValues.partners.every((a) => a.value == '')
     );
 };
 
@@ -48,7 +50,7 @@ interface Props {
 
 Partners.auth = true;
 export default function Partners({ socket }: Props): JSX.Element {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
@@ -64,9 +66,10 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(PartnersFormSchema),
     });
 
-    const [planAuthor, setPlanAuthor] = useState<string>()
+    const [planAuthor, setPlanAuthor] = useState<string>();
 
     const {
         fields: fieldsPartners,
@@ -92,10 +95,10 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
-            setPlanAuthor(plan.author.username)
+            setPlanAuthor(plan.author.username);
 
-            let partners = [{ label: '', value: '' }]
-            let extPartners = [{ externalParty: '' }]
+            let partners = [{ label: '', value: '' }];
+            let extPartners = [{ externalParty: '' }];
             if (plan.checklist && Array.isArray(plan.checklist)) {
                 setFormalConditions(plan.checklist);
             }
@@ -106,7 +109,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 setIndividualLearningGoals(plan.individual_learning_goals);
             }
             if (plan.involved_parties.length !== 0) {
-                extPartners = plan.involved_parties.map(exp => ({ externalParty: exp }))
+                extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
             }
             if (Object.keys(plan.progress).length) {
@@ -117,39 +120,37 @@ export default function Partners({ socket }: Props): JSX.Element {
                     '/profile_snippets',
                     { usernames: plan.partners },
                     session?.accessToken
-                )
+                );
                 if (snippets) {
-                    partners = plan.partners.map(
-                        (partner: string): Partner => {
-                            const findFullUsername = snippets.user_snippets.find(
-                                (backendUser: BackendUserSnippet) =>
-                                    backendUser.username === partner
-                            );
-                            if (findFullUsername !== undefined) {
-                                return {
-                                    label:
-                                        findFullUsername.first_name +
-                                        ' ' +
-                                        findFullUsername.last_name +
-                                        ' - ' +
-                                        findFullUsername.username,
-                                    value: findFullUsername.username,
-                                };
-                            } else {
-                                return {
-                                    label: partner,
-                                    value: partner,
-                                };
-                            }
-                        });
+                    partners = plan.partners.map((partner: string): Partner => {
+                        const findFullUsername = snippets.user_snippets.find(
+                            (backendUser: BackendUserSnippet) => backendUser.username === partner
+                        );
+                        if (findFullUsername !== undefined) {
+                            return {
+                                label:
+                                    findFullUsername.first_name +
+                                    ' ' +
+                                    findFullUsername.last_name +
+                                    ' - ' +
+                                    findFullUsername.username,
+                                value: findFullUsername.username,
+                            };
+                        } else {
+                            return {
+                                label: partner,
+                                value: partner,
+                            };
+                        }
+                    });
                     replacePartners(partners);
                 }
             }
 
             return {
                 partners: partners,
-                externalParties: extPartners
-            }
+                externalParties: extPartners,
+            };
         },
         [replaceExternalParties, replacePartners, session]
     );
@@ -279,17 +280,22 @@ export default function Partners({ socket }: Props): JSX.Element {
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
         if (inputValue.length > 1) {
-            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken)
-            .then((data: BackendSearchResponse) => {
-                callback(
-                    data.users
-                    .filter((user: BackendUserSnippet) => !fieldsPartners.some(a => a.value == user.username) )
-                    .map((user) => ({
-                        label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                        value: user.username,
-                    }))
-                );
-            });
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    callback(
+                        data.users
+                            .filter(
+                                (user: BackendUserSnippet) =>
+                                    !fieldsPartners.some((a) => a.value == user.username)
+                            )
+                            .map((user) => ({
+                                label:
+                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                                value: user.username,
+                            }))
+                    );
+                }
+            );
         }
     };
 
@@ -328,12 +334,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         type="text"
                         placeholder="Externen eingeben"
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                        })}
+                        {...methods.register(`externalParties.${index}.externalParty`)}
                     />
                     <button type="button" onClick={() => handleDeleteExternalParties(index)}>
                         <RxMinus size={20} />
@@ -372,20 +373,22 @@ export default function Partners({ socket }: Props): JSX.Element {
                 {fieldsPartners.map((partner, index) => {
                     return (
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                            {partner.value == planAuthor
-                                ? (
-                                    <div className='p-2'>{partner.label}</div>
-                                ) : (
-                                    <>
-                                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
-                                        <button onClick={() => handleDeletePartners(index)}>
-                                            <RxMinus size={20} />
-                                        </button>
-                                    </>
-                                )
-                            }
+                            {partner.value == planAuthor ? (
+                                <div className="p-2">{partner.label}</div>
+                            ) : (
+                                <>
+                                    {createableAsyncSelect(
+                                        methods.control,
+                                        `partners.${index}`,
+                                        index
+                                    )}
+                                    <button onClick={() => handleDeletePartners(index)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                </>
+                            )}
                         </div>
-                    )
+                    );
                 })}
                 <div className="mt-4">
                     <button

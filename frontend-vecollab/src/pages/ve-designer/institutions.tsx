@@ -19,6 +19,8 @@ import Dialog from '@/components/profile/Dialog';
 import Link from 'next/link';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
 
 export interface Institution {
     name: string;
@@ -30,13 +32,6 @@ export interface Institution {
 interface FormValues {
     institutions: Institution[];
 }
-
-const emptyInstitution = {
-    name: '',
-    school_type: '',
-    country: '',
-    department: '',
-};
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return formValues.institutions.every((institution) => {
@@ -61,18 +56,19 @@ export default function Institutions({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
     const [importDialog, setImportDialog] = useState<{
-        isOpen: boolean,
-        institutions: Institution[] | undefined
+        isOpen: boolean;
+        institutions: Institution[] | undefined;
     }>({
         isOpen: false,
-        institutions: undefined
-    })
+        institutions: undefined,
+    });
 
     const prevpage = '/ve-designer/partners';
     const nextpage = '/ve-designer/lectures';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(InstitutionsFormSchema),
         defaultValues: {
             institutions: [],
         },
@@ -91,16 +87,14 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let institutions = plan.institutions.length > 0
-                ? plan.institutions
-                : []
+            let institutions = plan.institutions.length > 0 ? plan.institutions : [];
 
             replace(institutions);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {institutions}
+            return { institutions };
         },
         [replace]
     );
@@ -141,13 +135,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Name eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
-                            {...methods.register(`institutions.${index}.name`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`institutions.${index}.name`)}
                         />
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.institutions?.[index]?.name?.message}
@@ -164,13 +152,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         <select
                             placeholder="Bildungseinrichtung eingeben"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
-                            {...methods.register(`institutions.${index}.school_type`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`institutions.${index}.school_type`)}
                         >
                             <option value="Hochschule / Universität / College">
                                 Hochschule / Universität / College
@@ -202,13 +184,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Land eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
-                            {...methods.register(`institutions.${index}.country`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`institutions.${index}.country`)}
                         />
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.institutions?.[index]?.country?.message}
@@ -226,18 +202,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             type="text"
                             placeholder="Fachbereich eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
-                            {...methods.register(`institutions.${index}.department`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`institutions.${index}.department`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {
-                                methods.formState.errors?.institutions?.[index]?.department?.message
-                            }
+                            {methods.formState.errors?.institutions?.[index]?.department?.message}
                         </p>
                     </div>
                 </div>
@@ -256,91 +224,100 @@ export default function Institutions({ socket }: Props): JSX.Element {
     };
 
     const openImportDialog = async () => {
-        setImportDialog(prev => ({...prev, isOpen: true}))
-        if (importDialog.institutions?.length) return
+        setImportDialog((prev) => ({ ...prev, isOpen: true }));
+        if (importDialog.institutions?.length) return;
 
-        fetchGET('/profileinformation', session?.accessToken)
-        .then((data: BackendUser) => {
-            const institutions = data.profile.institutions.map(institution => {
+        fetchGET('/profileinformation', session?.accessToken).then((data: BackendUser) => {
+            const institutions = data.profile.institutions.map((institution) => {
                 return {
                     country: institution.country,
                     name: institution.name,
                     school_type: institution.school_type,
                     department: institution.department,
-                }
-            })
-            setImportDialog(prev => ({...prev, institutions}))
-        })
+                };
+            });
+            setImportDialog((prev) => ({ ...prev, institutions }));
+        });
         // TODO handle error case!!!
-    }
+    };
 
     const ImportDialog = () => {
-        const [selection, setSelection] = useState<{[key: number]: Institution}>({})
+        const [selection, setSelection] = useState<{ [key: number]: Institution }>({});
 
         const toggleImport = (index: number, institution: Institution) => {
             if (typeof selection[index] === 'undefined') {
-                setSelection(prev => ({...prev, [index]: institution}))
+                setSelection((prev) => ({ ...prev, [index]: institution }));
             } else {
-                setSelection(prev => {
+                setSelection((prev) => {
                     // remove selection[index], return the rest
-                    const {[index]: rm, ...rest} = prev;
+                    const { [index]: rm, ...rest } = prev;
                     return rest;
-                })
+                });
             }
-        }
+        };
         const handleImport = () => {
-            prepend(Object.keys(selection).map((i: any) => {
-                return {
-                    country: selection[i].country,
+            prepend(
+                Object.keys(selection).map((i: any) => {
+                    return {
+                        country: selection[i].country,
                         name: selection[i].name,
                         school_type: selection[i].school_type,
-                        department: selection[i].department
-                }
-            }))
-            setImportDialog(prev => ({...prev, isOpen: false}))
-        }
+                        department: selection[i].department,
+                    };
+                })
+            );
+            setImportDialog((prev) => ({ ...prev, isOpen: false }));
+        };
 
-        if (importDialog.institutions === undefined) return <LoadingAnimation />
+        if (importDialog.institutions === undefined) return <LoadingAnimation />;
 
         if (!importDialog.institutions.length) {
             return (
                 <div>
                     <p>Es sind noch keine Institutionen im Profil hinterlegt.</p>
-                    <Link href={'/profile/edit'} target='_blank'>
-                        <span className='border border-white bg-black/75 text-white rounded-lg px-3 py-1' >
+                    <Link href={'/profile/edit'} target="_blank">
+                        <span className="border border-white bg-black/75 text-white rounded-lg px-3 py-1">
                             Profil bearbeiten
                         </span>
                     </Link>
                 </div>
-            )
+            );
         }
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                {importDialog.institutions.map(((institution, i) => {
+                {importDialog.institutions.map((institution, i) => {
                     return (
-                        <div key={i}
-                            className='ml-10 hover:cursor-pointer flex'
-                            onClick={e => toggleImport(i, institution)}
-                            title='Add/Remove'
+                        <div
+                            key={i}
+                            className="ml-10 hover:cursor-pointer flex"
+                            onClick={() => toggleImport(i, institution)}
+                            title="Add/Remove"
                         >
                             <input
-                                type='checkbox'
-                                className='mr-2'
+                                type="checkbox"
+                                className="mr-2"
                                 checked={typeof selection[i] !== 'undefined'}
                                 readOnly
                             />
-                            {institution.name} {institution.department && (<>({institution.department})</>)}
+                            {institution.name}
+                            {institution.department && <>({institution.department})</>}
                         </div>
-                    )
-                }))}
-                <div className='ml-auto text-right'>
-                    <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setImportDialog(prev => ({...prev, isOpen: false}))}>Abbrechen</button>
-                    <ButtonPrimary label={"Importieren"} onClick={() => handleImport()} />
+                    );
+                })}
+                <div className="ml-auto text-right">
+                    <button
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        onClick={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
+                    >
+                        Abbrechen
+                    </button>
+                    <ButtonPrimary label={'Importieren'} onClick={() => handleImport()} />
                 </div>
             </div>
-        )
-    }
+        );
+    };
 
     return (
         <Wrapper
@@ -357,22 +334,25 @@ export default function Institutions({ socket }: Props): JSX.Element {
             <Dialog
                 isOpen={importDialog.isOpen}
                 title={'Institutionen importieren'}
-                onClose={() => setImportDialog(prev => ({...prev, isOpen: false}))}
+                onClose={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
             >
-                <div className="w-[40vw]"><ImportDialog /></div>
+                <div className="w-[40vw]">
+                    <ImportDialog />
+                </div>
             </Dialog>
 
             <div className={'px-4 w-full lg:w-2/3'}>
                 <div className="flex">
                     <button
                         className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        type='button'
-                        title='Institionen aus Profil importieren'
-                        onClick={e => openImportDialog()}
+                        type="button"
+                        title="Institionen aus Profil importieren"
+                        onClick={() => openImportDialog()}
                     >
                         Importieren
                     </button>
-                    {fields.length == 0 && (<button
+                    {fields.length == 0 && (
+                        <button
                             className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {
@@ -385,27 +365,30 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             }}
                         >
                             Neu
-                    </button>)}
+                        </button>
+                    )}
                 </div>
 
                 <div className="divide-y">{renderInstitutionInputs()}</div>
 
-                {fields.length > 0 && (<div className="flex justify-center">
-                    <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
-                        type="button"
-                        onClick={() => {
-                            append({
-                                name: '',
-                                school_type: '',
-                                country: '',
-                                department: '',
-                            });
-                        }}
-                    >
-                        <RxPlus size={25} />
-                    </button>
-                </div>)}
+                {fields.length > 0 && (
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {
+                                append({
+                                    name: '',
+                                    school_type: '',
+                                    country: '',
+                                    department: '',
+                                });
+                            }}
+                        >
+                            <RxPlus size={25} />
+                        </button>
+                    </div>
+                )}
             </div>
         </Wrapper>
     );

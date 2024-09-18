@@ -12,12 +12,14 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { LecturesFormSchema } from '../../zod-schemas/lecturesSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export interface LectureOld {
     name: string;
     lecture_type: string;
     lecture_format: string;
-    participants_amount: string;
+    participants_amount: number;
 }
 
 interface FormValues {
@@ -32,7 +34,7 @@ const emptyLecture = {
     name: '',
     lecture_type: '',
     lecture_format: '',
-    participants_amount: '',
+    participants_amount: 0,
 };
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
@@ -41,7 +43,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
             lecture.name === '' &&
             lecture.lecture_type === '' &&
             lecture.lecture_format === '' &&
-            (lecture.participants_amount === '' || isNaN(Number(lecture.participants_amount)))
+            (lecture.participants_amount === 0 || lecture.participants_amount == undefined)
         );
     });
 };
@@ -57,6 +59,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(LecturesFormSchema),
         defaultValues: {
             lectures: [emptyLecture],
         },
@@ -69,16 +72,14 @@ export default function Lectures({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const lectures = plan.lectures.length > 0
-                ? plan.lectures
-                : [emptyLecture]
+            const lectures = plan.lectures.length > 0 ? plan.lectures : [emptyLecture];
 
             replace(lectures);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {lectures}
+            return { lectures };
         },
         [replace]
     );
@@ -125,13 +126,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`lectures.${index}.name`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`lectures.${index}.name`)}
                             placeholder="Name eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -148,13 +143,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                     </div>
                     <div className="w-3/4">
                         <select
-                            {...methods.register(`lectures.${index}.lecture_type`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`lectures.${index}.lecture_type`)}
                             placeholder="z.B. Wahl, Wahlpflicht, Pflicht"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
@@ -174,13 +163,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                     </div>
                     <div className="w-3/4">
                         <select
-                            {...methods.register(`lectures.${index}.lecture_format`, {
-                                maxLength: {
-                                    value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                                },
-                            })}
+                            {...methods.register(`lectures.${index}.lecture_format`)}
                             placeholder="z.B. online, hybrid, präsenz"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
@@ -204,15 +187,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             type="number"
                             min={0}
                             {...methods.register(`lectures.${index}.participants_amount`, {
-                                maxLength: {
-                                    value: 4,
-                                    message: 'Bitte geben sie eine realistische Zahl ein',
-                                },
-                                pattern: {
-                                    value: /^\d+$/,
-                                    message: 'Bitte nur ganze postive Zahlen',
-                                },
-                                setValueAs: (v) => parseInt(v),
+                                valueAsNumber: true,
                             })}
                             placeholder="Anzahl eingeben"
                             className="border border-gray-400 rounded-lg w-full p-2"
@@ -261,7 +236,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                                 name: '',
                                 lecture_type: '',
                                 lecture_format: '',
-                                participants_amount: '',
+                                participants_amount: 0,
                             });
                         }}
                     >

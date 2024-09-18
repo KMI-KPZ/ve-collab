@@ -13,6 +13,8 @@ import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { CheckListPartnersFormSchema } from '../../zod-schemas/checkListSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export interface CheckListPartner {
     username: string;
@@ -70,7 +72,7 @@ interface Props {
 Checklist.auth = true;
 export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -81,6 +83,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(CheckListPartnersFormSchema),
         defaultValues: {
             checklist: [emptyCheckListPartner],
         },
@@ -93,13 +96,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let checklistValue = [emptyCheckListPartner]
-            if (
-                plan.checklist &&
-                Array.isArray(plan.checklist) &&
-                plan.checklist.length > 0
-            ) {
-                checklistValue = plan.checklist
+            let checklistValue = [emptyCheckListPartner];
+            if (plan.checklist && Array.isArray(plan.checklist) && plan.checklist.length > 0) {
+                checklistValue = plan.checklist;
                 methods.setValue('checklist', checklistValue);
             }
             if (Object.keys(plan.progress).length) {
@@ -115,7 +114,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 setUsersFirstLastNames(snippets.user_snippets);
             });
 
-            return {checklist : checklistValue}
+            return { checklist: checklistValue };
         },
         [methods, session]
     );

@@ -16,6 +16,8 @@ import { useSession } from 'next-auth/react';
 import { useGetAvailablePlans } from '@/lib/backend';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
+import { FineStepFormSchema } from '../../../zod-schemas/FinestepSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export interface ITask {
     task_formulation: string;
@@ -117,6 +119,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
+        resolver: zodResolver(FineStepFormSchema),
         defaultValues: {
             ...defaultFormValueDataFineStepFrontend,
         },
@@ -132,7 +135,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
+    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -254,30 +257,31 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         }));
     };
 
-    const originalPlan = availablePlans.find(a => a._id == currentFineStep.original_plan)
+    const originalPlan = availablePlans.find((a) => a._id == currentFineStep.original_plan);
 
     let description = (
         <>
             {currentFineStep.original_plan !== '' && (
-                <p className='my-2'>
+                <p className="my-2">
                     <span className="font-bold">Importiert aus: </span>&nbsp;
-                    {typeof originalPlan !== 'undefined'
-                        ? (
-                            <Link className='group' href={`/plan/${originalPlan?._id}`} target='_blank'>
-                                {originalPlan?.name}
-                                <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
-                            </Link>)
-                        : (<>Plan nicht mehr vorhanden</>)}
+                    {typeof originalPlan !== 'undefined' ? (
+                        <Link className="group" href={`/plan/${originalPlan?._id}`} target="_blank">
+                            {originalPlan?.name}
+                            <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
+                        </Link>
+                    ) : (
+                        <>Plan nicht mehr vorhanden</>
+                    )}
                 </p>
             )}
             <p className="text-xl text-slate-600">Feinplanung</p>
             <p className="mb-8">
-                Beschreibt nun die einzelnen Etappen genauer.
-                Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen,
-                beschreibt bitte auch die einzelnen Lernaktivitäten näher.
+                Beschreibt nun die einzelnen Etappen genauer. Solltet ihr das Projekt als
+                Good-Practice-Beispiel einpflegen wollen, beschreibt bitte auch die einzelnen
+                Lernaktivitäten näher.
             </p>
         </>
-    )
+    );
 
     return (
         <Wrapper
