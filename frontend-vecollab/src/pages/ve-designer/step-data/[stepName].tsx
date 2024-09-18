@@ -16,7 +16,7 @@ import { useSession } from 'next-auth/react';
 import { useGetAvailablePlans } from '@/lib/backend';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
-import { FineStepFormSchema } from '../../../zod-schemas/FinestepSchema';
+import { FineStepFormSchema } from '../../../zod-schemas/finestepSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 export interface ITask {

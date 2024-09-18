@@ -11,6 +11,7 @@ export const FineStepFormSchema = z.object({
         .string()
         .max(1000, 'Ein gültige Lernaktivität darf maximal 1000 Buchstaben lang sein.'),
     has_tasks: z.boolean(),
+    original_plan: z.string().nullable(),
     tasks: z
         .array(
             z.object({
@@ -43,9 +44,4 @@ export const FineStepFormSchema = z.object({
             })
         )
         .min(1, 'Es muss mindestens eine Aufgabe geben.'),
-    duration: z.number().nullable(), // can be sometimes null maybe backend to slow to update
-    // todo below attributes unused ???
-    evaluation_tools: z.any(),
-    attachments: z.any(),
-    custom_attributes: z.any(),
 });
