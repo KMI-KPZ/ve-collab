@@ -1,0 +1,25 @@
+{
+    "messages": {
+        "maxlength500": "The field must not contain more than 500 letters.",
+        "realistic_number": "Please enter a realistic number",
+        "only_positive_number": "Please only whole positive numbers",
+        "no_special_chars": "Only the following special characters are permitted: _*+\":,&()!?-"
+    },
+    "learningEnv": {
+        "title": "Digital learning environment",
+        "subtitle": "In which digital learning environment does the VE take place?",
+        "description": "Please specify which shared learning platform is available to your participants, e.g. a joint project page or shared padlet, or which individual platform each of the participating partners use. If applicable, also name the most important digital tools for your project, e.g. the video conferencing system or virtual environments you will be using.",
+        "tooltip": "More about LMS can be found in the self-learning materials…",
+        "placeholder": "Describe the learning environment",
+        "subtitle2": "In which format(s) will the VE be carried out?",
+        "tooltip2": "Click here to find out more about different formats in the e-learning modules…",
+        "description2": "Please specify whether the collaborative components of the VE will take place exclusively synchronously (e.g., via video conference), asynchronously (e.g., via email, padlet, etc.) or if both synchronous and asynchronous phases are planned.",
+        "format": "Format",
+        "sync": "synchronous",
+        "async": "asynchronous",
+        "asyncAndSync": "asynchronous and synchronous",
+        "pysicalSupp": "Is the VE accompanied / supplemented by physical mobility?",
+        "place": "Place",
+        "enter_place": "Enter Place"
+    }
+}

@@ -13,6 +13,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 interface FormValues {
     learningEnv: string;
@@ -54,6 +56,7 @@ const emptyPysicalMobility: PhysicalMobility = {
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -173,16 +176,15 @@ export default function Methodology({ socket }: Props): JSX.Element {
             <div key={mobility.id} className="flex py-4 w-full ">
                 <div className="w-full">
                     <div className="flex items-center justify-start pb-2">
-                        <p className="mr-4">Ort:</p>
+                        <p className="mr-4">{t('learningEnv.place')}:</p>
                         <input
                             type="text"
-                            placeholder="Ort eingeben"
+                            placeholder={t('learningEnv.enter_place')}
                             className="border border-gray-400 rounded-lg p-2 w-full"
                             {...methods.register(`physicalMobilities.${index}.location`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('messages.maxlength500'),
                                 },
                             })}
                         />
@@ -192,7 +194,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     </p>
                     <div className="flex justify-between">
                         <div className="flex items-center">
-                            <p className="mr-4">von:</p>
+                            <p className="mr-4">{t('common:from')}:</p>
                             <input
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_from`, {
@@ -202,7 +204,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             />
                         </div>
                         <div className="flex items-center">
-                            <p className="mr-4">bis:</p>
+                            <p className="mr-4">{t('common:to')}:</p>
                             <input
                                 type="date"
                                 {...methods.register(`physicalMobilities.${index}.timestamp_to`, {
@@ -241,7 +243,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     <>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">Ja</label>
+                                <label className="px-2 py-2">{t('yes', {ns: 'common'})}</label>
                             </div>
                             <div>
                                 <input
@@ -255,7 +257,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         </div>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">Nein</label>
+                                <label className="px-2 py-2">{t('common:no')}</label>
                             </div>
                             <div>
                                 <input
@@ -275,11 +277,11 @@ export default function Methodology({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Digitale Lernumgebung"
-            subtitle="In welcher digitalen Lernumgebung findet der VE statt?"
-            description="Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten."
+            title={t('learningEnv.title')}
+            subtitle={t('learningEnv.subtitle')}
+            description={t('learningEnv.description')}
             tooltip={{
-                text: 'Mehr zu LMS findest du hier in den Selbstlernmaterialien …',
+                text: t('learningEnv.tooltip'),
                 link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge',
             }}
             methods={methods}
@@ -291,12 +293,12 @@ export default function Methodology({ socket }: Props): JSX.Element {
             <div className="mt-4">
                 <textarea
                     rows={3}
-                    placeholder="Lernumgebung beschreiben"
+                    placeholder={t('learningEnv.placeholder')}
                     className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
                     {...methods.register('learningEnv', {
                         maxLength: {
                             value: 500,
-                            message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                            message: t('messages.maxlength500'),
                         },
                     })}
                 />
@@ -309,8 +311,8 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}
                 >
-                    In welchem Format / welchen Formaten wird der VE umgesetzt?
-                    <Tooltip tooltipsText="Mehr zu Formaten findest du hier in den Selbstlernmaterialien …">
+                    {t('learningEnv.subtitle2')}
+                    <Tooltip tooltipsText={t('learningEnv.tooltip2')}>
                         <Link
                             target="_blank"
                             href={
@@ -323,37 +325,31 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     </Tooltip>
                 </div>
                 <p className="mb-8">
-                    Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE
-                    ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per
-                    E-Mail, Padlet etc.) stattfinden oder sowohl synchrone als auch asynchrone
-                    Phasen geplant sind.
+                    {t('learningEnv.description2')}
                 </p>
                 <div className="w-full lg:w-1/2">
                     <div className="flex items-center">
                         <label htmlFor="courseFormat" className="mr-2">
-                            Format:
+                            {t('learningEnv.format')}:
                         </label>
                         <select
-                            placeholder="Auswählen..."
+                            placeholder={`${t('common:choose')}...`}
                             className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
                             {...methods.register(`courseFormat`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                    message: t('messages.maxlength500'),
                                 },
                             })}
                         >
-                            <option value="synchron">synchron</option>
-                            <option value="asynchron">asynchron</option>
-                            <option value="asynchron und synchron">asynchron und synchron</option>
+                            <option value={t('learningEnv.sync')}>{t('learningEnv.sync')}</option>
+                            <option value={t('learningEnv.async')}>{t('learningEnv.async')}</option>
+                            <option value={t('learningEnv.asyncAndSync')}>{t('learningEnv.asyncAndSync')}</option>
                         </select>
                     </div>
                 </div>
                 <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                    <p className="">
-                        Wird der VE durch eine physische Mobilität ergänzt / begleitet?
-                    </p>
+                    {t('learningEnv.pysicalSupp')}
                     <div className="flex w-40 justify-end gap-x-5">
                         {radioBooleanInput(methods.control, `usePhysicalMobility`)}
                     </div>
@@ -377,4 +373,15 @@ export default function Methodology({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+                'designer'
+            ])),
+        },
+    }
 }

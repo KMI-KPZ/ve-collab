@@ -1,0 +1,25 @@
+ {
+    "messages": {
+        "maxlength500": "Das Feld darf nicht mehr als 500 Buchstaben enthalten.",
+        "realistic_number": "Bitte geben sie eine realistische Zahl ein",
+        "only_positive_number": "Bitte nur ganze postive Zahlen",
+        "no_special_chars": "Nur folgende Sonderzeichen sind zulässig: _*+\":,&()!?-"
+    },
+    "learningEnv": {
+        "title": "Digital Lernumgebung",
+        "subtitle": "In welcher digitalen Lernumgebung findet der VE statt?",
+        "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
+        "tooltip": "Mehr zu LMS findest du hier in den Selbstlernmaterialien …",
+        "placeholder": "Lernumgebung beschreiben",
+        "subtitle2": "In welchem Format / welchen Formaten wird der VE umgesetzt?",
+        "tooltip2": "Mehr zu Formaten findest du hier in den Selbstlernmaterialien …",
+        "description2": "Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl  synchrone als auch asynchrone Phasen geplant sind.",
+        "format": "Format",
+        "sync": "synchron",
+        "async": "asynchron",
+        "asyncAndSync": "asynchron und synchron",
+        "pysicalSupp": "Wird der VE durch eine physische Mobilität ergänzt / begleitet?",
+        "place": "Ort",
+        "enter_place": "Ort eingeben"
+    }
+}
