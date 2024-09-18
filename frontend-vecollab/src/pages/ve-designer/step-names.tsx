@@ -31,7 +31,7 @@ import { MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/ButtonPrimary';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { StepNamesFormSchema } from '@/pages/zod-schemas/stepNamesSchema';
+import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 
 interface FormValues {
     stepNames: IFineStep[];

@@ -13,7 +13,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { InstitutionsFormSchema } from '@/pages/zod-schemas/institutionsSchema';
+import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
 
 export interface Institution {
     name: string;

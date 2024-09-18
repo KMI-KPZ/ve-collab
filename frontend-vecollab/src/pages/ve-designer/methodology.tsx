@@ -11,7 +11,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import CreatableSelect from 'react-select/creatable';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MethFormSchema } from '@/pages/zod-schemas/methodologySchema';
+import { MethFormSchema } from '../../zod-schemas/methodologySchema';
 
 interface FormValues {
     methodicalApproaches: MethodicalApproach[];

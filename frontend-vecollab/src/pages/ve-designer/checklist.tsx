@@ -14,7 +14,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckListPartnersFormSchema } from '@/pages/zod-schemas/checkListSchema';
+import { CheckListPartnersFormSchema } from '../../zod-schemas/checkListSchema';
 
 export interface CheckListPartner {
     username: string;

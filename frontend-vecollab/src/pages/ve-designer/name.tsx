@@ -10,7 +10,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { NameFormSchema } from '@/pages/zod-schemas/nameSchema';
+import { NameFormSchema } from '../../zod-schemas/nameSchema';
 
 interface FormValues {
     name: string;

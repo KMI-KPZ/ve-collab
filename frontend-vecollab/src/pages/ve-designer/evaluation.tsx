@@ -13,7 +13,7 @@ import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-fo
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { EvaluationFormSchema } from '@/pages/zod-schemas/evaluationSchema';
+import { EvaluationFormSchema } from '../../zod-schemas/evaluationSchema';
 
 export interface EvaluationPerPartner {
     username: string;

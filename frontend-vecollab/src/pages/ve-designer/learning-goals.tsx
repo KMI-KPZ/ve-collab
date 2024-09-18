@@ -18,7 +18,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LearningGoalsFormSchema } from '@/pages/zod-schemas/learningGoalsSchema';
+import { LearningGoalsFormSchema } from '../../zod-schemas/learningGoalsSchema';
 
 export interface FormValues {
     individualLearningGoals: IndividualLearningGoal[];

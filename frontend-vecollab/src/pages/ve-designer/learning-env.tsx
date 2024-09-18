@@ -14,7 +14,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LearningEnvFormSchema } from '@/pages/zod-schemas/learningEnvSchema';
+import { LearningEnvFormSchema } from '../../zod-schemas/learningEnvSchema';
 
 interface FormValues {
     learningEnv: string;

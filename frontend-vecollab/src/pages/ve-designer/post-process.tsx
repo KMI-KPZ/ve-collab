@@ -11,7 +11,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PostProcessSchema } from '@/pages/zod-schemas/postProcessSchema';
+import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 
 // TODO trotzdem testen 5Mb einbauen, trotzdem hochgeladen iwie
 // TODO nur im Array -> size check funzt nicht

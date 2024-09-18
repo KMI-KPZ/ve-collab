@@ -13,7 +13,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LecturesFormSchema } from '@/pages/zod-schemas/lecturesSchema';
+import { LecturesFormSchema } from '../../zod-schemas/lecturesSchema';
 
 export interface LectureOld {
     name: string;
