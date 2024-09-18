@@ -32,5 +32,21 @@
         "option-2": "problem-based / problem-oriented learning",
         "option-3": "research-based learning",
         "option-4": "game-based learning"
+    },
+    "evaluation": {
+        "title": "Assessment / Evaluation",
+        "subtitle": "How can the VE be assessed and evaluated during and/or after the VE?",
+        "description": "At this point, reflect whether your VE is more process- or product-oriented. Note whether an evaluation (of processes or products) of the VE is planned on your part. Additionally, select appropriate formative and/or summative evaluation methods.",
+        "tooltip": "More about assessment options can be found here in the self-learning materials…",
+        "planned": "Is there an assessment planned?",
+        "formOf": "Form of assessment",
+        "formOfPlaceholder": "(e.g. exam, presentation)",
+        "typeOf": "Type of assessment",
+        "typeOfPlaceholder": "(e.g. graded, ungraded)",
+        "howTo": "How is the VE evaluated?",
+        "while": "During the VE (formative)",
+        "whilePlaceholder": "",
+        "after": "after the VE (summative)",
+        "afterPlaceholder": ""
     }
 }

@@ -32,5 +32,21 @@
         "option-2": "problembasiertes / problemorientiertes Lernen",
         "option-3": "forschendes Lernen",
         "option-4": "game-based Learning"
+    },
+    "evaluation": {
+        "title": "Bewertung / Evaluation",
+        "subtitle": "Wie kann der VE während der Durchführung und/oder abschließend bewertet und evaluiert werden?",
+        "description": "Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden.",
+        "tooltip": "Mehr zu Optionen der Bewertung findest du hier in den Selbstlernmaterialien",
+        "planned": "Erfolgt eine Bewertung?",
+        "formOf": "Art der Leistung",
+        "formOfPlaceholder": "",
+        "typeOf": "Art der Bewertung",
+        "typeOfPlaceholder": "z.B. benotet, unbenotet",
+        "howTo": "Wie erfolgt die Evaluation des VE?",
+        "while": "während des VE (formativ)",
+        "whilePlaceholder": "z. B. Teaching Analysis Poll, Feedback-Runden, etc.",
+        "after": "nach dem VE (summativ)",
+        "afterPlaceholder": "z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
     }
 }
