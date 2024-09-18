@@ -10,18 +10,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import CreatableSelect from 'react-select/creatable';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const MethFormSchema = z.object({
-    methodicalApproaches: z.array(
-        z.object({
-            value: z.string().max(100, 'Ein gültiger Name darf maximal 100 Buchstaben lang sein.'),
-            label: z.string().max(100, 'Ein gültiger Name darf maximal 100 Buchstaben lang sein.'),
-            __isNew__: z.boolean().optional(), // This is a flag for react-select library
-        })
-    ),
-});
+import { MethFormSchema } from '@/pages/zod-schemas/methodologySchema';
 
 interface FormValues {
     methodicalApproaches: MethodicalApproach[];

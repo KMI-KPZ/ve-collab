@@ -9,16 +9,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const NameFormSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Ein Name ist erforderlich.')
-        .max(100, 'Ein gültiger Name darf maximal 100 Buchstaben lang sein.')
-        .nullable(),
-});
+import { NameFormSchema } from '@/pages/zod-schemas/nameSchema';
 
 interface FormValues {
     name: string;

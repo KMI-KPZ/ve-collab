@@ -10,58 +10,12 @@ import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-fo
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PostProcessSchema } from '@/pages/zod-schemas/postProcessSchema';
 
 // TODO trotzdem testen 5Mb einbauen, trotzdem hochgeladen iwie
 // TODO nur im Array -> size check funzt nicht
 /*TODO kein Popup bei weiter*/
-const PostProcessSchema = z.object({
-    share: z.boolean(),
-    abstract: z
-        .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
-        .nullable(),
-    reflection: z
-        .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
-        .nullable(),
-    veModel: z
-        .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
-        .nullable(),
-    evaluation: z.string().nullable(),
-    evaluationFile: z
-        .object({
-            file: z.any().optional(),
-            file_name: z.string(),
-            size: z
-                .number()
-                .int()
-                .max(5242880, 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.')
-                .optional(),
-            file_id: z.string().optional(),
-        })
-        .nullable(),
-    literature: z.string().nullable(),
-    literatureFiles: z
-        .array(
-            z
-                .object({
-                    file: z.any().optional(),
-                    file_name: z.string(),
-                    size: z.number().int().optional(),
-                    file_id: z.string().optional(),
-                })
-                .refine((data) => data.size !== undefined && data.size <= 5242880, {
-                    // 25.470.060
-                    message: 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.',
-                    path: ['size'], // This will attach the error message to the `size` field
-                })
-        )
-        .max(4, 'max. 4 Dateien erlaubt')
-        .nullable(),
-});
 
 export interface EvaluationFile {
     file: File;

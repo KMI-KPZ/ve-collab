@@ -20,24 +20,8 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const PartnersFormSchema = z.object({
-    partners: z
-        .object({
-            label: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
-            value: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
-        })
-        .array(),
-    externalParties: z
-        .object({
-            externalParty: z
-                .string()
-                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
-        })
-        .array(),
-});
+import { PartnersFormSchema } from '@/pages/zod-schemas/partnersSchema';
 
 export interface FormValues {
     partners: Partner[];

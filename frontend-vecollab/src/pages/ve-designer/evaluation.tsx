@@ -12,39 +12,8 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const EvaluationFormSchema = z.object({
-    evaluationPerPartner: z.array(
-        z.object({
-            username: z
-                .string()
-                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.')
-                .nullable(),
-            is_graded: z.boolean({
-                required_error: 'Bitte Ja oder Nein auswählen',
-                invalid_type_error: 'Bitte Ja oder Nein auswählen',
-            }),
-            task_type: z
-                .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
-                .nullable(),
-            assessment_type: z
-                .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
-                .nullable(),
-            evaluation_while: z
-                .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
-                .nullable(),
-            evaluation_after: z
-                .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
-                .nullable(),
-        })
-    ),
-});
+import { EvaluationFormSchema } from '@/pages/zod-schemas/evaluationSchema';
 
 export interface EvaluationPerPartner {
     username: string;

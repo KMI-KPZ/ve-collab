@@ -17,33 +17,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const LearningGoalsFormSchema = z.object({
-    individualLearningGoals: z
-        .object({
-            username: z
-                .string()
-                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
-            learningGoal: z
-                .string()
-                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.')
-                .nullable(),
-        })
-        .array(),
-    majorLearningGoals: z
-        .object({
-            value: z.string().max(800, 'Ein gültiges Ziel darf maximal 800 Buchstaben lang sein.'),
-            label: z.string().max(800, 'Ein gültiges Ziel darf maximal 800 Buchstaben lang sein.'),
-        })
-        .array(),
-    topics: z
-        .object({
-            name: z.string().max(400, 'Ein gültiges Thema darf maximal 400 Buchstaben lang sein.'),
-        })
-        .array(),
-});
+import { LearningGoalsFormSchema } from '@/pages/zod-schemas/learningGoalsSchema';
 
 export interface FormValues {
     individualLearningGoals: IndividualLearningGoal[];

@@ -13,24 +13,8 @@ import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-const CheckListPartnerFormSchema = z.object({
-    username: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
-    time: z.boolean(),
-    format: z.boolean(),
-    topic: z.boolean(),
-    goals: z.boolean(),
-    languages: z.boolean(),
-    media: z.boolean(),
-    technicalEquipment: z.boolean(),
-    evaluation: z.boolean(),
-    institutionalRequirements: z.boolean(),
-    dataProtection: z.boolean(),
-});
-
-const CheckListPartnersFormSchema = z.object({ checklist: CheckListPartnerFormSchema.array() });
+import { CheckListPartnersFormSchema } from '@/pages/zod-schemas/checkListSchema';
 
 export interface CheckListPartner {
     username: string;
