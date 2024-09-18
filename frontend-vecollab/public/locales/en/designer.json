@@ -21,5 +21,16 @@
         "pysicalSupp": "Is the VE accompanied / supplemented by physical mobility?",
         "place": "Place",
         "enter_place": "Enter Place"
+    },
+    "methodology": {
+        "title": "Methodological approach",
+        "subtitle": "What methodological approach is your VE based on?",
+        "description": "If none of the suggestions match your approach, you can also add individual entries.",
+        "tooltip": "More about teaching methods can be found here in the self-learning materials…",
+        "placeholder": "Select approaches or add new ones",
+        "option-1": "task-based learning",
+        "option-2": "problem-based / problem-oriented learning",
+        "option-3": "research-based learning",
+        "option-4": "game-based learning"
     }
 }
