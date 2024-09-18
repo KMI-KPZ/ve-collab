@@ -5,12 +5,15 @@ import Image from 'next/image';
 import { showDataOrEmptySign } from './PlanSummary';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     plan: IPlan;
     openAllBoxes?: boolean;
 }
 export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Element {
+    const { t } = useTranslation('common');
+
     const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(openAllBoxes ? true : false);
 
     return (
@@ -26,22 +29,24 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                     height={20}
                     className={`${isOpenShowMore ? `rotate-180` : `rotate-0`}`}
                 />
-                <div className="text-2xl font-semibold">Good-Practice Dokumentation</div>
+                <div className="text-2xl font-semibold">{t("plan_summary_gpb_documentation")}</div>
             </div>
             {isOpenShowMore ? (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                     <span className="font-semibold pr-5">
-                        Als Good-Practice Beispiel veröffentlicht
+                        {t("plan_summary_is_good_practise")}
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {plan.is_good_practise ? 'Ja' : 'Nein'}
+                            {plan.is_good_practise ? t("yes") : t("no")}
                         </li>
                     </ul>
                     <span className="text-base font-semibold pr-5 print:hidden">
-                        zugrundeliegendes VE-Modell:
+                        {t("plan_summary_underlying_ve_model")}
                     </span>
-                    <span className='font-semibold pr-5 hidden print:block'>zugrunde-liegendes VE-Modell:</span>
+                    <span className="font-semibold pr-5 hidden print:block">
+                        {t("plan_summary_underlying_ve_model_line_break")}
+                    </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.underlying_ve_model ? (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
@@ -51,7 +56,7 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">Reflexion:</span>
+                    <span className="text-base font-semibold pr-5">{t("plan_summary_reflection")}</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.reflection ? (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
@@ -61,7 +66,7 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">Datei zur Reflexion:</span>
+                    <span className="text-base font-semibold pr-5">{t("plan_summary_reflection_file")}</span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit rounded-lg p-2 whitespace-pre-line">
                             {plan.evaluation_file ? (
@@ -81,7 +86,9 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                             )}
                         </li>
                     </ul>
-                    <span className="text-base font-semibold pr-5">Relevante Literaturangaben:</span>
+                    <span className="text-base font-semibold pr-5">
+                        {t("plan_summary_literature")}
+                    </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         {plan.literature ? (
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
@@ -91,10 +98,12 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                             <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
                         )}
                     </ul>
-                    <span className="text-base font-semibold pr-5">Dateien zu Literaturangaben:</span>
+                    <span className="text-base font-semibold pr-5">
+                        {t("plan_summary_literature_files")}
+                    </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit rounded-lg p-2 whitespace-pre-line">
-                            {(plan.literature_files && plan.literature_files.length) ? (
+                            {plan.literature_files && plan.literature_files.length ? (
                                 <>
                                     {plan.literature_files.map((file, index) => {
                                         return (
@@ -122,7 +131,7 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
             ) : (
                 <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
                     <span className="font-semibold pr-5">
-                        Als Good-Practice Beispiel veröffentlicht
+                        {t("plan_summary_is_good_practise")}
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
                         <li className="flex w-fit bg-slate-200 rounded-lg p-2">
@@ -133,7 +142,7 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                         onClick={() => setIsOpenShowMore(!isOpenShowMore)}
                         className="flex flex-col col-span-4  space-y-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
                     >
-                        mehr anzeigen...
+                        {t("plan_summary_show_more")}
                     </span>
                 </section>
             )}

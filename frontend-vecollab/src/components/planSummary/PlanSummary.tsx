@@ -419,7 +419,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                     openAllBoxes={openAllBoxes}
                 />
                 <hr className="h-px my-10 bg-gray-400 border-0" />
-                <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
+                <div className="text-2xl font-semibold mb-4 ml-4">{t('plan_summary_phases')}</div>
                 {plan.steps !== undefined && plan.steps.length > 0 ? (
                     plan.steps.map((fineStep, index) => (
                         <ViewFinestep
@@ -431,7 +431,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                         />
                     ))
                 ) : (
-                    <div className="ml-4"> Noch keine erstellt</div>
+                    <div className="ml-4">{t('plan_summary_no_phases')}</div>
                 )}
                 <hr className="h-px my-10 bg-gray-400 border-0" />
                 <ViewAfterVE plan={plan} openAllBoxes={openAllBoxes} />
