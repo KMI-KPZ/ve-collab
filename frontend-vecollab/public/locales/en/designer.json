@@ -3,7 +3,10 @@
         "maxlength500": "The field must not contain more than 500 letters.",
         "realistic_number": "Please enter a realistic number",
         "only_positive_number": "Please only whole positive numbers",
-        "no_special_chars": "Only the following special characters are permitted: _*+\":,&()!?-"
+        "no_special_chars": "Only the following special characters are permitted: _*+\":,&()!?-",
+        "start_date_before_end_date": "The start date must be before the end date",
+        "required_field": "Please fill out the field '{{field}}'",
+        "unique_name": "Please choose a unique name"
     },
     "learningEnv": {
         "title": "Digital learning environment",
@@ -70,5 +73,26 @@
         "guidelines_descr-1": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
         "dataprotection": "Data Protection",
         "dataprotection_descr-1": "Inform yourselves about the relevant data protection regulations at your institution/country."
+    },
+    "step-names" : {
+        "no_good_practice_plans": "No Good-Practice plans with phases available for import",
+        "select_steps_to_import": "Select phases you wish to import from the Good-Practice plans",
+        "by": "by",
+        "last_modified": "Last modified",
+        "add_remove": "Add / Remove",
+        "from": "from:",
+        "to": "to:",
+        "name": "Name:",
+        "name_placeholder": "Name, e.g. Icebreaker",
+        "time": "Time required:",
+        "time_placeholder": "Time required in hours",
+        "learning_objectives": "Learning objective(s):",
+        "learning_objectives_placeholder": "separate multiple entries by commas",
+        "title": "General outline",
+        "subtitle": "General outline of the project",
+        "description": "Create as many phases as you like and assign a time frameto each of them. Important: Each phase requires a unique name (e.g. Group Work Phase I, Group Work Phase II). The phases you define will serve as your structure and overview.. You can then elaborate them in the detailed planning.",
+        "tooltip_text": "You can find detailed information on planning and different types and models of VE in the e-learning materials.",
+        "import_phases": "Import phases",
+        "new_phase": "New phase"
     }
 }
