@@ -40,7 +40,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.every((a) => a.value == '')
+        formValues.partners.length === 1
     );
 };
 
