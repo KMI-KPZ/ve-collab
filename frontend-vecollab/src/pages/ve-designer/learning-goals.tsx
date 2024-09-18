@@ -59,7 +59,7 @@ LearningGoals.auth = true;
 export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -182,40 +182,40 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     const options: { value: string; label: string }[] = [
         {
-            value: t('designer.goals2-option1'),
-            label: t('designer.goals2-option1'),
+            value: t('goals.2-option1'),
+            label: t('goals.2-option1'),
         },
         {
-            value: t('designer.goals2-option2'),
-            label: t('designer.goals2-option2'),
+            value: t('goals.2-option2'),
+            label: t('goals.2-option2'),
         },
         {
-            value: t('designer.goals2-option3'),
-            label: t('designer.goals2-option3'),
+            value: t('goals.2-option3'),
+            label: t('goals.2-option3'),
         },
         {
-            value: t('designer.goals2-option4'),
-            label: t('designer.goals2-option4'),
+            value: t('goals.2-option4'),
+            label: t('goals.2-option4'),
         },
         {
-            value: t('designer.goals2-option5'),
-            label: t('designer.goals2-option5'),
+            value: t('goals.2-option5'),
+            label: t('goals.2-option5'),
         },
         {
-            value: t('designer.goals2-option6'),
-            label: t('designer.goals2-option6'),
+            value: t('goals.2-option6'),
+            label: t('goals.2-option6'),
         },
         {
-            value: t('designer.goals2-option7'),
-            label: t('designer.goals2-option7'),
+            value: t('goals.2-option7'),
+            label: t('goals.2-option7'),
         },
         {
-            value: t('designer.goals2-option8'),
-            label: t('designer.goals2-option8'),
+            value: t('goals.2-option8'),
+            label: t('goals.2-option8'),
         },
         {
-            value: t('designer.goals2-option9'),
-            label: t('designer.goals2-option9'),
+            value: t('goals.2-option9'),
+            label: t('goals.2-option9'),
         },
     ];
 
@@ -236,7 +236,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         isClearable={true}
                         isMulti
                         closeMenuOnSelect={false}
-                        placeholder={t('designer.goals2-placeholder')}
+                        placeholder={t('goals.2-placeholder')}
                     />
                 )}
                 control={control}
@@ -254,12 +254,12 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                 <div className="grow mr-2">
                                     <input
                                         type="text"
-                                        placeholder={t('designer.goals3-placeholder')}
+                                        placeholder={t('goals.3-placeholder')}
                                         className="w-full border border-gray-300 rounded-lg p-2 "
                                         {...methods.register(`topics.${index}.name`, {
                                             maxLength: {
                                                 value: 500,
-                                                message: t('designer_field_maxlength500'),
+                                                message: t('messages.max_length', {count: 500}),
                                             },
                                         })}
                                     />
@@ -294,11 +294,11 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t('designer.goals-title')}
-            subtitle={t('designer.goals-subtitle')}
-            description={t('designer.goals-description')}
+            title={t('goals.title')}
+            subtitle={t('goals.subtitle')}
+            description={t('goals.description')}
             tooltip={{
-                text: t('designer.goals-tooltip'),
+                text: t('goals.tooltip'),
                 link: '/learning-material/top-bubble/Potenziale',
             }}
             methods={methods}
@@ -325,7 +325,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                             `individualLearningGoals.${index}.learningGoal`
                                         )}
                                         placeholder={
-                                            t('designer.goals-learningGoal_placeholder', {username: findPartnerFirstAndLastName(
+                                            t('goals.learningGoal_placeholder', {username: findPartnerFirstAndLastName(
                                                 individualLearningGoalPerPartner.username
                                             )})
                                         }
@@ -340,8 +340,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}
                 >
-                    {t('designer.goals2-title')}
-                    <Tooltip tooltipsText={t('designer.goals2-tooltip')}>
+                    {t('goals.2-title')}
+                    <Tooltip tooltipsText={t('goals.2-tooltip')}>
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Potenziale'}
@@ -352,7 +352,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     </Tooltip>
                 </div>
                 <p className="mb-8">
-                    {t('designer.goals2-subtitle')}
+                    {t('goals.2-subtitle')}
                 </p>
 
                 <div className="w-full lg:w-1/2">
@@ -364,8 +364,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}
                 >
-                    {t('designer.goals3-title')}
-                    <Tooltip tooltipsText={t('designer.goals3-tooltip')}>
+                    {t('goals.3-title')}
+                    <Tooltip tooltipsText={t('goals.3-tooltip')}>
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
@@ -376,7 +376,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     </Tooltip>
                 </div>
                 <p className="mb-8">
-                    {t('designer.goals3-subtitle')}
+                    {t('goals.3-subtitle')}
                 </p>
 
                 <div className="w-full lg:w-1/2">{renderTopics()}</div>
@@ -389,8 +389,7 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
-                ''
+                'common', 'designer'
             ])),
         },
     }

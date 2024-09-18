@@ -64,7 +64,7 @@ const emptyLanguage = { language: '' }
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -161,7 +161,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('name')}
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -170,10 +170,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.name`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
-                            placeholder={t('enter_name')}
+                            placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -184,7 +184,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="age" className="px-2 py-2">
-                            {t('age')}
+                            {t('common:age')}
                         </label>
                     </div>
                     <div className="w-3/4 flex">
@@ -194,14 +194,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_min`, {
                                     maxLength: {
                                         value: 4,
-                                        message: t('designer_field_realistic_number'),
+                                        message: t('messages.realistic_number'),
                                     },
                                     pattern: {
                                         value: /^\d+$/,
-                                        message:t('designer_field_only_positive_number'),
+                                        message:t('messages.only_positive_number'),
                                     },
                                 })}
-                                placeholder={t('from')}
+                                placeholder={t('common:from')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -214,14 +214,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_max`, {
                                     maxLength: {
                                         value: 4,
-                                        message: t('designer_field_realistic_number'),
+                                        message: t('messages.realistic_number'),
                                     },
                                     pattern: {
                                         value: /^\d+$/,
-                                        message: t('designer_field_only_positive_number'),
+                                        message: t('messages.only_positive_number'),
                                     },
                                 })}
-                                placeholder={t('to')}
+                                placeholder={t('common:to')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
@@ -233,7 +233,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="experience" className="px-2 py-2">
-                            {t('designer_target_relevant_exp')}
+                            {t('target.relevant_exp')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -242,10 +242,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.experience`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
-                            placeholder={t('designer_target_relevant_exp_placeh')}
+                            placeholder={t('target.relevant_exp_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -256,7 +256,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="academic_course" className="px-2 py-2">
-                            {t('designer_target_degree')}
+                            {t('target.degree')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -265,10 +265,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.academic_course`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
-                            placeholder={t('designer_target_degree_placeh')}
+                            placeholder={t('target.degree_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -282,7 +282,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="languages" className="px-2 py-2">
-                            {t('designer_target_languages')}
+                            {t('target.languages')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -291,10 +291,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             {...methods.register(`targetGroups.${index}.languages`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
-                            placeholder={t('designer_target_languages_placeh')}
+                            placeholder={t('target.languages_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -322,16 +322,16 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="flex my-2 items-center w-full">
                     <input
                         type="text"
-                        placeholder={t('enter_language')}
+                        placeholder={t('common:enter_language')}
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
                         {...methods.register(`languages.${index}.language`, {
                             maxLength: {
                                 value: 500,
-                                message: t('designer_field_maxlength500'),
+                                message: t('messages.max_length', {count: 500}),
                             },
                             pattern: {
                                 value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: t('designer_field_no_special_chars'),
+                                message: t('messages.no_special_chars'),
                             },
                         })}
                     />
@@ -351,11 +351,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t('designer_target_title')}
-            subtitle={t('designer_target_subtitle')}
-            description={t('designer_target_description')}
+            title={t('target.title')}
+            subtitle={t('target.subtitle')}
+            description={t('target.description')}
             tooltip={{
-                text: t('designer_target_tootltip'),
+                text: t('target.tooltip'),
                 link: '',
             }}
             methods={methods}
@@ -380,8 +380,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             </div>
 
             <div className="">
-                <div className="text-xl text-slate-600">{t('designer_target_language_title')}</div>
-                <div className="mb-8">{t('designer_target_language_description')}</div>
+                <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                <div className="mb-8">{t('target.language_description')}</div>
                 <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow"
@@ -401,7 +401,7 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
+                'common', 'designer'
             ])),
         },
     }

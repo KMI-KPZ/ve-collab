@@ -23,7 +23,7 @@ interface Props {
 Name.auth = true;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -63,9 +63,9 @@ export default function Name({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t("designer_name_title")}
-            subtitle={t("designer_name_subtitle")}
-            description={t('designer_name_description')}
+            title={t("name.title")}
+            subtitle={t("name.subtitle")}
+            description={t('name.description')}
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
@@ -74,21 +74,21 @@ export default function Name({ socket }: Props): JSX.Element {
             <div className="">
                 <input
                     type="text"
-                    placeholder="Name eingeben"
+                    placeholder={t('name.placeholder')}
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
                     {...methods.register('name', {
                         required: {
                             value: true,
-                            message: t('designer_name_err_empty'),
+                            message: t('messages.required_field', {field: 'name'}),
                         },
                         maxLength: {
                             value: 50,
-                            message: t('designer_name_err_maxlength'),
+                            message: t('messages.max_length', {count: 50}),
                         },
                         pattern: {
                             value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                            message: t('designer_name_err_type'),
+                            message: t('name.no_special_chars'),
                         },
                     })}
                 />
@@ -102,7 +102,7 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
+                'common', 'designer'
             ])),
         },
     }

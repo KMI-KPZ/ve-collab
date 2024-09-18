@@ -51,7 +51,7 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
 Lectures.auth = true;
 export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation(['designer', 'common'])
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -123,7 +123,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('designer_lectures_name')}
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -132,10 +132,10 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.name`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
-                            placeholder={t('enter_name')}
+                            placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -146,7 +146,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="type" className="px-2 py-2">
-                            {t('designer_lectures_type')}
+                            {t('common:type')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -154,13 +154,13 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.lecture_type`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value={t('designer_lectures_compulsory')}>{t('designer_lectures_compulsory')}</option>
-                            <option value={t('designer_lectures_elective')}>{t('designer_lectures_elective')}</option>
+                            <option value={t('lectures.compulsory')}>{t('lectures.compulsory')}</option>
+                            <option value={t('lectures.elective')}>{t('lectures.elective')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.lectures?.[index]?.lecture_type?.message}
@@ -170,7 +170,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="format" className="px-2 py-2">
-                            {t('designer_lectures_format')}
+                            {t('lectures.format')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -178,15 +178,15 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.lecture_format`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_field_maxlength500'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
                             placeholder="z.B. online, hybrid, präsenz"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value={t('designer_lectures_face2face')}>{t('designer_lectures_face2face')}</option>
-                            <option value={t('designer_lectures_online')}>{t('designer_lectures_online')}</option>
-                            <option value={t('designer_lectures_hybrid')}>{t('designer_lectures_hybrid')}</option>
+                            <option value={t('lectures.face2face')}>{t('lectures.face2face')}</option>
+                            <option value={t('lectures.online')}>{t('lectures.online')}</option>
+                            <option value={t('lectures.hybrid')}>{t('lectures.hybrid')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.lectures?.[index]?.lecture_format?.message}
@@ -196,7 +196,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/2 flex items-center">
                         <label htmlFor="participants" className="px-2 py-2">
-                            {t('designer_lectures_numbers_of_part')}
+                            {t('lectures.numbers_of_part')}
                         </label>
                     </div>
                     <div className="w-1/2">
@@ -206,15 +206,15 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.participants_amount`, {
                                 maxLength: {
                                     value: 4,
-                                    message: t('designer_field_realistic_number'),
+                                    message: t('messages.realistic_number'),
                                 },
                                 pattern: {
                                     value: /^\d+$/,
-                                    message: t('designer_field_only_positive_number'),
+                                    message: t('messages.only_positive_number'),
                                 },
                                 setValueAs: (v) => parseInt(v),
                             })}
-                            placeholder={t('designer_lectures_enter_numbers_of_part')}
+                            placeholder={t('lectures.enter_numbers_of_part')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -242,8 +242,8 @@ export default function Lectures({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t('designer_lectures_title')}
-            subtitle={t('designer_lectures_subtitle')}
+            title={t('lectures.title')}
+            subtitle={t('lectures.subtitle')}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -277,7 +277,7 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
+                'common', 'designer'
             ])),
         },
     }

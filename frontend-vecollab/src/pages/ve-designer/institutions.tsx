@@ -59,7 +59,7 @@ Institutions.auth = true;
 export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation(['designer', 'common'])
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -137,19 +137,19 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('name')}
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder={t('enter_name')}
+                            placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.name`, {
                                 maxLength: {
                                     value: 500,
                                     message:
-                                        t('<<designer_institutions_err_maxlength'),
+                                        t('messages.max_length', {count: 500}),
                                 },
                             })}
                         />
@@ -161,7 +161,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="schoolType" className="px-2 py-2">
-                            {t('educational_institution')}
+                            {t('institutions.educational_institution')}
                         </label>
                     </div>
                     <div className="w-2/3">
@@ -170,24 +170,23 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {...methods.register(`institutions.${index}.school_type`, {
                                 maxLength: {
                                     value: 500,
-                                    message:
-                                        t('designer_institutions_err_maxlength'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
                         >
-                            <option value={t('designer_institutions_eduinst_highschool')}>
-                                {t('designer_institutions_eduinst_highschool')}
+                            <option value={t('institutions.eduinst_highschool')}>
+                                {t('institutions.eduinst_highschool')}
                             </option>
-                            <option value={t('designer_institutions_eduinst_appliedsc')}>
-                                {t('designer_institutions_eduinst_appliedsc')}
+                            <option value={t('institutions.eduinst_appliedsc')}>
+                                {t('institutions.eduinst_appliedsc')}
                             </option>
-                            <option value={t('designer_institutions_eduinst_voc')}>{t('designer_institutions_eduinst_voc')}</option>
-                            <option value={t('designer_institutions_eduinst_school1')}>{t('designer_institutions_eduinst_school1')}</option>
-                            <option value={t('designer_institutions_eduinst_school2')}>
-                                {t('designer_institutions_eduinst_school2')}
+                            <option value={t('institutions.eduinst_voc')}>{t('institutions.eduinst_voc')}</option>
+                            <option value={t('institutions.eduinst_school1')}>{t('institutions.eduinst_school1')}</option>
+                            <option value={t('institutions.eduinst_school2')}>
+                                {t('institutions.eduinst_school2')}
                             </option>
 
-                            <option value={t('designer_institutions_eduinst_other')}>{t('designer_institutions_eduinst_other')}</option>
+                            <option value={t('institutions.eduinst_other')}>{t('institutions.eduinst_other')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
                             {methods.formState.errors?.institutions?.[index]?.school_type?.message}
@@ -197,18 +196,18 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="country" className="px-2 py-2">
-                            {t('country')}
+                            {t('institutions.country')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder={t('enter_country')}
+                            placeholder={t('institutions.enter_country')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.country`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_institutions_err_maxlength'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
                         />
@@ -220,18 +219,18 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="department" className="px-2 py-2">
-                            {t('department')}
+                            {t('institutions.department')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder={t('enter_department')}
+                            placeholder={t('institutions.enter_department')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.department`, {
                                 maxLength: {
                                     value: 500,
-                                    message: t('designer_institutions_err_maxlength'),
+                                    message: t('messages.max_length', {count: 500}),
                                 },
                             })}
                         />
@@ -306,7 +305,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
         if (!importDialog.institutions.length) {
             return (
                 <div>
-                    <p>{t('designer_institutions_no_inst_in_profile')}</p>
+                    <p>{t('institutions.no_inst_in_profile')}</p>
                     <Link href={'/profile/edit'} target='_blank'>
                         <span className='border border-white bg-black/75 text-white rounded-lg px-3 py-1' >
                             {t('edit_profile')}
@@ -336,9 +335,9 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 }))}
                 <div className='ml-auto text-right'>
                     <button type='button' className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg' onClick={e => setImportDialog(prev => ({...prev, isOpen: false}))}>
-                        {t('cancel')}
+                        {t('common:cancel')}
                     </button>
-                    <ButtonPrimary label={t('import')} onClick={() => handleImport()} />
+                    <ButtonPrimary label={t('common:import')} onClick={() => handleImport()} />
                 </div>
             </div>
         )
@@ -347,9 +346,9 @@ export default function Institutions({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t('designer_institutions_title')}
-            subtitle={t('designer_institutions_subtitle')}
-            description={t('designer_institutions_description')}
+            title={t('institutions.title')}
+            subtitle={t('institutions.subtitle')}
+            description={t('institutions.description')}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -358,7 +357,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
         >
             <Dialog
                 isOpen={importDialog.isOpen}
-                title={t('designer_institutions_import_institutions')}
+                title={t('institutions.import_institutions')}
                 onClose={() => setImportDialog(prev => ({...prev, isOpen: false}))}
             >
                 <div className="w-[40vw]"><ImportDialog /></div>
@@ -369,10 +368,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
                     <button
                         className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                         type='button'
-                        title={t('designer_institutions_import_institutions')}
+                        title={t('institutions.import_institutions')}
                         onClick={e => openImportDialog()}
                     >
-                        {t('import')}
+                        {t('common:import')}
                     </button>
                     {fields.length == 0 && (<button
                             className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
@@ -386,7 +385,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 });
                             }}
                         >
-                            {t('new')}
+                            {t('common:new')}
                     </button>)}
                 </div>
 
@@ -417,7 +416,7 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
+                'common', 'designer'
             ])),
         },
     }
