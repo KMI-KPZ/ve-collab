@@ -13,17 +13,19 @@ import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export interface CheckListPartner {
     username: string;
     time: boolean;
-    format: boolean;
+    // format: boolean;
     topic: boolean;
     goals: boolean;
-    languages: boolean;
+    // languages: boolean;
     media: boolean;
     technicalEquipment: boolean;
-    evaluation: boolean;
+    // evaluation: boolean;
     institutionalRequirements: boolean;
     dataProtection: boolean;
 }
@@ -36,13 +38,13 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return formValues.checklist.every((checkListPartner) => {
         return (
             !checkListPartner.time &&
-            !checkListPartner.format &&
+            // !checkListPartner.format &&
             !checkListPartner.topic &&
             !checkListPartner.goals &&
-            !checkListPartner.languages &&
+            // !checkListPartner.languages &&
             !checkListPartner.media &&
             !checkListPartner.technicalEquipment &&
-            !checkListPartner.evaluation &&
+            // !checkListPartner.evaluation &&
             !checkListPartner.institutionalRequirements &&
             !checkListPartner.dataProtection
         );
@@ -52,13 +54,13 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
 const emptyCheckListPartner: CheckListPartner = {
     username: '',
     time: false,
-    format: false,
+    // format: false,
     topic: false,
     goals: false,
-    languages: false,
+    // languages: false,
     media: false,
     technicalEquipment: false,
-    evaluation: false,
+    // evaluation: false,
     institutionalRequirements: false,
     dataProtection: false,
 };
@@ -70,6 +72,7 @@ interface Props {
 Checklist.auth = true;
 export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const { data: session, status } = useSession();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -167,15 +170,14 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         />
                         <TooltipList
                             tooltipsTextItems={[
-                                'Zeiten für die gemeinsame Vorbereitung (Zeitplan erstellen)',
-                                'Zeitlicher Ablauf des VE',
-                                'Zeitslots für den VE, falls synchrone Meetings geplant sind',
+                                t('checklist.time_descr-1'),
+                                t('checklist.time_descr-2')
                             ]}
                         >
-                            <p>Zeit</p>
+                            <p>{t('checklist.time')}</p>
                         </TooltipList>
                     </div>
-                    <div className="flex justify-start items-center">
+                    {/* <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
                             {...methods.register(`checklist.${index}.format`)}
@@ -184,19 +186,15 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         <TooltipList tooltipsTextItems={['Format(e) des VE']}>
                             <p>Format</p>
                         </TooltipList>
-                    </div>
+                    </div> */}
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
                             {...methods.register(`checklist.${index}.topic`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
-                        <TooltipList
-                            tooltipsTextItems={[
-                                'Thema / Themen des VE, welche(s) mit Modulvorgaben / dem Lehrplan aller beteiligten Partner vereinbar ist / sind',
-                            ]}
-                        >
-                            <p>Thema</p>
+                        <TooltipList tooltipsTextItems={[t('checklist.topic_descr-1')]}>
+                            <p>{t('checklist.topic')}</p>
                         </TooltipList>
                     </div>
                     <div className="flex justify-start items-center">
@@ -205,15 +203,11 @@ export default function Checklist({ socket }: Props): JSX.Element {
                             {...methods.register(`checklist.${index}.goals`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
-                        <TooltipList
-                            tooltipsTextItems={[
-                                'Richtlernziele des VE, welche mit Modulvorgaben / dem Lehrplan aller beteiligter Partner verinbar sind',
-                            ]}
-                        >
-                            <p>Ziele</p>
+                        <TooltipList tooltipsTextItems={[t('checklist.objectives_descr-1')]}>
+                            <p>{t('checklist.objectives')}</p>
                         </TooltipList>
                     </div>
-                    <div className="flex justify-start items-center">
+                    {/* <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
                             {...methods.register(`checklist.${index}.languages`)}
@@ -226,7 +220,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         >
                             <p>Sprache(n)</p>
                         </TooltipList>
-                    </div>
+                    </div> */}
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
@@ -234,11 +228,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
                         <TooltipList
-                            tooltipsTextItems={[
-                                'Learning Management System, das im VE verwendet wird',
-                            ]}
+                            tooltipsTextItems={[t('checklist.media_descr-1') ]}
                         >
-                            <p>Medien</p>
+                            <p>{t('checklist.media')}</p>
                         </TooltipList>
                     </div>
                     <div className="flex justify-start items-center">
@@ -249,14 +241,14 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         />
                         <TooltipList
                             tooltipsTextItems={[
-                                'Ausreichende technische Ausstattung zur Durchführung des VE',
-                                'Ressourcen für technische Unterstützung während des VE',
+                                t('checklist.technic_descr-1'),
+                                t('checklist.technic_descr-2')
                             ]}
                         >
-                            <p>Technik</p>
+                            <p>{t('checklist.technic')}</p>
                         </TooltipList>
                     </div>
-                    <div className="flex justify-start items-center">
+                    {/* <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
                             {...methods.register(`checklist.${index}.evaluation`)}
@@ -269,18 +261,15 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         >
                             <p>Bewertung</p>
                         </TooltipList>
-                    </div>
+                    </div> */}
                     <div className="flex justify-start items-center">
                         <input
                             type="checkbox"
                             {...methods.register(`checklist.${index}.institutionalRequirements`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
-                        <TooltipList tooltipsTextItems={['Umgang mit Anwesenheit und Mitarbeit']}>
-                            <div>
-                                <p>institutionelle</p>
-                                <p>Vorgaben</p>
-                            </div>
+                        <TooltipList tooltipsTextItems={[t('checklist.guidelines_descr-1')]}>
+                            <p>{t('checklist.guidelines')}</p>
                         </TooltipList>
                     </div>
                     <div className="flex justify-start items-center">
@@ -289,12 +278,8 @@ export default function Checklist({ socket }: Props): JSX.Element {
                             {...methods.register(`checklist.${index}.dataProtection`)}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mr-6"
                         />
-                        <TooltipList
-                            tooltipsTextItems={[
-                                'Kenntnis der relevanten Datenschutzbestimmungen deiner Institution / deines Landes',
-                            ]}
-                        >
-                            <p>Datenschutz</p>
+                        <TooltipList tooltipsTextItems={[t('checklist.dataprotection_descr-1')]}>
+                            <p>{t('checklist.dataprotection')}</p>
                         </TooltipList>
                     </div>
                 </div>
@@ -305,11 +290,11 @@ export default function Checklist({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Checkliste"
-            subtitle="An alles gedacht?"
-            description="Bevor es mit der inhaltlichen und didaktischen Planung losgeht, dient euch die Liste noch einmal als Überblick, ob ihr die wichtigsten formalen Rahmenbedingungen berücksichtigt habt."
+            title={t('checklist.title')}
+            subtitle={t('checklist.subtitle')}
+            description={t('checklist.description')}
             tooltip={{
-                text: 'Mehr zu der Checkliste findest du hier in den Selbstlernmaterialien …',
+                text: t('checklist.tooltip'),
                 link: '/learning-material/top-bubble/Herausforderungen',
             }}
             methods={methods}
@@ -321,4 +306,15 @@ export default function Checklist({ socket }: Props): JSX.Element {
             <div className="grid grid-cols-3 gap-1 mt-7 mb-10">{renderCheckBoxes()}</div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+                'designer'
+            ])),
+        },
+    }
 }

@@ -48,5 +48,27 @@
         "whilePlaceholder": "z. B. Teaching Analysis Poll, Feedback-Runden, etc.",
         "after": "nach dem VE (summativ)",
         "afterPlaceholder": "z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
+    },
+    "checklist": {
+        "title": "Checkliste",
+        "subtitle": "An alles gedacht?",
+        "description": "Hier noch einige wichtige Aspekte, die ihr geklärt haben solltet, bevor es mit der inhaltlichen und didaktischen Planung losgeht.",
+        "tooltip": "Mehr zu den Aspekten der Checkliste findest du hier in den Selbstlernmaterialien",
+        "time": "Time",
+        "time_descr-1": "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
+        "time_descr-2": "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind.",
+        "topic": "Topic",
+        "topic_descr-1": "Überprüft, ob das Thema / die Themen des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar ist / sind.",
+        "objectives": "Ziele",
+        "objectives_descr-1": "Überprüft, ob die Lehr-/Lernziele des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar sind.",
+        "media": "Medien",
+        "media_descr-1": "Falls ihr ein gemeinsames LMS verwenden wollt, stellt sicher, dass es an allen beteiligten Institutionen nutzbar ist.",
+        "technic": "Technik",
+        "technic_descr-1": "Überprüft, ob eure Institution über eine ausreichende technische Ausstattung zur Durchführung des VE verfügt.",
+        "technic_descr-2": "Erkundigt euch über Ressourcen für  technische Unterstützung während des VE an eurer Institution.",
+        "guidelines": "Institutionelle Vorgaben",
+        "guidelines_descr-1": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
+        "dataprotection": "Datenschutz",
+        "dataprotection_descr-1": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
     }
 }
