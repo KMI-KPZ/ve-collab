@@ -35,7 +35,7 @@ export default function Sidebar({
     const { t } = useTranslation('common');
 
     // init menu open states
-    let menuStates: IMenuDataState[] = mainMenu().map((a) => {
+    let menuStates: IMenuDataState[] = mainMenu.map((a) => {
         return { id: a.id, open: true };
     });
 
@@ -48,7 +48,7 @@ export default function Sidebar({
         }));
     };
 
-    const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu());
+    const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu);
 
     useEffect(() => {
         if (!plan?.steps || !mainMenu?.length) return;
@@ -62,7 +62,7 @@ export default function Sidebar({
         });
         if (!userDefinedSteps.length) return;
 
-        const defaultSteps = mainMenu().find((a) => a.id == 'steps')?.submenu || [];
+        const defaultSteps = mainMenu.find((a) => a.id == 'steps')?.submenu || [];
 
         // adding user defined steps to steps menu item
         setMainMenuData((prev) => {

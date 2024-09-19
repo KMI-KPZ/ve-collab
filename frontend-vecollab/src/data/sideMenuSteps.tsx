@@ -3,8 +3,7 @@ import imageStagePlanner from '@/images/icons/progressBar/topProgressBar/stagePl
 import imageFinish from '@/images/icons/progressBar/topProgressBar/finish.svg';
 import { IMenuData, ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 
-const itemsAllgemein = (): ISubmenuData[] => {
-    return [
+const itemsAllgemein: ISubmenuData[] = [
         {
             text: 'sidebar_project_name',
             id: 'name',
@@ -56,34 +55,31 @@ const itemsAllgemein = (): ISubmenuData[] => {
             link: '/ve-designer/checklist',
         },
     ];
-};
 
-const itemsEtappenplaner = (): ISubmenuData[] => {
-    return [
+const itemsEtappenplaner : ISubmenuData[] = 
+    [
         {
             text: "sidebar_general_outline",
             id: 'stepsGenerally',
             link: '/ve-designer/step-names',
         },
     ];
-};
 
-export const mainMenu = (): IMenuData[] => {
-    return [
+export const mainMenu: IMenuData[] =[
         {
             text: 'sidebar_general',
             id: 'generally',
             link: '',
             image: imageGeneralInformation,
             // submenu: getSubMenu('generally', itemsAllgemein)
-            submenu: itemsAllgemein(),
+            submenu: itemsAllgemein,
         },
         {
             text: "sidebar_phases",
             id: 'steps',
             link: '',
             image: imageStagePlanner,
-            submenu: itemsEtappenplaner(),
+            submenu: itemsEtappenplaner,
         },
         {
             text: "sidebar_summary",
@@ -100,7 +96,6 @@ export const mainMenu = (): IMenuData[] => {
             submenu: [],
         },
     ];
-};
 
 export interface IMenuDataState {
     id: string;
