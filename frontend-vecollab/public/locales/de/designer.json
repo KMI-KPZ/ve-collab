@@ -178,5 +178,25 @@
         "tooltip_text": "Ausführliche Informationen zur VE-Planung und verschiedenen Typen und Modellen von VE findest du hier in den Selbstlernmaterialien.",
         "import_phases": "Phasen importieren",
         "new_phase": "Neue Phase"
+    },
+    "step-data": {
+        "imported_from": "Importiert aus:",
+        "plan_no_longer_available": "Plan nicht mehr verfügbar",
+        "fine_plan": "Feinplanung",
+        "description": "Beschreibt nun die einzelnen Phasen genauer. Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen, beschreibt bitte auch die einzelnen Lernaktivitäten näher.",
+        "title": "Phase: {{name}}",
+        "tooltip_text": "Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien",
+        "time_frame": "Zeitspanne:",
+        "learning_activities": "Lernaktivität(en):",
+        "learning_activities_placeholder": "mehrere durch Komma trennen",
+        "detail_activities": "Möchtet ihr die Lernaktivität(en) im Designer genauer ausarbeiten?",
+        "add_learning_activity": "weitere Lernaktivität hinzufügen",
+        "task": "Aufgabenstellung",
+        "work_mode": "Arbeitsform",
+        "notes": "Notizen",
+        "tools": "Tools",
+        "tools_placeholder": "Welche Tools können verwendet werden?",
+        "materials": "Materialien",
+        "materials_placeholder": "Welche Materialien können verwendet werden?"
     }
 }

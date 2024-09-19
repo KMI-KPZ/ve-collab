@@ -13,6 +13,7 @@
   "age": "Age",
   "from": "from",
   "to": "to",
+  "optional": "optional",
   "designer_field_maxlength500": "The field must not contain more than 500 letters.",
   "designer_field_realistic_number": "Please enter a realistic number",
   "designer_field_only_positive_number": "Please only whole positive numbers",

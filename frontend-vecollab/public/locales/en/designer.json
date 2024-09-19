@@ -178,5 +178,25 @@
         "tooltip_text": "You can find detailed information on planning and different types and models of VE in the e-learning materials.",
         "import_phases": "Import phases",
         "new_phase": "New phase"
+    },
+    "step-data": {
+        "imported_from": "Imported from:",
+        "plan_no_longer_available": "Plan no longer available",
+        "fine_plan": "Detailed planning",
+        "description": "Now describe the individual phase more in detail. If you plan to submit the project as a Good Practice example, you should also describe the individual learning activities in more depth.",
+        "title": "Phase: {{name}}",
+        "tooltip_text": "More aspects of detailed planning can be found in the e-learning materials.",
+        "time_frame": "Time frame:",
+        "learning_activities": "Learning activity(ies):",
+        "learning_activities_placeholder": "Separate multiple entries with commas",
+        "detail_activities": "Do you want to elaborate on the learning activity(ies) in the Designer?",
+        "add_learning_activity": "Add another learning activity",
+        "task": "Task description",
+        "work_mode": "Type of activity",
+        "notes": "Notes",
+        "tools": "Tools",
+        "tools_placeholder": "Which tools can be used?",
+        "materials": "Materials",
+        "materials_placeholder": "Which materials can be used?"
     }
 }

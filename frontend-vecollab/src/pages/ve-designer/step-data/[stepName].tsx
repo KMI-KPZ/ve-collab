@@ -16,6 +16,8 @@ import { useSession } from 'next-auth/react';
 import { useGetAvailablePlans } from '@/lib/backend';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 export interface ITask {
     task_formulation: string;
@@ -114,6 +116,8 @@ FinePlanner.auth = true;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
@@ -132,7 +136,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
-    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken)
+    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -254,38 +258,35 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         }));
     };
 
-    const originalPlan = availablePlans.find(a => a._id == currentFineStep.original_plan)
+    const originalPlan = availablePlans.find((a) => a._id == currentFineStep.original_plan);
 
     let description = (
         <>
             {currentFineStep.original_plan !== '' && (
-                <p className='my-2'>
-                    <span className="font-bold">Importiert aus: </span>&nbsp;
-                    {typeof originalPlan !== 'undefined'
-                        ? (
-                            <Link className='group' href={`/plan/${originalPlan?._id}`} target='_blank'>
-                                {originalPlan?.name}
-                                <MdArrowOutward className='hidden text-slate-500 group-hover:inline' />
-                            </Link>)
-                        : (<>Plan nicht mehr vorhanden</>)}
+                <p className="my-2">
+                    <span className="font-bold">{t('step-data.imported_from')}</span>&nbsp;
+                    {typeof originalPlan !== 'undefined' ? (
+                        <Link className="group" href={`/plan/${originalPlan?._id}`} target="_blank">
+                            {originalPlan?.name}
+                            <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
+                        </Link>
+                    ) : (
+                        <>{t('step-data.plan_no_longer_available')}</>
+                    )}
                 </p>
             )}
-            <p className="text-xl text-slate-600">Feinplanung</p>
-            <p className="mb-8">
-                Beschreibt nun die einzelnen Etappen genauer.
-                Solltet ihr das Projekt als Good-Practice-Beispiel einpflegen wollen,
-                beschreibt bitte auch die einzelnen Lernaktivitäten näher.
-            </p>
+            <p className="text-xl text-slate-600">{t('step-data.fine_plan')}</p>
+            <p className="mb-8">{t('step-data.description')}</p>
         </>
-    )
+    );
 
     return (
         <Wrapper
             socket={socket}
-            title={`Etappe: ${currentFineStep.name}`}
+            title={t('step-data.title', { name: currentFineStep.name })}
             description={description}
             tooltip={{
-                text: 'Mehr Aspekte der Feinplanung findest du hier in den Selbstlernmaterialien …',
+                text: t('step-data.tooltip_text'),
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
@@ -298,4 +299,12 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             <Stage fineStep={currentFineStep} />
         </Wrapper>
     );
+}
+
+export async function getServerSideProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
+        },
+    };
 }

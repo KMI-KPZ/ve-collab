@@ -2,6 +2,7 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { RxMinus } from 'react-icons/rx';
 import { IFineStepFrontend } from '@/pages/ve-designer/step-data/[stepName]';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     taskIndex: number;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const { register, formState } = useFormContext<IFineStepFrontend>();
     return (
         <div className="flex gap-5">
@@ -18,10 +21,10 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
                 {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`, {
                     maxLength: {
                         value: 500,
-                        message: 'Bitte nicht mehr als 500 Zeichen.',
+                        message: t("messages.max_length", { count: 500 }),
                     },
                 })}
-                placeholder="Welche Tools können verwendet werden?"
+                placeholder={t("step-data.tools_placeholder")}
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button

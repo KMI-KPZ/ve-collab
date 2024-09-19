@@ -5,6 +5,7 @@ import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     fineStep: IFineStepFrontend;
@@ -19,6 +20,8 @@ export const defaultValueTask: ITaskFrontend = {
 };
 
 export default function Stage({ fineStep }: Props) {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const { register, control, formState, watch } = useFormContext<IFineStepFrontend>();
     const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
         name: 'tasks',
@@ -53,7 +56,7 @@ export default function Stage({ fineStep }: Props) {
                     <>
                         <div className="flex">
                             <div>
-                                <label className="px-2 py-2">Ja</label>
+                                <label className="px-2 py-2">{t("common:yes")}</label>
                             </div>
                             <div>
                                 <input
@@ -67,7 +70,7 @@ export default function Stage({ fineStep }: Props) {
                         </div>
                         <div className="flex">
                             <div>
-                                <label className="px-2 py-2">Nein</label>
+                                <label className="px-2 py-2">{t("common:no")}</label>
                             </div>
                             <div>
                                 <input
@@ -85,82 +88,78 @@ export default function Stage({ fineStep }: Props) {
     }
 
     return (
+        <div className="">
             <div className="">
-                <div className="">
-                    {/* <div className="flex">
+                {/* <div className="flex">
                         <div className="font-bold text-xl mx-2">Etappe:</div>
                         <div className="font-bold text-xl">{fineStep.name}</div>
                     </div> */}
-                    <div className="flex">
-                        <div className="font-bold mx-2">Zeitspanne:</div>
-                        <div className="mx-2">
-                            {dateFrom} - {dateTo}
-                        </div>
+                <div className="flex">
+                    <div className="font-bold mx-2">{t("step-data.time_frame")}</div>
+                    <div className="mx-2">
+                        {dateFrom} - {dateTo}
                     </div>
                 </div>
-                <div className="mt-4 flex">
-                    <div className="w-1/6 flex items-center">
-                        <label htmlFor="learning_goal" className="px-2 py-2">
-                            Lernaktivität(en)
-                        </label>
-                    </div>
-                    <div className="w-5/6">
-                        <textarea
-                            {...register(`learning_activity`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: 'Bitte nicht mehr als 500 Zeichen.',
-                                },
-                            })}
-                            rows={2}
-                            placeholder="mehrere durch Komma trennen"
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {formState.errors?.learning_activity?.message}
-                        </p>
-                    </div>
-                </div>
-                <div className="mt-4 flex justify-center">
-                    <p>Möchten Sie Lernaktivität(en) im Designer genauer ausarbeiten?</p>
-                    <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
-                </div>
-                {watch('has_tasks') && (
-                    <div className="mt-4 flex">
-                        <div className="flex flex-col w-full">
-                            {fields.map((task, taskIndex) => (
-                                <div className="relative" key={task.id}>
-                                    <Tasks taskIndex={taskIndex} />
-                                    <div className="absolute left-10 bottom-7">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(taskIndex)}
-                                        >
-                                            <Image
-                                                src={imageTrashcan}
-                                                width={20}
-                                                height={20}
-                                                alt="trashcan"
-                                            ></Image>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            <div className="w-full flex items-center justify-center">
-                                <button
-                                    type="button"
-                                    className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
-                                    onClick={() => {
-                                        append(defaultValueTask);
-                                    }}
-                                >
-                                    weitere Lernaktivität hinzufügen
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
-
+            <div className="mt-4 flex">
+                <div className="w-1/6 flex items-center">
+                    <label htmlFor="learning_goal" className="px-2 py-2">
+                        {t("step-data.learning_activities")}
+                    </label>
+                </div>
+                <div className="w-5/6">
+                    <textarea
+                        {...register(`learning_activity`, {
+                            maxLength: {
+                                value: 500,
+                                message: t("messages.max_length", { count: 500 }),
+                            },
+                        })}
+                        rows={2}
+                        placeholder={t("step-data.learning_activities_placeholder")}
+                        className="border border-gray-400 rounded-lg w-full p-2"
+                    />
+                    <p className="text-red-600 pt-2">
+                        {formState.errors?.learning_activity?.message}
+                    </p>
+                </div>
+            </div>
+            <div className="mt-4 flex justify-center">
+                <p>{t("step-data.detail_activities")}</p>
+                <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
+            </div>
+            {watch('has_tasks') && (
+                <div className="mt-4 flex">
+                    <div className="flex flex-col w-full">
+                        {fields.map((task, taskIndex) => (
+                            <div className="relative" key={task.id}>
+                                <Tasks taskIndex={taskIndex} />
+                                <div className="absolute left-10 bottom-7">
+                                    <button type="button" onClick={() => handleDelete(taskIndex)}>
+                                        <Image
+                                            src={imageTrashcan}
+                                            width={20}
+                                            height={20}
+                                            alt="trashcan"
+                                        ></Image>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        <div className="w-full flex items-center justify-center">
+                            <button
+                                type="button"
+                                className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
+                                onClick={() => {
+                                    append(defaultValueTask);
+                                }}
+                            >
+                                {t("step-data.add_learning_activity")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

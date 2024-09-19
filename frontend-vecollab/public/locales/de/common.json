@@ -13,6 +13,7 @@
   "age": "Alter",
   "from": "von",
   "to": "bis",
+  "optional": "optional",
   "designer_field_maxlength500": "Das Feld darf nicht mehr als 500 Buchstaben enthalten.",
   "designer_field_realistic_number": "Bitte geben sie eine realistische Zahl ein",
   "designer_field_only_positive_number": "Bitte nur ganze postive Zahlen",

@@ -8,6 +8,7 @@ import {
 import Tools from '@/components/VE-designer/FinePlanner/Tools';
 import { RxPlus } from 'react-icons/rx';
 import Material from './Material';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     taskIndex: number;
@@ -17,6 +18,8 @@ const defaultValueTools: IToolsFrontend = { name: '' };
 const defaultValueMedia: IMaterialFrontend = { name: '' };
 
 export default function Tasks({ taskIndex }: Props) {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const { register, formState, control } = useFormContext<IFineStepFrontend>();
     const {
         fields: fieldsTools,
@@ -58,7 +61,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="task_formulation" className="px-2 py-2">
-                        Aufgabenstellung
+                        {t("step-data.task")}
                     </label>
                 </div>
                 <div className="w-5/6">
@@ -66,7 +69,7 @@ export default function Tasks({ taskIndex }: Props) {
                         {...register(`tasks.${taskIndex}.task_formulation`, {
                             maxLength: {
                                 value: 500,
-                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                                message: t("messages.max_length", { count: 500 }),
                             },
                         })}
                         placeholder=""
@@ -80,7 +83,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="work_mode" className="px-2 py-2">
-                        Arbeitsform
+                        {t("step-data.work_mode")}
                     </label>
                 </div>
                 <div className="w-5/6">
@@ -88,7 +91,7 @@ export default function Tasks({ taskIndex }: Props) {
                         {...register(`tasks.${taskIndex}.work_mode`, {
                             maxLength: {
                                 value: 500,
-                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                                message: t("messages.max_length", { count: 500 }),
                             },
                         })}
                         placeholder=""
@@ -102,7 +105,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="notes" className="px-2 py-2">
-                        Notizen
+                        {t("step-data.notes")}
                     </label>
                 </div>
                 <div className="w-5/6">
@@ -110,11 +113,11 @@ export default function Tasks({ taskIndex }: Props) {
                         rows={3}
                         {...register(`tasks.${taskIndex}.notes`, {
                             maxLength: {
-                                value: 500,
-                                message: 'Bitte nicht mehr als 500 Zeichen.',
+                                value: 5000,
+                                message: t("messages.max_length", { count: 5000 }),
                             },
                         })}
-                        placeholder="optional"
+                        placeholder={t("common:optional")}
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
@@ -125,7 +128,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="tools" className="px-2 py-2">
-                        Tools
+                        {t("step-data.tools")}
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
@@ -155,7 +158,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-4 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="materials" className="px-2 py-2">
-                        Materialien
+                        {t("step-data.materials")}
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
