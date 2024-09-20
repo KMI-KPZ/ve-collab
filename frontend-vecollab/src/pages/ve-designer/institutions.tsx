@@ -142,7 +142,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {...methods.register(`institutions.${index}.name`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.name?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.name?.message!)}
                         </p>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             <option value={t('institutions.eduinst_other')}>{t('institutions.eduinst_other')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.school_type?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.school_type?.message!)}
                         </p>
                     </div>
                 </div>
@@ -190,7 +190,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {...methods.register(`institutions.${index}.country`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.country?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.country?.message!)}
                         </p>
                     </div>
                 </div>
@@ -208,7 +208,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {...methods.register(`institutions.${index}.department`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.department?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.department?.message!)}
                         </p>
                     </div>
                 </div>
@@ -305,7 +305,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {institution.department && <>({institution.department})</>}
                         </div>
                     )
-                }))}
+                })}
                 <div className='ml-auto text-right'>
                     <button
                         type='button'

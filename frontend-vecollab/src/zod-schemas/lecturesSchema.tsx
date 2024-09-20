@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 const LectureFormSchema = z.object({
-    name: z.string().max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.'),
-    lecture_type: z.string().max(500, 'Maximal 500 Buchstaben.'),
-    lecture_format: z.string().max(500, 'Maximal 500 Buchstaben.'),
+    name: z.string().max(500, "messages.maxlength500"),
+    lecture_type: z.string().max(500, "messages.maxlength500"),
+    lecture_format: z.string().max(500, "messages.maxlength500"),
     participants_amount: z
         .number({
-            invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+            invalid_type_error: "messages.only_positive_number",
         })
-        .int('Bitte geben sie eine ganze Zahl ein.')
-        .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
-        .lte(999999, 'Bitte geben sie eine realistische Zahl ein.'),
+        .int("messages.only_positive_number")
+        .gte(0, "messages.only_positive_number")
+        .lte(999999, "messages.realistic_number"),
 });
 
 export const LecturesFormSchema = z.object({ lectures: z.array(LectureFormSchema) });

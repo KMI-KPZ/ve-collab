@@ -4,27 +4,27 @@ const StepNameFormSchema = z
     .object({
         name: z
             .string()
-            .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.')
-            .min(1, { message: 'Ein Etappen-Name ist erforderlich' }),
-        timestamp_from: z.string().date('Bitte ein gültiges Datum eingeben'), // it is still a string
-        timestamp_to: z.string().date('Bitte ein gültiges Datum eingeben'),
+            .max(200, "messages.maxlength200")
+            .min(1, { message: "messages.required_field_gen" }),
+        timestamp_from: z.string().date("messages.valid_date"), // it is still a string
+        timestamp_to: z.string().date("messages.valid_date"),
         workload: z
             .number({
-                invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+                invalid_type_error: "messages.only_positive_number",
             })
-            .int('Bitte geben sie eine ganze Zahl ein.')
-            .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
-            .lte(999, 'Bitte geben sie eine realistische Zahl ein.'),
+            .int("messages.only_positive_number")
+            .gte(0, "messages.only_positive_number")
+            .lte(999, "messages.realistic_number"),
         learning_goal: z
             .string()
-            .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.'),
+            .max(500, "messages.maxlength500"),
     })
     .refine(
         (data) =>
             new Date(data.timestamp_from) >= new Date(1950, 0) &&
             new Date(data.timestamp_from) <= new Date(2100, 0),
         {
-            message: 'Von: Bitte geben sie ein realistisches Datum an',
+            message: "messages.realistic_date",
             path: ['timestamp_from'], // This will attach the error message to the `timestamp_from` field
         }
     )
@@ -33,7 +33,7 @@ const StepNameFormSchema = z
             new Date(data.timestamp_to) >= new Date(1950, 0) &&
             new Date(data.timestamp_to) <= new Date(2100, 0),
         {
-            message: 'Bis: Bitte geben sie ein realistisches Datum an',
+            message: "messages.",
             path: ['timestamp_to'],
         }
     )
@@ -41,12 +41,12 @@ const StepNameFormSchema = z
         if (new Date(data.timestamp_from) > new Date(data.timestamp_to)) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                message: "messages.start_date_before_end_date",
                 path: ['timestamp_from'],
             });
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                message: "messages.",
                 path: ['timestamp_to'],
             });
         }
@@ -54,7 +54,7 @@ const StepNameFormSchema = z
 
 export const StepNamesFormSchema = z
     .object({
-        stepNames: z.array(StepNameFormSchema).min(1, 'Es muss mindestens eine Etappe geben.'),
+        stepNames: z.array(StepNameFormSchema).min(1, "messages.at_least_one"),
     })
     .superRefine((data, ctx) => {
         // check unique step names
@@ -65,7 +65,7 @@ export const StepNamesFormSchema = z
                 if (stepNames.indexOf(step.name) !== index) {
                     ctx.addIssue({
                         code: z.ZodIssueCode.custom,
-                        message: 'Bitte wählen Sie für jede Etappe einen einzigartigen Namen',
+                        message: "messages.unique_name",
                         path: ['stepNames', index, 'name'],
                     });
                 }

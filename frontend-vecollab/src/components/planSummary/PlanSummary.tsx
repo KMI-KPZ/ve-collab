@@ -277,11 +277,11 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                         </div>
                         <div className="text-red-600 pt-2 flex justify-center">
                             {methods.formState.errors?.step?.name &&
-                                methods.formState.errors?.step?.name?.message}
+                                t(methods.formState.errors?.step?.name?.message!)}
                             {methods.formState.errors?.step?.timestamp_from &&
-                                methods.formState.errors?.step?.timestamp_from?.message}
+                                t(methods.formState.errors?.step?.timestamp_from?.message!)}
                             {methods.formState.errors?.step?.timestamp_to &&
-                                methods.formState.errors?.step?.timestamp_to?.message}
+                                t(methods.formState.errors?.step?.timestamp_to?.message!)}
                         </div>
                         <div className="text-right mt-2">
                             {loadingImport && <LoadingAnimation size="small" />}

@@ -135,7 +135,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.lectures?.[index]?.name?.message}
+                            {t(methods.formState.errors?.lectures?.[index]?.name?.message!)}
                         </p>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             <option value={t('lectures.elective')}>{t('lectures.elective')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.lectures?.[index]?.lecture_type?.message}
+                            {t(methods.formState.errors?.lectures?.[index]?.lecture_type?.message!)}
                         </p>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             <option value={t('lectures.hybrid')}>{t('lectures.hybrid')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.lectures?.[index]?.lecture_format?.message}
+                            {t(methods.formState.errors?.lectures?.[index]?.lecture_format?.message!)}
                         </p>
                     </div>
                 </div>
@@ -197,8 +197,8 @@ export default function Lectures({ socket }: Props): JSX.Element {
                         />
                         <p className="text-red-600 pt-2">
                             {
-                                methods.formState.errors?.lectures?.[index]?.participants_amount
-                                    ?.message
+                                t(methods.formState.errors?.lectures?.[index]?.participants_amount
+                                    ?.message!)
                             }
                         </p>
                     </div>

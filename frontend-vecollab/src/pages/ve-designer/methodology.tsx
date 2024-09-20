@@ -135,7 +135,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         (error, index) =>
                             error?.value?.message && (
                                 <p key={index} className="text-red-600 pt-2">
-                                    {error.value.message}
+                                    {t(error.value.message)}
                                 </p>
                             )
                     )}

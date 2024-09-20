@@ -1,13 +1,23 @@
 {
     "messages": {
+        "maxlength1000": "The field must not contain more than 1000 letters.",
+        "maxlength800": "The field must not contain more than 800 letters.",
         "maxlength500": "The field must not contain more than 500 letters.",
+        "maxlength200": "The field must not contain more than 200 letters.",
+        "maxlength100": "The field must not contain more than 100 letters.",
         "realistic_number": "Please enter a realistic number",
         "only_positive_number": "Please only whole positive numbers",
         "no_special_chars": "Only the following special characters are permitted: _*+\":,&()!?-",
         "start_date_before_end_date": "The start date must be before the end date",
         "required_field": "Please fill out the field '{{field}}'",
+        "required_field_gen": "Please fill out the field",
         "unique_name": "Please choose a unique name",
-        "max_length": "The field must not contain more than {{count}} letters."
+        "max_length": "The field must not contain more than {{count}} letters.",
+        "please_yes_or_no": "Please select Yes or No",
+        "atleast_one_field": "There must be at least one entry",
+        "valid_date": "Please enter a valid date",
+        "realistic_date": "Please enter a realistic date",
+        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file."
     },
     "save_and_continue": "Save & Continue",
     "proceed_without_saving": "Continue without saving",
@@ -94,7 +104,8 @@
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
         "languages": "Language",
-        "languages_placeholder": "Enter languages, separate several by comma"
+        "languages_placeholder": "Enter languages, separate several by comma",
+        "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age."
     },
     "goals": {
         "title": "Learning objectives & topics",
@@ -205,7 +216,9 @@
         "description": "Create as many phases as you like and assign a time frameto each of them. Important: Each phase requires a unique name (e.g. Group Work Phase I, Group Work Phase II). The phases you define will serve as your structure and overview.. You can then elaborate them in the detailed planning.",
         "tooltip_text": "You can find detailed information on planning and different types and models of VE in the e-learning materials.",
         "import_phases": "Import phases",
-        "new_phase": "New phase"
+        "new_phase": "New phase",
+        "at_least_one": "There must be at least one stage.",
+        "unique_name": "Please choose a unique name for each stage"
     },
     "step-data": {
         "imported_from": "Imported from:",

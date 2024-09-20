@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const CheckListPartnerFormSchema = z.object({
-    username: z.string().max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+    username: z.string().max(200, "messages.maxlength200"),
     time: z.boolean(),
     format: z.boolean(),
     topic: z.boolean(),

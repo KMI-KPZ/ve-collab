@@ -219,12 +219,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         )}
                                     />
                                 </div>
-                                <p className="flex justify-center text-red-600 pb-2">
-                                    {
-                                        methods.formState.errors?.evaluationPerPartner?.[index]
-                                            ?.task_type?.message
-                                    }
-                                </p>
+                                {methods.formState.errors?.evaluationPerPartner?.[index]?.task_type &&
+                                    <p className="flex justify-center text-red-600 pb-2">
+                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.task_type?.message!)}
+                                    </p>
+                                }
                                 <div className="flex items-center justify-between my-1">
                                     <p className="">{t('evaluation.typeOf')}</p>
                                     <input
@@ -236,12 +235,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         placeholder={t('evaluation.typeOfPlaceholder')}
                                     />
                                 </div>
-                                <p className="flex justify-center text-red-600 pb-2">
-                                    {
-                                        methods.formState.errors?.evaluationPerPartner?.[index]
-                                            ?.assessment_type?.message
-                                    }
-                                </p>
+                                {methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type &&
+                                    <p className="flex justify-center text-red-600 pb-2">
+                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type?.message!)}
+                                    </p>
+                                }
                             </>
                         )}
                         <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
@@ -258,12 +256,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.whilePlaceholder')}
                             />
                         </div>
-                        <p className="flex justify-center text-red-600 pb-2">
-                            {
-                                methods.formState.errors?.evaluationPerPartner?.[index]
-                                    ?.evaluation_while?.message
-                            }
-                        </p>
+                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while &&
+                            <p className="flex justify-center text-red-600 pb-2">
+                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while?.message!)}
+                            </p>
+                        }
                         <div className="flex items-center justify-between my-1">
                             <div>
                                 <p>{t('evaluation.after')}</p>
@@ -276,12 +273,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.afterPlaceholder')}
                             />
                         </div>
-                        <p className="flex justify-center text-red-600 pb-2">
-                            {
-                                methods.formState.errors?.evaluationPerPartner?.[index]
-                                    ?.evaluation_after?.message
-                            }
-                        </p>
+                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after &&
+                            <p className="flex justify-center text-red-600 pb-2">
+                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after?.message!)}
+                            </p>
+                        }
                     </div>
                 </div>
             </div>

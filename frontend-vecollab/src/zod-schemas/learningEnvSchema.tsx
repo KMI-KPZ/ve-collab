@@ -1,23 +1,23 @@
 import { z } from 'zod';
 
 export const LearningEnvFormSchema = z.object({
-    learningEnv: z.string().max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
-    courseFormat: z.string().max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
+    learningEnv: z.string().max(800, "messages.maxlength800"),
+    courseFormat: z.string().max(800, "messages.maxlength800"),
     usePhysicalMobility: z.boolean({
-        required_error: 'Bitte Ja oder Nein auswählen',
-        invalid_type_error: 'Bitte Ja oder Nein auswählen',
+        required_error: "messages.please_yes_or_no",
+        invalid_type_error: "messages.please_yes_or_no",
     }),
     physicalMobilities: z
         .object({
             location: z
                 .string()
-                .max(400, 'Ein gültiges Thema darf maximal 400 Buchstaben lang sein.'),
+                .max(400, "messages.maxlength400"),
             timestamp_from: z.union([
-                z.string().date('Bitte ein gültiges Datum eingeben'),
+                z.string().date("messages.valid_date"),
                 z.string().max(0),
             ]), // it is still a string
             timestamp_to: z.union([
-                z.string().date('Bitte ein gültiges Datum eingeben'),
+                z.string().date("messages.valid_date"),
                 z.string().max(0),
             ]),
         })
@@ -30,7 +30,7 @@ export const LearningEnvFormSchema = z.object({
                 );
             },
             {
-                message: 'Von: Bitte geben sie ein realistisches Datum an',
+                message: "messages.realistic_date",
                 path: ['timestamp_from'], // This will attach the error message to the `timestamp_from` field
             }
         )
@@ -43,7 +43,7 @@ export const LearningEnvFormSchema = z.object({
                 );
             },
             {
-                message: 'Bis: Bitte geben sie ein realistisches Datum an',
+                message: "messages.realistic_date",
                 path: ['timestamp_to'],
             }
         )
@@ -55,12 +55,12 @@ export const LearningEnvFormSchema = z.object({
             ) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                    message: "messages.start_date_before_end_date",
                     path: ['timestamp_from'],
                 });
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: 'Das Startdatum muss an oder vor dem Enddatum liegen',
+                    message: "messages.start_date_before_end_date",
                     path: ['timestamp_to'],
                 });
             }

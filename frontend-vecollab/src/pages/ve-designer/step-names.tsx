@@ -409,32 +409,32 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_from?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.timestamp_to && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_to?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.name && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.name
-                                                    ?.message
+                                                t(methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.workload && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.workload?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message!)
                                             }
                                         </p>
                                     )}

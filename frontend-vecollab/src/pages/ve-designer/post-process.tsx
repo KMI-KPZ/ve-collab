@@ -448,7 +448,7 @@ export default function PostProcess({ socket }: Props) {
                                     </div>
                                     {methods.formState.errors?.evaluationFile?.message && (
                                         <p className="text-red-500">
-                                            {methods.formState.errors?.evaluationFile?.message}
+                                            {t(methods.formState.errors?.evaluationFile?.message)}
                                         </p>
                                     )}
                                 </div>
@@ -534,9 +534,9 @@ export default function PostProcess({ socket }: Props) {
                                                     ?.file?.message && (
                                                     <p className="text-red-500">
                                                         {
-                                                            methods.formState.errors
+                                                            t(methods.formState.errors
                                                                 ?.literatureFiles?.[index]?.file
-                                                                ?.message
+                                                                ?.message)
                                                         }
                                                     </p>
                                                 )}
@@ -545,7 +545,7 @@ export default function PostProcess({ socket }: Props) {
                                     </div>
                                     {methods.formState.errors?.literatureFiles?.message && (
                                         <p className="text-red-500">
-                                            {methods.formState.errors?.literatureFiles?.message}
+                                            {t(methods.formState.errors?.literatureFiles?.message)}
                                         </p>
                                     )}
                                 </div>

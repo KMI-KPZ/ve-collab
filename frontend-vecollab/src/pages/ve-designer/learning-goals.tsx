@@ -272,7 +272,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                 </button>
                             </div>
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.topics?.[index]?.name?.message}
+                                {t(methods.formState.errors?.topics?.[index]?.name?.message!)}
                             </p>
                         </div>
                     ))}
@@ -335,9 +335,9 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                     ></textarea>
                                     <p className="text-red-600 pt-2">
                                         {
-                                            methods.formState.errors?.individualLearningGoals?.[
+                                            t(methods.formState.errors?.individualLearningGoals?.[
                                                 index
-                                            ]?.learningGoal?.message
+                                            ]?.learningGoal?.message!)
                                         }
                                     </p>
                                 </div>
@@ -369,7 +369,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     {createableSelect(methods.control, 'majorLearningGoals', options)}
                 </div>
                 <p className="text-red-600 pt-2">
-                    {methods.formState.errors?.majorLearningGoals?.message}
+                    {t(methods.formState.errors?.majorLearningGoals?.message!)}
                 </p>
             </div>
             <div className="mt-12">

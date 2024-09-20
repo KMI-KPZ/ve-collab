@@ -172,7 +172,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.name?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.name?.message!)}
                         </p>
                     </div>
                 </div>
@@ -193,7 +193,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2 mr-4">
-                                {methods.formState.errors?.targetGroups?.[index]?.age_min?.message}
+                                {t(methods.formState.errors?.targetGroups?.[index]?.age_min?.message!)}
                             </p>
                         </div>
                         <div>
@@ -206,7 +206,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.targetGroups?.[index]?.age_max?.message}
+                                {t(methods.formState.errors?.targetGroups?.[index]?.age_max?.message!)}
                             </p>
                         </div>
                     </div>
@@ -225,7 +225,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.experience?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.experience?.message!)}
                         </p>
                     </div>
                 </div>
@@ -244,8 +244,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                         />
                         <p className="text-red-600 pt-2">
                             {
-                                methods.formState.errors?.targetGroups?.[index]?.academic_course
-                                    ?.message
+                                t(methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                    ?.message!)
                             }
                         </p>
                     </div>
@@ -264,7 +264,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.languages?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.languages?.message!)}
                         </p>
                     </div>
                 </div>
@@ -298,7 +298,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.languages?.[index]?.language?.message && (
                     <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.languages?.[index]?.language?.message}
+                        {t(methods.formState.errors?.languages?.[index]?.language?.message!)}
                     </p>
                 )}
             </div>

@@ -3,35 +3,35 @@ import { z } from 'zod';
 export const TargetGroupsFormSchema = z.object({
     targetGroups: z
         .object({
-            name: z.string().max(300, 'Ein gültiger Name darf maximal 300 Buchstaben lang sein.'),
+            name: z.string().max(200, "messages.maxlength200"),
             age_min: z
                 .number({
-                    invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+                    invalid_type_error: "messages.only_positive_number",
                 })
-                .int('Bitte geben sie eine ganze Zahl ein.')
-                .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
-                .lte(150, 'Bitte geben sie eine realistische Zahl ein.'),
+                .int("messages.only_positive_number")
+                .gte(0, "messages.only_positive_number")
+                .lte(150, "messages.realistic_number"),
             age_max: z
                 .number({
-                    invalid_type_error: 'Bitte geben sie eine ganze Zahl ein.',
+                    invalid_type_error: "messages.only_positive_number",
                 })
-                .int('Bitte geben sie eine ganze Zahl ein.')
-                .gte(0, 'Bitte geben sie eine positive ganze Zahl ein.')
-                .lte(150, 'Bitte geben sie eine realistische Zahl ein.'),
+                .int("messages.only_positive_number")
+                .gte(0, "messages.")
+                .lte(150, "messages."),
             experience: z
                 .string()
-                .max(800, 'Ein gültiger Name darf maximal 800 Buchstaben lang sein.'),
+                .max(800, "messages.maxlength800"),
             // TODO string array
             academic_course: z
                 .string()
-                .max(400, 'Ein gültiger Name darf maximal 400 Buchstaben lang sein.'),
+                .max(500, "messages.maxlength500"),
             // TODO string array
             languages: z
                 .string()
-                .max(400, 'Ein gültiger Name darf maximal 400 Buchstaben lang sein.'),
+                .max(500, "messages.maxlength500"),
         })
         .refine((data) => data.age_min <= data.age_max, {
-            message: 'Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.',
+            message: "messages.min_age_less_max_age",
             path: ['age_max'], // This will show the error message at the age_min field
         })
         .array(),
@@ -39,7 +39,7 @@ export const TargetGroupsFormSchema = z.object({
         .object({
             language: z
                 .string()
-                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.'),
+                .max(200, "messages.maxlength200"),
         })
         .array(),
 });

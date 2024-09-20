@@ -179,7 +179,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         />
                     </div>
                     <p className="flex justify-center text-red-600 pb-2">
-                        {methods.formState.errors?.physicalMobilities?.[index]?.location?.message}
+                        {t(methods.formState.errors?.physicalMobilities?.[index]?.location?.message!)}
                     </p>
                     <div className="flex justify-between">
                         <div className="flex items-center">
@@ -201,14 +201,14 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     </div>
                     <p className="flex justify-center text-red-600 pt-2">
                         {
-                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_from
-                                ?.message
+                            t(methods.formState.errors?.physicalMobilities?.[index]?.timestamp_from
+                                ?.message!)
                         }
                     </p>
                     <p className="flex justify-center text-red-600 pt-2">
                         {
-                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_to
-                                ?.message
+                            t(methods.formState.errors?.physicalMobilities?.[index]?.timestamp_to
+                                ?.message!)
                         }
                     </p>
                 </div>
@@ -284,7 +284,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     {...methods.register('learningEnv')}
                 />
                 <p className="text-red-600 pt-2">
-                    {methods.formState.errors?.learningEnv?.message}
+                    {t(methods.formState.errors?.learningEnv?.message!)}
                 </p>
             </div>
 

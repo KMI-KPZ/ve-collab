@@ -84,7 +84,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     autoComplete="off"
                     {...methods.register('name')}
                 />
-                <p className="text-red-600 pt-2">{methods.formState.errors.name?.message}</p>
+                <p className="text-red-600 pt-2">{t(methods.formState.errors.name?.message!)}</p>
             </div>
         </Wrapper>
     );
