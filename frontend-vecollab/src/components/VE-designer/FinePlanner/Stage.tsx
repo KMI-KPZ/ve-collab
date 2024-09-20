@@ -1,5 +1,4 @@
 import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
-import WhiteBox from '@/components/common/WhiteBox';
 import React from 'react';
 import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/[stepName]';
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
@@ -88,12 +87,8 @@ export default function Stage({ fineStep }: Props) {
     }
 
     return (
-        <div className="">
-            <div className="">
-                {/* <div className="flex">
-                        <div className="font-bold text-xl mx-2">Etappe:</div>
-                        <div className="font-bold text-xl">{fineStep.name}</div>
-                    </div> */}
+        <div>
+            <div>
                 <div className="flex">
                     <div className="font-bold mx-2">{t("step-data.time_frame")}</div>
                     <div className="mx-2">
@@ -109,12 +104,7 @@ export default function Stage({ fineStep }: Props) {
                 </div>
                 <div className="w-5/6">
                     <textarea
-                        {...register(`learning_activity`, {
-                            maxLength: {
-                                value: 500,
-                                message: t("messages.max_length", { count: 500 }),
-                            },
-                        })}
+                        {...register(`learning_activity`)}
                         rows={2}
                         placeholder={t("step-data.learning_activities_placeholder")}
                         className="border border-gray-400 rounded-lg w-full p-2"

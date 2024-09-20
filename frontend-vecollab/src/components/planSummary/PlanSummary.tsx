@@ -15,7 +15,7 @@ import Alert, { AlertState } from '../common/dialogs/Alert';
 import { socket } from '@/lib/socket';
 import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
-import { dropPlanLock } from '../VE-designer/PlanSocket';
+import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
@@ -92,25 +92,8 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
             return;
         }
 
-        // TODO move to seperate file for reusage
-        const getPlanLock = () => {
-            return new Promise((resolve, reject) => {
-                socket.emit(
-                    'try_acquire_or_extend_plan_write_lock',
-                    { plan_id: importStep2Plan.plan!._id },
-                    async (response: any) => {
-                        // console.log('try_acquire_or_extend_plan_write_lock', { response });
-                        if (response.success === true && response.status !== 403) {
-                            return resolve(true);
-                        }
-                        reject(false);
-                    }
-                );
-            });
-        };
-
-        const planLock = await getPlanLock();
-        if (!planLock) {
+        const planLock = await getPlanLock(socket, importStep2Plan.plan!._id)
+        if (planLock.reason === 'plan_locked') {
             setAlert({
                 message: t('plan_summary_import_error_plan_locked'),
                 type: 'warning',

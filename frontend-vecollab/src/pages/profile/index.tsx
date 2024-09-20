@@ -1,4 +1,3 @@
-import Container from '@/components/common/Container';
 import PersonalData from '@/components/profile/PersonalData';
 import ProfileBanner from '@/components/profile/profile-banner';
 import ProfileHeader from '@/components/profile/profile-header';
@@ -185,7 +184,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
             {loading ? (
                 <LoadingAnimation />
             ) : (
-                <Container>
+                <>
                     <ProfileBanner
                         follows={follows}
                         setFollows={setFollows}
@@ -213,44 +212,42 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                             veReady={veReady}
                         />
                     </div>
-                    <Container>
-                        <div className={'mx-20 flex'}>
-                            <div className={'w-3/4  mr-4'}>
-                                <WhiteBox>
-                                    <ExtendedPersonalInformation
-                                        veInfo={veInformation}
-                                        researchAndTeachingInfo={researchandTeachingInformation}
-                                        cvInfo={{ educations, workExperience }}
-                                    />
-                                </WhiteBox>
-                                <BoxHeadline title="Timeline" />
-                                {foreignUser ? (
-                                    <Timeline socket={socket} user={router.query.username as string} />
-                                ) : (
-                                    <Timeline socket={socket} />
-                                )}
-                            </div>
-                            <div className={'w-1/4  ml-4'}>
-                                <WhiteBox>
-                                    <PersonalData
-                                        name={
-                                            personalInformation.firstName +
-                                            ' ' +
-                                            personalInformation.lastName
-                                        }
-                                        bio={personalInformation.bio}
-                                        expertise={personalInformation.expertise}
-                                        birthday={personalInformation.birthday}
-                                        languages={personalInformation.languages}
-                                    />
-                                </WhiteBox>
-                                <WhiteBox>
-                                    <VEVitrine items={veWindowItems} />
-                                </WhiteBox>
-                            </div>
+                    <div className={'mx-20 flex'}>
+                        <div className={'w-3/4  mr-4'}>
+                            <WhiteBox>
+                                <ExtendedPersonalInformation
+                                    veInfo={veInformation}
+                                    researchAndTeachingInfo={researchandTeachingInformation}
+                                    cvInfo={{ educations, workExperience }}
+                                />
+                            </WhiteBox>
+                            <BoxHeadline title="Timeline" />
+                            {foreignUser ? (
+                                <Timeline socket={socket} user={router.query.username as string} />
+                            ) : (
+                                <Timeline socket={socket} />
+                            )}
                         </div>
-                    </Container>
-                </Container>
+                        <div className={'w-1/4  ml-4'}>
+                            <WhiteBox>
+                                <PersonalData
+                                    name={
+                                        personalInformation.firstName +
+                                        ' ' +
+                                        personalInformation.lastName
+                                    }
+                                    bio={personalInformation.bio}
+                                    expertise={personalInformation.expertise}
+                                    birthday={personalInformation.birthday}
+                                    languages={personalInformation.languages}
+                                />
+                            </WhiteBox>
+                            <WhiteBox>
+                                <VEVitrine items={veWindowItems} />
+                            </WhiteBox>
+                        </div>
+                    </div>
+                </>
             )}
         </>
     );

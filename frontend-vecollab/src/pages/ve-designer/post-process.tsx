@@ -8,10 +8,6 @@ import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import {
-    ISideProgressBarStates,
-    initialSideProgressBarStates,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -52,12 +48,9 @@ export default function PostProcess({ socket }: Props) {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
-    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);
-    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();
-    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);
+    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);;
+    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();;
+    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);;
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -109,9 +102,9 @@ export default function PostProcess({ socket }: Props) {
                     });
                 });
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
+            // if (Object.keys(plan.progress).length) {
+            //     setSideMenuStepsProgress(plan.progress);
+            // }
 
             return {
                 abstract: plan.abstract,
@@ -292,7 +285,7 @@ export default function PostProcess({ socket }: Props) {
                             return true;
                         },
                     }}
-                    render={({ field: { ref, name, onBlur, onChange } }) => (
+                    render={({ field: { ref, name, onBlur } }) => (
                         <>
                             <label
                                 className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"

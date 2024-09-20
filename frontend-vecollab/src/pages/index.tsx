@@ -14,7 +14,7 @@ export default function Home(): JSX.Element {
     const { t } = useTranslation('common')
 
     return (
-        <div className="bg-slate-100 bg-pattern-left-blue bg-no-repeat">
+        <div>
             <div className="flex flex-col m-auto p-12 max-w-screen-2xl items-center">
                 <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl bg-footer-pattern-rounded">
                     <h1 className='text-center content-center text-white font-bold uppercase text-2xl md:text-4xl'>

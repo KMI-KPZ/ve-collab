@@ -66,12 +66,7 @@ export default function Tasks({ taskIndex }: Props) {
                 </div>
                 <div className="w-5/6">
                     <input
-                        {...register(`tasks.${taskIndex}.task_formulation`, {
-                            maxLength: {
-                                value: 500,
-                                message: t("messages.max_length", { count: 500 }),
-                            },
-                        })}
+                        {...register(`tasks.${taskIndex}.task_formulation`)}
                         placeholder=""
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
@@ -88,12 +83,7 @@ export default function Tasks({ taskIndex }: Props) {
                 </div>
                 <div className="w-5/6">
                     <input
-                        {...register(`tasks.${taskIndex}.work_mode`, {
-                            maxLength: {
-                                value: 500,
-                                message: t("messages.max_length", { count: 500 }),
-                            },
-                        })}
+                        {...register(`tasks.${taskIndex}.work_mode`)}
                         placeholder=""
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
@@ -111,12 +101,7 @@ export default function Tasks({ taskIndex }: Props) {
                 <div className="w-5/6">
                     <textarea
                         rows={3}
-                        {...register(`tasks.${taskIndex}.notes`, {
-                            maxLength: {
-                                value: 5000,
-                                message: t("messages.max_length", { count: 5000 }),
-                            },
-                        })}
+                        {...register(`tasks.${taskIndex}.notes`)}
                         placeholder={t("common:optional")}
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />

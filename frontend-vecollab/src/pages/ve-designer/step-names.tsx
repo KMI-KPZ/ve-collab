@@ -33,6 +33,8 @@ import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -99,6 +101,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(StepNamesFormSchema),
         defaultValues: {
             stepNames: [
                 {
@@ -119,7 +122,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
     });
 
-    const { fields, append, remove, move, update, replace } = useFieldArray({
+    const { fields, append, remove, move, replace, update } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
@@ -139,7 +142,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 setSteps(plan.steps);
                 // DIRTY hack to initial set the size of our textareas
                 setTimeout(() => {
-                    plan.steps?.map((step, i) =>
+                    plan.steps?.map((_, i) =>
                         adjustTextareaSize(
                             document.querySelector(`textarea[name='stepNames.${i}.learning_goal']`)
                         )
@@ -154,11 +157,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
         [replace]
     );
-
-    const checkIfNamesAreUnique = (stepNames: IFineStep[]): boolean => {
-        const stepNamesNames = stepNames.map((stepName) => stepName.name);
-        return new Set(stepNamesNames).size !== stepNames.length;
-    };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
@@ -200,23 +198,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
         ];
     };
 
-    const validateDateRange = (fromValue: string, indexFromTo: number) => {
-        const fromDate = new Date(fromValue);
-        const toDate = new Date(methods.watch(`stepNames.${indexFromTo}.timestamp_to`));
-        if (fromDate > toDate) {
-            return t("messages.start_date_before_end_date");
-        } else {
-            return true;
-        }
-    };
-
     const handleDelete = (index: number): void => {
-        remove(index);
-        // if (fields.length > 1) {
-        //     remove(index);
-        // } else {
-        //     update(index, emptyStepData);
-        // }
+        if (fields.length > 1) {
+            remove(index);
+        } else {
+            update(index, emptyStepData);
+        }
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -299,7 +286,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                             new Date(a.last_modified).getTime()
                         );
                     })
-                    .map((plan, i) => (
+                    .map((plan) => (
                         <div key={plan._id}>
                             <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
                                 <MdNewspaper />
@@ -320,7 +307,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <Timestamp timestamp={plan.last_modified} className="text-sm" />
                                 </span>
                             </div>
-                            {plan.steps.map((step, j) => (
+                            {plan.steps.map((step) => (
                                 <div
                                     key={step._id}
                                     className="ml-10 hover:cursor-pointer flex"
@@ -342,7 +329,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     <button
                         type="button"
                         className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
-                        onClick={(e) => setIsImportStepsDialogOpen(false)}
+                        onClick={() => setIsImportStepsDialogOpen(false)}
                     >
                         {t("common:cancel")}
                     </button>
@@ -366,16 +353,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_from`,
-                                                    {
-                                                        required: {
-                                                            value: true,
-                                                            message:
-                                                                t("messages.required_field", {field: t("common:from")}),
-                                                        },
-                                                        validate: (v) =>
-                                                            validateDateRange(v, index),
-                                                    }
+                                                    `stepNames.${index}.timestamp_from`
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -385,14 +363,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_to`,
-                                                    {
-                                                        required: {
-                                                            value: true,
-                                                            message:
-                                                                t("messages.required_field", {field: t("common:to")}),
-                                                        },
-                                                    }
+                                                    `stepNames.${index}.timestamp_to`
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -401,21 +372,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label className="ml-2">{t("step-names.name")}</label>
                                             <input
                                                 type="text"
-                                                {...methods.register(`stepNames.${index}.name`, {
-                                                    required: {
-                                                        value: true,
-                                                        message: t("messages.required_field", {field: t("common:name")}),
-                                                    },
-                                                    validate: {
-                                                        unique: () => {
-                                                            return (
-                                                                !checkIfNamesAreUnique(
-                                                                    methods.getValues('stepNames')
-                                                                ) || t("messages.unique_name")
-                                                            );
-                                                        },
-                                                    },
-                                                })}
+                                                {...methods.register(`stepNames.${index}.name`)}
                                                 placeholder={t("step-names.name_placeholder")}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -426,17 +383,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 type="number"
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
-                                                    {
-                                                        validate: {
-                                                            positive: (v) => {
-                                                                return (
-                                                                    v >= 0 ||
-                                                                    t("messages.only_positive_number")
-                                                                );
-                                                            },
-                                                        },
-                                                        setValueAs: (v: string) => parseInt(v),
-                                                    }
+                                                    { valueAsNumber: true }
                                                 )}
                                                 placeholder={t("step-names.time_placeholder")}
                                                 className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"

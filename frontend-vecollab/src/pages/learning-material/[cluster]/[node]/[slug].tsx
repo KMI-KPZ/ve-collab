@@ -43,7 +43,7 @@ export default function LearningContentView(props: Props) {
     const ListOfLectionsSidebar = ({lections}:{lections: IMaterialNode[]}) => (
         <ul className="flex flex-col divide-y gap-1 bg-white">
             <li>
-                <div className='font-konnect text-xl pb-2'>Lektionen</div>
+                <div className='font-konnect text-xl pb-2'>Kapitel</div>
             </li>
             {lections.map(node => (
                 <li key={node.id}>
@@ -63,7 +63,7 @@ export default function LearningContentView(props: Props) {
             <Dropdown
                 icon={
                     <div className='flex items-center'>
-                        Lektionen
+                        Kapitel
                         <MdMenu className='mx-2 my-0.5' />
                     </div>
                 }

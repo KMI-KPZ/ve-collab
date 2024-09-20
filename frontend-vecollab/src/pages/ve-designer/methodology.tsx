@@ -12,6 +12,8 @@ import { Socket } from 'socket.io-client';
 import CreatableSelect from 'react-select/creatable';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { MethFormSchema } from '../../zod-schemas/methodologySchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface FormValues {
     methodicalApproaches: MethodicalApproach[];
@@ -20,12 +22,6 @@ interface FormValues {
 interface MethodicalApproach {
     value: string;
     label: string;
-}
-
-export interface PhysicalMobility {
-    location: string;
-    timestamp_from: string;
-    timestamp_to: string;
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
@@ -50,6 +46,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(MethFormSchema),
         defaultValues: {
             methodicalApproaches: [],
         },
@@ -57,13 +54,13 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }))
+            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }));
             methods.setValue('methodicalApproaches', approaches);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {methodicalApproaches: approaches}
+            return { methodicalApproaches: approaches };
         },
         [methods]
     );
@@ -115,22 +112,34 @@ export default function Methodology({ socket }: Props): JSX.Element {
         options: { value: string; label: string }[]
     ): JSX.Element {
         return (
-            <Controller
-                name={name}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <CreatableSelect
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={options}
-                        isClearable={true}
-                        isMulti
-                        closeMenuOnSelect={false}
-                        placeholder={t('methodology.placeholder')}
-                    />
-                )}
-                control={control}
-            />
+            <>
+                <Controller
+                    name={name}
+                    render={({ field: { onChange, onBlur, value, ref } }) => (
+                        <CreatableSelect
+                            ref={ref}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            value={value}
+                            options={options}
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder={t('methodology.placeholder')}
+                        />
+                    )}
+                    control={control}
+                />
+                {Array.isArray(methods.formState.errors.methodicalApproaches) &&
+                    methods.formState.errors.methodicalApproaches.map(
+                        (error, index) =>
+                            error?.value?.message && (
+                                <p key={index} className="text-red-600 pt-2">
+                                    {error.value.message}
+                                </p>
+                            )
+                    )}
+            </>
         );
     }
 

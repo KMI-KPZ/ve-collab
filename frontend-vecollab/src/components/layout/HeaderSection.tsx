@@ -65,10 +65,11 @@ export default function HeaderSection({
         document.dispatchEvent(new Event('mousedown'));
     };
 
-    const handleSelectOption = (value: string) => {
+    const handleSelectOption = async (value: string) => {
         switch (value) {
             case 'logout':
-                signOut();
+                await signOut();
+                router.push('/')
                 break;
             case 'profil':
                 router.push('/profile');

@@ -17,34 +17,24 @@ export default function Plan() {
 
     const username = session?.user.preferred_username;
 
-    const Wrapper = ({ children }: { children: JSX.Element }) => {
+    if (!isLoading && !plan._id) {
         return (
-            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
-                <div className="container mx-auto mb-14 px-5 p-12">{children}</div>
-            </div>
-        );
-    };
-
-    if (!isLoading && !plan) {
-        return (
-            <Wrapper>
-                <div className="flex flex-col items-center justify-center font-bold">
-                    <div className="flex items-center">
-                        <GiSadCrab size={60} className="m-4" />
-                        <div className="text-xl text-slate-900">
-                            Dieser Plan wurde nicht gefunden.
-                        </div>
+            <div className="flex flex-col items-center justify-center font-bold">
+                <div className="flex items-center">
+                    <GiSadCrab size={60} className="m-4" />
+                    <div className="text-xl text-slate-900">
+                        Dieser Plan wurde nicht gefunden.
                     </div>
-                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-                        <Link href="/plans">Zurück zur Übersicht</Link>
-                    </button>
                 </div>
-            </Wrapper>
+                <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+                    <Link href="/plans">Zurück zur Übersicht</Link>
+                </button>
+            </div>
         );
     }
 
     return (
-        <Wrapper>
+        <>
             {isLoading ? (
                 <LoadingAnimation />
             ) : (
@@ -86,6 +76,6 @@ export default function Plan() {
                     </div>
                 </>
             )}
-        </Wrapper>
+        </>
     );
 }

@@ -15,11 +15,13 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 
 export interface TargetGroup {
     name: string;
-    age_min: string;
-    age_max: string;
+    age_min: number;
+    age_max: number;
     experience: string;
     academic_course: string;
     languages: string;
@@ -39,8 +41,8 @@ const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
     formValues.targetGroups.every((targetGroup) => {
         return (
             targetGroup.name === '' &&
-            targetGroup.age_min === '' &&
-            targetGroup.age_max === '' &&
+            targetGroup.age_min === 0 &&
+            targetGroup.age_max === 0 &&
             targetGroup.experience === '' &&
             targetGroup.academic_course === '' &&
             targetGroup.languages === ''
@@ -53,13 +55,13 @@ interface Props {
 
 const emptyTG = {
     name: '',
-    age_min: '',
-    age_max: '',
+    age_min: 0,
+    age_max: 0,
     experience: '',
     academic_course: '',
     languages: '',
-}
-const emptyLanguage = { language: '' }
+};
+const emptyLanguage = { language: '' };
 
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
@@ -73,6 +75,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(TargetGroupsFormSchema),
         defaultValues: {
             targetGroups: [emptyTG],
             languages: [emptyLanguage],
@@ -101,20 +104,19 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const targetGroups = plan.target_groups.length > 0
-                ? plan.target_groups
-                : [emptyTG]
-            replaceTg(targetGroups)
+            const targetGroups = plan.target_groups.length > 0 ? plan.target_groups : [emptyTG];
+            replaceTg(targetGroups);
 
-            const languages = plan.languages.length > 0
-                ? plan.languages.map(language => ({ language }))
-                : [emptyLanguage]
-            replaceLang(languages)
+            const languages =
+                plan.languages.length > 0
+                    ? plan.languages.map((language) => ({ language }))
+                    : [emptyLanguage];
+            replaceLang(languages);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {targetGroups, languages}
+            return { targetGroups, languages };
         },
         [replaceLang, replaceTg]
     );
@@ -147,13 +149,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         ];
     };
 
-    const handleRemoveTg = (index: number) => fieldsTg.length > 1
-        ? removeTg(index)
-        : replaceTg(emptyTG)
+    const handleRemoveTg = (index: number) =>
+        fieldsTg.length > 1 ? removeTg(index) : replaceTg(emptyTG);
 
-    const handleRemoveLang = (index: number) => fieldsLang.length > 1
-        ? removeLang(index)
-        : replaceLang(emptyLanguage);
+    const handleRemoveLang = (index: number) =>
+        fieldsLang.length > 1 ? removeLang(index) : replaceLang(emptyLanguage);
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fieldsTg.map((targetGroup, index) => (
@@ -167,12 +167,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.name`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: t('messages.max_length', {count: 500}),
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.name`)}
                             placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -192,19 +187,12 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_min`, {
-                                    maxLength: {
-                                        value: 4,
-                                        message: t('messages.realistic_number'),
-                                    },
-                                    pattern: {
-                                        value: /^\d+$/,
-                                        message:t('messages.only_positive_number'),
-                                    },
+                                    valueAsNumber: true,
                                 })}
                                 placeholder={t('common:from')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
-                            <p className="text-red-600 pt-2">
+                            <p className="text-red-600 pt-2 mr-4">
                                 {methods.formState.errors?.targetGroups?.[index]?.age_min?.message}
                             </p>
                         </div>
@@ -212,14 +200,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_max`, {
-                                    maxLength: {
-                                        value: 4,
-                                        message: t('messages.realistic_number'),
-                                    },
-                                    pattern: {
-                                        value: /^\d+$/,
-                                        message: t('messages.only_positive_number'),
-                                    },
+                                    valueAsNumber: true,
                                 })}
                                 placeholder={t('common:to')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
@@ -239,12 +220,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <textarea
                             rows={3}
-                            {...methods.register(`targetGroups.${index}.experience`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: t('messages.max_length', {count: 500}),
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.experience`)}
                             placeholder={t('target.relevant_exp_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -262,12 +238,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.academic_course`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: t('messages.max_length', {count: 500}),
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.academic_course`)}
                             placeholder={t('target.degree_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -288,12 +259,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <input
                             type="text"
-                            {...methods.register(`targetGroups.${index}.languages`, {
-                                maxLength: {
-                                    value: 500,
-                                    message: t('messages.max_length', {count: 500}),
-                                },
-                            })}
+                            {...methods.register(`targetGroups.${index}.languages`)}
                             placeholder={t('target.languages_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
@@ -324,16 +290,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                         type="text"
                         placeholder={t('common:enter_language')}
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
-                        {...methods.register(`languages.${index}.language`, {
-                            maxLength: {
-                                value: 500,
-                                message: t('messages.max_length', {count: 500}),
-                            },
-                            pattern: {
-                                value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?-]*$/i,
-                                message: t('messages.no_special_chars'),
-                            },
-                        })}
+                        {...methods.register(`languages.${index}.language`)}
                     />
                     <button type="button" onClick={() => handleRemoveLang(index)}>
                         <RxMinus size={20} />

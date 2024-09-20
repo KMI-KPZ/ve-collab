@@ -19,10 +19,12 @@ import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LearningGoalsFormSchema } from '../../zod-schemas/learningGoalsSchema';
 
 export interface FormValues {
-    majorLearningGoals: MajorLearningGoals[];
     individualLearningGoals: IndividualLearningGoal[];
+    majorLearningGoals: MajorLearningGoals[];
     topics: Topic[];
 }
 
@@ -57,7 +59,7 @@ interface Props {
 
 LearningGoals.auth = true;
 export default function LearningGoals({ socket }: Props): JSX.Element {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
@@ -70,6 +72,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(LearningGoalsFormSchema),
         defaultValues: {
             majorLearningGoals: [],
             individualLearningGoals: [],
@@ -97,18 +100,18 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             const majGoals = plan.major_learning_goals.map((goals: string) => ({
                 value: goals,
                 label: goals,
-            }))
+            }));
             methods.setValue('majorLearningGoals', majGoals);
 
             const individGoals = plan.individual_learning_goals.map((goal: any) => ({
                 username: goal.username,
                 learningGoal: goal.learning_goal,
-            }))
+            }));
             replaceLearnings(individGoals);
 
-            let topics = [{ name: '' }]
+            let topics = [{ name: '' }];
             if (plan.topics.length > 0) {
-                topics = plan.topics.map((topic: string) => ({ name: topic }))
+                topics = plan.topics.map((topic: string) => ({ name: topic }));
                 replaceTopics(topics);
             }
             if (Object.keys(plan.progress).length) {
@@ -127,8 +130,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             return {
                 majorLearningGoals: majGoals,
                 individualLearningGoals: individGoals,
-                topics
-            }
+                topics,
+            };
         },
         [methods, replaceLearnings, replaceTopics, session]
     );
@@ -330,6 +333,13 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                             )})
                                         }
                                     ></textarea>
+                                    <p className="text-red-600 pt-2">
+                                        {
+                                            methods.formState.errors?.individualLearningGoals?.[
+                                                index
+                                            ]?.learningGoal?.message
+                                        }
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -358,8 +368,10 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 <div className="w-full lg:w-1/2">
                     {createableSelect(methods.control, 'majorLearningGoals', options)}
                 </div>
+                <p className="text-red-600 pt-2">
+                    {methods.formState.errors?.majorLearningGoals?.message}
+                </p>
             </div>
-
             <div className="mt-12">
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}

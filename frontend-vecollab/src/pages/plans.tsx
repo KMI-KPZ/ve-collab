@@ -93,57 +93,53 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue bg-no-repeat">
-                <div className="container mx-auto mb-14 px-5 p-12">
-                    <div className="flex justify-between mb-6">
-                        <div>
-                            <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
-                            <div className={'text-gray-500 text-xl'}>
-                                {t("plans_overview_subtitle")}
-                            </div>
-                        </div>
-
-                        <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
-                            <div>
-                                {t("matching_question")}
-                            </div>
-                            <Link
-                                href={'/matching'}
-                                className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
-                            >
-                                <MdKeyboardDoubleArrowRight className="inline" /> {t("go_matching")}
-                            </Link>
-                        </div>
+            <div className="flex justify-between mb-6">
+                <div>
+                    <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
+                    <div className={'text-gray-500 text-xl'}>
+                        {t("plans_overview_subtitle")}
                     </div>
+                </div>
 
-                    <PlansBrowserFilter
-                        socket={socket}
-                        filterBy={filterBy}
-                        filterByCallback={handleFilterBy}
-                    />
-
-                    {typeof error !== 'undefined' && (
-                        <Alert
-                            type="error"
-                            message={'Error loading plans. See console for details.'}
-                        />
-                    )}
-
-                    {isLoading ? (
-                        <div className="m-12">
-                            <LoadingAnimation size="small" /> {t("loading_plans")}
-                        </div>
-                    ) : (
-                        <PlansBrowser
-                            plans={sortedPlans}
-                            sortBy={sortBy}
-                            filterBy={filterBy}
-                            sortByCallback={handleSortBy}
-                            refetchPlansCallback={mutate}
-                        />
-                    )}
+                <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
+                    <div>
+                        {t("matching_question")}
+                    </div>
+                    <Link
+                        href={'/matching'}
+                        className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
+                    >
+                        <MdKeyboardDoubleArrowRight className="inline" /> {t("go_matching")}
+                    </Link>
                 </div>
             </div>
+
+            <PlansBrowserFilter
+                socket={socket}
+                filterBy={filterBy}
+                filterByCallback={handleFilterBy}
+            />
+
+            {typeof error !== 'undefined' && (
+                <Alert
+                    type="error"
+                    message={'Error loading plans. See console for details.'}
+                />
+            )}
+
+            {isLoading ? (
+                <div className="m-12">
+                    <LoadingAnimation size="small" /> {t("loading_plans")}
+                </div>
+            ) : (
+                <PlansBrowser
+                    plans={sortedPlans}
+                    sortBy={sortBy}
+                    filterBy={filterBy}
+                    sortByCallback={handleSortBy}
+                    refetchPlansCallback={mutate}
+                />
+            )}
         </>
     );
 }

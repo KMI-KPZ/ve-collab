@@ -9,7 +9,7 @@ import { useRouter } from 'next/router';
 import FeedbackBanner from '../FeedbackBanner';
 
 interface Props {
-    children: React.ReactNode;
+    children: JSX.Element;
     headerBarMessageEvents: any[];
     notificationEvents: Notification[];
     toggleChatWindow(value?: boolean): void
@@ -37,19 +37,19 @@ export default function LayoutSection({
     }
 
     return (
-        <>
+        <div className='flex flex-col min-h-screen bg-slate-100'>
             <HeaderSection
                 notificationEvents={notificationEvents}
                 headerBarMessageEvents={headerBarMessageEvents}
                 toggleChatWindow={toggleChatWindow}
                 toggleNotifWindow={toggleNotifWindow}
             />
-            <main>
+            <main className='flex-1 bg-pattern-left-blue bg-no-repeat min-h-96'>
                 {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
-                <>{children}</>
+                <div className='container mx-auto max-w-screen-2xl'>{children}</div>
             </main>
             <FooterSection />
-        </>
+        </div>
     );
 }

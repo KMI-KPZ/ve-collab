@@ -166,7 +166,8 @@ class VEPlanHandler(BaseHandler):
         GET /planner/get_available
             request all plans that are available to the current user,
             i.e. their own plans and those that he/she has read or write
-            access to.
+            access to and those that are marked as good practise examples
+            (read only).
 
             query params:
 
@@ -1797,7 +1798,17 @@ class VEPlanHandler(BaseHandler):
             plan = planner.get_plan(_id, requesting_username=self.current_user.username)
             plan_dict = plan.to_dict()
             if plan.author:
-                author_snippet = profile_manager.get_profile_snippets([plan.author])[0]
+                profile_snippets = profile_manager.get_profile_snippets([plan.author])
+                if profile_snippets:
+                    author_snippet = profile_snippets[0]
+                else:
+                    author_snippet = {
+                        "username": plan.author,
+                        "first_name": None,
+                        "last_name": None,
+                        "institution": None,
+                        "profile_pic": None,
+                    }
             else:
                 author_snippet = {
                     "username": None,
@@ -1826,7 +1837,8 @@ class VEPlanHandler(BaseHandler):
         not be called manually anywhere else.
 
         Request all available plans for the current user, i.e. their own plans and
-        those that he/she has read/write access to.
+        those that he/she has read/write access to and those that are marked as
+        good practise examples (read only).
 
         Responses:
             200 OK --> contains all available plans in a list of dictionaries

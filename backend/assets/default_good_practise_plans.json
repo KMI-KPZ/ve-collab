@@ -38,9 +38,7 @@
                     "name": "Universität Siegen",
                     "school_type": "Hochschule / Universität / College",
                     "country": "Deutschland",
-                    "departments": [
-                        "Lehramt Staatsexamen und Bachelor Französisch"
-                    ]
+                    "department": "Lehramt Staatsexamen und Bachelor Französisch"
                 },
                 {
                     "_id": {
@@ -49,9 +47,7 @@
                     "name": "Sorbonne Nouvelle - Paris 3",
                     "school_type": "Hochschule / Universität / College",
                     "country": "Frankreich",
-                    "departments": [
-                        "Master Französisch als Fremdsprache (FLE)"
-                    ]
+                    "department": "Master Französisch als Fremdsprache (FLE)"
                 }
             ],
             "topics": [
@@ -101,7 +97,7 @@
                     "learning_goal": "Für die Pariser Studierenden stehen der fachdidaktische Austausch sowie mediendidaktische Fragestellungen im Fokus."
                 }
             ],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": {
                         "$oid": "666139b8d165067323a18078"
@@ -182,7 +178,7 @@
             ],
             "learning_env": "eigene Projektplattform (Google-Webseite mit extern eingebettetem Forum und Materialien)\n",
             "new_content": null,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "Dagmar Abendroth-Timmer",
                     "time": false,
@@ -247,7 +243,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -287,7 +283,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -327,7 +323,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -365,7 +361,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -405,7 +401,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -443,7 +439,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 }
@@ -465,14 +461,14 @@
                 "lectures": "completed",
                 "learning_goals": "completed",
                 "methodical_approach": "completed",
-                "audience": "completed",
+                "target_groups": "completed",
                 "languages": "completed",
                 "evaluation": "completed",
                 "involved_parties": "not_started",
                 "realization": "completed",
                 "learning_env": "completed",
                 "new_content": "not_started",
-                "formalities": "completed",
+                "checklist": "completed",
                 "steps": [
                     {
                         "Vorab-Fragebogen%20zur%20Gruppenbildung": "completed"
@@ -536,9 +532,7 @@
                     "name": "Universität Leipzig",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Deutschland",
-                    "departments": [
-                        "Herder-Institut, Deutsch als Fremd-und Zweitsprache"
-                    ]
+                    "department": "Herder-Institut, Deutsch als Fremd-und Zweitsprache"
                 },
                 {
                     "_id": {
@@ -547,9 +541,7 @@
                     "name": "Dokkyo University",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Japan",
-                    "departments": [
-                        "Abteilung für deutsche Sprache und Kultur"
-                    ]
+                    "department": "Abteilung für deutsche Sprache und Kultur"
                 }
             ],
             "topics": [
@@ -600,7 +592,7 @@
                     "learning_goal": "- Sammeln erster Erfahrungen bei der Betreuung von DaF-Studierenden.\n- Planung, Durchführung und Reflexion eines DaF-Lehr-/Lernprojekts: Lerneranalyse, Formulierung lernerspezifischer Lehr-/Lernziele, Planung des Projektablaufs (Teilziele und -schritte), mediendidaktische Unterstützung des Projekts.\n- Sammeln von Erfahrungen mit VE-Projekten als didaktischem Konzept für den Fremdsprachenunterricht. \n- Reflexion dieser Erfahrungen."
                 }
             ],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": {
                         "$oid": "667bc72b2169d7670df0d3b0"
@@ -670,7 +662,7 @@
             ],
             "learning_env": " Padlet, Slack, Moodle",
             "new_content": null,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "david_fujisawa"
                 },
@@ -725,7 +717,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -763,7 +755,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -801,7 +793,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 }
@@ -818,14 +810,14 @@
                 "lectures": "completed",
                 "learning_goals": "completed",
                 "methodical_approach": "completed",
-                "audience": "completed",
+                "target_groups": "completed",
                 "languages": "completed",
                 "evaluation": "completed",
                 "involved_parties": "not_started",
                 "realization": "completed",
                 "learning_env": "completed",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": [
                     {
                         "Vorbereitungsphase": "not_started"
@@ -879,9 +871,7 @@
                     "name": "Universität Siegen",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Deutschland",
-                    "departments": [
-                        "Romanistik, Sozialwissenschaften"
-                    ]
+                    "department": "Romanistik, Sozialwissenschaften"
                 },
                 {
                     "_id": {
@@ -890,9 +880,7 @@
                     "name": "Gymnasium im Raum Siegen",
                     "school_type": "Schule – Sekundarbereich",
                     "country": "Deutschland",
-                    "departments": [
-                        "Fremdsprachen, SoWi"
-                    ]
+                    "department": "Fremdsprachen, SoWi"
                 },
                 {
                     "_id": {
@@ -901,9 +889,7 @@
                     "name": "İstanbul Üniversitesi-Cerrahpaşa",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Türkei",
-                    "departments": [
-                        "Anglistik"
-                    ]
+                    "department": "Anglistik"
                 },
                 {
                     "_id": {
@@ -912,9 +898,7 @@
                     "name": "Universität Bonn",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Deutschland",
-                    "departments": [
-                        "Interkulturelle Kommunikation und Mehrsprachigkeitsforschung"
-                    ]
+                    "department": "Interkulturelle Kommunikation und Mehrsprachigkeitsforschung"
                 },
                 {
                     "_id": {
@@ -923,9 +907,7 @@
                     "name": "University of Exeter",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Großbritannien",
-                    "departments": [
-                        "School of Education"
-                    ]
+                    "department": "School of Education"
                 },
                 {
                     "_id": {
@@ -934,9 +916,7 @@
                     "name": "Universidad Anáhuac Mayab Mérida",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Mexiko",
-                    "departments": [
-                        "Wirtschaftswissenschaften"
-                    ]
+                    "department": "Wirtschaftswissenschaften"
                 },
                 {
                     "_id": {
@@ -945,9 +925,7 @@
                     "name": "Breda University of Applied Sciences",
                     "school_type": "Fachhochschule/University of Applied Sciences",
                     "country": "Niederlande",
-                    "departments": [
-                        "Französisch"
-                    ]
+                    "department": "Französisch"
                 }
             ],
             "topics": [
@@ -988,7 +966,7 @@
                     "learning_goal": ""
                 }
             ],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": {
                         "$oid": "668cedbc5b82b31d6d6cef22"
@@ -1067,7 +1045,7 @@
             ],
             "learning_env": "Zoom\nPadlet\nMentimeter\nJamboard",
             "new_content": null,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "dagmar_abendroth-timmer",
                     "time": true,
@@ -1132,7 +1110,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1168,7 +1146,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1234,7 +1212,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1285,7 +1263,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1336,7 +1314,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1374,7 +1352,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1411,7 +1389,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1449,7 +1427,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 }
@@ -1471,14 +1449,14 @@
                 "lectures": "completed",
                 "learning_goals": "completed",
                 "methodical_approach": "completed",
-                "audience": "completed",
+                "target_groups": "completed",
                 "languages": "completed",
                 "evaluation": "completed",
                 "involved_parties": "not_started",
                 "realization": "completed",
                 "learning_env": "completed",
                 "new_content": "not_started",
-                "formalities": "completed",
+                "checklist": "completed",
                 "steps": [
                     {
                         "Kick-off mit Schulleitung und interessierten Lehrkräften": "completed"
@@ -1544,9 +1522,7 @@
                     "name": "Dokkyo Universität",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Japan",
-                    "departments": [
-                        "Abteilung für deutsche Sprache und Kultur"
-                    ]
+                    "department": "Abteilung für deutsche Sprache und Kultur"
                 },
                 {
                     "_id": {
@@ -1555,9 +1531,7 @@
                     "name": "Hankuk University of Foreign Studies",
                     "school_type": "Hochschule/Universität/College",
                     "country": "Südkorea",
-                    "departments": [
-                        "Department of German Education"
-                    ]
+                    "department": "Department of German Education"
                 }
             ],
             "topics": [
@@ -1608,7 +1582,7 @@
                     "learning_goal": "- Schreibkompetenzen auf Deutsch weiterentwickeln\n- Erhöhung der Motivation der Studierenden zum Deutschlernen\n- über die entstehenden zwischen­mensch­lichen Kontakte auch einen Beitrag zur Völkerverständigung zu leisten"
                 }
             ],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": {
                         "$oid": "66b060a553500153679a6275"
@@ -1678,7 +1652,7 @@
             ],
             "learning_env": "https://maus-reisen.de",
             "new_content": null,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "david_fujisawa"
                 },
@@ -1733,7 +1707,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1771,7 +1745,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1809,7 +1783,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -1847,7 +1821,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 }
@@ -1864,14 +1838,14 @@
                 "lectures": "completed",
                 "learning_goals": "completed",
                 "methodical_approach": "completed",
-                "audience": "completed",
+                "target_groups": "completed",
                 "languages": "completed",
                 "evaluation": "completed",
                 "involved_parties": "not_started",
                 "realization": "completed",
                 "learning_env": "completed",
                 "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": [
                     {
                         "Vorbereitungsphase": "completed"
@@ -1925,9 +1899,7 @@
                     "name": "Universität Leipzig",
                     "school_type": "Hochschule / Universität / College",
                     "country": "Deutschland",
-                    "departments": [
-                        "Deutsch als Fremdsprache"
-                    ]
+                    "department": "Deutsch als Fremdsprache"
                 },
                 {
                     "_id": {
@@ -1936,9 +1908,7 @@
                     "name": "Ohio University at Athens",
                     "school_type": "Hochschule / Universität / College",
                     "country": "USA",
-                    "departments": [
-                        "Diverse"
-                    ]
+                    "department": "Diverse"
                 }
             ],
             "topics": [
@@ -1980,7 +1950,7 @@
             "methodical_approaches": [
                 "problembasiertes / problemorientiertes Lernen"
             ],
-            "audience": [
+            "target_groups": [
                 {
                     "_id": {
                         "$oid": "66bf63530fa797a13a7b8125"
@@ -2039,7 +2009,7 @@
             ],
             "learning_env": "Blackboard (Ohio, gemeinsame Nutzung für VE-Austausch),\nMoodle (nur Leipzig),\nVoiceThread (beide Gruppen)",
             "new_content": null,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "aketzer",
                     "time": true,
@@ -2091,7 +2061,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -2129,7 +2099,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -2183,7 +2153,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -2221,7 +2191,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -2259,7 +2229,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 },
@@ -2297,7 +2267,7 @@
                             ]
                         }
                     ],
-                    "evaluation_tools": [],
+                    "original_plan": null,
                     "attachments": [],
                     "custom_attributes": {}
                 }
@@ -2324,14 +2294,14 @@
                 "lectures": "completed",
                 "learning_goals": "completed",
                 "methodical_approaches": "completed",
-                "audience": "completed",
+                "target_groups": "completed",
                 "languages": "completed",
                 "evaluation": "completed",
                 "involved_parties": "not_started",
                 "realization": "completed",
                 "learning_env": "completed",
                 "new_content": "not_started",
-                "formalities": "completed",
+                "checklist": "completed",
                 "steps": [
                     {
                         "Kennenlernen,%20IceBreaker": "completed"

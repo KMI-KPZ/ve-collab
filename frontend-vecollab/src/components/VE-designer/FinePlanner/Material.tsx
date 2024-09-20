@@ -18,12 +18,7 @@ export default function Material({ materialsIndex, taskIndex, removeItem }: Prop
         <div className="flex gap-5">
             <input
                 type="text"
-                {...register(`tasks.${taskIndex}.materials.${materialsIndex}.name`, {
-                    maxLength: {
-                        value: 500,
-                        message: t('messages.max_length', { count: 500 }),
-                    },
-                })}
+                {...register(`tasks.${taskIndex}.materials.${materialsIndex}.name`)}
                 placeholder={t("step-data.materials_placeholder")}
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
@@ -37,7 +32,7 @@ export default function Material({ materialsIndex, taskIndex, removeItem }: Prop
                 <RxMinus size={20} />
             </button>
             <p className="text-red-600 pt-2">
-                {formState.errors?.tasks?.[taskIndex]?.materials?.[materialsIndex]?.message}
+                {formState.errors?.tasks?.[taskIndex]?.materials?.[materialsIndex]?.name?.message}
             </p>
         </div>
     );

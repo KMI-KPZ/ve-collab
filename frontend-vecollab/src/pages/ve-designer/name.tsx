@@ -11,6 +11,8 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { NameFormSchema } from '../../zod-schemas/nameSchema';
 
 interface FormValues {
     name: string;
@@ -28,7 +30,10 @@ export default function Name({ socket }: Props): JSX.Element {
         initialSideProgressBarStates
     );
 
-    const methods = useForm<FormValues>({ mode: 'onChange' });
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(NameFormSchema),
+    });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -37,7 +42,7 @@ export default function Name({ socket }: Props): JSX.Element {
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {name: plan.name}
+            return { name: plan.name };
         },
         [methods]
     );
@@ -77,20 +82,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     placeholder={t('name.placeholder')}
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
-                    {...methods.register('name', {
-                        required: {
-                            value: true,
-                            message: t('messages.required_field', {field: 'name'}),
-                        },
-                        maxLength: {
-                            value: 50,
-                            message: t('messages.max_length', {count: 50}),
-                        },
-                        pattern: {
-                            value: /^[a-zA-Z0-9äöüÄÖÜß\s_*+'":&()!?,-]*$/i,
-                            message: t('name.no_special_chars'),
-                        },
-                    })}
+                    {...methods.register('name')}
                 />
                 <p className="text-red-600 pt-2">{methods.formState.errors.name?.message}</p>
             </div>

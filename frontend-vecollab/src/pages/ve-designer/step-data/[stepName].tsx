@@ -18,6 +18,8 @@ import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import { FineStepFormSchema } from '../../../zod-schemas/finestepSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 export interface ITask {
     task_formulation: string;
@@ -121,6 +123,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const stepName: string = router.query.stepName as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
+        resolver: zodResolver(FineStepFormSchema),
         defaultValues: {
             ...defaultFormValueDataFineStepFrontend,
         },

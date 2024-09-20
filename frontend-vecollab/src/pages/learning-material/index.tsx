@@ -80,25 +80,25 @@ export default function PageCategoryNotSelected(props: Props) {
             {/* TOP BUBBLE */}
             {Bubble(1, 'xl:left-[37%] xl:-translate-x-1/1',
                 [
-                    '-top-[1.5rem] -left-[5rem]',
-                    'top-[.5rem] -right-[6.5rem]',
-                    '-bottom-[2.5rem] -right-[7rem]',
-                    '-bottom-[.5rem] -left-[10rem]',
+                    '-top-[1.5rem] -left-[5rem]', //einfuehrung
+                    'top-[.5rem] -right-[6.5rem]', // potenziale
+                    '-bottom-[2.2rem] -right-[7rem]', // herausforderungen
+                    '-bottom-[.5rem] -left-[10rem]', // beispiele aus der praxis
                 ]
             )}
 
             {/* LEFT BUBBLE */}
             {Bubble(2, 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2',
                 [
-                    '-top-[2rem] -left-[7rem]',
-                    '-bottom-[1.5rem] -right-[5rem]',
+                    '-top-[1.5rem] -left-[5rem]', // va-planung
+                    '-bottom-[1.5rem] -right-[5rem]', // evaluation
                 ]
             )}
 
             {/* RIGHT BUBBLE */}
             {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2',
                 [
-                    '-top-[3rem] -left-[5rem]', // digitale medien
+                    '-top-[2.5rem] -left-[5rem]', // digitale medien
                     '-bottom-[3.5rem] -right-[7rem]', // datenschutz
                     'bottom-0 -left-[4rem]', // tools
                     'top-0 -right-[4rem]', // oer
@@ -108,7 +108,7 @@ export default function PageCategoryNotSelected(props: Props) {
             {/* BOTTOM BUBBLE */}
             {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2',
                 [
-                    '-bottom-[.5rem] -left-[11rem]', // interaktion
+                    '-bottom-[.5rem] -left-[10.5rem]', // interaktion
                     '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                     '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
                 ]
@@ -118,56 +118,40 @@ export default function PageCategoryNotSelected(props: Props) {
 
     return (
         <>
-            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue bg-no-repeat">
-                <div className="container mx-auto px-5">
-                    <div className="flex justify-between pt-12 mb-4">
-                        <div>
-                            {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}
-                            {/* <div className="w-fit py-3 px-4 mb-2 font-bold text-4xl text-slate-600 border-b-4 border-ve-collab-blue rounded-md bg-ve-collab-blue-light">
-                                Selbstlernmaterialien
-                            </div> */}
-                            <div className='mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8'>
-                                Selbstlernmaterialien
-                            </div>
-                            <div className={'text-gray-500 text-xl'}>
-                                Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!
-                            </div>
-                        </div>
-                        <div className='flex'>
-                            {isUserAdmin && (
-                                <div className="">
-                                    <Link
-                                        className={'bg-ve-collab-orange text-white rounded-lg px-4 py-2'}
-                                        href={'/learning-material/edit'}
-                                    >
-                                        Bearbeiten
-                                    </Link>
-                                </div>
-                            )}
-                            <Tooltip tooltipsText={"Mehr Infos …"}>
-                                <Link
-                                    href={"/"}
-                                    className="rounded-full shadow bg-slate-50 hover:bg-gray-50 p-2 mx-2"
-                                >
-                                    <PiBookOpenText
-                                        size={30}
-                                        color="#00748f"
-                                        className="inline relative"
-                                    />
-                                </Link>
-                            </Tooltip>
-                        </div>
+            <div className="flex justify-between pt-12 mb-4">
+                <div>
+                    {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}
+                    {/* <div className="w-fit py-3 px-4 mb-2 font-bold text-4xl text-slate-600 border-b-4 border-ve-collab-blue rounded-md bg-ve-collab-blue-light">
+                        Selbstlernmaterialien
+                    </div> */}
+                    <div className='mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8'>
+                        Selbstlernmaterialien
                     </div>
-
-                    <div className='columns-2 gab-6 mb-6'>
-                        Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch.
-                        Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.
-                    </div>
-
-                    <div className="relative mx-8 border-slate-500 border-t xl:mt-6 xl:pt-12 xl:-mb-[3rem]">
-                        <Bubbles />
+                    <div className={'text-gray-500 text-xl'}>
+                        Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!
                     </div>
                 </div>
+                <div className='flex'>
+                    {isUserAdmin && (
+                        <div className="">
+                            <Link
+                                className={'bg-ve-collab-orange text-white rounded-lg px-4 py-2'}
+                                href={'/learning-material/edit'}
+                            >
+                                Bearbeiten
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className='columns-2 gab-6 mb-6'>
+                Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch.
+                Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.
+            </div>
+
+            <div className="relative mx-8 border-slate-500 border-t xl:mt-6 xl:pt-12 xl:-mb-[3rem]">
+                <Bubbles />
             </div>
         </>
     );
