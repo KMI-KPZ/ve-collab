@@ -68,7 +68,7 @@ export default function Wrapper({
 }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['designer', 'common']);
 
     const [loading, setLoading] = useState(true);
     const [popUp, setPopUp] = useState<{
@@ -152,7 +152,7 @@ export default function Wrapper({
                         ? `${userSnippet.first_name} ${userSnippet.last_name}`
                         : response.lock_holder;
                     setAlert({
-                        message: t('designer_wrapper_alert_locked', { name: displayName }),
+                        message: t('alert_locked', { name: displayName }),
                         // autoclose: 10000,
                         type: 'warning',
                         onClose: () => setAlert({ open: false }),
@@ -167,7 +167,7 @@ export default function Wrapper({
             plan.author.username !== session?.user.preferred_username!
         ) {
             setAlert({
-                message: t('designer_wrapper_alert_insufficient_permission'),
+                message: t('alert_insufficient_permission'),
                 type: 'error',
                 onClose: () => setAlert({ open: false }),
             });
@@ -214,7 +214,7 @@ export default function Wrapper({
             if (res.success === false) {
                 console.log({ res });
                 setAlert({
-                    message: t('designer_wrapper_alert_error_save'),
+                    message: t('alert_error_save'),
                     type: 'error',
                     onClose: () => {
                         setAlert({ open: false });
@@ -300,7 +300,7 @@ export default function Wrapper({
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-            <Link href="/plans">{t('designer_wrapper_back_to_overview')}</Link>
+            <Link href="/plans">{t('back_to_overview')}</Link>
         </button>
     );
 
@@ -308,13 +308,13 @@ export default function Wrapper({
         let errorMessage: string;
         switch (error.apiResponse.reason) {
             case 'plan_doesnt_exist':
-                errorMessage = t('plans_alert_doesnt_exist');
+                errorMessage = t('common:plans_alert_doesnt_exist');
                 break;
             case 'insufficient_permission':
-                errorMessage = t('plans_alert_open_insufficient_permission');
+                errorMessage = t('common:plans_alert_open_insufficient_permission');
                 break;
             default:
-                errorMessage = t('plans_alert_open_unexpected_error');
+                errorMessage = t('common:plans_alert_open_unexpected_error');
         }
         return (
             <WrapperBox>
@@ -357,7 +357,7 @@ export default function Wrapper({
                                     const res = await handleSubmit(data);
                                     if (res) {
                                         setAlert({
-                                            message: t('designer_wrapper_alert_saved'),
+                                            message: t('alert_saved'),
                                             autoclose: 2000,
                                             onClose: () => setAlert({ open: false }),
                                         });
@@ -408,6 +408,7 @@ export default function Wrapper({
                                     )}
                                 >
                                     <Breadcrumb />
+                                    {t('designer:back_to_overview')}
 
                                     <div className={'flex justify-between items-start mt-2 mb-2'}>
                                         <h2 className="font-bold text-2xl">{title}</h2>
@@ -468,7 +469,7 @@ export default function Wrapper({
                                                 {typeof prevpage !== 'undefined' && (
                                                     <button
                                                         type="button"
-                                                        title={t("back")}
+                                                        title={t("common:back")}
                                                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                         onClick={methods.handleSubmit(
                                                             // valid
@@ -492,7 +493,7 @@ export default function Wrapper({
                                                             }
                                                         )}
                                                     >
-                                                        {prevPageBtnLabel || t("back")}
+                                                        {prevPageBtnLabel || t("common:back")}
                                                     </button>
                                                 )}
                                             </div>

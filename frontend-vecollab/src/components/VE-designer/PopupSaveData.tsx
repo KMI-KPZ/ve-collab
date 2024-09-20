@@ -14,7 +14,7 @@ export default function PopupSaveData({
     handleContinue,
     handleCancel,
 }: PopupProps): JSX.Element {
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['designer', 'common']);
 
     return (
         <>
@@ -24,18 +24,18 @@ export default function PopupSaveData({
                         <div className="p-4">
                             {type == "unsaved" ? (
                                 <>
-                                    <h5 className="text-xl font-medium mb-4">{t("designer_wrapper_unsaved_changes")}</h5>
+                                    <h5 className="text-xl font-medium mb-4">{t("unsaved_changes")}</h5>
                                     <p className="text-gray-700 mb-6">
-                                        {t("designer_wrapper_unsaved_changes_text")}
+                                        {t("unsaved_changes_text")}
                                         <br />
-                                        {t("are_you_sure")}
+                                        {t("common:are_you_sure")}
                                     </p>
                                 </>
                             ) : (
                                 <>
-                                    <h5 className="text-xl font-medium mb-4">{t("designer_wrapper_invalid_data")}</h5>
+                                    <h5 className="text-xl font-medium mb-4">{t("invalid_data")}</h5>
                                     <p className="text-gray-700 mb-6">
-                                        {t("designer_wrapper_invalid_data_text")}
+                                        {t("invalid_data_text")}
                                     </p>
                                 </>
                             )}
@@ -46,7 +46,7 @@ export default function PopupSaveData({
                                     className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                     onClick={handleCancel}
                                 >
-                                    {t("back")}
+                                    {t("common:back")}
                                 </button>
                                 <button
                                     type="button"
