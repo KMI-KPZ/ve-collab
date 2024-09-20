@@ -19,7 +19,7 @@ interface Props {
 Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['designer', 'common']);
 
     // TODO
     const [plan, setPlanData] = useState<IPlan>();
@@ -27,12 +27,12 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
     return (
         <Wrapper
             socket={socket}
-            title={t('designer_finish_title')}
-            subtitle={t('designer_finish_subtitle')}
+            title={t('finish.title')}
+            subtitle={t('finish.subtitle')}
             methods={useForm<any>()}
             preventToLeave={false}
             nextpage="/ve-designer/post-process"
-            nextpageBtnLabel={t('designer_finish_to_post_process')}
+            nextpageBtnLabel={t('finish.to_post_process')}
             stageInMenu="finish"
             planerDataCallback={(d) => {
                 setPlanData(d);
@@ -43,16 +43,16 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
             {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
             {feedbackFormURL && (
                 <div className="mt-4 font-bold text-lg">
-                    {t('designer_finish_feedback_1')}
+                    {t('finish.feedback_1')}
                     <a
                         className="underline text-ve-collab-orange"
                         href={feedbackFormURL}
                         target="_blank"
                         rel="noreferrer"
                     >
-                        {t('here')}
+                        {t('common:here')}
                     </a>{' '}
-                    {t('designer_finish_feedback_2')}
+                    {t('finish.feedback_2')}
                 </div>
             )}
         </Wrapper>
@@ -64,7 +64,7 @@ export async function getServerSideProps({ locale }: { locale: any }) {
     return {
         props: {
             feedbackFormURL: feedbackFormURL ?? null,
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };
 }

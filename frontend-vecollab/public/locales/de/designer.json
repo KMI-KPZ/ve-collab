@@ -218,5 +218,12 @@
         "ve_model_placeholder": "Beschreibe das zugrundeliegende VE-Modell",
         "literature_task": "Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch, die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.",
         "literature_placeholder": "relevante Literaturangaben"
+    },
+    "finish": {
+        "title": "Fertig",
+        "subtitle": "Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!",
+        "to_post_process": "Zur Nachbearbeitung",
+        "feedback_1": "Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns ",
+        "feedback_2": " wissen!"
     }
 }

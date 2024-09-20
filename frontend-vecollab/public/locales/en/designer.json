@@ -218,5 +218,12 @@
         "ve_model_placeholder": "Describe the underlying VE model",
         "literature_task": "Please provide references to relevant publications or upload articles that you would like to share with the community. Be mindful of potential copyright restrictions.",
         "literature_placeholder": "Relevant literature references"
+    },
+    "finish": {
+        "title": "Finished",
+        "subtitle": "Well done! You have successfully planned the VE.",
+        "to_post_process": "to post-processing",
+        "feedback_1": "We'd love to hear your thoughts on VE-Designer or the platform! Please share them ",
+        "feedback_2": ""
     }
 }
