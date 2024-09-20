@@ -350,7 +350,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
-                        {t(methods.formState.errors?.externalParties?.[index]?.externalParty?.message)}
+                        {t(methods.formState.errors?.externalParties?.[index]?.externalParty?.message!)}
                     </p>
                 )}
             </div>
