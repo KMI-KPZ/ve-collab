@@ -133,7 +133,6 @@ export function PlansBrowserFilter({
             <div className="ml-auto">
                 <ButtonNewPlan
                     socket={socket}
-                    className="ml-4 py-2 px-5 bg-ve-collab-orange rounded-lg text-white"
                     label={
                         <>
                             <MdAdd className="inline" /> Neuen Plan starten

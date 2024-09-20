@@ -7,11 +7,14 @@ import { useRouter } from "next/router";
 import { FormEvent, useState } from "react";
 import { GiSadCrab } from "react-icons/gi";
 import { MdSearch } from "react-icons/md";
+import GeneralError from "@/components/common/GeneralError";
+import ButtonPrimary from "@/components/common/buttons/ButtonPrimary";
+import ButtonSecondary from "@/components/common/buttons/ButtonSecondary";
 
 SearchResult.auth = true;
 export default function SearchResult() {
     const router = useRouter();
-    const [postsPagination, setPostsPagination] = useState<number>(10)
+    const [postsPagination, setPostsPagination] = useState<number>(2)
 
     const {
         data,
@@ -31,8 +34,8 @@ export default function SearchResult() {
 
     const Wrapper = ({children}: {children: JSX.Element|JSX.Element[]}) => {
         return (
-            <div className="bg-slate-100">
-                <div className="flex flex-col m-auto md:p-12 p-6 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
+            <div className="">
+                <div className="flex flex-col m-auto md:p-12 p-6 max-w-screen-[1500] items-center">
                     <div className="md:w-1/2">
                         <div className="font-bold text-4xl mb-4">Suche</div>
                         <div className="text-gray-600">Suche nach Benutzern, Gruppen und Beiträgen</div>
@@ -71,7 +74,8 @@ export default function SearchResult() {
     }
 
     if (error) {
-        return  <Wrapper><div>Es ist ein Fehler aufgetreten</div></Wrapper>
+        // return  <Wrapper><div>Es ist ein Fehler aufgetreten</div></Wrapper>
+        return <Wrapper><GeneralError /></Wrapper>
     }
 
     if (router.query.search && !data?.posts?.length && !data?.users?.length && !data?.spaces?.length) {
@@ -105,7 +109,7 @@ export default function SearchResult() {
 
             <div>
                 {data.users.length > 0 && (
-                    <div>
+                    <>
                         <div className="font-bold text-xl text-slate-900">Benutzer ({data.users.length})</div>
                         <div className="flex flex-wrap m-2">
                             {data.users.map((user, i) => {
@@ -121,11 +125,11 @@ export default function SearchResult() {
                                 </a>
                             })}
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {data.spaces.length > 0 && (
-                    <div>
+                    <>
                         <div className="font-bold text-xl text-slate-900">Gruppen ({data.spaces.length})</div>
                         <div className="flex m-2">
                             {data.spaces.map((space, i) => {
@@ -142,26 +146,25 @@ export default function SearchResult() {
 
                             })}
                         </div>
-                    </div>
+                    </>
                 )}
 
                 {data.posts.length > 0 && (
-                    <div>
+                    <>
                         <div className="font-bold text-xl text-slate-900">Beiträge ({data.posts.length})</div>
-                        {/* TODO pagination!?1 */}
                         <div className="m-2">
                             {data.posts.map((post, i) => {
                                 if (i > postsPagination) return;
                                 if (i == postsPagination) {
-                                    return (
-                                        <div key={i} onClick={e => setPostsPagination(x => x+10)}>Load More</div>
-                                    )
+                                    return <ButtonSecondary key={i} label="Weitere Beiträge anzeigen" onClick={() => setPostsPagination(x => x+10)} />
                                 }
                                 return (
+
                                     <div key={i} className="p-4 mb-4 bg-white rounded shadow hover:cursor-pointer hover:bg-slate-50" onClick={e => {
                                         e.preventDefault()
                                         router.push(`/post/${post._id}`)
                                     }}>
+                                        {/* TODO use <TimelinePost /> !  */}
                                         <div className="flex flex-col mb-2">
                                             {/* <PostHeader author={post.author} date={post.creation_date} /> */}
 
@@ -180,8 +183,8 @@ export default function SearchResult() {
                                 )
                             })}
                         </div>
-                    </div>
-                    )}
+                    </>
+                )}
             </div>
         </Wrapper>
     )
