@@ -198,5 +198,25 @@
         "tools_placeholder": "Which tools can be used?",
         "materials": "Materials",
         "materials_placeholder": "Which materials can be used?"
+    },
+    "post-process": {
+        "title": "Post-processing",
+        "subtitle": "Return here after completing the VE.",
+        "submit": "Submit & return to overview",
+        "text_1": "Would you like to share your VE as a Good Practice example with the community?",
+        "text_2": "Everyone will be able to find, view, and use the plan as a source of inspiration for their own VEs.",
+        "license": "License",
+        "abstract_task": "Please write a brief abstract (about 5 lines) summarizing the key points (partners, content, process) of your VE.",
+        "abstract_placeholder": "Short summary of the VE",
+        "reflection": "Reflection",
+        "reflection_task_1": "What makes this VE a Good Practice example? What did you think went well? What were the challenges and how did you handle them? What would you do differently next time?",
+        "reflection_task_2": "Please share your own experiences and the feedback from your learners here. If available, you can upload a file containing your evaluation results.",
+        "reflection_placeholder": "Describe your reflection.",
+        "update_task_1": "Did you change the initial plan for your VE during the implementation (e.g. for didactic and/or organizational reasons)? In this case, please adjust your plan accordingly (project planning, learning activity, etc.). Use the navigation bar above or click ",
+        "update_task_2": " to return to the general outline.",
+        "ve_model_task": "Is your VE based on a known VE model? If so, which one? (This information will help us to improve VE-Collab in the future)",
+        "ve_model_placeholder": "Describe the underlying VE model",
+        "literature_task": "Please provide references to relevant publications or upload articles that you would like to share with the community. Be mindful of potential copyright restrictions.",
+        "literature_placeholder": "Relevant literature references"
     }
 }

@@ -198,5 +198,25 @@
         "tools_placeholder": "Welche Tools können verwendet werden?",
         "materials": "Materialien",
         "materials_placeholder": "Welche Materialien können verwendet werden?"
+    },
+    "post-process": {
+        "title": "Nachbearbeitung",
+        "subtitle": "Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt.",
+        "submit": "Absenden & Schließen",
+        "text_1": "Möchtest du euren VE als Good Practice der Community zur Verfügung stellen?",
+        "text_2": "Jeder kann die Planung finden, anschauen und als Inspiration für eigene VEs nutzen.",
+        "license": "Lizenz",
+        "abstract_task": "Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen, in dem du die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf) ganz kurz zusammenfasst.",
+        "abstract_placeholder": "Kurze Beschreibung des VE ...",
+        "reflection": "Reflexion",
+        "reflection_task_1": "Was macht diesen VE zum Good Practice Beispiel? Was hat deiner Meinung nach gut funktioniert? Was waren Herausforderungen und wie bist du damit umgegangen? Was würdest du das nächste Mal anders machen?",
+        "reflection_task_2": "Lasse hier deine eigenen Erfahrungen und das Feedback deiner Lernenden einfließen. Falls vorhanden, kannst du eine Datei mit Evaluationsergebnissen hochladen.",
+        "reflection_placeholder": "Beschreibe deine eigene Reflexion.",
+        "update_task_1": "Bist du (aus didaktischen und / oder organisatorischen Gründen) schon während der Durchführung deines VE vom ursprünglichen Plan abgewichen? Dann passe bitte die tatsächliche Umsetzung im VE-Planer an (Projektplanung, Lernaktivität, etc.). Nutze die Navigationsleiste oben oder klicke ",
+        "update_task_2": ", um zurück zur Grobplanung zu gelangen.",
+        "ve_model_task": "Basierte der VE auf einem bekannten VE-Modell? Wenn ja, auf welchem? (Diese Information hilft uns bei der zukünftigen Verbesserung von VE-Collab)",
+        "ve_model_placeholder": "Beschreibe das zugrundeliegende VE-Modell",
+        "literature_task": "Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch, die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.",
+        "literature_placeholder": "relevante Literaturangaben"
     }
 }
