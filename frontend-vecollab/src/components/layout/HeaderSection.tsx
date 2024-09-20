@@ -11,6 +11,7 @@ import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons
 import Dropdown from '../common/Dropdown';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     notificationEvents: Notification[];
@@ -27,6 +28,7 @@ export default function HeaderSection({
 }: Props) {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
 
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
@@ -97,7 +99,7 @@ export default function HeaderSection({
         <button
             onClick={onToggleLanguage}
             className="p-2 rounded-full hover:bg-ve-collab-blue-light"
-            title='Sprache wechseln'
+            title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
         >
             {changeToLanguage == "de" ? "EN" : "DE"}
         </button>
@@ -192,13 +194,6 @@ export default function HeaderSection({
                                             value: 'contact',
                                             label: 'Kontakt per Mail...',
                                             title: 'Kontaktiere uns per Mail ...',
-                                        },
-                                        {
-                                            value: 'language',
-                                            label: <span className="mx-2 truncate">Sprache:&nbsp;
-                                                    <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
-                                                    <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
-                                                </span>
                                         },
                                         {
                                             value: 'logout',
@@ -379,6 +374,17 @@ export default function HeaderSection({
                                 className={sandwichItemClass}
                             >
                                 Kontakt
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                className={sandwichItemClass}
+                                onClick={onToggleLanguage}
+                                title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+                            >
+                                {t('language')}:&nbsp;
+                                <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
+                                <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
                             </button>
                         </li>
                         <li>
