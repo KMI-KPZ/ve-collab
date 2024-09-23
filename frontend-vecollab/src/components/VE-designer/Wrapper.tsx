@@ -19,6 +19,7 @@ import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
 import { dropPlanLock, getPlanLock } from './PlanSocket';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     title: string;
@@ -30,7 +31,7 @@ interface Props {
     prevpage?: string;
     prevPageBtnLabel?: string;
     nextpage?: string;
-    nextpageBtnLabel?: string
+    nextpageBtnLabel?: string;
     preventToLeave?: boolean;
 
     stageInMenu?: string; // TODO make it unrequired
@@ -66,11 +67,13 @@ export default function Wrapper({
 }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation(['designer', 'common']);
+
     const [loading, setLoading] = useState(true);
     const [popUp, setPopUp] = useState<{
         isOpen: boolean;
-        continueLink: string,
-        type?: "unsaved"|"invalid"
+        continueLink: string;
+        type?: 'unsaved' | 'invalid';
     }>({
         isOpen: false,
         continueLink: '/plans',
@@ -101,13 +104,12 @@ export default function Wrapper({
 
             if (clickedOutside) {
                 if (Object.keys(methods.formState.dirtyFields).length == 0) {
-                    dropPlanLock(socket, router.query.plannerId as string)
+                    dropPlanLock(socket, router.query.plannerId as string);
                 } else {
                     setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
                     router.events.emit('routeChangeError');
                     throw 'routeChange aborted.';
                 }
-
             }
         };
 
@@ -134,16 +136,14 @@ export default function Wrapper({
             return;
         }
 
-        getPlanLock(socket, router.query.plannerId)
-        .catch(response => {
+        getPlanLock(socket, router.query.plannerId).catch((response) => {
             if (response.reason === 'plan_locked') {
                 // const data = await
                 fetchPOST(
                     '/profile_snippets',
                     { usernames: [response.lock_holder] },
                     session?.accessToken
-                )
-                .then(data => {
+                ).then((data) => {
                     const userSnippet = data.user_snippets.find(
                         (snippet: BackendUserSnippet) => snippet.username === response.lock_holder
                     );
@@ -151,14 +151,14 @@ export default function Wrapper({
                         ? `${userSnippet.first_name} ${userSnippet.last_name}`
                         : response.lock_holder;
                     setAlert({
-                        message: `Dieser Plan wird gerade von ${displayName} bearbeitet. Änderungen werden nicht gespeichert!`,
+                        message: t('alert_locked', { name: displayName }),
                         // autoclose: 10000,
                         type: 'warning',
                         onClose: () => setAlert({ open: false }),
                     });
-                })
+                });
             }
-        })
+        });
 
         // write access or author check
         if (
@@ -166,12 +166,12 @@ export default function Wrapper({
             plan.author.username !== session?.user.preferred_username!
         ) {
             setAlert({
-                message: 'Sie haben keine Berechtigung, um diesen Plan zu bearbeiten.',
+                message: t('alert_insufficient_permission'),
                 type: 'error',
                 onClose: () => setAlert({ open: false }),
             });
         }
-    }, [plan, isLoading, error, socket, router, session]);
+    }, [plan, isLoading, error, socket, router, session, t]);
 
     // call data callback and rest form defaults for correct form valdation (form.isDirty)
     useEffect(() => {
@@ -183,28 +183,21 @@ export default function Wrapper({
             const data = await planerDataCallback(plan);
             if (Object.keys(data).length) {
                 // reset form default values for isDirty check
-                methods.reset(data)
+                methods.reset(data);
             }
             // fix: do not remove loader if we'll change the route
             setTimeout(() => {
-                if (!willRouteChange) setLoading(false)
+                if (!willRouteChange) setLoading(false);
             }, 1);
         })();
 
-        const handleRouteChange = (url: string) => willRouteChange = true;
+        const handleRouteChange = (url: string) => (willRouteChange = true);
 
-        router.events.on('routeChangeStart', handleRouteChange)
+        router.events.on('routeChangeStart', handleRouteChange);
         return () => {
-            router.events.off('routeChangeStart', handleRouteChange)
-        }
-    }, [
-        router,
-        plan,
-        isLoading,
-        error,
-        planerDataCallback,
-        methods
-    ]);
+            router.events.off('routeChangeStart', handleRouteChange);
+        };
+    }, [router, plan, isLoading, error, planerDataCallback, methods]);
 
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
@@ -220,11 +213,11 @@ export default function Wrapper({
             if (res.success === false) {
                 console.log({ res });
                 setAlert({
-                    message: 'Fehler beim speichern',
+                    message: t('alert_error_save'),
                     type: 'error',
                     onClose: () => {
-                        setAlert({ open: false })
-                        setLoading(false)
+                        setAlert({ open: false });
+                        setLoading(false);
                     },
                 });
                 return false;
@@ -243,7 +236,7 @@ export default function Wrapper({
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
                 // release plan if we leave designer
-                await dropPlanLock(socket, router.query.plannerId)
+                await dropPlanLock(socket, router.query.plannerId);
                 // update all plans SWR to update /plans list
                 await router.push({
                     pathname: popUp.continueLink,
@@ -266,7 +259,8 @@ export default function Wrapper({
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenu.find((a) => a.id == stageInMenu);
-        let subMenuItem = mainMenuItem?.submenu.find((a) => a.link == currentPath);
+        if (!mainMenuItem) return <></>;
+        let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
             const currentStep = plan.steps.find((a) =>
@@ -284,10 +278,10 @@ export default function Wrapper({
 
         return (
             <div className="text-normale py-2 flex items-center text-slate-500">
-                <MdArrowForwardIos size={15} /> {mainMenuItem?.text}
+                <MdArrowForwardIos size={15} /> {t(mainMenuItem.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
-                        <MdArrowForwardIos size={15} /> {subMenuItem.text}
+                        <MdArrowForwardIos size={15} /> {t(subMenuItem.text)}
                     </>
                 )}
             </div>
@@ -301,7 +295,7 @@ export default function Wrapper({
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-            <Link href="/plans">Zurück zur Übersichtsseite</Link>
+            <Link href="/plans">{t('back_to_overview')}</Link>
         </button>
     );
 
@@ -309,13 +303,13 @@ export default function Wrapper({
         let errorMessage: string;
         switch (error.apiResponse.reason) {
             case 'plan_doesnt_exist':
-                errorMessage = 'Dieser Plan wurde nicht gefunden.';
+                errorMessage = t('common:plans_alert_doesnt_exist');
                 break;
             case 'insufficient_permission':
-                errorMessage = 'Sie haben keine Berechtigung, um diesen Plan zu öffnen.';
+                errorMessage = t('common:plans_alert_open_insufficient_permission');
                 break;
             default:
-                errorMessage = 'Ein Fehler ist aufgetreten. Siehe Konsole für Details.';
+                errorMessage = t('common:plans_alert_open_unexpected_error');
         }
         return (
             <WrapperBox>
@@ -349,27 +343,27 @@ export default function Wrapper({
                             }}
                         />
 
-                        <Header
-                            socket={socket}
-                            methods={methods}
-                            plan={plan}
-                            submitCallback={async (data) => {
-                                const res = await handleSubmit(data);
-                                if (res) {
-                                    setAlert({
-                                        message: 'Gespeichert',
-                                        autoclose: 2000,
-                                        onClose: () => setAlert({ open: false }),
-                                    });
-                                }
-                            }}
-                            handleUnsavedData={(data: any, continueLink: string) => {
-                                setPopUp({ isOpen: true, continueLink });
-                            }}
-                            handleInvalidData={(data: any, continueLink: string) => {
-                                setPopUp({ isOpen: true, type: "invalid", continueLink });
-                            }}
-                        />
+                            <Header
+                                socket={socket}
+                                methods={methods}
+                                plan={plan}
+                                submitCallback={async (data) => {
+                                    const res = await handleSubmit(data);
+                                    if (res) {
+                                        setAlert({
+                                            message: t('alert_saved'),
+                                            autoclose: 2000,
+                                            onClose: () => setAlert({ open: false }),
+                                        });
+                                    }
+                                }}
+                                handleUnsavedData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, continueLink });
+                                }}
+                                handleInvalidData={(data: any, continueLink: string) => {
+                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
+                                }}
+                            />
 
                         <div className="flex flex-row divide-x gap-1">
                             <Sidebar
@@ -384,24 +378,31 @@ export default function Wrapper({
                                 plan={plan}
                             />
 
-                            <form className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4" onSubmit={methods.handleSubmit(
-                                    // valid
-                                    async (data: any) => {
-                                        await handleSubmit(data);
-                                        await router.push({
-                                            pathname: nextpage,
-                                            query: {
-                                                plannerId:
-                                                    router.query.plannerId,
-                                            },
-                                        });
-                                    },
-                                    // invalid
-                                    async () => {
-                                        setPopUp({ isOpen: true, type: "invalid", continueLink: nextpage || '/plans' });
-                                    }
-                                )}>
-                                <Breadcrumb />
+                                <form
+                                    className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
+                                    onSubmit={methods.handleSubmit(
+                                        // valid
+                                        async (data: any) => {
+                                            await handleSubmit(data);
+                                            await router.push({
+                                                pathname: nextpage,
+                                                query: {
+                                                    plannerId: router.query.plannerId,
+                                                },
+                                            });
+                                        },
+                                        // invalid
+                                        async () => {
+                                            setPopUp({
+                                                isOpen: true,
+                                                type: 'invalid',
+                                                continueLink: nextpage || '/plans',
+                                            });
+                                        }
+                                    )}
+                                >
+                                    <Breadcrumb />
+                                    {t('designer:back_to_overview')}
 
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
@@ -462,7 +463,7 @@ export default function Wrapper({
                                             {typeof prevpage !== 'undefined' && (
                                                 <button
                                                     type="button"
-                                                    title="Speichern & zurück"
+                                                    title={t("common:back")}
                                                     className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
@@ -486,7 +487,7 @@ export default function Wrapper({
                                                         }
                                                     )}
                                                 >
-                                                    {prevPageBtnLabel || 'Zurück'}
+                                                    {prevPageBtnLabel || t("common:back")}
                                                 </button>
                                             )}
                                         </div>
@@ -495,7 +496,7 @@ export default function Wrapper({
                                             {typeof nextpage !== 'undefined' && (
                                                 <button
                                                     type="button"
-                                                    title='Speichern & Weiter'
+                                                    title={t("save_and_continue")}
                                                     className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
@@ -519,7 +520,7 @@ export default function Wrapper({
                                                         }
                                                     )}
                                                 >
-                                                    {nextpageBtnLabel || 'Speichern & Weiter'}
+                                                    {nextpageBtnLabel || t("save_and_continue")}
                                                 </button>
                                             )}
                                         </div>

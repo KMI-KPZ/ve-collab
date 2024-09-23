@@ -10,6 +10,8 @@ import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-fo
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 export interface EvaluationFile {
     file: File;
@@ -44,9 +46,11 @@ PostProcess.auth = true;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
-    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);
-    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();
-    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);
+    const { t } = useTranslation(['designer', 'common']);
+
+    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);;
+    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();;
+    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);;
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -98,6 +102,9 @@ export default function PostProcess({ socket }: Props) {
                     });
                 });
             }
+            // if (Object.keys(plan.progress).length) {
+            //     setSideMenuStepsProgress(plan.progress);
+            // }
 
             return {
                 abstract: plan.abstract,
@@ -217,7 +224,7 @@ export default function PostProcess({ socket }: Props) {
                     rules={{
                         // max 5MB allowed
                         validate: (value) => {
-                            return !value?.size || value.size < 5242880 || 'max. 5 MB erlaubt';
+                            return !value?.size || value.size < 5242880 || t('common:max_5_mb');
                         },
                     }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
@@ -226,7 +233,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
                                 htmlFor={name}
                             >
-                                Datei hinzufügen
+                                {t('common:add_file')}
                             </label>
                             <input
                                 id={name}
@@ -270,7 +277,7 @@ export default function PostProcess({ socket }: Props) {
                                 if (file.size > 5242880) {
                                     methods.setError(`literatureFiles.${i}.file`, {
                                         type: 'custom',
-                                        message: 'max. 5 MB erlaubt',
+                                        message: t('common:max_5_mb'),
                                     });
                                 }
                                 i++;
@@ -284,7 +291,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
                                 htmlFor={name}
                             >
-                                Datei(en) hinzufügen
+                                {t('common:add_file_multiple')}
                             </label>
                             <input
                                 id={name}
@@ -306,7 +313,7 @@ export default function PostProcess({ socket }: Props) {
                                         } else {
                                             methods.setError(`literatureFiles`, {
                                                 type: 'custom',
-                                                message: 'max. 5 Dateien erlaubt',
+                                                message: t('common:max_5_files'),
                                             });
                                         }
                                         i++;
@@ -326,15 +333,11 @@ export default function PostProcess({ socket }: Props) {
     return (
         <Wrapper
             socket={socket}
-            title="Nachbearbeitung"
-            subtitle="Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt."
-            tooltip={{
-                text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
-                link: '/learning-material/left-bubble/Etappenplanung',
-            }}
+            title={t('post-process.title')}
+            subtitle={t('post-process.subtitle')}
             methods={methods}
             nextpage="/plans"
-            nextpageBtnLabel="Absenden & Schließen"
+            nextpageBtnLabel={t('post-process.submit')}
             preventToLeave={false}
             stageInMenu="post-process"
             planerDataCallback={setPlanerData}
@@ -343,16 +346,10 @@ export default function PostProcess({ socket }: Props) {
             <div className="py-6 divide-y">
                 <div className="flex flex-col justify-between mb-3">
                     <div>
-                        <p className="font-medium">
-                            Möchtest du euren VE als Good Practice der Community zur Verfügung
-                            stellen?
-                        </p>
+                        <p className="font-medium">{t('post-process.text_1')}</p>
+                        <p>{t('post-process.text_2')}</p>
                         <p>
-                            Jeder kann die Planung finden, anschauen und als Inspiration für eigene
-                            VE&apos;s nutzen.
-                        </p>
-                        <p>
-                            (Lizenz:{' '}
+                            ({t('post-process.license') + ' '}
                             <Link
                                 className="underline text-ve-collab-blue"
                                 href={'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'}
@@ -367,7 +364,7 @@ export default function PostProcess({ socket }: Props) {
                         name={'share'}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <div className="flex w-40 mb-4">
-                                <label className="px-2 py-2">Ja</label>
+                                <label className="px-2 py-2">{t('common:yes')}</label>
                                 <input
                                     type="radio"
                                     className="border border-gray-400 rounded-lg p-2"
@@ -375,7 +372,7 @@ export default function PostProcess({ socket }: Props) {
                                     onChange={() => onChange(true)} // send value to hook form
                                     checked={value === true}
                                 />
-                                <label className="px-2 py-2">Nein</label>
+                                <label className="px-2 py-2">{t('common:no')}</label>
                                 <input
                                     type="radio"
                                     className="border border-gray-400 rounded-lg p-2"
@@ -391,34 +388,22 @@ export default function PostProcess({ socket }: Props) {
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
-                            <p>
-                                Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen, in dem du
-                                die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf)
-                                ganz kurz zusammenfasst.
-                            </p>
+                            <p>{t('post-process.abstract_task')}</p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
-                                placeholder="Kurze Beschreibung deines VE ..."
+                                placeholder={t('post-process.abstract_placeholder')}
                                 {...methods.register('abstract')}
                             />
                         </li>
                         <li className="mb-4">
-                            <p className="font-bold">Reflexion:</p>
-                            <p className="mb-1">
-                                Was hat deiner Meinung nach gut funktioniert? Was waren
-                                Herausforderungen und wie bist du damit umgegangen? Was würdest du
-                                das nächste Mal anders machen?
-                            </p>
-                            <p>
-                                Lasse hier deine eigenen Erfahrungen und das Feedback deiner
-                                Lernenden einfließen. Falls vorhanden, kannst du eine Datei mit
-                                Evaluationsergebnissen hochladen.
-                            </p>
+                            <p className="font-bold">{t('post-process.reflection')}</p>
+                            <p className="mb-1">{t('post-process.reflection_task_1')}</p>
+                            <p>{t('post-process.reflection_task_2')}</p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
-                                placeholder="Beschreibe deine Reflexion"
+                                placeholder={t('post-process.reflection_placeholder')}
                                 {...methods.register('reflection')}
                             />
                             {methods.watch('evaluationFile') ? (
@@ -463,7 +448,7 @@ export default function PostProcess({ socket }: Props) {
                                     </div>
                                     {methods.formState.errors?.evaluationFile?.message && (
                                         <p className="text-red-500">
-                                            {methods.formState.errors?.evaluationFile?.message}
+                                            {t(methods.formState.errors?.evaluationFile?.message!)}
                                         </p>
                                     )}
                                 </div>
@@ -473,11 +458,7 @@ export default function PostProcess({ socket }: Props) {
                         </li>
                         <li className="mb-4">
                             <p>
-                                Bist du (aus didaktischen und / oder organisatorischen Gründen)
-                                schon während der Durchführung deines VE vom ursprünglichen Plan
-                                abgewichen? Dann passe bitte die tatsächliche Umsetzung im VE-Planer
-                                an (Etappenplanung, Lernaktivität, etc.). Nutze die
-                                Navigationsleiste oben oder klicke{' '}
+                                {t('post-process.update_task_1')}
                                 <Link
                                     className="underline text-ve-collab-blue"
                                     href={{
@@ -488,34 +469,26 @@ export default function PostProcess({ socket }: Props) {
                                     }}
                                     target="_blank"
                                 >
-                                    hier
+                                    {t('common:here')}
                                 </Link>
-                                , um zurück zur Grobplanung zu gelangen.
+                                {t('post-process.update_task_2')}
                             </p>
                         </li>
                         <li className="mb-4">
-                            <p>
-                                Basierte der VE auf einem bekannten VE-Modell? Wenn ja, auf welchem?
-                                (Diese Information hilft uns bei der zukünftigen Verbesserung von
-                                VE-Collab)
-                            </p>
+                            <p>{t('post-process.ve_model_task')}</p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-3 mt-2"
                                 rows={5}
-                                placeholder="Beschreibe das zugrundeliegende VE-Modell"
+                                placeholder={t('post-process.ve_model_placeholder')}
                                 {...methods.register('veModel')}
                             />
                         </li>
                         <li className="mb-4">
-                            <p>
-                                Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an
-                                oder lade Artikel hoch, die du der Community zur Verfügung stellen
-                                möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.
-                            </p>
+                            <p>{t('post-process.literature_task')}</p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
-                                placeholder="Relevante Literaturangaben"
+                                placeholder={t('post-process.literature_placeholder')}
                                 {...methods.register('literature')}
                             />
                             {litFiles.length > 0 && (
@@ -551,7 +524,7 @@ export default function PostProcess({ socket }: Props) {
                                                             rmLitFile(index);
                                                         }}
                                                         className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
-                                                        title="Datei Entfernen"
+                                                        title={t('common:delete_file')}
                                                     >
                                                         <IoMdClose />
                                                     </button>
@@ -561,9 +534,9 @@ export default function PostProcess({ socket }: Props) {
                                                     ?.file?.message && (
                                                     <p className="text-red-500">
                                                         {
-                                                            methods.formState.errors
+                                                            t(methods.formState.errors
                                                                 ?.literatureFiles?.[index]?.file
-                                                                ?.message
+                                                                ?.message!)
                                                         }
                                                     </p>
                                                 )}
@@ -572,7 +545,7 @@ export default function PostProcess({ socket }: Props) {
                                     </div>
                                     {methods.formState.errors?.literatureFiles?.message && (
                                         <p className="text-red-500">
-                                            {methods.formState.errors?.literatureFiles?.message}
+                                            {t(methods.formState.errors?.literatureFiles?.message!)}
                                         </p>
                                     )}
                                 </div>
@@ -584,4 +557,14 @@ export default function PostProcess({ socket }: Props) {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    };
 }

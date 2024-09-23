@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { i18n } = require('./next-i18next.config')
 
 if (!process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID) {
     throw new Error(`
@@ -36,6 +37,7 @@ const nextConfig = {
         ],
     },
     transpilePackages: ['@jitsi/react-sdk'], // workaround for https://github.com/jitsi/jitsi-meet-react-sdk/issues/12
+    i18n,
 };
 
 module.exports = nextConfig;

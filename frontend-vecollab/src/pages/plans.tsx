@@ -11,6 +11,8 @@ import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar
 import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 export interface IfilterBy {
     /** key from PlanPreview to filter */
@@ -34,6 +36,7 @@ interface Props {
 Plans.auth = true;
 export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
@@ -92,21 +95,21 @@ export default function Plans({ socket }: Props) {
         <>
             <div className="flex justify-between mb-6">
                 <div>
-                    <div className={'font-bold text-4xl mb-2'}>Pläne</div>
+                    <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>
-                        Übersicht deiner und mit dir geteilter Pläne
+                        {t("plans_overview_subtitle")}
                     </div>
                 </div>
 
                 <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
                     <div>
-                        Noch auf der Suche nach neuen Partner:innen für den nächsten VE?
+                        {t("matching_question")}
                     </div>
                     <Link
                         href={'/matching'}
                         className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
                     >
-                        <MdKeyboardDoubleArrowRight className="inline" /> zum Matching
+                        <MdKeyboardDoubleArrowRight className="inline" /> {t("go_matching")}
                     </Link>
                 </div>
             </div>
@@ -126,7 +129,7 @@ export default function Plans({ socket }: Props) {
 
             {isLoading ? (
                 <div className="m-12">
-                    <LoadingAnimation size="small" /> lade Pläne ...
+                    <LoadingAnimation size="small" /> {t("loading_plans")}
                 </div>
             ) : (
                 <PlansBrowser
@@ -139,4 +142,14 @@ export default function Plans({ socket }: Props) {
             )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+            ])),
+        },
+    }
 }

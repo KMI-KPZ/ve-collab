@@ -31,6 +31,8 @@ import { MdArrowOutward, MdNewspaper } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import Link from 'next/link';
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 
@@ -78,6 +80,8 @@ interface Props {
 StepNames.auth = true;
 export default function StepNames({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const router = useRouter();
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -263,8 +267,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         if (!plans.length)
             return (
                 <>
-                    Es sind noch keine &quot;Good Practice&quot; Pläne mit Etappen zum importieren
-                    vorhanden
+                    {t("step-names.no_good_practice_plans")}
                 </>
             );
 
@@ -273,7 +276,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 <div>
-                    Wähle aus den &quot;Good Practice&quot; Plänen Etappen zum importieren aus
+                    {t("step-names.select_steps_to_import")}
                 </div>
 
                 {plans
@@ -297,10 +300,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 </Link>
                                 {session?.user.preferred_username != plan.author.username && (
                                     <div className="text-sm text-gray-500">
-                                        von {plan.author.first_name} {plan.author.last_name}
+                                        {t("step-names.by")} {plan.author.first_name} {plan.author.last_name}
                                     </div>
                                 )}
-                                <span className="grow text-right" title="zuletzt geändert">
+                                <span className="grow text-right" title={t("step-names.last_modified")}>
                                     <Timestamp timestamp={plan.last_modified} className="text-sm" />
                                 </span>
                             </div>
@@ -308,8 +311,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div
                                     key={step._id}
                                     className="ml-10 hover:cursor-pointer flex"
-                                    onClick={() => toggleStepToImport(plan, step)}
-                                    title="Add/Remove"
+                                    onClick={(e) => toggleStepToImport(plan, step)}
+                                    title={t("step-names.add_remove")}
                                 >
                                     <input
                                         type="checkbox"
@@ -328,9 +331,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
                         onClick={() => setIsImportStepsDialogOpen(false)}
                     >
-                        Abbrechen
+                        {t("common:cancel")}
                     </button>
-                    <ButtonPrimary label={'Importieren'} onClick={() => handleStepsImport()} />
+                    <ButtonPrimary label={t("common:import")} onClick={() => handleStepsImport()} />
                 </div>
             </div>
         );
@@ -346,7 +349,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 items-center">
                                         <div>
-                                            <label>von:</label>
+                                            <label>{t("step-names.from")}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
@@ -356,7 +359,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">bis:</label>
+                                            <label className="ml-2">{t("step-names.to")}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
@@ -366,36 +369,36 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">Name:</label>
+                                            <label className="ml-2">{t("step-names.name")}</label>
                                             <input
                                                 type="text"
                                                 {...methods.register(`stepNames.${index}.name`)}
-                                                placeholder="Name, z.B. Kennenlernphase"
+                                                placeholder={t("step-names.name_placeholder")}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">Zeitaufwand:</label>
+                                            <label className="ml-2">{t("step-names.time")}</label>
                                             <input
                                                 type="number"
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
                                                     { valueAsNumber: true }
                                                 )}
-                                                placeholder="Zeitaufwand in Stunden"
+                                                placeholder={t("step-names.time_placeholder")}
                                                 className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
                                             />
                                             <label className="mr-4">h</label>
                                         </div>
                                     </div>
                                     <div className="flex items-center mt-2">
-                                        <label>Lernziel(e):</label>
+                                        <label>{t("step-names.learning_objectives")}</label>
                                         <textarea
                                             {...methods.register(
                                                 `stepNames.${index}.learning_goal`
                                             )}
                                             rows={1}
-                                            placeholder="mehrere durch Komma trennen"
+                                            placeholder={t("step-names.learning_objectives_placeholder")}
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
@@ -406,32 +409,32 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_from?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.timestamp_to && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_to?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.name && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]?.name
-                                                    ?.message
+                                                t(methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message!)
                                             }
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.workload && (
                                         <p className="text-red-600 pt-2 flex justify-center">
                                             {
-                                                methods.formState.errors?.stepNames?.[index]
-                                                    ?.workload?.message
+                                                t(methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message!)
                                             }
                                         </p>
                                     )}
@@ -465,11 +468,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Grobplanung"
-            subtitle="Grobplanung des Ablaufs"
-            description="Erstellt beliebig viele Etappen und legt für jede Etappe einen Zeitraum fest. Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Gruppenarbeitsphase I, Gruppenarbeitsphase II). Die von euch festgelegten Etappen dienen euch als Struktur und Überblick. Ihr könnt sie dann optional in der Feinplanung detaillierter ausarbeiten."
+            title={t("step-names.title")}
+            subtitle={t("step-names.subtitle")}
+            description={t("step-names.description")}
             tooltip={{
-                text: 'Ausführliche Informationen zur Etappenplanung und verschiedenen Typen und Modellen von VA findest du hier in den Selbstlernmaterialien …',
+                text: t("step-names.tooltip_text"),
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
@@ -485,7 +488,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         >
             <Dialog
                 isOpen={isImportStepsDialogOpen}
-                title={'Etappen Import'}
+                title={t("step-names.import_phases")}
                 onClose={() => setIsImportStepsDialogOpen(false)}
             >
                 <div className="w-[40vw]">
@@ -507,7 +510,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
-                    title="Neue Etappe"
+                    title={t("step-names.new_phase")}
                     onClick={() => {
                         append(emptyStepData);
                     }}
@@ -518,12 +521,23 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                     type="button"
-                    title="Etappen importieren"
-                    onClick={() => openStepsImportDialog()}
+                    title={t("step-names.import_phases")}
+                    onClick={(e) => openStepsImportDialog()}
                 >
-                    Import
+                    {t("common:import")}
                 </button>
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+                'designer'
+            ])),
+        },
+    }
 }

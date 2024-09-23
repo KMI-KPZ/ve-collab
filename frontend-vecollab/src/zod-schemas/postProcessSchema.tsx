@@ -4,15 +4,15 @@ export const PostProcessSchema = z.object({
     share: z.boolean(),
     abstract: z
         .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
+        .max(1000,"messages.maxlength1000")
         .nullable(),
     reflection: z
         .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
+        .max(1000,"messages.maxlength1000")
         .nullable(),
     veModel: z
         .string()
-        .max(1000, 'Ein gültiger Name darf maximal 1000 Buchstaben lang sein.')
+        .max(1000,"messages.maxlength1000")
         .nullable(),
     evaluation: z.string().nullable(),
     evaluationFile: z
@@ -22,7 +22,7 @@ export const PostProcessSchema = z.object({
             size: z
                 .number()
                 .int()
-                .max(5242880, 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.')
+                .max(5242880, "messages.max_5_mb")
                 .optional(),
             file_id: z.string().optional(),
         })
@@ -39,7 +39,7 @@ export const PostProcessSchema = z.object({
                 })
                 .refine((data) => data.size !== undefined && data.size <= 5242880, {
                     // 25.470.060
-                    message: 'Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.',
+                    message: "messages.max_5_mb",
                     path: ['size'], // This will attach the error message to the `size` field
                 })
         )

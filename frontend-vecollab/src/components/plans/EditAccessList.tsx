@@ -6,6 +6,7 @@ import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import LoadingAnimation from '../common/LoadingAnimation';
 import EditAccessUserSnippet from './EditAccessUserSnippet';
 import { AlertState } from '../common/dialogs/Alert';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     closeDialogCallback: () => void;
@@ -19,6 +20,7 @@ export default function EditAccessList({
     setAlert
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
 
     const [userSnippetsLoading, setUserSnippetsLoading] = useState(false);
     const [userSnippets, setUserSnippets] = useState<UserAccessSnippet[]>([]);
@@ -82,7 +84,7 @@ export default function EditAccessList({
                     { ...userSnippets[index], access: access },
                 ];
                 setUserSnippets(copy);
-                setAlert({message: 'Freigabeeinstellung geändert', autoclose: 2000, onClose: () => setAlert({open: false})})
+                setAlert({message: t("plans_share_dialog_alert_update"), autoclose: 2000, onClose: () => setAlert({open: false})})
             });
         });
     };
@@ -99,7 +101,7 @@ export default function EditAccessList({
             setUserSnippets([
                 ...userSnippets.filter((val, count) => val.preferredUsername !== username),
             ]);
-            setAlert({message: 'Freigabe entzogen', autoclose: 2000})
+            setAlert({message: t("plans_share_dialog_alert_revoke"), autoclose: 2000})
         });
     };
 
@@ -125,7 +127,7 @@ export default function EditAccessList({
                         </>
                     ) : (
                         <div className="flex items-center justify-center mt-10 text-gray-400 text-2xl">
-                            Niemand anderes hat Zugang
+                            {t("plans_share_dialog_text_nobody_access")}
                         </div>
                     )}
                 </ul>

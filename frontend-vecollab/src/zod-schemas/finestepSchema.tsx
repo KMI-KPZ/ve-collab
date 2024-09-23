@@ -9,7 +9,7 @@ export const FineStepFormSchema = z.object({
     // above: previous data from step-names
     learning_activity: z
         .string()
-        .max(1000, 'Ein gültige Lernaktivität darf maximal 1000 Buchstaben lang sein.'),
+        .max(1000, "messages.maxlength1000"),
     has_tasks: z.boolean(),
     original_plan: z.string().nullable(),
     tasks: z
@@ -17,18 +17,18 @@ export const FineStepFormSchema = z.object({
             z.object({
                 task_formulation: z
                     .string()
-                    .max(500, 'Ein gültige Lernaktivität darf maximal 500 Buchstaben lang sein.'),
+                    .max(500, "messages.maxlength500"),
                 work_mode: z
                     .string()
-                    .max(500, 'Ein gültige Arbeitsform darf maximal 500 Buchstaben lang sein.'),
+                    .max(500, "messages.maxlength500"),
                 notes: z
                     .string()
-                    .max(1000, 'Ein gültige Notitz darf maximal 1000 Buchstaben lang sein.'),
+                    .max(1000, "messages.maxlength1000"),
                 tools: z.array(
                     z.object({
                         name: z
                             .string()
-                            .max(200, 'Ein gültiges Tool darf maximal 200 Buchstaben lang sein.'),
+                            .max(200, "messages.maxlength200"),
                     })
                 ),
                 materials: z.array(
@@ -37,11 +37,11 @@ export const FineStepFormSchema = z.object({
                             .string()
                             .max(
                                 200,
-                                'Ein gültiges Material darf maximal 200 Buchstaben lang sein.'
+                                "messages.maxlength200"
                             ),
                     })
                 ),
             })
         )
-        .min(1, 'Es muss mindestens eine Aufgabe geben.'),
+        .min(1, "messages.atleast_one_field"),
 });

@@ -20,6 +20,8 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 
@@ -52,6 +54,7 @@ Partners.auth = true;
 export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common'])
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -312,11 +315,16 @@ export default function Partners({ socket }: Props): JSX.Element {
                         onChange={onChange}
                         onBlur={onBlur}
                         value={value}
-                        placeholder={'Suche nach Nutzer:innen...'}
+                        placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
                         formatCreateLabel={(inputValue) => (
                             <span>
-                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                                {t('common:search_users_no_hit', { value: inputValue })}
+                                {/* <Trans
+                                    i18nKey="search_users_no_hit" // optional -> fallbacks to defaults if not provided
+                                    values={{ value: inputValue }}
+                                    components={{ bold: <strong /> }}
+                                /> */}
                             </span>
                         )}
                     />
@@ -332,7 +340,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 <div className="flex">
                     <input
                         type="text"
-                        placeholder="Externen eingeben"
+                        placeholder={t("common:enter_name")}
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`)}
                     />
@@ -342,7 +350,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
+                        {t(methods.formState.errors?.externalParties?.[index]?.externalParty?.message!)}
                     </p>
                 )}
             </div>
@@ -352,14 +360,14 @@ export default function Partners({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Projektpartner:innen"
-            subtitle="Wer ist am Projekt beteiligt?"
+            title={t('partners.title')}
+            subtitle={t('partners.subtitle')}
             description={[
-                'Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.',
-                'Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
+                t('partners.description-1'),
+                t('partners.description-2'),
             ]}
             tooltip={{
-                text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
+                text: t('partners.tooltip'),
                 link: '/learning-material/left-bubble/Partnersuche',
             }}
             methods={methods}
@@ -369,7 +377,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div>
-                <p className="text-xl text-slate-600 mb-2">Beteiligte</p>
+                <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
                 {fieldsPartners.map((partner, index) => {
                     return (
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
@@ -402,7 +410,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                     </button>
                 </div>
                 <div>
-                    <p className="text-xl text-slate-600 mb-2 mt-10">Extern Beteiligte</p>
+                    <p className="text-xl text-slate-600 mb-2 mt-10">{t('partners.externpartners_title')}</p>
                     {renderExternalPartiesInputs()}
                     <div className="mt-4">
                         <button
@@ -421,4 +429,14 @@ export default function Partners({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }

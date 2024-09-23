@@ -17,6 +17,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LearningGoalsFormSchema } from '../../zod-schemas/learningGoalsSchema';
 
@@ -59,6 +61,7 @@ LearningGoals.auth = true;
 export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -182,40 +185,40 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     const options: { value: string; label: string }[] = [
         {
-            value: 'Förderung kritischen Denkens',
-            label: 'Förderung kritischen Denkens',
+            value: t('goals.2-option1'),
+            label: t('goals.2-option1'),
         },
         {
-            value: 'Förderung kreativen Denkens',
-            label: 'Förderung kreativen Denkens',
+            value: t('goals.2-option2'),
+            label: t('goals.2-option2'),
         },
         {
-            value: 'Förderung kollaborativen Arbeitens',
-            label: 'Förderung kollaborativen Arbeitens',
+            value: t('goals.2-option3'),
+            label: t('goals.2-option3'),
         },
         {
-            value: 'Förderung kommunikativer Fähigkeiten',
-            label: 'Förderung kommunikativer Fähigkeiten',
+            value: t('goals.2-option4'),
+            label: t('goals.2-option4'),
         },
         {
-            value: 'Förderung digitaler Kompetenzen',
-            label: 'Förderung digitaler Kompetenzen',
+            value: t('goals.2-option5'),
+            label: t('goals.2-option5'),
         },
         {
-            value: 'Förderung sozialer Kompetenzen',
-            label: 'Förderung sozialer Kompetenzen',
+            value: t('goals.2-option6'),
+            label: t('goals.2-option6'),
         },
         {
-            value: 'Förderung der kulturellen Kompetenz',
-            label: 'Förderung der kulturellen Kompetenz',
+            value: t('goals.2-option7'),
+            label: t('goals.2-option7'),
         },
         {
-            value: 'Förderung der Sprachkompetenz',
-            label: 'Förderung der Sprachkompetenz',
+            value: t('goals.2-option8'),
+            label: t('goals.2-option8'),
         },
         {
-            value: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
-            label: 'Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)',
+            value: t('goals.2-option9'),
+            label: t('goals.2-option9'),
         },
     ];
 
@@ -236,7 +239,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         isClearable={true}
                         isMulti
                         closeMenuOnSelect={false}
-                        placeholder="weitere Kompetenzen auswählen oder neue durch Tippen hinzufügen"
+                        placeholder={t('goals.2-placeholder')}
                     />
                 )}
                 control={control}
@@ -254,13 +257,12 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                 <div className="grow mr-2">
                                     <input
                                         type="text"
-                                        placeholder="Thema eingeben"
+                                        placeholder={t('goals.3-placeholder')}
                                         className="w-full border border-gray-300 rounded-lg p-2 "
                                         {...methods.register(`topics.${index}.name`, {
                                             maxLength: {
                                                 value: 500,
-                                                message:
-                                                    'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
+                                                message: t('messages.max_length', {count: 500}),
                                             },
                                         })}
                                     />
@@ -270,7 +272,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                 </button>
                             </div>
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.topics?.[index]?.name?.message}
+                                {t(methods.formState.errors?.topics?.[index]?.name?.message!)}
                             </p>
                         </div>
                     ))}
@@ -295,11 +297,11 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Lernziele & Themen"
-            subtitle="1. Welche fachlichen Lernziele sollen im VE erreicht werden?"
-            description="Beschreibt hier kurz die fachlichen Lernziele für den VE, also welches fachliche Wissen und welche Fertigkeiten ihr vermitteln wollt. Die Lernziele können auch überfachlich bzw. fächerübergreifend sein, wenn ihr aus eurem Fach heraus auf ein bestimmtes Thema blickt (z. B. BNE)."
+            title={t('goals.title')}
+            subtitle={t('goals.subtitle')}
+            description={t('goals.description')}
             tooltip={{
-                text: 'Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …',
+                text: t('goals.tooltip'),
                 link: '/learning-material/top-bubble/Potenziale',
             }}
             methods={methods}
@@ -326,17 +328,16 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                             `individualLearningGoals.${index}.learningGoal`
                                         )}
                                         placeholder={
-                                            'Beschreibe die Lernziele für die Lernenden von ' +
-                                            findPartnerFirstAndLastName(
+                                            t('goals.learningGoal_placeholder', {username: findPartnerFirstAndLastName(
                                                 individualLearningGoalPerPartner.username
-                                            )
+                                            )})
                                         }
                                     ></textarea>
                                     <p className="text-red-600 pt-2">
                                         {
-                                            methods.formState.errors?.individualLearningGoals?.[
+                                            t(methods.formState.errors?.individualLearningGoals?.[
                                                 index
-                                            ]?.learningGoal?.message
+                                            ]?.learningGoal?.message!)
                                         }
                                     </p>
                                 </div>
@@ -349,8 +350,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}
                 >
-                    2. Welche weiteren übergeordneten Lernziele werden verfolgt?
-                    <Tooltip tooltipsText="Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …">
+                    {t('goals.2-title')}
+                    <Tooltip tooltipsText={t('goals.2-tooltip')}>
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Potenziale'}
@@ -361,24 +362,22 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     </Tooltip>
                 </div>
                 <p className="mb-8">
-                    Neben fachlichen Lernzielen könnt ihr mit eurem VE auch übergeordnete
-                    Kompetenzen fördern. Überlegt hier, welche gemeinsamen Schwerpunkte ihr setzen
-                    wollt.
+                    {t('goals.2-subtitle')}
                 </p>
 
                 <div className="w-full lg:w-1/2">
                     {createableSelect(methods.control, 'majorLearningGoals', options)}
                 </div>
                 <p className="text-red-600 pt-2">
-                    {methods.formState.errors?.majorLearningGoals?.message}
+                    {t(methods.formState.errors?.majorLearningGoals?.message!)}
                 </p>
             </div>
             <div className="mt-12">
                 <div
                     className={'flex justify-between items-center text-slate-600 text-xl relative'}
                 >
-                    3. Zu welchem Thema / welchen Themen findet der VE statt?
-                    <Tooltip tooltipsText="Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …">
+                    {t('goals.3-title')}
+                    <Tooltip tooltipsText={t('goals.3-tooltip')}>
                         <Link
                             target="_blank"
                             href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
@@ -389,13 +388,21 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     </Tooltip>
                 </div>
                 <p className="mb-8">
-                    Überlegt euch, welche inhaltlichen Themen ihr in eurem VA behandeln wollt. Diese
-                    können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine
-                    bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.
+                    {t('goals.3-subtitle')}
                 </p>
 
                 <div className="w-full lg:w-1/2">{renderTopics()}</div>
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }

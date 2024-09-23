@@ -4,6 +4,7 @@ import { IFineStepFrontend, ITaskFrontend } from '@/pages/ve-designer/step-data/
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     fineStep: IFineStepFrontend;
@@ -18,6 +19,8 @@ export const defaultValueTask: ITaskFrontend = {
 };
 
 export default function Stage({ fineStep }: Props) {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const { register, control, formState, watch } = useFormContext<IFineStepFrontend>();
     const { fields, append, remove, update } = useFieldArray<IFineStepFrontend>({
         name: 'tasks',
@@ -52,7 +55,7 @@ export default function Stage({ fineStep }: Props) {
                     <>
                         <div className="flex">
                             <div>
-                                <label className="px-2 py-2">Ja</label>
+                                <label className="px-2 py-2">{t("common:yes")}</label>
                             </div>
                             <div>
                                 <input
@@ -66,7 +69,7 @@ export default function Stage({ fineStep }: Props) {
                         </div>
                         <div className="flex">
                             <div>
-                                <label className="px-2 py-2">Nein</label>
+                                <label className="px-2 py-2">{t("common:no")}</label>
                             </div>
                             <div>
                                 <input
@@ -87,7 +90,7 @@ export default function Stage({ fineStep }: Props) {
         <div>
             <div>
                 <div className="flex">
-                    <div className="font-bold mx-2">Zeitspanne:</div>
+                    <div className="font-bold mx-2">{t("step-data.time_frame")}</div>
                     <div className="mx-2">
                         {dateFrom} - {dateTo}
                     </div>
@@ -96,14 +99,14 @@ export default function Stage({ fineStep }: Props) {
             <div className="mt-4 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="learning_goal" className="px-2 py-2">
-                        Lernaktivität(en)
+                        {t("step-data.learning_activities")}
                     </label>
                 </div>
                 <div className="w-5/6">
                     <textarea
                         {...register(`learning_activity`)}
                         rows={2}
-                        placeholder="mehrere durch Komma trennen"
+                        placeholder={t("step-data.learning_activities_placeholder")}
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
@@ -112,7 +115,7 @@ export default function Stage({ fineStep }: Props) {
                 </div>
             </div>
             <div className="mt-4 flex justify-center">
-                <p>Möchten Sie Lernaktivität(en) im Designer genauer ausarbeiten?</p>
+                <p>{t("step-data.detail_activities")}</p>
                 <div className="flex">{radioBooleanInput(control, 'has_tasks')}</div>
             </div>
             {watch('has_tasks') && (
@@ -141,7 +144,7 @@ export default function Stage({ fineStep }: Props) {
                                     append(defaultValueTask);
                                 }}
                             >
-                                weitere Lernaktivität hinzufügen
+                                {t("step-data.add_learning_activity")}
                             </button>
                         </div>
                     </div>

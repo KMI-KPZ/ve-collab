@@ -5,22 +5,22 @@ export const LearningGoalsFormSchema = z.object({
         .object({
             username: z
                 .string()
-                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.'),
+                .max(800, "messages.maxlength800"),
             learningGoal: z
                 .string()
-                .max(800, 'Ein gültiger Ziel darf maximal 800 Buchstaben lang sein.')
+                .max(800, "messages.maxlength800")
                 .nullable(),
         })
         .array(),
     majorLearningGoals: z
         .object({
-            value: z.string().max(800, 'Ein gültiges Ziel darf maximal 800 Buchstaben lang sein.'),
-            label: z.string().max(800, 'Ein gültiges Ziel darf maximal 800 Buchstaben lang sein.'),
+            value: z.string().max(800, "messages.maxlength800"),
+            label: z.string().max(800, "messages.maxlength800"),
         })
         .array(),
     topics: z
         .object({
-            name: z.string().max(400, 'Ein gültiges Thema darf maximal 400 Buchstaben lang sein.'),
+            name: z.string().max(500, "messages.maxlength500"),
         })
         .array(),
 });

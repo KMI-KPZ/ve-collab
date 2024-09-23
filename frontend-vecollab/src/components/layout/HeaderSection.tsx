@@ -11,6 +11,7 @@ import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons
 import Dropdown from '../common/Dropdown';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     notificationEvents: Notification[];
@@ -25,7 +26,10 @@ export default function HeaderSection({
     toggleChatWindow,
     toggleNotifWindow,
 }: Props) {
+    const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
+
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
     const baseStyle =
@@ -37,7 +41,6 @@ export default function HeaderSection({
         'block w-full px-2 py-1 whitespace-nowrap text-left hover:bg-slate-50';
     const sandwichActiveItemClass = `${sandwichItemClass} font-bold`;
 
-    const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
     const {data: userProfile} = useGetOwnProfile(session ? session.accessToken : '')
 
@@ -56,6 +59,8 @@ export default function HeaderSection({
 
     const isFrontpage = () => currentPath == '/';
 
+    const changeToLanguage = router.locale === 'en' ? 'de' : 'en'
+
     const hideSandwichMenu = () => {
         document.dispatchEvent(new Event('mousedown'));
     };
@@ -68,6 +73,9 @@ export default function HeaderSection({
                 break;
             case 'profil':
                 router.push('/profile');
+                break;
+            case 'language':
+                onToggleLanguage()
                 break;
             case 'contact':
                 window.open('mailto:schlecht@infai.org, mihaela.markovic@uni-leipzig.de', '_blank');
@@ -83,12 +91,24 @@ export default function HeaderSection({
         router.push(`/search?search=${e.currentTarget.search.value}`);
     };
 
+    const onToggleLanguage = () => {
+        const { pathname, asPath, query } = router
+        router.push({ pathname, query }, asPath, { locale: changeToLanguage })
+    }
+
+    const LanguageSelector = () => (
+        <button
+            onClick={onToggleLanguage}
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+            title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+        >
+            {changeToLanguage == "de" ? "EN" : "DE"}
+        </button>
+    )
+
     const Menu = () => {
         return (
             <>
-                {/* <li className={isFrontpage() ? activeClass : inactiveClass}>
-                <Link href="/" className='px-2 py-1'>Start</Link>
-            </li> */}
                 {isGlobalAdmin && (
                     <li className={isActivePath('/admin') ? activeClass : inactiveClass}>
                         <Link href="/admin" className="px-2 py-1">
@@ -154,6 +174,9 @@ export default function HeaderSection({
                             </Link>
                         </li>
                         <li>
+                            <LanguageSelector />
+                        </li>
+                        <li>
                             <div className="flex items-center font-normal">
                                 <Dropdown
                                     options={[
@@ -162,13 +185,22 @@ export default function HeaderSection({
                                             label: 'Profil bearbeiten',
                                             title: 'Eigenes Profil bearbeiten',
                                         },
+                                        // Object.assign({}, isGlobalAdmin
+                                        //     ? {
+                                        //         value: "admin",
+                                        //         label: "Admin Dashboard"
+                                        //     } : null
+                                        // ),
                                         {
                                             value: 'contact',
                                             label: 'Kontakt per Mail...',
                                             title: 'Kontaktiere uns per Mail ...',
                                         },
-                                        { value: 'logout', label: 'Abmelden' },
-                                    ]}
+                                        {
+                                            value: 'logout',
+                                            label: 'Abmelden'
+                                        },
+                                    ].filter(a => "value" in a)}
                                     icon={
                                         <div className="flex items-center">
                                             <AuthenticatedImage
@@ -343,6 +375,17 @@ export default function HeaderSection({
                                 className={sandwichItemClass}
                             >
                                 Kontakt
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                className={sandwichItemClass}
+                                onClick={onToggleLanguage}
+                                title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+                            >
+                                {t('language')}:&nbsp;
+                                <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
+                                <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
                             </button>
                         </li>
                         <li>

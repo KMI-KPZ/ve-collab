@@ -6,6 +6,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { dropPlanLock } from './PlanSocket';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -13,7 +14,7 @@ interface Props {
     handleUnsavedData: (data: any, continueLink: string) => void;
     handleInvalidData: (data: any, continueLink: string) => void;
     socket: Socket;
-    plan: IPlan
+    plan: IPlan;
 }
 
 export default function Header({
@@ -22,9 +23,10 @@ export default function Header({
     submitCallback,
     handleUnsavedData,
     handleInvalidData,
-    socket
+    socket,
 }: Props) {
     const router = useRouter();
+    const { t } = useTranslation('common');
 
     return (
         <div className="p-3 flex justify-between flex-wrap border-b">
@@ -39,7 +41,7 @@ export default function Header({
                     <button
                         type="submit"
                         className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
-                        title="Kollaboratives Pad öffnen"
+                        title={t('open_collaborative_pad')}
                     >
                         <MdEditSquare className="inline" /> Pad
                     </button>
@@ -48,7 +50,7 @@ export default function Header({
                     <button
                         type="submit"
                         className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        title="Jitsi Raum betreten"
+                        title={t('enter_jtsi')}
                     >
                         <MdMeetingRoom className="inline" /> Video
                     </button>
@@ -60,7 +62,7 @@ export default function Header({
                         if (Object.keys(methods.formState.dirtyFields).length > 0) {
                             handleUnsavedData(null, '/plans');
                         } else {
-                            await dropPlanLock(socket, router.query.plannerId)
+                            await dropPlanLock(socket, router.query.plannerId);
                             await router.push({
                                 pathname: '/plans',
                                 query: {},
@@ -68,7 +70,7 @@ export default function Header({
                         }
                     }}
                 >
-                    Beenden
+                    {t("exit")}
                 </button>
 
                 <button
@@ -80,11 +82,11 @@ export default function Header({
                         },
                         // invalid form
                         async (data: any) => {
-                            handleInvalidData(data, '')
+                            handleInvalidData(data, '');
                         }
                     )}
                 >
-                    Speichern
+                    {t("save")}
                 </button>
             </div>
         </div>

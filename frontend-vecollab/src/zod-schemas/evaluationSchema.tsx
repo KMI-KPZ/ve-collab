@@ -5,27 +5,27 @@ export const EvaluationFormSchema = z.object({
         z.object({
             username: z
                 .string()
-                .max(200, 'Ein gültiger Name darf maximal 200 Buchstaben lang sein.')
+                .max(200, "messages.maxlength200")
                 .nullable(),
             is_graded: z.boolean({
-                required_error: 'Bitte Ja oder Nein auswählen',
-                invalid_type_error: 'Bitte Ja oder Nein auswählen',
+                required_error: "messages.please_yes_or_no",
+                invalid_type_error: "messages.please_yes_or_no",
             }),
             task_type: z
                 .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .max(500, "messages.maxlength500")
                 .nullable(),
             assessment_type: z
                 .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .max(500, "messages.maxlength500")
                 .nullable(),
             evaluation_while: z
                 .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .max(500, "messages.maxlength500")
                 .nullable(),
             evaluation_after: z
                 .string()
-                .max(500, 'Ein gültiger Name darf maximal 500 Buchstaben lang sein.')
+                .max(500, "messages.maxlength500")
                 .nullable(),
         })
     ),

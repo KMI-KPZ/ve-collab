@@ -19,6 +19,8 @@ import Dialog from '@/components/profile/Dialog';
 import Link from 'next/link';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
 
@@ -52,6 +54,8 @@ Institutions.auth = true;
 export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation(['designer', 'common'])
+
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -127,85 +131,84 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            Name
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder="Name eingeben"
+                            placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.name`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.name?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.name?.message!)}
                         </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="schoolType" className="px-2 py-2">
-                            Bildungseinrichtung
+                            {t('institutions.educational_institution')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <select
-                            placeholder="Bildungseinrichtung eingeben"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                             {...methods.register(`institutions.${index}.school_type`)}
                         >
-                            <option value="Hochschule / Universität / College">
-                                Hochschule / Universität / College
+                            <option value={t('institutions.eduinst_highschool')}>
+                                {t('institutions.eduinst_highschool')}
                             </option>
-                            <option value="Fachhochschule / University of Applied Sciences">
-                                Fachhochschule / University of Applied Sciences
+                            <option value={t('institutions.eduinst_appliedsc')}>
+                                {t('institutions.eduinst_appliedsc')}
                             </option>
-                            <option value="Berufsschule">Berufsschule</option>
-                            <option value="Schule – Primärbereich">Schule – Primärbereich</option>
-                            <option value="Schule – Sekundarbereich">
-                                Schule – Sekundarbereich
+                            <option value={t('institutions.eduinst_voc')}>{t('institutions.eduinst_voc')}</option>
+                            <option value={t('institutions.eduinst_school1')}>{t('institutions.eduinst_school1')}</option>
+                            <option value={t('institutions.eduinst_school2')}>
+                                {t('institutions.eduinst_school2')}
                             </option>
 
-                            <option value="Sonstige">Sonstige</option>
+                            <option value={t('institutions.eduinst_other')}>{t('institutions.eduinst_other')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.school_type?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.school_type?.message!)}
                         </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="country" className="px-2 py-2">
-                            Land
+                            {t('institutions.country')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder="Land eingeben"
+                            placeholder={t('institutions.enter_country')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.country`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.country?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.country?.message!)}
                         </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="department" className="px-2 py-2">
-                            Fachbereich
+                            {t('institutions.department')}
                         </label>
                     </div>
                     <div className="w-2/3">
                         <input
                             type="text"
-                            placeholder="Fachbereich eingeben"
+                            placeholder={t('institutions.enter_department')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                             {...methods.register(`institutions.${index}.department`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.institutions?.[index]?.department?.message}
+                            {t(methods.formState.errors?.institutions?.[index]?.department?.message!)}
                         </p>
                     </div>
                 </div>
@@ -274,10 +277,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
         if (!importDialog.institutions.length) {
             return (
                 <div>
-                    <p>Es sind noch keine Institutionen im Profil hinterlegt.</p>
-                    <Link href={'/profile/edit'} target="_blank">
-                        <span className="border border-white bg-black/75 text-white rounded-lg px-3 py-1">
-                            Profil bearbeiten
+                    <p>{t('institutions.no_inst_in_profile')}</p>
+                    <Link href={'/profile/edit'} target='_blank'>
+                        <span className='border border-white bg-black/75 text-white rounded-lg px-3 py-1' >
+                            {t('edit_profile')}
                         </span>
                     </Link>
                 </div>
@@ -288,11 +291,9 @@ export default function Institutions({ socket }: Props): JSX.Element {
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 {importDialog.institutions.map((institution, i) => {
                     return (
-                        <div
-                            key={i}
-                            className="ml-10 hover:cursor-pointer flex"
-                            onClick={() => toggleImport(i, institution)}
-                            title="Add/Remove"
+                        <div key={i}
+                            className='ml-10 hover:cursor-pointer flex'
+                            onClick={e => toggleImport(i, institution)}
                         >
                             <input
                                 type="checkbox"
@@ -303,17 +304,16 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {institution.name}
                             {institution.department && <>({institution.department})</>}
                         </div>
-                    );
+                    )
                 })}
-                <div className="ml-auto text-right">
+                <div className='ml-auto text-right'>
                     <button
-                        type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
-                        onClick={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
-                    >
-                        Abbrechen
+                        type='button'
+                        className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg'
+                        onClick={e => setImportDialog(prev => ({...prev, isOpen: false}))}>
+                        {t('common:cancel')}
                     </button>
-                    <ButtonPrimary label={'Importieren'} onClick={() => handleImport()} />
+                    <ButtonPrimary label={t('common:import')} onClick={() => handleImport()} />
                 </div>
             </div>
         );
@@ -322,9 +322,9 @@ export default function Institutions({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Institution"
-            subtitle="In welchen Institutionen wird der VE umgesetzt?"
-            description="Überblick beteiligter Einrichtungen und der entsprechenden Fachbereiche."
+            title={t('institutions.title')}
+            subtitle={t('institutions.subtitle')}
+            description={t('institutions.description')}
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -333,8 +333,8 @@ export default function Institutions({ socket }: Props): JSX.Element {
         >
             <Dialog
                 isOpen={importDialog.isOpen}
-                title={'Institutionen importieren'}
-                onClose={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
+                title={t('institutions.import_institutions')}
+                onClose={() => setImportDialog(prev => ({...prev, isOpen: false}))}
             >
                 <div className="w-[40vw]">
                     <ImportDialog />
@@ -345,11 +345,11 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="flex">
                     <button
                         className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        type="button"
-                        title="Institionen aus Profil importieren"
-                        onClick={() => openImportDialog()}
+                        type='button'
+                        title={t('institutions.import_institutions')}
+                        onClick={e => openImportDialog()}
                     >
-                        Importieren
+                        {t('common:import')}
                     </button>
                     {fields.length == 0 && (
                         <button
@@ -364,9 +364,8 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 });
                             }}
                         >
-                            Neu
-                        </button>
-                    )}
+                            {t('common:new')}
+                    </button>)}
                 </div>
 
                 <div className="divide-y">{renderInstitutionInputs()}</div>
@@ -392,4 +391,14 @@ export default function Institutions({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }

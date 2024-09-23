@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
@@ -12,6 +13,8 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 
@@ -63,6 +66,7 @@ const emptyLanguage = { language: '' };
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -157,25 +161,25 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            Bezeichnung
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.name`)}
-                            placeholder="Name eingeben"
+                            placeholder={t('common:enter_name')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.name?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.name?.message!)}
                         </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="age" className="px-2 py-2">
-                            Alter
+                            {t('common:age')}
                         </label>
                     </div>
                     <div className="w-3/4 flex">
@@ -185,11 +189,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_min`, {
                                     valueAsNumber: true,
                                 })}
-                                placeholder="von"
+                                placeholder={t('common:from')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2 mr-4">
-                                {methods.formState.errors?.targetGroups?.[index]?.age_min?.message}
+                                {t(methods.formState.errors?.targetGroups?.[index]?.age_min?.message!)}
                             </p>
                         </div>
                         <div>
@@ -198,11 +202,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 {...methods.register(`targetGroups.${index}.age_max`, {
                                     valueAsNumber: true,
                                 })}
-                                placeholder="bis"
+                                placeholder={t('common:to')}
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {methods.formState.errors?.targetGroups?.[index]?.age_max?.message}
+                                {t(methods.formState.errors?.targetGroups?.[index]?.age_max?.message!)}
                             </p>
                         </div>
                     </div>
@@ -210,38 +214,38 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="experience" className="px-2 py-2">
-                            VE-Projektrelevante Erfahrungen
+                            {t('target.relevant_exp')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <textarea
                             rows={3}
                             {...methods.register(`targetGroups.${index}.experience`)}
-                            placeholder=" z.B. Sprachkenntnisse, bisherige Seminare zum Thema, etc."
+                            placeholder={t('target.relevant_exp_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.experience?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.experience?.message!)}
                         </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="academic_course" className="px-2 py-2">
-                            Studiengang
+                            {t('target.degree')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.academic_course`)}
-                            placeholder="Studiengang eingeben, mehrere durch Komma trennen"
+                            placeholder={t('target.degree_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
                             {
-                                methods.formState.errors?.targetGroups?.[index]?.academic_course
-                                    ?.message
+                                t(methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                    ?.message!)
                             }
                         </p>
                     </div>
@@ -249,18 +253,18 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="languages" className="px-2 py-2">
-                            Sprachen
+                            {t('target.languages')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.languages`)}
-                            placeholder="mehrere durch Komma trennen"
+                            placeholder={t('target.languages_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {methods.formState.errors?.targetGroups?.[index]?.languages?.message}
+                            {t(methods.formState.errors?.targetGroups?.[index]?.languages?.message!)}
                         </p>
                     </div>
                 </div>
@@ -284,7 +288,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="flex my-2 items-center w-full">
                     <input
                         type="text"
-                        placeholder="Sprache eingeben"
+                        placeholder={t('common:enter_language')}
                         className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
                         {...methods.register(`languages.${index}.language`)}
                     />
@@ -294,7 +298,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.languages?.[index]?.language?.message && (
                     <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.languages?.[index]?.language?.message}
+                        {t(methods.formState.errors?.languages?.[index]?.language?.message!)}
                     </p>
                 )}
             </div>
@@ -304,14 +308,11 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Zielgruppen & Sprachen"
-            subtitle="An welche Zielgruppen richtet sich der VE?"
-            description={[
-                'Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt ausgefüllt werden, da ihr eure Zielgruppe unter Umständen zum Zeitpunkt der VE-Planung noch nicht genau kennt (z. B. Alter der Teilnehmenden, Sprachen).',
-                'Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.',
-            ]}
+            title={t('target.title')}
+            subtitle={t('target.subtitle')}
+            description={t('target.description')}
             tooltip={{
-                text: 'Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VEs optimal an die Lernenden anzupassen. Die Zielgruppe ist noch nicht bekannt? Dieses Feld kann auch zu einem späteren Zeitpunkt ausgefüllt werden',
+                text: t('target.tooltip'),
                 link: '',
             }}
             methods={methods}
@@ -336,20 +337,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             </div>
 
             <div className="">
-                <div className="text-xl text-slate-600">
-                    In welchen Sprachen findet der VE (hauptsächlich) statt?
-                </div>
-                <div className="mb-8">
-                    <p className="mb-2">
-                        Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren
-                        Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen
-                        könnt.
-                    </p>
-                    <p className="mb-2">
-                        Dieses Feld ist optional und kann auch zu einem späteren Zeitpunkt
-                        ausgefüllt werden.
-                    </p>
-                </div>
+                <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                <div className="mb-8">{t('target.language_description')}</div>
                 <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow"
@@ -363,4 +352,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }

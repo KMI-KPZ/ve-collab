@@ -9,6 +9,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NameFormSchema } from '../../zod-schemas/nameSchema';
 
@@ -23,6 +25,7 @@ interface Props {
 Name.auth = true;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common'])
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -65,9 +68,9 @@ export default function Name({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Projektname"
-            subtitle="Wie soll das Projekt heißen?"
-            description="Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht."
+            title={t("name.title")}
+            subtitle={t("name.subtitle")}
+            description={t('name.description')}
             methods={methods}
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
@@ -76,13 +79,23 @@ export default function Name({ socket }: Props): JSX.Element {
             <div className="">
                 <input
                     type="text"
-                    placeholder="Name eingeben"
+                    placeholder={t('name.placeholder')}
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
                     {...methods.register('name')}
                 />
-                <p className="text-red-600 pt-2">{methods.formState.errors.name?.message}</p>
+                <p className="text-red-600 pt-2">{t(methods.formState.errors.name?.message!)}</p>
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }
