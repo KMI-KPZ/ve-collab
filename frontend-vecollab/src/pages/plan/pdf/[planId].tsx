@@ -21,13 +21,6 @@ interface Props {
 }
 
 export default function PDFPlan({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
-    const Wrapper = ({ children }: { children: JSX.Element }) => {
-        return (
-            <div className="max-w-screen-[1500] min-h-[70vh] bg-pattern-left-blue-small bg-no-repeat">
-                <div className="container mx-auto mb-14 px-5 p-12">{children}</div>
-            </div>
-        );
-    };
 
     if (error) {
         let message = '';
@@ -53,39 +46,35 @@ export default function PDFPlan({ plan, error, partnerProfileSnippets, available
         }
 
         return (
-            <Wrapper>
-                <div className="flex flex-col items-center justify-center font-bold">
-                    <div className="flex items-center">
-                        <GiSadCrab size={60} className="m-4" />
-                        <div className="text-xl text-slate-900">{message}</div>
-                    </div>
-                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-                        <Link href="/plans">Zurück zur Übersicht</Link>
-                    </button>
+            <div className="flex flex-col items-center justify-center font-bold">
+                <div className="flex items-center">
+                    <GiSadCrab size={60} className="m-4" />
+                    <div className="text-xl text-slate-900">{message}</div>
                 </div>
-            </Wrapper>
+                <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+                    <Link href="/plans">Zurück zur Übersicht</Link>
+                </button>
+            </div>
         );
     }
     return (
-        <Wrapper>
-            <>
-                <div className="mb-6">
-                    <div className={'flex justify-between font-bold text-4xl mb-2'}>
-                        <h1>{plan!.name}</h1>
-                    </div>
-                    <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
+        <>
+            <div className="mb-6">
+                <div className={'flex justify-between font-bold text-4xl mb-2'}>
+                    <h1>{plan!.name}</h1>
                 </div>
-                <div className="flex w-full">
-                    <PlanSummaryPDF
-                        plan={plan!}
-                        openAllBoxes={true}
-                        partnerProfileSnippets={partnerProfileSnippets}
-                        availablePlans={availablePlans}
+                <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
+            </div>
+            <div className="flex w-full">
+                <PlanSummaryPDF
+                    plan={plan!}
+                    openAllBoxes={true}
+                    partnerProfileSnippets={partnerProfileSnippets}
+                    availablePlans={availablePlans}
 
-                    />
-                </div>
-            </>
-        </Wrapper>
+                />
+            </div>
+        </>
     );
 }
 

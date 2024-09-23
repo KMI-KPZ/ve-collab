@@ -1,13 +1,7 @@
-import datetime
 import functools
-import json
 import logging
 from typing import Awaitable, Callable, Dict, List, Optional
 
-from bson import ObjectId
-from jose import jwt
-import jose.exceptions
-from keycloak import KeycloakGetError
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
 import tornado.web
@@ -60,7 +54,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 "test_user@mail.de",
             )
             return
-        
+
         # abort if there is no Authorization header
         if "Authorization" not in self.request.headers:
             self.current_user = None
@@ -68,31 +62,15 @@ class BaseHandler(tornado.web.RequestHandler):
             return
 
         # remove the Bearer prefix to only keep the token
-        bearer_token = self.request.headers["Authorization"].replace(
-            "Bearer ", ""
-        )
-
-        try:
-            # in order to verify the JWT we need the public key from keycloak
-            KEYCLOAK_PUBLIC_KEY = (
-                "-----BEGIN PUBLIC KEY-----\n"
-                + global_vars.keycloak.public_key()
-                + "\n-----END PUBLIC KEY-----"
-            )
-        except KeycloakGetError:
-            self.current_user = None
-            self._access_token = None
-            return
+        bearer_token = self.request.headers["Authorization"].replace("Bearer ", "")
 
         # decode the JWT, if any error is thrown, the token
         # is definetly invalid and therefore no session is set
         # otherwise, set the current user as per the content of the
         # token
         try:
-            token_info = jwt.decode(
-                bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
-            )
-        except jose.exceptions.JWTError as e:
+            token_info = global_vars.keycloak.decode_token(bearer_token)
+        except Exception as e:
             self.current_user = None
             self._access_token = None
             return
@@ -167,7 +145,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
         try:
             # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
-            global_vars.keycloak_admin.refresh_token()
+            global_vars.keycloak_admin.connection.refresh_token()
 
             # request user data from keycloak
             user_id = global_vars.keycloak_admin.get_user_id(username)
@@ -233,7 +211,7 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             try:
                 # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
-                global_vars.keycloak_admin.refresh_token()
+                global_vars.keycloak_admin.connection.refresh_token()
                 return global_vars.keycloak_admin.get_users()
             except KeycloakError as e:
                 logger.warn(

@@ -16,6 +16,7 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 import NotificationsWindow from '@/components/notifications/NotificationsWindow';
 import ChatWindow from '@/components/chat/ChatWindow';
+import { appWithTranslation } from 'next-i18next'
 
 export const SocketContext = createContext(socket);
 
@@ -53,7 +54,7 @@ function Auth({
     }
 }
 
-export default function App({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAuth) {
+const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAuth) => {
     const [notificationEvents, setNotificationEvents] = useState<Notification[]>([]);
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
     const [chatOpen, setChatOpen] = useState<boolean>(false);
@@ -204,3 +205,4 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         </>
     );
 }
+export default appWithTranslation(App)

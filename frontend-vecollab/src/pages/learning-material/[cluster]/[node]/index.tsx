@@ -27,7 +27,7 @@ export default function PageCategorySelected(props: Props) {
                         <>
                             <LoadingAnimation />
                             <p className='mt-8'>
-                                Sie werden automatisch zur 1. Lektion weitergeleitet, falls dies nicht funktioniert, klicken Sie bitte{' '}
+                                Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies nicht funktioniert, klicken Sie bitte{' '}
                                 <a
                                     className="underline text-ve-collab-blue"
                                     href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
@@ -37,7 +37,7 @@ export default function PageCategorySelected(props: Props) {
                             </p>
                         </>
                     ) : (
-                        <div className='italic'>Leider gibt es noch keine Inhalte für diese Kategorie</div>
+                        <div className='italic'>Leider gibt es noch keine Inhalte für dieses Modul</div>
                     )}
                 </div>
             }

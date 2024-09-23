@@ -14,6 +14,8 @@ import AsyncCreatableSelect from 'react-select/async-creatable';
 import Select from 'react-select';
 import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 import Dropdown from '../common/Dropdown';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -327,14 +329,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                             <div className="mt-2 min-h-[2rem]">
                                 {userIsAdmin()
                                     ? (
-                                        <button
-                                            className={
-                                                'border border-white bg-black/75 text-white rounded-lg px-3 py-2'
-                                            }
+                                        <ButtonSecondary
                                             onClick={() => handleOpenEditDialog()}
-                                        >
-                                            Gruppe bearbeiten
-                                        </button>
+                                            label={"Gruppe bearbeiten"}
+                                        />
                                     ) : (
                                         <Dropdown options={[
                                             { value: 'leaveGroup', label: 'Gruppe verlassen' }
@@ -364,17 +362,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     />
                                                 </div>
                                                 <div className="flex justify-center">
-                                                    <button
-                                                        className={
-                                                            'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                                        }
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setIsEditImageDialogOpen(true);
-                                                        }}
-                                                    >
-                                                        ändern
-                                                    </button>
+                                                    <ButtonPrimary
+                                                        onClick={() => setIsEditImageDialogOpen(true)}
+                                                        label={"ändern"}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -431,17 +422,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         setUpdatedDescription(e.target.value)
                                                     }
                                                 ></textarea>
-                                                <button
-                                                    className={
-                                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                                    }
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleUpdateDescription();
-                                                    }}
-                                                >
-                                                    Speichern
-                                                </button>
+                                                <ButtonPrimary
+                                                    onClick={() => handleUpdateDescription()}
+                                                    label={"Speichern"}
+                                                />
                                             </div>
                                         </div>
                                     </div>

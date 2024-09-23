@@ -20,6 +20,10 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 
 export interface FormValues {
     partners: Partner[];
@@ -38,7 +42,7 @@ interface Partner {
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
     return (
         formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.every(a => a.value == '')
+        formValues.partners.length === 1
     );
 };
 
@@ -48,8 +52,9 @@ interface Props {
 
 Partners.auth = true;
 export default function Partners({ socket }: Props): JSX.Element {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common'])
 
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
@@ -64,9 +69,10 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(PartnersFormSchema),
     });
 
-    const [planAuthor, setPlanAuthor] = useState<string>()
+    const [planAuthor, setPlanAuthor] = useState<string>();
 
     const {
         fields: fieldsPartners,
@@ -92,10 +98,10 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
-            setPlanAuthor(plan.author.username)
+            setPlanAuthor(plan.author.username);
 
-            let partners = [{ label: '', value: '' }]
-            let extPartners = [{ externalParty: '' }]
+            let partners = [{ label: '', value: '' }];
+            let extPartners = [{ externalParty: '' }];
             if (plan.checklist && Array.isArray(plan.checklist)) {
                 setFormalConditions(plan.checklist);
             }
@@ -106,7 +112,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 setIndividualLearningGoals(plan.individual_learning_goals);
             }
             if (plan.involved_parties.length !== 0) {
-                extPartners = plan.involved_parties.map(exp => ({ externalParty: exp }))
+                extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
             }
             if (Object.keys(plan.progress).length) {
@@ -117,39 +123,37 @@ export default function Partners({ socket }: Props): JSX.Element {
                     '/profile_snippets',
                     { usernames: plan.partners },
                     session?.accessToken
-                )
+                );
                 if (snippets) {
-                    partners = plan.partners.map(
-                        (partner: string): Partner => {
-                            const findFullUsername = snippets.user_snippets.find(
-                                (backendUser: BackendUserSnippet) =>
-                                    backendUser.username === partner
-                            );
-                            if (findFullUsername !== undefined) {
-                                return {
-                                    label:
-                                        findFullUsername.first_name +
-                                        ' ' +
-                                        findFullUsername.last_name +
-                                        ' - ' +
-                                        findFullUsername.username,
-                                    value: findFullUsername.username,
-                                };
-                            } else {
-                                return {
-                                    label: partner,
-                                    value: partner,
-                                };
-                            }
-                        });
+                    partners = plan.partners.map((partner: string): Partner => {
+                        const findFullUsername = snippets.user_snippets.find(
+                            (backendUser: BackendUserSnippet) => backendUser.username === partner
+                        );
+                        if (findFullUsername !== undefined) {
+                            return {
+                                label:
+                                    findFullUsername.first_name +
+                                    ' ' +
+                                    findFullUsername.last_name +
+                                    ' - ' +
+                                    findFullUsername.username,
+                                value: findFullUsername.username,
+                            };
+                        } else {
+                            return {
+                                label: partner,
+                                value: partner,
+                            };
+                        }
+                    });
                     replacePartners(partners);
                 }
             }
 
             return {
                 partners: partners,
-                externalParties: extPartners
-            }
+                externalParties: extPartners,
+            };
         },
         [replaceExternalParties, replacePartners, session]
     );
@@ -279,17 +283,22 @@ export default function Partners({ socket }: Props): JSX.Element {
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
         if (inputValue.length > 1) {
-            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken)
-            .then((data: BackendSearchResponse) => {
-                callback(
-                    data.users
-                    .filter((user: BackendUserSnippet) => !fieldsPartners.some(a => a.value == user.username) )
-                    .map((user) => ({
-                        label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                        value: user.username,
-                    }))
-                );
-            });
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    callback(
+                        data.users
+                            .filter(
+                                (user: BackendUserSnippet) =>
+                                    !fieldsPartners.some((a) => a.value == user.username)
+                            )
+                            .map((user) => ({
+                                label:
+                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                                value: user.username,
+                            }))
+                    );
+                }
+            );
         }
     };
 
@@ -306,11 +315,16 @@ export default function Partners({ socket }: Props): JSX.Element {
                         onChange={onChange}
                         onBlur={onBlur}
                         value={value}
-                        placeholder={'Suche nach Nutzer:innen...'}
+                        placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
                         formatCreateLabel={(inputValue) => (
                             <span>
-                                kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                                {t('common:search_users_no_hit', { value: inputValue })}
+                                {/* <Trans
+                                    i18nKey="search_users_no_hit" // optional -> fallbacks to defaults if not provided
+                                    values={{ value: inputValue }}
+                                    components={{ bold: <strong /> }}
+                                /> */}
                             </span>
                         )}
                     />
@@ -326,14 +340,9 @@ export default function Partners({ socket }: Props): JSX.Element {
                 <div className="flex">
                     <input
                         type="text"
-                        placeholder="Externen eingeben"
+                        placeholder={t("common:enter_name")}
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`, {
-                            maxLength: {
-                                value: 500,
-                                message: 'Das Feld darf nicht mehr als 500 Buchstaben enthalten.',
-                            },
-                        })}
+                        {...methods.register(`externalParties.${index}.externalParty`)}
                     />
                     <button type="button" onClick={() => handleDeleteExternalParties(index)}>
                         <RxMinus size={20} />
@@ -341,7 +350,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
-                        {methods.formState.errors?.externalParties?.[index]?.externalParty?.message}
+                        {t(methods.formState.errors?.externalParties?.[index]?.externalParty?.message!)}
                     </p>
                 )}
             </div>
@@ -351,14 +360,14 @@ export default function Partners({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Projektpartner:innen"
-            subtitle="Wer ist am Projekt beteiligt?"
+            title={t('partners.title')}
+            subtitle={t('partners.subtitle')}
             description={[
-                'Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.',
-                'Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.',
+                t('partners.description-1'),
+                t('partners.description-2'),
             ]}
             tooltip={{
-                text: 'Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …',
+                text: t('partners.tooltip'),
                 link: '/learning-material/left-bubble/Partnersuche',
             }}
             methods={methods}
@@ -368,24 +377,26 @@ export default function Partners({ socket }: Props): JSX.Element {
             submitCallback={onSubmit}
         >
             <div>
-                <p className="text-xl text-slate-600 mb-2">Beteiligte</p>
+                <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
                 {fieldsPartners.map((partner, index) => {
                     return (
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                            {partner.value == planAuthor
-                                ? (
-                                    <div className='p-2'>{partner.label}</div>
-                                ) : (
-                                    <>
-                                        {createableAsyncSelect(methods.control, `partners.${index}`, index)}
-                                        <button onClick={() => handleDeletePartners(index)}>
-                                            <RxMinus size={20} />
-                                        </button>
-                                    </>
-                                )
-                            }
+                            {partner.value == planAuthor ? (
+                                <div className="p-2">{partner.label}</div>
+                            ) : (
+                                <>
+                                    {createableAsyncSelect(
+                                        methods.control,
+                                        `partners.${index}`,
+                                        index
+                                    )}
+                                    <button onClick={() => handleDeletePartners(index)}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                </>
+                            )}
                         </div>
-                    )
+                    );
                 })}
                 <div className="mt-4">
                     <button
@@ -399,7 +410,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                     </button>
                 </div>
                 <div>
-                    <p className="text-xl text-slate-600 mb-2 mt-10">Extern Beteiligte</p>
+                    <p className="text-xl text-slate-600 mb-2 mt-10">{t('partners.externpartners_title')}</p>
                     {renderExternalPartiesInputs()}
                     <div className="mt-4">
                         <button
@@ -418,4 +429,14 @@ export default function Partners({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common', 'designer'
+            ])),
+        },
+    }
 }

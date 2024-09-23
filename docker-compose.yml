@@ -55,6 +55,10 @@ services:
       MBR_CLIENT_SECRET:
       MBR_METADATA_BASE_ENDPOINT:
       MBR_METADATA_SOURCE_SLUG:
+      SMTP_HOST:
+      SMTP_PORT:
+      SMTP_USERNAME:
+      SMTP_PASSWORD:
     network_mode: host
     depends_on:
       mongodb:

@@ -2,7 +2,6 @@ import React from 'react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
-import Container from '@/components/common/Container';
 import Dialog from '@/components/profile/Dialog';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import {
@@ -43,13 +42,11 @@ export default function Groups() {
         data: myGroupInvites,
         mutate: mutateMyGroupInvites,
     } = useGetMyGroupInvites(session!.accessToken);
-    // console.log(myGroupInvites);
 
     const {
         data: myGroupRequests,
         mutate: mutateMyGroupRequests,
     } = useGetMyGroupRequests(session!.accessToken);
-    // console.log(myGroupRequests);
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
@@ -129,7 +126,7 @@ export default function Groups() {
     }
 
     return (
-        <Container>
+        <>
             <WhiteBox>
                 <VerticalTabs>
                     <div tabname="meine Gruppen">
@@ -553,6 +550,6 @@ export default function Groups() {
                     </div>
                 </div>
             </Dialog>
-        </Container>
+        </>
     );
 }

@@ -1798,7 +1798,17 @@ class VEPlanHandler(BaseHandler):
             plan = planner.get_plan(_id, requesting_username=self.current_user.username)
             plan_dict = plan.to_dict()
             if plan.author:
-                author_snippet = profile_manager.get_profile_snippets([plan.author])[0]
+                profile_snippets = profile_manager.get_profile_snippets([plan.author])
+                if profile_snippets:
+                    author_snippet = profile_snippets[0]
+                else:
+                    author_snippet = {
+                        "username": plan.author,
+                        "first_name": None,
+                        "last_name": None,
+                        "institution": None,
+                        "profile_pic": None,
+                    }
             else:
                 author_snippet = {
                     "username": None,

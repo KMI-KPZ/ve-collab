@@ -351,6 +351,10 @@ def set_global_vars() -> None:
         "MBR_CLIENT_SECRET",
         "MBR_METADATA_BASE_ENDPOINT",
         "MBR_METADATA_SOURCE_SLUG",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USERNAME",
+        "SMTP_PASSWORD",
     ]
 
     for key in expected_env_keys:
@@ -377,6 +381,11 @@ def set_global_vars() -> None:
     global_vars.mbr_client_secret = os.getenv("MBR_CLIENT_SECRET")
     global_vars.mbr_metadata_base_endpoint = os.getenv("MBR_METADATA_BASE_ENDPOINT")
     global_vars.mbr_metadata_source_slug = os.getenv("MBR_METADATA_SOURCE_SLUG")
+    global_vars.smtp_host = os.getenv("SMTP_HOST")
+    global_vars.smtp_port = int(os.getenv("SMTP_PORT", 587))
+    global_vars.smtp_username = os.getenv("SMTP_USERNAME")
+    global_vars.smtp_password = os.getenv("SMTP_PASSWORD")
+
     global_vars.keycloak_base_url = os.getenv("KEYCLOAK_BASE_URL")
     global_vars.keycloak_realm = os.getenv("KEYCLOAK_REALM")
     global_vars.keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
@@ -398,7 +407,6 @@ def set_global_vars() -> None:
             username=global_vars.keycloak_admin_username,
             password=global_vars.keycloak_admin_password,
             verify=True,
-            auto_refresh_token=["get", "put", "post", "delete"],
         )
 
 

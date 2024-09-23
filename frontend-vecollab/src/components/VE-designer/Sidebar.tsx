@@ -13,20 +13,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { MdArrowDropDown, MdArrowRight, MdCheckCircleOutline } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-
-// init menu open states
-let menuStates: IMenuDataState[] = mainMenu.map((a) => {
-    return { id: a.id, open: true };
-});
-
-// note: but why does this work while change a route?!
-//  because we actually do not reload the page
-const updateMenuState = (id: string, state: boolean) => {
-    menuStates = menuStates.map((a) => ({
-        id: a.id,
-        open: a.id == id ? state : a.open,
-    }));
-};
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     methods: UseFormReturn<any>;
@@ -45,6 +32,22 @@ export default function Sidebar({
 }: Props): JSX.Element {
     const router = useRouter();
     const currentPath = usePathname();
+    const { t } = useTranslation('common');
+
+    // init menu open states
+    let menuStates: IMenuDataState[] = mainMenu.map((a) => {
+        return { id: a.id, open: true };
+    });
+
+    // note: but why does this work while change a route?!
+    //  because we actually do not reload the page
+    const updateMenuState = (id: string, state: boolean) => {
+        menuStates = menuStates.map((a) => ({
+            id: a.id,
+            open: a.id == id ? state : a.open,
+        }));
+    };
+
     const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu);
 
     useEffect(() => {
@@ -78,11 +81,12 @@ export default function Sidebar({
     const getProgressState = (id: string, parentId: string): any => {
         if (!plan || !plan.progress) return ProgressState.notStarted;
 
-        const progress = (parentId == 'steps' && id !== 'stepsGenerally')
-            ? (plan.progress.steps.find(a => a[id as keyof ISideProgressBarStateSteps])?.[id])
-            : plan.progress[id as keyof ISideProgressBarStates]
+        const progress =
+            parentId == 'steps' && id !== 'stepsGenerally'
+                ? plan.progress.steps.find((a) => a[id as keyof ISideProgressBarStateSteps])?.[id]
+                : plan.progress[id as keyof ISideProgressBarStates];
 
-        if (progress !== undefined) return progress
+        if (progress !== undefined) return progress;
 
         return ProgressState.notStarted;
     };
@@ -106,7 +110,7 @@ export default function Sidebar({
         )(e);
     };
 
-    const SubMenuItem = ({ item, parentId }: { item: ISubmenuData, parentId: string }) => {
+    const SubMenuItem = ({ item, parentId }: { item: ISubmenuData; parentId: string }) => {
         const isCurrentPage = currentPath == item.link;
 
         return (
@@ -120,7 +124,7 @@ export default function Sidebar({
                         isCurrentPage ? 'text-ve-collab-blue font-extrabold' : ''
                     }`}
                 >
-                    {item.text}
+                    {t(item.text)}
                 </p>
                 <span>
                     {getProgressState(item.id, parentId) == ProgressState.completed && (
@@ -165,7 +169,7 @@ export default function Sidebar({
                             isCurrentPage ? 'font-bold' : ''
                         }`}
                     >
-                        {item.text}
+                        {t(item.text)}
                     </span>
                     {item.submenu.length > 0 && (
                         <>

@@ -12,6 +12,10 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { EvaluationFormSchema } from '../../zod-schemas/evaluationSchema';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -45,7 +49,8 @@ interface Props {
 Evaluation.auth = true;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
+    const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -73,10 +78,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             evaluation_while: '',
             evaluation_after: '',
         },
-    ]
+    ];
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(EvaluationFormSchema),
         defaultValues: {
             evaluationPerPartner: defaultEvaluationValue,
         },
@@ -89,11 +95,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            let data: {[key: string]: any} = {}
+            let data: { [key: string]: any } = {};
 
             if (plan.evaluation.length !== 0) {
                 replace(plan.evaluation);
-                data.evaluationPerPartner = plan.evaluation
+                data.evaluationPerPartner = plan.evaluation;
             }
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
@@ -112,7 +118,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 setPartnerProfileSnippets(partnerSnippets);
             });
 
-            return data
+            return data;
         },
         [replace, session]
     );
@@ -148,7 +154,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                     <>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">Ja</label>
+                                <label className="px-2 py-2">{t('common:yes')}</label>
                             </div>
                             <div>
                                 <input
@@ -162,7 +168,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                         </div>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">Nein</label>
+                                <label className="px-2 py-2">{t('common:yes')}</label>
                             </div>
                             <div>
                                 <input
@@ -193,7 +199,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 : evaluationPerPartner.username}
                         </div>
                         <div className="flex items-center">
-                            <p className="">Erfolgt eine Bewertung?</p>
+                            <p className="">{t('evaluation.planned')}</p>
                             <div className="flex w-36 justify-end gap-x-3">
                                 {radioBooleanInput(
                                     methods.control,
@@ -204,7 +210,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                         {methods.watch(`evaluationPerPartner.${index}.is_graded`) && (
                             <>
                                 <div className="flex items-center justify-between my-1">
-                                    <p className="">Art der Leistung</p>
+                                    <p className="">{t('evaluation.formOf')}</p>
                                     <input
                                         type="text"
                                         className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
@@ -213,24 +219,33 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         )}
                                     />
                                 </div>
+                                {methods.formState.errors?.evaluationPerPartner?.[index]?.task_type &&
+                                    <p className="flex justify-center text-red-600 pb-2">
+                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.task_type?.message!)}
+                                    </p>
+                                }
                                 <div className="flex items-center justify-between my-1">
-                                    <p className="">Art der Bewertung</p>
+                                    <p className="">{t('evaluation.typeOf')}</p>
                                     <input
                                         type="text"
                                         className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
                                         {...methods.register(
                                             `evaluationPerPartner.${index}.assessment_type`
                                         )}
-                                        placeholder="z.B. benotet, unbenotet"
+                                        placeholder={t('evaluation.typeOfPlaceholder')}
                                     />
                                 </div>
+                                {methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type &&
+                                    <p className="flex justify-center text-red-600 pb-2">
+                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type?.message!)}
+                                    </p>
+                                }
                             </>
                         )}
-                        <p className="mt-10 mb-1">Wie erfolgt die Evaluation des VE?</p>
+                        <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
                         <div className="flex items-center justify-between my-1">
                             <div>
-                                <p>während des VE</p>
-                                <p>(formativ)</p>
+                                <p>{t('evaluation.while')}</p>
                             </div>
                             <textarea
                                 className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
@@ -238,22 +253,31 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                     `evaluationPerPartner.${index}.evaluation_while`
                                 )}
                                 rows={2}
-                                placeholder="z. B. Teaching Analysis Poll, Feedback-Runden, etc."
+                                placeholder={t('evaluation.whilePlaceholder')}
                             />
                         </div>
+                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while &&
+                            <p className="flex justify-center text-red-600 pb-2">
+                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while?.message!)}
+                            </p>
+                        }
                         <div className="flex items-center justify-between my-1">
                             <div>
-                                <p>nach dem VE</p>
-                                <p>(summativ)</p>
+                                <p>{t('evaluation.after')}</p>
                             </div>
                             <textarea
                                 className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
                                 {...methods.register(
                                     `evaluationPerPartner.${index}.evaluation_after`
                                 )}
-                                placeholder="z. B. anonymer Feedbackbogen, Zielscheibenfeedback, etc."
+                                placeholder={t('evaluation.afterPlaceholder')}
                             />
                         </div>
+                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after &&
+                            <p className="flex justify-center text-red-600 pb-2">
+                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after?.message!)}
+                            </p>
+                        }
                     </div>
                 </div>
             </div>
@@ -263,11 +287,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title="Bewertung / Evaluation"
-            subtitle="Wie kann der VE während der Durchführung oder abschließend bewertet und evaluiert werden?"
-            description="Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden."
+            title={t('evaluation.title')}
+            subtitle={t('evaluation.subtitle')}
+            description={t('evaluation.description')}
             tooltip={{
-                text: 'mehr zu Optionen der Bewertung findest du im Modul VA-Planung > Aushandlungsphase',
+                text: t('evaluation.tooltip'),
                 link: '/learning-material/left-bubble/VA-Planung',
             }}
             methods={methods}
@@ -279,4 +303,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+                'designer'
+            ])),
+        },
+    }
 }

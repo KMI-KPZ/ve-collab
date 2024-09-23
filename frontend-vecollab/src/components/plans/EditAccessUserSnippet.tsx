@@ -3,6 +3,7 @@ import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 import { UserAccessSnippet } from '@/interfaces/profile/profileInterfaces';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     snippet: UserAccessSnippet;
@@ -18,6 +19,8 @@ export default function EditAccessUserSnippet({
     revokeAccessCallback,
 }: Props) {
     const router = useRouter();
+    const { t } = useTranslation('common');
+
     return (
         <li className="py-2">
             <div
@@ -31,7 +34,7 @@ export default function EditAccessUserSnippet({
                 <div>
                     <AuthenticatedImage
                         imageId={snippet.profilePicUrl}
-                        alt={'Profilbild'}
+                        alt={t("profil_pic_alt_text")}
                         width={60}
                         height={60}
                         className="rounded-full"
@@ -56,7 +59,7 @@ export default function EditAccessUserSnippet({
                                 changeAccessCallback(snippet.preferredUsername, e.target.value)
                             }
                         />
-                        Lesen
+                        {t("plans_share_dialog_radio_btn_read")}
                     </label>
                 </div>
                 <div>
@@ -72,7 +75,7 @@ export default function EditAccessUserSnippet({
                                 changeAccessCallback(snippet.preferredUsername, e.target.value)
                             }
                         />
-                        Lesen & Schreiben
+                        {t("plans_share_dialog_radio_btn_read_and_write")}
                     </label>
                 </div>
                 <div className="flex items-center">

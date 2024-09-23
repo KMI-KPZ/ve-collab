@@ -21,7 +21,7 @@ const FeedbackBanner = (): JSX.Element => (
                 <p className="m-2">
                     Oder kontaktieren Sie uns
                     <Link
-                        className="underline decoration-dotted hover:decoration-solid"
+                        className="m-1 underline decoration-dotted hover:decoration-solid"
                         href="mailto:schlecht@infai.org,mihaela.markovic@uni-leipzig.de"
                         target="_blank"
                     >

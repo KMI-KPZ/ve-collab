@@ -10,6 +10,10 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import CreatableSelect from 'react-select/creatable';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
+import { MethFormSchema } from '../../zod-schemas/methodologySchema';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 interface FormValues {
     methodicalApproaches: MethodicalApproach[];
@@ -18,12 +22,6 @@ interface FormValues {
 interface MethodicalApproach {
     value: string;
     label: string;
-}
-
-export interface PhysicalMobility {
-    location: string;
-    timestamp_from: string;
-    timestamp_to: string;
 }
 
 const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
@@ -39,6 +37,7 @@ interface Props {
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
+    const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -47,6 +46,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(MethFormSchema),
         defaultValues: {
             methodicalApproaches: [],
         },
@@ -54,13 +54,13 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }))
+            const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }));
             methods.setValue('methodicalApproaches', approaches);
 
             if (Object.keys(plan.progress).length) {
                 setSideMenuStepsProgress(plan.progress);
             }
-            return {methodicalApproaches: approaches}
+            return { methodicalApproaches: approaches };
         },
         [methods]
     );
@@ -89,20 +89,20 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     const options: { value: string; label: string }[] = [
         {
-            value: 'aufgabenbasiertes Lernen',
-            label: 'aufgabenbasiertes Lernen',
+            value: t('methodology.option-1'),
+            label: t('methodology.option-1'),
         },
         {
-            value: 'problembasiertes / problemorientiertes Lernen',
-            label: 'problembasiertes / problemorientiertes Lernen',
+            value: t('methodology.option-2'),
+            label: t('methodology.option-2'),
         },
         {
-            value: 'forschendes Lernen',
-            label: 'forschendes Lernen',
+            value: t('methodology.option-3'),
+            label: t('methodology.option-3'),
         },
         {
-            value: 'game-based Learning',
-            label: 'game-based Learning',
+            value: t('methodology.option-4'),
+            label: t('methodology.option-4'),
         },
     ];
 
@@ -112,35 +112,45 @@ export default function Methodology({ socket }: Props): JSX.Element {
         options: { value: string; label: string }[]
     ): JSX.Element {
         return (
-            <Controller
-                name={name}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <CreatableSelect
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        value={value}
-                        options={options}
-                        isClearable={true}
-                        isMulti
-                        closeMenuOnSelect={false}
-                        placeholder="Ansätze auswählen oder neue durch Tippen hinzufügen"
-                    />
-                )}
-                control={control}
-            />
+            <>
+                <Controller
+                    name={name}
+                    render={({ field: { onChange, onBlur, value, ref } }) => (
+                        <CreatableSelect
+                            ref={ref}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            value={value}
+                            options={options}
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder={t('methodology.placeholder')}
+                        />
+                    )}
+                    control={control}
+                />
+                {Array.isArray(methods.formState.errors.methodicalApproaches) &&
+                    methods.formState.errors.methodicalApproaches.map(
+                        (error, index) =>
+                            error?.value?.message && (
+                                <p key={index} className="text-red-600 pt-2">
+                                    {t(error.value.message!)}
+                                </p>
+                            )
+                    )}
+            </>
         );
     }
 
     return (
         <Wrapper
             socket={socket}
-            title="Methodischer Ansatz"
-            subtitle="Welcher methodische Ansatz liegt eurem VA zugrunde?"
-            description={[
-                'Falls keines der Vorschläge eurem Ansatz entspricht, könnt ihr durch Schreiben im Feld individuelle Eingaben hinzufügen.',
-            ]}
+            title={t('methodology.title')}
+            subtitle={t('methodology.subtitle')}
+            description={t('methodology.description')}
             tooltip={{
-                text: 'Mehr zu Methodik findest du hier in den Selbstlernmaterialien …',
+                text: t('methodology.tooltip'),
                 link: '/learning-material',
             }}
             methods={methods}
@@ -154,4 +164,15 @@ export default function Methodology({ socket }: Props): JSX.Element {
             </div>
         </Wrapper>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', [
+                'common',
+                'designer'
+            ])),
+        },
+    }
 }

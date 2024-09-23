@@ -1,3 +1,5 @@
+import Button from "./Button";
+
 interface Props {
     label?: string|JSX.Element;
     children?: JSX.Element;
@@ -10,9 +12,8 @@ export default function ButtonPrimary({ label, children, onClick, className, cla
     const defaulStyle = 'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary'
 
     return (
-        <button
-            type='button'
-            role="button"
+        <Button
+            label={label}
             onClick={onClick}
             className={`${
                 className
@@ -20,7 +21,7 @@ export default function ButtonPrimary({ label, children, onClick, className, cla
                     : classNameExtend ? `${defaulStyle} ${classNameExtend}` : defaulStyle
             }`}
         >
-            {children || label}
-        </button>
-    );
+            {children}
+        </Button>
+    )
 }

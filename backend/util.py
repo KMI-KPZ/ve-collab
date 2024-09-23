@@ -1,13 +1,13 @@
 from contextlib import contextmanager
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 import logging
+import smtplib
 from typing import Dict, Optional
 
 from bson import ObjectId
 import dateutil.parser
-from jose import jwt
-import jose.exceptions
-from keycloak import KeycloakGetError
 from pymongo import MongoClient
 
 import global_vars
@@ -89,23 +89,6 @@ def seconds_to_timedelta(seconds: float | int) -> timedelta:
     return timedelta(seconds=seconds)
 
 
-def construct_keycloak_public_key() -> str:
-    """
-    retrieve the public key from Keycloak itself and bring it into
-    the correct pem format.
-
-    Returns the public key.
-
-    Raises `KeycloakGetError` if unable to request the key.
-    """
-
-    return (
-        "-----BEGIN PUBLIC KEY-----\n"
-        + global_vars.keycloak.public_key()
-        + "\n-----END PUBLIC KEY-----"
-    )
-
-
 def validate_keycloak_jwt(jwt_token: str) -> Dict:
     """
     Decodes and validates the JWT access token issued by Keycloak.
@@ -117,19 +100,15 @@ def validate_keycloak_jwt(jwt_token: str) -> Dict:
         - `jose.exceptions.JWTError` : token did not validate
     """
 
-    try:
-        keycloak_public_key = construct_keycloak_public_key()
-    except KeycloakGetError:
-        raise
-
     # try to decode the JWT, if any error is thrown, re-raise it to signal
     # to the caller that the token is invalid
     try:
-        token_info = jwt.decode(jwt_token, keycloak_public_key, audience="account")
-    except jose.exceptions.JWTError:
+        token_info = global_vars.keycloak.decode_token(jwt_token)
+    except Exception:
         raise
 
     return token_info
+
 
 def json_serialize_response(dictionary: dict) -> dict:
     """
@@ -168,3 +147,24 @@ def json_serialize_response(dictionary: dict) -> dict:
                     elem = json_serialize_response(elem)
 
     return dictionary
+
+def send_email(recipient: str, subject: str, text: str) -> None:
+    """
+    Send an Email to the recipient with the specified subject and text.
+    TODO HTML support + layouting
+    """
+
+    mailserver = smtplib.SMTP(global_vars.smtp_host, global_vars.smtp_port)
+    mailserver.starttls()
+    mailserver.login(global_vars.smtp_username, global_vars.smtp_password)
+
+    msg = MIMEMultipart('alternative')
+    msg['From'] = "VE-Collab Plattform NoReply"
+    msg['To'] = recipient
+    msg['Subject'] = subject
+
+    part1 = MIMEText(text, 'plain')
+    msg.attach(part1)
+
+    mailserver.sendmail(global_vars.smtp_username,recipient, msg.as_string())
+    mailserver.quit()

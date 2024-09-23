@@ -2,6 +2,7 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { RxMinus } from 'react-icons/rx';
 import { IFineStepFrontend } from '@/pages/ve-designer/step-data/[stepName]';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     taskIndex: number;
@@ -10,18 +11,15 @@ interface Props {
 }
 
 export default function Material({ materialsIndex, taskIndex, removeItem }: Props) {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
     const { register, formState } = useFormContext<IFineStepFrontend>();
     return (
         <div className="flex gap-5">
             <input
                 type="text"
-                {...register(`tasks.${taskIndex}.materials.${materialsIndex}.name`, {
-                    maxLength: {
-                        value: 500,
-                        message: 'Bitte nicht mehr als 500 Zeichen.',
-                    },
-                })}
-                placeholder="Welche Materialien können verwendet werden?"
+                {...register(`tasks.${taskIndex}.materials.${materialsIndex}.name`)}
+                placeholder={t("step-data.materials_placeholder")}
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button
@@ -34,7 +32,7 @@ export default function Material({ materialsIndex, taskIndex, removeItem }: Prop
                 <RxMinus size={20} />
             </button>
             <p className="text-red-600 pt-2">
-                {formState.errors?.tasks?.[taskIndex]?.materials?.[materialsIndex]?.message}
+                {formState.errors?.tasks?.[taskIndex]?.materials?.[materialsIndex]?.name?.message}
             </p>
         </div>
     );

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 import { AlertState } from '../common/dialogs/Alert';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     closeDialogCallback: () => void;
@@ -11,12 +12,9 @@ interface Props {
     setAlert: Dispatch<SetStateAction<AlertState>>;
 }
 
-export default function SharePlanForm({
-    closeDialogCallback,
-    planId,
-    setAlert,
-}: Props) {
+export default function SharePlanForm({ closeDialogCallback, planId, setAlert }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
 
     const [shareUsername, setShareUsername] = useState('');
     const [shareAccessRight, setShareAccessRight] = useState('write');
@@ -33,7 +31,11 @@ export default function SharePlanForm({
         };
 
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
-            setAlert({message: 'Plan freigegeben', autoclose: 2000, onClose: () => setAlert({open: false})})
+            setAlert({
+                message: t("plans_share_dialog_alert_set"),
+                autoclose: 2000,
+                onClose: () => setAlert({ open: false }),
+            });
         });
     };
 
@@ -59,7 +61,7 @@ export default function SharePlanForm({
 
     return (
         <>
-            <p className="my-2">Suche nach Nutzenden, um ihnen den Plan freizugeben:</p>
+            <p className="my-2">{t("plans_share_dialog_text")}</p>
             <AsyncCreatableSelect
                 loadOptions={loadOptions}
                 onChange={(e) => setShareUsername(e!.value)}
@@ -79,11 +81,11 @@ export default function SharePlanForm({
                         : `${shareUsername}`,
                     value: shareUsername,
                 }}
-                placeholder={'Suche nach Nutzer:innen...'}
+                placeholder={t("plans_share_dialog_select_placeholder")}
                 getOptionLabel={(option) => option.label}
                 formatCreateLabel={(inputValue) => (
                     <span>
-                        kein Treffer? <b>{inputValue}</b> trotzdem verwenden
+                        {t("plans_share_dialog_select_no_match_1")}<b>{inputValue}</b>{t("plans_share_dialog_select_no_match_2")}
                     </span>
                 )}
             />
@@ -99,7 +101,7 @@ export default function SharePlanForm({
                             defaultChecked={shareAccessRight === 'read'}
                             onChange={(e) => setShareAccessRight(e.target.value)}
                         />
-                        Lesen
+                        {t("plans_share_dialog_radio_btn_read")}
                     </label>
                 </div>
                 <div>
@@ -113,7 +115,7 @@ export default function SharePlanForm({
                             defaultChecked={shareAccessRight === 'write'}
                             onChange={(e) => setShareAccessRight(e.target.value)}
                         />
-                        Lesen & Schreiben
+                        {t("plans_share_dialog_radio_btn_read_and_write")}
                     </label>
                 </div>
             </div>
@@ -124,7 +126,7 @@ export default function SharePlanForm({
                     }
                     onClick={closeDialogCallback}
                 >
-                    <span>Abbrechen</span>
+                    <span>{t("plans_share_dialog_btn_cancel")}</span>
                 </button>
                 <button
                     className={
@@ -135,7 +137,7 @@ export default function SharePlanForm({
                         closeDialogCallback();
                     }}
                 >
-                    <span>Absenden</span>
+                    <span>{t("plans_share_dialog_btn_confirm")}</span>
                 </button>
             </div>
         </>

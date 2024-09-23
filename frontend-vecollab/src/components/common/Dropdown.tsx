@@ -4,7 +4,7 @@ import { HiDotsHorizontal } from "react-icons/hi";
 interface Props {
     options: {
         value: string,
-        label: string,
+        label: string | JSX.Element,
         title?: string,
         liClasses?: string,
         icon?: JSX.Element }[]
@@ -62,8 +62,12 @@ export default function Dropdown({
                                 onClick={() => _handleSelect(element.value)}
                                 className={`flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg ${element.liClasses}`}
                                 >
-                                    {element.icon}
-                                    <span className="mx-2 truncate">{element.label}</span>
+                                    {typeof element.label === "string"
+                                        ? (<>
+                                            {element.icon}
+                                            <span className="mx-2 truncate">{element.label}</span>
+                                        </>) : element.label
+                                    }
                             </li>) : (element)
                     })}
                 </ul>
