@@ -401,8 +401,7 @@ export default function Wrapper({
                                         }
                                     )}
                                 >
-                                    <Breadcrumb />
-                                    {t('designer:back_to_overview')}
+                                <Breadcrumb />
 
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
