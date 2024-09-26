@@ -17,7 +17,8 @@
         "atleast_one_field": "There must be at least one entry",
         "valid_date": "Please enter a valid date",
         "realistic_date": "Please enter a realistic date",
-        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file."
+        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file.",
+        "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age."
     },
     "save_and_continue": "Save & Continue",
     "proceed_without_saving": "Continue without saving",
@@ -104,8 +105,7 @@
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
         "languages": "Language",
-        "languages_placeholder": "Enter languages, separate several by comma",
-        "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age."
+        "languages_placeholder": "Enter languages, separate several by comma"
     },
     "goals": {
         "title": "Learning objectives & topics",

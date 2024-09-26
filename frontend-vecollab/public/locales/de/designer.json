@@ -17,7 +17,8 @@
         "atleast_one_field": "Es muss mindestens ein Eintrag vorhanden sein",
         "valid_date": "Bitte ein gültiges Datum eingeben",
         "realistic_date": "Bitte ein realistisches Datum eingeben",
-        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei."
+        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
+        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein."
     },
     "save_and_continue": "Speichern & Weiter",
     "proceed_without_saving": "Weiter ohne Speichern",
@@ -104,8 +105,7 @@
         "degree": "Studiengang",
         "degree_placeholder": "Studiengang eingeben, mehrere durch Komma trennen",
         "languages": "Sprachen",
-        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen",
-        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein."
+        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen"
     },
     "goals": {
         "title": "Lernziele & Themen",
