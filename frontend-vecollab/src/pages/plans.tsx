@@ -13,12 +13,14 @@ import { Socket } from 'socket.io-client';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import { IFineStep } from './ve-designer/step-data/[stepName]';
 
 export interface IfilterBy {
     /** key from PlanPreview to filter */
     planKey: keyof PlanPreview;
     /** compare function to compare the plan[planKey].planValue of a plan   */
-    compare: (planValue: string | string[] | boolean | ISideProgressBarStates | BackendUserSnippet) => boolean;
+    compare: (planValue: unknown) => boolean;
+    // compare: (planValue: string | string[] | boolean | ISideProgressBarStates | BackendUserSnippet | IFineStep[]) => boolean;
     /** opti0nal id of your filter function (used in filterBy array) */
     id?: string;
 }
