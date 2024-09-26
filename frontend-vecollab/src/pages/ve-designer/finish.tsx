@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
@@ -7,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { dropPlanLock } from '@/components/VE-designer/PlanSocket';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 
@@ -18,10 +15,8 @@ interface Props {
 
 Finished.auth = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
-    const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
 
-    // TODO
     const [plan, setPlanData] = useState<IPlan>();
 
     return (
