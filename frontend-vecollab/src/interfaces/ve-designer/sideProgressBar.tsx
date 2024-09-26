@@ -19,21 +19,21 @@ export enum ProgressState {
     // eslint-disable-next-line no-unused-vars
     notStarted = 'not_started',
     // eslint-disable-next-line no-unused-vars
-    uncompleted = 'uncompleted',
+    // uncompleted = 'uncompleted',
 }
 
 export interface ISideProgressBarStates {
     name: ProgressState;
     partners: ProgressState;
     institutions: ProgressState;
-    topics: ProgressState;
     lectures: ProgressState;
     target_groups: ProgressState;
-    languages: ProgressState;
-    involved_parties: ProgressState;
-    realization: ProgressState;
+    learning_goals: ProgressState;
     learning_env: ProgressState;
+    methodical_approaches: ProgressState;
+    evaluation: ProgressState;
     checklist: ProgressState;
+    stepsGenerally: ProgressState;
     steps: ISideProgressBarStateSteps[];
 }
 
@@ -45,13 +45,13 @@ export const initialSideProgressBarStates: ISideProgressBarStates = {
     name: ProgressState.notStarted,
     partners: ProgressState.notStarted,
     institutions: ProgressState.notStarted,
-    topics: ProgressState.notStarted,
     lectures: ProgressState.notStarted,
     target_groups: ProgressState.notStarted,
-    languages: ProgressState.notStarted,
-    involved_parties: ProgressState.notStarted,
-    realization: ProgressState.notStarted,
+    learning_goals: ProgressState.notStarted,
     learning_env: ProgressState.notStarted,
+    methodical_approaches: ProgressState.notStarted,
+    evaluation: ProgressState.notStarted,
     checklist: ProgressState.notStarted,
+    stepsGenerally: ProgressState.notStarted,
     steps: [],
 };

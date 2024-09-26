@@ -32,6 +32,8 @@
     "alert_saved": "Saved",
     "unsaved_changes": "Unsaved changes",
     "unsaved_changes_text": "Your current changes to this site will not be saved.",
+    "step_done_question": "Step ready?",
+    "toggle_state_hover": "KKlick to change the editing status",
     "sidebar": {
         "general": "General Information",
         "phases": "Project plan",

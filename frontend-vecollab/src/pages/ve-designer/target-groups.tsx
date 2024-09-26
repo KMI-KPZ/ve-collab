@@ -1,12 +1,8 @@
+
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -35,18 +31,18 @@ interface FormValues {
     languages: Language[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
-    formValues.languages.every((languageObject) => languageObject.language === '') &&
-    formValues.targetGroups.every((targetGroup) => {
-        return (
-            targetGroup.name === '' &&
-            targetGroup.age_min === 0 &&
-            targetGroup.age_max === 0 &&
-            targetGroup.experience === '' &&
-            targetGroup.academic_course === '' &&
-            targetGroup.languages === ''
-        );
-    });
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
+//     formValues.languages.every((languageObject) => languageObject.language === '') &&
+//     formValues.targetGroups.every((targetGroup) => {
+//         return (
+//             targetGroup.name === '' &&
+//             targetGroup.age_min === 0 &&
+//             targetGroup.age_max === 0 &&
+//             targetGroup.experience === '' &&
+//             targetGroup.academic_course === '' &&
+//             targetGroup.languages === ''
+//         );
+//     });
 
 interface Props {
     socket: Socket;
@@ -65,10 +61,7 @@ const emptyLanguage = { language: '' };
 TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common']);
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
+    const { t } = useTranslation(['designer', 'common'])
     const prevpage = '/ve-designer/lectures';
     const nextpage = '/ve-designer/learning-goals';
 
@@ -111,20 +104,12 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     ? plan.languages.map((language) => ({ language }))
                     : [emptyLanguage];
             replaceLang(languages);
-
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { targetGroups, languages };
         },
         [replaceLang, replaceTg]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -135,16 +120,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'languages',
                 value: data.languages.map((element) => element.language),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    target_groups: progressState,
-                    languages: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -327,6 +303,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 text: t('target.tooltip'),
                 link: '',
             }}
+            stageInMenu='generally'
+            idOfProgress="target_groups"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

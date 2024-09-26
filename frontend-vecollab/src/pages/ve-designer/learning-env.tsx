@@ -1,11 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Tooltip } from '@/components/common/Tooltip';
 import Link from 'next/link';
 import { PiBookOpenText } from 'react-icons/pi';
@@ -31,19 +26,19 @@ export interface PhysicalMobility {
     timestamp_to: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.learningEnv === '' &&
-        formValues.courseFormat === '' &&
-        formValues.physicalMobilities.every((mobility) => {
-            return (
-                mobility.location === '' &&
-                mobility.timestamp_from === '' &&
-                mobility.timestamp_to === ''
-            );
-        })
-    );
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return (
+//         formValues.learningEnv === '' &&
+//         formValues.courseFormat === '' &&
+//         formValues.physicalMobilities.every((mobility) => {
+//             return (
+//                 mobility.location === '' &&
+//                 mobility.timestamp_from === '' &&
+//                 mobility.timestamp_to === ''
+//             );
+//         })
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -58,10 +53,7 @@ const emptyPysicalMobility: PhysicalMobility = {
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common']); // designer is default ns
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
+    const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const prevpage = '/ve-designer/learning-goals';
     const nextpage = '/ve-designer/methodology';
 
@@ -110,9 +102,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 });
                 replace(data.physicalMobilities);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
 
             return data;
         },
@@ -120,10 +109,6 @@ export default function Methodology({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -144,16 +129,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'physical_mobilities',
                 value: data.physicalMobilities,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    learning_env: progressState,
-                    realization: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -278,6 +254,8 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 text: t('learningEnv.tooltip'),
                 link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge',
             }}
+            stageInMenu='generally'
+            idOfProgress="learning_env"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

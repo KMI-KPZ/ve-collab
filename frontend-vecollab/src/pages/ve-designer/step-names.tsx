@@ -2,12 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ISideProgressBarStateSteps,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import {
     DragDropContext,
@@ -40,17 +34,17 @@ interface FormValues {
     stepNames: IFineStep[];
 }
 
-const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-    return stepNamesObject.stepNames.every((step) => {
-        return (
-            step.name === '' &&
-            step.timestamp_from === '' &&
-            step.timestamp_to === '' &&
-            step.learning_goal === '' &&
-            step.workload === 0
-        );
-    });
-};
+// const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
+//     return stepNamesObject.stepNames.every((step) => {
+//         return (
+//             step.name === '' &&
+//             step.timestamp_from === '' &&
+//             step.timestamp_to === '' &&
+//             step.learning_goal === '' &&
+//             step.workload === 0
+//         );
+//     });
+// };
 
 export const emptyStepData: IFineStep = {
     _id: undefined,
@@ -83,9 +77,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
 
     const router = useRouter();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
@@ -149,9 +140,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     );
                 }, 1);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
 
             return data;
         },
@@ -172,29 +160,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
             return Object.assign({}, payload, step);
         });
 
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
-            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
-        });
-
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: stepNamesData,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    stepsGenerally: progressState,
-                    steps: sideMenuStateSteps,
-                },
-            },
+            }
         ];
     };
 
@@ -482,6 +453,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 )}` || noStepPage
             }
             stageInMenu="steps"
+            idOfProgress="stepsGenerally"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

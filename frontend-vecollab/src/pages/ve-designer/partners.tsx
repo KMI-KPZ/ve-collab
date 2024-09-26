@@ -4,11 +4,6 @@ import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -39,12 +34,12 @@ interface Partner {
     value: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length === 1
-    );
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return (
+//         formValues.externalParties.every((party) => party.externalParty === '') &&
+//         formValues.partners.length === 1
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -56,9 +51,6 @@ export default function Partners({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
@@ -115,9 +107,6 @@ export default function Partners({ socket }: Props): JSX.Element {
                 extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             if (plan.partners.length !== 0) {
                 const snippets: BackendProfileSnippetsResponse = await fetchPOST(
                     '/profile_snippets',
@@ -164,10 +153,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
         let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
-
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
 
         if (partners.length >= 1 && partners[0] !== '') {
             updateFormalConditions = partners.map((partner) => {
@@ -234,14 +219,6 @@ export default function Partners({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'involved_parties',
                 value: data.externalParties.map((element) => element.externalParty),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    partners: progressState,
-                },
             },
             {
                 plan_id: router.query.plannerId,
@@ -370,6 +347,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                 text: t('partners.tooltip'),
                 link: '/learning-material/left-bubble/Partnersuche',
             }}
+            stageInMenu='generally'
+            idOfProgress="partners"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

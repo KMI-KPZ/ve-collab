@@ -1,11 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
@@ -24,11 +19,11 @@ interface MethodicalApproach {
     label: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.methodicalApproaches.every((value) => {
-        return value.value === '' && value.label === '';
-    });
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return formValues.methodicalApproaches.every((value) => {
+//         return value.value === '' && value.label === '';
+//     });
+// };
 
 interface Props {
     socket: Socket;
@@ -38,9 +33,6 @@ Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']) // designer is default ns
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const prevpage = '/ve-designer/learning-env';
     const nextpage = '/ve-designer/evaluation';
 
@@ -57,33 +49,18 @@ export default function Methodology({ socket }: Props): JSX.Element {
             const approaches = plan.methodical_approaches.map((value) => ({ value, label: value }));
             methods.setValue('methodicalApproaches', approaches);
 
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { methodicalApproaches: approaches };
         },
         [methods]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'methodical_approaches',
                 value: data.methodicalApproaches.map((value) => value.value),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    methodical_approaches: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -153,6 +130,8 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 text: t('methodology.tooltip'),
                 link: '/learning-material',
             }}
+            stageInMenu='generally'
+            idOfProgress="methodical_approaches"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
