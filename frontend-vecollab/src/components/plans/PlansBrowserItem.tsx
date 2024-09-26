@@ -63,7 +63,10 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     const getCompletedSteps = () =>
         Object.keys(plan.progress).filter(
             (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
-        ).length + plan.progress.steps.filter((a, i) => a[i] == ProgressState.completed).length;
+        ).length +
+        plan.progress.steps.filter((a) =>
+            a[ Object.keys(a)[0] ] == ProgressState.completed
+        ).length
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
