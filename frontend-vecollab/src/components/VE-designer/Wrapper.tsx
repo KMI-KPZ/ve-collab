@@ -20,7 +20,12 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
 import { dropPlanLock, getPlanLock } from './PlanSocket';
 import { useTranslation } from 'next-i18next';
-import { initialSideProgressBarStates, ISideProgressBarStates, ISideProgressBarStateSteps, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ISideProgressBarStateSteps,
+    ProgressState,
+} from '@/interfaces/ve-designer/sideProgressBar';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
 
 interface Props {
@@ -86,10 +91,12 @@ export default function Wrapper({
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
 
-    const [progressOfCurrent, setProgressOfCurrent] = useState<ProgressState>(ProgressState.notStarted)
+    const [progressOfCurrent, setProgressOfCurrent] = useState<ProgressState>(
+        ProgressState.notStarted
+    );
     const [progressOfPlan, setProgressOfPlan] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
-    )
+    );
 
     // fetch plan
     const {
@@ -189,15 +196,16 @@ export default function Wrapper({
         let willRouteChange: boolean = false;
 
         const getProgressOfCurrentStep = (planProgress: ISideProgressBarStates) => {
-            if (!idOfProgress) return undefined
+            if (!idOfProgress) return undefined;
 
-            const progress =
-                stageInMenu == "steps" && idOfProgress != "stepsGenerally"
-                    ? planProgress.steps.find((a) => a[idOfProgress as keyof ISideProgressBarStateSteps])?.[idOfProgress]
-                    : planProgress[idOfProgress as keyof Omit<ISideProgressBarStates, "steps">]
+            const progress = stageInMenu == 'steps' && idOfProgress != 'stepsGenerally'
+                ? planProgress.steps.find(
+                        (a) => a[idOfProgress as keyof ISideProgressBarStateSteps]
+                    )?.[idOfProgress]
+                : planProgress[idOfProgress as keyof Omit<ISideProgressBarStates, 'steps'>];
 
-            return progress
-        }
+            return progress;
+        };
 
         (async () => {
             const data = await planerDataCallback(plan);
@@ -206,9 +214,9 @@ export default function Wrapper({
                 methods.reset(data);
             }
             if (idOfProgress) {
-                const progress = getProgressOfCurrentStep(plan.progress)
-                setProgressOfPlan(plan.progress)
-                if (progress) setProgressOfCurrent(progress)
+                const progress = getProgressOfCurrentStep(plan.progress);
+                setProgressOfPlan(plan.progress);
+                if (progress) setProgressOfCurrent(progress);
                 // console.log({plan, stageInMenu, currentStepId: idOfProgress, progress});
             }
 
@@ -224,34 +232,24 @@ export default function Wrapper({
         return () => {
             router.events.off('routeChangeStart', handleRouteChange);
         };
-    }, [
-        router,
-        plan,
-        isLoading,
-        error,
-        planerDataCallback,
-        stageInMenu,
-        idOfProgress,
-        methods
-    ]);
+    }, [router, plan, isLoading, error, planerDataCallback, stageInMenu, idOfProgress, methods]);
 
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
         setLoading(true);
-        const fields = await submitCallback(data) as {
+        const fields = (await submitCallback(data)) as {
             plan_id: string;
             field_name: string;
             value: any;
-        }[]
+        }[];
 
         if (fields && Object.keys(fields).length > 0) {
-
-            if (typeof idOfProgress === "string") {
+            if (typeof idOfProgress === 'string') {
                 fields.push({
                     plan_id: router.query.plannerId as string,
                     field_name: 'progress',
-                    value: progressOfPlan
-                })
+                    value: progressOfPlan,
+                });
             }
 
             const res = await fetchPOST(
@@ -305,8 +303,6 @@ export default function Wrapper({
         }
     };
 
-
-
     const handleClickToggleProgress = () => {
         // let progress = ProgressState.notStarted
         // if (progressOfCurrent == ProgressState.notStarted)
@@ -318,33 +314,32 @@ export default function Wrapper({
             progressOfCurrent == ProgressState.notStarted
                 ? ProgressState.completed
                 : ProgressState.notStarted
-        )
-    }
+        );
+    };
 
     const setProgress = (progress: ProgressState) => {
         if (!idOfProgress) return;
 
-        if (stageInMenu == "steps" && idOfProgress != "stepsGenerally") {
-            setProgressOfPlan(prev => {
-                const _stepsProgress = prev.steps.map(step =>
+        if (stageInMenu == 'steps' && idOfProgress != 'stepsGenerally') {
+            setProgressOfPlan((prev) => {
+                const _stepsProgress = prev.steps.map((step) =>
                     step[idOfProgress] !== undefined ? { [idOfProgress]: progress } : step
-                )
-                return {...prev, ...{steps: _stepsProgress}}
-            })
-
+                );
+                return { ...prev, ...{ steps: _stepsProgress } };
+            });
         } else {
-            setProgressOfPlan(prev => {
-                return {...prev, ...{[idOfProgress]: progress}}
-            })
+            setProgressOfPlan((prev) => {
+                return { ...prev, ...{ [idOfProgress]: progress } };
+            });
             // TODO maybe add plan.progress.step = [] if currentStepId is "stepsGenerally" ?!!
         }
 
-        setProgressOfCurrent(progress)
-    }
+        setProgressOfCurrent(progress);
+    };
 
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
-        const mainMenuItem = mainMenuData[stageInMenu]
+        const mainMenuItem = mainMenuData[stageInMenu];
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
@@ -374,15 +369,80 @@ export default function Wrapper({
     };
 
     // häh: if we use this with ref for main return we will have bug #295 (lose focus in 1th type)
-    const WrapperBox = ({ children }: { children: JSX.Element }) => (
-        <WhiteBox>{children}</WhiteBox>
-    );
+    const WrapperBox = ({ children }: { children: JSX.Element }) => <WhiteBox>{children}</WhiteBox>;
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
             <Link href="/plans">{t('back_to_overview')}</Link>
         </button>
     );
+
+    const SaveAndNextBtn = () => {
+        if (nextpage === 'undefined') return <></>
+
+        return (
+            <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
+                {typeof idOfProgress !== 'undefined' && (
+                    <span className="px-4 py-2  text-slate-800">
+                        {t('step_done_question')}
+
+                        <span
+                            title={t('toggle_state_hover')}
+                            className="hover:cursor-pointer ml-1"
+                            onClick={(e) =>
+                                handleClickToggleProgress()
+                            }
+                        >
+                            {progressOfCurrent == ProgressState.notStarted && (
+                                <MdOutlineCircle
+                                    className="inline mb-1"
+                                    size={22}
+                                />
+                            )}
+                            {/* {progressOfCurrent == ProgressState.uncompleted && <HiOutlineDotsCircleHorizontal className="inline mb-1" size={22} />} */}
+                            {progressOfCurrent == ProgressState.completed && (
+                                <HiOutlineCheckCircle
+                                    className="inline mb-1"
+                                    size={22}
+                                />
+                            )}
+                        </span>
+                    </span>
+                )}
+
+                <button
+                    type="button"
+                    title={t('save_and_continue')}
+                    className={`px-4 py-2 shadow text-white
+                        ${typeof idOfProgress !== 'undefined' ? 'rounded-r-full' : 'rounded-full'}
+                        bg-ve-collab-orange hover:bg-ve-collab-orange`}
+                    onClick={methods.handleSubmit(
+                        // valid
+                        async (data: any) => {
+                            await handleSubmit(data);
+                            await router.push({
+                                pathname: nextpage,
+                                query: {
+                                    plannerId:
+                                        router.query.plannerId,
+                                },
+                            });
+                        },
+                        // invalid
+                        async () => {
+                            setPopUp({
+                                isOpen: true,
+                                type: 'invalid',
+                                continueLink: nextpage!,
+                            });
+                        }
+                    )}
+                >
+                    {nextpageBtnLabel || t('save_and_continue')}
+                </button>
+            </div>
+        )
+    }
 
     if (error) {
         let errorMessage: string;
@@ -428,27 +488,27 @@ export default function Wrapper({
                             }}
                         />
 
-                            <Header
-                                socket={socket}
-                                methods={methods}
-                                plan={plan}
-                                submitCallback={async (data) => {
-                                    const res = await handleSubmit(data);
-                                    if (res) {
-                                        setAlert({
-                                            message: t('alert_saved'),
-                                            autoclose: 2000,
-                                            onClose: () => setAlert({ open: false }),
-                                        });
-                                    }
-                                }}
-                                handleUnsavedData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, continueLink });
-                                }}
-                                handleInvalidData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
-                                }}
-                            />
+                        <Header
+                            socket={socket}
+                            methods={methods}
+                            plan={plan}
+                            submitCallback={async (data) => {
+                                const res = await handleSubmit(data);
+                                if (res) {
+                                    setAlert({
+                                        message: t('alert_saved'),
+                                        autoclose: 2000,
+                                        onClose: () => setAlert({ open: false }),
+                                    });
+                                }
+                            }}
+                            handleUnsavedData={(data: any, continueLink: string) => {
+                                setPopUp({ isOpen: true, continueLink });
+                            }}
+                            handleInvalidData={(data: any, continueLink: string) => {
+                                setPopUp({ isOpen: true, type: 'invalid', continueLink });
+                            }}
+                        />
 
                         <div className="flex flex-row divide-x gap-1">
                             <Sidebar
@@ -457,36 +517,36 @@ export default function Wrapper({
                                     await handleSubmit(data);
                                 }}
                                 handleInvalidData={(data: any, continueLink: string) => {
-                                    setPopUp({ isOpen: true, type: "invalid", continueLink });
+                                    setPopUp({ isOpen: true, type: 'invalid', continueLink });
                                 }}
                                 stageInMenu={stageInMenu}
                                 plan={plan}
                                 progressOfPlan={progressOfPlan}
                             />
 
-                                <form
-                                    className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
-                                    onSubmit={methods.handleSubmit(
-                                        // valid
-                                        async (data: any) => {
-                                            await handleSubmit(data);
-                                            await router.push({
-                                                pathname: nextpage,
-                                                query: {
-                                                    plannerId: router.query.plannerId,
-                                                },
-                                            });
-                                        },
-                                        // invalid
-                                        async () => {
-                                            setPopUp({
-                                                isOpen: true,
-                                                type: 'invalid',
-                                                continueLink: nextpage || '/plans',
-                                            });
-                                        }
-                                    )}
-                                >
+                            <form
+                                className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
+                                onSubmit={methods.handleSubmit(
+                                    // valid
+                                    async (data: any) => {
+                                        await handleSubmit(data);
+                                        await router.push({
+                                            pathname: nextpage,
+                                            query: {
+                                                plannerId: router.query.plannerId,
+                                            },
+                                        });
+                                    },
+                                    // invalid
+                                    async () => {
+                                        setPopUp({
+                                            isOpen: true,
+                                            type: 'invalid',
+                                            continueLink: nextpage || '/plans',
+                                        });
+                                    }
+                                )}
+                            >
                                 <Breadcrumb />
 
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
@@ -524,9 +584,7 @@ export default function Wrapper({
                                                 ))}
                                             </div>
                                         )}
-                                        {React.isValidElement(description) && (
-                                            <>{description}</>
-                                        )}
+                                        {React.isValidElement(description) && <>{description}</>}
                                     </>
                                 )}
 
@@ -541,14 +599,13 @@ export default function Wrapper({
 
                                 {children}
 
-                                {(typeof prevpage !== 'undefined' ||
-                                    typeof nextpage !== 'undefined') && (
+                                {(typeof prevpage !== 'undefined' || typeof nextpage !== 'undefined') && (
                                     <div className="my-8 border-t py-3 flex justify-between">
                                         <div>
                                             {typeof prevpage !== 'undefined' && (
                                                 <button
                                                     type="button"
-                                                    title={t("common:back")}
+                                                    title={t('common:back')}
                                                     className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
@@ -566,19 +623,18 @@ export default function Wrapper({
                                                         async (data: any) => {
                                                             setPopUp({
                                                                 isOpen: true,
-                                                                type: "invalid",
+                                                                type: 'invalid',
                                                                 continueLink: prevpage,
                                                             });
                                                         }
                                                     )}
                                                 >
-                                                    {prevPageBtnLabel || t("common:back")}
+                                                    {prevPageBtnLabel || t('common:back')}
                                                 </button>
                                             )}
                                         </div>
 
-                                        <div className='flex tex-center'>
-
+                                        <div className="flex tex-center">
                                             {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r'>
                                                 <span>{t("editing_state")}:</span>
 
@@ -595,61 +651,10 @@ export default function Wrapper({
                                                         <span className='underline underline-offset-2 decoration-dotted italic text-ve-collab-blue'>{t("state_completed")}</span>
                                                         <HiOutlineCheckCircle className="inline ml-1 mb-1" size={22} />
                                                     </>)}
-                                                </span>
-
+                                                </span
                                             </div> */}
 
-                                            {typeof nextpage !== 'undefined' && (
-
-                                                <div className='shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50'>
-                                                    {typeof idOfProgress !== "undefined" && (
-                                                        <span className='px-4 py-2  text-slate-800'>
-                                                            {t("step_done_question")}
-
-                                                            <span
-                                                                title={t("toggle_state_hover")}
-                                                                className='hover:cursor-pointer ml-1'
-                                                                onClick={e => handleClickToggleProgress()}
-                                                            >
-                                                                {progressOfCurrent == ProgressState.notStarted && <MdOutlineCircle className="inline mb-1" size={22} />}
-                                                                {/* {progressOfCurrent == ProgressState.uncompleted && <HiOutlineDotsCircleHorizontal className="inline mb-1" size={22} />} */}
-                                                                {progressOfCurrent == ProgressState.completed && <HiOutlineCheckCircle className="inline mb-1" size={22} />}
-                                                            </span>
-                                                        </span>
-                                                    )}
-
-                                                    <button
-                                                        type="button"
-                                                        title={t("save_and_continue")}
-                                                        className={`px-4 py-2 shadow text-white
-                                                            ${typeof idOfProgress !== "undefined" ? "rounded-r-full" : "rounded-full"}
-                                                            bg-ve-collab-orange hover:bg-ve-collab-orange`}
-                                                        onClick={methods.handleSubmit(
-                                                            // valid
-                                                            async (data: any) => {
-                                                                await handleSubmit(data);
-                                                                await router.push({
-                                                                    pathname: nextpage,
-                                                                    query: {
-                                                                        plannerId:
-                                                                            router.query.plannerId,
-                                                                    },
-                                                                });
-                                                            },
-                                                            // invalid
-                                                            async () => {
-                                                                setPopUp({
-                                                                    isOpen: true,
-                                                                    type: "invalid",
-                                                                    continueLink: nextpage!,
-                                                                });
-                                                            }
-                                                        )}
-                                                    >
-                                                        {nextpageBtnLabel || t("save_and_continue")}
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <SaveAndNextBtn />
                                         </div>
                                     </div>
                                 )}
