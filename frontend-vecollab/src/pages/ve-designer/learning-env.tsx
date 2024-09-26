@@ -8,8 +8,8 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxPlus, RxTrash } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LearningEnvFormSchema } from '../../zod-schemas/learningEnvSchema';
 
@@ -155,7 +155,10 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         />
                     </div>
                     <p className="flex justify-center text-red-600 pb-2">
-                        {t(methods.formState.errors?.physicalMobilities?.[index]?.location?.message!)}
+                        {t(
+                            methods.formState.errors?.physicalMobilities?.[index]?.location
+                                ?.message!
+                        )}
                     </p>
                     <div className="flex justify-between">
                         <div className="flex items-center">
@@ -176,16 +179,16 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         </div>
                     </div>
                     <p className="flex justify-center text-red-600 pt-2">
-                        {
-                            t(methods.formState.errors?.physicalMobilities?.[index]?.timestamp_from
-                                ?.message!)
-                        }
+                        {t(
+                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_from
+                                ?.message!
+                        )}
                     </p>
                     <p className="flex justify-center text-red-600 pt-2">
-                        {
-                            t(methods.formState.errors?.physicalMobilities?.[index]?.timestamp_to
-                                ?.message!)
-                        }
+                        {t(
+                            methods.formState.errors?.physicalMobilities?.[index]?.timestamp_to
+                                ?.message!
+                        )}
                     </p>
                 </div>
 
@@ -205,7 +208,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                     <>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">{t('yes', {ns: 'common'})}</label>
+                                <label className="px-2 py-2">{t('yes', { ns: 'common' })}</label>
                             </div>
                             <div>
                                 <input
@@ -225,7 +228,12 @@ export default function Methodology({ socket }: Props): JSX.Element {
                                 <input
                                     type="radio"
                                     onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(false)} // send value to hook form
+                                    onChange={() => {
+                                        methods.setValue('physicalMobilities', [
+                                            emptyPysicalMobility,
+                                        ]);
+                                        return onChange(false);
+                                    }} // send value to hook form
                                     checked={value === false}
                                 />
                             </div>
@@ -283,9 +291,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         </Link>
                     </Tooltip>
                 </div>
-                <p className="mb-8">
-                    {t('learningEnv.description2')}
-                </p>
+                <p className="mb-8">{t('learningEnv.description2')}</p>
                 <div className="w-full lg:w-1/2">
                     <div className="flex items-center">
                         <label htmlFor="courseFormat" className="mr-2">
@@ -298,7 +304,9 @@ export default function Methodology({ socket }: Props): JSX.Element {
                         >
                             <option value={t('learningEnv.sync')}>{t('learningEnv.sync')}</option>
                             <option value={t('learningEnv.async')}>{t('learningEnv.async')}</option>
-                            <option value={t('learningEnv.asyncAndSync')}>{t('learningEnv.asyncAndSync')}</option>
+                            <option value={t('learningEnv.asyncAndSync')}>
+                                {t('learningEnv.asyncAndSync')}
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -332,10 +340,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
-                'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

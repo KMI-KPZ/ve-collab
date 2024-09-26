@@ -31,6 +31,6 @@ export const PostProcessSchema = z.object({
                     path: ['size'], // This will attach the error message to the `size` field
                 })
         )
-        .max(4, 'max. 4 Dateien erlaubt')
+        .max(4, 'messages.file_count_max')
         .nullable(),
 });

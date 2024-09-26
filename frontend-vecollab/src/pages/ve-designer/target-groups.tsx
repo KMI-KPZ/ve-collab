@@ -8,8 +8,8 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 
@@ -159,6 +159,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     </div>
                     <div className="w-3/4 flex">
                         <div>
+                            <label className="mr-4"> {t('common:from')} </label>
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_min`, {
@@ -168,10 +169,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2 mr-4">
-                                {t(methods.formState.errors?.targetGroups?.[index]?.age_min?.message!)}
+                                {t(
+                                    methods.formState.errors?.targetGroups?.[index]?.age_min
+                                        ?.message!
+                                )}
                             </p>
                         </div>
                         <div>
+                            <label className="mr-4"> {t('common:to')} </label>
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_max`, {
@@ -181,7 +186,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {t(methods.formState.errors?.targetGroups?.[index]?.age_max?.message!)}
+                                {t(
+                                    methods.formState.errors?.targetGroups?.[index]?.age_max
+                                        ?.message!
+                                )}
                             </p>
                         </div>
                     </div>
@@ -200,7 +208,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.targetGroups?.[index]?.experience?.message!)}
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.experience
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -218,10 +229,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {
-                                t(methods.formState.errors?.targetGroups?.[index]?.academic_course
-                                    ?.message!)
-                            }
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -239,7 +250,9 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.targetGroups?.[index]?.languages?.message!)}
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.languages?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -334,9 +347,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

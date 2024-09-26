@@ -7,8 +7,8 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EvaluationFormSchema } from '../../zod-schemas/evaluationSchema';
 
@@ -122,7 +122,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
         ];
     };
 
-    function radioBooleanInput(control: any, name: any): JSX.Element {
+    function radioBooleanInput(control: any, name: any, index: number): JSX.Element {
         return (
             <Controller
                 control={control}
@@ -145,14 +145,24 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                         </div>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">{t('common:yes')}</label>
+                                <label className="px-2 py-2">{t('common:no')}</label>
                             </div>
                             <div>
                                 <input
                                     type="radio"
                                     className="border border-gray-400 rounded-lg p-2"
                                     onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(false)} // send value to hook form
+                                    onChange={() => {
+                                        methods.setValue(
+                                            `evaluationPerPartner.${index}.task_type`,
+                                            ''
+                                        );
+                                        methods.setValue(
+                                            `evaluationPerPartner.${index}.assessment_type`,
+                                            ''
+                                        );
+                                        return onChange(false);
+                                    }} // send value to hook form
                                     checked={value === false}
                                 />
                             </div>
@@ -180,7 +190,8 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                             <div className="flex w-36 justify-end gap-x-3">
                                 {radioBooleanInput(
                                     methods.control,
-                                    `evaluationPerPartner.${index}.is_graded`
+                                    `evaluationPerPartner.${index}.is_graded`,
+                                    index
                                 )}
                             </div>
                         </div>
@@ -196,11 +207,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         )}
                                     />
                                 </div>
-                                {methods.formState.errors?.evaluationPerPartner?.[index]?.task_type &&
+                                {methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.task_type && (
                                     <p className="flex justify-center text-red-600 pb-2">
-                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.task_type?.message!)}
+                                        {t(
+                                            methods.formState.errors?.evaluationPerPartner?.[index]
+                                                ?.task_type?.message!
+                                        )}
                                     </p>
-                                }
+                                )}
                                 <div className="flex items-center justify-between my-1">
                                     <p className="">{t('evaluation.typeOf')}</p>
                                     <input
@@ -212,11 +227,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         placeholder={t('evaluation.typeOfPlaceholder')}
                                     />
                                 </div>
-                                {methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type &&
+                                {methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.assessment_type && (
                                     <p className="flex justify-center text-red-600 pb-2">
-                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type?.message!)}
+                                        {t(
+                                            methods.formState.errors?.evaluationPerPartner?.[index]
+                                                ?.assessment_type?.message!
+                                        )}
                                     </p>
-                                }
+                                )}
                             </>
                         )}
                         <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
@@ -233,11 +252,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.whilePlaceholder')}
                             />
                         </div>
-                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while &&
+                        {methods.formState.errors?.evaluationPerPartner?.[index]
+                            ?.evaluation_while && (
                             <p className="flex justify-center text-red-600 pb-2">
-                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while?.message!)}
+                                {t(
+                                    methods.formState.errors?.evaluationPerPartner?.[index]
+                                        ?.evaluation_while?.message!
+                                )}
                             </p>
-                        }
+                        )}
                         <div className="flex items-center justify-between my-1">
                             <div>
                                 <p>{t('evaluation.after')}</p>
@@ -250,11 +273,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.afterPlaceholder')}
                             />
                         </div>
-                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after &&
+                        {methods.formState.errors?.evaluationPerPartner?.[index]
+                            ?.evaluation_after && (
                             <p className="flex justify-center text-red-600 pb-2">
-                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after?.message!)}
+                                {t(
+                                    methods.formState.errors?.evaluationPerPartner?.[index]
+                                        ?.evaluation_after?.message!
+                                )}
                             </p>
-                        }
+                        )}
                     </div>
                 </div>
             </div>
@@ -287,10 +314,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
-                'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }
