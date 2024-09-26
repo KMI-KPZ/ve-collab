@@ -145,7 +145,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
         ];
     };
 
-    function radioBooleanInput(control: any, name: any): JSX.Element {
+    function radioBooleanInput(control: any, name: any, index: number): JSX.Element {
         return (
             <Controller
                 control={control}
@@ -175,7 +175,17 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                     type="radio"
                                     className="border border-gray-400 rounded-lg p-2"
                                     onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(false)} // send value to hook form
+                                    onChange={() => {
+                                        methods.setValue(
+                                            `evaluationPerPartner.${index}.task_type`,
+                                            ''
+                                        );
+                                        methods.setValue(
+                                            `evaluationPerPartner.${index}.assessment_type`,
+                                            ''
+                                        );
+                                        return onChange(false);
+                                    }} // send value to hook form
                                     checked={value === false}
                                 />
                             </div>
@@ -203,7 +213,8 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                             <div className="flex w-36 justify-end gap-x-3">
                                 {radioBooleanInput(
                                     methods.control,
-                                    `evaluationPerPartner.${index}.is_graded`
+                                    `evaluationPerPartner.${index}.is_graded`,
+                                    index
                                 )}
                             </div>
                         </div>
