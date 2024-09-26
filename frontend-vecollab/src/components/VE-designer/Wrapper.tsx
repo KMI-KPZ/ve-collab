@@ -217,7 +217,7 @@ export default function Wrapper({
                 const progress = getProgressOfCurrentStep(plan.progress);
                 setProgressOfPlan(plan.progress);
                 if (progress) setProgressOfCurrent(progress);
-                // console.log({plan, stageInMenu, currentStepId: idOfProgress, progress});
+                // console.log({plan, stageInMenu, idOfProgress, progress});
             }
 
             // fix: do not remove loader if we'll change the route
@@ -321,17 +321,23 @@ export default function Wrapper({
         if (!idOfProgress) return;
 
         if (stageInMenu == 'steps' && idOfProgress != 'stepsGenerally') {
-            setProgressOfPlan((prev) => {
-                const _stepsProgress = prev.steps.map((step) =>
-                    step[idOfProgress] !== undefined ? { [idOfProgress]: progress } : step
-                );
-                return { ...prev, ...{ steps: _stepsProgress } };
-            });
+            if (!plan.progress.steps.some((a, i) => idOfProgress in a)) {
+                setProgressOfPlan((prev) => {
+                    prev.steps.push({[idOfProgress]: progress})
+                    return { ...prev };
+                })
+            } else {
+                setProgressOfPlan((prev) => {
+                    const _stepsProgress = prev.steps.map((step) =>
+                        step[idOfProgress] !== undefined ? { [idOfProgress]: progress } : step
+                    );
+                    return { ...prev, ...{ steps: _stepsProgress } };
+                });
+            }
         } else {
             setProgressOfPlan((prev) => {
                 return { ...prev, ...{ [idOfProgress]: progress } };
             });
-            // TODO maybe add plan.progress.step = [] if currentStepId is "stepsGenerally" ?!!
         }
 
         setProgressOfCurrent(progress);
