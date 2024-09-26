@@ -12,8 +12,8 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EvaluationFormSchema } from '../../zod-schemas/evaluationSchema';
 
@@ -50,7 +50,7 @@ Evaluation.auth = true;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation(['designer', 'common']) // designer is default ns
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
     const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
         initialSideProgressBarStates
     );
@@ -168,7 +168,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                         </div>
                         <div className="flex my-1">
                             <div>
-                                <label className="px-2 py-2">{t('common:yes')}</label>
+                                <label className="px-2 py-2">{t('common:no')}</label>
                             </div>
                             <div>
                                 <input
@@ -219,11 +219,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         )}
                                     />
                                 </div>
-                                {methods.formState.errors?.evaluationPerPartner?.[index]?.task_type &&
+                                {methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.task_type && (
                                     <p className="flex justify-center text-red-600 pb-2">
-                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.task_type?.message!)}
+                                        {t(
+                                            methods.formState.errors?.evaluationPerPartner?.[index]
+                                                ?.task_type?.message!
+                                        )}
                                     </p>
-                                }
+                                )}
                                 <div className="flex items-center justify-between my-1">
                                     <p className="">{t('evaluation.typeOf')}</p>
                                     <input
@@ -235,11 +239,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                         placeholder={t('evaluation.typeOfPlaceholder')}
                                     />
                                 </div>
-                                {methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type &&
+                                {methods.formState.errors?.evaluationPerPartner?.[index]
+                                    ?.assessment_type && (
                                     <p className="flex justify-center text-red-600 pb-2">
-                                        {t(methods.formState.errors?.evaluationPerPartner?.[index]?.assessment_type?.message!)}
+                                        {t(
+                                            methods.formState.errors?.evaluationPerPartner?.[index]
+                                                ?.assessment_type?.message!
+                                        )}
                                     </p>
-                                }
+                                )}
                             </>
                         )}
                         <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
@@ -256,11 +264,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.whilePlaceholder')}
                             />
                         </div>
-                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while &&
+                        {methods.formState.errors?.evaluationPerPartner?.[index]
+                            ?.evaluation_while && (
                             <p className="flex justify-center text-red-600 pb-2">
-                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_while?.message!)}
+                                {t(
+                                    methods.formState.errors?.evaluationPerPartner?.[index]
+                                        ?.evaluation_while?.message!
+                                )}
                             </p>
-                        }
+                        )}
                         <div className="flex items-center justify-between my-1">
                             <div>
                                 <p>{t('evaluation.after')}</p>
@@ -273,11 +285,15 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                                 placeholder={t('evaluation.afterPlaceholder')}
                             />
                         </div>
-                        {methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after &&
+                        {methods.formState.errors?.evaluationPerPartner?.[index]
+                            ?.evaluation_after && (
                             <p className="flex justify-center text-red-600 pb-2">
-                                {t(methods.formState.errors?.evaluationPerPartner?.[index]?.evaluation_after?.message!)}
+                                {t(
+                                    methods.formState.errors?.evaluationPerPartner?.[index]
+                                        ?.evaluation_after?.message!
+                                )}
                             </p>
-                        }
+                        )}
                     </div>
                 </div>
             </div>
@@ -308,10 +324,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
-                'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }
