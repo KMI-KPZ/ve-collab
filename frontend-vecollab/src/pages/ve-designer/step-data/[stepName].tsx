@@ -70,6 +70,14 @@ export interface IFineStep {
     original_plan: string;
 }
 
+export const emptyTask: ITaskFrontend = {
+    task_formulation: '',
+    work_mode: '',
+    notes: '',
+    tools: [{ name: '' }, { name: '' }],
+    materials: [{ name: '' }, { name: '' }],
+};
+
 export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     _id: '1111',
     timestamp_from: '',
@@ -79,15 +87,7 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     learning_goal: '',
     learning_activity: '',
     has_tasks: false,
-    tasks: [
-        {
-            task_formulation: '',
-            work_mode: '',
-            notes: '',
-            tools: [{ name: '' }, { name: '' }],
-            materials: [{ name: '' }, { name: '' }],
-        },
-    ],
+    tasks: [emptyTask],
     original_plan: '',
 };
 
