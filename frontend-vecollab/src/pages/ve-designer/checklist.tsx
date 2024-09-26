@@ -1,10 +1,5 @@
 import { useRouter } from 'next/router';
 import React, { useCallback, useState } from 'react';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { TooltipList } from '@/components/common/TooltipList';
@@ -36,22 +31,22 @@ interface FormValues {
     checklist: CheckListPartner[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.checklist.every((checkListPartner) => {
-        return (
-            !checkListPartner.time &&
-            // !checkListPartner.format &&
-            !checkListPartner.topic &&
-            !checkListPartner.goals &&
-            // !checkListPartner.languages &&
-            !checkListPartner.media &&
-            !checkListPartner.technicalEquipment &&
-            // !checkListPartner.evaluation &&
-            !checkListPartner.institutionalRequirements &&
-            !checkListPartner.dataProtection
-        );
-    });
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return formValues.checklist.every((checkListPartner) => {
+//         return (
+//             !checkListPartner.time &&
+//             // !checkListPartner.format &&
+//             !checkListPartner.topic &&
+//             !checkListPartner.goals &&
+//             // !checkListPartner.languages &&
+//             !checkListPartner.media &&
+//             !checkListPartner.technicalEquipment &&
+//             // !checkListPartner.evaluation &&
+//             !checkListPartner.institutionalRequirements &&
+//             !checkListPartner.dataProtection
+//         );
+//     });
+// };
 
 const emptyCheckListPartner: CheckListPartner = {
     username: '',
@@ -76,9 +71,6 @@ export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']) // designer is default ns
     const { data: session } = useSession();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
 
     const prevpage = '/ve-designer/evaluation';
@@ -103,9 +95,6 @@ export default function Checklist({ socket }: Props): JSX.Element {
             if (plan.checklist && Array.isArray(plan.checklist) && plan.checklist.length > 0) {
                 checklistValue = plan.checklist;
                 methods.setValue('checklist', checklistValue);
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
             }
 
             // fetch profile snippets to be able to display the full name instead of username only
@@ -134,23 +123,12 @@ export default function Checklist({ socket }: Props): JSX.Element {
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'checklist',
                 value: data.checklist,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    checklist: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -296,6 +274,8 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 text: t('checklist.tooltip'),
                 link: '/learning-material/top-bubble/Herausforderungen',
             }}
+            stageInMenu='generally'
+            idOfProgress="checklist"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

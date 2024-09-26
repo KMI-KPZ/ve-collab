@@ -30,6 +30,8 @@
     "alert_saved": "Gespeichert",
     "unsaved_changes": "Ungespeicherte Änderungen",
     "unsaved_changes_text": "Deine Änderungen auf der aktuellen Seite werden nicht gespeichert und gehen verloren.",
+    "step_done_question": "Schritt fertig?",
+    "toggle_state_hover": "Klicken um den Bearbeitungsstatus zu wechseln",
     "sidebar": {
         "general": "Allgemein",
         "phases": "Projektplanung",

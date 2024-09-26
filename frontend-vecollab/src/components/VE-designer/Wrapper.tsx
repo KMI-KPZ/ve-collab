@@ -6,11 +6,11 @@ import { useSession } from 'next-auth/react';
 import LoadingAnimation from '../common/LoadingAnimation';
 import PopupSaveData from './PopupSaveData';
 import WhiteBox from '../common/WhiteBox';
-import { MdArrowForwardIos } from 'react-icons/md';
+import { MdArrowForwardIos, MdOutlineCircle } from 'react-icons/md';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
-import { mainMenu } from '@/data/sideMenuSteps';
+import { IMainMenuItems, mainMenuData } from '@/data/sideMenuSteps';
 import { Tooltip } from '../common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
@@ -20,6 +20,8 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { GiSadCrab } from 'react-icons/gi';
 import { dropPlanLock, getPlanLock } from './PlanSocket';
 import { useTranslation } from 'next-i18next';
+import { initialSideProgressBarStates, ISideProgressBarStates, ISideProgressBarStateSteps, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
+import { HiOutlineCheckCircle } from 'react-icons/hi';
 
 interface Props {
     title: string;
@@ -34,7 +36,8 @@ interface Props {
     nextpageBtnLabel?: string;
     preventToLeave?: boolean;
 
-    stageInMenu?: string; // TODO make it unrequired
+    stageInMenu?: keyof IMainMenuItems;
+    idOfProgress?: string | keyof ISideProgressBarStates;
     planerDataCallback: (data: any) => FieldValues;
     submitCallback: (data: any) =>
         | unknown
@@ -60,6 +63,7 @@ export default function Wrapper({
     nextpage,
     nextpageBtnLabel,
     stageInMenu = 'generally',
+    idOfProgress,
     preventToLeave = true,
     planerDataCallback,
     submitCallback,
@@ -81,6 +85,11 @@ export default function Wrapper({
     const wrapperRef = useRef<null | HTMLDivElement>(null);
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const currentPath = usePathname();
+
+    const [progressOfCurrent, setProgressOfCurrent] = useState<ProgressState>(ProgressState.notStarted)
+    const [progressOfPlan, setProgressOfPlan] = useState<ISideProgressBarStates>(
+        initialSideProgressBarStates
+    )
 
     // fetch plan
     const {
@@ -179,12 +188,30 @@ export default function Wrapper({
 
         let willRouteChange: boolean = false;
 
+        const getProgressOfCurrentStep = (planProgress: ISideProgressBarStates) => {
+            if (!idOfProgress) return undefined
+
+            const progress =
+                stageInMenu == "steps" && idOfProgress != "stepsGenerally"
+                    ? planProgress.steps.find((a) => a[idOfProgress as keyof ISideProgressBarStateSteps])?.[idOfProgress]
+                    : planProgress[idOfProgress as keyof Omit<ISideProgressBarStates, "steps">]
+
+            return progress
+        }
+
         (async () => {
             const data = await planerDataCallback(plan);
             if (Object.keys(data).length) {
                 // reset form default values for isDirty check
                 methods.reset(data);
             }
+            if (idOfProgress) {
+                const progress = getProgressOfCurrentStep(plan.progress)
+                setProgressOfPlan(plan.progress)
+                if (progress) setProgressOfCurrent(progress)
+                // console.log({plan, stageInMenu, currentStepId: idOfProgress, progress});
+            }
+
             // fix: do not remove loader if we'll change the route
             setTimeout(() => {
                 if (!willRouteChange) setLoading(false);
@@ -197,14 +224,36 @@ export default function Wrapper({
         return () => {
             router.events.off('routeChangeStart', handleRouteChange);
         };
-    }, [router, plan, isLoading, error, planerDataCallback, methods]);
+    }, [
+        router,
+        plan,
+        isLoading,
+        error,
+        planerDataCallback,
+        stageInMenu,
+        idOfProgress,
+        methods
+    ]);
 
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
         setLoading(true);
-        const fields = await submitCallback(data);
+        const fields = await submitCallback(data) as {
+            plan_id: string;
+            field_name: string;
+            value: any;
+        }[]
 
-        if (fields) {
+        if (fields && Object.keys(fields).length > 0) {
+
+            if (typeof idOfProgress === "string") {
+                fields.push({
+                    plan_id: router.query.plannerId as string,
+                    field_name: 'progress',
+                    value: progressOfPlan
+                })
+            }
+
             const res = await fetchPOST(
                 '/planner/update_fields',
                 { update: fields },
@@ -256,10 +305,46 @@ export default function Wrapper({
         }
     };
 
+
+
+    const handleClickToggleProgress = () => {
+        // let progress = ProgressState.notStarted
+        // if (progressOfCurrent == ProgressState.notStarted)
+        //     progress = ProgressState.completed
+        // else if (progressOfCurrent == ProgressState.completed)
+        //     progress = ProgressState.uncompleted
+
+        setProgress(
+            progressOfCurrent == ProgressState.notStarted
+                ? ProgressState.completed
+                : ProgressState.notStarted
+        )
+    }
+
+    const setProgress = (progress: ProgressState) => {
+        if (!idOfProgress) return;
+
+        if (stageInMenu == "steps" && idOfProgress != "stepsGenerally") {
+            setProgressOfPlan(prev => {
+                const _stepsProgress = prev.steps.map(step =>
+                    step[idOfProgress] !== undefined ? { [idOfProgress]: progress } : step
+                )
+                return {...prev, ...{steps: _stepsProgress}}
+            })
+
+        } else {
+            setProgressOfPlan(prev => {
+                return {...prev, ...{[idOfProgress]: progress}}
+            })
+            // TODO maybe add plan.progress.step = [] if currentStepId is "stepsGenerally" ?!!
+        }
+
+        setProgressOfCurrent(progress)
+    }
+
     const Breadcrumb = () => {
         if (!plan || !plan.steps) return <></>;
-        const mainMenuItem = mainMenu.find((a) => a.id == stageInMenu);
-        if (!mainMenuItem) return <></>;
+        const mainMenuItem = mainMenuData[stageInMenu]
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
@@ -376,6 +461,7 @@ export default function Wrapper({
                                 }}
                                 stageInMenu={stageInMenu}
                                 plan={plan}
+                                progressOfPlan={progressOfPlan}
                             />
 
                                 <form
@@ -491,36 +577,78 @@ export default function Wrapper({
                                             )}
                                         </div>
 
-                                        <div>
+                                        <div className='flex tex-center'>
+
+                                            {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r'>
+                                                <span>{t("editing_state")}:</span>
+
+                                                <span className=' hover:cursor-pointer' title={t("toggle_state_hover")} onClick={e => handleClickToggleProgress()}>
+                                                    {progressOfCurrent == ProgressState.notStarted && (<>
+                                                        <span className='underline underline-offset-2 decoration-dotted italic text-ve-collab-blue'>{t("state_notStarted")}</span>
+                                                        <MdOutlineCircle className="inline ml-1 mb-1" size={22} />
+                                                    </>)}
+                                                    {progressOfCurrent == ProgressState.uncompleted && (<>
+                                                        <span className='underline underline-offset-2 decoration-dotted italic text-ve-collab-blue'>{t("state_uncompleted")}</span>
+                                                        <HiOutlineDotsCircleHorizontal className="inline ml-1 mb-1" size={22} />
+                                                    </>)}
+                                                    {progressOfCurrent == ProgressState.completed && (<>
+                                                        <span className='underline underline-offset-2 decoration-dotted italic text-ve-collab-blue'>{t("state_completed")}</span>
+                                                        <HiOutlineCheckCircle className="inline ml-1 mb-1" size={22} />
+                                                    </>)}
+                                                </span>
+
+                                            </div> */}
+
                                             {typeof nextpage !== 'undefined' && (
-                                                <button
-                                                    type="button"
-                                                    title={t("save_and_continue")}
-                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                                                    onClick={methods.handleSubmit(
-                                                        // valid
-                                                        async (data: any) => {
-                                                            await handleSubmit(data);
-                                                            await router.push({
-                                                                pathname: nextpage,
-                                                                query: {
-                                                                    plannerId:
-                                                                        router.query.plannerId,
-                                                                },
-                                                            });
-                                                        },
-                                                        // invalid
-                                                        async () => {
-                                                            setPopUp({
-                                                                isOpen: true,
-                                                                type: "invalid",
-                                                                continueLink: nextpage,
-                                                            });
-                                                        }
+
+                                                <div className='shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50'>
+                                                    {typeof idOfProgress !== "undefined" && (
+                                                        <span className='px-4 py-2  text-slate-800'>
+                                                            {t("step_done_question")}
+
+                                                            <span
+                                                                title={t("toggle_state_hover")}
+                                                                className='hover:cursor-pointer ml-1'
+                                                                onClick={e => handleClickToggleProgress()}
+                                                            >
+                                                                {progressOfCurrent == ProgressState.notStarted && <MdOutlineCircle className="inline mb-1" size={22} />}
+                                                                {/* {progressOfCurrent == ProgressState.uncompleted && <HiOutlineDotsCircleHorizontal className="inline mb-1" size={22} />} */}
+                                                                {progressOfCurrent == ProgressState.completed && <HiOutlineCheckCircle className="inline mb-1" size={22} />}
+                                                            </span>
+                                                        </span>
                                                     )}
-                                                >
-                                                    {nextpageBtnLabel || t("save_and_continue")}
-                                                </button>
+
+                                                    <button
+                                                        type="button"
+                                                        title={t("save_and_continue")}
+                                                        className={`px-4 py-2 shadow text-white
+                                                            ${typeof idOfProgress !== "undefined" ? "rounded-r-full" : "rounded-full"}
+                                                            bg-ve-collab-orange hover:bg-ve-collab-orange`}
+                                                        onClick={methods.handleSubmit(
+                                                            // valid
+                                                            async (data: any) => {
+                                                                await handleSubmit(data);
+                                                                await router.push({
+                                                                    pathname: nextpage,
+                                                                    query: {
+                                                                        plannerId:
+                                                                            router.query.plannerId,
+                                                                    },
+                                                                });
+                                                            },
+                                                            // invalid
+                                                            async () => {
+                                                                setPopUp({
+                                                                    isOpen: true,
+                                                                    type: "invalid",
+                                                                    continueLink: nextpage!,
+                                                                });
+                                                            }
+                                                        )}
+                                                    >
+                                                        {nextpageBtnLabel || t("save_and_continue")}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

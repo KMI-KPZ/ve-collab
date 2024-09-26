@@ -65,37 +65,44 @@ const itemsEtappenplaner : ISubmenuData[] =
         },
     ];
 
-export const mainMenu: IMenuData[] =[
-        {
-            text: 'designer:sidebar.general',
-            id: 'generally',
-            link: '',
-            image: imageGeneralInformation,
-            // submenu: getSubMenu('generally', itemsAllgemein)
-            submenu: itemsAllgemein,
-        },
-        {
-            text: "designer:sidebar.phases",
-            id: 'steps',
-            link: '',
-            image: imageStagePlanner,
-            submenu: itemsEtappenplaner,
-        },
-        {
-            text: "designer:sidebar.summary",
-            id: 'finish',
-            link: '/ve-designer/finish',
-            image: imageFinish,
-            submenu: [],
-        },
-        {
-            text: "designer:sidebar.post_processing",
-            id: 'post-process',
-            link: '/ve-designer/post-process',
-            image: imageStagePlanner,
-            submenu: [],
-        },
-    ];
+export interface IMainMenuItems {
+    generally: IMenuData,
+    steps: IMenuData,
+    finish: IMenuData,
+    'post-process': IMenuData
+}
+
+export const mainMenuData: IMainMenuItems = {
+    'generally': {
+        text: 'designer:sidebar.general',
+        id: 'generally',
+        link: '',
+        image: imageGeneralInformation,
+        submenu: itemsAllgemein,
+    },
+    'steps': {
+        text: "designer:sidebar.phases",
+        id: 'steps',
+        link: '',
+        image: imageStagePlanner,
+        submenu: itemsEtappenplaner,
+    },
+    'finish': {
+        text: "designer:sidebar.summary",
+        id: 'finish',
+        link: '/ve-designer/finish',
+        image: imageFinish,
+        submenu: [],
+    },
+    'post-process': {
+        text: "designer:sidebar.post_processing",
+        id: 'post-process',
+        link: '/ve-designer/post-process',
+        image: imageStagePlanner,
+        submenu: [],
+    }
+}
+
 
 export interface IMenuDataState {
     id: string;
