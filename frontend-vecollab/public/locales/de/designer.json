@@ -18,7 +18,8 @@
         "valid_date": "Bitte ein gültiges Datum eingeben",
         "realistic_date": "Bitte ein realistisches Datum eingeben",
         "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
-        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein."
+        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.",
+        "file_count_max": "Max. 4 Dateien erlaubt"
     },
     "save_and_continue": "Speichern & Weiter",
     "proceed_without_saving": "Weiter ohne Speichern",
