@@ -389,7 +389,7 @@ export default function Wrapper({
         return (
             <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
                 {typeof idOfProgress !== 'undefined' && (
-                    <span className="px-4 py-2  text-slate-800">
+                    <span className="px-4 py-2 flex items-center text-slate-800">
                         {t('step_done_question')}
 
                         <span
