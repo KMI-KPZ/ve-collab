@@ -25,7 +25,7 @@ export function PlansBrowserFilter({
 
     return (
         <div className="mb-4 flex items-center">
-            <div className="flex flex-rows mr-4 divide-x divide-slate-900">
+            <div className="flex flex-rows items-center mr-4 divide-x divide-slate-900">
                 <div className="px-2">
                     <button
                         className={`hover:underline ${
@@ -82,7 +82,7 @@ export function PlansBrowserFilter({
                 </div>
             </div>
 
-            <div>
+            <div className='flex items-center'>
                 <input
                     className={'border border-[#cccccc] rounded-l px-2 py-1'}
                     type="text"
