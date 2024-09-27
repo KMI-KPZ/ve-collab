@@ -69,7 +69,7 @@ export default function Plans({ socket }: Props) {
             });
         }
 
-        console.log({ filterBy, sortedPlans });
+        // console.log({ filterBy, sortedPlans });
 
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
