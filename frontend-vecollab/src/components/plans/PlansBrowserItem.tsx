@@ -174,6 +174,19 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         </Dialog>
     );
 
+    const EditButton = () => (
+        <div
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation();
+                forward(plan._id);
+            }}
+            title={t('edit')}
+        >
+            <MdEdit />
+        </div>
+    );
+
     const ViewButton = () => (
         <div
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
@@ -325,21 +338,19 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                         </div>
                     )}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ViewButton />
+                        {plan.write_access.includes(username) && (
+                            <>
+                                <EditButton />
+                                <CopyButton />
+                            </>
+                        )}
                         {plan.author.username == username && (
                             <>
-                                <ViewButton />
-                                <CopyButton />
                                 <ShareButton />
                                 <DeleteButton />
                             </>
                         )}
-                        {plan.author.username != username &&
-                            plan.write_access.includes(username) && (
-                                <>
-                                    <ViewButton />
-                                    <CopyButton />
-                                </>
-                            )}
                     </div>
                 </div>
             </div>
