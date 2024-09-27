@@ -7,10 +7,13 @@ import { MdEdit, MdOutlineFileDownload } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import { GiSadCrab } from 'react-icons/gi';
 import { PlanSummary } from '@/components/planSummary/PlanSummary';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
 Plan.auth = true;
 export default function Plan() {
     const { data: session } = useSession();
+    const { t } = useTranslation('common')
 
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.planId as string);
@@ -78,4 +81,12 @@ export default function Plan() {
             )}
         </>
     );
+}
+
+export async function getServerSideProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }
