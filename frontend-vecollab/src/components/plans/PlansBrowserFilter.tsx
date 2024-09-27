@@ -1,12 +1,10 @@
-import { MdAdd } from 'react-icons/md';
+import { MdAdd, MdClose } from 'react-icons/md';
 import ButtonNewPlan from './ButtonNewPlan';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
 import { Socket } from 'socket.io-client';
 import { GiCheckMark } from 'react-icons/gi';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useTranslation } from 'next-i18next';
-import { truncate } from 'fs';
 import { useState } from 'react';
 
 interface Props {
@@ -23,6 +21,7 @@ export function PlansBrowserFilter({
     const { data: session } = useSession();
     const { t } = useTranslation('common')
     const [isGoodPractice, setIsGoodPractice] = useState<boolean>(false)
+    const [search, setSearch] = useState<string>("")
 
     return (
         <div className="mb-4 flex items-center">
@@ -89,22 +88,31 @@ export function PlansBrowserFilter({
                     type="text"
                     placeholder={t("plans_filter_title_placeholder")}
                     name="search"
+                    value={search}
                     autoComplete="off"
-                    onKeyUp={(event) => {
+                    onChange={(event) => {
+                        const value = (event.target as HTMLInputElement).value
+                        setSearch(value)
                         filterByCallback({
                             compare: (plan) => {
                                 if (!plan.name) return false
                                 return plan.name
                                     .toLocaleLowerCase()
-                                    .includes(
-                                        (event.target as HTMLInputElement).value.toLowerCase()
-                                    );
+                                    .includes(value.toLowerCase());
                             },
                             id: 'searchByName',
                             isAdditional: true
                         });
                     }}
                 />
+                <div onClick={e => {
+                    setSearch("")
+                    filterByCallback({
+                        compare: undefined,
+                        id: 'searchByName',
+                        isAdditional: true
+                    });
+                }} className='text-slate-600 inline relative -left-[22px] hover:cursor-pointer'><MdClose size={15} className='inline' /></div>
             </div>
 
             <div
