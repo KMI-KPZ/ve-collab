@@ -7,14 +7,10 @@ import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
 import { PlansBrowserFilter } from '@/components/plans/PlansBrowserFilter';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
-import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
-import { IFineStep } from './ve-designer/step-data/[stepName]';
-import { compare } from 'swr/dist/_internal';
 
 export interface IfilterBy {
     /** compare function
