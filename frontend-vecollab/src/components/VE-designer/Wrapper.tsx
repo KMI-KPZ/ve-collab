@@ -198,11 +198,12 @@ export default function Wrapper({
         const getProgressOfCurrentStep = (planProgress: ISideProgressBarStates) => {
             if (!idOfProgress) return undefined;
 
-            const progress = stageInMenu == 'steps' && idOfProgress != 'stepsGenerally'
-                ? planProgress.steps.find(
-                        (a) => a[idOfProgress as keyof ISideProgressBarStateSteps]
-                    )?.[idOfProgress]
-                : planProgress[idOfProgress as keyof Omit<ISideProgressBarStates, 'steps'>];
+            const progress =
+                stageInMenu == 'steps' && idOfProgress != 'stepsGenerally'
+                    ? planProgress.steps.find(
+                          (a) => a[idOfProgress as keyof ISideProgressBarStateSteps]
+                      )?.[idOfProgress]
+                    : planProgress[idOfProgress as keyof Omit<ISideProgressBarStates, 'steps'>];
 
             return progress;
         };
@@ -217,8 +218,8 @@ export default function Wrapper({
                 const progress = getProgressOfCurrentStep(plan.progress);
                 setProgressOfPlan(plan.progress);
                 if (progress) setProgressOfCurrent(progress);
-                // console.log({plan, stageInMenu, idOfProgress, progress});
             }
+            // console.log({plan});
 
             // fix: do not remove loader if we'll change the route
             setTimeout(() => {
@@ -323,9 +324,9 @@ export default function Wrapper({
         if (stageInMenu == 'steps' && idOfProgress != 'stepsGenerally') {
             if (!plan.progress.steps.some((a, i) => idOfProgress in a)) {
                 setProgressOfPlan((prev) => {
-                    prev.steps.push({[idOfProgress]: progress})
+                    prev.steps.push({ [idOfProgress]: progress });
                     return { ...prev };
-                })
+                });
             } else {
                 setProgressOfPlan((prev) => {
                     const _stepsProgress = prev.steps.map((step) =>
@@ -384,7 +385,7 @@ export default function Wrapper({
     );
 
     const SaveAndNextBtn = () => {
-        if (nextpage === 'undefined') return <></>
+        if (nextpage === 'undefined') return <></>;
 
         return (
             <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
@@ -395,22 +396,14 @@ export default function Wrapper({
                         <span
                             title={t('toggle_state_hover')}
                             className="hover:cursor-pointer ml-1"
-                            onClick={(e) =>
-                                handleClickToggleProgress()
-                            }
+                            onClick={(e) => handleClickToggleProgress()}
                         >
                             {progressOfCurrent == ProgressState.notStarted && (
-                                <MdOutlineCircle
-                                    className="inline mb-1"
-                                    size={22}
-                                />
+                                <MdOutlineCircle className="inline mb-1" size={22} />
                             )}
                             {/* {progressOfCurrent == ProgressState.uncompleted && <HiOutlineDotsCircleHorizontal className="inline mb-1" size={22} />} */}
                             {progressOfCurrent == ProgressState.completed && (
-                                <HiOutlineCheckCircle
-                                    className="inline mb-1"
-                                    size={22}
-                                />
+                                <HiOutlineCheckCircle className="inline mb-1" size={22} />
                             )}
                         </span>
                     </span>
@@ -429,8 +422,7 @@ export default function Wrapper({
                             await router.push({
                                 pathname: nextpage,
                                 query: {
-                                    plannerId:
-                                        router.query.plannerId,
+                                    plannerId: router.query.plannerId,
                                 },
                             });
                         },
@@ -447,8 +439,8 @@ export default function Wrapper({
                     {nextpageBtnLabel || t('save_and_continue')}
                 </button>
             </div>
-        )
-    }
+        );
+    };
 
     if (error) {
         let errorMessage: string;
@@ -605,7 +597,8 @@ export default function Wrapper({
 
                                 {children}
 
-                                {(typeof prevpage !== 'undefined' || typeof nextpage !== 'undefined') && (
+                                {(typeof prevpage !== 'undefined' ||
+                                    typeof nextpage !== 'undefined') && (
                                     <div className="my-8 border-t py-3 flex justify-between">
                                         <div>
                                             {typeof prevpage !== 'undefined' && (
