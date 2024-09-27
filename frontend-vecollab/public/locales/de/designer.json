@@ -68,7 +68,7 @@
     },
     "institutions": {
         "title": "Institutionen",
-        "subtitle": "In welchen Institutionen wird der VE umgesetzt?",
+        "subtitle": "In welchen Institutionen soll der VE umgesetzt werden?",
         "description": "Dieses Feld gibt euch einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche.",
         "educational_institution": "Bildungseinrichtung",
         "country": "Land",
@@ -86,7 +86,7 @@
     },
     "lectures": {
         "title": "Lehrveranstaltungen",
-        "subtitle": "Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?",
+        "subtitle": "Im Rahmen welcher Lehrveranstaltungen soll der VE umgesetzt werden?",
         "compulsory": "Pflichtveranstaltung",
         "elective": "Wahlveranstaltung",
         "format": "Format",
@@ -140,7 +140,7 @@
         "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
         "tooltip": "Mehr zu LMS findest du hier in den Selbstlernmaterialien …",
         "placeholder": "Lernumgebung beschreiben",
-        "subtitle2": "In welchem Format / welchen Formaten wird der VE umgesetzt?",
+        "subtitle2": "In welchem Format / welchen Formaten soll der VE umgesetzt werden?",
         "tooltip2": "Mehr zu Formaten findest du hier in den Selbstlernmaterialien …",
         "description2": "Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl  synchrone als auch asynchrone Phasen geplant sind.",
         "format": "Format",
