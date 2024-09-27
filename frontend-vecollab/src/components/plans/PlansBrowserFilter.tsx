@@ -6,6 +6,7 @@ import { Socket } from 'socket.io-client';
 import { GiCheckMark } from 'react-icons/gi';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     socket: Socket;
@@ -115,7 +116,32 @@ export function PlansBrowserFilter({
                 }} className='text-slate-600 inline relative -left-[22px] hover:cursor-pointer'><MdClose size={15} className='inline' /></div>
             </div>
 
-            <div
+            <ButtonLightBlue
+                onClick={() => {
+                    if (isGoodPractice) {
+                        filterByCallback({
+                            compare: undefined,
+                            id: 'isGoodPractice',
+                            isAdditional: true
+                        })
+                    } else {
+                        filterByCallback({
+                            compare: (plan) => plan.is_good_practise === true,
+                            id: 'isGoodPractice',
+                            isAdditional: true
+                        })
+
+                    }
+                    setIsGoodPractice(prev => !prev)
+                }}
+            >
+                <>
+                    {t("plans_filter_good_practice_examples")}
+                    {isGoodPractice && <GiCheckMark className='inline ml-2 mb-2' /> }
+                </>
+            </ButtonLightBlue>
+
+            {/* <div
                 className="mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
                 onClick={() => {
                     if (isGoodPractice) {
@@ -137,7 +163,7 @@ export function PlansBrowserFilter({
             >
                 {t("plans_filter_good_practice_examples")}
                 {isGoodPractice && <GiCheckMark className='inline ml-2 mb-2' /> }
-            </div>
+            </div> */}
 
             <div className="ml-auto">
                 <ButtonNewPlan
