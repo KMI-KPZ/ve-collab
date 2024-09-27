@@ -66,6 +66,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     placeholder={t('name.placeholder')}
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
+                    autoFocus={true}
                     {...methods.register('name')}
                 />
                 <p className="text-red-600 pt-2">{t(methods.formState.errors.name?.message!)}</p>
