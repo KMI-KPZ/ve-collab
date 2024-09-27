@@ -7,8 +7,10 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
 import { useTranslation } from 'next-i18next';
+import { useSession } from 'next-auth/react';
 
 interface Props {
+    plan: IPlan;
     fineStep: IFineStep;
     openAllBoxes?: boolean;
     handleImportStep?: (step: IFineStep) => void;
@@ -16,14 +18,18 @@ interface Props {
 }
 
 export default function ViewFinestep({
+    plan,
     fineStep,
     openAllBoxes,
     availablePlans,
     handleImportStep,
 }: Props): JSX.Element {
+    const { data: session } = useSession();
     const { t } = useTranslation('common');
 
     const originalPlan = availablePlans.find((a) => a._id == fineStep.original_plan);
+
+    const canExport = !plan.is_good_practise_ro || plan.write_access.includes(session?.user.preferred_username as string)
 
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
@@ -63,7 +69,7 @@ export default function ViewFinestep({
                     </div>
                 </div>
 
-                {typeof handleImportStep !== 'undefined' && (
+                {(typeof handleImportStep !== 'undefined' && canExport == true) && (
                     <div>
                         <button
                             className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 print:hidden"
