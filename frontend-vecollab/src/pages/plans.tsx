@@ -7,22 +7,19 @@ import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
 import { PlansBrowserFilter } from '@/components/plans/PlansBrowserFilter';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
-import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
 import Alert from '@/components/common/dialogs/Alert';
 import { Socket } from 'socket.io-client';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
-import { IFineStep } from './ve-designer/step-data/[stepName]';
 
 export interface IfilterBy {
-    /** key from PlanPreview to filter */
-    planKey: keyof PlanPreview;
-    /** compare function to compare the plan[planKey].planValue of a plan   */
-    compare: (planValue: unknown) => boolean;
-    // compare: (planValue: string | string[] | boolean | ISideProgressBarStates | BackendUserSnippet | IFineStep[]) => boolean;
-    /** opti0nal id of your filter function (used in filterBy array) */
-    id?: string;
+    /** compare function
+      * If compare is undefined the filter (id) wil removed  */
+    compare: undefined | ((plan: PlanPreview) => boolean);
+    /** id of your filter function (used in filterBy array) */
+    id: string;
+    /** optional, is true it will added as filter, not replace all others */
+    isAdditional?: boolean;
 }
 
 export interface IsortBy {
@@ -40,10 +37,14 @@ export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common')
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
-    const [filterBy, setFilterBy] = useState<IfilterBy[]>([]);
+    const [filterBy, setFilterBy] = useState<IfilterBy[]>([
+        {
+            compare: () => true,
+            id: 'allAuthors',
+        }
+    ]);
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
-    // TODO add author full name  (in backend)
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
 
     useEffect(() => {
@@ -58,9 +59,9 @@ export default function Plans({ socket }: Props) {
 
         if (filterBy && filterBy.length) {
             filterBy.forEach((filter) => {
-                sortedPlans = sortedPlans.filter((p) => {
-                    return filter.planKey in p && filter.compare(p[filter.planKey]);
-                });
+                sortedPlans = sortedPlans.filter((p) =>
+                    typeof filter.compare !== 'undefined' ?  filter.compare(p) : true
+                );
             });
         }
 
@@ -79,17 +80,24 @@ export default function Plans({ socket }: Props) {
     };
 
     /**
-     * Add filter method or replace existing by planKey
+     * Add filter method, append is isAdditional is true, remove if compare is  undefined
      * Usage: See description in IfilterBy
      */
-    const handleFilterBy = ({ planKey, compare, id }: IfilterBy) => {
-        if (filterBy.find((f) => f.planKey == planKey)) {
-            // update existing filter
+    const handleFilterBy = ({ compare, id, isAdditional }: IfilterBy) => {
+        if (typeof compare === 'undefined') {
             setFilterBy((prev) =>
-                prev.map((f) => (f.planKey == planKey ? { id, planKey, compare } : f))
+                prev.filter(f => f.id != id)
             );
-        } else {
-            setFilterBy((prev) => [...prev, { id, planKey, compare }]);
+        } else if (isAdditional === true) {
+            if (filterBy.find((f) => f.id == id)) {
+                setFilterBy((prev) =>
+                    prev.map((f) => (f.id == id ? { id, compare } : f))
+                );
+            } else {
+                setFilterBy((prev) => [...prev, { id, compare }]);
+            }
+        }else {
+            setFilterBy((prev) => [{ id, compare }]);
         }
     };
 

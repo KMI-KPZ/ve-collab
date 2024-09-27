@@ -151,7 +151,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         let payload: IFineStep = {
             ...emptyStepData,
         };
-        const stepNamesData = data.stepNames.map((step) => {
+        const stepNamesData = stepNames.map((step) => {
             // TODO ids lieber vergleichen
             const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
             if (fineStepBackend !== undefined) {
@@ -165,16 +165,16 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: stepNamesData,
-            }
+            },
         ];
     };
 
     const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
-        } else {
-            update(index, emptyStepData);
-        }
+        // if (fields.length > 1) {
+        // } else {
+        //     update(index, emptyStepData);
+        // }
+        remove(index);
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -194,6 +194,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             })
             .finally(() => setLoadingAvailPlans(false));
     };
+
     const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
         if (stepsToImport.some((s) => s._id == step._id)) {
             setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
@@ -220,12 +221,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         });
         setIsImportStepsDialogOpen(false);
         setStepsToImport([]);
-    };
-
-    const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
-        if (!el) return;
-        el.style.height = '0px';
-        el.style.height = el.scrollHeight + 'px';
     };
 
     const ImportStepsDialog = () => {
@@ -307,6 +302,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
         );
     };
 
+    const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
+        if (!el) return;
+        el.style.height = '0px';
+        el.style.height = el.scrollHeight + 'px';
+    };
+
     const renderStepNamesInputs = (): JSX.Element[] => {
         return fields.map((step, index) => (
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
@@ -373,6 +374,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
                                             }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="hidden"
+                                            {...methods.register(
+                                                `stepNames.${index}.original_plan`
+                                            )}
                                         />
                                     </div>
                                     {methods.formState.errors?.stepNames?.[index]

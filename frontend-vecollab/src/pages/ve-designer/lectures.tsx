@@ -34,16 +34,14 @@ const emptyLecture = {
     participants_amount: 0,
 };
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return formValues.lectures.every((lecture) => {
-//         return (
-//             lecture.name === '' &&
-//             lecture.lecture_type === '' &&
-//             lecture.lecture_format === '' &&
-//             (lecture.participants_amount === 0 || lecture.participants_amount == undefined)
-//         );
-//     });
-// };
+const areAllValuesEmpty = (lecture: LectureOld): boolean => {
+    return (
+        lecture.name.trim() == '' &&
+        lecture.lecture_type.trim() == '' &&
+        lecture.lecture_format.trim() == '' &&
+        (lecture.participants_amount === 0 || lecture.participants_amount == undefined)
+    );
+};
 
 Lectures.auth = true;
 export default function Lectures({ socket }: Props): JSX.Element {
@@ -77,11 +75,15 @@ export default function Lectures({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const lectures = data.lectures.filter((lecture =>
+            !areAllValuesEmpty(lecture)
+        ))
+
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'lectures',
-                value: data.lectures,
+                value: lectures,
             }
         ];
     };
