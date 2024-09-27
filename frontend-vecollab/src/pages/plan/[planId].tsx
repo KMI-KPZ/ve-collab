@@ -9,6 +9,7 @@ import { GiSadCrab } from 'react-icons/gi';
 import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { useTranslation } from 'next-i18next'
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 
 Plan.auth = true;
 export default function Plan() {
@@ -43,33 +44,36 @@ export default function Plan() {
             ) : (
                 <>
                     <div className="mb-6">
-                        <div className={'flex justify-between font-bold text-4xl mb-2'}>
-                            <h1>{plan.name}</h1>
-                            <div className='flex'>
+                        <div className={'flex justify-between font-bold mb-2'}>
+                            <h1 className='text-4xl'>{plan.name}</h1>
+                            <div className='flex gap-x-4'>
+
                                 {username && (
                                     <>
                                         {plan.write_access.includes(username) && (
-                                            <Link
-                                                className="inline text-xl m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                                                href={{
-                                                    pathname: '/ve-designer/name',
-                                                    query: { plannerId: plan._id },
-                                                }}
+                                            <ButtonLightBlue
+                                                onClick={() =>
+                                                    router.push({
+                                                        pathname: '/ve-designer/name',
+                                                        query: { plannerId: plan._id },
+                                                    })
+                                                }
                                             >
                                                 <MdEdit className="inline" /> Bearbeiten
-                                            </Link>
+                                            </ButtonLightBlue>
                                         )}
                                     </>
                                 )}
-                                <Link
-                                    className="inline text-xl m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                                    href={{
-                                        pathname: `/api/pdf-plan`,
-                                        query: { planId: plan._id },
+                                <ButtonLightBlue
+                                    onClick={() => {
+                                        router.push({
+                                            pathname: `/api/pdf-plan`,
+                                            query: { planId: plan._id },
+                                        })
                                     }}
                                 >
                                     <MdOutlineFileDownload className="inline" /> Herunterladen
-                                </Link>
+                                </ButtonLightBlue>
                             </div>
                         </div>
                         <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
