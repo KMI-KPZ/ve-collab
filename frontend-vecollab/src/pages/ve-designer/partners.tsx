@@ -148,13 +148,15 @@ export default function Partners({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const partners: string[] = data.partners.map((partner) => partner.value);
+        const partners: string[] = data.partners
+            .filter((partner) => partner.value.trim() != "")
+            .map((partner) => partner.value);
 
         let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
         let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
 
-        if (partners.length >= 1 && partners[0] !== '') {
+        if (partners.length >= 1) {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
                     (formalCondition) => formalCondition.username === partner
@@ -259,6 +261,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
+        // TODO more less api queries if we wait some ms for next keys ...
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
@@ -289,11 +292,17 @@ export default function Partners({ socket }: Props): JSX.Element {
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadUsers}
-                        onChange={onChange}
+                        onChange={(target, type) => {
+                            onChange(type.action == 'clear'
+                                ? {label: "", value: ""}
+                                : target
+                            )
+                        }}
                         onBlur={onBlur}
-                        value={value}
+                        value={value.value == "" ? null : value}
                         placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
+                        autoFocus={true}
                         formatCreateLabel={(inputValue) => (
                             <span>
                                 {t('common:search_users_no_hit', { value: inputValue })}
