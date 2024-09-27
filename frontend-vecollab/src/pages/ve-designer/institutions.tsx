@@ -35,16 +35,14 @@ interface FormValues {
     institutions: Institution[];
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return formValues.institutions.every((institution) => {
-//         return (
-//             institution.name === '' &&
-//             institution.school_type === '' &&
-//             institution.country === '' &&
-//             institution.department === ''
-//         );
-//     });
-// };
+const areAllFieldsEmpty = (institution: Institution): boolean => {
+    return (
+        institution.name.trim()  == "" &&
+        institution.school_type.trim()  == "" &&
+        institution.country.trim()  == "" &&
+        institution.department.trim()  == ""
+    )
+}
 
 interface Props {
     socket: Socket;
@@ -97,11 +95,14 @@ export default function Institutions({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const institutions = data.institutions.filter(inst =>
+            !areAllFieldsEmpty(inst)
+        )
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'institutions',
-                value: data.institutions,
+                value: institutions,
             }
         ];
     };
