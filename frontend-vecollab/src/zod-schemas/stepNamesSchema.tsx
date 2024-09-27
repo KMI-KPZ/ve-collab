@@ -16,6 +16,7 @@ const StepNameFormSchema = z
             .gte(0, 'messages.only_positive_number')
             .lte(999, 'messages.realistic_number'),
         learning_goal: z.string().max(500, 'messages.maxlength500'),
+        original_plan: z.string()
     })
     .refine(
         (data) =>
@@ -52,7 +53,8 @@ const StepNameFormSchema = z
 
 export const StepNamesFormSchema = z
     .object({
-        stepNames: z.array(StepNameFormSchema).min(1, 'messages.at_least_one'),
+        // stepNames: z.array(StepNameFormSchema).min(1, 'messages.at_least_one'),
+        stepNames: z.array(StepNameFormSchema),
     })
     .superRefine((data, ctx) => {
         // check unique step names
