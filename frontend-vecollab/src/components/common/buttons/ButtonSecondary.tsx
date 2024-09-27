@@ -2,7 +2,7 @@ import Button from "./Button";
 
 interface Props {
     label?: string|JSX.Element;
-    children?: JSX.Element;
+    children?: React.ReactNode;
     onClick: () => void
     className?: string;
     classNameExtend?: string;
