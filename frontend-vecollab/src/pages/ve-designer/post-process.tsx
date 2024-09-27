@@ -15,6 +15,7 @@ import { useTranslation } from 'next-i18next';
 import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tooltip } from '@/components/common/Tooltip';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 
 export interface EvaluationFile {
     file: File;
@@ -384,34 +385,39 @@ export default function PostProcess({ socket }: Props) {
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <div className="flex flex-col mb-4">
                                         <div>
-                                            <input
-                                                type="radio"
-                                                className="border border-gray-400 rounded-lg p-2"
-                                                onBlur={onBlur} // notify when input is touched
-                                                onChange={() => onChange(false)} // send value to hook form
-                                                checked={value === false}
-                                            />
-                                            <label className="px-2 py-2">
-                                                <Tooltip tooltipsText='Registrierte VE-Collab-Nutzende können Teile dieses Plans (z. B. Lernaktivitäten) in eigene VE-Pläne importieren'
-                                                >
-                                                    Lesen und Importieren
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name='sharedReadOnly-false'
+                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(false)} // send value to hook form
+                                                    checked={value === false}
+                                                />
+                                                <Tooltip tooltipsText={<>
+                                                    Ich stelle der Community meinen Plan teilweise lizenzfrei zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung finden, anschauen und Teile (z. B. Lernaktivitäten) daraus in eigene VE-Pläne importieren.<br />
+                                                    Die herunterladbare Gesamtübersicht meines Plans steht unter der folgenden Lizenz: CC-BY-NC-ND 4.0
+                                                </>}>
+                                                    Lesen und Importieren <FaRegQuestionCircle className='inline m-1' />
                                                 </Tooltip>
                                             </label>
-
                                         </div>
                                         <div>
-                                            <input
-                                                type="radio"
-                                                className="border border-gray-400 rounded-lg p-2"
-                                                onBlur={onBlur} // notify when input is touched
-                                                onChange={() => onChange(true)} // send value to hook form
-                                                checked={value === true}
-                                            />
-                                            <label className="px-2 py-2">
-                                                <Tooltip tooltipsText='Registrierte VE-Collab-Nutzende können ausschließlich eine Lese-Ansicht dieses Plans finden'>
-                                                    Nur Lesen
-                                                </Tooltip>
-                                            </label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(true)} // send value to hook form
+                                                    checked={value === true}
+                                                />
+                                                    <Tooltip tooltipsText={<>
+                                                        Ich stelle der Community meinen Plan unter der Lizenz CC-BY-NC-ND 4.0 zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung als Leseansicht finden, anschauen und als Inspiration für eigene VE nutzen.<br />
+                                                        Die herunterladbare Gesamtübersicht meines Plans steht ebenfalls unter der folgenden Lizenz: CC-BY-NC-ND 4.0
+                                                    </>}>
+                                                        Nur Lesen <FaRegQuestionCircle className='inline m-1' />
+                                                    </Tooltip>
+                                                </label>
                                         </div>
                                     </div>
                                 )}
