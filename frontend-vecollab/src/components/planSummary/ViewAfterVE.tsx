@@ -102,7 +102,7 @@ export default function ViewAttributes({ plan, openAllBoxes }: Props): JSX.Eleme
                         {t("plan_summary_literature_files")}
                     </span>
                     <ul className="flex flex-col space-y-2 col-span-3">
-                        <li className="flex w-fit rounded-lg p-2 whitespace-pre-line">
+                        <li className="flex flex-wrap w-fit rounded-lg p-2 whitespace-pre-line">
                             {plan.literature_files && plan.literature_files.length ? (
                                 <>
                                     {plan.literature_files.map((file, index) => {
