@@ -4,11 +4,6 @@ import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -39,12 +34,12 @@ interface Partner {
     value: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length === 1
-    );
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return (
+//         formValues.externalParties.every((party) => party.externalParty === '') &&
+//         formValues.partners.length === 1
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -56,9 +51,6 @@ export default function Partners({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
@@ -115,9 +107,6 @@ export default function Partners({ socket }: Props): JSX.Element {
                 extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             if (plan.partners.length !== 0) {
                 const snippets: BackendProfileSnippetsResponse = await fetchPOST(
                     '/profile_snippets',
@@ -159,17 +148,15 @@ export default function Partners({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const partners: string[] = data.partners.map((partner) => partner.value);
+        const partners: string[] = data.partners
+            .filter((partner) => partner.value.trim() != "")
+            .map((partner) => partner.value);
 
         let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
         let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
 
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
-        if (partners.length >= 1 && partners[0] !== '') {
+        if (partners.length >= 1) {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
                     (formalCondition) => formalCondition.username === partner
@@ -237,14 +224,6 @@ export default function Partners({ socket }: Props): JSX.Element {
             },
             {
                 plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    partners: progressState,
-                },
-            },
-            {
-                plan_id: router.query.plannerId,
                 field_name: 'checklist',
                 value: updateFormalConditions,
             },
@@ -282,6 +261,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
+        // TODO more less api queries if we wait some ms for next keys ...
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
@@ -312,11 +292,17 @@ export default function Partners({ socket }: Props): JSX.Element {
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadUsers}
-                        onChange={onChange}
+                        onChange={(target, type) => {
+                            onChange(type.action == 'clear'
+                                ? {label: "", value: ""}
+                                : target
+                            )
+                        }}
                         onBlur={onBlur}
-                        value={value}
+                        value={value.value == "" ? null : value}
                         placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
+                        autoFocus={true}
                         formatCreateLabel={(inputValue) => (
                             <span>
                                 {t('common:search_users_no_hit', { value: inputValue })}
@@ -370,6 +356,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                 text: t('partners.tooltip'),
                 link: '/learning-material/left-bubble/Partnersuche',
             }}
+            stageInMenu='generally'
+            idOfProgress="partners"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

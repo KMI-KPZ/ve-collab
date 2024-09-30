@@ -5,7 +5,7 @@
         "maxlength500": "Das Feld darf nicht mehr als 500 Buchstaben enthalten.",
         "maxlength200": "Das Feld darf nicht mehr als 200 Buchstaben enthalten.",
         "maxlength100": "Das Feld darf nicht mehr als 100 Buchstaben enthalten.",
-        "realistic_number": "Bitte geben sie eine realistische Zahl ein",
+        "realistic_number": "Bitte geben Sie eine realistische Zahl ein",
         "only_positive_number": "Bitte nur ganze postive Zahlen",
         "no_special_chars": "Nur folgende Sonderzeichen sind zulässig: _*+\":,&()!?-",
         "start_date_before_end_date": "Das Startdatum muss vor dem Enddatum liegen",
@@ -17,7 +17,9 @@
         "atleast_one_field": "Es muss mindestens ein Eintrag vorhanden sein",
         "valid_date": "Bitte ein gültiges Datum eingeben",
         "realistic_date": "Bitte ein realistisches Datum eingeben",
-        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei."
+        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
+        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.",
+        "file_count_max": "Max. 4 Dateien erlaubt"
     },
     "save_and_continue": "Speichern & Weiter",
     "proceed_without_saving": "Weiter ohne Speichern",
@@ -30,6 +32,8 @@
     "alert_saved": "Gespeichert",
     "unsaved_changes": "Ungespeicherte Änderungen",
     "unsaved_changes_text": "Deine Änderungen auf der aktuellen Seite werden nicht gespeichert und gehen verloren.",
+    "step_done_question": "Schritt fertig?",
+    "toggle_state_hover": "Klicken um den Bearbeitungsstatus zu wechseln",
     "sidebar": {
         "general": "Allgemein",
         "phases": "Projektplanung",
@@ -56,7 +60,7 @@
     "partners": {
         "title": "Projektpartner:innen",
         "subtitle": "Wer ist am Projekt beteiligt?",
-        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
+        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
         "description-2": "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.",
         "tooltip": "Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …",
         "partners_title": "Beteiligte",
@@ -64,7 +68,7 @@
     },
     "institutions": {
         "title": "Institutionen",
-        "subtitle": "In welchen Institutionen wird der VE umgesetzt?",
+        "subtitle": "In welchen Institutionen soll der VE umgesetzt werden?",
         "description": "Dieses Feld gibt euch einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche.",
         "educational_institution": "Bildungseinrichtung",
         "country": "Land",
@@ -82,7 +86,7 @@
     },
     "lectures": {
         "title": "Lehrveranstaltungen",
-        "subtitle": "Im Rahmen welcher Lehrveranstaltungen wird der VE umgesetzt?",
+        "subtitle": "Im Rahmen welcher Lehrveranstaltungen soll der VE umgesetzt werden?",
         "compulsory": "Pflichtveranstaltung",
         "elective": "Wahlveranstaltung",
         "format": "Format",
@@ -104,8 +108,7 @@
         "degree": "Studiengang",
         "degree_placeholder": "Studiengang eingeben, mehrere durch Komma trennen",
         "languages": "Sprachen",
-        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen",
-        "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein."
+        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen"
     },
     "goals": {
         "title": "Lernziele & Themen",
@@ -137,7 +140,7 @@
         "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
         "tooltip": "Mehr zu LMS findest du hier in den Selbstlernmaterialien …",
         "placeholder": "Lernumgebung beschreiben",
-        "subtitle2": "In welchem Format / welchen Formaten wird der VE umgesetzt?",
+        "subtitle2": "In welchem Format / welchen Formaten soll der VE umgesetzt werden?",
         "tooltip2": "Mehr zu Formaten findest du hier in den Selbstlernmaterialien …",
         "description2": "Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl  synchrone als auch asynchrone Phasen geplant sind.",
         "format": "Format",
@@ -213,7 +216,7 @@
         "learning_objectives_placeholder": "mehrere durch Komma trennen",
         "title": "Grobplanung",
         "subtitle": "Grobplanung des Ablaufs",
-        "description": "Erstellt beliebig viele Phasen und legt für jede einen Zeitraum fest. Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Gruppenarbeitsphase I, Gruppenarbeitsphase II). Die von euch festgelegten Phasen dienen euch als Struktur und Überblick. Ihr könnt sie dann in der Feinplanung detaillierter ausarbeiten.",
+        "description": "Erstellt beliebig viele Phasen und legt für jede einen Zeitraum fest. Wichtig: Jede Phase braucht einen individuellen Namen (z.B. Gruppenarbeitsphase I, Gruppenarbeitsphase II). Die von euch festgelegten Phasen dienen euch als Struktur und Überblick. Ihr könnt Sie dann in der Feinplanung detaillierter ausarbeiten.",
         "tooltip_text": "Ausführliche Informationen zur VE-Planung und verschiedenen Typen und Modellen von VE findest du hier in den Selbstlernmaterialien.",
         "import_phases": "Phasen importieren",
         "new_phase": "Neue Phase",

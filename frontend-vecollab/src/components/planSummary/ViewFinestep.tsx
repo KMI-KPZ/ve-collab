@@ -206,7 +206,9 @@ export default function ViewFinestep({
                                 </span>
                                 <ul className="flex flex-col space-y-2 col-span-3">
                                     <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                        {showDataOrEmptySign(originalPlan?.author)}
+                                        {showDataOrEmptySign(
+                                            `${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`
+                                        )}
                                     </li>
                                 </ul>
                             </>

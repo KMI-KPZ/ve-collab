@@ -8,19 +8,21 @@ import {
     IMenuData,
     ISideProgressBarStateSteps,
 } from '@/interfaces/ve-designer/sideProgressBar';
-import { IMenuDataState, mainMenu } from '@/data/sideMenuSteps';
+import { IMainMenuItems, IMenuDataState, mainMenuData } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
-import { MdArrowDropDown, MdArrowRight, MdCheckCircleOutline } from 'react-icons/md';
+import { MdArrowDropDown, MdArrowRight } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { useTranslation } from 'next-i18next';
+import { HiOutlineCheckCircle } from 'react-icons/hi';
 
 interface Props {
     methods: UseFormReturn<any>;
     submitCallback: (data: any) => Promise<void>;
     handleInvalidData: (data: any, continueLink: string) => void;
-    stageInMenu: string;
+    stageInMenu: keyof IMainMenuItems;
     plan: IPlan;
+    progressOfPlan: ISideProgressBarStates|undefined;
 }
 
 export default function Sidebar({
@@ -29,14 +31,14 @@ export default function Sidebar({
     handleInvalidData,
     stageInMenu = 'generally',
     plan,
+    progressOfPlan
 }: Props): JSX.Element {
     const router = useRouter();
     const currentPath = usePathname();
     const { t } = useTranslation('common');
 
-    // init menu open states
-    let menuStates: IMenuDataState[] = mainMenu.map((a) => {
-        return { id: a.id, open: true };
+    let menuStates: IMenuDataState[] = Object.keys(mainMenuData).map((a) => {
+        return { id: mainMenuData[a as keyof IMainMenuItems].id, open: true };
     });
 
     // note: but why does this work while change a route?!
@@ -48,10 +50,10 @@ export default function Sidebar({
         }));
     };
 
-    const [mainMenuData, setMainMenuData] = useState<IMenuData[]>(mainMenu);
+    const [mainMenuData_, setMainMenuData_] = useState<IMainMenuItems>(mainMenuData);
 
     useEffect(() => {
-        if (!plan?.steps || !mainMenu?.length) return;
+        if (!plan?.steps) return;
 
         const userDefinedSteps = plan.steps.map((step) => {
             return {
@@ -62,33 +64,23 @@ export default function Sidebar({
         });
         if (!userDefinedSteps.length) return;
 
-        const defaultSteps = mainMenu.find((a) => a.id == 'steps')?.submenu || [];
+        const defaultSteps = mainMenuData.steps.submenu || [];
 
-        // adding user defined steps to steps menu item
-        setMainMenuData((prev) => {
-            return prev.map((item) => {
-                if (item.id == 'steps') {
-                    return Object.assign({}, item, {
-                        submenu: [...defaultSteps, ...userDefinedSteps],
-                    });
-                } else {
-                    return item;
-                }
-            });
-        });
+        setMainMenuData_(prev => {
+            const steps = {...prev.steps, ...{submenu: [...defaultSteps, ...userDefinedSteps]}}
+            return {...prev, ...{steps}}
+        })
     }, [plan]);
 
     const getProgressState = (id: string, parentId: string): any => {
-        if (!plan || !plan.progress) return ProgressState.notStarted;
+        if (!progressOfPlan) return undefined;
 
         const progress =
             parentId == 'steps' && id !== 'stepsGenerally'
-                ? plan.progress.steps.find((a) => a[id as keyof ISideProgressBarStateSteps])?.[id]
-                : plan.progress[id as keyof ISideProgressBarStates];
+                ? progressOfPlan.steps.find((a) => a[id as keyof ISideProgressBarStateSteps])?.[id]
+                : progressOfPlan[id as keyof ISideProgressBarStates];
 
-        if (progress !== undefined) return progress;
-
-        return ProgressState.notStarted;
+        return progress || undefined;
     };
 
     const handleClick = (item: ISubmenuData, e: React.BaseSyntheticEvent<any> | undefined) => {
@@ -112,6 +104,7 @@ export default function Sidebar({
 
     const SubMenuItem = ({ item, parentId }: { item: ISubmenuData; parentId: string }) => {
         const isCurrentPage = currentPath == item.link;
+        const itemsProgress = getProgressState(item.id, parentId)
 
         return (
             <button
@@ -127,9 +120,10 @@ export default function Sidebar({
                     {t(item.text)}
                 </p>
                 <span>
-                    {getProgressState(item.id, parentId) == ProgressState.completed && (
-                        <MdCheckCircleOutline size={20} />
-                    )}
+                    {/* {itemsProgress == ProgressState.completed && <MdCheckCircleOutline size={20} />} */}
+                    {/* {itemsProgress == ProgressState.notStarted && <MdOutlineCircle size={20} />} */}
+                    {/* {itemsProgress == ProgressState.uncompleted && <HiOutlineDotsCircleHorizontal className='text-slate-600' size={20} />} */}
+                    {itemsProgress == ProgressState.completed && <HiOutlineCheckCircle size={20} />}
                 </span>
             </button>
         );
@@ -202,9 +196,9 @@ export default function Sidebar({
         <>
             <nav className="flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
                 <ul className="flex flex-col divide-y gap-1 bg-white">
-                    {mainMenuData.map((item, index) => (
-                        <li key={index}>
-                            <MainMenuItem item={item} />
+                    {Object.keys(mainMenuData_).map((el, i) => (
+                        <li key={i}>
+                            <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />
                         </li>
                     ))}
                 </ul>

@@ -3,18 +3,13 @@ import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 
@@ -36,18 +31,18 @@ interface FormValues {
     languages: Language[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
-    formValues.languages.every((languageObject) => languageObject.language === '') &&
-    formValues.targetGroups.every((targetGroup) => {
-        return (
-            targetGroup.name === '' &&
-            targetGroup.age_min === 0 &&
-            targetGroup.age_max === 0 &&
-            targetGroup.experience === '' &&
-            targetGroup.academic_course === '' &&
-            targetGroup.languages === ''
-        );
-    });
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
+//     formValues.languages.every((languageObject) => languageObject.language === '') &&
+//     formValues.targetGroups.every((targetGroup) => {
+//         return (
+//             targetGroup.name === '' &&
+//             targetGroup.age_min === 0 &&
+//             targetGroup.age_max === 0 &&
+//             targetGroup.experience === '' &&
+//             targetGroup.academic_course === '' &&
+//             targetGroup.languages === ''
+//         );
+//     });
 
 interface Props {
     socket: Socket;
@@ -67,9 +62,6 @@ TargetGroups.auth = true;
 export default function TargetGroups({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const prevpage = '/ve-designer/lectures';
     const nextpage = '/ve-designer/learning-goals';
 
@@ -112,20 +104,12 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     ? plan.languages.map((language) => ({ language }))
                     : [emptyLanguage];
             replaceLang(languages);
-
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { targetGroups, languages };
         },
         [replaceLang, replaceTg]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -136,16 +120,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'languages',
                 value: data.languages.map((element) => element.language),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    target_groups: progressState,
-                    languages: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -184,6 +159,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                     </div>
                     <div className="w-3/4 flex">
                         <div>
+                            <label className="mr-4"> {t('common:from')} </label>
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_min`, {
@@ -193,10 +169,14 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
                             />
                             <p className="text-red-600 pt-2 mr-4">
-                                {t(methods.formState.errors?.targetGroups?.[index]?.age_min?.message!)}
+                                {t(
+                                    methods.formState.errors?.targetGroups?.[index]?.age_min
+                                        ?.message!
+                                )}
                             </p>
                         </div>
                         <div>
+                            <label className="mr-4"> {t('common:to')} </label>
                             <input
                                 type="number"
                                 {...methods.register(`targetGroups.${index}.age_max`, {
@@ -206,7 +186,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
                             />
                             <p className="text-red-600 pt-2">
-                                {t(methods.formState.errors?.targetGroups?.[index]?.age_max?.message!)}
+                                {t(
+                                    methods.formState.errors?.targetGroups?.[index]?.age_max
+                                        ?.message!
+                                )}
                             </p>
                         </div>
                     </div>
@@ -225,7 +208,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.targetGroups?.[index]?.experience?.message!)}
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.experience
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -243,10 +229,10 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {
-                                t(methods.formState.errors?.targetGroups?.[index]?.academic_course
-                                    ?.message!)
-                            }
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.academic_course
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -264,7 +250,9 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.targetGroups?.[index]?.languages?.message!)}
+                            {t(
+                                methods.formState.errors?.targetGroups?.[index]?.languages?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -315,6 +303,8 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 text: t('target.tooltip'),
                 link: '',
             }}
+            stageInMenu='generally'
+            idOfProgress="target_groups"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -357,9 +347,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

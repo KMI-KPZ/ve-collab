@@ -5,7 +5,11 @@ import React, { useState } from 'react';
 import SharePlanForm from './SharePlanForm';
 import EditAccessList from './EditAccessList';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import { ISideProgressBarStates, ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
+import {
+    initialSideProgressBarStates,
+    ISideProgressBarStates,
+    ProgressState,
+} from '@/interfaces/ve-designer/sideProgressBar';
 import { MdShare, MdDelete, MdEdit, MdOutlineCopyAll, MdOutlineFileDownload } from 'react-icons/md';
 import { GrStatusGood } from 'react-icons/gr';
 import Timestamp from '../common/Timestamp';
@@ -52,18 +56,17 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         await refetchPlansCallback();
     };
 
-    // const completedProgress: { [key: string]:  ProgressState } = {
-    //     name: ProgressState.completed
-    // }
+    const getStepsToProgress = () =>
+        Object.keys(initialSideProgressBarStates).filter((a) => a !== 'steps').length +
+        plan.steps.length;
 
-    // const isPlanProgressCompleted = (): boolean => {
-    //     return Object.keys(completedProgress).every(k => plan.progress[k as keyof ISideProgressBarStates] == completedProgress[k] )
-    // }
-
-    const getCompletedStates = () =>
+    const getCompletedSteps = () =>
         Object.keys(plan.progress).filter(
             (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
-        ).length;
+        ).length +
+        plan.progress.steps.filter((a) =>
+            a[ Object.keys(a)[0] ] == ProgressState.completed
+        ).length
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -91,7 +94,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             title={t('plans_share_dialog_title')}
             onClose={handleCloseShareDialog}
         >
-            <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+            <div className="w-getStepsToProgress[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
                     <div tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
@@ -171,6 +174,19 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         </Dialog>
     );
 
+    const EditButton = () => (
+        <div
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation();
+                forward(plan._id);
+            }}
+            title={t('edit')}
+        >
+            <MdEdit />
+        </div>
+    );
+
     const ViewButton = () => (
         <div
             className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
@@ -227,7 +243,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 createCopy(plan._id);
             }}
         >
-            <MdOutlineCopyAll title={t("create_copy")} />
+            <MdOutlineCopyAll title={t('create_copy')} />
         </button>
     );
 
@@ -241,7 +257,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             refetchPlansCallback(); // refresh plans
         }
         setAlert({
-            message: t("plans_alert_deleted"),
+            message: t('plans_alert_deleted'),
             autoclose: 2000,
             onClose: () => setAlert({ open: false }),
         });
@@ -256,7 +272,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         if (response.success === true) {
             refetchPlansCallback(); // refresh plans
             setAlert({
-                message: t("plans_alert_copied"),
+                message: t('plans_alert_copied'),
                 autoclose: 2000,
                 onClose: () => setAlert({ open: false }),
             });
@@ -264,7 +280,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             switch (response.reason) {
                 case 'insufficient_permission':
                     setAlert({
-                        message: t("plans_alert_copy_insufficient_permission"),
+                        message: t('plans_alert_copy_insufficient_permission'),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -272,7 +288,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     return;
                 case 'plan_doesnt_exist':
                     setAlert({
-                        message: t("plans_alert_doesnt_exist"),
+                        message: t('plans_alert_doesnt_exist'),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -280,7 +296,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     return;
                 default:
                     setAlert({
-                        message: t("plans_alert_copy_unexpected_error"),
+                        message: t('plans_alert_copy_unexpected_error'),
                         autoclose: 2000,
                         type: 'error',
                         onClose: () => setAlert({ open: false }),
@@ -295,7 +311,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             <div className="basis-1/12 text-center">
                 {/* {isPlanProgressCompleted() ?<MdCheck /> : <></>} */}
                 <span className="rounded-full border p-2 whitespace-nowrap">
-                    {getCompletedStates()} / {Object.keys(plan.progress).length}
+                    {getCompletedSteps()} / {getStepsToProgress()}
                 </span>
             </div>
 
@@ -318,25 +334,23 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     </div>
                     {plan.is_good_practise && (
                         <div className="mr-2 text-slate-700">
-                            <GrStatusGood title={t("plans_marked_as_good_practise")} />
+                            <GrStatusGood title={t('plans_marked_as_good_practise')} />
                         </div>
                     )}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ViewButton />
+                        {plan.write_access.includes(username) && (
+                            <>
+                                <EditButton />
+                                <CopyButton />
+                            </>
+                        )}
                         {plan.author.username == username && (
                             <>
-                                <ViewButton />
-                                <CopyButton />
                                 <ShareButton />
                                 <DeleteButton />
                             </>
                         )}
-                        {plan.author.username != username &&
-                            plan.write_access.includes(username) && (
-                                <>
-                                    <ViewButton />
-                                    <CopyButton />
-                                </>
-                            )}
                     </div>
                 </div>
             </div>
@@ -348,7 +362,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     </>
                 ) : (
                     <span
-                        title={t("plans_shared_by", {name: `${plan.author.first_name} ${plan.author.last_name}`})}
+                        title={t('plans_shared_by', {
+                            name: `${plan.author.first_name} ${plan.author.last_name}`,
+                        })}
                     >
                         <MdShare className="inline m-1 text-slate-900" /> {plan.author.first_name}{' '}
                         {plan.author.last_name}
@@ -370,7 +386,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
 
             {askDeletion && (
                 <ConfirmDialog
-                    message={t("plans_confirm_delete")}
+                    message={t('plans_confirm_delete')}
                     callback={(proceed) => {
                         if (proceed) deletePlan(plan._id);
                         setAskDeletion(false);

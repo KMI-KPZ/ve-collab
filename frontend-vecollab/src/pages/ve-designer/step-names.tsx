@@ -2,12 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ISideProgressBarStateSteps,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import {
     DragDropContext,
@@ -40,17 +34,17 @@ interface FormValues {
     stepNames: IFineStep[];
 }
 
-const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-    return stepNamesObject.stepNames.every((step) => {
-        return (
-            step.name === '' &&
-            step.timestamp_from === '' &&
-            step.timestamp_to === '' &&
-            step.learning_goal === '' &&
-            step.workload === 0
-        );
-    });
-};
+// const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
+//     return stepNamesObject.stepNames.every((step) => {
+//         return (
+//             step.name === '' &&
+//             step.timestamp_from === '' &&
+//             step.timestamp_to === '' &&
+//             step.learning_goal === '' &&
+//             step.workload === 0
+//         );
+//     });
+// };
 
 export const emptyStepData: IFineStep = {
     _id: undefined,
@@ -83,9 +77,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
 
     const router = useRouter();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
@@ -149,9 +140,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     );
                 }, 1);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
 
             return data;
         },
@@ -163,7 +151,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         let payload: IFineStep = {
             ...emptyStepData,
         };
-        const stepNamesData = data.stepNames.map((step) => {
+        const stepNamesData = stepNames.map((step) => {
             // TODO ids lieber vergleichen
             const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
             if (fineStepBackend !== undefined) {
@@ -172,38 +160,21 @@ export default function StepNames({ socket }: Props): JSX.Element {
             return Object.assign({}, payload, step);
         });
 
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
-            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
-        });
-
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: stepNamesData,
             },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    stepsGenerally: progressState,
-                    steps: sideMenuStateSteps,
-                },
-            },
         ];
     };
 
     const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
-        } else {
-            update(index, emptyStepData);
-        }
+        // if (fields.length > 1) {
+        // } else {
+        //     update(index, emptyStepData);
+        // }
+        remove(index);
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -223,6 +194,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             })
             .finally(() => setLoadingAvailPlans(false));
     };
+
     const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
         if (stepsToImport.some((s) => s._id == step._id)) {
             setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
@@ -249,12 +221,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
         });
         setIsImportStepsDialogOpen(false);
         setStepsToImport([]);
-    };
-
-    const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
-        if (!el) return;
-        el.style.height = '0px';
-        el.style.height = el.scrollHeight + 'px';
     };
 
     const ImportStepsDialog = () => {
@@ -303,8 +269,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <div className="text-sm text-gray-500">
                                         {t('step-names.by')} {plan.author.first_name}{' '}
                                         {plan.author.last_name}
+                                        {t('step-names.by')} {plan.author.first_name}{' '}
+                                        {plan.author.last_name}
                                     </div>
                                 )}
+                                <span
+                                    className="grow text-right"
+                                    title={t('step-names.last_modified')}
+                                >
                                 <span
                                     className="grow text-right"
                                     title={t('step-names.last_modified')}
@@ -337,11 +309,19 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         onClick={() => setIsImportStepsDialogOpen(false)}
                     >
                         {t('common:cancel')}
+                        {t('common:cancel')}
                     </button>
+                    <ButtonPrimary label={t('common:import')} onClick={() => handleStepsImport()} />
                     <ButtonPrimary label={t('common:import')} onClick={() => handleStepsImport()} />
                 </div>
             </div>
         );
+    };
+
+    const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
+        if (!el) return;
+        el.style.height = '0px';
+        el.style.height = el.scrollHeight + 'px';
     };
 
     const renderStepNamesInputs = (): JSX.Element[] => {
@@ -355,6 +335,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <div className="flex flex-wrap gap-y-2 items-center">
                                         <div>
                                             <label>{t('step-names.from')}</label>
+                                            <label>{t('step-names.from')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
@@ -364,6 +345,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
+                                            <label className="ml-2">{t('step-names.to')}</label>
                                             <label className="ml-2">{t('step-names.to')}</label>
                                             <input
                                                 type="date"
@@ -375,9 +357,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         </div>
                                         <div>
                                             <label className="ml-2">{t('step-names.name')}</label>
+                                            <label className="ml-2">{t('step-names.name')}</label>
                                             <input
                                                 type="text"
                                                 {...methods.register(`stepNames.${index}.name`)}
+                                                placeholder={t('step-names.name_placeholder')}
                                                 placeholder={t('step-names.name_placeholder')}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
@@ -398,11 +382,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     </div>
                                     <div className="flex items-center mt-2">
                                         <label>{t('step-names.learning_objectives')}</label>
+                                        <label>{t('step-names.learning_objectives')}</label>
                                         <textarea
                                             {...methods.register(
                                                 `stepNames.${index}.learning_goal`
                                             )}
                                             rows={1}
+                                            placeholder={t(
+                                                'step-names.learning_objectives_placeholder'
+                                            )}
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
@@ -412,9 +400,21 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             }}
                                         />
                                     </div>
+                                    <div>
+                                        <input
+                                            type="hidden"
+                                            {...methods.register(
+                                                `stepNames.${index}.original_plan`
+                                            )}
+                                        />
+                                    </div>
                                     {methods.formState.errors?.stepNames?.[index]
                                         ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message!
+                                            )}
                                             {t(
                                                 methods.formState.errors?.stepNames?.[index]
                                                     ?.timestamp_from?.message!
@@ -427,6 +427,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 methods.formState.errors?.stepNames?.[index]
                                                     ?.timestamp_to?.message!
                                             )}
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message!
+                                            )}
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.name && (
@@ -435,10 +439,18 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 methods.formState.errors?.stepNames?.[index]?.name
                                                     ?.message!
                                             )}
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message!
+                                            )}
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.workload && (
                                         <p className="text-red-600 pt-2 flex justify-center">
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message!
+                                            )}
                                             {t(
                                                 methods.formState.errors?.stepNames?.[index]
                                                     ?.workload?.message!
@@ -478,7 +490,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
             title={t('step-names.title')}
             subtitle={t('step-names.subtitle')}
             description={t('step-names.description')}
+            title={t('step-names.title')}
+            subtitle={t('step-names.subtitle')}
+            description={t('step-names.description')}
             tooltip={{
+                text: t('step-names.tooltip_text'),
                 text: t('step-names.tooltip_text'),
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
@@ -490,11 +506,13 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 )}` || noStepPage
             }
             stageInMenu="steps"
+            idOfProgress="stepsGenerally"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
             <Dialog
                 isOpen={isImportStepsDialogOpen}
+                title={t('step-names.import_phases')}
                 title={t('step-names.import_phases')}
                 onClose={() => setIsImportStepsDialogOpen(false)}
             >
@@ -518,6 +536,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
                     title={t('step-names.new_phase')}
+                    title={t('step-names.new_phase')}
                     onClick={() => {
                         append(emptyStepData);
                     }}
@@ -532,6 +551,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     onClick={(e) => openStepsImportDialog()}
                 >
                     {t('common:import')}
+                    {t('common:import')}
                 </button>
             </div>
         </Wrapper>
@@ -542,6 +562,8 @@ export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
+    };
     };
 }

@@ -73,8 +73,8 @@ export function PlansBrowser({
                                     ? t('plans_no_good_practise_plan_shared')
                                     : t('plans_no_plan_shared')
                                 : filterBy.find((f) => f.id == 'isGoodPractice')
-                                ? t('plans_no_good_practise_plan_created')
-                                : t('plans_no_plan_created')}
+                                    ? t('plans_no_good_practise_plan_created')
+                                    : t('plans_no_plan_created')}
                         </div>
                     ) : (
                         plans.map((plan, index) => (

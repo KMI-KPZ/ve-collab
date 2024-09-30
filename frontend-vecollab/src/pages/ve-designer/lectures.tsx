@@ -2,11 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -39,15 +34,13 @@ const emptyLecture = {
     participants_amount: 0,
 };
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.lectures.every((lecture) => {
-        return (
-            lecture.name === '' &&
-            lecture.lecture_type === '' &&
-            lecture.lecture_format === '' &&
-            (lecture.participants_amount === 0 || lecture.participants_amount == undefined)
-        );
-    });
+const areAllValuesEmpty = (lecture: LectureOld): boolean => {
+    return (
+        lecture.name.trim() == '' &&
+        lecture.lecture_type.trim() == '' &&
+        lecture.lecture_format.trim() == '' &&
+        (lecture.participants_amount === 0 || lecture.participants_amount == undefined)
+    );
 };
 
 Lectures.auth = true;
@@ -55,9 +48,6 @@ export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const prevpage = '/ve-designer/institutions';
     const nextpage = '/ve-designer/target-groups';
 
@@ -79,34 +69,22 @@ export default function Lectures({ socket }: Props): JSX.Element {
             const lectures = plan.lectures.length > 0 ? plan.lectures : [emptyLecture];
 
             replace(lectures);
-
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { lectures };
         },
         [replace]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
+        const lectures = data.lectures.filter((lecture =>
+            !areAllValuesEmpty(lecture)
+        ))
 
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'lectures',
-                value: data.lectures,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    lectures: progressState,
-                },
-            },
+                value: lectures,
+            }
         ];
     };
 
@@ -222,6 +200,8 @@ export default function Lectures({ socket }: Props): JSX.Element {
             socket={socket}
             title={t('lectures.title')}
             subtitle={t('lectures.subtitle')}
+            stageInMenu='generally'
+            idOfProgress="lectures"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

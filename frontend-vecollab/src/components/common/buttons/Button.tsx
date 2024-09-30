@@ -1,16 +1,17 @@
+import React from 'react';
+
 interface Props {
-    label?: string|JSX.Element;
-    children?: JSX.Element;
-    onClick: () => void
+    label?: string | JSX.Element;
+    children?: React.ReactNode;
+    onClick: () => void;
     className?: string;
 }
 export default function Button({ label, children, onClick, className }: Props) {
-
-    const defaulStyle = 'py-2 px-4'
+    const defaulStyle = 'py-2 px-4';
 
     return (
         <button
-            type='button'
+            type="button"
             role="button"
             onClick={onClick}
             className={`${defaulStyle} ${className}`}

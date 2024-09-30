@@ -1,10 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useCallback, useState } from 'react';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
+import React, { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -26,22 +21,17 @@ Name.auth = true;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
         resolver: zodResolver(NameFormSchema),
+
     });
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
-            methods.setValue('name', plan.name, { shouldValidate: true, shouldDirty: false });
+            methods.setValue("name", plan.name, { shouldValidate: true, shouldDirty: false });
 
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { name: plan.name };
         },
         [methods]
@@ -53,15 +43,7 @@ export default function Name({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'name',
                 value: data.name,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    name: ProgressState.completed,
-                },
-            },
+            }
         ];
     };
 
@@ -72,6 +54,8 @@ export default function Name({ socket }: Props): JSX.Element {
             subtitle={t("name.subtitle")}
             description={t('name.description')}
             methods={methods}
+            stageInMenu='generally'
+            idOfProgress="name"
             nextpage="/ve-designer/partners"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
@@ -82,6 +66,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     placeholder={t('name.placeholder')}
                     className="border border-gray-300 rounded-md p-2 w-1/2"
                     autoComplete="off"
+                    autoFocus={true}
                     {...methods.register('name')}
                 />
                 <p className="text-red-600 pt-2">{t(methods.formState.errors.name?.message!)}</p>
