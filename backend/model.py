@@ -375,7 +375,9 @@ class Step:
         if not self._check_unique_tasks(self.tasks):
             raise NonUniqueTasksError
 
-        self.original_plan = util.parse_object_id(original_plan) if original_plan else None
+        self.original_plan = (
+            util.parse_object_id(original_plan) if original_plan else None
+        )
 
     def __str__(self) -> str:
         return str(self.__dict__)
@@ -405,7 +407,7 @@ class Step:
             "learning_activity": self.learning_activity,
             "has_tasks": self.has_tasks,
             "tasks": [task.to_dict() for task in self.tasks],
-            "original_plan": self.original_plan
+            "original_plan": self.original_plan,
         }
 
     @classmethod
@@ -1552,6 +1554,8 @@ class VEPlan:
         if not is_good_practise:
             is_good_practise = False
         self.is_good_practise = is_good_practise
+        if not is_good_practise_ro:
+            is_good_practise_ro = False
         self.is_good_practise_ro = is_good_practise_ro
         self.abstract = abstract
         self.underlying_ve_model = underlying_ve_model
@@ -1574,13 +1578,17 @@ class VEPlan:
 
         if literature_files:
             for literature_file in literature_files:
-                if any([key not in literature_file for key in ["file_id", "file_name"]]):
+                if any(
+                    [key not in literature_file for key in ["file_id", "file_name"]]
+                ):
                     raise MissingKeyError(
                         "Missing a key in literature_files dictionary",
                         "file or filename",
                         "literature_files",
                     )
-                literature_file["file_id"] = util.parse_object_id(literature_file["file_id"])
+                literature_file["file_id"] = util.parse_object_id(
+                    literature_file["file_id"]
+                )
             self.literature_files = literature_files
         else:
             self.literature_files = []
@@ -1698,7 +1706,9 @@ class VEPlan:
                 for individual_learning_goal in self.individual_learning_goals
             ],
             "methodical_approaches": self.methodical_approaches,
-            "target_groups": [target_group.to_dict() for target_group in self.target_groups],
+            "target_groups": [
+                target_group.to_dict() for target_group in self.target_groups
+            ],
             "languages": self.languages,
             "evaluation": [evaluation.to_dict() for evaluation in self.evaluation],
             "timestamp_from": self.timestamp_from,
