@@ -92,8 +92,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         async (plan: IPlan) => {
             setPlanAuthor(plan.author.username);
 
-            let partners = [{ label: '', value: '' }];
-            let extPartners = [{ externalParty: '' }];
+            let partners: Partner[] = [];
+            let extPartners: ExternalParty[] = [];
             if (plan.checklist && Array.isArray(plan.checklist)) {
                 setFormalConditions(plan.checklist);
             }
@@ -138,6 +138,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                     replacePartners(partners);
                 }
             }
+            partners.push({ value: '', label: '' })
+            appendPartners(partners)
 
             return {
                 partners: partners,
@@ -148,6 +150,9 @@ export default function Partners({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const extPartners = data.externalParties
+            .filter((value) => value.externalParty.trim() != "")
+            .map((element) => element.externalParty)
         const partners: string[] = data.partners
             .filter((partner) => partner.value.trim() != "")
             .map((partner) => partner.value);
@@ -220,7 +225,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             {
                 plan_id: router.query.plannerId,
                 field_name: 'involved_parties',
-                value: data.externalParties.map((element) => element.externalParty),
+                value: extPartners,
             },
             {
                 plan_id: router.query.plannerId,
@@ -249,11 +254,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     };
 
     const handleDeleteExternalParties = (index: number): void => {
-        if (fieldsExternalParties.length > 1) {
-            removeExternalParties(index);
-        } else {
-            updateExternalParties(index, { externalParty: '' });
-        }
+        removeExternalParties(index);
     };
 
     const loadUsers = (
@@ -367,7 +368,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             <div>
                 <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
                 {fieldsPartners.map((partner, index) => {
-                    return (
+                    return (<>
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
                             {partner.value == planAuthor ? (
                                 <div className="p-2">{partner.label}</div>
@@ -384,7 +385,12 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 </>
                             )}
                         </div>
-                    );
+                        {methods.formState.errors?.partners?.[index]?.value?.message && (
+                            <p className="text-red-600 pt-2">
+                                {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
+                            </p>
+                        )}
+                    </>);
                 })}
                 <div className="mt-4">
                     <button
