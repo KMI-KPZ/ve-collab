@@ -7318,6 +7318,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "workload": 10,
             "steps": [],
             "is_good_practise": True,
+            "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
@@ -7936,6 +7937,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": False,
+            "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
@@ -8101,6 +8103,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response_plan["is_good_practise"], default_plan.is_good_practise
         )
+        self.assertEqual(
+            response_plan["is_good_practise_ro"], default_plan.is_good_practise_ro
+        )
         self.assertEqual(response_plan["abstract"], default_plan.abstract)
         self.assertEqual(
             response_plan["underlying_ve_model"], default_plan.underlying_ve_model
@@ -8218,6 +8223,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response_plan["is_good_practise"], good_practise_plan.is_good_practise
+        )
+        self.assertEqual(
+            response_plan["is_good_practise_ro"], good_practise_plan.is_good_practise_ro
         )
         self.assertEqual(response_plan["abstract"], good_practise_plan.abstract)
         self.assertEqual(
@@ -8400,6 +8408,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response_plan["is_good_practise"], default_plan.is_good_practise
+        )
+        self.assertEqual(
+            response_plan["is_good_practise_ro"], default_plan.is_good_practise_ro
         )
         self.assertEqual(response_plan["abstract"], default_plan.abstract)
         self.assertEqual(

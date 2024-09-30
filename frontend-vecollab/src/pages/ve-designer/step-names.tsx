@@ -226,9 +226,17 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const ImportStepsDialog = () => {
         if (loadingAvailPlans) return <LoadingAnimation />;
 
+        // show good practice plans if:
+        //  - they have steps
+        //  - they are not "read_only" OR I have write access
+
         const plans = availPlans.filter(
             (plan) =>
-                plan.is_good_practise && plan.steps.length && plan._id != router.query.plannerId
+                plan.is_good_practise &&
+                plan.steps.length &&
+                plan._id != router.query.plannerId &&
+                (!plan.is_good_practise_ro ||
+                    plan.write_access.includes(session?.user.preferred_username as string))
         );
         if (!plans.length) return <>{t('step-names.no_good_practice_plans')}</>;
 
@@ -274,7 +282,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div
                                     key={step._id}
                                     className="ml-10 hover:cursor-pointer flex"
-                                    onClick={() => toggleStepToImport(plan, step)}
+                                    onClick={(e) => toggleStepToImport(plan, step)}
                                     title={t('step-names.add_remove')}
                                 >
                                     <input
@@ -355,7 +363,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                     { valueAsNumber: true }
                                                 )}
                                                 placeholder={t('step-names.time_placeholder')}
-                                                className="border border-gray-400 rounded-lg p-2 mx-2 w-16"
+                                                className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
                                             />
                                             <label className="mr-4">h</label>
                                         </div>
@@ -502,7 +510,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                     type="button"
                     title={t('step-names.import_phases')}
-                    onClick={() => openStepsImportDialog()}
+                    onClick={(e) => openStepsImportDialog()}
                 >
                     {t('common:import')}
                 </button>
@@ -517,4 +525,4 @@ export async function getStaticProps({ locale }: { locale: any }) {
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };
-}
+};

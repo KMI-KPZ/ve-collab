@@ -603,6 +603,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "is_good_practise_ro": True,
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
@@ -2600,6 +2601,7 @@ class VEPlanHandler(BaseHandler):
             plan = planner.get_plan(plan_id)
 
             # permission check: author, write access or good practise
+            # TODO check if is_good_practise_ro is not True
             if plan.is_good_practise is not True:
                 if plan.author != self.current_user.username:
                     if self.current_user.username not in plan.write_access:
