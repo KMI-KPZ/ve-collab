@@ -146,7 +146,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 externalParties: extPartners,
             };
         },
-        [replaceExternalParties, replacePartners, session]
+        [replaceExternalParties, replacePartners, appendPartners, session]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
