@@ -85,7 +85,9 @@ export default function PostProcess({ socket }: Props) {
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
-            methods.setValue('sharedReadOnly', plan.is_good_practise_ro);
+            const is_good_practise_ro = typeof plan.is_good_practise_ro !== 'undefined'
+                ? plan.is_good_practise_ro : false
+            methods.setValue('sharedReadOnly', is_good_practise_ro);
             methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
@@ -114,7 +116,7 @@ export default function PostProcess({ socket }: Props) {
             return {
                 abstract: plan.abstract,
                 share: plan.is_good_practise,
-                sharedReadOnly: plan.is_good_practise_ro,
+                sharedReadOnly: is_good_practise_ro,
                 veModel: plan.underlying_ve_model,
                 reflection: plan.reflection,
                 evaluationFile: plan.evaluation_file,
