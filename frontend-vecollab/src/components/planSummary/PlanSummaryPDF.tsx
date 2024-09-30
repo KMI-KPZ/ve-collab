@@ -36,6 +36,7 @@ export function PlanSummaryPDF({
             {plan.steps !== undefined && plan.steps.length > 0 ? (
                 plan.steps.map((fineStep, index) => (
                     <ViewFinestep
+                        plan={plan}
                         key={index}
                         fineStep={fineStep}
                         openAllBoxes={openAllBoxes}

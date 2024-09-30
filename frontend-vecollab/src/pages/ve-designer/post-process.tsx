@@ -14,6 +14,8 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Tooltip } from '@/components/common/Tooltip';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 
 export interface EvaluationFile {
     file: File;
@@ -31,6 +33,7 @@ export interface LiteratureFile {
 
 interface FormValues {
     share: boolean;
+    sharedReadOnly: boolean;
     abstract: string;
     veModel: string;
     reflection: string;
@@ -81,6 +84,7 @@ export default function PostProcess({ socket }: Props) {
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
+            methods.setValue('sharedReadOnly', plan.is_good_practise_ro);
             methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
@@ -109,6 +113,7 @@ export default function PostProcess({ socket }: Props) {
             return {
                 abstract: plan.abstract,
                 share: plan.is_good_practise,
+                sharedReadOnly: plan.is_good_practise_ro,
                 veModel: plan.underlying_ve_model,
                 reflection: plan.reflection,
                 evaluationFile: plan.evaluation_file,
@@ -144,6 +149,11 @@ export default function PostProcess({ socket }: Props) {
                 plan_id: router.query.plannerId,
                 field_name: 'is_good_practise',
                 value: data.share,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'is_good_practise_ro',
+                value: data.sharedReadOnly,
             },
             {
                 plan_id: router.query.plannerId,
@@ -367,6 +377,53 @@ export default function PostProcess({ socket }: Props) {
 
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
+                        <li className="mb-4 mt-2">
+                            <p>Zugriffsberechtigung auf diesen Plan</p>
+                            <Controller
+                                control={methods.control}
+                                name={'sharedReadOnly'}
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <div className="flex flex-col mb-4">
+                                        <div>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name='sharedReadOnly-false'
+                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(false)} // send value to hook form
+                                                    checked={value === false}
+                                                />
+                                                <Tooltip tooltipsText={<>
+                                                    Ich stelle der Community meinen Plan teilweise lizenzfrei zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung finden, anschauen und Teile (z. B. Lernaktivitäten) daraus in eigene VE-Pläne importieren.<br />
+                                                    Die herunterladbare Gesamtübersicht meines Plans steht unter der folgenden Lizenz: CC-BY-NC-ND 4.0
+                                                </>}>
+                                                    Lesen und Importieren <FaRegQuestionCircle className='inline m-1' />
+                                                </Tooltip>
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(true)} // send value to hook form
+                                                    checked={value === true}
+                                                />
+                                                    <Tooltip tooltipsText={<>
+                                                        Ich stelle der Community meinen Plan unter der Lizenz CC-BY-NC-ND 4.0 zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung als Leseansicht finden, anschauen und als Inspiration für eigene VE nutzen.<br />
+                                                        Die herunterladbare Gesamtübersicht meines Plans steht ebenfalls unter der folgenden Lizenz: CC-BY-NC-ND 4.0
+                                                    </>}>
+                                                        Nur Lesen <FaRegQuestionCircle className='inline m-1' />
+                                                    </Tooltip>
+                                                </label>
+                                        </div>
+                                    </div>
+                                )}
+                            />
+
+                        </li>
                         <li className="mb-4 mt-2">
                             <p>{t('post-process.abstract_task')}</p>
                             <textarea

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const PostProcessSchema = z.object({
     share: z.boolean(),
+    sharedReadOnly: z.boolean(),
     abstract: z.string().max(1000, 'messages.maxlength1000').nullable(),
     reflection: z.string().max(1000, 'messages.maxlength1000').nullable(),
     veModel: z.string().max(1000, 'messages.maxlength1000').nullable(),

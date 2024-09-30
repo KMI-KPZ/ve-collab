@@ -408,6 +408,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                         <ViewFinestep
                             key={index}
                             openAllBoxes={openAllBoxes}
+                            plan={plan}
                             fineStep={fineStep}
                             handleImportStep={openImportDialog}
                             availablePlans={availablePlans}

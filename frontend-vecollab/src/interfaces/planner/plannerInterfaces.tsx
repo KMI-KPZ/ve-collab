@@ -50,6 +50,7 @@ export interface IPlan {
     realization: string | null;
     steps: IFineStep[];
     is_good_practise: boolean;
+    is_good_practise_ro: boolean;
     underlying_ve_model: string | null;
     reflection: string | null;
     literature?: string | null;
