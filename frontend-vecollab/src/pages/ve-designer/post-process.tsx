@@ -16,7 +16,6 @@ import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tooltip } from '@/components/common/Tooltip';
 import { FaRegQuestionCircle } from 'react-icons/fa';
-import { Collapse } from '@/components/common/Collapse';
 
 export interface EvaluationFile {
     file: File;
