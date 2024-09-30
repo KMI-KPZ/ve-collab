@@ -11,11 +11,12 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tooltip } from '@/components/common/Tooltip';
 import { FaRegQuestionCircle } from 'react-icons/fa';
+import { Collapse } from '@/components/common/Collapse';
 
 export interface EvaluationFile {
     file: File;
@@ -378,7 +379,7 @@ export default function PostProcess({ socket }: Props) {
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
-                            <p>Zugriffsberechtigung auf diesen Plan</p>
+                            <p>{t('post-process.access_on_plan')}</p>
                             <Controller
                                 control={methods.control}
                                 name={'sharedReadOnly'}
@@ -389,16 +390,16 @@ export default function PostProcess({ socket }: Props) {
                                                 <input
                                                     type="radio"
                                                     name='sharedReadOnly-false'
-                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
                                                     onBlur={onBlur} // notify when input is touched
                                                     onChange={() => onChange(false)} // send value to hook form
                                                     checked={value === false}
                                                 />
-                                                <Tooltip tooltipsText={<>
-                                                    Ich stelle der Community meinen Plan teilweise lizenzfrei zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung finden, anschauen und Teile (z. B. Lernaktivitäten) daraus in eigene VE-Pläne importieren.<br />
-                                                    Die herunterladbare Gesamtübersicht meines Plans steht unter der folgenden Lizenz: CC-BY-NC-ND 4.0
-                                                </>}>
-                                                    Lesen und Importieren <FaRegQuestionCircle className='inline m-1' />
+                                                {t('post-process.read_and_import')}
+                                                <Tooltip tooltipsText={
+                                                    <Trans i18nKey="post-process.read_and_import_tooltip" ns='designer' components={{ 1: <br /> }} />
+                                                }>
+                                                    <FaRegQuestionCircle className='inline m-1 text-ve-collab-blue' />
                                                 </Tooltip>
                                             </label>
                                         </div>
@@ -406,18 +407,18 @@ export default function PostProcess({ socket }: Props) {
                                             <label>
                                                 <input
                                                     type="radio"
-                                                    className="border border-gray-400 rounded-lg p-2"
+                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
                                                     onBlur={onBlur} // notify when input is touched
                                                     onChange={() => onChange(true)} // send value to hook form
                                                     checked={value === true}
                                                 />
-                                                    <Tooltip tooltipsText={<>
-                                                        Ich stelle der Community meinen Plan unter der Lizenz CC-BY-NC-ND 4.0 zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung als Leseansicht finden, anschauen und als Inspiration für eigene VE nutzen.<br />
-                                                        Die herunterladbare Gesamtübersicht meines Plans steht ebenfalls unter der folgenden Lizenz: CC-BY-NC-ND 4.0
-                                                    </>}>
-                                                        Nur Lesen <FaRegQuestionCircle className='inline m-1' />
-                                                    </Tooltip>
-                                                </label>
+                                                 {t('post-process.read_only')}
+                                                <Tooltip tooltipsText={
+                                                    <Trans i18nKey="post-process.read_only_tooltip" ns='designer' components={{ 1: <br /> }} />
+                                                }>
+                                                    <FaRegQuestionCircle className='inline m-1  text-ve-collab-blue' />
+                                                </Tooltip>
+                                            </label>
                                         </div>
                                     </div>
                                 )}
