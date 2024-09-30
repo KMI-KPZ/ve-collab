@@ -201,16 +201,21 @@ export default function ViewFinestep({
                                         )}
                                     </li>
                                 </ul>
-                                <span className="text-base font-semibold pr-5">
-                                    {t('plan_summary_author_original_plan')}
-                                </span>
-                                <ul className="flex flex-col space-y-2 col-span-3">
-                                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                        {showDataOrEmptySign(
-                                            `${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`
-                                        )}
-                                    </li>
-                                </ul>
+
+                                {typeof originalPlan !== 'undefined' ? (<>
+                                    <span className="text-base font-semibold pr-5">
+                                        {t('plan_summary_author_original_plan')}
+                                    </span>
+                                    <ul className="flex flex-col space-y-2 col-span-3">
+                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
+                                            {showDataOrEmptySign(
+                                                `${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`
+                                            )}
+                                        </li>
+                                    </ul>
+                                </>) : (
+                                    <></>
+                                )}
                             </>
                         )}
                     </section>
