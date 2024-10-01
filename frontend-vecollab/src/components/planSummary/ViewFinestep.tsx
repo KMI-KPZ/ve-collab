@@ -180,7 +180,7 @@ export default function ViewFinestep({
                             </>
                         )}
 
-                        {fineStep.original_plan !== '' && (
+                        {(fineStep.original_plan && fineStep.original_plan !== '') && (
                             <>
                                 <span className="text-base font-semibold pr-5">
                                     {t('plan_summary_imported_from')}
