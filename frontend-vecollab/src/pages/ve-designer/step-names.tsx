@@ -148,16 +148,16 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
-        let payload: IFineStep = {
-            ...emptyStepData,
-        };
         const stepNamesData = stepNames.map((step) => {
-            // TODO ids lieber vergleichen
-            const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
-            if (fineStepBackend !== undefined) {
-                payload = fineStepBackend;
-            }
-            return Object.assign({}, payload, step);
+            if (step._id == '') step._id = undefined
+
+            const prevData = steps.find((fineStep) => fineStep._id === step._id);
+
+            const payload: IFineStep = prevData !== undefined
+                ? {...prevData}
+                : {...emptyStepData};
+
+                return {...payload, ...step}
         });
 
         return [
@@ -385,6 +385,12 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         />
                                     </div>
                                     <div>
+                                        <input
+                                            type="hidden"
+                                            {...methods.register(
+                                                `stepNames.${index}._id`
+                                            )}
+                                        />
                                         <input
                                             type="hidden"
                                             {...methods.register(

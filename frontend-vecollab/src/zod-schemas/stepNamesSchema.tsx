@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const StepNameFormSchema = z
     .object({
+        _id: z.string(),
         name: z
             .string()
             .max(200, 'messages.maxlength200')
