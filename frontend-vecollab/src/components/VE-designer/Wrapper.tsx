@@ -506,6 +506,7 @@ export default function Wrapper({
                                 setPopUp({ isOpen: true, continueLink });
                             }}
                             handleInvalidData={(data: any, continueLink: string) => {
+                                console.error(data);
                                 setPopUp({ isOpen: true, type: 'invalid', continueLink });
                             }}
                         />
@@ -517,6 +518,7 @@ export default function Wrapper({
                                     await handleSubmit(data);
                                 }}
                                 handleInvalidData={(data: any, continueLink: string) => {
+                                    console.error(data);
                                     setPopUp({ isOpen: true, type: 'invalid', continueLink });
                                 }}
                                 stageInMenu={stageInMenu}
