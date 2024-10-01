@@ -183,22 +183,26 @@
         "subtitle": "An alles gedacht?",
         "description": "Hier noch einige wichtige Aspekte, die ihr geklärt haben solltet, bevor es mit der inhaltlichen und didaktischen Planung losgeht.",
         "tooltip": "Mehr zu den Aspekten der Checkliste findest du hier in den Selbstlernmaterialien",
-        "time": "Time",
-        "time_descr-1": "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
-        "time_descr-2": "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind.",
-        "topic": "Topic",
-        "topic_descr-1": "Überprüft, ob das Thema / die Themen des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar ist / sind.",
-        "objectives": "Ziele",
-        "objectives_descr-1": "Überprüft, ob die Lehr-/Lernziele des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar sind.",
-        "media": "Medien",
-        "media_descr-1": "Falls ihr ein gemeinsames LMS verwenden wollt, stellt sicher, dass es an allen beteiligten Institutionen nutzbar ist.",
-        "technic": "Technik",
-        "technic_descr-1": "Überprüft, ob eure Institution über eine ausreichende technische Ausstattung zur Durchführung des VE verfügt.",
-        "technic_descr-2": "Erkundigt euch über Ressourcen für  technische Unterstützung während des VE an eurer Institution.",
-        "guidelines": "Institutionelle Vorgaben",
-        "guidelines_descr-1": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
-        "dataprotection": "Datenschutz",
-        "dataprotection_descr-1": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
+        "time_title": "Zeit",
+        "time_descr": [
+                "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
+                "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind."
+        ],
+        "topic_title": "Themen",
+        "topic_descr": "Überprüft, ob das Thema / die Themen des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar ist / sind.",
+        "goals_title": "Ziele",
+        "goals_descr": "Überprüft, ob die Lehr-/Lernziele des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar sind.",
+        "media_title": "Medien",
+        "media_descr": "Falls ihr ein gemeinsames LMS verwenden wollt, stellt sicher, dass es an allen beteiligten Institutionen nutzbar ist.",
+        "technicalEquipment_title": "Technik",
+        "technicalEquipment_descr": [
+            "Überprüft, ob eure Institution über eine ausreichende technische Ausstattung zur Durchführung des VE verfügt.",
+            "Erkundigt euch über Ressourcen für  technische Unterstützung während des VE an eurer Institution."
+        ],
+        "institutionalRequirements_title": "Institutionelle Vorgaben",
+        "institutionalRequirements_descr": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
+        "dataProtection_title": "Datenschutz",
+        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
     },
     "step-names" : {
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",
