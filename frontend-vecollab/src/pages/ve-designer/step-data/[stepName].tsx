@@ -50,7 +50,7 @@ export interface IFineStepFrontend {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITaskFrontend[];
-    original_plan: string;
+    original_plan?: string;
 }
 
 export interface IFineStep {
@@ -63,7 +63,7 @@ export interface IFineStep {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITask[];
-    original_plan: string;
+    original_plan?: string;
 }
 
 export const emptyTask: ITaskFrontend = {
