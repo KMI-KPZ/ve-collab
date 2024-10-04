@@ -244,7 +244,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
         return (
             <div>
-                <div className="flex flex-col max-h-96 overflow-y-auto">
+                <div className="flex flex-col max-h-96 overflow-y-auto content-scrollbar">
                     <div>{t('step-names.select_steps_to_import')}</div>
 
                     {plans
