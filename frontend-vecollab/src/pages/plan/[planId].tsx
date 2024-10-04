@@ -43,9 +43,9 @@ export default function Plan() {
                 <LoadingAnimation />
             ) : (
                 <>
-                    <div className="mb-6">
+                    <div className="mb-6 mt-12">
                         <div className={'flex justify-between font-bold mb-2'}>
-                            <h1 className='text-4xl'>{plan.name}</h1>
+                            <h1 className='text-4xl'>Plan</h1>
                             <div className='flex gap-x-4'>
 
                                 {username && (
