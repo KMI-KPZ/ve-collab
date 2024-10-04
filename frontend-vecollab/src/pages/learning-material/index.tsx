@@ -150,7 +150,7 @@ export default function PageCategoryNotSelected(props: Props) {
                 Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.
             </div>
 
-            <div className="relative mx-8 border-slate-500 border-t xl:mt-6 xl:pt-12 xl:-mb-[3rem]">
+            <div className="relative mx-8 border-t-2 border-ve-collab-blue/50 xl:mt-6 xl:pt-12 xl:-mb-[3rem]">
                 <Bubbles />
             </div>
         </>
