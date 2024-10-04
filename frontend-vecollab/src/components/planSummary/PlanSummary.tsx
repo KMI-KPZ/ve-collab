@@ -38,14 +38,14 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
     const [alert, setAlert] = useState<AlertState>({ open: false });
     const methods = useForm<FormValues>({ mode: 'onChange' });
 
-    const [importStep2Plan, setImportStep2Plan] = useState<{
+    const [exportStep2Plan, setExportStep2Plan] = useState<{
         isOpen: boolean;
         step?: IFineStep;
         plan?: IPlan;
     }>({
         isOpen: false,
     });
-    const [loadingImport, setLoadingImport] = useState<boolean>(false);
+    const [loadingExport, setLoadingExport] = useState<boolean>(false);
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
     const { data: partnerUserSnippets, isLoading } = useGetProfileSnippets(
         [...plan.partners, plan.author.username],
@@ -62,9 +62,9 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         setPartnerProfileSnippets(partnerSnippets);
     }, [partnerUserSnippets]);
 
-    const openImportDialog = (step: IFineStep) => {
+    const openExportDialog = (step: IFineStep) => {
         step._id = undefined;
-        setImportStep2Plan({ isOpen: true, step, plan: undefined });
+        setExportStep2Plan({ isOpen: true, step, plan: undefined });
         methods.setValue('step.name', step.name, { shouldValidate: true, shouldDirty: false });
         methods.setValue(
             'step.timestamp_from',
@@ -78,41 +78,41 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         );
     };
 
-    const handleImportStep2Plan = async (data: FormValues) => {
-        setLoadingImport(true);
-        const step = { ...importStep2Plan.step, ...data.step };
+    const handleExportStep2Plan = async (data: FormValues) => {
+        setLoadingExport(true);
+        const step = { ...exportStep2Plan.step, ...data.step };
 
-        if (importStep2Plan.plan!.steps.some((p) => p.name == step!.name)) {
+        if (exportStep2Plan.plan!.steps.some((p) => p.name == step!.name)) {
             setAlert({
-                message: t('plan_summary_import_error_step_name_exists'),
+                message: t('plan_summary_export_error_step_name_exists'),
                 type: 'warning',
                 onClose: () => setAlert({ open: false }),
             });
-            setLoadingImport(false);
+            setLoadingExport(false);
             return;
         }
 
-        const planLock = await getPlanLock(socket, importStep2Plan.plan!._id)
+        const planLock = await getPlanLock(socket, exportStep2Plan.plan!._id)
         if (planLock.reason === 'plan_locked') {
             setAlert({
-                message: t('plan_summary_import_error_plan_locked'),
+                message: t('plan_summary_export_error_plan_locked'),
                 type: 'warning',
                 onClose: () => setAlert({ open: false }),
             });
-            setLoadingImport(false);
+            setLoadingExport(false);
             return;
         }
 
         const res = await fetchPOST(
             '/planner/append_step',
             {
-                plan_id: importStep2Plan.plan!._id,
+                plan_id: exportStep2Plan.plan!._id,
                 step: step,
             },
             session?.accessToken
         );
         if (res.success === true) {
-            setImportStep2Plan((prev) => ({ ...prev, isOpen: false }));
+            setExportStep2Plan((prev) => ({ ...prev, isOpen: false }));
         } else {
             console.log({ res });
             setAlert({
@@ -122,21 +122,21 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
             });
         }
 
-        await dropPlanLock(socket, importStep2Plan.plan!._id);
-        setLoadingImport(false);
+        await dropPlanLock(socket, exportStep2Plan.plan!._id);
+        setLoadingExport(false);
     };
 
     const validateDateRange = (fromValue: string, toValue: string) => {
         methods.clearErrors('step.timestamp_from');
         methods.clearErrors('step.timestamp_to');
         return new Date(fromValue) > new Date(toValue)
-            ? t('plan_summary_import_validation_error_dates')
+            ? t('plan_summary_export_validation_error_dates')
             : true;
     };
 
     const validateUniqueStepName = (stepName: string) => {
-        if (importStep2Plan.plan?.steps.some((p) => p.name == stepName)) {
-            return t('plan_summary_import_validation_error_unique_steps');
+        if (exportStep2Plan.plan?.steps.some((p) => p.name == stepName)) {
+            return t('plan_summary_export_validation_error_unique_steps');
         }
         return true;
     };
@@ -152,8 +152,8 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 <div>
-                    {t('plan_summary_import_choose_plan_text', {
-                        name: importStep2Plan.step?.name,
+                    {t('plan_summary_export_choose_plan_text', {
+                        name: exportStep2Plan.step?.name,
                     })}
                 </div>
                 {plans
@@ -169,7 +169,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                             className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
                             title={t('choose')}
                             onClick={(e) => {
-                                setImportStep2Plan((prev) => ({ ...prev, plan }));
+                                setExportStep2Plan((prev) => ({ ...prev, plan }));
                             }}
                         >
                             <MdNewspaper />
@@ -186,13 +186,13 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
     const Dialog_Step2PlanConfirm = () => {
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                {importStep2Plan.plan!.steps?.length > 0 && (
+                {exportStep2Plan.plan!.steps?.length > 0 && (
                     <div className="flex items-start">
                         <span className="mr-2 p-2 font-bold">
-                            {t('plan_summary_import_phases')}
+                            {t('plan_summary_export_phases')}
                         </span>
                         <div className="flex flex-wrap gap-y-2">
-                            {importStep2Plan.plan!.steps?.map((planStep) => (
+                            {exportStep2Plan.plan!.steps?.map((planStep) => (
                                 <div
                                     key={planStep._id}
                                     title={`von ${planStep.timestamp_from} bis ${planStep.timestamp_from}`}
@@ -204,13 +204,13 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                         </div>
                     </div>
                 )}
-                <div className="mt-2">{t('plan_summary_import_check_data_text')}</div>
+                <div className="mt-2">{t('plan_summary_export_check_data_text')}</div>
 
                 <FormProvider {...methods}>
                     <form>
                         <div className="ml-6 mt-3 items-center flex flex-wrap flex-row gap-y-2">
                             <label className="text-right basis-1/4">
-                                {t('plan_summary_import_name')}
+                                {t('plan_summary_export_name')}
                             </label>
                             <div className="grow basis-3/4">
                                 <input
@@ -219,18 +219,18 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                                         required: {
                                             value: true,
                                             message: t(
-                                                'plan_summary_import_name_validation_required'
+                                                'plan_summary_export_name_validation_required'
                                             ),
                                         },
                                         validate: (v) => validateUniqueStepName(v),
                                     })}
-                                    placeholder={t('plan_summary_import_name_placeholder')}
+                                    placeholder={t('plan_summary_export_name_placeholder')}
                                     className="border border-gray-400 rounded-lg p-2 mx-2"
                                 />
                             </div>
 
                             <label className="text-right  basis-1/4">
-                                {t('plan_summary_import_from')}
+                                {t('plan_summary_export_from')}
                             </label>
                             <div className="basis-3/4">
                                 <input
@@ -239,7 +239,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                                         required: {
                                             value: true,
                                             message: t(
-                                                'plan_summary_import_from_validation_required'
+                                                'plan_summary_export_from_validation_required'
                                             ),
                                         },
                                         validate: (v) =>
@@ -253,7 +253,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                             </div>
 
                             <label className="text-right  basis-1/4">
-                                {t('plan_summary_import_to')}
+                                {t('plan_summary_export_to')}
                             </label>
                             <div className="basis-3/4">
                                 <input
@@ -262,7 +262,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                                         required: {
                                             value: true,
                                             message: t(
-                                                'plan_summary_import_to_validation_required'
+                                                'plan_summary_export_to_validation_required'
                                             ),
                                         },
                                         validate: (v) =>
@@ -284,11 +284,11 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                                 t(methods.formState.errors?.step?.timestamp_to?.message!)}
                         </div>
                         <div className="text-right mt-2">
-                            {loadingImport && <LoadingAnimation size="small" />}
+                            {loadingExport && <LoadingAnimation size="small" />}
                             <button
                                 className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                                 onClick={(e) => {
-                                    setImportStep2Plan((prev) => ({ ...prev, plan: undefined }));
+                                    setExportStep2Plan((prev) => ({ ...prev, plan: undefined }));
                                 }}
                             >
                                 {t('back')}
@@ -299,7 +299,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                                 onClick={methods.handleSubmit(
                                     // valid
                                     async (data: any) => {
-                                        await handleImportStep2Plan(data);
+                                        await handleExportStep2Plan(data);
                                     }
                                 )}
                             >
@@ -312,11 +312,11 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         );
     };
 
-    const Dialog_Step2PlanSuccess = () => {
+    const Dialog_ExportStep2PlanSuccess = () => {
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 <div>
-                    {t('plan_summary_import_success_text', { name: importStep2Plan.step?.name })}
+                    {t('plan_summary_export_success_text', { name: exportStep2Plan.step?.name })}
                 </div>
 
                 <div className="mt-4 flex flex-row">
@@ -324,17 +324,17 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                         className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         href={{
                             pathname: '/ve-designer/step-names',
-                            query: { plannerId: importStep2Plan.plan?._id },
+                            query: { plannerId: exportStep2Plan.plan?._id },
                         }}
                     >
                         <MdEdit className="inline" />
-                        {t('plan_summary_import_edit_plan')}
+                        {t('plan_summary_export_edit_plan')}
                     </Link>
                     <button
                         type="button"
                         className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                         onClick={(e) => {
-                            setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined });
+                            setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined });
                         }}
                     >
                         {t('close')}
@@ -354,10 +354,10 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
 
             {/* dialog to select target plan */}
             <Dialog
-                isOpen={importStep2Plan.isOpen && importStep2Plan.plan === undefined}
-                title={t('plan_summary_import_choose_plan_title')}
+                isOpen={exportStep2Plan.isOpen && exportStep2Plan.plan === undefined}
+                title={t('plan_summary_export_choose_plan_title')}
                 onClose={() =>
-                    setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
+                    setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
                 }
             >
                 <div className="w-[40vw]">
@@ -367,10 +367,10 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
 
             {/* dialog to set date and name of step for import */}
             <Dialog
-                isOpen={importStep2Plan.isOpen && importStep2Plan.plan !== undefined}
-                title={t('plan_summary_import_into_title', { name: importStep2Plan.plan?.name })}
+                isOpen={exportStep2Plan.isOpen && exportStep2Plan.plan !== undefined}
+                title={t('plan_summary_export_into_title', { name: exportStep2Plan.plan?.name })}
                 onClose={() =>
-                    setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
+                    setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
                 }
             >
                 <div className="w-[40vw]">
@@ -378,20 +378,20 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                 </div>
             </Dialog>
 
-            {/* import success dialog */}
+            {/* export success dialog */}
             <Dialog
                 isOpen={
-                    !importStep2Plan.isOpen &&
-                    importStep2Plan.plan !== undefined &&
-                    importStep2Plan.step !== undefined
+                    !exportStep2Plan.isOpen &&
+                    exportStep2Plan.plan !== undefined &&
+                    exportStep2Plan.step !== undefined
                 }
-                title={t('plan_summary_import_into_title', { name: importStep2Plan.plan?.name })}
+                title={t('plan_summary_export_into_title', { name: exportStep2Plan.plan?.name })}
                 onClose={() =>
-                    setImportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
+                    setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined })
                 }
             >
                 <div className="w-[40vw]">
-                    <Dialog_Step2PlanSuccess />
+                    <Dialog_ExportStep2PlanSuccess />
                 </div>
             </Dialog>
 
@@ -410,7 +410,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                             openAllBoxes={openAllBoxes}
                             plan={plan}
                             fineStep={fineStep}
-                            handleImportStep={openImportDialog}
+                            handleImportStep={openExportDialog}
                             availablePlans={availablePlans}
                         />
                     ))
