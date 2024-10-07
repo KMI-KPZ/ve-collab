@@ -103,7 +103,7 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <div className="flex justify-between mb-6">
+            <div className="flex justify-between mb-6 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>

@@ -126,7 +126,7 @@ export default function Groups() {
     }
 
     return (
-        <>
+        <div className='mt-12'>
             <WhiteBox>
                 <VerticalTabs>
                     <div tabname="meine Gruppen">
@@ -550,6 +550,6 @@ export default function Groups() {
                     </div>
                 </div>
             </Dialog>
-        </>
+        </div>
     );
 }

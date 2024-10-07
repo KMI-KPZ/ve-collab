@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const StepNameFormSchema = z
     .object({
+        _id: z.string(),
         name: z
             .string()
             .max(200, 'messages.maxlength200')
@@ -16,7 +17,7 @@ const StepNameFormSchema = z
             .gte(0, 'messages.only_positive_number')
             .lte(999, 'messages.realistic_number'),
         learning_goal: z.string().max(500, 'messages.maxlength500'),
-        original_plan: z.string()
+        original_plan: z.string().optional()
     })
     .refine(
         (data) =>

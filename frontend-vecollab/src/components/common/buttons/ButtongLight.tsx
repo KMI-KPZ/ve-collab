@@ -8,7 +8,7 @@ interface Props {
     className?: string;
     classNameExtend?: string;
 }
-export default function ButtonLightBlue({
+export default function ButtonLight({
     label,
     children,
     onClick,
@@ -16,7 +16,7 @@ export default function ButtonLightBlue({
     classNameExtend,
 }: Props) {
     const defaulStyle =
-        'py-2 px-4 rounded-lg bg-ve-collab-blue-light text-ve-collab-blue hover:bg-ve-collab-blue/20';
+        'py-2 px-4 rounded-lg bg-white shadow hover:bg-slate-100';
 
     return (
         <Button

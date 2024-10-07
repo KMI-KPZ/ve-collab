@@ -29,15 +29,15 @@ export default function Header({
     const { t } = useTranslation('common');
 
     return (
-        <div className="p-3 flex justify-between flex-wrap border-b">
-            <div className="text-4xl font-bold flex-nowrap text-slate-400 w-1/2 truncate">
+        <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
+            <div className="grow text-4xl font-bold flex-nowrap text-slate-400 truncate w-full lg:w-1/2">
                 <span className="text-ve-collab-orange">VE</span>{' '}
                 <span className="text-ve-collab-blue">Designer</span>
-                {plan && plan.name && <span className="ml-4 text-2xl">• {plan.name}</span>}
+                {plan && plan.name && <span className="ml-4 text-2xl before:content-['•'] before:mr-2">{plan.name}</span>}
             </div>
 
-            <div className="">
-                <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
+            <div className="flex justify-between w-full lg:w-fit">
+                <div><Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
                     <button
                         type="submit"
                         className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
@@ -54,9 +54,9 @@ export default function Header({
                     >
                         <MdMeetingRoom className="inline" /> Video
                     </button>
-                </Link>
+                </Link></div>
 
-                <button
+                <div><button
                     className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                     onClick={async (e) => {
                         if (Object.keys(methods.formState.dirtyFields).length > 0) {
@@ -87,7 +87,7 @@ export default function Header({
                     )}
                 >
                     {t("save")}
-                </button>
+                </button></div>
             </div>
         </div>
     );

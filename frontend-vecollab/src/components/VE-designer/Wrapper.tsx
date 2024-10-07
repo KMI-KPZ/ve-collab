@@ -390,13 +390,15 @@ export default function Wrapper({
         return (
             <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
                 {typeof idOfProgress !== 'undefined' && (
-                    <span className="px-4 py-2 flex items-center text-slate-800">
+                    <span
+                        className="group px-4 py-2 flex items-center text-slate-700 hover:cursor-pointer hover:text-slate-900"
+                        onClick={(e) => handleClickToggleProgress()}
+                    >
                         {t('step_done_question')}
 
                         <span
                             title={t('toggle_state_hover')}
-                            className="hover:cursor-pointer ml-1"
-                            onClick={(e) => handleClickToggleProgress()}
+                            className="ml-1 transition ease-in-out group-hover:scale-110"
                         >
                             {progressOfCurrent == ProgressState.notStarted && (
                                 <MdOutlineCircle className="inline mb-1" size={22} />
@@ -504,6 +506,7 @@ export default function Wrapper({
                                 setPopUp({ isOpen: true, continueLink });
                             }}
                             handleInvalidData={(data: any, continueLink: string) => {
+                                console.error(data);
                                 setPopUp({ isOpen: true, type: 'invalid', continueLink });
                             }}
                         />
@@ -515,6 +518,7 @@ export default function Wrapper({
                                     await handleSubmit(data);
                                 }}
                                 handleInvalidData={(data: any, continueLink: string) => {
+                                    console.error(data);
                                     setPopUp({ isOpen: true, type: 'invalid', continueLink });
                                 }}
                                 stageInMenu={stageInMenu}
@@ -550,7 +554,7 @@ export default function Wrapper({
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
                                     {typeof tooltip !== 'undefined' && (
-                                        <Tooltip tooltipsText={tooltip.text}>
+                                        <Tooltip tooltipsText={tooltip.text} position='left'>
                                             <Link
                                                 target="_blank"
                                                 href={tooltip.link}
