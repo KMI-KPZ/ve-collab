@@ -316,7 +316,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             </div>
 
             <div
-                className="grow font-normal text-base group hover:cursor-pointer"
+                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -326,7 +326,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     }
                 }}
             >
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                     <div className="mr-2 py-1 font-bold whitespace-nowrap">
                         <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
@@ -372,11 +372,11 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 )}
             </div>
 
-            <div className="basis-1/6">
+            <div className="basis-1/6 hidden md:block">
                 <Timestamp timestamp={plan.last_modified} className="text-sm" />
             </div>
 
-            <div className="basis-1/6">
+            <div className="basis-1/6 hidden md:block">
                 <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
             </div>
 

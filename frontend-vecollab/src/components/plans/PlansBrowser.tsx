@@ -42,7 +42,7 @@ export function PlansBrowser({
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
                     <div className="basis-1/12 text-center">{t('plans_table_progress')}</div>
                     <div
-                        className="grow hover:underline hover:cursor-pointer group"
+                        className="grow md:basis-5/12 hover:underline hover:cursor-pointer group"
                         onClick={() => sortByCallback('name')}
                     >
                         {t('plans_table_name')}
@@ -50,14 +50,14 @@ export function PlansBrowser({
                     </div>
                     <div className="basis-1/6">{t('plans_table_author')}</div>
                     <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group"
+                        className="basis-1/6 hover:underline hover:cursor-pointer group hidden md:block"
                         onClick={() => sortByCallback('last_modified')}
                     >
                         {t('plans_table_last_modified')}
                         <SortArrow by="last_modified" />
                     </div>
                     <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group"
+                        className="basis-1/6 hover:underline hover:cursor-pointer group hidden md:block"
                         onClick={() => sortByCallback('creation_timestamp')}
                     >
                         {t('plans_table_created')}
