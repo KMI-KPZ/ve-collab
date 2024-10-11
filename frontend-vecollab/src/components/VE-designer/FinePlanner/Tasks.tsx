@@ -4,7 +4,7 @@ import {
     IFineStepFrontend,
     IMaterialFrontend,
     IToolsFrontend,
-} from '@/pages/ve-designer/step-data/[stepName]';
+} from '@/pages/ve-designer/step/[stepName]';
 import Tools from '@/components/VE-designer/FinePlanner/Tools';
 import { RxPlus } from 'react-icons/rx';
 import Material from './Material';

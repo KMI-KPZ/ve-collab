@@ -358,7 +358,7 @@ export default function Wrapper({
                 ? {
                       id: currentStep.name.toLowerCase(),
                       text: currentStep.name,
-                      link: `/ve-designer/step-data/${encodeURIComponent(currentStep.name)}`,
+                      link: `/ve-designer/step/${encodeURIComponent(currentStep.name)}`,
                   }
                 : undefined;
         }

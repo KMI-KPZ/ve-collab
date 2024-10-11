@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepName]';
 import {
     DragDropContext,
     Droppable,
@@ -475,7 +475,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             methods={methods}
             // prevpage={prevpage}
             nextpage={
-                `/ve-designer/step-data/${encodeURIComponent(
+                `/ve-designer/step/${encodeURIComponent(
                     methods.getValues('stepNames')[0]?.name as string
                 )}` || noStepPage
             }

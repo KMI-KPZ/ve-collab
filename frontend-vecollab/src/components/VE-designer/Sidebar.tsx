@@ -59,7 +59,7 @@ export default function Sidebar({
             return {
                 text: step.name,
                 id: encodeURI(step.name),
-                link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
+                link: `/ve-designer/step/${encodeURIComponent(step.name)}`,
             };
         });
         if (!userDefinedSteps.length) return;

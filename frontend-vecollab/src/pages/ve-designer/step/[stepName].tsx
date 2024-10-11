@@ -124,8 +124,8 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             ...defaultFormValueDataFineStepFrontend,
         },
     });
-    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step-data/');
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/step-data/');
+    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step/');
+    const [nextpage, setNextpage] = useState<string>('/ve-designer/step/');
     const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
         ...defaultFormValueDataFineStepFrontend,
     });
@@ -229,7 +229,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
         return steps.map((step: IFineStep) => ({
             id: encodeURIComponent(step.name),
             text: step.name,
-            link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
+            link: `/ve-designer/step/${encodeURIComponent(step.name)}`,
         }));
     };
 

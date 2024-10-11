@@ -1,6 +1,6 @@
 import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
 import React from 'react';
-import { emptyTask, IFineStepFrontend } from '@/pages/ve-designer/step-data/[stepName]';
+import { emptyTask, IFineStepFrontend } from '@/pages/ve-designer/step/[stepName]';
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
