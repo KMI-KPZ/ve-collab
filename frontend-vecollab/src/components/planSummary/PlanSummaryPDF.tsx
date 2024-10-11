@@ -38,6 +38,7 @@ export function PlanSummaryPDF({
                     <ViewFinestep
                         plan={plan}
                         key={index}
+                        index={index}
                         fineStep={fineStep}
                         openAllBoxes={openAllBoxes}
                         availablePlans={availablePlans}
