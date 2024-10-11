@@ -21,7 +21,8 @@ import ConfirmDialog from '../common/dialogs/Confirm';
 import Alert, { AlertState } from '../common/dialogs/Alert';
 import { useRouter } from 'next/router';
 import { FaEye } from 'react-icons/fa';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     plan: PlanPreview;
@@ -64,9 +65,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         Object.keys(plan.progress).filter(
             (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
         ).length +
-        plan.progress.steps.filter((a) =>
-            a[ Object.keys(a)[0] ] == ProgressState.completed
-        ).length
+        plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -118,55 +117,58 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     const SummaryDialog = () => (
         <Dialog
             isOpen={isSummaryOpen}
-            title={t('summary')}
+            title={
+                <>
+                    <div className="text-2xl font-semibold italic text-slate-900">
+                        <Trans i18nKey="summary">
+                            Summary of the
+                            <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
+                                <span className="relative text-white">plan</span>
+                            </span>
+                        </Trans>
+                    </div>
+
+                    <div className="flex ml-auto mr-2 gap-x-2">
+                        {plan.write_access.includes(username) && (
+                            <ButtonLightBlue
+                                classNameExtend="text-nowrap"
+                                onClick={() =>
+                                    router.push({
+                                        pathname: '/ve-designer/name',
+                                        query: { plannerId: plan._id },
+                                    })
+                                }
+                            >
+                                <MdEdit className="inline" /> {t('edit')}
+                            </ButtonLightBlue>
+                        )}
+
+                        <ButtonLightBlue
+                            classNameExtend="text-nowrap"
+                            onClick={() => {
+                                router.push({
+                                    pathname: `/api/pdf-plan`,
+                                    query: { planId: plan._id },
+                                });
+                            }}
+                        >
+                            <MdOutlineFileDownload className="inline" /> {t('download')}
+                        </ButtonLightBlue>
+                    </div>
+                </>
+            }
             onClose={() => {
                 setSummaryOpen(false);
                 setPlanSummary(undefined);
             }}
         >
             <div>
-                {plan.write_access.includes(username) ? (
-                    <div className="absolute top-0 right-10 flex">
-                        <div
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                            onClick={() => forward(plan._id)}
-                        >
-                            <MdEdit className="inline" />
-                            {t('edit')}
-                        </div>
-                        <Link
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            href={{
-                                pathname: `/api/pdf-plan`,
-                                query: { planId: plan._id },
-                            }}
-                        >
-                            <MdOutlineFileDownload className="inline" />
-                            {t('download')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="absolute top-0 right-10 flex">
-                        <Link
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            href={{
-                                pathname: `/api/pdf-plan`,
-                                query: { planId: plan._id },
-                            }}
-                        >
-                            <MdOutlineFileDownload className="inline" /> {t('download')}
-                        </Link>
-                    </div>
-                )}
-                <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
+                <div className="h-[60vh] overflow-y-auto content-scrollbar relative border-t">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
-                        <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
-                            <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
-                            <div className="flex w-full">
-                                <PlanSummary plan={planSummary!} />
-                            </div>
+                        <div className="flex w-full">
+                            <PlanSummary plan={planSummary!} />
                         </div>
                     )}
                 </div>

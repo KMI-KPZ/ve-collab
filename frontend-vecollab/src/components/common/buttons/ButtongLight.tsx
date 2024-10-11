@@ -1,15 +1,12 @@
 import React from 'react';
-import Button from './Button';
+import Button, { ButtonProps } from './Button';
 
-interface Props {
-    label?: string | JSX.Element;
-    children?: React.ReactNode;
-    onClick: () => void;
-    className?: string;
+interface Props extends ButtonProps {
     classNameExtend?: string;
 }
 export default function ButtonLight({
     label,
+    title,
     children,
     onClick,
     className,
@@ -21,6 +18,7 @@ export default function ButtonLight({
     return (
         <Button
             label={label}
+            title={title}
             onClick={onClick}
             className={`${
                 className
