@@ -1,5 +1,5 @@
 import { ISideProgressBarStates } from '@/interfaces/ve-designer/sideProgressBar';
-import { IFineStep } from '@/pages/ve-designer/step/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import { TargetGroup } from '@/pages/ve-designer/target-groups';
 import { Institution } from '@/pages/ve-designer/institutions';
 import { LectureOld } from '@/pages/ve-designer/lectures';

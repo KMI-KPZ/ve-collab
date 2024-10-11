@@ -351,14 +351,14 @@ export default function Wrapper({
 
         if (stageInMenu == 'steps') {
             const currentStep = plan.steps.find((a) =>
-                currentPath.endsWith(encodeURIComponent(a.name))
+                currentPath.endsWith(a._id!)
             );
 
             subMenuItem = currentStep
                 ? {
                       id: currentStep.name.toLowerCase(),
                       text: currentStep.name,
-                      link: `/ve-designer/step/${encodeURIComponent(currentStep.name)}`,
+                      link: `/ve-designer/step/${currentStep._id}`,
                   }
                 : undefined;
         }

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const FineStepFormSchema = z.object({
+    _id: z.string(),
     timestamp_from: z.string(),
     timestamp_to: z.string(),
     name: z.string(),

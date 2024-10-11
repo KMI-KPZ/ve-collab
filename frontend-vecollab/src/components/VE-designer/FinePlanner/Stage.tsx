@@ -1,6 +1,6 @@
 import Tasks from '@/components/VE-designer/FinePlanner/Tasks';
 import React from 'react';
-import { emptyTask, IFineStepFrontend } from '@/pages/ve-designer/step/[stepName]';
+import { emptyTask, IFineStepFrontend } from '@/pages/ve-designer/step/[stepId]';
 import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
@@ -89,6 +89,10 @@ export default function Stage({ fineStep }: Props) {
                     <div className="mx-2">
                         {dateFrom} - {dateTo}
                     </div>
+                    <input
+                        type="hidden"
+                        {...register(`_id`)}
+                    />
                 </div>
             </div>
             <div className="mt-4 flex">

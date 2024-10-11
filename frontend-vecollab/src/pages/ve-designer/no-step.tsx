@@ -3,7 +3,7 @@ import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { IFineStep } from '@/pages/ve-designer/step/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import { useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';

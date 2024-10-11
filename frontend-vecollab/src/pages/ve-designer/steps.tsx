@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IFineStep } from '@/pages/ve-designer/step/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import {
     DragDropContext,
     Droppable,
@@ -473,11 +473,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
-            // prevpage={prevpage}
-            nextpage={
-                `/ve-designer/step/${encodeURIComponent(
-                    methods.getValues('stepNames')[0]?.name as string
-                )}` || noStepPage
+            nextpage={methods.getValues('stepNames').length
+                ? `/ve-designer/step/1`
+                : `/ve-designer/finish`
             }
             stageInMenu="steps"
             idOfProgress="stepsGenerally"
