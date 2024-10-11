@@ -25,7 +25,7 @@ export function PlansBrowserFilter({
     const [search, setSearch] = useState<string>("")
 
     return (
-        <div className="mb-4 flex items-center">
+        <div className="mb-4 flex flex-wrap items-center gap-y-2">
             <div className="flex flex-rows items-center mr-4 divide-x divide-slate-900">
                 <div className="px-2">
                     <button
