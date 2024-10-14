@@ -1,5 +1,6 @@
 {
     "messages": {
+        "maxlength5000": "The field must not contain more than 5000 letters.",
         "maxlength1000": "The field must not contain more than 1000 letters.",
         "maxlength800": "The field must not contain more than 800 letters.",
         "maxlength500": "The field must not contain more than 500 letters.",

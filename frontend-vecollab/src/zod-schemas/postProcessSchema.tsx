@@ -3,9 +3,9 @@ import { z } from 'zod';
 export const PostProcessSchema = z.object({
     share: z.boolean(),
     sharedReadOnly: z.boolean(),
-    abstract: z.string().max(1000, 'messages.maxlength1000').nullable(),
-    reflection: z.string().max(1000, 'messages.maxlength1000').nullable(),
-    veModel: z.string().max(1000, 'messages.maxlength1000').nullable(),
+    abstract: z.string().max(5000, 'messages.maxlength5000').nullable(),
+    reflection: z.string().max(5000, 'messages.maxlength5000').nullable(),
+    veModel: z.string().max(5000, 'messages.maxlength5000').nullable(),
     evaluation: z.string().nullish(),
     evaluationFile: z
         .object({
@@ -15,7 +15,7 @@ export const PostProcessSchema = z.object({
             file_id: z.string().optional(),
         })
         .nullish(),
-    literature: z.string().max(1000, 'messages.maxlength1000').nullable(),
+    literature: z.string().max(5000, 'messages.maxlength5000').nullable(),
     literatureFiles: z
         .array(
             z
