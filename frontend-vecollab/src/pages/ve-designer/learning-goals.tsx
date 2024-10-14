@@ -2,11 +2,6 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/common/Tooltip';
@@ -42,16 +37,16 @@ interface IndividualLearningGoal {
     learningGoal: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.majorLearningGoals.every((goal) => {
-            return goal.value === '' && goal.label === '';
-        }) &&
-        formValues.individualLearningGoals.every((goal) => {
-            return goal.learningGoal === '' || goal.learningGoal === null;
-        })
-    );
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return (
+//         formValues.majorLearningGoals.every((goal) => {
+//             return goal.value === '' && goal.label === '';
+//         }) &&
+//         formValues.individualLearningGoals.every((goal) => {
+//             return goal.learningGoal === '' || goal.learningGoal === null;
+//         })
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -62,9 +57,6 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
 
     const prevpage = '/ve-designer/target-groups';
@@ -114,9 +106,6 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 topics = plan.topics.map((topic: string) => ({ name: topic }));
                 replaceTopics(topics);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
 
             // fetch profile snippets to be able to display the full name instead of username only
             fetchPOST(
@@ -137,10 +126,6 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
         return [
             {
                 plan_id: router.query.plannerId,
@@ -159,16 +144,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'topics',
                 value: data.topics.map((element) => element.name),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    learning_goals: progressState,
-                    topics: progressState,
-                },
-            },
+            }
         ];
     };
 
@@ -304,6 +280,8 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 text: t('goals.tooltip'),
                 link: '/learning-material/top-bubble/Potenziale',
             }}
+            stageInMenu='generally'
+            idOfProgress="learning_goals"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

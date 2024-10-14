@@ -35,16 +35,14 @@ interface FormValues {
     institutions: Institution[];
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return formValues.institutions.every((institution) => {
-        return (
-            institution.name === '' &&
-            institution.school_type === '' &&
-            institution.country === '' &&
-            institution.department === ''
-        );
-    });
-};
+const areAllFieldsEmpty = (institution: Institution): boolean => {
+    return (
+        institution.name.trim()  == "" &&
+        institution.school_type.trim()  == "" &&
+        institution.country.trim()  == "" &&
+        institution.department.trim()  == ""
+    )
+}
 
 interface Props {
     socket: Socket;
@@ -56,9 +54,6 @@ export default function Institutions({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const { t } = useTranslation(['designer', 'common'])
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [importDialog, setImportDialog] = useState<{
         isOpen: boolean;
         institutions: Institution[] | undefined;
@@ -94,34 +89,21 @@ export default function Institutions({ socket }: Props): JSX.Element {
             let institutions = plan.institutions.length > 0 ? plan.institutions : [];
 
             replace(institutions);
-
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
             return { institutions };
         },
         [replace]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
+        const institutions = data.institutions.filter(inst =>
+            !areAllFieldsEmpty(inst)
+        )
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'institutions',
-                value: data.institutions,
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    institutions: progressState,
-                },
-            },
+                value: institutions,
+            }
         ];
     };
 
@@ -325,6 +307,8 @@ export default function Institutions({ socket }: Props): JSX.Element {
             title={t('institutions.title')}
             subtitle={t('institutions.subtitle')}
             description={t('institutions.description')}
+            stageInMenu='generally'
+            idOfProgress="institutions"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}

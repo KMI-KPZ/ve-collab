@@ -44,7 +44,7 @@ export default function LayoutSection({
                 toggleChatWindow={toggleChatWindow}
                 toggleNotifWindow={toggleNotifWindow}
             />
-            <main className='flex-1 bg-pattern-left-blue bg-no-repeat min-h-96'>
+            <main className='flex-1 p-5 bg-pattern-left-blue bg-no-repeat min-h-96'>
                 {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
                 <div className='container mx-auto max-w-screen-2xl'>{children}</div>

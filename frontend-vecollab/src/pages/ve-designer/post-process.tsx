@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE } from '@/lib/backend';
@@ -11,7 +11,11 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
+import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Tooltip } from '@/components/common/Tooltip';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 
 export interface EvaluationFile {
     file: File;
@@ -29,6 +33,7 @@ export interface LiteratureFile {
 
 interface FormValues {
     share: boolean;
+    sharedReadOnly: boolean;
     abstract: string;
     veModel: string;
     reflection: string;
@@ -48,12 +53,13 @@ export default function PostProcess({ socket }: Props) {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
 
-    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);;
-    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();;
-    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);;
+    const [changedEvFile, setChangedEvFile] = useState<boolean>(false);
+    const [originalEvFile, setOriginalEvFile] = useState<EvaluationFile>();
+    const [deletedLitFiles, setDeletedLitFiles] = useState<LiteratureFile[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
+        resolver: zodResolver(PostProcessSchema),
         defaultValues: {
             share: false,
         },
@@ -78,6 +84,9 @@ export default function PostProcess({ socket }: Props) {
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
+            const is_good_practise_ro = typeof plan.is_good_practise_ro !== 'undefined'
+                ? plan.is_good_practise_ro : false
+            methods.setValue('sharedReadOnly', is_good_practise_ro);
             methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
             methods.setValue('reflection', plan.reflection as string);
@@ -102,13 +111,11 @@ export default function PostProcess({ socket }: Props) {
                     });
                 });
             }
-            // if (Object.keys(plan.progress).length) {
-            //     setSideMenuStepsProgress(plan.progress);
-            // }
 
             return {
                 abstract: plan.abstract,
                 share: plan.is_good_practise,
+                sharedReadOnly: is_good_practise_ro,
                 veModel: plan.underlying_ve_model,
                 reflection: plan.reflection,
                 evaluationFile: plan.evaluation_file,
@@ -144,6 +151,11 @@ export default function PostProcess({ socket }: Props) {
                 plan_id: router.query.plannerId,
                 field_name: 'is_good_practise',
                 value: data.share,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'is_good_practise_ro',
+                value: data.sharedReadOnly,
             },
             {
                 plan_id: router.query.plannerId,
@@ -215,18 +227,11 @@ export default function PostProcess({ socket }: Props) {
     };
 
     function evaluationFileSelector() {
-        // if (methods.watch("evaluationFile")) return (<></>)
         return (
             <>
                 <Controller
                     name={'evaluationFile'}
                     control={methods.control}
-                    rules={{
-                        // max 5MB allowed
-                        validate: (value) => {
-                            return !value?.size || value.size < 5242880 || t('common:max_5_mb');
-                        },
-                    }}
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
                             <label
@@ -267,25 +272,7 @@ export default function PostProcess({ socket }: Props) {
                 <Controller
                     name={'literatureFiles'}
                     control={methods.control}
-                    rules={{
-                        // max 5MB allowed
-                        validate: (value) => {
-                            if (!value) return;
-
-                            let i = 0;
-                            for (const file of value!) {
-                                if (file.size > 5242880) {
-                                    methods.setError(`literatureFiles.${i}.file`, {
-                                        type: 'custom',
-                                        message: t('common:max_5_mb'),
-                                    });
-                                }
-                                i++;
-                            }
-                            return true;
-                        },
-                    }}
-                    render={({ field: { ref, name, onBlur } }) => (
+                    render={({ field: { ref, name, onBlur, value } }) => (
                         <>
                             <label
                                 className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
@@ -300,25 +287,30 @@ export default function PostProcess({ socket }: Props) {
                                 name={name}
                                 onBlur={onBlur}
                                 onChange={(e) => {
-                                    if (!e.target?.files) return;
-                                    methods.clearErrors(`literatureFiles`);
-                                    let i = 0;
-                                    for (const file of e.target.files) {
-                                        if (i < 5) {
+                                    const files = e.target?.files;
+                                    const indexLengthOfSavedFiles = value?.length ?? 0;
+                                    if (!files) return;
+                                    Array.from(files)
+                                        .slice(0, 5)
+                                        .forEach((file, index) => {
+                                            if (file.size >= 5242880) {
+                                                // instant error message render through zod not possible because of combination of useArray and Controller
+                                                methods.setError(
+                                                    `literatureFiles.${
+                                                        indexLengthOfSavedFiles + index
+                                                    }.size`,
+                                                    {
+                                                        type: 'custom',
+                                                        message: 'messages.max_5_mb',
+                                                    }
+                                                );
+                                            }
                                             addLitFile({
                                                 file: file,
                                                 file_name: file.name,
                                                 size: file.size,
                                             });
-                                        } else {
-                                            methods.setError(`literatureFiles`, {
-                                                type: 'custom',
-                                                message: t('common:max_5_files'),
-                                            });
-                                        }
-                                        i++;
-                                    }
-                                    // onChange(newFiles)
+                                        });
                                 }}
                                 className="hidden"
                                 multiple
@@ -388,6 +380,53 @@ export default function PostProcess({ socket }: Props) {
                 {methods.watch('share') == true && (
                     <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
                         <li className="mb-4 mt-2">
+                            <p>{t('post-process.access_on_plan')}</p>
+                            <Controller
+                                control={methods.control}
+                                name={'sharedReadOnly'}
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <div className="flex flex-col mb-4">
+                                        <div>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    name='sharedReadOnly-false'
+                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(false)} // send value to hook form
+                                                    checked={value === false}
+                                                />
+                                                {t('post-process.read_and_import')}
+                                                <Tooltip tooltipsText={
+                                                    <Trans i18nKey="post-process.read_and_import_tooltip" ns='designer' components={{ 1: <br /> }} />
+                                                }>
+                                                    <FaRegQuestionCircle className='inline m-1 text-ve-collab-blue' />
+                                                </Tooltip>
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    className="border border-gray-400 rounded-lg p-2 mr-2"
+                                                    onBlur={onBlur} // notify when input is touched
+                                                    onChange={() => onChange(true)} // send value to hook form
+                                                    checked={value === true}
+                                                />
+                                                 {t('post-process.read_only')}
+                                                <Tooltip tooltipsText={
+                                                    <Trans i18nKey="post-process.read_only_tooltip" ns='designer' components={{ 1: <br /> }} />
+                                                }>
+                                                    <FaRegQuestionCircle className='inline m-1  text-ve-collab-blue' />
+                                                </Tooltip>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+                            />
+
+                        </li>
+                        <li className="mb-4 mt-2">
                             <p>{t('post-process.abstract_task')}</p>
                             <textarea
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
@@ -396,6 +435,11 @@ export default function PostProcess({ socket }: Props) {
                                 {...methods.register('abstract')}
                             />
                         </li>
+                        {methods.formState.errors?.abstract && (
+                            <p className="text-red-600 pt-2 flex justify-center">
+                                {t(methods.formState.errors?.abstract?.message!)}
+                            </p>
+                        )}
                         <li className="mb-4">
                             <p className="font-bold">{t('post-process.reflection')}</p>
                             <p className="mb-1">{t('post-process.reflection_task_1')}</p>
@@ -406,6 +450,11 @@ export default function PostProcess({ socket }: Props) {
                                 placeholder={t('post-process.reflection_placeholder')}
                                 {...methods.register('reflection')}
                             />
+                            {methods.formState.errors?.reflection && (
+                                <p className="text-red-600 pt-2 flex justify-center">
+                                    {t(methods.formState.errors?.reflection?.message!)}
+                                </p>
+                            )}
                             {methods.watch('evaluationFile') ? (
                                 <div>
                                     <div
@@ -446,9 +495,12 @@ export default function PostProcess({ socket }: Props) {
                                             <IoMdClose />
                                         </button>
                                     </div>
-                                    {methods.formState.errors?.evaluationFile?.message && (
+                                    {methods.formState.errors?.evaluationFile?.size?.message && (
                                         <p className="text-red-500">
-                                            {t(methods.formState.errors?.evaluationFile?.message!)}
+                                            {t(
+                                                methods.formState.errors?.evaluationFile?.size
+                                                    ?.message!
+                                            )}
                                         </p>
                                     )}
                                 </div>
@@ -483,6 +535,11 @@ export default function PostProcess({ socket }: Props) {
                                 {...methods.register('veModel')}
                             />
                         </li>
+                        {methods.formState.errors?.veModel && (
+                            <p className="text-red-600 pt-2 flex justify-center">
+                                {t(methods.formState.errors?.veModel?.message!)}
+                            </p>
+                        )}
                         <li className="mb-4">
                             <p>{t('post-process.literature_task')}</p>
                             <textarea
@@ -491,12 +548,17 @@ export default function PostProcess({ socket }: Props) {
                                 placeholder={t('post-process.literature_placeholder')}
                                 {...methods.register('literature')}
                             />
+                            {methods.formState.errors?.literature && (
+                                <p className="text-red-600 pt-2 flex justify-center">
+                                    {t(methods.formState.errors?.literature?.message!)}
+                                </p>
+                            )}
                             {litFiles.length > 0 && (
                                 <div>
                                     <div className="mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                                         {litFiles.map((file, index) => (
                                             <div
-                                                key={index}
+                                                key={file.id}
                                                 className="max-w-[250px] mr-4 flex flex-wrap items-center"
                                             >
                                                 <div className="flex truncate items-center">
@@ -529,15 +591,14 @@ export default function PostProcess({ socket }: Props) {
                                                         <IoMdClose />
                                                     </button>
                                                 </div>
-
                                                 {methods.formState.errors?.literatureFiles?.[index]
-                                                    ?.file?.message && (
+                                                    ?.size?.message && (
                                                     <p className="text-red-500">
-                                                        {
-                                                            t(methods.formState.errors
-                                                                ?.literatureFiles?.[index]?.file
-                                                                ?.message!)
-                                                        }
+                                                        {t(
+                                                            methods.formState.errors
+                                                                ?.literatureFiles?.[index]?.size
+                                                                ?.message!
+                                                        )}
                                                     </p>
                                                 )}
                                             </div>
@@ -562,9 +623,7 @@ export default function PostProcess({ socket }: Props) {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };
 }

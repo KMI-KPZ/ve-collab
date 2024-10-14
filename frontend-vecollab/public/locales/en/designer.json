@@ -17,7 +17,9 @@
         "atleast_one_field": "There must be at least one entry",
         "valid_date": "Please enter a valid date",
         "realistic_date": "Please enter a realistic date",
-        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file."
+        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file.",
+        "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age.",
+        "file_count_max": "Max. 4 files allowed"
     },
     "save_and_continue": "Save & Continue",
     "proceed_without_saving": "Continue without saving",
@@ -30,6 +32,8 @@
     "alert_saved": "Saved",
     "unsaved_changes": "Unsaved changes",
     "unsaved_changes_text": "Your current changes to this site will not be saved.",
+    "step_done_question": "Step ready?",
+    "toggle_state_hover": "KKlick to change the editing status",
     "sidebar": {
         "general": "General Information",
         "phases": "Project plan",
@@ -104,8 +108,7 @@
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
         "languages": "Language",
-        "languages_placeholder": "Enter languages, separate several by comma",
-        "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age."
+        "languages_placeholder": "Enter languages, separate several by comma"
     },
     "goals": {
         "title": "Learning objectives & topics",
@@ -180,22 +183,26 @@
         "subtitle": "Have you thought of everything?",
         "description": "Here are some important aspects you should clarify before starting with the content and didactic planning..",
         "tooltip": "More about the aspects of the checklist can be found here in the self-learning materials…",
-        "time": "Time",
-        "time_descr-1": "Find time slots for the joint preparation of the VE. It is best to create a timetable.",
-        "time_descr-2": "Find time slots for conducting the VE if synchronous meetings are planned.",
-        "topic": "Topic",
-        "topic_descr-1": "Ensure that the topic(s) of the VE align with the module requirements/curriculum of all involved persons.",
-        "objectives": "Objectivs",
-        "objectives_descr-1": "Check that the teaching / learning objectives of the VE are consistentwith the module requirements/ curriculum of all involved persons.",
-        "media": "Media",
-        "media_descr-1": "If you plan to use a shared LMS, make sure it is accessible at all participating institutions.",
-        "technic": "Technical equipment",
-        "technic_descr-1": "Check whether your institution has sufficient technical equipment to carry out the VE.",
-        "technic_descr-2": "Look into resources for technical support during the VE at your institution.",
-        "guidelines": "Institutional guidelines",
-        "guidelines_descr-1": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
-        "dataprotection": "Data Protection",
-        "dataprotection_descr-1": "Inform yourselves about the relevant data protection regulations at your institution/country."
+        "time_title": "Time",
+        "time_descr": [
+            "Find time slots for the joint preparation of the VE. It is best to create a timetable.",
+            "Find time slots for conducting the VE if synchronous meetings are planned."
+        ],
+        "topic_title": "Topic",
+        "topic_descr": "Ensure that the topic(s) of the VE align with the module requirements/curriculum of all involved persons.",
+        "goals_title": "Objectivs",
+        "goals_descr": "Check that the teaching / learning objectives of the VE are consistentwith the module requirements/ curriculum of all involved persons.",
+        "media_title": "Media",
+        "media_descr": "If you plan to use a shared LMS, make sure it is accessible at all participating institutions.",
+        "technicalEquipment_title": "Technical equipment",
+        "technicalEquipment_descr": [
+            "Check whether your institution has sufficient technical equipment to carry out the VE.",
+            "Look into resources for technical support during the VE at your institution."
+        ],
+        "institutionalRequirements_title": "Institutional guidelines",
+        "institutionalRequirements_descr": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
+        "dataProtection_title": "Data Protection",
+        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country."
     },
     "step-names" : {
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",
@@ -247,6 +254,11 @@
         "text_1": "Would you like to share your VE as a Good Practice example with the community?",
         "text_2": "Everyone will be able to find, view, and use the plan as a source of inspiration for their own VEs.",
         "license": "License",
+        "access_on_plan": "Access authorisation for this plan",
+        "read_and_import": "Read an import",
+        "read_and_import_tooltip": "I am making my plan partially available to the community free of licence, i.e. every registered VE-Collab user can find the plan, view it and import parts of it (e.g. learning activities) into their own VE plans.<1/>The downloadable overview of my plan is available under the following licence: CC-BY-NC-ND 4.0",
+        "read_only": "Read only",
+        "read_only_tooltip": "I am making my plan available to the community under the CC-BY-NC-ND 4.0 licence, i.e. every registered VE-Collab user can find and view the plan as a reading view and use it as inspiration for their own VEs.<1/>The downloadable overview of my plan is also available under the following licence: CC-BY-NC-ND 4.0",
         "abstract_task": "Please write a brief abstract (about 5 lines) summarizing the key points (partners, content, process) of your VE.",
         "abstract_placeholder": "Short summary of the VE",
         "reflection": "Reflection",

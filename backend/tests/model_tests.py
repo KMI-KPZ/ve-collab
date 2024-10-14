@@ -414,7 +414,7 @@ class StepModelTest(TestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[task],
-            original_plan=original_plan
+            original_plan=original_plan,
         )
 
         self.assertEqual(step.name, "test")
@@ -433,7 +433,11 @@ class StepModelTest(TestCase):
         # into datetime objects and let _id be system-derived
         # and let the original_plan be transformed into an ObjectId
         original_plan = ObjectId()
-        step2 = Step(timestamp_from="2023-01-01", timestamp_to="2023-01-08", original_plan=str(original_plan))
+        step2 = Step(
+            timestamp_from="2023-01-01",
+            timestamp_to="2023-01-08",
+            original_plan=str(original_plan),
+        )
         self.assertEqual(step2.timestamp_from, timestamp_from)
         self.assertEqual(step2.timestamp_to, timestamp_to)
         self.assertEqual(step2.duration, timedelta(days=7))
@@ -495,7 +499,7 @@ class StepModelTest(TestCase):
             "learning_activity": "test",
             "has_tasks": True,
             "tasks": [Task().to_dict()],
-            "original_plan": original_plan
+            "original_plan": original_plan,
         }
 
         step = Step.from_dict(step_dict.copy())
@@ -528,7 +532,7 @@ class StepModelTest(TestCase):
             "learning_activity": "test",
             "has_tasks": True,
             "tasks": [task_dict],
-            "original_plan": str(original_plan)
+            "original_plan": str(original_plan),
         }
         step = Step.from_dict(step_dict.copy())
 
@@ -574,7 +578,7 @@ class StepModelTest(TestCase):
             "learning_goal": "test",
             "learning_activity": "test",
             "tasks": [Task().to_dict()],
-            "original_plan": ObjectId()
+            "original_plan": ObjectId(),
         }
         self.assertRaises(MissingKeyError, Step.from_dict, step_dict)
 
@@ -594,7 +598,7 @@ class StepModelTest(TestCase):
             "learning_activity": "test",
             "has_tasks": True,
             "tasks": [Task().to_dict(), Task().to_dict()],
-            "original_plan": ObjectId()
+            "original_plan": ObjectId(),
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -1671,7 +1675,7 @@ class VEPlanModelTest(TestCase):
             learning_activity="test",
             has_tasks=True,
             tasks=[Task()],
-            original_plan=ObjectId()
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -1777,6 +1781,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.checklist, [])
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.is_good_practise, False)
+        self.assertEqual(plan.is_good_practise_ro, False)
         self.assertIsNone(plan.abstract)
         self.assertIsNone(plan.underlying_ve_model)
         self.assertIsNone(plan.reflection)
@@ -1868,6 +1873,7 @@ class VEPlanModelTest(TestCase):
             ],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_ro=True,
             abstract="test",
             underlying_ve_model="test",
             reflection="test",
@@ -1918,6 +1924,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_ro, True)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
@@ -1958,6 +1965,7 @@ class VEPlanModelTest(TestCase):
             checklist=[],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_ro=False,
             abstract="test",
             underlying_ve_model="test",
             reflection="test",
@@ -2002,6 +2010,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
@@ -2124,6 +2133,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
         self.assertIn("is_good_practise", plan_dict)
+        self.assertIn("is_good_practise_ro", plan_dict)
         self.assertIn("abstract", plan_dict)
         self.assertIn("underlying_ve_model", plan_dict)
         self.assertIn("reflection", plan_dict)
@@ -2160,6 +2170,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
         self.assertEqual(plan_dict["is_good_practise"], False)
+        self.assertEqual(plan_dict["is_good_practise_ro"], False)
         self.assertIsNone(plan_dict["abstract"])
         self.assertIsNone(plan_dict["underlying_ve_model"])
         self.assertIsNone(plan_dict["reflection"])
@@ -2286,6 +2297,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
@@ -2338,6 +2350,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
@@ -2434,6 +2447,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
@@ -2493,6 +2507,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
         self.assertEqual(plan.reflection, "test")
@@ -2547,6 +2562,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": None,
+            "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,
@@ -2605,6 +2621,7 @@ class VEPlanModelTest(TestCase):
             ],
             "steps": [],
             "is_good_practise": None,
+            "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,
@@ -2710,6 +2727,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["is_good_practise"] = None
 
+        plan_dict["is_good_practise_ro"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["is_good_practise_ro"] = None
+
         plan_dict["abstract"] = 123
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["abstract"] = None
@@ -2774,6 +2795,7 @@ class VEPlanModelTest(TestCase):
                 self.create_step("test").to_dict(),
             ],
             "is_good_practise": None,
+            "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
             "reflection": None,

@@ -2,12 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ISideProgressBarStateSteps,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
 import {
     DragDropContext,
@@ -40,17 +34,17 @@ interface FormValues {
     stepNames: IFineStep[];
 }
 
-const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-    return stepNamesObject.stepNames.every((step) => {
-        return (
-            step.name === '' &&
-            step.timestamp_from === '' &&
-            step.timestamp_to === '' &&
-            step.learning_goal === '' &&
-            step.workload === 0
-        );
-    });
-};
+// const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
+//     return stepNamesObject.stepNames.every((step) => {
+//         return (
+//             step.name === '' &&
+//             step.timestamp_from === '' &&
+//             step.timestamp_to === '' &&
+//             step.learning_goal === '' &&
+//             step.workload === 0
+//         );
+//     });
+// };
 
 export const emptyStepData: IFineStep = {
     _id: undefined,
@@ -70,7 +64,7 @@ export const emptyStepData: IFineStep = {
             materials: ['', ''],
         },
     ],
-    original_plan: '',
+    original_plan: undefined,
 };
 
 interface Props {
@@ -83,9 +77,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
 
     const router = useRouter();
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
     const noStepPage = '/ve-designer/no-step';
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
@@ -97,7 +88,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true);
     const [availPlans, setAvailPlans] = useState<IPlan[]>([]);
-    const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -149,9 +139,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     );
                 }, 1);
             }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
-            }
 
             return data;
         },
@@ -160,25 +147,17 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
-        let payload: IFineStep = {
-            ...emptyStepData,
-        };
-        const stepNamesData = data.stepNames.map((step) => {
-            // TODO ids lieber vergleichen
-            const fineStepBackend = steps.find((fineStep) => fineStep.name === step.name);
-            if (fineStepBackend !== undefined) {
-                payload = fineStepBackend;
-            }
-            return Object.assign({}, payload, step);
-        });
+        const stepNamesData = stepNames.map((step) => {
+            if (step._id == '') step._id = undefined
 
-        const sideMenuStateSteps: ISideProgressBarStateSteps[] = stepNames.map((broadStep) => {
-            return { [encodeURI(broadStep.name)]: ProgressState.notStarted };
-        });
+            const prevData = steps.find((fineStep) => fineStep._id === step._id);
 
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
+            const payload: IFineStep = prevData !== undefined
+                ? {...prevData}
+                : {...emptyStepData};
+
+            return {...payload, ...step}
+        });
 
         return [
             {
@@ -186,24 +165,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 field_name: 'steps',
                 value: stepNamesData,
             },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    stepsGenerally: progressState,
-                    steps: sideMenuStateSteps,
-                },
-            },
         ];
     };
 
     const handleDelete = (index: number): void => {
-        if (fields.length > 1) {
-            remove(index);
-        } else {
-            update(index, emptyStepData);
-        }
+        // if (fields.length > 1) {
+        // } else {
+        //     update(index, emptyStepData);
+        // }
+        remove(index);
     };
 
     const onDragEnd = (result: DropResult): void => {
@@ -223,120 +193,131 @@ export default function StepNames({ socket }: Props): JSX.Element {
             })
             .finally(() => setLoadingAvailPlans(false));
     };
-    const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
-        if (stepsToImport.some((s) => s._id == step._id)) {
-            setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
-        } else {
-            setStepsToImport((prev) => [
-                ...prev,
-                {
-                    ...step,
-                    original_plan: step.original_plan === '' ? plan._id : step.original_plan,
-                },
-            ]);
-        }
-    };
 
-    const handleStepsImport = () => {
-        stepsToImport.map((step) => {
-            append(
-                Object.assign({}, step, {
-                    _id: undefined,
-                    timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
-                    timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
-                } as IFineStep)
-            );
-        });
-        setIsImportStepsDialogOpen(false);
-        setStepsToImport([]);
+    const ImportStepsDialog = () => {
+        const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([]);
+
+        const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
+            if (stepsToImport.some((s) => s._id == step._id)) {
+                setStepsToImport((prev) => prev.filter((s) => s._id != step._id));
+            } else {
+                setStepsToImport((prev) => [
+                    ...prev,
+                    {
+                        ...step,
+                        original_plan: !step.original_plan ? plan._id : step.original_plan,
+                    },
+                ]);
+            }
+        };
+
+        const handleStepsImport = () => {
+            stepsToImport.map((step) => {
+                append(
+                    Object.assign({}, step, {
+                        _id: undefined,
+                        timestamp_from: new Date(step.timestamp_from).toISOString().split('T')[0],
+                        timestamp_to: new Date(step.timestamp_from).toISOString().split('T')[0],
+                    } as IFineStep)
+                );
+            });
+            setIsImportStepsDialogOpen(false);
+            setStepsToImport([]);
+        };
+
+        // show good practice plans if:
+        //  - they have steps
+        //  - they are not "read_only" OR I have write access
+        const plans = availPlans.filter(
+            (plan) =>
+                plan.is_good_practise &&
+                plan.steps.length &&
+                plan._id != router.query.plannerId &&
+                (!plan.is_good_practise_ro ||
+                    plan.write_access.includes(session?.user.preferred_username as string))
+        );
+
+        if (loadingAvailPlans) return <LoadingAnimation />;
+        if (!plans.length) return <>{t('step-names.no_good_practice_plans')}</>;
+
+        // TODO add simple filter input?
+
+        return (
+            <div>
+                <div className="flex flex-col max-h-96 overflow-y-auto content-scrollbar">
+                    <div>{t('step-names.select_steps_to_import')}</div>
+
+                    {plans
+                        .sort((a, b) => {
+                            return (
+                                new Date(b.last_modified).getTime() -
+                                new Date(a.last_modified).getTime()
+                            );
+                        })
+                        .map((plan, i) => (
+                            <div key={i}>
+                                <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
+                                    <MdNewspaper />
+                                    <Link
+                                        className="text-xl font-bold grow-0 group"
+                                        href={`/plan/${plan._id}`}
+                                        target="_blank"
+                                    >
+                                        {plan.name}
+                                        <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
+                                    </Link>
+                                    {session?.user.preferred_username != plan.author.username && (
+                                        <div className="text-sm text-gray-500">
+                                            {t('step-names.by')} {plan.author.first_name}{' '}
+                                            {plan.author.last_name}
+                                        </div>
+                                    )}
+                                    <span
+                                        className="grow text-right"
+                                        title={t('step-names.last_modified')}
+                                    >
+                                        <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                    </span>
+                                </div>
+                                {plan.steps.map((step, j) => (
+                                    <div
+                                        key={j}
+                                        className="ml-10 hover:cursor-pointer flex"
+                                        onClick={(e) => toggleStepToImport(plan, step)}
+                                        title={t('step-names.add_remove')}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="mr-2"
+                                            // BUGFIX: compare name and _id, because we had some finesteps with duplicated _ids ...
+                                            checked={stepsToImport.some((s) => (s._id == step._id && s.name == step.name))}
+                                            readOnly
+                                        />
+                                        {step.name} ({step.workload} h)
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+
+                </div>
+                <div className="ml-auto text-right pt-4">
+                    <button
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        onClick={() => setIsImportStepsDialogOpen(false)}
+                    >
+                        {t('common:cancel')}
+                    </button>
+                    <ButtonPrimary label={t('common:import')} onClick={() => handleStepsImport()} />
+                </div>
+            </div>
+        );
     };
 
     const adjustTextareaSize = (el: HTMLTextAreaElement | null) => {
         if (!el) return;
         el.style.height = '0px';
         el.style.height = el.scrollHeight + 'px';
-    };
-
-    const ImportStepsDialog = () => {
-        if (loadingAvailPlans) return <LoadingAnimation />;
-
-        const plans = availPlans.filter(
-            (plan) =>
-                plan.is_good_practise && plan.steps.length && plan._id != router.query.plannerId
-        );
-        if (!plans.length)
-            return (
-                <>
-                    {t("step-names.no_good_practice_plans")}
-                </>
-            );
-
-        // TODO add simple filter input?
-
-        return (
-            <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div>
-                    {t("step-names.select_steps_to_import")}
-                </div>
-
-                {plans
-                    .sort((a, b) => {
-                        return (
-                            new Date(b.last_modified).getTime() -
-                            new Date(a.last_modified).getTime()
-                        );
-                    })
-                    .map((plan) => (
-                        <div key={plan._id}>
-                            <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
-                                <MdNewspaper />
-                                <Link
-                                    className="text-xl font-bold grow-0 group"
-                                    href={`/plan/${plan._id}`}
-                                    target="_blank"
-                                >
-                                    {plan.name}
-                                    <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
-                                </Link>
-                                {session?.user.preferred_username != plan.author.username && (
-                                    <div className="text-sm text-gray-500">
-                                        {t("step-names.by")} {plan.author.first_name} {plan.author.last_name}
-                                    </div>
-                                )}
-                                <span className="grow text-right" title={t("step-names.last_modified")}>
-                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
-                                </span>
-                            </div>
-                            {plan.steps.map((step) => (
-                                <div
-                                    key={step._id}
-                                    className="ml-10 hover:cursor-pointer flex"
-                                    onClick={(e) => toggleStepToImport(plan, step)}
-                                    title={t("step-names.add_remove")}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        className="mr-2"
-                                        checked={stepsToImport.some((s) => s._id == step._id)}
-                                        readOnly
-                                    />
-                                    {step.name} ({step.workload} h)
-                                </div>
-                            ))}
-                        </div>
-                    ))}
-                <div className="ml-auto text-right">
-                    <button
-                        type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
-                        onClick={() => setIsImportStepsDialogOpen(false)}
-                    >
-                        {t("common:cancel")}
-                    </button>
-                    <ButtonPrimary label={t("common:import")} onClick={() => handleStepsImport()} />
-                </div>
-            </div>
-        );
     };
 
     const renderStepNamesInputs = (): JSX.Element[] => {
@@ -349,7 +330,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 items-center">
                                         <div>
-                                            <label>{t("step-names.from")}</label>
+                                            <label>{t('step-names.from')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
@@ -359,7 +340,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t("step-names.to")}</label>
+                                            <label className="ml-2">{t('step-names.to')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
@@ -369,73 +350,89 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t("step-names.name")}</label>
+                                            <label className="ml-2">{t('step-names.name')}</label>
                                             <input
                                                 type="text"
                                                 {...methods.register(`stepNames.${index}.name`)}
-                                                placeholder={t("step-names.name_placeholder")}
+                                                placeholder={t('step-names.name_placeholder')}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t("step-names.time")}</label>
+                                            <label className="ml-2">{t('step-names.time')}</label>
                                             <input
                                                 type="number"
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
                                                     { valueAsNumber: true }
                                                 )}
-                                                placeholder={t("step-names.time_placeholder")}
+                                                placeholder={t('step-names.time_placeholder')}
                                                 className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
                                             />
                                             <label className="mr-4">h</label>
                                         </div>
                                     </div>
                                     <div className="flex items-center mt-2">
-                                        <label>{t("step-names.learning_objectives")}</label>
+                                        <label>{t('step-names.learning_objectives')}</label>
                                         <textarea
                                             {...methods.register(
                                                 `stepNames.${index}.learning_goal`
                                             )}
                                             rows={1}
-                                            placeholder={t("step-names.learning_objectives_placeholder")}
+                                            placeholder={t(
+                                                'step-names.learning_objectives_placeholder'
+                                            )}
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
                                             }}
                                         />
                                     </div>
+                                    <div>
+                                        <input
+                                            type="hidden"
+                                            {...methods.register(
+                                                `stepNames.${index}._id`
+                                            )}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            {...methods.register(
+                                                `stepNames.${index}.original_plan`
+                                            )}
+                                        />
+                                    </div>
                                     {methods.formState.errors?.stepNames?.[index]
                                         ?.timestamp_from && (
                                         <p className="text-red-600 pt-2 flex justify-center">
-                                            {
-                                                t(methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_from?.message!)
-                                            }
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_from?.message!
+                                            )}
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.timestamp_to && (
                                         <p className="text-red-600 pt-2 flex justify-center">
-                                            {
-                                                t(methods.formState.errors?.stepNames?.[index]
-                                                    ?.timestamp_to?.message!)
-                                            }
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.timestamp_to?.message!
+                                            )}
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.name && (
                                         <p className="text-red-600 pt-2 flex justify-center">
-                                            {
-                                                t(methods.formState.errors?.stepNames?.[index]?.name
-                                                    ?.message!)
-                                            }
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]?.name
+                                                    ?.message!
+                                            )}
                                         </p>
                                     )}
                                     {methods.formState.errors?.stepNames?.[index]?.workload && (
                                         <p className="text-red-600 pt-2 flex justify-center">
-                                            {
-                                                t(methods.formState.errors?.stepNames?.[index]
-                                                    ?.workload?.message!)
-                                            }
+                                            {t(
+                                                methods.formState.errors?.stepNames?.[index]
+                                                    ?.workload?.message!
+                                            )}
                                         </p>
                                     )}
                                 </div>
@@ -468,11 +465,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
     return (
         <Wrapper
             socket={socket}
-            title={t("step-names.title")}
-            subtitle={t("step-names.subtitle")}
-            description={t("step-names.description")}
+            title={t('step-names.title')}
+            subtitle={t('step-names.subtitle')}
+            description={t('step-names.description')}
             tooltip={{
-                text: t("step-names.tooltip_text"),
+                text: t('step-names.tooltip_text'),
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
@@ -483,12 +480,13 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 )}` || noStepPage
             }
             stageInMenu="steps"
+            idOfProgress="stepsGenerally"
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >
             <Dialog
                 isOpen={isImportStepsDialogOpen}
-                title={t("step-names.import_phases")}
+                title={t('step-names.import_phases')}
                 onClose={() => setIsImportStepsDialogOpen(false)}
             >
                 <div className="w-[40vw]">
@@ -510,7 +508,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                     type="button"
-                    title={t("step-names.new_phase")}
+                    title={t('step-names.new_phase')}
                     onClick={() => {
                         append(emptyStepData);
                     }}
@@ -521,10 +519,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <button
                     className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                     type="button"
-                    title={t("step-names.import_phases")}
+                    title={t('step-names.import_phases')}
                     onClick={(e) => openStepsImportDialog()}
                 >
-                    {t("common:import")}
+                    {t('common:import')}
                 </button>
             </div>
         </Wrapper>
@@ -534,10 +532,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common',
-                'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
-}
+    };
+};

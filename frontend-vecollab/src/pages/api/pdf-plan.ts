@@ -27,8 +27,8 @@ const saveAsPdf = async (url: string, accessToken: string) => {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const { planId } = req.query;
-    const gotoURL = process.env.NEXTAUTH_URL + '/plan/pdf/' + planId;
+    const { planId, locale } = req.query;
+    const gotoURL = process.env.NEXTAUTH_URL + '/' + locale + '/plan/pdf/' + planId;
 
     const token = await getToken({ req, secret: process.env.JWT_SECRET! });
     if (!token) {

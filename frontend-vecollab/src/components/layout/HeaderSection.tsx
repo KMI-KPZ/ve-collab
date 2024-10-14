@@ -247,6 +247,9 @@ export default function HeaderSection({
                                 Registrieren
                             </button>
                         </li>
+                        <li>
+                            <LanguageSelector />
+                        </li>
                     </>
                 )}
             </>
@@ -414,6 +417,17 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <hr className="mb-2 " />
+                        </li>
+                        <li>
+                            <button
+                                className={sandwichItemClass}
+                                onClick={onToggleLanguage}
+                                title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+                            >
+                                {t('language')}:&nbsp;
+                                <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
+                                <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
+                            </button>
                         </li>
                         <li>
                             <Link href={'/search'} className={`px-2 py-1`}>

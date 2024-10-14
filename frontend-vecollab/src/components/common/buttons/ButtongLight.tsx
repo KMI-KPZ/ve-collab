@@ -1,25 +1,24 @@
 import React from 'react';
-import Button from './Button';
+import Button, { ButtonProps } from './Button';
 
-interface Props {
-    label?: string | JSX.Element;
-    children?: React.ReactNode;
-    onClick: () => void;
-    className?: string;
+interface Props extends ButtonProps {
     classNameExtend?: string;
 }
-export default function ButtonSecondary({
+export default function ButtonLight({
     label,
+    title,
     children,
     onClick,
     className,
     classNameExtend,
 }: Props) {
-    const defaulStyle = 'py-2 px-4 rounded-lg bg-white border border-ve-collab-orange';
+    const defaulStyle =
+        'py-2 px-4 rounded-lg bg-white shadow hover:bg-slate-100';
 
     return (
         <Button
             label={label}
+            title={title}
             onClick={onClick}
             className={`${
                 className

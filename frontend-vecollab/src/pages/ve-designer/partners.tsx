@@ -4,11 +4,6 @@ import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import AsyncCreatableSelect from 'react-select/async-creatable';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -39,12 +34,12 @@ interface Partner {
     value: string;
 }
 
-const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-    return (
-        formValues.externalParties.every((party) => party.externalParty === '') &&
-        formValues.partners.length === 1
-    );
-};
+// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
+//     return (
+//         formValues.externalParties.every((party) => party.externalParty === '') &&
+//         formValues.partners.length === 1
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -56,9 +51,6 @@ export default function Partners({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common'])
 
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
@@ -100,8 +92,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         async (plan: IPlan) => {
             setPlanAuthor(plan.author.username);
 
-            let partners = [{ label: '', value: '' }];
-            let extPartners = [{ externalParty: '' }];
+            let partners: Partner[] = [];
+            let extPartners: ExternalParty[] = [];
             if (plan.checklist && Array.isArray(plan.checklist)) {
                 setFormalConditions(plan.checklist);
             }
@@ -114,9 +106,6 @@ export default function Partners({ socket }: Props): JSX.Element {
             if (plan.involved_parties.length !== 0) {
                 extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
-            }
-            if (Object.keys(plan.progress).length) {
-                setSideMenuStepsProgress(plan.progress);
             }
             if (plan.partners.length !== 0) {
                 const snippets: BackendProfileSnippetsResponse = await fetchPOST(
@@ -149,27 +138,30 @@ export default function Partners({ socket }: Props): JSX.Element {
                     replacePartners(partners);
                 }
             }
+            partners.push({ value: '', label: '' })
+            appendPartners(partners)
 
             return {
                 partners: partners,
                 externalParties: extPartners,
             };
         },
-        [replaceExternalParties, replacePartners, session]
+        [replaceExternalParties, replacePartners, appendPartners, session]
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const partners: string[] = data.partners.map((partner) => partner.value);
+        const extPartners = data.externalParties
+            .filter((value) => value.externalParty.trim() != "")
+            .map((element) => element.externalParty)
+        const partners: string[] = data.partners
+            .filter((partner) => partner.value.trim() != "")
+            .map((partner) => partner.value);
 
         let updateFormalConditions: CheckListPartner[] = [];
         let updateEvaluationInfo: EvaluationPerPartner[] = [];
         let updateIndividualLearningGoals: { username: string; learning_goal: string }[] = [];
 
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
-        if (partners.length >= 1 && partners[0] !== '') {
+        if (partners.length >= 1) {
             updateFormalConditions = partners.map((partner) => {
                 const findFormalCondition = formalConditions.find(
                     (formalCondition) => formalCondition.username === partner
@@ -233,15 +225,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             {
                 plan_id: router.query.plannerId,
                 field_name: 'involved_parties',
-                value: data.externalParties.map((element) => element.externalParty),
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    partners: progressState,
-                },
+                value: extPartners,
             },
             {
                 plan_id: router.query.plannerId,
@@ -270,11 +254,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     };
 
     const handleDeleteExternalParties = (index: number): void => {
-        if (fieldsExternalParties.length > 1) {
-            removeExternalParties(index);
-        } else {
-            updateExternalParties(index, { externalParty: '' });
-        }
+        removeExternalParties(index);
     };
 
     const loadUsers = (
@@ -282,6 +262,7 @@ export default function Partners({ socket }: Props): JSX.Element {
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         // a little less api queries, only start searching for recommendations from 2 letter inputs
+        // TODO more less api queries if we wait some ms for next keys ...
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
@@ -312,11 +293,17 @@ export default function Partners({ socket }: Props): JSX.Element {
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadUsers}
-                        onChange={onChange}
+                        onChange={(target, type) => {
+                            onChange(type.action == 'clear'
+                                ? {label: "", value: ""}
+                                : target
+                            )
+                        }}
                         onBlur={onBlur}
-                        value={value}
+                        value={value.value == "" ? null : value}
                         placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
+                        autoFocus={true}
                         formatCreateLabel={(inputValue) => (
                             <span>
                                 {t('common:search_users_no_hit', { value: inputValue })}
@@ -370,6 +357,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                 text: t('partners.tooltip'),
                 link: '/learning-material/left-bubble/Partnersuche',
             }}
+            stageInMenu='generally'
+            idOfProgress="partners"
             methods={methods}
             prevpage={prevpage}
             nextpage={nextpage}
@@ -379,7 +368,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             <div>
                 <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
                 {fieldsPartners.map((partner, index) => {
-                    return (
+                    return (<>
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
                             {partner.value == planAuthor ? (
                                 <div className="p-2">{partner.label}</div>
@@ -396,7 +385,12 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 </>
                             )}
                         </div>
-                    );
+                        {methods.formState.errors?.partners?.[index]?.value?.message && (
+                            <p className="text-red-600 pt-2">
+                                {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
+                            </p>
+                        )}
+                    </>);
                 })}
                 <div className="mt-4">
                     <button

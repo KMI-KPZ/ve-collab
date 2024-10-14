@@ -3,11 +3,7 @@ import { useRouter } from 'next/router';
 import Stage from '@/components/VE-designer/FinePlanner/Stage';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
     ISubmenuData,
-    ISideProgressBarStateSteps,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -54,7 +50,7 @@ export interface IFineStepFrontend {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITaskFrontend[];
-    original_plan: string;
+    original_plan?: string;
 }
 
 export interface IFineStep {
@@ -67,8 +63,16 @@ export interface IFineStep {
     learning_activity: string;
     has_tasks: boolean;
     tasks: ITask[];
-    original_plan: string;
+    original_plan?: string;
 }
+
+export const emptyTask: ITaskFrontend = {
+    task_formulation: '',
+    work_mode: '',
+    notes: '',
+    tools: [{ name: '' }, { name: '' }],
+    materials: [{ name: '' }, { name: '' }],
+};
 
 export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     _id: '1111',
@@ -79,36 +83,28 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     learning_goal: '',
     learning_activity: '',
     has_tasks: false,
-    tasks: [
-        {
-            task_formulation: '',
-            work_mode: '',
-            notes: '',
-            tools: [{ name: '' }, { name: '' }],
-            materials: [{ name: '' }, { name: '' }],
-        },
-    ],
+    tasks: [emptyTask],
     original_plan: '',
 };
 
-const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
-    return (
-        formValues.learning_activity === '' &&
-        formValues.tasks.every((task) => {
-            return (
-                task.task_formulation === '' &&
-                task.work_mode === '' &&
-                task.notes === '' &&
-                task.tools.every((tool) => {
-                    return tool.name === '';
-                }) &&
-                task.materials.every((materials) => {
-                    return materials.name === '';
-                })
-            );
-        })
-    );
-};
+// const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
+//     return (
+//         formValues.learning_activity === '' &&
+//         formValues.tasks.every((task) => {
+//             return (
+//                 task.task_formulation === '' &&
+//                 task.work_mode === '' &&
+//                 task.notes === '' &&
+//                 task.tools.every((tool) => {
+//                     return tool.name === '';
+//                 }) &&
+//                 task.materials.every((materials) => {
+//                     return materials.name === '';
+//                 })
+//             );
+//         })
+//     );
+// };
 
 interface Props {
     socket: Socket;
@@ -136,9 +132,6 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
-    const [sideMenuStepsProgress, setSideMenuStepsProgress] = useState<ISideProgressBarStates>(
-        initialSideProgressBarStates
-    );
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
 
     const setPlanerData = useCallback(
@@ -171,9 +164,6 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 };
                 setCurrentFineStep(fineStepCopyTransformedTools);
                 setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
-                if (Object.keys(plan.progress).length) {
-                    setSideMenuStepsProgress(plan.progress);
-                }
             }
 
             return { ...fineStepCopyTransformedTools };
@@ -226,30 +216,12 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 : step
         );
 
-        const progressState = areAllFormValuesEmpty(data)
-            ? ProgressState.notStarted
-            : ProgressState.completed;
-
-        const stepSlugEncoded = encodeURI(stepName as string);
-        const updateStepsProgress = sideMenuStepsProgress.steps.map(
-            (step: ISideProgressBarStateSteps) =>
-                step[stepSlugEncoded] !== undefined ? { [stepSlugEncoded]: progressState } : step
-        );
-
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: [...updateStepsData],
-            },
-            {
-                plan_id: router.query.plannerId,
-                field_name: 'progress',
-                value: {
-                    ...sideMenuStepsProgress,
-                    steps: [...updateStepsProgress],
-                },
-            },
+            }
         ];
     };
 
@@ -296,6 +268,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             prevpage={prevpage}
             nextpage={nextpage}
             stageInMenu="steps"
+            idOfProgress={encodeURI(stepName as string)}
             planerDataCallback={setPlanerData}
             submitCallback={onSubmit}
         >

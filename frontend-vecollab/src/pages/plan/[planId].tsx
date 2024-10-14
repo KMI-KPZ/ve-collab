@@ -7,10 +7,14 @@ import { MdEdit, MdOutlineFileDownload } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import { GiSadCrab } from 'react-icons/gi';
 import { PlanSummary } from '@/components/planSummary/PlanSummary';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { Trans, useTranslation } from 'next-i18next';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 
 Plan.auth = true;
 export default function Plan() {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
 
     const router = useRouter();
     const { data: plan, isLoading } = useGetPlanById(router.query.planId as string);
@@ -22,9 +26,7 @@ export default function Plan() {
             <div className="flex flex-col items-center justify-center font-bold">
                 <div className="flex items-center">
                     <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">
-                        Dieser Plan wurde nicht gefunden.
-                    </div>
+                    <div className="text-xl text-slate-900">Dieser Plan wurde nicht gefunden.</div>
                 </div>
                 <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
                     <Link href="/plans">Zurück zur Übersicht</Link>
@@ -39,43 +41,62 @@ export default function Plan() {
                 <LoadingAnimation />
             ) : (
                 <>
-                    <div className="mb-6">
-                        <div className={'flex justify-between font-bold text-4xl mb-2'}>
-                            <h1>{plan.name}</h1>
-                            <div className='flex'>
+                    <div className="mb-6 mt-12">
+                        <div className={'flex justify-between font-bold mb-2'}>
+                            <h1 className="text-3xl font-bold text-slate-650">{plan.name}</h1>
+                            <div className="flex gap-x-4 print:hidden">
                                 {username && (
                                     <>
                                         {plan.write_access.includes(username) && (
-                                            <Link
-                                                className="inline text-xl m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                                                href={{
-                                                    pathname: '/ve-designer/name',
-                                                    query: { plannerId: plan._id },
-                                                }}
+                                            <ButtonLightBlue
+                                                classNameExtend="text-nowrap"
+                                                onClick={() =>
+                                                    router.push({
+                                                        pathname: '/ve-designer/name',
+                                                        query: { plannerId: plan._id },
+                                                    })
+                                                }
                                             >
-                                                <MdEdit className="inline" /> Bearbeiten
-                                            </Link>
+                                                <MdEdit className="inline" /> {t('edit')}
+                                            </ButtonLightBlue>
                                         )}
                                     </>
                                 )}
-                                <Link
-                                    className="inline text-xl m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                                    href={{
-                                        pathname: `/api/pdf-plan`,
-                                        query: { planId: plan._id },
+                                <ButtonLightBlue
+                                    classNameExtend="text-nowrap"
+                                    onClick={() => {
+                                        router.push({
+                                            pathname: `/api/pdf-plan`,
+                                            query: { planId: plan._id, locale: router.locale },
+                                        });
                                     }}
                                 >
-                                    <MdOutlineFileDownload className="inline" /> Herunterladen
-                                </Link>
+                                    <MdOutlineFileDownload className="inline" /> {t('download')}
+                                </ButtonLightBlue>
                             </div>
                         </div>
-                        <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
+                        <div className="text-2xl font-semibold text-slate-500">
+                            <Trans i18nKey="summary">
+                                Summary of the
+                                <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
+                                    <span className="relative text-white">plan</span>
+                                </span>
+                            </Trans>
+                        </div>
                     </div>
                     <div className="flex w-full">
-                        <PlanSummary plan={plan} />
+                        <PlanSummary plan={plan} openAllBoxes={false} isSingleView={true} />
                     </div>
                 </>
             )}
         </>
     );
+}
+
+export async function getServerSideProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }
