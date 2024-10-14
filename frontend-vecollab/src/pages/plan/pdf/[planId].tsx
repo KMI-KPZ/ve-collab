@@ -1,6 +1,5 @@
 import React from 'react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import Link from 'next/link';
 import { GiSadCrab } from 'react-icons/gi';
 import { GetServerSidePropsContext } from 'next';
@@ -8,7 +7,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { PlanSummaryPDF } from '@/components/planSummary/PlanSummaryPDF';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { Trans } from 'react-i18next';
+import { Trans } from 'next-i18next';
 
 // This is the component that gets rendered into the PDF of a plan
 // In contrast to the other pages, it is only accessible by directly

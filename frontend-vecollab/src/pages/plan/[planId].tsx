@@ -67,7 +67,7 @@ export default function Plan() {
                                     onClick={() => {
                                         router.push({
                                             pathname: `/api/pdf-plan`,
-                                            query: { planId: plan._id },
+                                            query: { planId: plan._id, locale: router.locale },
                                         });
                                     }}
                                 >
