@@ -61,7 +61,7 @@ const itemsEtappenplaner : ISubmenuData[] =
         {
             text: "designer:sidebar.general_outline",
             id: 'stepsGenerally',
-            link: '/ve-designer/step-names',
+            link: '/ve-designer/steps',
         },
     ];
 

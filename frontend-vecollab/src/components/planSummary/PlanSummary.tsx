@@ -7,7 +7,7 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/backend';
 import LoadingAnimation from '../common/LoadingAnimation';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import Dialog from '../profile/Dialog';
 import { MdEdit, MdNewspaper } from 'react-icons/md';
 import Timestamp from '../common/Timestamp';

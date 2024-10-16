@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { RxMinus } from 'react-icons/rx';
-import { IFineStepFrontend } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStepFrontend } from '@/pages/ve-designer/step/[stepId]';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
