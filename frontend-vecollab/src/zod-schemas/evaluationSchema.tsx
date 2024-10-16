@@ -13,19 +13,19 @@ export const EvaluationFormSchema = z.object({
             }),
             task_type: z
                 .string()
-                .max(500, "messages.maxlength500")
+                .max(5000, "messages.maxlength5000")
                 .nullable(),
             assessment_type: z
                 .string()
-                .max(500, "messages.maxlength500")
+                .max(5000, "messages.maxlength5000")
                 .nullable(),
             evaluation_while: z
                 .string()
-                .max(500, "messages.maxlength500")
+                .max(5000, "messages.maxlength5000")
                 .nullable(),
             evaluation_after: z
                 .string()
-                .max(500, "messages.maxlength500")
+                .max(5000, "messages.maxlength5000")
                 .nullable(),
         })
     ),

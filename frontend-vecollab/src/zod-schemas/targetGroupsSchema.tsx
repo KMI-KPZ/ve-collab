@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const TargetGroupsFormSchema = z.object({
     targetGroups: z
         .object({
-            name: z.string().max(200, "messages.maxlength200"),
+            name: z.string().max(500, "messages.maxlength500"),
             age_min: z
                 .number({
                     invalid_type_error: "messages.only_positive_number",
@@ -20,15 +20,15 @@ export const TargetGroupsFormSchema = z.object({
                 .lte(150, "messages."),
             experience: z
                 .string()
-                .max(800, "messages.maxlength800"),
+                .max(5000, "messages.maxlength5000"),
             // TODO string array
             academic_course: z
                 .string()
-                .max(500, "messages.maxlength500"),
+                .max(5000, "messages.maxlength5000"),
             // TODO string array
             languages: z
                 .string()
-                .max(500, "messages.maxlength500"),
+                .max(5000, "messages.maxlength5000"),
         })
         .refine((data) => data.age_min <= data.age_max, {
             message: "messages.min_age_less_max_age",
@@ -39,7 +39,7 @@ export const TargetGroupsFormSchema = z.object({
         .object({
             language: z
                 .string()
-                .max(200, "messages.maxlength200"),
+                .max(5000, "messages.maxlength5000"),
         })
         .array(),
 });

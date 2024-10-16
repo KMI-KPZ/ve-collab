@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import {
     Caption4,
     GridEntry,

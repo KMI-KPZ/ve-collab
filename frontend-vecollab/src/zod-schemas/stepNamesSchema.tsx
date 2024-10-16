@@ -5,7 +5,7 @@ const StepNameFormSchema = z
         _id: z.string(),
         name: z
             .string()
-            .max(200, 'messages.maxlength200')
+            .max(500, 'messages.maxlength500')
             .min(1, { message: 'messages.required_field_gen' }),
         timestamp_from: z.string().date('messages.valid_date'), // it is still a string
         timestamp_to: z.string().date('messages.valid_date'),
@@ -16,7 +16,7 @@ const StepNameFormSchema = z
             .int('messages.only_positive_number')
             .gte(0, 'messages.only_positive_number')
             .lte(999, 'messages.realistic_number'),
-        learning_goal: z.string().max(500, 'messages.maxlength500'),
+        learning_goal: z.string().max(5000, 'messages.maxlength5000'),
         original_plan: z.string().optional()
     })
     .refine(

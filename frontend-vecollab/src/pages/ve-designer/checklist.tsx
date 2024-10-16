@@ -74,7 +74,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
     const [displayText, setDisplayText] = useState<{[key: string]: boolean}>()
 
     const prevpage = '/ve-designer/evaluation';
-    const nextpage = '/ve-designer/step-names';
+    const nextpage = '/ve-designer/steps';
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
