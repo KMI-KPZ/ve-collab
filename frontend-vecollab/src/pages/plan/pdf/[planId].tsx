@@ -1,12 +1,13 @@
 import React from 'react';
 import { fetchGET, fetchPOST } from '@/lib/backend';
-import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import Link from 'next/link';
 import { GiSadCrab } from 'react-icons/gi';
 import { GetServerSidePropsContext } from 'next';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { PlanSummaryPDF } from '@/components/planSummary/PlanSummaryPDF';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { Trans } from 'next-i18next';
 
 // This is the component that gets rendered into the PDF of a plan
 // In contrast to the other pages, it is only accessible by directly
@@ -63,7 +64,14 @@ export default function PDFPlan({ plan, error, partnerProfileSnippets, available
                 <div className={'flex justify-between font-bold text-4xl mb-2'}>
                     <h1>{plan!.name}</h1>
                 </div>
-                <div className={'text-gray-500 text-xl'}>Zusammenfassung des Plans</div>
+                <div className="text-2xl font-semibold text-slate-500">
+                    <Trans i18nKey="summary">
+                        Summary of the
+                        <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
+                            <span className="relative text-white">plan</span>
+                        </span>
+                    </Trans>
+                </div>
             </div>
             <div className="flex w-full">
                 <PlanSummaryPDF
@@ -102,6 +110,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 partnerProfileSnippets: partnerSnippets,
                 availablePlans: availablePlansResponse.plans,
                 error: null,
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common']))
             },
         };
     } else {
@@ -111,6 +120,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 partnerProfileSnippets: {},
                 availablePlans: [],
                 error: planResponse.reason ? planResponse.reason : 'fetch_failed',
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common']))
             },
         };
     }

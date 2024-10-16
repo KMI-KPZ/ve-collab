@@ -1,5 +1,6 @@
  {
     "messages": {
+        "maxlength5000": "Das Feld darf nicht mehr als 5000 Buchstaben enthalten.",
         "maxlength1000": "Das Feld darf nicht mehr als 1000 Buchstaben enthalten.",
         "maxlength800": "Das Feld darf nicht mehr als 800 Buchstaben enthalten.",
         "maxlength500": "Das Feld darf nicht mehr als 500 Buchstaben enthalten.",

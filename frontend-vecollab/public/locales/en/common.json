@@ -58,7 +58,7 @@
   "plans_share_dialog_alert_update": "Access settings updated",
   "plans_share_dialog_alert_revoke": "Access revoked",
   "plans_share_dialog_text_nobody_access": "Nobody has access to this plan",
-  "summary": "Summary",
+  "summary": "Summary of the <1><0>plan</0></1>",
   "show_summary": "Show summary",
   "edit": "Edit",
   "download": "Download",
@@ -171,5 +171,7 @@
   "plan_summary_reflection_file": "Reflection (file):",
   "plan_summary_literature": "Relevant literature references:",
   "plan_summary_literature_files": "Literature references (files):",
-  "type": "Type"
+  "type": "Type",
+  "show_all": "Show all",
+  "show_less": "Show less"
 }

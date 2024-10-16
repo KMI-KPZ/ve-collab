@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const LearningEnvFormSchema = z.object({
-    learningEnv: z.string().max(800, "messages.maxlength800"),
-    courseFormat: z.string().max(800, "messages.maxlength800"),
+    learningEnv: z.string().max(5000, "messages.maxlength5000"),
+    courseFormat: z.string().max(5000, "messages.maxlength5000"),
     usePhysicalMobility: z.boolean({
         required_error: "messages.please_yes_or_no",
         invalid_type_error: "messages.please_yes_or_no",
@@ -11,7 +11,7 @@ export const LearningEnvFormSchema = z.object({
         .object({
             location: z
                 .string()
-                .max(400, "messages.maxlength400"),
+                .max(1000, "messages.maxlength1000"),
             timestamp_from: z.union([
                 z.string().date("messages.valid_date"),
                 z.string().max(0),

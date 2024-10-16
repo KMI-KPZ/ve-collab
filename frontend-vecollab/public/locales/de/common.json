@@ -58,7 +58,7 @@
   "plans_share_dialog_alert_update": "Freigabeeinstellungen geändert",
   "plans_share_dialog_alert_revoke": "Freigabe entzogen",
   "plans_share_dialog_text_nobody_access": "Niemand anderes hat Zugriff auf diesen Plan",
-  "summary": "Zusammenfassung",
+  "summary": "Zusammenfassung des <1><0>Plans</0></1>",
   "show_summary": "Zusammenfassung anzeigen",
   "edit": "Bearbeiten",
   "download": "Herunterladen",
@@ -171,5 +171,7 @@
   "plan_summary_reflection_file": "Reflexion (Datei):",
   "plan_summary_literature": "relevante Literaturangaben:",
   "plan_summary_literature_files": "Literatur (Dateien):",
-  "type": "Typ"
+  "type": "Typ",
+  "show_all": "Alles anzeigen",
+  "show_less": "Weniger anzeigen"
 }

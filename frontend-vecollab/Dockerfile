@@ -70,6 +70,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # install google chrome manually on the runner
 # because copying it from puppeteer cache crashes for some reason
+ENV XDG_CONFIG_HOME=/tmp/.chromium
+ENV XDG_CACHE_HOME=/tmp/.chromium
 ENV CHROME_BIN /usr/bin/google-chrome
 RUN apt-get update && apt-get install -y gnupg wget && \
   wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
