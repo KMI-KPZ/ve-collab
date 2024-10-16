@@ -334,7 +334,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_from`
+                                                    `stepNames.${index}.timestamp_from`,
+                                                    {
+                                                        onChange: (e) => {
+                                                            const newDate = new Date(e.target.value);
+                                                            newDate.setDate(newDate.getDate() + 1);
+                                                            methods.setValue(`stepNames.${index}.timestamp_to`, newDate.toISOString().split('T')[0]);
+                                                        }
+                                                    }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
