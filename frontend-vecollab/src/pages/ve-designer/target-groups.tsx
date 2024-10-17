@@ -117,7 +117,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 : [];
         methods.setValue('languages', languages);
         return { targetGroups, languages };
-    }, []);
+    }, [methods, t]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const transformedTargetGroups = data.targetGroups.map((tg) => ({
@@ -278,7 +278,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                             control={methods.control}
                         />
                         {Array.isArray(methods.formState.errors.targetGroups?.[index]?.languages) &&
-                            methods.formState.errors.targetGroups?.[index].languages?.map(
+                            methods.formState.errors.targetGroups?.[index]?.languages?.map!(
                                 (error, index) =>
                                     error?.value?.message && (
                                         <p key={index} className="text-red-600 pt-2">
