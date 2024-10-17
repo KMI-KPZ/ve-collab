@@ -109,7 +109,7 @@
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
         "languages": "Language",
-        "languages_placeholder": "Enter languages, separate several by comma"
+        "languages_placeholder": "Choose languages or add new ones by typing"
     },
     "goals": {
         "title": "Learning objectives & topics",

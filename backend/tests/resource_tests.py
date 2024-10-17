@@ -171,7 +171,7 @@ class BaseResourceTestCase(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -6116,7 +6116,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            languages="updated_languages",
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6145,7 +6145,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            languages="updated_languages2",
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6178,7 +6178,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            languages="updated_languages",
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -6212,7 +6212,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            languages="updated_languages2",
+            languages=["test", "updated_languages2"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result

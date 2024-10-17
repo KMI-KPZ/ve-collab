@@ -677,7 +677,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.age_max, None)
         self.assertEqual(target_group.experience, None)
         self.assertEqual(target_group.academic_course, None)
-        self.assertEqual(target_group.languages, None)
+        self.assertEqual(target_group.languages, [])
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_init(self):
@@ -693,7 +693,7 @@ class TargetGroupModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
         self.assertEqual(target_group.name, "test")
@@ -701,45 +701,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.age_max, 40)
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
-        self.assertEqual(target_group._id, _id)
-
-        _id = ObjectId()
-        target_group = TargetGroup(
-            _id=_id,
-            name="test",
-            age_min="30",
-            age_max="40",
-            experience="test",
-            academic_course="test",
-            languages="test",
-        )
-
-        self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
-        self.assertEqual(target_group.experience, "test")
-        self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
-        self.assertEqual(target_group._id, _id)
-
-        _id = ObjectId()
-        target_group = TargetGroup(
-            _id=_id,
-            name="test",
-            age_min=30,
-            age_max=40,
-            experience="test",
-            academic_course="test",
-            languages="test",
-        )
-
-        self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
-        self.assertEqual(target_group.experience, "test")
-        self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
+        self.assertEqual(target_group.languages, ["test"])
         self.assertEqual(target_group._id, _id)
 
         # test again without supplying a _id
@@ -750,14 +712,14 @@ class TargetGroupModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
         self.assertEqual(target_group.name, "test")
         self.assertEqual(target_group.age_min, 30)
         self.assertEqual(target_group.age_max, 40)
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
+        self.assertEqual(target_group.languages, ["test"])
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_to_dict(self):
@@ -783,9 +745,9 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["age_max"], None)
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
-        self.assertEqual(target_group_dict["languages"], None)
+        self.assertEqual(target_group_dict["languages"], [])
 
-        target_group = TargetGroup(age_min=10, age_max=20)
+        target_group = TargetGroup(age_min=10, age_max=20, languages=["test"])
         target_group_dict = target_group.to_dict()
 
         self.assertIsInstance(target_group_dict, dict)
@@ -802,7 +764,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["age_max"], "20")
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
-        self.assertEqual(target_group_dict["languages"], None)
+        self.assertEqual(target_group_dict["languages"], ["test"])
 
     def test_from_dict(self):
         """
@@ -817,7 +779,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -841,7 +803,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": "20",
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -864,7 +826,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -918,7 +880,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -946,9 +908,9 @@ class TargetGroupModelTest(TestCase):
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["academic_course"] = "test"
 
-        target_group_dict["languages"] = 1
-        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["languages"] = "test"
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["languages"] = ["test"]
 
 
 class InstitutionModelTest(TestCase):
@@ -1688,7 +1650,7 @@ class VEPlanModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
     def create_institution(self, name: str = "test") -> Institution:

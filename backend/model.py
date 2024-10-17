@@ -542,7 +542,7 @@ class TargetGroup:
         "age_max": (int, str, type(None)),
         "experience": (str, type(None)),
         "academic_course": (str, type(None)),
-        "languages": (str, type(None)),
+        "languages": list,
     }
 
     def __init__(
@@ -553,7 +553,7 @@ class TargetGroup:
         age_max: int | str = None,
         experience: str = None,
         academic_course: str = None,
-        languages: str = None,
+        languages: List[str] = [],
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
