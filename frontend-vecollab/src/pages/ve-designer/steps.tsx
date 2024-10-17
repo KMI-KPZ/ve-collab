@@ -148,15 +148,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
         const stepNamesData = stepNames.map((step) => {
-            if (step._id == '') step._id = undefined
+            if (step._id == '') step._id = undefined;
 
             const prevData = steps.find((fineStep) => fineStep._id === step._id);
 
-            const payload: IFineStep = prevData !== undefined
-                ? {...prevData}
-                : {...emptyStepData};
+            const payload: IFineStep =
+                prevData !== undefined ? { ...prevData } : { ...emptyStepData };
 
-            return {...payload, ...step}
+            return { ...payload, ...step };
         });
 
         return [
@@ -276,7 +275,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         className="grow text-right"
                                         title={t('step-names.last_modified')}
                                     >
-                                        <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                        <Timestamp
+                                            timestamp={plan.last_modified}
+                                            className="text-sm"
+                                        />
                                     </span>
                                 </div>
                                 {plan.steps.map((step, j) => (
@@ -290,7 +292,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             type="checkbox"
                                             className="mr-2"
                                             // BUGFIX: compare name and _id, because we had some finesteps with duplicated _ids ...
-                                            checked={stepsToImport.some((s) => (s._id == step._id && s.name == step.name))}
+                                            checked={stepsToImport.some(
+                                                (s) => s._id == step._id && s.name == step.name
+                                            )}
                                             readOnly
                                         />
                                         {step.name} ({step.workload} h)
@@ -298,7 +302,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 ))}
                             </div>
                         ))}
-
                 </div>
                 <div className="ml-auto text-right pt-4">
                     <button
@@ -337,10 +340,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                     `stepNames.${index}.timestamp_from`,
                                                     {
                                                         onChange: (e) => {
-                                                            const newDate = new Date(e.target.value);
+                                                            const newDate = new Date(
+                                                                e.target.value
+                                                            );
                                                             newDate.setDate(newDate.getDate() + 1);
-                                                            methods.setValue(`stepNames.${index}.timestamp_to`, newDate.toISOString().split('T')[0]);
-                                                        }
+                                                            methods.setValue(
+                                                                `stepNames.${index}.timestamp_to`,
+                                                                newDate.toISOString().split('T')[0]
+                                                            );
+                                                        },
                                                     }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
@@ -398,9 +406,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <div>
                                         <input
                                             type="hidden"
-                                            {...methods.register(
-                                                `stepNames.${index}._id`
-                                            )}
+                                            {...methods.register(`stepNames.${index}._id`)}
                                         />
                                         <input
                                             type="hidden"
@@ -480,9 +486,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
-            nextpage={methods.getValues('stepNames').length
-                ? `/ve-designer/step/1`
-                : `/ve-designer/finish`
+            nextpage={
+                methods.getValues('stepNames').length
+                    ? `/ve-designer/step/1`
+                    : `/ve-designer/finish`
             }
             stageInMenu="steps"
             idOfProgress="stepsGenerally"
@@ -540,4 +547,4 @@ export async function getStaticProps({ locale }: { locale: any }) {
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };
-};
+}

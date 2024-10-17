@@ -109,7 +109,7 @@
         "degree": "Studiengang",
         "degree_placeholder": "Studiengang eingeben, mehrere durch Komma trennen",
         "languages": "Sprachen",
-        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen"
+        "languages_placeholder": "Sprachen auswählen oder neue durch Tippen hinzufügen"
     },
     "goals": {
         "title": "Lernziele & Themen",
