@@ -3,7 +3,11 @@ import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { type ISourceOptions, MoveDirection, OutMode } from '@tsparticles/engine';
 import { loadSlim } from '@tsparticles/slim';
 
-export default function Test() {
+interface IBackgroundAnimationProps {
+    className: string;
+}
+
+export default function BackgroundAnimation({ className }: IBackgroundAnimationProps) {
     const [init, setInit] = useState(false);
 
     // this should be run only once per application lifetime
@@ -20,11 +24,12 @@ export default function Test() {
 
     const options: ISourceOptions = useMemo(
         () => ({
+            /* // if not set -> transparent background
             background: {
                 color: {
                     value: '#FFFFFF',
                 },
-            },
+            },*/
             fpsLimit: 120,
             interactivity: {
                 events: {
@@ -65,7 +70,7 @@ export default function Test() {
                         default: OutMode.out,
                     },
                     random: false,
-                    speed: 0.3,
+                    speed: 0.2,
                     straight: false,
                 },
                 number: {
@@ -89,5 +94,5 @@ export default function Test() {
         []
     );
 
-    return init ? <Particles id="tsparticles" options={options} /> : <></>;
+    return init ? <Particles id="tsparticles" options={options} className={className} /> : <></>;
 }
