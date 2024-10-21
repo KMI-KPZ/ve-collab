@@ -174,7 +174,9 @@
         "typeOf": "Type of assessment",
         "typeOfPlaceholder": "(e.g. graded, ungraded)",
         "howTo": "How is the VE evaluated?",
-        "while": "During the VE (formative)",
+        "before": "before the VE",
+        "beforePlaceholder": "",
+        "while": "during the VE (formative)",
         "whilePlaceholder": "",
         "after": "after the VE (summative)",
         "afterPlaceholder": ""

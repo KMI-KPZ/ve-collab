@@ -174,6 +174,8 @@
         "typeOf": "Art der Bewertung",
         "typeOfPlaceholder": "z.B. benotet, unbenotet",
         "howTo": "Wie erfolgt die Evaluation des VE?",
+        "before": "vor dem VE",
+        "beforePlaceholder": "z. B. ???",
         "while": "während des VE (formativ)",
         "whilePlaceholder": "z. B. Teaching Analysis Poll, Feedback-Runden, etc.",
         "after": "nach dem VE (summativ)",

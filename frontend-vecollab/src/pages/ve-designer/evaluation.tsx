@@ -17,6 +17,7 @@ export interface EvaluationPerPartner {
     is_graded: boolean;
     task_type: string;
     assessment_type: string;
+    evaluation_before: string;
     evaluation_while: string;
     evaluation_after: string;
 }
@@ -59,6 +60,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             is_graded: false,
             task_type: '',
             assessment_type: '',
+            evaluation_before: '',
             evaluation_while: '',
             evaluation_after: '',
         },
@@ -67,6 +69,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             is_graded: false,
             task_type: '',
             assessment_type: '',
+            evaluation_before: '',
             evaluation_while: '',
             evaluation_after: '',
         },
@@ -239,6 +242,28 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                             </>
                         )}
                         <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
+                        <div className="flex items-center justify-between my-1">
+                            <div>
+                                <p>{t('evaluation.before')}</p>
+                            </div>
+                            <textarea
+                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                {...methods.register(
+                                    `evaluationPerPartner.${index}.evaluation_before`
+                                )}
+                                rows={2}
+                                placeholder={t('evaluation.beforePlaceholder')}
+                            />
+                        </div>
+                        {methods.formState.errors?.evaluationPerPartner?.[index]
+                            ?.evaluation_before && (
+                            <p className="flex justify-center text-red-600 pb-2">
+                                {t(
+                                    methods.formState.errors?.evaluationPerPartner?.[index]
+                                        ?.evaluation_before?.message!
+                                )}
+                            </p>
+                        )}
                         <div className="flex items-center justify-between my-1">
                             <div>
                                 <p>{t('evaluation.while')}</p>

@@ -328,6 +328,7 @@ class VEPlanHandler(BaseHandler):
                                 "is_graded": True,
                                 "task_type": "test",
                                 "assessment_type": "test",
+                                "evaluation_before": "test",
                                 "evaluation_while": "test",
                                 "evaluation_after": "test",
                             }
@@ -560,6 +561,7 @@ class VEPlanHandler(BaseHandler):
                                 "is_graded": True,
                                 "task_type": "test",
                                 "assessment_type": "test",
+                                "evaluation_before": "test",
                                 "evaluation_while": "test",
                                 "evaluation_after": "test",
                             }

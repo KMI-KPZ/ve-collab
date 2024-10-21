@@ -196,6 +196,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         is_graded: false,
                         task_type: '',
                         assessment_type: '',
+                        evaluation_before: '',
                         evaluation_while: '',
                         evaluation_after: '',
                     };
