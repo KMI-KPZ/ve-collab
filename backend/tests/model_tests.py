@@ -1425,6 +1425,7 @@ class EvaluationModelTest(TestCase):
         self.assertFalse(evaluation.is_graded)
         self.assertIsNone(evaluation.task_type)
         self.assertIsNone(evaluation.assessment_type)
+        self.assertIsNone(evaluation.evaluation_before)
         self.assertIsNone(evaluation.evaluation_while)
         self.assertIsNone(evaluation.evaluation_after)
 
@@ -1440,6 +1441,7 @@ class EvaluationModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         )
@@ -1449,6 +1451,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, "test")
         self.assertEqual(evaluation.assessment_type, "test")
+        self.assertEqual(evaluation.evaluation_before, "test")
         self.assertEqual(evaluation.evaluation_while, "test")
         self.assertEqual(evaluation.evaluation_after, "test")
 
@@ -1465,6 +1468,7 @@ class EvaluationModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         ).to_dict()
@@ -1474,6 +1478,7 @@ class EvaluationModelTest(TestCase):
         self.assertIn("is_graded", evaluation)
         self.assertIn("task_type", evaluation)
         self.assertIn("assessment_type", evaluation)
+        self.assertIn("evaluation_before", evaluation)
         self.assertIn("evaluation_while", evaluation)
         self.assertIn("evaluation_after", evaluation)
         self.assertEqual(evaluation["_id"], _id)
@@ -1481,6 +1486,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation["is_graded"])
         self.assertEqual(evaluation["task_type"], "test")
         self.assertEqual(evaluation["assessment_type"], "test")
+        self.assertEqual(evaluation["evaluation_before"], "test")
         self.assertEqual(evaluation["evaluation_while"], "test")
         self.assertEqual(evaluation["evaluation_after"], "test")
 
@@ -1496,6 +1502,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1507,6 +1514,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, params["task_type"])
         self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_before, params["evaluation_before"])
         self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
         self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
 
@@ -1516,6 +1524,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1527,6 +1536,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, params["task_type"])
         self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_before, params["evaluation_before"])
         self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
         self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
 
@@ -1550,6 +1560,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
         }
 
@@ -1566,6 +1577,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1585,6 +1597,10 @@ class EvaluationModelTest(TestCase):
         params["assessment_type"] = list()
         self.assertRaises(TypeError, Evaluation.from_dict, params)
         params["assessment_type"] = "test"
+
+        params["evaluation_before"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["evaluation_before"] = "test"
 
         params["evaluation_while"] = list()
         self.assertRaises(TypeError, Evaluation.from_dict, params)
@@ -1698,6 +1714,7 @@ class VEPlanModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         )
@@ -2221,6 +2238,7 @@ class VEPlanModelTest(TestCase):
                     "is_graded": evaluation.is_graded,
                     "task_type": evaluation.task_type,
                     "assessment_type": evaluation.assessment_type,
+                    "evaluation_before": evaluation.evaluation_before,
                     "evaluation_while": evaluation.evaluation_while,
                     "evaluation_after": evaluation.evaluation_after,
                 }
@@ -2373,6 +2391,7 @@ class VEPlanModelTest(TestCase):
                     "is_graded": evaluation.is_graded,
                     "task_type": evaluation.task_type,
                     "assessment_type": evaluation.assessment_type,
+                    "evaluation_before": evaluation.evaluation_before,
                     "evaluation_while": evaluation.evaluation_while,
                     "evaluation_after": evaluation.evaluation_after,
                 }

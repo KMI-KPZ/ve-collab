@@ -171,3 +171,15 @@ feedback_tweaks
 17.10.24 11:45
 
 ---
+
+#### Kurzfassung
+db.plan.evaluation.evaluation_before neu
+
+#### branch
+feedback_tweaks
+
+#### Beschreibung
+- Attribt `evaluation_before` ist neu in jeder `Evaluation` von einem Plan, Datentyp `str` oder `null`
+
+#### letzte Änderung
+21.10.24 14:30

@@ -19,6 +19,10 @@ export const EvaluationFormSchema = z.object({
                 .string()
                 .max(5000, "messages.maxlength5000")
                 .nullable(),
+            evaluation_before: z
+                .string()
+                .max(5000, "messages.maxlength5000")
+                .nullable(),
             evaluation_while: z
                 .string()
                 .max(5000, "messages.maxlength5000")
