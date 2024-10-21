@@ -18,8 +18,6 @@ export default function Test() {
         });
     }, []);
 
-    const particlesLoaded = async (): Promise<void> => {};
-
     const options: ISourceOptions = useMemo(
         () => ({
             background: {
@@ -91,9 +89,5 @@ export default function Test() {
         []
     );
 
-    if (init) {
-        return <Particles id="tsparticles" particlesLoaded={particlesLoaded} options={options} />;
-    }
-
-    return <></>;
+    return init ? <Particles id="tsparticles" options={options} /> : <></>;
 }
