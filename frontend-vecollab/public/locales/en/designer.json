@@ -175,11 +175,11 @@
         "typeOfPlaceholder": "(e.g. graded, ungraded)",
         "howTo": "How is the VE evaluated?",
         "before": "before the VE",
-        "beforePlaceholder": "",
+        "beforePlaceholder": "e. g. Pretest, Questionnaire",
         "while": "during the VE (formative)",
-        "whilePlaceholder": "",
+        "whilePlaceholder": "e.g. Teaching Analysis Poll, etc.",
         "after": "after the VE (summative)",
-        "afterPlaceholder": ""
+        "afterPlaceholder": "e.g. anonymous Feedback Polls, Target Feedback, etc."
     },
     "checklist": {
         "title": "Checklist",
