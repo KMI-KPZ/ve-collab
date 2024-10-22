@@ -215,12 +215,14 @@ export default function GroupHeader({ userIsAdmin }: Props) {
     };
 
     function inviteUserToGroup(value: string) {
+        if (value === '') return;
         fetchPOST(
             `/spaceadministration/invite?id=${group._id}&user=${value}`,
             {},
             session!.accessToken
         ).then((response) => {
             mutate();
+            setInvitedUser({ label: '', value: '' });
         });
     }
 
@@ -240,11 +242,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         const copy = { ...currentPermissions };
         copy[permissionKey] = !copy[permissionKey];
 
-        fetchPOST(
-            `/space_acl/update`,
-            copy,
-            session?.accessToken
-        ).then((data) => {
+        fetchPOST(`/space_acl/update`, copy, session?.accessToken).then((data) => {
             setCurrentPermissions(copy);
         });
     }
@@ -263,13 +261,13 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         if (!isLoading) {
             setToggleInvisible(group.invisible);
 
-            if (profileSnipppets.length) return
             setSnippetsLoading(true);
             fetchPOST(
                 '/profile_snippets',
                 { usernames: [...group.requests, ...group.invites, ...group.members] },
                 session?.accessToken
             ).then((data) => {
+                console.log('ran snippets query');
                 setProfileSnippets(
                     data.user_snippets.map((snippet: any) => ({
                         name: snippet.first_name + ' ' + snippet.last_name,
@@ -281,7 +279,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                 setSnippetsLoading(false);
             });
         }
-    }, [isLoading, group, profileSnipppets, session]);
+    }, [isLoading, group, session]);
 
     useEffect(() => {
         if (chosenPermissionUser.value !== '') {
@@ -299,7 +297,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     const handleClickGroupOptions = () => {
         leaveGroup();
-    }
+    };
 
     return (
         <>
@@ -321,24 +319,23 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                             />
                         </div>
                         <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
-                            <div className={'text-4xl pr-6'}>
-                                {group.name}
-                            </div>
+                            <div className={'text-4xl pr-6'}>{group.name}</div>
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
-                                {userIsAdmin()
-                                    ? (
-                                        <ButtonSecondary
-                                            onClick={() => handleOpenEditDialog()}
-                                            label={"Gruppe bearbeiten"}
-                                        />
-                                    ) : (
-                                        <Dropdown options={[
-                                            { value: 'leaveGroup', label: 'Gruppe verlassen' }
-                                        ]} onSelect={handleClickGroupOptions} />
-                                    )
-                                }
+                                {userIsAdmin() ? (
+                                    <ButtonSecondary
+                                        onClick={() => handleOpenEditDialog()}
+                                        label={'Gruppe bearbeiten'}
+                                    />
+                                ) : (
+                                    <Dropdown
+                                        options={[
+                                            { value: 'leaveGroup', label: 'Gruppe verlassen' },
+                                        ]}
+                                        onSelect={handleClickGroupOptions}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
@@ -347,12 +344,12 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                         title={'Gruppe bearbeiten'}
                         onClose={handleCloseEditDialog}
                     >
-                        <div className="w-[70vw] h-[60vh]">
+                        <div className="w-full h-full min-h-[60vh]">
                             <Tabs>
                                 <div tabname="Bild & Beschreibung">
                                     <div className="flex">
-                                        <div className="w-1/2 flex justify-center">
-                                            <div className="w-fit">
+                                        <div className="flex justify-center mx-6">
+                                            <div className="">
                                                 <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
                                                     <AuthenticatedImage
                                                         imageId={group.space_pic}
@@ -363,8 +360,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 </div>
                                                 <div className="flex justify-center">
                                                     <ButtonPrimary
-                                                        onClick={() => setIsEditImageDialogOpen(true)}
-                                                        label={"ändern"}
+                                                        onClick={() =>
+                                                            setIsEditImageDialogOpen(true)
+                                                        }
+                                                        label={'ändern'}
                                                     />
                                                 </div>
                                             </div>
@@ -402,7 +401,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 <></>
                                             )}
                                         </Dialog>
-                                        <div className="w-1/2 ml-auto mx-6 flex items-center">
+                                        <div className="mx-6 flex flex-grow items-center">
                                             <div className="w-full">
                                                 <div
                                                     className={
@@ -424,7 +423,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 ></textarea>
                                                 <ButtonPrimary
                                                     onClick={() => handleUpdateDescription()}
-                                                    label={"Speichern"}
+                                                    label={'Speichern'}
                                                 />
                                             </div>
                                         </div>
@@ -473,73 +472,66 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                         </div>
                                     )}
                                     <div className="divide-y">
-                                        {!snippetsLoading &&
-                                            group.requests.map((requestUser, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex py-2 justify-between"
-                                                >
-                                                    <div className="flex cursor-pointer">
-                                                        <div>
-                                                            <AuthenticatedImage
-                                                                imageId={
-                                                                    profileSnipppets.find(
-                                                                        (snippet) =>
-                                                                            snippet.preferredUsername ===
-                                                                            requestUser
-                                                                    )?.profilePicUrl
-                                                                }
-                                                                alt={'Profilbild'}
-                                                                width={60}
-                                                                height={60}
-                                                                className="rounded-full"
-                                                            ></AuthenticatedImage>
-                                                        </div>
-                                                        <div>
-                                                            <BoxHeadline
-                                                                title={
-                                                                    profileSnipppets.find(
-                                                                        (snippet) =>
-                                                                            snippet.preferredUsername ===
-                                                                            requestUser
-                                                                    )?.name
-                                                                }
-                                                            />
-                                                            <div className="mx-2 px-1 my-1 text-gray-600">
-                                                                {
-                                                                    profileSnipppets.find(
-                                                                        (snippet) =>
-                                                                            snippet.preferredUsername ===
-                                                                            requestUser
-                                                                    )?.institution
-                                                                }
-                                                            </div>
-                                                        </div>
+                                        {group.requests.map((requestUser, index) => (
+                                            <div key={index} className="flex py-2 justify-between">
+                                                <div className="flex cursor-pointer">
+                                                    <div>
+                                                        <AuthenticatedImage
+                                                            imageId={
+                                                                profileSnipppets.find(
+                                                                    (snippet) =>
+                                                                        snippet.preferredUsername ===
+                                                                        requestUser
+                                                                )?.profilePicUrl ||
+                                                                'default_profile_pic.jpg'
+                                                            }
+                                                            alt={'Profilbild'}
+                                                            width={60}
+                                                            height={60}
+                                                            className="rounded-full"
+                                                        ></AuthenticatedImage>
                                                     </div>
-                                                    <div className="flex items-center">
-                                                        <button
-                                                            className={
-                                                                'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                    <div>
+                                                        <BoxHeadline
+                                                            title={
+                                                                profileSnipppets.find(
+                                                                    (snippet) =>
+                                                                        snippet.preferredUsername ===
+                                                                        requestUser
+                                                                )?.name || requestUser
                                                             }
-                                                            onClick={(e) =>
-                                                                acceptRequest(requestUser)
+                                                        />
+                                                        <div className="mx-2 px-1 my-1 text-gray-600">
+                                                            {
+                                                                profileSnipppets.find(
+                                                                    (snippet) =>
+                                                                        snippet.preferredUsername ===
+                                                                        requestUser
+                                                                )?.institution
                                                             }
-                                                        >
-                                                            <span>Annehmen</span>
-                                                        </button>
-                                                        <button
-                                                            className={
-                                                                'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
-                                                            }
-                                                            onClick={(e) =>
-                                                                declineRequest(requestUser)
-                                                            }
-                                                        >
-                                                            <span>Ablehnen</span>
-                                                        </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                <div className="flex items-center">
+                                                    <button
+                                                        className={
+                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                        }
+                                                        onClick={(e) => acceptRequest(requestUser)}
+                                                    >
+                                                        <span>Annehmen</span>
+                                                    </button>
+                                                    <button
+                                                        className={
+                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                        }
+                                                        onClick={(e) => declineRequest(requestUser)}
+                                                    >
+                                                        <span>Ablehnen</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                                 <div tabname="Einladungen">
@@ -582,241 +574,249 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             </div>
                                         )}
                                         <div className="divide-y">
-                                            {!snippetsLoading &&
-                                                group.invites.map((inviteUser, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="flex py-2 w-1/3 justify-between"
-                                                    >
-                                                        <div className="flex cursor-pointer">
-                                                            <div>
-                                                                <AuthenticatedImage
-                                                                    imageId={
-                                                                        profileSnipppets.find(
-                                                                            (snippet) =>
-                                                                                snippet.preferredUsername ===
-                                                                                inviteUser
-                                                                        )?.profilePicUrl
-                                                                    }
-                                                                    alt={'Profilbild'}
-                                                                    width={60}
-                                                                    height={60}
-                                                                    className="rounded-full"
-                                                                ></AuthenticatedImage>
-                                                            </div>
-                                                            <div>
-                                                                <BoxHeadline
-                                                                    title={
-                                                                        profileSnipppets.find(
-                                                                            (snippet) =>
-                                                                                snippet.preferredUsername ===
-                                                                                inviteUser
-                                                                        )?.name
-                                                                    }
-                                                                />
-                                                                <div className="mx-2 px-1 my-1 text-gray-600">
-                                                                    {
-                                                                        profileSnipppets.find(
-                                                                            (snippet) =>
-                                                                                snippet.preferredUsername ===
-                                                                                inviteUser
-                                                                        )?.institution
-                                                                    }
-                                                                </div>
-                                                            </div>
+                                            {group.invites.map((inviteUser, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex py-2 w-1/3 justify-between"
+                                                >
+                                                    <div className="flex cursor-pointer">
+                                                        <div>
+                                                            <AuthenticatedImage
+                                                                imageId={
+                                                                    profileSnipppets.find(
+                                                                        (snippet) =>
+                                                                            snippet.preferredUsername ===
+                                                                            inviteUser
+                                                                    )?.profilePicUrl ||
+                                                                    'default_profile_pic.jpg'
+                                                                }
+                                                                alt={'Profilbild'}
+                                                                width={60}
+                                                                height={60}
+                                                                className="rounded-full"
+                                                            ></AuthenticatedImage>
                                                         </div>
-                                                        <div className="flex items-center">
-                                                            <div className="flex items-center">
-                                                                <RxTrash
-                                                                    size={20}
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        revokeInvite(inviteUser);
-                                                                    }}
-                                                                    className="cursor-pointer"
-                                                                />
+                                                        <div>
+                                                            <BoxHeadline
+                                                                title={
+                                                                    profileSnipppets.find(
+                                                                        (snippet) =>
+                                                                            snippet.preferredUsername ===
+                                                                            inviteUser
+                                                                    )?.name || inviteUser
+                                                                }
+                                                            />
+                                                            <div className="mx-2 px-1 my-1 text-gray-600">
+                                                                {profileSnipppets.find(
+                                                                    (snippet) =>
+                                                                        snippet.preferredUsername ===
+                                                                        inviteUser
+                                                                )?.institution || ''}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                    <div className="flex items-center">
+                                                        <div className="flex items-center">
+                                                            <RxTrash
+                                                                size={20}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    revokeInvite(inviteUser);
+                                                                }}
+                                                                className="cursor-pointer"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
                                 <div tabname="Berechtigungen">
-                                    {!snippetsLoading && (
-                                        <>
-                                            <div className="flex">
-                                                <Select
-                                                    className="w-3/4"
-                                                    options={group.members
-                                                        .filter(
-                                                            (member: string) =>
-                                                                !group.admins.includes(member)
-                                                        )
-                                                        .map((user: string) => {
-                                                            return {
-                                                                label:
-                                                                    profileSnipppets.find(
-                                                                        (snippet) =>
-                                                                            snippet.preferredUsername ===
-                                                                            user
-                                                                    )!.name +
-                                                                    ' - ' +
-                                                                    user,
-                                                                value: user,
-                                                            };
-                                                        })}
-                                                    onChange={(e) => setChosenPermissionUser(e!)}
-                                                    value={chosenPermissionUser}
-                                                    placeholder={'Suche nach Nutzer:innen...'}
-                                                    getOptionLabel={(option) => option.label}
-                                                />
-                                            </div>
-                                            <div className="my-4">
-                                                <div
-                                                    className={
-                                                        'mb-1 font-bold text-slate-900 text-lg'
-                                                    }
-                                                >
-                                                    Berechtigungen anpassen
+                                    <div>
+                                        {!snippetsLoading && (
+                                            <>
+                                                <div className="flex">
+                                                    <Select
+                                                        className="w-3/4"
+                                                        options={group.members
+                                                            .filter(
+                                                                (member: string) =>
+                                                                    !group.admins.includes(member)
+                                                            )
+                                                            .map((user: string) => {
+                                                                return {
+                                                                    label:
+                                                                        profileSnipppets.find(
+                                                                            (snippet) =>
+                                                                                snippet.preferredUsername ===
+                                                                                user
+                                                                        )!.name +
+                                                                        ' - ' +
+                                                                        user,
+                                                                    value: user,
+                                                                };
+                                                            })}
+                                                        onChange={(e) =>
+                                                            setChosenPermissionUser(e!)
+                                                        }
+                                                        value={chosenPermissionUser}
+                                                        placeholder={'Suche nach Nutzer:innen...'}
+                                                        getOptionLabel={(option) => option.label}
+                                                    />
                                                 </div>
-                                                {chosenPermissionUser.value === '' ? (
-                                                    <div className="mx-4 my-4 text-gray-600">
-                                                        kein User ausgewählt
+                                                <div className="my-4">
+                                                    <div
+                                                        className={
+                                                            'mb-1 font-bold text-slate-900 text-lg'
+                                                        }
+                                                    >
+                                                        Berechtigungen anpassen
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        {!permissionsLoading && (
-                                                            <>
-                                                                <div className="flex my-4 w-1/4 justify-between">
-                                                                    <div>Timeline lesen</div>
-                                                                    <div
-                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
-                                                                        onClick={(e) =>
-                                                                            togglePermission(
-                                                                                'read_timeline'
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                                                (currentPermissions.read_timeline
-                                                                                    ? 'transform translate-x-6 bg-green-500'
-                                                                                    : null)
-                                                                            }
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex my-4 w-1/4 justify-between">
-                                                                    <div>Posts verfassen</div>
-                                                                    <div
-                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
-                                                                        onClick={(e) =>
-                                                                            togglePermission('post')
-                                                                        }
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                                                (currentPermissions.post
-                                                                                    ? 'transform translate-x-6 bg-green-500'
-                                                                                    : null)
-                                                                            }
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex my-4 w-1/4 justify-between">
-                                                                    <div>Kommentare verfassen</div>
-                                                                    <div
-                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
-                                                                        onClick={(e) =>
-                                                                            togglePermission(
-                                                                                'comment'
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                                                (currentPermissions.comment
-                                                                                    ? 'transform translate-x-6 bg-green-500'
-                                                                                    : null)
-                                                                            }
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex my-4 w-1/4 justify-between">
-                                                                    <div>Dateien herunterladen</div>
-                                                                    <div
-                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
-                                                                        onClick={(e) =>
-                                                                            togglePermission(
-                                                                                'read_files'
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                                                (currentPermissions.read_files
-                                                                                    ? 'transform translate-x-6 bg-green-500'
-                                                                                    : null)
-                                                                            }
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex my-4 w-1/4 justify-between">
-                                                                    <div>Dateien hochladen</div>
-                                                                    <div
-                                                                        className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
-                                                                        onClick={(e) =>
-                                                                            togglePermission(
-                                                                                'write_files'
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <div
-                                                                            className={
-                                                                                'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                                                (currentPermissions.write_files
-                                                                                    ? 'transform translate-x-6 bg-green-500'
-                                                                                    : null)
-                                                                            }
-                                                                        ></div>
-                                                                    </div>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                        <div className="mt-10 p-2 w-1/2 rounded-xl border border-red-600">
-                                                            <div
-                                                                className={
-                                                                    'mb-1 font-bold text-slate-900 text-lg'
-                                                                }
-                                                            >
-                                                                Zum Gruppen-Admin ernennen
-                                                            </div>
-                                                            <div>
-                                                                Achtung: diese Aktion kann nicht
-                                                                rückgängig gemacht werden!
-                                                            </div>
-                                                            <button
-                                                                className={
-                                                                    'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                                                }
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    promoteToAdmin();
-                                                                }}
-                                                            >
-                                                                Befördern
-                                                            </button>
+                                                    {chosenPermissionUser.value === '' ? (
+                                                        <div className="mx-4 my-4 text-gray-600">
+                                                            kein User ausgewählt
                                                         </div>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
+                                                    ) : (
+                                                        <>
+                                                            {!permissionsLoading && (
+                                                                <>
+                                                                    <div className="flex my-4 w-1/4 justify-between">
+                                                                        <div>Timeline lesen</div>
+                                                                        <div
+                                                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                            onClick={(e) =>
+                                                                                togglePermission(
+                                                                                    'read_timeline'
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <div
+                                                                                className={
+                                                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                    (currentPermissions.read_timeline
+                                                                                        ? 'transform translate-x-6 bg-green-500'
+                                                                                        : null)
+                                                                                }
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex my-4 w-1/4 justify-between">
+                                                                        <div>Posts verfassen</div>
+                                                                        <div
+                                                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                            onClick={(e) =>
+                                                                                togglePermission(
+                                                                                    'post'
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <div
+                                                                                className={
+                                                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                    (currentPermissions.post
+                                                                                        ? 'transform translate-x-6 bg-green-500'
+                                                                                        : null)
+                                                                                }
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex my-4 w-1/4 justify-between">
+                                                                        <div>
+                                                                            Kommentare verfassen
+                                                                        </div>
+                                                                        <div
+                                                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                            onClick={(e) =>
+                                                                                togglePermission(
+                                                                                    'comment'
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <div
+                                                                                className={
+                                                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                    (currentPermissions.comment
+                                                                                        ? 'transform translate-x-6 bg-green-500'
+                                                                                        : null)
+                                                                                }
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex my-4 w-1/4 justify-between">
+                                                                        <div>
+                                                                            Dateien herunterladen
+                                                                        </div>
+                                                                        <div
+                                                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                            onClick={(e) =>
+                                                                                togglePermission(
+                                                                                    'read_files'
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <div
+                                                                                className={
+                                                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                    (currentPermissions.read_files
+                                                                                        ? 'transform translate-x-6 bg-green-500'
+                                                                                        : null)
+                                                                                }
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex my-4 w-1/4 justify-between">
+                                                                        <div>Dateien hochladen</div>
+                                                                        <div
+                                                                            className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
+                                                                            onClick={(e) =>
+                                                                                togglePermission(
+                                                                                    'write_files'
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <div
+                                                                                className={
+                                                                                    'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
+                                                                                    (currentPermissions.write_files
+                                                                                        ? 'transform translate-x-6 bg-green-500'
+                                                                                        : null)
+                                                                                }
+                                                                            ></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                            <div className="mt-10 p-2 w-1/2 rounded-xl border border-red-600">
+                                                                <div
+                                                                    className={
+                                                                        'mb-1 font-bold text-slate-900 text-lg'
+                                                                    }
+                                                                >
+                                                                    Zum Gruppen-Admin ernennen
+                                                                </div>
+                                                                <div>
+                                                                    Achtung: diese Aktion kann nicht
+                                                                    rückgängig gemacht werden!
+                                                                </div>
+                                                                <button
+                                                                    className={
+                                                                        'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                                    }
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        promoteToAdmin();
+                                                                    }}
+                                                                >
+                                                                    Befördern
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                                 <div tabname="Gruppe verlassen">
                                     <div className="flex">
