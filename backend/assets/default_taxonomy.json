@@ -1,6 +1,80 @@
 {
     "taxonomy": [
         {
+            "parent": 33,
+            "droppable": true,
+            "text": "Interaktion & kollaboratives Arbeiten",
+            "id": 17
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "kulturelle Aspekte",
+            "id": 19
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "sprachliche Aspekte",
+            "id": 20
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "Methodenkoffer",
+            "id": 58
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Einstieg",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung/"
+            },
+            "id": 53
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Ziele, Funktionen, Formen und Schwerpunkte",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte/"
+            },
+            "id": 54
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Evaluationsmethoden",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation/"
+            },
+            "id": 55
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Auswertung und Ergebnisse",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke/"
+            },
+            "id": 56
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Reflexion",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion/"
+            },
+            "id": 57
+        },
+        {
             "parent": 34,
             "droppable": false,
             "text": "Toolliste für virtuelle Austausche",
@@ -39,7 +113,7 @@
         {
             "parent": 34,
             "droppable": false,
-            "text": "Spielerisches",
+            "text": "Interaktive Lernbausteine",
             "data": {
                 "description": "",
                 "url": "https://soserve.rz.uni-leipzig.de:10001/8-4-tools-spielerisches/",
@@ -85,24 +159,6 @@
             "droppable": true,
             "text": "OER",
             "id": 35
-        },
-        {
-            "parent": 33,
-            "droppable": true,
-            "text": "Interaktion & kollaboratives Arbeiten",
-            "id": 17
-        },
-        {
-            "parent": 33,
-            "droppable": true,
-            "text": "kulturelle Aspekte",
-            "id": 19
-        },
-        {
-            "parent": 33,
-            "droppable": true,
-            "text": "sprachliche Aspekte",
-            "id": 20
         },
         {
             "parent": 31,
@@ -245,16 +301,6 @@
                 "mbr_id": "4f9e40f8-e0fe-40a3-9264-13e01d314ea8"
             },
             "id": 21
-        },
-        {
-            "parent": 11,
-            "droppable": false,
-            "text": "Mehrwerte virtueller Austausche",
-            "data": {
-                "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-potenziale-allgemeines/"
-            },
-            "id": 40
         },
         {
             "parent": 11,
