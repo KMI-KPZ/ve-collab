@@ -109,7 +109,7 @@
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
         "languages": "Language",
-        "languages_placeholder": "Enter languages, separate several by comma"
+        "languages_placeholder": "Choose languages or add new ones by typing"
     },
     "goals": {
         "title": "Learning objectives & topics",
@@ -174,10 +174,12 @@
         "typeOf": "Type of assessment",
         "typeOfPlaceholder": "(e.g. graded, ungraded)",
         "howTo": "How is the VE evaluated?",
-        "while": "During the VE (formative)",
-        "whilePlaceholder": "",
+        "before": "before the VE",
+        "beforePlaceholder": "e. g. Pretest, Questionnaire",
+        "while": "during the VE (formative)",
+        "whilePlaceholder": "e.g. Teaching Analysis Poll, etc.",
         "after": "after the VE (summative)",
-        "afterPlaceholder": ""
+        "afterPlaceholder": "e.g. anonymous Feedback Polls, Target Feedback, etc."
     },
     "checklist": {
         "title": "Checklist",
