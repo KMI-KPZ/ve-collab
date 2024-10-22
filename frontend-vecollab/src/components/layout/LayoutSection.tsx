@@ -12,42 +12,47 @@ interface Props {
     children: JSX.Element;
     headerBarMessageEvents: any[];
     notificationEvents: Notification[];
-    toggleChatWindow(value?: boolean): void
-    toggleNotifWindow(value?: boolean): void
+    toggleChatWindow(value?: boolean): void;
+    toggleNotifWindow(value?: boolean): void;
 }
 export default function LayoutSection({
     children,
     notificationEvents,
     headerBarMessageEvents,
     toggleChatWindow,
-    toggleNotifWindow
+    toggleNotifWindow,
 }: Props): JSX.Element {
     const { data: session, status } = useSession();
 
     const router = useRouter();
 
-    const {
-        data: excludedFromMatching
-    } = useGetExcludedFromMatching(session ? session.accessToken : '');
+    const { data: excludedFromMatching } = useGetExcludedFromMatching(
+        session ? session.accessToken : ''
+    );
 
-    if(router.pathname === "/plan/pdf/[planId]") {
-        return (
-            <main>{children}</main>
-        )
+    if (router.pathname === '/plan/pdf/[planId]') {
+        return <main>{children}</main>;
     }
+    console.log(router.pathname);
 
     return (
-        <div className='flex flex-col min-h-screen bg-slate-100'>
+        <div className="flex flex-col min-h-screen bg-slate-100">
             <HeaderSection
                 notificationEvents={notificationEvents}
                 headerBarMessageEvents={headerBarMessageEvents}
                 toggleChatWindow={toggleChatWindow}
                 toggleNotifWindow={toggleNotifWindow}
             />
-            <main className='flex-1 p-5 bg-pattern-left-blue bg-no-repeat min-h-96'>
-                {(excludedFromMatching === true) && <ExcludedFromMatchingBanner />}
+            <main
+                className={
+                    'flex-1 p-5 min-h-96' + router.isReady && router.pathname === '/'
+                        ? ' '
+                        : ' bg-pattern-left-blue bg-no-repeat'
+                }
+            >
+                {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
-                <div className='container mx-auto max-w-screen-2xl'>{children}</div>
+                <div className="container mx-auto max-w-screen-2xl">{children}</div>
             </main>
             <FooterSection />
         </div>
