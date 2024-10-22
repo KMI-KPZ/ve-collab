@@ -14,12 +14,12 @@ import { useTranslation } from 'next-i18next'
 
 export interface IfilterBy {
     /** compare function
-      * If compare is undefined the filter (id) wil removed  */
+      * If compare is undefined the filter (id) will removed  */
     compare: undefined | ((plan: PlanPreview) => boolean);
-    /** id of your filter function (used in filterBy array) */
+    /** id of the filter function (used in filterBy array) */
     id: string;
-    /** optional, is true it will added as filter, not replace all others */
-    isAdditional?: boolean;
+    /** value of the filter, required to recognise current filter  */
+    value: any
 }
 
 export interface IsortBy {
@@ -40,7 +40,8 @@ export default function Plans({ socket }: Props) {
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([
         {
             compare: () => true,
-            id: 'allAuthors',
+            id: 'author',
+            value: undefined
         }
     ]);
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
@@ -80,24 +81,22 @@ export default function Plans({ socket }: Props) {
     };
 
     /**
-     * Add filter method, append is isAdditional is true, remove if compare is  undefined
+     * Add/Remove/Update filter method
      * Usage: See description in IfilterBy
      */
-    const handleFilterBy = ({ compare, id, isAdditional }: IfilterBy) => {
+    const handleFilterBy = ({ compare, id, value }: IfilterBy) => {
         if (typeof compare === 'undefined') {
             setFilterBy((prev) =>
                 prev.filter(f => f.id != id)
             );
-        } else if (isAdditional === true) {
+        } else {
             if (filterBy.find((f) => f.id == id)) {
                 setFilterBy((prev) =>
-                    prev.map((f) => (f.id == id ? { id, compare } : f))
+                    prev.map((f) => (f.id == id ? { id, compare, value } : f))
                 );
             } else {
-                setFilterBy((prev) => [...prev, { id, compare }]);
+                setFilterBy((prev) => [...prev, { id, compare, value }]);
             }
-        }else {
-            setFilterBy((prev) => [{ id, compare }]);
         }
     };
 
