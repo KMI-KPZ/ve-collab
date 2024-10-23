@@ -407,7 +407,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                 </div>
             </Dialog>
 
-            <div className="bg-white rounded-lg px-6 py-4 xl:px-8 xl:py-6 w-full">
+            <div className="bg-white rounded-lg px-6 py-4 xl:px-8 xl:py-6 w-full @container">
                 <ViewAttributes
                     plan={plan}
                     partnerProfileSnippets={partnerProfileSnippets}
@@ -479,7 +479,7 @@ export const GridEntryCaption = ({ children }: { children: string }) => (
 );
 
 export const Caption4 = ({ children }: { children: string }) => (
-    <h4 className="font-semibold text-slate-700">{children}</h4>
+    <h4 className="font-semibold text-slate-700 px-1">{children}</h4>
 );
 
 interface ColProp {
@@ -502,7 +502,11 @@ export const GridEntry2Col = ({ col1, col2 }: { col1: ColProp; col2: ColProp }) 
 );
 
 export const GridEntrySubGrid = ({ children }: { children: React.ReactNode }) => (
-    <div className="grid lg:grid-cols-2 gap-x-6 gap-y-6">{children}</div>
+    <div className="grid xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
+);
+
+export const GridEntrySubGridLarge = ({ children }: { children: React.ReactNode }) => (
+    <div className="grid @7xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
 );
 
 export const GridEntryList = ({ list }: { list: any[] }) => (

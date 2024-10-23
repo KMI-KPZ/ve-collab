@@ -1,4 +1,4 @@
-import { MdAdd, MdClose } from 'react-icons/md';
+import { MdAdd, MdCheck, MdCheckBoxOutlineBlank, MdClose } from 'react-icons/md';
 import ButtonNewPlan from './ButtonNewPlan';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
@@ -21,8 +21,8 @@ export function PlansBrowserFilter({
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common')
-    const [isGoodPractice, setIsGoodPractice] = useState<boolean>(false)
     const [search, setSearch] = useState<string>("")
+    const isGoodPractice = filterBy.some(f => f.id == "isGoodPractice" && f.value == true)
 
     return (
         <div className="mb-4 flex flex-wrap items-center gap-y-2">
@@ -30,14 +30,15 @@ export function PlansBrowserFilter({
                 <div className="px-2">
                     <button
                         className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'allAuthors')
+                            filterBy.find((f) => f.id == 'author' && f.value === undefined)
                                 ? 'text-ve-collab-blue underline'
                                 : ''
                         }`}
                         onClick={() =>
                             filterByCallback({
                                 compare: () => true,
-                                id: 'allAuthors',
+                                id: 'author',
+                                value: undefined
                             })
                         }
                     >
@@ -47,14 +48,15 @@ export function PlansBrowserFilter({
                 <div className="px-2">
                     <button
                         className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'iamAuthor')
+                            filterBy.find((f) => f.id == 'author' && f.value == 'me')
                                 ? 'text-ve-collab-blue underline'
                                 : ''
                         }`}
                         onClick={() =>
                             filterByCallback({
                                 compare: (plan) => plan.author.username == session?.user.preferred_username,
-                                id: 'iamAuthor',
+                                id: 'author',
+                                value: 'me'
                             })
                         }
                     >
@@ -64,7 +66,7 @@ export function PlansBrowserFilter({
                 <div className="px-2">
                     <button
                         className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'otherAuthor')
+                            filterBy.find((f) => f.id == 'author' && f.value == 'other')
                                 ? 'text-ve-collab-blue underline'
                                 : ''
                         }`}
@@ -74,7 +76,8 @@ export function PlansBrowserFilter({
                                     return plan.read_access.includes(session?.user.preferred_username as string)
                                         && plan.author.username != session?.user.preferred_username
                                 },
-                                id: 'otherAuthor',
+                                id: 'author',
+                                value: 'other'
                             })
                         }
                     >
@@ -102,7 +105,7 @@ export function PlansBrowserFilter({
                                     .includes(value.toLowerCase());
                             },
                             id: 'searchByName',
-                            isAdditional: true
+                            value: value
                         });
                     }}
                 />
@@ -111,9 +114,11 @@ export function PlansBrowserFilter({
                     filterByCallback({
                         compare: undefined,
                         id: 'searchByName',
-                        isAdditional: true
+                        value: null
                     });
-                }} className='text-slate-600 inline relative -left-[22px] hover:cursor-pointer'><MdClose size={15} className='inline' /></div>
+                }} className='text-slate-600 inline relative -left-[22px] hover:cursor-pointer'>
+                    <MdClose size={15} className={`${search.length ? "inline" : "invisible"}`} />
+                </div>
             </div>
 
             <ButtonLightBlue
@@ -122,48 +127,26 @@ export function PlansBrowserFilter({
                         filterByCallback({
                             compare: undefined,
                             id: 'isGoodPractice',
-                            isAdditional: true
+                            value: undefined
                         })
                     } else {
                         filterByCallback({
                             compare: (plan) => plan.is_good_practise === true,
                             id: 'isGoodPractice',
-                            isAdditional: true
+                            value: true
                         })
 
                     }
-                    setIsGoodPractice(prev => !prev)
                 }}
             >
                 <>
+                    {isGoodPractice
+                        ? (<MdCheck className='inline mr-1 mb-1' />)
+                        : (<MdCheckBoxOutlineBlank className='inline mr-1 mb-1' />)
+                    }
                     {t("plans_filter_good_practice_examples")}
-                    {isGoodPractice && <GiCheckMark className='inline ml-2 mb-2' /> }
                 </>
             </ButtonLightBlue>
-
-            {/* <div
-                className="mx-4 py-2 px-5 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                onClick={() => {
-                    if (isGoodPractice) {
-                        filterByCallback({
-                            compare: undefined,
-                            id: 'isGoodPractice',
-                            isAdditional: true
-                        })
-                    } else {
-                        filterByCallback({
-                            compare: (plan) => plan.is_good_practise === true,
-                            id: 'isGoodPractice',
-                            isAdditional: true
-                        })
-
-                    }
-                    setIsGoodPractice(prev => !prev)
-                }}
-            >
-                {t("plans_filter_good_practice_examples")}
-                {isGoodPractice && <GiCheckMark className='inline ml-2 mb-2' /> }
-            </div> */}
 
             <div className="ml-auto">
                 <ButtonNewPlan

@@ -41,9 +41,9 @@ module.exports = {
             boxShadow: {
                 roundBox: '0px 6px 18px 12px rgba(0, 0, 0, 0.3)',
                 'button-primary': 'inset 0 -5px 0 rgba(146, 45, 10, 1)',
-                'button-blue-light': 'inset 0 -5px 0 rgba(0, 116, 143, 1)'
+                'button-blue-light': 'inset 0 -5px 0 rgba(0, 116, 143, 1)',
             },
         },
     },
-    plugins: [],
+    plugins: [require('@tailwindcss/container-queries')],
 };
