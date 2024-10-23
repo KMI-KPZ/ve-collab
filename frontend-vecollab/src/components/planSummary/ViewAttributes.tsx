@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { Caption4, GridEntry, GridEntryCaption, GridEntryList, GridEntrySubGrid, showDataOrEmptySign } from './PlanSummary';
+import {
+    Caption4,
+    GridEntry,
+    GridEntryCaption,
+    GridEntryList,
+    GridEntrySubGrid,
+    GridEntrySubGridLarge,
+    showDataOrEmptySign,
+} from './PlanSummary';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useTranslation } from 'next-i18next';
 import ButtonLight from '../common/buttons/ButtongLight';
-import {
-    MdKeyboardDoubleArrowDown,
-    MdKeyboardDoubleArrowUp,
-} from 'react-icons/md';
+import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from 'react-icons/md';
 
 interface Props {
     plan: IPlan;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
     openAllBoxes?: boolean;
-    isSingleView?: boolean
+    isSingleView?: boolean;
 }
 export default function ViewAttributes({
     plan,
     partnerProfileSnippets,
     openAllBoxes,
-    isSingleView
+    isSingleView,
 }: Props): JSX.Element {
     const { t } = useTranslation('common');
 
@@ -178,14 +183,14 @@ export default function ViewAttributes({
                                     plan.individual_learning_goals.map((goalPerPartner, index) => (
                                         <ul className="space-y-1" key={index}>
                                             <li className="flex">
-                                                <div className="w-1/3 lg:w-1/4">
+                                                <div className="w-1/3">
                                                     <Caption4>
                                                         {t(
                                                             'plan_summary_individual_learning_goals_name'
                                                         )}
                                                     </Caption4>
                                                 </div>
-                                                <div className="w-2/3 lg:w-3/4">
+                                                <div className="w-2/3">
                                                     {showDataOrEmptySign(
                                                         partnerProfileSnippets[
                                                             goalPerPartner.username
@@ -202,14 +207,14 @@ export default function ViewAttributes({
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 lg:w-1/4">
+                                                <div className="w-1/3">
                                                     <Caption4>
                                                         {t(
                                                             'plan_summary_individual_learning_goals_goals'
                                                         )}
                                                     </Caption4>
                                                 </div>
-                                                <div className="w-2/3 lg:w-3/4">
+                                                <div className="w-2/3">
                                                     {showDataOrEmptySign(
                                                         goalPerPartner.learning_goal
                                                     )}
@@ -293,7 +298,9 @@ export default function ViewAttributes({
                                                     </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
-                                                    {showDataOrEmptySign(studyGroup.languages)}
+                                                    {showDataOrEmptySign(
+                                                        studyGroup.languages.join(', ')
+                                                    )}
                                                 </div>
                                             </li>
                                         </ul>
@@ -373,6 +380,115 @@ export default function ViewAttributes({
 
                         <GridEntry caption={t('plan_summary_learning_env')}>
                             {showDataOrEmptySign(plan.learning_env)}
+                        </GridEntry>
+
+                        <GridEntry caption={t('plan_summary_evaluation')}>
+                            <GridEntrySubGridLarge>
+                                {plan.evaluation.map((evaluation, index) => (
+                                    <ul className="space-y-1" key={index}>
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_group_of')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                                {showDataOrEmptySign(
+                                                    partnerProfileSnippets[evaluation.username]
+                                                        ? partnerProfileSnippets[
+                                                              evaluation.username
+                                                          ].first_name +
+                                                              ' ' +
+                                                              partnerProfileSnippets[
+                                                                  evaluation.username
+                                                              ].last_name
+                                                        : evaluation.username
+                                                )}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_is_graded')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                                {showDataOrEmptySign(
+                                                    evaluation.is_graded ? t('yes') : t('no')
+                                                )}
+                                            </div>
+                                        </li>
+                                        {evaluation.is_graded && (
+                                            <>
+                                                <li className="flex">
+                                                    <div className="w-2/5 pl-4">
+                                                        <Caption4>
+                                                            {t('plan_summary_evaluation_task_type')}
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-3/5">
+                                                        {showDataOrEmptySign(evaluation.task_type)}
+                                                    </div>
+                                                </li>
+                                                <li className="flex">
+                                                    <div className="w-2/5 pl-4">
+                                                        <Caption4>
+                                                            {t(
+                                                                'plan_summary_evaluation_assessment_type'
+                                                            )}
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-3/5">
+                                                        {showDataOrEmptySign(
+                                                            evaluation.assessment_type
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            </>
+                                        )}
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_dot')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_before')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_before)}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_while')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_while)}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_after')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_after)}
+                                            </div>
+                                        </li>
+                                    </ul>
+                                ))}
+                            </GridEntrySubGridLarge>
                         </GridEntry>
 
                         {isSingleView !== true && (

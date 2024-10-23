@@ -163,7 +163,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             }}
         >
             <div>
-                <div className="h-[60vh] overflow-y-auto content-scrollbar relative border-t">
+                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
