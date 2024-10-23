@@ -205,7 +205,9 @@
         "institutionalRequirements_title": "Institutional guidelines",
         "institutionalRequirements_descr": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
         "dataProtection_title": "Data Protection",
-        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country."
+        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country.",
+        "add_userdefined_title": "Add user-defined aspect",
+        "new_userbox_placeholder": "Label ..."
     },
     "step-names" : {
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",

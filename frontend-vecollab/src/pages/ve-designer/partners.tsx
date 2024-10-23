@@ -172,15 +172,16 @@ export default function Partners({ socket }: Props): JSX.Element {
                     return {
                         username: partner,
                         time: false,
-                        format: false,
+                        // format: false,
                         topic: false,
                         goals: false,
-                        languages: false,
+                        // languages: false,
                         media: false,
                         technicalEquipment: false,
-                        evaluation: false,
+                        // evaluation: false,
                         institutionalRequirements: false,
                         dataProtection: false,
+                        userDefinedCheckboxes: []
                     };
                 }
             });

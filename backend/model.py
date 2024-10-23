@@ -2056,7 +2056,7 @@ class VEPlan:
                 # ensure that any other values are of type bool or None
                 for attr, value in checklist_item.items():
                     if attr != "username":
-                        if not isinstance(value, (bool, type(None))):
+                        if not isinstance(value, (bool, type(None), list)):
                             raise TypeError(
                                 "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)
