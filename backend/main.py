@@ -3,6 +3,8 @@ import logging
 import logging.handlers
 import os
 
+from apscheduler.schedulers.tornado import TornadoScheduler
+from apscheduler.triggers.cron import CronTrigger
 import bson.json_util
 from dotenv import load_dotenv
 import gridfs
@@ -47,6 +49,7 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
+from resources.notifications import periodic_notification_dispatch
 import util
 
 logger = logging.getLogger(__name__)
@@ -480,6 +483,34 @@ def hook_tornado_access_log():
         tornado_access_logger.propagate = False
 
 
+def schedule_periodic_notifications():
+    """
+    Schedule and start all (periodic) notifications from
+    `assets/periodic_notifications.json`.
+    """
+
+    scheduler = TornadoScheduler()
+
+    with open("assets/periodic_notifications.json", "r") as fp:
+        periodic_notifications = json.load(fp)["periodic_notifications"]
+        for notification in periodic_notifications:
+            for execution_dates in notification["triggers"]:
+                trigger = CronTrigger(
+                    year=execution_dates["year"],
+                    month=execution_dates["month"],
+                    day=execution_dates["day"],
+                    hour=execution_dates["hour"],
+                    minute=execution_dates["minute"],
+                )
+                scheduler.add_job(
+                    periodic_notification_dispatch,
+                    trigger,
+                    args=[notification["type"], notification["payload"]],
+                )
+
+    scheduler.start()
+
+
 def main():
     define(
         "debug",
@@ -523,8 +554,12 @@ def main():
     # write tornado access log to separate logfile
     hook_tornado_access_log()
 
+    # schedule periodic notifications
+    schedule_periodic_notifications()
+
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour
+    # TODO can also do this using APScheduler since we have to use it now anyways
     tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
 
     # build and start server
