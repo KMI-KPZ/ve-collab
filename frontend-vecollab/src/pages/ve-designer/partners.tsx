@@ -181,7 +181,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         // evaluation: false,
                         institutionalRequirements: false,
                         dataProtection: false,
-                        userDefinedCheckboxes: []
+                        userDefinedAspects: []
                     };
                 }
             });

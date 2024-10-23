@@ -12,7 +12,7 @@ const CheckListPartnerFormSchema = z.object({
     evaluation: z.boolean().optional(),
     institutionalRequirements: z.boolean(),
     dataProtection: z.boolean(),
-    userDefinedCheckboxes:  z
+    userDefinedAspects:  z
         .object({
             label: z.string().max(500, "messages.maxlength500"),
             value: z.boolean(),

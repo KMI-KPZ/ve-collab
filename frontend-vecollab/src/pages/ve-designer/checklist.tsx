@@ -27,8 +27,7 @@ export interface CheckListPartner {
     // evaluation: boolean;
     institutionalRequirements: boolean;
     dataProtection: boolean;
-    // userDefinedCheckboxes: {[key: string]: boolean}
-    userDefinedCheckboxes: {
+    userDefinedAspects: {
         label: string,
         value: boolean
     }[]
@@ -50,7 +49,7 @@ const emptyCheckListPartner: CheckListPartner = {
     // evaluation: false,
     institutionalRequirements: false,
     dataProtection: false,
-    userDefinedCheckboxes: []
+    userDefinedAspects: []
 };
 
 interface Props {
@@ -216,14 +215,14 @@ export default function Checklist({ socket }: Props): JSX.Element {
                     <label className='w-fit truncate font-konnect cursor-pointer py-2 flex items-center'>
                         <input
                             type="checkbox"
-                            {...methods.register(`checklist.${userIdx}.userDefinedCheckboxes.${index}.value`)}
+                            {...methods.register(`checklist.${userIdx}.userDefinedAspects.${index}.value`)}
                             checked={value}
                             className="border border-gray-500 rounded-lg w-4 h-4 p-3 mb-1 mr-4"
                             onChange={(e) => {
                                 updateUserChecklist(userIdx, {
                                     ...usersChecklist[userIdx],
-                                    ...{userDefinedCheckboxes:
-                                        usersChecklist[userIdx].userDefinedCheckboxes.map((a, i) => {
+                                    ...{userDefinedAspects:
+                                        usersChecklist[userIdx].userDefinedAspects.map((a, i) => {
                                             return i == index
                                                 ? {label: a.label, value: !a.value}
                                                 : a
@@ -235,7 +234,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                         {showEdit
                             ? (<input
                                     type="text"
-                                    {...methods.register(`checklist.${userIdx}.userDefinedCheckboxes.${index}.label`)}
+                                    {...methods.register(`checklist.${userIdx}.userDefinedAspects.${index}.label`)}
                                     placeholder={t('checklist.new_userbox_placeholder')}
                                     className="border border-gray-300 rounded-md px-2 py-1 -mt-1 -mb-1 w-fit"
                                     defaultValue={label}
@@ -245,8 +244,8 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                         if (e.target.value !== label) {
                                             updateUserChecklist(userIdx, {
                                                 ...usersChecklist[userIdx],
-                                                ...{userDefinedCheckboxes:
-                                                    usersChecklist[userIdx].userDefinedCheckboxes.map((a, i) => {
+                                                ...{userDefinedAspects:
+                                                    usersChecklist[userIdx].userDefinedAspects.map((a, i) => {
                                                         return i == index
                                                             ? {label: e.target.value, value: a.value}
                                                             : a
@@ -260,7 +259,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                             : <>
                                 <input
                                     type="hidden"
-                                    {...methods.register(`checklist.${userIdx}.userDefinedCheckboxes.${index}.label`)}
+                                    {...methods.register(`checklist.${userIdx}.userDefinedAspects.${index}.label`)}
                                     defaultValue={label}
                                 />
                                 <div className='grow'>
@@ -285,8 +284,8 @@ export default function Checklist({ socket }: Props): JSX.Element {
                     onClick={() => {
                         updateUserChecklist(userIdx, {
                             ...usersChecklist[userIdx],
-                            ...{userDefinedCheckboxes:
-                                usersChecklist[userIdx].userDefinedCheckboxes.filter((a, i) => i !== index)
+                            ...{userDefinedAspects:
+                                usersChecklist[userIdx].userDefinedAspects.filter((a, i) => i !== index)
                             }
                         })
                     }}
@@ -308,9 +307,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
     }
 
     function renderUserDefinedCheckBoxes(userIdx: number): JSX.Element[] {
-        if (!usersChecklist[userIdx].userDefinedCheckboxes) return []
+        if (!usersChecklist[userIdx].userDefinedAspects) return []
 
-        return usersChecklist[userIdx].userDefinedCheckboxes.map((key, i) => (
+        return usersChecklist[userIdx].userDefinedAspects.map((key, i) => (
             <UserDefinedCheckBox
                 key={i}
                 index={i}
@@ -356,9 +355,9 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                 onClick={() => {
                                     updateUserChecklist(index, {
                                         ...userCheckForm,
-                                        ...{userDefinedCheckboxes: !userCheckForm.userDefinedCheckboxes
+                                        ...{userDefinedAspects: !userCheckForm.userDefinedAspects
                                             ? [{label: "", value: false}]
-                                            : [...userCheckForm.userDefinedCheckboxes, {label: "", value: false}]
+                                            : [...userCheckForm.userDefinedAspects, {label: "", value: false}]
                                         }
                                     })
                                 }}
