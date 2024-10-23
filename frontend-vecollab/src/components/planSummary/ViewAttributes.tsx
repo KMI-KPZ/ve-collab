@@ -293,7 +293,7 @@ export default function ViewAttributes({
                                                     </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
-                                                    {showDataOrEmptySign(studyGroup.languages)}
+                                                    {showDataOrEmptySign(studyGroup.languages.join(", "))}
                                                 </div>
                                             </li>
                                         </ul>
