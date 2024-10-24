@@ -17,7 +17,7 @@ const StepNameFormSchema = z
             .gte(0, 'messages.only_positive_number')
             .lte(999, 'messages.realistic_number'),
         learning_goal: z.string().max(5000, 'messages.maxlength5000'),
-        original_plan: z.string().optional()
+        original_plan: z.string().optional().nullable(),
     })
     .refine(
         (data) =>
