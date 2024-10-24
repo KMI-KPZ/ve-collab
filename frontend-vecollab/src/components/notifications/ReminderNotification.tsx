@@ -40,7 +40,7 @@ export default function ReminderNotification({
                                     <p>
                                         Für viele neigt sich das Semester dem Ende und damit auch
                                         die Zeit, Evaluationen durchzuführen. Schau doch jetzt
-                                        nochmal in die <b>Materialien zur Evaluation von VE's</b>!
+                                        nochmal in die <b>Materialien zur Evaluation von VE&apos;s</b>!
                                     </p>
                                 );
                             case 'reminder_good_practise_examples':
