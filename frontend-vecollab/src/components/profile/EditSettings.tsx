@@ -18,6 +18,8 @@ export default function EditVisibilitySettings({
     orcid,
     importOrcidProfile,
 }: Props) {
+
+    /*
     const [visibilities, setVisibilities] = useState({
         veInfo: 'public',
         teaching: 'public',
@@ -45,6 +47,8 @@ export default function EditVisibilitySettings({
     const updateVeWindow = (e: ChangeEvent<HTMLInputElement>) => {
         setVisibilities({ ...visibilities, veWindow: e.target.value });
     };
+    */
+   
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
@@ -122,6 +126,7 @@ export default function EditVisibilitySettings({
                     </table>
                 </div>
             </EditProfileVerticalSpacer>
+            {/*
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Info'} />
                 <EditVisibilityRadioButtons
@@ -170,6 +175,7 @@ export default function EditVisibilitySettings({
                     onChange={updateVeWindow}
                 />
             </EditProfileVerticalSpacer>
+            */}
             <EditProfileVerticalSpacer>
                 <div className="p-2 rounded-xl border border-red-600">
                     <EditProfileHeadline name={'Ausschluss vom Matching'} />

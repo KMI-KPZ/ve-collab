@@ -182,8 +182,8 @@ export default function HeaderSection({
                                     options={[
                                         {
                                             value: 'profil',
-                                            label: 'Profil bearbeiten',
-                                            title: 'Eigenes Profil bearbeiten',
+                                            label: 'mein Profil',
+                                            title: 'Eigenes Profil öffnen',
                                         },
                                         // Object.assign({}, isGlobalAdmin
                                         //     ? {
@@ -319,7 +319,7 @@ export default function HeaderSection({
                                 Benachrichtigungen
                             </button>
                             {notificationEvents.length > 0 && (
-                                <span className="absolute top-0 right-0 py-1 px-2 rounded-[50%] bg-blue-500/75  font-semibold font-semibold">
+                                <span className="absolute top-0 right-0 py-1 px-2 rounded-[50%] bg-blue-500/75 font-semibold">
                                     {notificationEvents.length}
                                 </span>
                             )}
