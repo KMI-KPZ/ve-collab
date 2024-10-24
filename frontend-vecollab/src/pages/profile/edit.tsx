@@ -18,7 +18,7 @@ import {
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
+import EditSettings from '@/components/profile/EditSettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
@@ -336,8 +336,8 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Sichtbarkeiten">
-                                    <EditVisibilitySettings
+                                <div tabname="Einstellungen">
+                                    <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}

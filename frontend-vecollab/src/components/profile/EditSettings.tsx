@@ -49,6 +49,80 @@ export default function EditVisibilitySettings({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
+                <EditProfileHeadline name={'Benachrichtigungen'} />
+                <div className="my-4 border border-slate-300 rounded-xl overflow-hidden">
+                    <table className="table-auto w-full border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-300 bg-slate-100">
+                                <th></th>
+                                <th className="text-center p-4 font-medium">E-Mail & Push</th>
+                                <th className="text-center p-4 font-medium">Push</th>
+                                <th className="text-center p-4 font-medium">keine</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-b border-slate-300">
+                                <td className="p-4">Neue Nachrichten</td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="newMessages" value="emailPush" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="newMessages" value="push" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="newMessages" value="none" />
+                                </td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                                <td className="p-4">VE-Einladung</td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="veInvite" value="emailPush" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="veInvite" value="push" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="veInvite" value="none" />
+                                </td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                                <td className="p-4">Gruppen-Einladung</td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="groupInvite" value="emailPush" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="groupInvite" value="push" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="groupInvite" value="none" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="p-4">Systembenachrichtigungen</td>
+                                <td className="text-center p-4">
+                                    <input
+                                        type="radio"
+                                        name="systemNotifications"
+                                        value="emailPush"
+                                    />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input type="radio" name="systemNotifications" value="push" />
+                                </td>
+                                <td className="text-center p-4">
+                                    <input
+                                        type="radio"
+                                        name="systemNotifications"
+                                        value="none"
+                                        disabled
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </EditProfileVerticalSpacer>
+            <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'VE-Info'} />
                 <EditVisibilityRadioButtons
                     name={'veInfo'}
