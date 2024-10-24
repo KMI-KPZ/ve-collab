@@ -183,6 +183,8 @@
   "type": "Typ",
   "show_all": "Alles anzeigen",
   "show_less": "Weniger anzeigen",
+  "loading": "lädt",
+  "nothing_found": "nichts gefunden",
   "languages": {
     "Afrikaans": "Afrikaans",
     "Albanian": "Albanisch",
