@@ -493,6 +493,7 @@ def schedule_periodic_notifications():
 
     with open("assets/periodic_notifications.json", "r") as fp:
         periodic_notifications = json.load(fp)["periodic_notifications"]
+        
         for notification in periodic_notifications:
             for execution_dates in notification["triggers"]:
                 trigger = CronTrigger(

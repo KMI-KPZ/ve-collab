@@ -8,6 +8,7 @@ import VeInvitationNotification from '@/components/notifications/VeInvitationNot
 import VeInvitationReplyNotification from '@/components/notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
+import ReminderNotification from './ReminderNotification';
 
 interface Props {
     socket: Socket;
@@ -42,9 +43,14 @@ export default function NotificationsWindow({
     }
 
     return (
-        <div className='absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border' >
+        <div className="absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border">
             <div className="absolute -top-[16px] -left-[16px]">
-                <button onClick={e => toggleNotifWindow()} className="bg-white rounded-full shadow p-2 hover:bg-slate-50"><MdClose size={20} /></button>
+                <button
+                    onClick={(e) => toggleNotifWindow()}
+                    className="bg-white rounded-full shadow p-2 hover:bg-slate-50"
+                >
+                    <MdClose size={20} />
+                </button>
             </div>
 
             <div className="h-[60vh] min-h-[16rem] overflow-y-auto content-scrollbar text-sm">
@@ -82,6 +88,19 @@ export default function NotificationsWindow({
                                     )}
                                     {notification.type === 'space_join_request' && (
                                         <GroupJoinRequestNotification
+                                            notification={notification}
+                                            acknowledgeNotificationCallback={
+                                                acknowledgeNotification
+                                            }
+                                            removeNotificationCallback={removeNotificationFromList}
+                                        />
+                                    )}
+                                    {[
+                                        'reminder_evaluation',
+                                        'reminder_good_practise_examples',
+                                        'reminder_icebreaker',
+                                    ].includes(notification.type) && (
+                                        <ReminderNotification
                                             notification={notification}
                                             acknowledgeNotificationCallback={
                                                 acknowledgeNotification
