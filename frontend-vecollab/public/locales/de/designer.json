@@ -205,7 +205,9 @@
         "institutionalRequirements_title": "Institutionelle Vorgaben",
         "institutionalRequirements_descr": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
         "dataProtection_title": "Datenschutz",
-        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
+        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes.",
+        "add_userdefined_title": "Benutzerdefinierten Aspekt hinzufügen",
+        "new_userbox_placeholder": "Bezeichnung ..."
     },
     "step-names" : {
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",

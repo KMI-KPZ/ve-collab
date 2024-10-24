@@ -511,7 +511,7 @@ class VEPlanResource:
                     # ensure that any other values are of type bool or None
                     for attr, value in checklist_item.items():
                         if attr != "username":
-                            if not isinstance(value, (bool, type(None))):
+                            if not isinstance(value, (bool, type(None), list)):
                                 raise TypeError(
                                     "expected type 'bool|None' for attribute 'formalitites[{}]', got {} instead".format(
                                         attr, type(value)
@@ -686,7 +686,7 @@ class VEPlanResource:
         file_id: str | ObjectId,
         requesting_username: str = None,
     ) -> None:
-        """ 
+        """
         Remove the evaluation file from its plan (and gridfs) by specifying the plan's _id
         and the file's _id.
 
@@ -788,15 +788,15 @@ class VEPlanResource:
         )
 
         return _id
-    
+
     def remove_literature_file(
         self,
         plan_id: str | ObjectId,
         file_id: str | ObjectId,
         requesting_username: str = None,
     ) -> None:
-        """ 
-        Remove one literature file from the list in its plan (and gridfs) by specifying 
+        """
+        Remove one literature file from the list in its plan (and gridfs) by specifying
         the plan's _id and the file's _id.
 
         If the `requesting_username` is not None, sanity checks will be applied, i.e.
