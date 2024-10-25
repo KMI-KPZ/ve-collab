@@ -29,7 +29,7 @@ export default function BackgroundAnimation({ className }: IBackgroundAnimationP
                 "image": "url('/images/BG_Frontpage.png')"
 
             },
-            fpsLimit: 120,
+            fpsLimit:15,
             interactivity: {
                 events: {
                     onClick: {
