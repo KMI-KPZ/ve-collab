@@ -24,12 +24,11 @@ export default function BackgroundAnimation({ className }: IBackgroundAnimationP
 
     const options: ISourceOptions = useMemo(
         () => ({
-            /* // if not set -> transparent background
+            // if not set -> transparent background
             background: {
-                color: {
-                    value: '#FFFFFF',
-                },
-            },*/
+                "image": "url('/images/BG_Frontpage.png')"
+
+            },
             fpsLimit: 120,
             interactivity: {
                 events: {
@@ -54,13 +53,12 @@ export default function BackgroundAnimation({ className }: IBackgroundAnimationP
             },
             particles: {
                 color: {
-                    value: '#00748f',
+                    value: '#93d1e0',
                 },
                 links: {
-                    color: '#00748f',
+                    color: '#93d1e0',
                     distance: 150,
                     enable: true,
-                    opacity: 0.5,
                     width: 1,
                 },
                 move: {
@@ -78,9 +76,6 @@ export default function BackgroundAnimation({ className }: IBackgroundAnimationP
                         enable: true,
                     },
                     value: 80,
-                },
-                opacity: {
-                    value: 0.5,
                 },
                 shape: {
                     type: 'circle',
