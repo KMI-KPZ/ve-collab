@@ -8,7 +8,8 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "typescript": "tsc --noEmit"
+        "typescript": "tsc --noEmit",
+        "postbuild": "next-sitemap"
     },
     "dependencies": {
         "@emoji-mart/data": "^1.1.2",
