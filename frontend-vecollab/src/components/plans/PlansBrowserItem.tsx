@@ -11,7 +11,6 @@ import {
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { MdShare, MdDelete, MdEdit, MdOutlineCopyAll, MdOutlineFileDownload } from 'react-icons/md';
-import { GrStatusGood } from 'react-icons/gr';
 import Timestamp from '../common/Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -20,7 +19,7 @@ import { PlanSummary } from '../planSummary/PlanSummary';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import Alert, { AlertState } from '../common/dialogs/Alert';
 import { useRouter } from 'next/router';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaMedal } from 'react-icons/fa';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
@@ -93,12 +92,12 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             title={t('plans_share_dialog_title')}
             onClose={handleCloseShareDialog}
         >
-            <div className="w-getStepsToProgress[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+            <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
                     <div tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
-                            planId={plan._id}
+                            plan={plan}
                             setAlert={setAlert}
                         />
                     </div>
@@ -335,8 +334,8 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                         </Link>
                     </div>
                     {plan.is_good_practise && (
-                        <div className="mr-2 text-slate-700">
-                            <GrStatusGood title={t('plans_marked_as_good_practise')} />
+                        <div className="mx-2 text-ve-collab-blue">
+                            <FaMedal title={t('plans_marked_as_good_practise')} />
                         </div>
                     )}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">

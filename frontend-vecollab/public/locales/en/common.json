@@ -183,6 +183,8 @@
   "type": "Type",
   "show_all": "Show all",
   "show_less": "Show less",
+  "loading": "loading",
+  "nothing_found": "nothing found",
   "languages": {
     "Afrikaans": "Afrikaans",
     "Albanian": "Albanian",
