@@ -2597,10 +2597,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                 }
             ],
             "notification_settings": {
-                "messages": "email",
-                "ve_invite": "email",
-                "group_invite": "email",
-                "system": "email",
+                "messages": "push",
+                "ve_invite": "push",
+                "group_invite": "push",
+                "system": "push",
             },
         }
 
@@ -2656,7 +2656,10 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["work_experience"], self.default_profile["work_experience"]
         )
         self.assertEqual(profile["ve_window"], self.default_profile["ve_window"])
-        self.assertEqual(profile["notification_settings"], self.default_profile["notification_settings"])
+        self.assertEqual(
+            profile["notification_settings"],
+            self.default_profile["notification_settings"],
+        )
 
         # test again, but specify a projection of only first_name, last_name and expertise
         profile = profile_manager.get_profile(
@@ -2794,12 +2797,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
-        self.assertEqual(profile["notification_settings"], {
-            "messages": "email",
-            "ve_invite": "email",
-            "group_invite": "email",
-            "system": "email",
-        })
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2855,12 +2861,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
-        self.assertEqual(profile["notification_settings"], {
-            "messages": "email",
-            "ve_invite": "email",
-            "group_invite": "email",
-            "system": "email",
-        })
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2916,12 +2925,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["educations"], [])
         self.assertEqual(result["work_experience"], [])
         self.assertEqual(result["ve_window"], [])
-        self.assertEqual(result["notification_settings"], {
-            "messages": "email",
-            "ve_invite": "email",
-            "group_invite": "email",
-            "system": "email",
-        })
+        self.assertEqual(
+            result["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3157,12 +3169,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
-        self.assertEqual(profile["notification_settings"], {
-            "messages": "email",
-            "ve_invite": "email",
-            "group_invite": "email",
-            "system": "email",
-        })
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(
@@ -3434,6 +3449,58 @@ class ProfileResourceTest(BaseResourceTestCase):
         result2 = self.db.profiles.find_one({"username": "test1"})
         self.assertEqual(len(result2["ve_window"]), 1)
         self.assertIn(profile1["ve_window"][0], result2["ve_window"])
+
+    def test_get_notification_setting(self):
+        """
+        expect: successfully retrieve a single notification setting
+        """
+
+        profile_manager = Profiles(self.db)
+        notification_setting = profile_manager.get_notification_setting(
+            CURRENT_ADMIN.username, "messages"
+        )
+        self.assertEqual(
+            notification_setting,
+            self.default_profile["notification_settings"]["messages"],
+        )
+
+    def test_get_notification_setting_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_notification_setting,
+            "non_existing",
+            "messages",
+        )
+
+    def test_get_notification_settings(self):
+        """
+        expect: successfully retrieve all notification settings
+        """
+
+        profile_manager = Profiles(self.db)
+        notification_settings = profile_manager.get_all_notification_settings(
+            CURRENT_ADMIN.username
+        )
+        self.assertEqual(
+            notification_settings, self.default_profile["notification_settings"]
+        )
+
+    def test_get_notification_settings_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_all_notification_settings,
+            "non_existing",
+        )
 
 
 class SpaceResourceTest(BaseResourceTestCase):

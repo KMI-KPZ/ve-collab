@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 from bson import ObjectId
 
 import gridfs
@@ -657,3 +657,38 @@ class Profiles:
             {"ve_window.plan_id": plan_id},
             {"$pull": {"ve_window": {"plan_id": plan_id}}},
         )
+
+    def get_notification_setting(
+        self,
+        username: str,
+        setting: Literal["messages", "ve_invite", "group_invite", "system"],
+    ) -> str:
+        """
+        Returns the notification setting for the given user and the specified setting.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+
+        try:
+            result = self.get_profile(
+                username, projection={"notification_settings": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        return result["notification_settings"][setting]
+
+    def get_all_notification_settings(self, username) -> Dict:
+        """
+        Returns all notification settings for the given user.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+        try:
+            result = self.get_profile(
+                username, projection={"notification_settings": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        return result["notification_settings"]

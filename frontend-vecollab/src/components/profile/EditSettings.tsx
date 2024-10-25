@@ -104,8 +104,7 @@ export default function EditVisibilitySettings({
                                         type="radio"
                                         name="newMessages"
                                         value="none"
-                                        checked={notificationSettings.messages === 'none'}
-                                        onChange={(e) => updateNotificationSettings('messages', e)}
+                                        disabled
                                     />
                                 </td>
                             </tr>

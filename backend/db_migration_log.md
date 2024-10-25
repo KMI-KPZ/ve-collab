@@ -183,3 +183,24 @@ feedback_tweaks
 
 #### letzte Änderung
 21.10.24 14:30
+
+---
+
+#### Kurzfassung
+db.profiles.notification_settings neu
+
+#### branch
+periodic_notifications
+
+#### Beschreibung
+- Attribt `notification_settings` ist neu in jedem profile. Datentype `dict`
+- Struktur:
+    {
+        "messages": "none|push|email",
+        "ve_invite": "none|push|email",
+        "group_invite": "none|push|email",
+        "system": "none|push|email",
+    }
+
+#### letzte Änderung
+25.10.24 14:00

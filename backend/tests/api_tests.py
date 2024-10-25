@@ -222,6 +222,12 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "educations": [],
                 "work_experience": [],
                 "ve_window": [],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -255,6 +261,12 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "educations": [],
                 "work_experience": [],
                 "ve_window": [],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
             },
         }
 
@@ -8848,7 +8860,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["target_groups"][0]["languages"], ["test", "updated_languages"])
+        self.assertEqual(
+            db_state["target_groups"][0]["languages"], ["test", "updated_languages"]
+        )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert

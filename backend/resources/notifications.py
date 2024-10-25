@@ -3,11 +3,15 @@ from typing import Dict, List
 
 from bson import ObjectId
 from bson.errors import InvalidId
+import logging
 from pymongo.database import Database
 
 from exceptions import NotificationDoesntExistError
 import global_vars
+from resources.network.profile import Profiles
 import util
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationResource:
@@ -23,6 +27,22 @@ class NotificationResource:
     def __init__(self, db: Database) -> None:
         self.db = db
 
+        self.allowed_notification_types = [
+            "space_join_request",
+            "space_invitation",
+            "ve_invitation",
+            "ve_invitation_reply",
+        ]
+
+        # mapping of notification types to the profile settings
+        # that have to be obeyed
+        self.notification_type_setting_mapper = {
+            "space_join_request": "group_invite",
+            "space_invitation": "group_invite",
+            "ve_invitation": "ve_invite",
+            "ve_invitation_reply": "ve_invite",
+        }
+
     async def send_notification(
         self, recipient: str, notification_type: str, payload: Dict
     ) -> None:
@@ -31,10 +51,15 @@ class NotificationResource:
         by specifying the `notification_type` and the `payload` that
         represents the body of the notification.
 
-        Both type and payload can be an arbitrary str, respectively an arbitrary dict,
+        These notifications obey the rules the recipient user has set in their profile,
+        i.e. if they want to receive notifications of this type via email and push, push only
+        or not at all.
+
+        Payload can be an arbitrary str, respectively an arbitrary dict,
         as long as the recipient is able the understand the content and react
         accordingly. The notification feature itself does not enforce any format or content.
 
+        If the user has complied to push notifications:
         If the recipient user is currently "online" (i.e. has an open and authenticated
         socket connection) the notification is dispatched immediately via the socketio event
         "notification". Otherwise the notification is held back until the user is online
@@ -42,9 +67,48 @@ class NotificationResource:
         will be sent (see `handlers.socket_io.authenticate` for further information).
 
         Notifications are expected to be acknowledged by the recipients, otherwise
-        they will always be re-sent. See details in
+        they will always be re-sent (only applicable to push-notifications). See details in
         `handlers.socket_io.acknowledge_notification` on how to send appropriate
         acknowledgements to notifications.
+
+        Returns nothing.
+
+        Raises `ValueError` if the `notification_type` is not allowed.
+        """
+
+        # check if the notification type is allowed
+        if notification_type not in self.allowed_notification_types:
+            raise ValueError(
+                "Notification type '{}' is not allowed.Allowed types are: {}".format(
+                    notification_type, self.allowed_notification_types
+                )
+            )
+
+        # determin user settings for notifications
+        profile_manager = Profiles(self.db)
+        notification_setting = profile_manager.get_notification_setting(
+            recipient, self.notification_type_setting_mapper[notification_type]
+        )
+
+        
+        # user doesn't want to receive any notifications of this type
+        if notification_setting == "none":
+            return
+        # user wants to receive notifications of this type via push only
+        elif notification_setting == "push":
+            await self._notify_push(recipient, notification_type, payload)
+        # user wants to receive notifications of this type via email and push
+        elif notification_setting == "email":
+            await self._notify_push(recipient, notification_type, payload)
+            try:
+                self._notify_email(recipient, notification_type, payload)
+            except Exception as e:
+                logger.error(e)
+
+    async def _notify_push(self, recipient: str, notification_type: str, payload: Dict) -> None:
+        """
+        helper function to dispatch a notification to the user given as `recipient` (username)
+        via the internal platform push notification system.
         """
 
         notification_payload = {
@@ -78,6 +142,18 @@ class NotificationResource:
         # responsible event handler
         self.db.notifications.insert_one(notification_payload)
 
+    def _notify_email(self, recipient: str, notification_type: str, payload: Dict) -> None:
+        """
+        helper function to dispatch a notification to the user given as `recipient` (username)
+        via email
+        """
+
+        user_id = global_vars.keycloak_admin.get_user_id(recipient)
+        email = global_vars.keycloak_admin.get_user(user_id)["email"]
+
+        # TODO implement email templates, for now just send the stringified payload
+        util.send_email(email, notification_type, str(payload))
+
     async def bulk_send_notifications(
         self, notification_type: str, payload: Dict
     ) -> None:
@@ -106,8 +182,7 @@ class NotificationResource:
         from handlers.socket_io import emit_event, get_sid_of_user, recipient_online
 
         all_users = [
-            user["username"]
-            for user in global_vars.keycloak_admin.get_users()
+            user["username"] for user in global_vars.keycloak_admin.get_users()
         ]
 
         for recipient in all_users:
