@@ -44,11 +44,6 @@ const StepNameFormSchema = z
                 message: 'messages.start_date_before_end_date',
                 path: ['timestamp_from'],
             });
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'messages.start_date_before_end_date',
-                path: ['timestamp_to'],
-            });
         }
     });
 
