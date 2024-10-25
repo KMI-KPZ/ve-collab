@@ -2596,6 +2596,12 @@ class ProfileResourceTest(BaseResourceTestCase):
                     "description": "test",
                 }
             ],
+            "notification_settings": {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
         }
 
     def test_get_profile(self):
@@ -2650,6 +2656,7 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["work_experience"], self.default_profile["work_experience"]
         )
         self.assertEqual(profile["ve_window"], self.default_profile["ve_window"])
+        self.assertEqual(profile["notification_settings"], self.default_profile["notification_settings"])
 
         # test again, but specify a projection of only first_name, last_name and expertise
         profile = profile_manager.get_profile(
@@ -2686,6 +2693,7 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("educations", profile)
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
+        self.assertNotIn("notification_settings", profile)
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
         self.assertEqual(profile["expertise"], self.default_profile["expertise"])
@@ -2786,6 +2794,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(profile["notification_settings"], {
+            "messages": "email",
+            "ve_invite": "email",
+            "group_invite": "email",
+            "system": "email",
+        })
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2841,6 +2855,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(profile["notification_settings"], {
+            "messages": "email",
+            "ve_invite": "email",
+            "group_invite": "email",
+            "system": "email",
+        })
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2896,6 +2916,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["educations"], [])
         self.assertEqual(result["work_experience"], [])
         self.assertEqual(result["ve_window"], [])
+        self.assertEqual(result["notification_settings"], {
+            "messages": "email",
+            "ve_invite": "email",
+            "group_invite": "email",
+            "system": "email",
+        })
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3131,6 +3157,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(profile["notification_settings"], {
+            "messages": "email",
+            "ve_invite": "email",
+            "group_invite": "email",
+            "system": "email",
+        })
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(

@@ -3,10 +3,13 @@ import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
 import EditVisibilityRadioButtons from './EditVisibilityRadioButtons';
+import { NotificationSettings } from '@/interfaces/profile/profileInterfaces';
 
 interface Props {
     excludedFromMatching: boolean;
     setExcludedFromMatching: Dispatch<SetStateAction<boolean>>;
+    notificationSettings: NotificationSettings;
+    setNotificationSettings: Dispatch<SetStateAction<NotificationSettings>>;
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
@@ -14,11 +17,12 @@ interface Props {
 export default function EditVisibilitySettings({
     excludedFromMatching,
     setExcludedFromMatching,
+    notificationSettings,
+    setNotificationSettings,
     updateProfileData,
     orcid,
     importOrcidProfile,
 }: Props) {
-
     /*
     const [visibilities, setVisibilities] = useState({
         veInfo: 'public',
@@ -48,7 +52,17 @@ export default function EditVisibilitySettings({
         setVisibilities({ ...visibilities, veWindow: e.target.value });
     };
     */
-   
+
+    const updateNotificationSettings = (
+        setting: keyof NotificationSettings,
+        e: ChangeEvent<HTMLInputElement>
+    ) => {
+        setNotificationSettings({
+            ...notificationSettings,
+            [setting]: e.target.value,
+        });
+    };
+
     return (
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
@@ -68,37 +82,97 @@ export default function EditVisibilitySettings({
                             <tr className="border-b border-slate-300">
                                 <td className="p-4">Neue Nachrichten</td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="newMessages" value="emailPush" />
+                                    <input
+                                        type="radio"
+                                        name="newMessages"
+                                        value="email"
+                                        checked={notificationSettings.messages === 'email'}
+                                        onChange={(e) => updateNotificationSettings('messages', e)}
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="newMessages" value="push" />
+                                    <input
+                                        type="radio"
+                                        name="newMessages"
+                                        value="push"
+                                        checked={notificationSettings.messages === 'push'}
+                                        onChange={(e) => updateNotificationSettings('messages', e)}
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="newMessages" value="none" />
+                                    <input
+                                        type="radio"
+                                        name="newMessages"
+                                        value="none"
+                                        checked={notificationSettings.messages === 'none'}
+                                        onChange={(e) => updateNotificationSettings('messages', e)}
+                                    />
                                 </td>
                             </tr>
                             <tr className="border-b border-slate-300">
                                 <td className="p-4">VE-Einladung</td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="veInvite" value="emailPush" />
+                                    <input
+                                        type="radio"
+                                        name="veInvite"
+                                        value="email"
+                                        checked={notificationSettings.ve_invite === 'email'}
+                                        onChange={(e) => updateNotificationSettings('ve_invite', e)}
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="veInvite" value="push" />
+                                    <input
+                                        type="radio"
+                                        name="veInvite"
+                                        value="push"
+                                        checked={notificationSettings.ve_invite === 'push'}
+                                        onChange={(e) => updateNotificationSettings('ve_invite', e)}
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="veInvite" value="none" />
+                                    <input
+                                        type="radio"
+                                        name="veInvite"
+                                        value="none"
+                                        checked={notificationSettings.ve_invite === 'none'}
+                                        onChange={(e) => updateNotificationSettings('ve_invite', e)}
+                                    />
                                 </td>
                             </tr>
                             <tr className="border-b border-slate-300">
                                 <td className="p-4">Gruppen-Einladung</td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="groupInvite" value="emailPush" />
+                                    <input
+                                        type="radio"
+                                        name="groupInvite"
+                                        value="email"
+                                        checked={notificationSettings.group_invite === 'email'}
+                                        onChange={(e) =>
+                                            updateNotificationSettings('group_invite', e)
+                                        }
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="groupInvite" value="push" />
+                                    <input
+                                        type="radio"
+                                        name="groupInvite"
+                                        value="push"
+                                        checked={notificationSettings.group_invite === 'push'}
+                                        onChange={(e) =>
+                                            updateNotificationSettings('group_invite', e)
+                                        }
+                                    />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="groupInvite" value="none" />
+                                    <input
+                                        type="radio"
+                                        name="groupInvite"
+                                        value="none"
+                                        checked={notificationSettings.group_invite === 'none'}
+                                        onChange={(e) =>
+                                            updateNotificationSettings('group_invite', e)
+                                        }
+                                    />
                                 </td>
                             </tr>
                             <tr>
@@ -107,11 +181,19 @@ export default function EditVisibilitySettings({
                                     <input
                                         type="radio"
                                         name="systemNotifications"
-                                        value="emailPush"
+                                        value="email"
+                                        checked={notificationSettings.system === 'email'}
+                                        onChange={(e) => updateNotificationSettings('system', e)}
                                     />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input type="radio" name="systemNotifications" value="push" />
+                                    <input
+                                        type="radio"
+                                        name="systemNotifications"
+                                        value="push"
+                                        checked={notificationSettings.system === 'push'}
+                                        onChange={(e) => updateNotificationSettings('system', e)}
+                                    />
                                 </td>
                                 <td className="text-center p-4">
                                     <input

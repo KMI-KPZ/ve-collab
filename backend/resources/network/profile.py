@@ -53,6 +53,7 @@ class Profiles:
             "educations": list,
             "work_experience": list,
             "ve_window": list,
+            "notification_settings": dict,
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
@@ -142,6 +143,12 @@ class Profiles:
             "educations": [],
             "work_experience": [],
             "ve_window": [],
+            "notification_settings": {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -201,6 +208,12 @@ class Profiles:
             "educations": [],
             "work_experience": [],
             "ve_window": [],
+            "notification_settings": {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -597,7 +610,7 @@ class Profiles:
         # refactor the institutions: only keep the name of the chosen institution as
         # "institution" and discard "institutions" and "chosen_institution_id"
         for profile in profiles:
-            profile["institution"] = "" # default empty string
+            profile["institution"] = ""  # default empty string
             for institution in profile["institutions"]:
                 if institution["_id"] == profile["chosen_institution_id"]:
                     profile["institution"] = institution["name"]
