@@ -58,8 +58,8 @@ export default function Sidebar({
         const userDefinedSteps = plan.steps.map((step) => {
             return {
                 text: step.name,
-                id: encodeURI(step.name),
-                link: `/ve-designer/step-data/${encodeURIComponent(step.name)}`,
+                id: step._id!,
+                link: `/ve-designer/step/${step._id}`,
             };
         });
         if (!userDefinedSteps.length) return;

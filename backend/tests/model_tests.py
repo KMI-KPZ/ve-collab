@@ -677,7 +677,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.age_max, None)
         self.assertEqual(target_group.experience, None)
         self.assertEqual(target_group.academic_course, None)
-        self.assertEqual(target_group.languages, None)
+        self.assertEqual(target_group.languages, [])
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_init(self):
@@ -693,7 +693,7 @@ class TargetGroupModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
         self.assertEqual(target_group.name, "test")
@@ -701,45 +701,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group.age_max, 40)
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
-        self.assertEqual(target_group._id, _id)
-
-        _id = ObjectId()
-        target_group = TargetGroup(
-            _id=_id,
-            name="test",
-            age_min="30",
-            age_max="40",
-            experience="test",
-            academic_course="test",
-            languages="test",
-        )
-
-        self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
-        self.assertEqual(target_group.experience, "test")
-        self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
-        self.assertEqual(target_group._id, _id)
-
-        _id = ObjectId()
-        target_group = TargetGroup(
-            _id=_id,
-            name="test",
-            age_min=30,
-            age_max=40,
-            experience="test",
-            academic_course="test",
-            languages="test",
-        )
-
-        self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
-        self.assertEqual(target_group.experience, "test")
-        self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
+        self.assertEqual(target_group.languages, ["test"])
         self.assertEqual(target_group._id, _id)
 
         # test again without supplying a _id
@@ -750,14 +712,14 @@ class TargetGroupModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
         self.assertEqual(target_group.name, "test")
         self.assertEqual(target_group.age_min, 30)
         self.assertEqual(target_group.age_max, 40)
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
-        self.assertEqual(target_group.languages, "test")
+        self.assertEqual(target_group.languages, ["test"])
         self.assertIsInstance(target_group._id, ObjectId)
 
     def test_to_dict(self):
@@ -783,9 +745,9 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["age_max"], None)
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
-        self.assertEqual(target_group_dict["languages"], None)
+        self.assertEqual(target_group_dict["languages"], [])
 
-        target_group = TargetGroup(age_min=10, age_max=20)
+        target_group = TargetGroup(age_min=10, age_max=20, languages=["test"])
         target_group_dict = target_group.to_dict()
 
         self.assertIsInstance(target_group_dict, dict)
@@ -802,7 +764,7 @@ class TargetGroupModelTest(TestCase):
         self.assertEqual(target_group_dict["age_max"], "20")
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
-        self.assertEqual(target_group_dict["languages"], None)
+        self.assertEqual(target_group_dict["languages"], ["test"])
 
     def test_from_dict(self):
         """
@@ -817,7 +779,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -841,7 +803,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": "20",
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -864,7 +826,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         target_group = TargetGroup.from_dict(target_group_dict.copy())
@@ -918,7 +880,7 @@ class TargetGroupModelTest(TestCase):
             "age_max": 20,
             "experience": "test",
             "academic_course": "test",
-            "languages": "test",
+            "languages": ["test"],
         }
 
         # try out each attribute with a wrong type and expect ValueErrors
@@ -946,9 +908,9 @@ class TargetGroupModelTest(TestCase):
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["academic_course"] = "test"
 
-        target_group_dict["languages"] = 1
-        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["languages"] = "test"
+        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
+        target_group_dict["languages"] = ["test"]
 
 
 class InstitutionModelTest(TestCase):
@@ -1463,6 +1425,7 @@ class EvaluationModelTest(TestCase):
         self.assertFalse(evaluation.is_graded)
         self.assertIsNone(evaluation.task_type)
         self.assertIsNone(evaluation.assessment_type)
+        self.assertIsNone(evaluation.evaluation_before)
         self.assertIsNone(evaluation.evaluation_while)
         self.assertIsNone(evaluation.evaluation_after)
 
@@ -1478,6 +1441,7 @@ class EvaluationModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         )
@@ -1487,6 +1451,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, "test")
         self.assertEqual(evaluation.assessment_type, "test")
+        self.assertEqual(evaluation.evaluation_before, "test")
         self.assertEqual(evaluation.evaluation_while, "test")
         self.assertEqual(evaluation.evaluation_after, "test")
 
@@ -1503,6 +1468,7 @@ class EvaluationModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         ).to_dict()
@@ -1512,6 +1478,7 @@ class EvaluationModelTest(TestCase):
         self.assertIn("is_graded", evaluation)
         self.assertIn("task_type", evaluation)
         self.assertIn("assessment_type", evaluation)
+        self.assertIn("evaluation_before", evaluation)
         self.assertIn("evaluation_while", evaluation)
         self.assertIn("evaluation_after", evaluation)
         self.assertEqual(evaluation["_id"], _id)
@@ -1519,6 +1486,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation["is_graded"])
         self.assertEqual(evaluation["task_type"], "test")
         self.assertEqual(evaluation["assessment_type"], "test")
+        self.assertEqual(evaluation["evaluation_before"], "test")
         self.assertEqual(evaluation["evaluation_while"], "test")
         self.assertEqual(evaluation["evaluation_after"], "test")
 
@@ -1534,6 +1502,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1545,6 +1514,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, params["task_type"])
         self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_before, params["evaluation_before"])
         self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
         self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
 
@@ -1554,6 +1524,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1565,6 +1536,7 @@ class EvaluationModelTest(TestCase):
         self.assertTrue(evaluation.is_graded)
         self.assertEqual(evaluation.task_type, params["task_type"])
         self.assertEqual(evaluation.assessment_type, params["assessment_type"])
+        self.assertEqual(evaluation.evaluation_before, params["evaluation_before"])
         self.assertEqual(evaluation.evaluation_while, params["evaluation_while"])
         self.assertEqual(evaluation.evaluation_after, params["evaluation_after"])
 
@@ -1588,6 +1560,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
         }
 
@@ -1604,6 +1577,7 @@ class EvaluationModelTest(TestCase):
             "is_graded": True,
             "task_type": "test",
             "assessment_type": "test",
+            "evaluation_before": "test",
             "evaluation_while": "test",
             "evaluation_after": "test",
         }
@@ -1623,6 +1597,10 @@ class EvaluationModelTest(TestCase):
         params["assessment_type"] = list()
         self.assertRaises(TypeError, Evaluation.from_dict, params)
         params["assessment_type"] = "test"
+
+        params["evaluation_before"] = list()
+        self.assertRaises(TypeError, Evaluation.from_dict, params)
+        params["evaluation_before"] = "test"
 
         params["evaluation_while"] = list()
         self.assertRaises(TypeError, Evaluation.from_dict, params)
@@ -1688,7 +1666,7 @@ class VEPlanModelTest(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -1736,6 +1714,7 @@ class VEPlanModelTest(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         )
@@ -2259,6 +2238,7 @@ class VEPlanModelTest(TestCase):
                     "is_graded": evaluation.is_graded,
                     "task_type": evaluation.task_type,
                     "assessment_type": evaluation.assessment_type,
+                    "evaluation_before": evaluation.evaluation_before,
                     "evaluation_while": evaluation.evaluation_while,
                     "evaluation_after": evaluation.evaluation_after,
                 }
@@ -2411,6 +2391,7 @@ class VEPlanModelTest(TestCase):
                     "is_graded": evaluation.is_graded,
                     "task_type": evaluation.task_type,
                     "assessment_type": evaluation.assessment_type,
+                    "evaluation_before": evaluation.evaluation_before,
                     "evaluation_while": evaluation.evaluation_while,
                     "evaluation_after": evaluation.evaluation_after,
                 }

@@ -3,11 +3,11 @@ import { z } from 'zod';
 const InstitutionFormSchema = z.object({
     name: z
         .string()
-        .max(200, "messages.maxlength200")
+        .max(1000, "messages.maxlength1000")
         .optional(),
-    school_type: z.string().max(200, "messages.maxlength200").optional(),
-    country: z.string().max(200, "messages.maxlength200").optional(),
-    department: z.string().max(200, "messages.maxlength200").optional(),
+    school_type: z.string().max(1000, "messages.maxlength1000").optional(),
+    country: z.string().max(1000, "messages.maxlength1000").optional(),
+    department: z.string().max(1000, "messages.maxlength1000").optional(),
 });
 
 export const InstitutionsFormSchema = z.object({

@@ -1,5 +1,6 @@
  {
     "messages": {
+        "maxlength5000": "Das Feld darf nicht mehr als 5000 Buchstaben enthalten.",
         "maxlength1000": "Das Feld darf nicht mehr als 1000 Buchstaben enthalten.",
         "maxlength800": "Das Feld darf nicht mehr als 800 Buchstaben enthalten.",
         "maxlength500": "Das Feld darf nicht mehr als 500 Buchstaben enthalten.",
@@ -108,7 +109,7 @@
         "degree": "Studiengang",
         "degree_placeholder": "Studiengang eingeben, mehrere durch Komma trennen",
         "languages": "Sprachen",
-        "languages_placeholder": "Sprachen eingeben, mehrere durch Komma trennen"
+        "languages_placeholder": "Sprachen auswählen oder neue durch Tippen hinzufügen"
     },
     "goals": {
         "title": "Lernziele & Themen",
@@ -173,6 +174,8 @@
         "typeOf": "Art der Bewertung",
         "typeOfPlaceholder": "z.B. benotet, unbenotet",
         "howTo": "Wie erfolgt die Evaluation des VE?",
+        "before": "vor dem VE",
+        "beforePlaceholder": "z. B. Pretest, Fragebogen",
         "while": "während des VE (formativ)",
         "whilePlaceholder": "z. B. Teaching Analysis Poll, Feedback-Runden, etc.",
         "after": "nach dem VE (summativ)",
@@ -202,7 +205,9 @@
         "institutionalRequirements_title": "Institutionelle Vorgaben",
         "institutionalRequirements_descr": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
         "dataProtection_title": "Datenschutz",
-        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
+        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes.",
+        "add_userdefined_title": "Benutzerdefinierten Aspekt hinzufügen",
+        "new_userbox_placeholder": "Bezeichnung ..."
     },
     "step-names" : {
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",

@@ -1,8 +1,7 @@
-
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -12,6 +11,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
+import CreatableSelect from 'react-select/creatable';
 
 export interface TargetGroup {
     name: string;
@@ -19,15 +19,25 @@ export interface TargetGroup {
     age_max: number;
     experience: string;
     academic_course: string;
-    languages: string;
+    languages: string[];
+}
+
+interface TargetGroupWithLanguageOptions {
+    name: string;
+    age_min: number;
+    age_max: number;
+    experience: string;
+    academic_course: string;
+    languages: Language[];
 }
 
 interface Language {
-    language: string;
+    value: string;
+    label: string;
 }
 
 interface FormValues {
-    targetGroups: TargetGroup[];
+    targetGroups: TargetGroupWithLanguageOptions[];
     languages: Language[];
 }
 
@@ -46,6 +56,7 @@ interface FormValues {
 
 interface Props {
     socket: Socket;
+    languageKeys: string[];
 }
 
 const emptyTG = {
@@ -54,14 +65,13 @@ const emptyTG = {
     age_max: 0,
     experience: '',
     academic_course: '',
-    languages: '',
+    languages: [],
 };
-const emptyLanguage = { language: '' };
 
 TargetGroups.auth = true;
-export default function TargetGroups({ socket }: Props): JSX.Element {
+export default function TargetGroups({ socket, languageKeys }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common'])
+    const { t } = useTranslation(['designer', 'common']);
     const prevpage = '/ve-designer/lectures';
     const nextpage = '/ve-designer/learning-goals';
 
@@ -70,7 +80,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         resolver: zodResolver(TargetGroupsFormSchema),
         defaultValues: {
             targetGroups: [emptyTG],
-            languages: [emptyLanguage],
+            languages: [],
         },
     });
 
@@ -84,51 +94,53 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         control: methods.control,
     });
 
-    const {
-        fields: fieldsLang,
-        append: appendLang,
-        remove: removeLang,
-        replace: replaceLang,
-    } = useFieldArray({
-        name: 'languages',
-        control: methods.control,
-    });
+    const setPlanerData = useCallback((plan: IPlan) => {
+        const targetGroups =
+            plan.target_groups.length > 0
+                ? plan.target_groups.map((tg) => ({
+                      ...tg,
+                      languages: tg.languages.map((language) => ({
+                          value: language,
+                          label: t('common:languages.' + language, { defaultValue: language }),
+                      })),
+                  }))
+                : [emptyTG];
 
-    const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            const targetGroups = plan.target_groups.length > 0 ? plan.target_groups : [emptyTG];
-            replaceTg(targetGroups);
+        methods.setValue('targetGroups', targetGroups);
 
-            const languages =
-                plan.languages.length > 0
-                    ? plan.languages.map((language) => ({ language }))
-                    : [emptyLanguage];
-            replaceLang(languages);
-            return { targetGroups, languages };
-        },
-        [replaceLang, replaceTg]
-    );
+        const languages =
+            plan.languages.length > 0
+                ? plan.languages.map((language) => ({
+                      value: language,
+                      label: t('common:languages.' + language, { defaultValue: language }),
+                  }))
+                : [];
+        methods.setValue('languages', languages);
+        return { targetGroups, languages };
+    }, [methods, t]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+        const transformedTargetGroups = data.targetGroups.map((tg) => ({
+            ...tg,
+            languages: tg.languages.map((language) => language.value),
+        }));
+
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'target_groups',
-                value: data.targetGroups,
+                value: transformedTargetGroups,
             },
             {
                 plan_id: router.query.plannerId,
                 field_name: 'languages',
-                value: data.languages.map((element) => element.language),
-            }
+                value: data.languages.map((element) => element.value),
+            },
         ];
     };
 
     const handleRemoveTg = (index: number) =>
         fieldsTg.length > 1 ? removeTg(index) : replaceTg(emptyTG);
-
-    const handleRemoveLang = (index: number) =>
-        fieldsLang.length > 1 ? removeLang(index) : replaceLang(emptyLanguage);
 
     const renderTargetGroupsInputs = (): JSX.Element[] => {
         return fieldsTg.map((targetGroup, index) => (
@@ -243,6 +255,38 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                         </label>
                     </div>
                     <div className="w-3/4">
+                        <Controller
+                            name={`targetGroups.${index}.languages`}
+                            render={({ field: { onChange, onBlur, value, ref } }) => (
+                                <CreatableSelect
+                                    ref={ref}
+                                    onChange={onChange}
+                                    onBlur={onBlur}
+                                    value={value}
+                                    options={
+                                        languageKeys.map((language) => ({
+                                            value: language,
+                                            label: t('common:languages.' + language),
+                                        })) as { value: string; label: string }[]
+                                    }
+                                    isClearable={true}
+                                    isMulti
+                                    closeMenuOnSelect={false}
+                                    placeholder={t('target.languages_placeholder')}
+                                />
+                            )}
+                            control={methods.control}
+                        />
+                        {Array.isArray(methods.formState.errors.targetGroups?.[index]?.languages) &&
+                            methods.formState.errors.targetGroups?.[index]?.languages?.map!(
+                                (error, index) =>
+                                    error?.value?.message && (
+                                        <p key={index} className="text-red-600 pt-2">
+                                            {t(error.value.message!)}
+                                        </p>
+                                    )
+                            )}
+                        {/*}
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.languages`)}
@@ -254,6 +298,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                                 methods.formState.errors?.targetGroups?.[index]?.languages?.message!
                             )}
                         </p>
+                        */}
                     </div>
                 </div>
                 <div className="flex justify-end items-center">
@@ -270,27 +315,42 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
         ));
     };
 
-    const renderLanguagesInputs = (): JSX.Element[] => {
-        return fieldsLang.map((language, index) => (
-            <div key={language.id}>
-                <div className="flex my-2 items-center w-full">
-                    <input
-                        type="text"
-                        placeholder={t('common:enter_language')}
-                        className="border border-gray-300 rounded-lg w-1/2 p-2 mr-2"
-                        {...methods.register(`languages.${index}.language`)}
-                    />
-                    <button type="button" onClick={() => handleRemoveLang(index)}>
-                        <RxMinus size={20} />
-                    </button>
-                </div>
-                {methods.formState.errors?.languages?.[index]?.language?.message && (
-                    <p className="text-red-600 pt-2">
-                        {t(methods.formState.errors?.languages?.[index]?.language?.message!)}
-                    </p>
-                )}
-            </div>
-        ));
+    const renderLanguagesInputs = (): JSX.Element => {
+        return (
+            <>
+                <Controller
+                    name={'languages'}
+                    render={({ field: { onChange, onBlur, value, ref } }) => (
+                        <CreatableSelect
+                            ref={ref}
+                            onChange={onChange}
+                            onBlur={onBlur}
+                            value={value}
+                            options={
+                                languageKeys.map((language) => ({
+                                    value: language,
+                                    label: t('common:languages.' + language),
+                                })) as { value: string; label: string }[]
+                            }
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder={t('target.languages_placeholder')}
+                        />
+                    )}
+                    control={methods.control}
+                />
+                {Array.isArray(methods.formState.errors.languages) &&
+                    methods.formState.errors.languages.map(
+                        (error, index) =>
+                            error?.value?.message && (
+                                <p key={index} className="text-red-600 pt-2">
+                                    {t(error.value.message!)}
+                                </p>
+                            )
+                    )}
+            </>
+        );
     };
 
     return (
@@ -303,7 +363,7 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 text: t('target.tooltip'),
                 link: '',
             }}
-            stageInMenu='generally'
+            stageInMenu="generally"
             idOfProgress="target_groups"
             methods={methods}
             prevpage={prevpage}
@@ -330,23 +390,90 @@ export default function TargetGroups({ socket }: Props): JSX.Element {
                 <div className="text-xl text-slate-600">{t('target.language_title')}</div>
                 <div className="mb-8">{t('target.language_description')}</div>
                 <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
-                <button
-                    className="p-2 m-2 bg-white rounded-full shadow"
-                    type="button"
-                    onClick={() => {
-                        appendLang(emptyLanguage);
-                    }}
-                >
-                    <RxPlus size={20} />
-                </button>
             </div>
         </Wrapper>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
+    const languageKeys = [
+        'Afrikaans',
+        'Albanian',
+        'Arabic',
+        'Armenian',
+        'Basque',
+        'Bengali',
+        'Bulgarian',
+        'Catalan',
+        'Cambodian',
+        'Chinese (Mandarin)',
+        'Croatian',
+        'Czech',
+        'Danish',
+        'Dutch',
+        'English',
+        'Estonian',
+        'Fiji',
+        'Finnish',
+        'French',
+        'Georgian',
+        'German',
+        'Greek',
+        'Gujarati',
+        'Hebrew',
+        'Hindi',
+        'Hungarian',
+        'Icelandic',
+        'Indonesian',
+        'Irish',
+        'Italian',
+        'Japanese',
+        'Javanese',
+        'Korean',
+        'Latin',
+        'Latvian',
+        'Lithuanian',
+        'Macedonian',
+        'Malay',
+        'Malayalam',
+        'Maltese',
+        'Maori',
+        'Marathi',
+        'Mongolian',
+        'Nepali',
+        'Norwegian',
+        'Persian',
+        'Polish',
+        'Portuguese',
+        'Punjabi',
+        'Quechua',
+        'Romanian',
+        'Russian',
+        'Samoan',
+        'Serbian',
+        'Slovak',
+        'Slovenian',
+        'Spanish',
+        'Swahili',
+        'Swedish',
+        'Tamil',
+        'Tatar',
+        'Telugu',
+        'Thai',
+        'Tibetan',
+        'Tonga',
+        'Turkish',
+        'Ukrainian',
+        'Urdu',
+        'Uzbek',
+        'Vietnamese',
+        'Welsh',
+        'Xhosa',
+    ];
+
     return {
         props: {
+            languageKeys,
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };

@@ -111,6 +111,7 @@ export default function PageCategoryNotSelected(props: Props) {
                     '-bottom-[.5rem] -left-[10.5rem]', // interaktion
                     '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                     '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
+                    '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
                 ]
             )}
         </>
