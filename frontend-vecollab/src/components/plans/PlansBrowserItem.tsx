@@ -317,7 +317,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             </div>
 
             <div
-                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer"
+                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -327,14 +327,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     }
                 }}
             >
-                <div className="flex flex-wrap items-center">
-                    <div className="mr-2 py-1 font-bold whitespace-nowrap">
+                <div className="flex flex-wrap xl:flex-nowrap items-center">
+                    <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
                         <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
                         </Link>
                     </div>
                     {plan.is_good_practise && (
-                        <div className="mx-2 text-ve-collab-blue">
+                        <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
                             <FaMedal title={t('plans_marked_as_good_practise')} />
                         </div>
                     )}
