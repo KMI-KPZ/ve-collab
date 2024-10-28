@@ -20,7 +20,7 @@ export default function Home(): JSX.Element {
                 <BackgroundAnimation className="-z-10" />
             </div>
             <div className="flex flex-col m-auto p-12 max-w-screen-2xl items-center z-0 relative">
-                <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl bg-footer-pattern-rounded">
+                <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl">
                     <h1 className="text-center content-center text-white font-bold uppercase text-2xl md:text-4xl">
                         Lehre kooperativ, digital und international
                     </h1>
