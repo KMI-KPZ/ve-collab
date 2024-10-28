@@ -47,11 +47,11 @@ jobs:
         run: |
           echo "${{ secrets.FRONTEND_ENV }}" > .env
 
-      - name: Generate Sitemap
-        run: npm run sitemap
-
       - name: Build React app
         run: npm run build
+
+      - name: Generate Sitemap
+        run: npm run sitemap
 
       - name: Lighthouse
         uses: foo-software/lighthouse-check-action@master
