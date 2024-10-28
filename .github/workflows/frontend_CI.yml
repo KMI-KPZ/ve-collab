@@ -56,4 +56,4 @@ jobs:
       - name: Lighthouse
         uses: foo-software/lighthouse-check-action@master
         with:
-          urls: 'http://localhost:3000' // also possible to test multiple urls
+          urls: 'http://localhost:3000, http://localhost:3000/plans'
