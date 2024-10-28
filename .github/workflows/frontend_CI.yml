@@ -50,3 +50,8 @@ jobs:
 
       - name: Build React app
         run: npm run build
+
+      - name: Lighthouse
+        uses: foo-software/lighthouse-check-action@master
+        with:
+          urls: 'http://localhost:3000' // also possible to test multiple urls
