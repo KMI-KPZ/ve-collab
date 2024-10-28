@@ -8,6 +8,7 @@ from apscheduler.triggers.cron import CronTrigger
 import bson.json_util
 from dotenv import load_dotenv
 import gridfs
+from jinja2 import Environment, FileSystemLoader
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
@@ -49,6 +50,7 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
+from handlers.template_debug_handler import TemplateDebugHandler
 from resources.notifications import periodic_notification_dispatch
 import util
 
@@ -145,6 +147,7 @@ def make_app(cookie_secret: str, debug: bool = False):
                 tornado.web.StaticFileHandler,
                 {"path": "./knowledgeworker_courses", "default_filename": "index.html"},
             ),
+            (r"/template/(.*)", TemplateDebugHandler),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -493,7 +496,7 @@ def schedule_periodic_notifications():
 
     with open("assets/periodic_notifications.json", "r") as fp:
         periodic_notifications = json.load(fp)["periodic_notifications"]
-        
+
         for notification in periodic_notifications:
             for execution_dates in notification["triggers"]:
                 trigger = CronTrigger(
@@ -510,6 +513,18 @@ def schedule_periodic_notifications():
                 )
 
     scheduler.start()
+
+
+def load_email_templates():
+    """
+    set up the jinja2 environment for email templates and
+    store it in `global_vars.email_template_env`
+    """
+
+    jinja_env = Environment(
+        loader=FileSystemLoader("assets/email_templates"), autoescape=True
+    )
+    global_vars.email_template_env = jinja_env
 
 
 def main():
@@ -537,6 +552,9 @@ def main():
     # setup global vars from env
     set_global_vars()
 
+    # load email template env
+    load_email_templates()
+
     # insert default admin role and acl templates
     create_initial_admin()
 
@@ -557,6 +575,8 @@ def main():
 
     # schedule periodic notifications
     schedule_periodic_notifications()
+
+    #util.send_email("schlecht@infai.org", "test", "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy \n \n eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.")
 
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour

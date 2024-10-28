@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+    
+        .header {
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+    
+        .content {
+            padding: 20px;
+            background-color: #fff;
+            margin: 20px;
+        }
+    
+        .responsive-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            max-width: 1536px;
+            width: 66.666667%;
+            margin: 0 auto;
+            padding: 16px 0;
+            padding-top: 40px;
+        }
+    
+        .responsive-container img {
+            color: transparent;
+        }
+    
+        .responsive-container p {
+            flex: 1;
+            margin: 0 16px;
+            color: white;
+        }
+    
+        @media (max-width: 900px) {
+            .responsive-container {
+                flex-direction: column;
+                align-items: center;
+            }
+    
+            .responsive-container .image-container {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 16px;
+            }
+    
+            .responsive-container p {
+                margin: 16px 0 0 0;
+                width: 100%;
+                text-align: center;
+            }
+        }
+    
+        @media (max-width: 425px) {
+            .responsive-container .image-container {
+                flex-direction: column;
+                align-items: center;
+            }
+    
+            .responsive-container .image-container img {
+                margin-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img height="60" src="{{ logo_cid }}" alt="">
+    </div>
+    <div class="content">
+        {{ text }}
+    </div>
+    <footer style="position: relative; padding-bottom: 16px; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);">
+        <img src="{{ background_cid }}" alt="Background"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1;">
+            <div class="responsive-container">
+                <div class="image-container">
+                    <img alt="" loading="lazy" width="194" height="120" decoding="async" src="{{ bmbf_cid }}">
+                    <img alt="" loading="lazy" width="94" height="100" decoding="async" src="{{ eu_cid }}">
+                </div>
+                <p>Dieses Forschungs- und Entwicklungsprojekt wird im Rahmen der Maßnahme „Initiative Nationale Bildungsplattform” (Förderkennzeichen 16INB2032A/B) vom Bundesministerium für Bildung und Forschung (BMBF) gefördert und vom Projektträger VDI-VDE IT betreut. Die Verantwortung für den Inhalt dieser Veröffentlichung liegt bei den Autor:innen.</p>
+            </div>
+        <hr
+            style="width: 66.666667%; margin: 0 auto 16px; border-color: rgba(128, 128, 128, 0.5); border-width: 0.5px;">
+        <div style="display: flex; flex-wrap: wrap; color: white; justify-content: center; padding-bottom: 4px;">
+            <p style="margin: 0 8px;">© 2024 VE-Collab</p>
+            <p style="margin: 0 8px;"><a target="_blank" href="https://infai.org/das-institut/impressum/"
+                    style="color: white;">Impressum</a></p>
+            <p style="margin: 0 8px;"><a target="_blank" href="https://infai.org/datenschutzerklaerung-2/"
+                    style="color: white;">Datenschutzerklärung</a></p>
+            <p style="margin: 0 8px;"><a href="mailto:schlecht@infai.org,elisa.mueller@uni-leipzig.de"
+                    style="color: white;">Kontaktiere uns</a></p>
+        </div>
+    </footer>
+</body>
+
+</html>
