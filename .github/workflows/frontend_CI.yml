@@ -56,7 +56,7 @@ jobs:
       - name: run build
         run: npm run build
 
-      - name: Lighthouse
-        uses: foo-software/lighthouse-check-action@master
-        with:
-          urls: 'http://localhost:3000/'
+      - name: run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.14.x
+          lhci autorun
