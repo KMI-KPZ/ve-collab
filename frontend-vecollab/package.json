@@ -9,7 +9,7 @@
         "start": "next start",
         "lint": "next lint",
         "typescript": "tsc --noEmit",
-        "postbuild": "next-sitemap"
+        "sitemap": "next-sitemap"
     },
     "dependencies": {
         "@emoji-mart/data": "^1.1.2",
