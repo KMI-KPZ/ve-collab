@@ -53,7 +53,10 @@ jobs:
       - name: Generate Sitemap
         run: npm run sitemap
 
+      - name: run build
+        run: npm run build
+
       - name: Lighthouse
         uses: foo-software/lighthouse-check-action@master
         with:
-          urls: 'https://ve-collab.org/'
+          urls: 'http://localhost:3000/'
