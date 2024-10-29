@@ -14,6 +14,8 @@ module.exports = {
         assertions: {
             performance: ['error', { minScore: 0.6 }],
             seo: ['error', { minScore: 0.8 }],
+            accessibility: ['error', { minScore: 0.9 }],
+            'best-practices': ['error', { minScore: 0.8 }],
         },
     },
 };
