@@ -12,10 +12,10 @@ module.exports = {
             target: 'temporary-public-storage',
         },
         assertions: {
-            performance: ['error', { minScore: 0.99 }],
-            seo: ['error', { minScore: 0.99 }],
-            accessibility: ['error', { minScore: 0.99 }],
-            'best-practices': ['error', { minScore: 0.99 }],
+            performance: ['fatal', { minScore: 0.99 }],
+            seo: ['fatal', { minScore: 0.99 }],
+            accessibility: ['fatal', { minScore: 0.99 }],
+            'best-practices': ['fatal', { minScore: 0.99 }],
         },
     },
 };
