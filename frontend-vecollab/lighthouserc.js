@@ -1,7 +1,10 @@
 module.exports = {
-  ci: {
-    upload: {
-      target: "temporary-public-storage",
+    ci: {
+        collect: {
+            staticDistDir: './frontend-vecollab/out',
+        },
+        upload: {
+            target: 'temporary-public-storage',
+        },
     },
-  },
 };
