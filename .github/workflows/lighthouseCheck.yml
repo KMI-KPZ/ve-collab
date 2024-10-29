@@ -1,5 +1,11 @@
 name: CI
 on: [push]
+workflow_call:
+  secrets:
+    FRONTEND_ENV:
+      required: true
+    LHCI_GITHUB_APP_TOKEN:
+      required: true
 jobs:
   lhci:
     name: Lighthouse
@@ -15,6 +21,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: './frontend-vecollab/.nvmrc'
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.FRONTEND_ENV }}" > .env
       - name: npm install, build
         run: |
           npm install
