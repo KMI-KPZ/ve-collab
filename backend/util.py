@@ -170,8 +170,6 @@ def send_email(recipient: str, subject: str, text: str) -> None:
     msg.set_content(text)
 
     # image cid's
-    background_cid = make_msgid(domain="ve-collab.org")
-    background_cid_bare = background_cid.strip("<>")
     logo_cid = make_msgid(domain="ve-collab.org")
     logo_cid_bare = logo_cid.strip("<>")
     bmbf_cid = make_msgid(domain="ve-collab.org")
@@ -180,12 +178,11 @@ def send_email(recipient: str, subject: str, text: str) -> None:
     eu_cid_bare = eu_cid.strip("<>")
 
     # html template
-    template = global_vars.email_template_env.get_template("base.html")
+    template = global_vars.email_template_env.get_template("reminder.html")
     rendered = template.render(
         logo_cid=logo_cid_bare,
         bmbf_cid=bmbf_cid_bare,
         eu_cid=eu_cid_bare,
-        background_cid=background_cid_bare,
         text=text,
     )
     msg.add_alternative(rendered, subtype="html")
@@ -205,11 +202,6 @@ def send_email(recipient: str, subject: str, text: str) -> None:
         maintype, subtype = mimetypes.guess_type(eu.name)[0].split("/")
         msg.get_payload()[1].add_related(
             eu.read(), maintype=maintype, subtype=subtype, cid=eu_cid
-        )
-    with open("assets/images/background.png", "rb") as background:
-        maintype, subtype = mimetypes.guess_type(background.name)[0].split("/")
-        msg.get_payload()[1].add_related(
-            background.read(), maintype=maintype, subtype=subtype, cid=background_cid
         )
 
     mailserver.send_message(msg)
