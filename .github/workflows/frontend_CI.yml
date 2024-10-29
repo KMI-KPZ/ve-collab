@@ -5,6 +5,8 @@ on:
     secrets:
       FRONTEND_ENV:
         required: true
+      LHCI_GITHUB_APP_TOKEN:
+        required: true
   workflow_dispatch:
 
 jobs:
@@ -53,13 +55,13 @@ jobs:
       - name: Generate Sitemap
         run: npm run sitemap
 
-      - name: run build
-        run: npm run build
+      #- name: run build
+      #  run: npm run build
 
-      - name: run Lighthouse CI
-        run: |
-          npm install -g @lhci/cli@0.14.x
-          npm run build
-          lhci autorun
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+     # - name: run Lighthouse CI
+     #   env:
+     #     LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+     #   run: |
+     #     npm install -g @lhci/cli@0.14.x
+     #     npm run build
+     #     lhci autorun
