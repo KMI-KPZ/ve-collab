@@ -11,5 +11,9 @@ module.exports = {
         upload: {
             target: 'temporary-public-storage',
         },
+        assertions: {
+            performance: ['error', { minScore: 0.6 }],
+            seo: ['error', { minScore: 0.8 }],
+        },
     },
 };
