@@ -1,7 +1,8 @@
 module.exports = {
     ci: {
         collect: {
-            staticDistDir: './frontend-vecollab/out',
+            url: ['http://localhost:3000/'],
+            startServerCommand: 'npm run start',
         },
         upload: {
             target: 'temporary-public-storage',
