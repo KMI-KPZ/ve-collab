@@ -8,13 +8,13 @@ jobs:
       run:
         working-directory: ./frontend-vecollab
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Use Node.js 20.10
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.10
+          node-version-file: './frontend-vecollab/.nvmrc'
       - name: npm install, build
         run: |
           npm install
