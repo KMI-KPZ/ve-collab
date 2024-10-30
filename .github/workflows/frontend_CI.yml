@@ -57,7 +57,6 @@ jobs:
           key: ${{ runner.os }}-nextjs-build-${{ hashFiles('**/frontend-vecollab/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-build-${{ hashFiles('**/frontend-vecollab/package-lock.json') }}-
-        
 
       - name: Build React app
         run: npm run build
