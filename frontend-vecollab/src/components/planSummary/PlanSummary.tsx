@@ -7,7 +7,7 @@ import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/backend';
 import LoadingAnimation from '../common/LoadingAnimation';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import Dialog from '../profile/Dialog';
 import { MdEdit, MdNewspaper } from 'react-icons/md';
 import Timestamp from '../common/Timestamp';
@@ -21,6 +21,7 @@ import { useTranslation } from 'next-i18next';
 interface Props {
     plan: IPlan;
     openAllBoxes?: boolean;
+    isSingleView?: boolean;
 }
 
 interface FormValues {
@@ -28,7 +29,7 @@ interface FormValues {
 }
 
 PlanSummary.auth = true;
-export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
+export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.Element {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
@@ -51,6 +52,8 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         [...plan.partners, plan.author.username],
         session!.accessToken
     );
+
+    // console.log({plan});
 
     useEffect(() => {
         if (!partnerUserSnippets?.length) return;
@@ -92,7 +95,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
             return;
         }
 
-        const planLock = await getPlanLock(socket, exportStep2Plan.plan!._id)
+        const planLock = await getPlanLock(socket, exportStep2Plan.plan!._id);
         if (planLock.reason === 'plan_locked') {
             setAlert({
                 message: t('plan_summary_export_error_plan_locked'),
@@ -348,11 +351,20 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
         return <LoadingAnimation />;
     }
 
+    const Separator = () => <hr className="h-px w-full mx-auto my-8 bg-slate-300 border-0" />;
+    // const Separator_Fancy = () => (
+    //     <div className="h-2 w-full bg-white my-8 border-0 m-auto"
+    //         style={{
+    //             background: 'repeating-linear-gradient(135deg, #fff, #fff 6px, #7fb9c7 6px, #7fb9c7 12px)'
+    //         }}
+    //     />
+    // )
+
     return (
         <>
             <Alert state={alert} />
 
-            {/* dialog to select target plan */}
+            {/* dialog to select target plan for export a step */}
             <Dialog
                 isOpen={exportStep2Plan.isOpen && exportStep2Plan.plan === undefined}
                 title={t('plan_summary_export_choose_plan_title')}
@@ -365,7 +377,7 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                 </div>
             </Dialog>
 
-            {/* dialog to set date and name of step for import */}
+            {/* dialog to set date and name of step for export a step */}
             <Dialog
                 isOpen={exportStep2Plan.isOpen && exportStep2Plan.plan !== undefined}
                 title={t('plan_summary_export_into_title', { name: exportStep2Plan.plan?.name })}
@@ -395,18 +407,25 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                 </div>
             </Dialog>
 
-            <div className="bg-white rounded-lg p-4 w-full">
+            <div className="bg-white rounded-lg px-6 py-4 xl:px-8 xl:py-6 w-full @container">
                 <ViewAttributes
                     plan={plan}
                     partnerProfileSnippets={partnerProfileSnippets}
-                    openAllBoxes={openAllBoxes}
+                    openAllBoxes={isSingleView || openAllBoxes}
+                    isSingleView={isSingleView}
                 />
-                <hr className="h-px my-10 bg-gray-400 border-0" />
-                <div className="text-2xl font-semibold mb-4 ml-4">{t('plan_summary_phases')}</div>
+
+                <Separator />
+
+                <div className="text-2xl font-semibold mb-4 underline decoration-ve-collab-blue/50 decoration-4 underline-offset-6">
+                    {t('plan_summary_phases')}
+                </div>
+
                 {plan.steps !== undefined && plan.steps.length > 0 ? (
                     plan.steps.map((fineStep, index) => (
                         <ViewFinestep
                             key={index}
+                            index={index}
                             openAllBoxes={openAllBoxes}
                             plan={plan}
                             fineStep={fineStep}
@@ -417,8 +436,14 @@ export function PlanSummary({ plan, openAllBoxes }: Props): JSX.Element {
                 ) : (
                     <div className="ml-4">{t('plan_summary_no_phases')}</div>
                 )}
-                <hr className="h-px my-10 bg-gray-400 border-0" />
-                <ViewAfterVE plan={plan} openAllBoxes={openAllBoxes} />
+
+                <Separator />
+
+                <ViewAfterVE
+                    plan={plan}
+                    openAllBoxes={isSingleView || openAllBoxes}
+                    isSingleView={isSingleView}
+                />
             </div>
         </>
     );
@@ -431,3 +456,65 @@ export const showDataOrEmptySign = (data: any) => {
         return data;
     }
 };
+
+export const GridEntry = ({
+    caption,
+    children,
+}: {
+    caption: string;
+    children: React.ReactNode;
+}) => (
+    <>
+        <div className="col-span-3 lg:col-span-4">
+            <GridEntryCaption>{caption}</GridEntryCaption>
+        </div>
+        <div className="col-span-3 lg:col-span-4 ml-6 -mt-6">{children}</div>
+    </>
+);
+
+export const GridEntryCaption = ({ children }: { children: string }) => (
+    <h3 className="font-bold font-konnect tracking-wide text-slate-800 underline decoration-ve-collab-orange-light decoration-2 underline-offset-2">
+        {children}
+    </h3>
+);
+
+export const Caption4 = ({ children }: { children: string }) => (
+    <h4 className="font-semibold text-slate-700 px-1">{children}</h4>
+);
+
+interface ColProp {
+    caption: string;
+    value: React.ReactNode;
+}
+
+export const GridEntry2Col = ({ col1, col2 }: { col1: ColProp; col2: ColProp }) => (
+    <>
+        <div className="col-span-3 lg:col-span-2">
+            <GridEntryCaption>{col1.caption}</GridEntryCaption>
+            <div className="ml-6 my-2">{col1.value}</div>
+        </div>
+
+        <div className="col-span-3 lg:col-span-2">
+            <GridEntryCaption>{col2.caption}</GridEntryCaption>
+            <div className="ml-6">{col2.value}</div>
+        </div>
+    </>
+);
+
+export const GridEntrySubGrid = ({ children }: { children: React.ReactNode }) => (
+    <div className="grid xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
+);
+
+export const GridEntrySubGridLarge = ({ children }: { children: React.ReactNode }) => (
+    <div className="grid @7xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
+);
+
+export const GridEntryList = ({ list }: { list: any[] }) => (
+    <ul className="flex flex-col space-y-2">
+        {list.map((value, index) => (
+            <li className="before:content-['•'] before:mr-2" key={index}>
+                {showDataOrEmptySign(value)}
+            </li>
+        ))}
+    </ul>
+);

@@ -1,176 +1,169 @@
 import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
-import Image from 'next/image';
-import { showDataOrEmptySign } from './PlanSummary';
+import {
+    Caption4,
+    GridEntry,
+    GridEntryCaption,
+    GridEntryList,
+    GridEntrySubGrid,
+    GridEntrySubGridLarge,
+    showDataOrEmptySign,
+} from './PlanSummary';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useTranslation } from 'next-i18next';
+import ButtonLight from '../common/buttons/ButtongLight';
+import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from 'react-icons/md';
 
 interface Props {
     plan: IPlan;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
     openAllBoxes?: boolean;
+    isSingleView?: boolean;
 }
 export default function ViewAttributes({
     plan,
     partnerProfileSnippets,
     openAllBoxes,
+    isSingleView,
 }: Props): JSX.Element {
     const { t } = useTranslation('common');
 
     const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(
         openAllBoxes ? true : false
     );
+
     return (
         <>
-            <div
-                className="flex cursor-pointer justify-start items-center space-x-10 mb-4 ml-1"
-                onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-            >
-                <Image
-                    src={iconDropdown}
-                    alt="Dropdown arrow"
-                    width={20}
-                    height={20}
-                    className={`${isOpenStepSection ? `rotate-180` : `rotate-0`}`}
-                />
-                <div className="text-2xl font-semibold">{t('plan_summary_characteristics')}</div>
-            </div>
+            <div className="grid grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                {isSingleView !== true && (
+                    <div className="font-bold text-xl col-span-4">{plan.name}</div>
+                )}
 
-            <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                <span className="font-semibold pr-5">{t('plan_summary_name')}</span>
-                <ul className="flex flex-col space-y-2 col-span-3">
-                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                        {showDataOrEmptySign(plan.name)}
-                    </li>
-                </ul>
-                <span className="font-semibold pr-5">{t('plan_summary_abstract')}</span>
-                <ul className="flex flex-col space-y-2 col-span-3">
-                    <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                        {showDataOrEmptySign(plan.abstract)}
-                    </li>
-                </ul>
-                <span className="font-semibold pr-5">{t('plan_summary_partners')}</span>
-                <ul className="flex flex-col space-y-2 col-span-3">
-                    {plan.partners.length !== 0 ? (
-                        plan.partners.map((partner, index) => (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                {showDataOrEmptySign(
-                                    partnerProfileSnippets[partner]
-                                        ? partnerProfileSnippets[partner].first_name +
-                                              ' ' +
-                                              partnerProfileSnippets[partner].last_name
-                                        : partner
-                                )}
-                            </li>
-                        ))
-                    ) : (
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                    )}
-                </ul>
-                <span className="text-base font-semibold pr-5">{t('plan_summary_externals')}</span>
-                <ul className="flex flex-col space-y-2 col-span-3">
-                    {plan.involved_parties.length !== 0 ? (
-                        plan.involved_parties.map((party, index) => (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2" key={index}>
-                                {showDataOrEmptySign(party)}
-                            </li>
-                        ))
-                    ) : (
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                    )}
-                </ul>
+                <div className="col-span-4 columns-2 gap-6">{plan.abstract}</div>
+
+                {plan.partners.length > 0 && (
+                    <div className="col-span-3 lg:col-span-2">
+                        <GridEntryCaption>{t('plan_summary_partners')}</GridEntryCaption>
+                        <ul className="ml-6 space-y-1">
+                            {plan.partners.map((partner, index) => (
+                                <li key={index}>
+                                    {showDataOrEmptySign(
+                                        partnerProfileSnippets[partner]
+                                            ? partnerProfileSnippets[partner].first_name +
+                                                  ' ' +
+                                                  partnerProfileSnippets[partner].last_name
+                                            : partner
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {plan.involved_parties.length > 0 && (
+                    <div className="col-span-3 lg:col-span-2">
+                        <GridEntryCaption>{t('plan_summary_externals')}</GridEntryCaption>
+                        <ul className="ml-6  space-y-1">
+                            {plan.involved_parties.map((party, index) => (
+                                <li key={index}>{showDataOrEmptySign(party)}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {isOpenStepSection ? (
                     <>
-                        <span className="font-semibold pr-5">{t('plan_summary_institutions')}</span>
-                        <div className="grid xl:grid-cols-2 col-span-3">
-                            {plan.institutions.length !== 0 ? (
-                                plan.institutions.map((institution, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                    >
-                                        <ul className="space-y-1 mr-2">
+                        {plan.institutions.length > 0 && (
+                            <GridEntry caption={t('plan_summary_institutions')}>
+                                <GridEntrySubGrid>
+                                    {plan.institutions.map((institution, index) => (
+                                        <ul className="space-y-1" key={index}>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_institutions_name')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_institutions_name')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(institution.name)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_institutions_type')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_institutions_type')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(institution.school_type)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_institutions_country')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_institutions_country')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(institution.country)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_institutions_department')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_institutions_department')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(institution.department)}
                                                 </div>
                                             </li>
                                         </ul>
-                                    </div>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </div>
-                        <span className="font-semibold pr-5 print:hidden">
-                            {t('plan_summary_lectures')}
-                        </span>
-                        <span className="font-semibold pr-5 hidden print:block">
-                            {t('plan_summary_lectures_print_line_break')}
-                        </span>
-                        <div className="grid xl:grid-cols-2 col-span-3">
-                            {plan.lectures.length !== 0 ? (
-                                plan.lectures.map((lecture, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                    >
-                                        <ul className="space-y-1 mr-2">
+                                    ))}
+                                </GridEntrySubGrid>
+                            </GridEntry>
+                        )}
+
+                        {plan.lectures.length > 0 && (
+                            <GridEntry caption={t('plan_summary_lectures')}>
+                                <GridEntrySubGrid>
+                                    {plan.lectures.map((lecture, index) => (
+                                        <ul className="space-y-1" key={index}>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_lectures_name')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_lectures_name')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(lecture.name)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    #{t('plan_summary_lectures_type')}
+                                                <div className="w-1/2">
+                                                    <Caption4>{`#${t(
+                                                        'plan_summary_lectures_type'
+                                                    )}`}</Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(lecture.lecture_type)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_lectures_format')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_lectures_format')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(lecture.lecture_format)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/2 font-medium print:font-bold">
-                                                    {t('plan_summary_lectures_participants')}
+                                                <div className="w-1/2">
+                                                    <Caption4>
+                                                        {t('plan_summary_lectures_participants')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-1/2">
                                                     {showDataOrEmptySign(
@@ -179,30 +172,25 @@ export default function ViewAttributes({
                                                 </div>
                                             </li>
                                         </ul>
-                                    </div>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </div>
-                        <span className="font-semibold pr-5">
-                            {t('plan_summary_individual_learning_goals')}
-                        </span>
-                        <div className="grid col-span-3">
-                            {plan.individual_learning_goals.length !== 0 ? (
-                                plan.individual_learning_goals.map((goalPerPartner, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                    >
-                                        <ul className="space-y-1 mr-2">
+                                    ))}
+                                </GridEntrySubGrid>
+                            </GridEntry>
+                        )}
+
+                        <GridEntry caption={t('plan_summary_individual_learning_goals')}>
+                            <GridEntrySubGrid>
+                                {plan.individual_learning_goals.length !== 0 ? (
+                                    plan.individual_learning_goals.map((goalPerPartner, index) => (
+                                        <ul className="space-y-1" key={index}>
                                             <li className="flex">
-                                                <div className="w-1/3 lg:w-1/4 font-medium print:font-bold">
-                                                    {t(
-                                                        'plan_summary_individual_learning_goals_name'
-                                                    )}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t(
+                                                            'plan_summary_individual_learning_goals_name'
+                                                        )}
+                                                    </Caption4>
                                                 </div>
-                                                <div className="w-2/3 lg:w-3/4">
+                                                <div className="w-2/3">
                                                     {showDataOrEmptySign(
                                                         partnerProfileSnippets[
                                                             goalPerPartner.username
@@ -219,78 +207,59 @@ export default function ViewAttributes({
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 lg:w-1/4 font-medium print:font-bold">
-                                                    {t(
-                                                        'plan_summary_individual_learning_goals_goals'
-                                                    )}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t(
+                                                            'plan_summary_individual_learning_goals_goals'
+                                                        )}
+                                                    </Caption4>
                                                 </div>
-                                                <div className="w-2/3 lg:w-3/4">
+                                                <div className="w-2/3">
                                                     {showDataOrEmptySign(
                                                         goalPerPartner.learning_goal
                                                     )}
                                                 </div>
                                             </li>
                                         </ul>
-                                    </div>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </div>
-                        <span className="font-semibold pr-5">
-                            {t('plan_summary_major_learning_goals')}
-                        </span>
-                        <ul className="flex flex-col space-y-2 col-span-3">
-                            {plan.major_learning_goals.length !== 0 ? (
-                                plan.major_learning_goals.map((goal, index) => (
-                                    <li
-                                        className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                        key={index}
-                                    >
-                                        {showDataOrEmptySign(goal)}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </ul>
-                        <span className="font-semibold pr-5">{t('plan_summary_methodics')}</span>
-                        <ul className="flex flex-col space-y-2 col-span-3">
-                            {plan.methodical_approaches.length !== 0 ? (
-                                plan.methodical_approaches.map((approach, index) => (
-                                    <li
-                                        className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                        key={index}
-                                    >
-                                        {showDataOrEmptySign(approach)}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </ul>
-                        <span className="font-semibold pr-5">
-                            {t('plan_summary_target_groups')}
-                        </span>
-                        <div className="grid xl:grid-cols-2 col-span-3">
-                            {plan.target_groups.length !== 0 ? (
-                                plan.target_groups.map((studyGroup, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                    >
-                                        <ul className="space-y-1 mr-2">
+                                    ))
+                                ) : (
+                                    <li className="flex w-fit rounded-lg p-2">/</li>
+                                )}
+                            </GridEntrySubGrid>
+                        </GridEntry>
+
+                        {plan.major_learning_goals.length > 0 && (
+                            <GridEntry caption={t('plan_summary_major_learning_goals')}>
+                                <GridEntryList list={plan.major_learning_goals} />
+                            </GridEntry>
+                        )}
+
+                        {plan.methodical_approaches.length > 0 && (
+                            <GridEntry caption={t('plan_summary_methodics')}>
+                                <GridEntryList list={plan.methodical_approaches} />
+                            </GridEntry>
+                        )}
+
+                        {plan.target_groups.length > 0 && (
+                            <GridEntry caption={t('plan_summary_target_groups')}>
+                                <GridEntrySubGrid>
+                                    {plan.target_groups.map((studyGroup, index) => (
+                                        <ul className="space-y-1" key={index}>
                                             <li className="flex">
-                                                <div className="w-1/3 font-medium print:font-bold">
-                                                    {t('plan_summary_target_groups_name')}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t('plan_summary_target_groups_name')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
                                                     {showDataOrEmptySign(studyGroup.name)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 font-medium print:font-bold">
-                                                    {t('plan_summary_target_groups_age')}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t('plan_summary_target_groups_age')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
                                                     {showDataOrEmptySign(studyGroup.age_min)}
@@ -299,18 +268,22 @@ export default function ViewAttributes({
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 font-medium print:font-bold">
-                                                    {t('plan_summary_target_groups_experience')}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t('plan_summary_target_groups_experience')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
                                                     {showDataOrEmptySign(studyGroup.experience)}
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 font-medium print:font-bold">
-                                                    {t(
-                                                        'plan_summary_target_groups_academic_course'
-                                                    )}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t(
+                                                            'plan_summary_target_groups_academic_course'
+                                                        )}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
                                                     {showDataOrEmptySign(
@@ -319,136 +292,233 @@ export default function ViewAttributes({
                                                 </div>
                                             </li>
                                             <li className="flex">
-                                                <div className="w-1/3 font-medium print:font-bold">
-                                                    {t('plan_summary_target_groups_languages')}
+                                                <div className="w-1/3">
+                                                    <Caption4>
+                                                        {t('plan_summary_target_groups_languages')}
+                                                    </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
-                                                    {showDataOrEmptySign(studyGroup.languages)}
+                                                    {showDataOrEmptySign(
+                                                        studyGroup.languages.join(', ')
+                                                    )}
                                                 </div>
                                             </li>
                                         </ul>
-                                    </div>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </div>
-                        <span className="font-semibold pr-5">{t('plan_summary_topics')}</span>
-                        <ul className="flex flex-col space-y-2  col-span-3">
-                            {plan.topics.length !== 0 ? (
-                                plan.topics.map((topic, index) => (
-                                    <li
-                                        className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                        key={index}
-                                    >
-                                        {showDataOrEmptySign(topic)}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </ul>
-                        <span className="font-semibold pr-5">{t('plan_summary_languages')}</span>
-                        <ul className="flex flex-col space-y-2 col-span-3">
-                            {plan.languages.length !== 0 ? (
-                                plan.languages.map((language, index) => (
-                                    <li
-                                        className="flex w-fit bg-slate-200 rounded-lg p-2"
-                                        key={index}
-                                    >
-                                        {showDataOrEmptySign(language)}
-                                    </li>
-                                ))
-                            ) : (
-                                <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                            )}
-                        </ul>
-                        <span className="font-semibold pr-5">{t('plan_summary_formats')}</span>
-                        <ul className="flex flex-col space-y-2 col-span-3">
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                {showDataOrEmptySign(plan.realization)}
-                            </li>
-                        </ul>
-                        <span className="font-semibold pr-5">
-                            {t('plan_summary_phys_mobility')}
-                        </span>
-                        <ul className="flex flex-col space-y-2 col-span-3">
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                {showDataOrEmptySign(plan.physical_mobility ? t('yes') : t('no'))}
-                            </li>
-                        </ul>
-                        {plan.physical_mobility && plan.physical_mobilities.length > 0 && (
-                            <>
-                                <span className="font-semibold pr-5">
-                                    {t('plan_summary_phys_mobility_meets')}
-                                </span>
-                                <div className="grid lg:grid-cols-2 col-span-3">
-                                    {plan.physical_mobilities.length !== 0 ? (
-                                        plan.physical_mobilities.map((mobility, index) => (
-                                            <div
-                                                key={index}
-                                                className="p-5 mr-3 mb-3 bg-slate-200 rounded-lg space-x-2"
-                                            >
-                                                <ul className="space-y-1 mr-2">
-                                                    <li className="flex">
-                                                        <div className="w-1/3 font-medium print:font-bold">
+                                    ))}
+                                </GridEntrySubGrid>
+                            </GridEntry>
+                        )}
+
+                        {plan.topics.length > 0 && (
+                            <GridEntry caption={t('plan_summary_topics')}>
+                                <GridEntryList list={plan.topics} />
+                            </GridEntry>
+                        )}
+
+                        {plan.languages.length > 0 && (
+                            <GridEntry caption={t('plan_summary_languages')}>
+                                <GridEntryList list={plan.languages} />
+                            </GridEntry>
+                        )}
+
+                        <GridEntry caption={t('plan_summary_formats')}>
+                            {showDataOrEmptySign(plan.realization)}
+                        </GridEntry>
+
+                        <GridEntry caption={t('plan_summary_phys_mobility')}>
+                            {showDataOrEmptySign(plan.physical_mobility ? t('yes') : t('no'))}
+                        </GridEntry>
+
+                        {plan.physical_mobilities.length > 0 && (
+                            <GridEntry caption={t('plan_summary_phys_mobility_meets')}>
+                                <div className="grid lg:grid-cols-2 gap-x-6 gap-y-4">
+                                    {plan.physical_mobilities.map((mobility, index) => (
+                                        <div key={index} className="">
+                                            <ul className="space-y-1">
+                                                <li className="flex">
+                                                    <div className="w-1/3">
+                                                        <Caption4>
                                                             {t(
                                                                 'plan_summary_phys_mobility_location'
                                                             )}
-                                                        </div>
-                                                        <div className="w-2/3">
-                                                            {showDataOrEmptySign(mobility.location)}
-                                                        </div>
-                                                    </li>
-                                                    <li className="flex">
-                                                        <div className="w-1/3 font-medium print:font-bold">
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-2/3">
+                                                        {showDataOrEmptySign(mobility.location)}
+                                                    </div>
+                                                </li>
+                                                <li className="flex">
+                                                    <div className="w-1/3">
+                                                        <Caption4>
                                                             {t('plan_summary_phys_mobility_date')}
-                                                        </div>
-                                                        <div className="w-2/3">
-                                                            {showDataOrEmptySign(
-                                                                mobility.timestamp_from
-                                                                    ? mobility.timestamp_from.split(
-                                                                          'T'
-                                                                      )[0]
-                                                                    : ''
-                                                            )}
-                                                            {' - '}
-                                                            {showDataOrEmptySign(
-                                                                mobility.timestamp_to
-                                                                    ? mobility.timestamp_to.split(
-                                                                          'T'
-                                                                      )[0]
-                                                                    : ''
-                                                            )}
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                                            /
-                                        </li>
-                                    )}
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-2/3">
+                                                        {showDataOrEmptySign(
+                                                            mobility.timestamp_from
+                                                                ? mobility.timestamp_from.split(
+                                                                      'T'
+                                                                  )[0]
+                                                                : ''
+                                                        )}
+                                                        {' - '}
+                                                        {showDataOrEmptySign(
+                                                            mobility.timestamp_to
+                                                                ? mobility.timestamp_to.split(
+                                                                      'T'
+                                                                  )[0]
+                                                                : ''
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    ))}
                                 </div>
-                            </>
+                            </GridEntry>
                         )}
-                        <span className="font-semibold pr-5">{t('plan_summary_learning_env')}</span>
-                        <ul className="flex flex-col col-span-3 space-y-2 ">
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-5">
-                                {showDataOrEmptySign(plan.learning_env)}
-                            </li>
-                        </ul>
+
+                        <GridEntry caption={t('plan_summary_learning_env')}>
+                            {showDataOrEmptySign(plan.learning_env)}
+                        </GridEntry>
+
+                        <GridEntry caption={t('plan_summary_evaluation')}>
+                            <GridEntrySubGridLarge>
+                                {plan.evaluation.map((evaluation, index) => (
+                                    <ul className="space-y-1" key={index}>
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_group_of')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                                {showDataOrEmptySign(
+                                                    partnerProfileSnippets[evaluation.username]
+                                                        ? partnerProfileSnippets[
+                                                              evaluation.username
+                                                          ].first_name +
+                                                              ' ' +
+                                                              partnerProfileSnippets[
+                                                                  evaluation.username
+                                                              ].last_name
+                                                        : evaluation.username
+                                                )}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_is_graded')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                                {showDataOrEmptySign(
+                                                    evaluation.is_graded ? t('yes') : t('no')
+                                                )}
+                                            </div>
+                                        </li>
+                                        {evaluation.is_graded && (
+                                            <>
+                                                <li className="flex">
+                                                    <div className="w-2/5 pl-4">
+                                                        <Caption4>
+                                                            {t('plan_summary_evaluation_task_type')}
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-3/5">
+                                                        {showDataOrEmptySign(evaluation.task_type)}
+                                                    </div>
+                                                </li>
+                                                <li className="flex">
+                                                    <div className="w-2/5 pl-4">
+                                                        <Caption4>
+                                                            {t(
+                                                                'plan_summary_evaluation_assessment_type'
+                                                            )}
+                                                        </Caption4>
+                                                    </div>
+                                                    <div className="w-3/5">
+                                                        {showDataOrEmptySign(
+                                                            evaluation.assessment_type
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            </>
+                                        )}
+                                        <li className="flex">
+                                            <div className="w-2/5">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_dot')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_before')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_before)}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_while')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_while)}
+                                            </div>
+                                        </li>
+                                        <li className="flex">
+                                            <div className="w-2/5 pl-4">
+                                                <Caption4>
+                                                    {t('plan_summary_evaluation_after')}
+                                                </Caption4>
+                                            </div>
+                                            <div className="w-3/5">
+                                            {showDataOrEmptySign(evaluation.evaluation_after)}
+                                            </div>
+                                        </li>
+                                    </ul>
+                                ))}
+                            </GridEntrySubGridLarge>
+                        </GridEntry>
+
+                        {isSingleView !== true && (
+                            <div className="col-span-4 flex justify-center">
+                                <ButtonLight
+                                    onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                >
+                                    {t('show_less')}
+                                    <MdKeyboardDoubleArrowUp className="inline mx-2" />
+                                </ButtonLight>
+                            </div>
+                        )}
                     </>
                 ) : (
-                    <span
-                        onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                        className="flex flex-col col-span-4  space-y-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
-                    >
-                        {t('plan_summary_show_more')}
-                    </span>
+                    <>
+                        {isSingleView !== true && (
+                            <div className="col-span-4 flex justify-center">
+                                <ButtonLight
+                                    onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                >
+                                    {t('show_all')}
+                                    <MdKeyboardDoubleArrowDown className="inline mx-2" />
+                                </ButtonLight>
+                            </div>
+                        )}
+                    </>
                 )}
-            </section>
+            </div>
         </>
     );
 }

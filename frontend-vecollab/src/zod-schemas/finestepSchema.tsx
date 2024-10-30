@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const FineStepFormSchema = z.object({
+    _id: z.string(),
     timestamp_from: z.string(),
     timestamp_to: z.string(),
     name: z.string(),
@@ -9,7 +10,7 @@ export const FineStepFormSchema = z.object({
     // above: previous data from step-names
     learning_activity: z
         .string()
-        .max(1000, "messages.maxlength1000"),
+        .max(5000, "messages.maxlength5000"),
     has_tasks: z.boolean(),
     original_plan: z.string().nullable(),
     tasks: z
@@ -17,18 +18,18 @@ export const FineStepFormSchema = z.object({
             z.object({
                 task_formulation: z
                     .string()
-                    .max(500, "messages.maxlength500"),
+                    .max(5000, "messages.maxlength5000"),
                 work_mode: z
                     .string()
-                    .max(500, "messages.maxlength500"),
+                    .max(5000, "messages.maxlength5000"),
                 notes: z
                     .string()
-                    .max(1000, "messages.maxlength1000"),
+                    .max(5000, "messages.maxlength5000"),
                 tools: z.array(
                     z.object({
                         name: z
                             .string()
-                            .max(200, "messages.maxlength200"),
+                            .max(1000, "messages.maxlength1000"),
                     })
                 ),
                 materials: z.array(
@@ -36,8 +37,8 @@ export const FineStepFormSchema = z.object({
                         name: z
                             .string()
                             .max(
-                                200,
-                                "messages.maxlength200"
+                                1000,
+                                "messages.maxlength1000"
                             ),
                     })
                 ),

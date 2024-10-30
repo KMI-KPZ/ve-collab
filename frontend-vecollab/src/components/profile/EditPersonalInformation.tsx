@@ -8,16 +8,14 @@ import AvatarEditor from './AvatarEditor';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
-import Swapper from './Swapper';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
 import { DropdownList } from '@/interfaces/dropdowns';
-import { set } from 'date-fns';
 import LoadingAnimation from '../common/LoadingAnimation';
 import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
-import { Tooltip } from '../common/Tooltip';
 import ConfirmDialog from '../common/dialogs/Confirm';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -26,6 +24,7 @@ interface Props {
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
     dropdowns: DropdownList;
+    languageKeys: string[];
 }
 
 export default function EditPersonalInformation({
@@ -35,8 +34,10 @@ export default function EditPersonalInformation({
     orcid,
     importOrcidProfile,
     dropdowns,
+    languageKeys,
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation(['common']);
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -86,43 +87,6 @@ export default function EditPersonalInformation({
             });
             reader.readAsDataURL(e.target.files[0]);
         }
-    };
-
-    const modifyLanguages = (index: number, value: string) => {
-        let newLanguageTags = [...personalInformation.languages];
-        newLanguageTags[index] = value;
-        setPersonalInformation({ ...personalInformation, languages: newLanguageTags });
-    };
-
-    const swapLanguages = (e: FormEvent, firstIndex: number, secondIndex: number) => {
-        e.preventDefault();
-
-        // swap indices
-        [personalInformation.languages[firstIndex], personalInformation.languages[secondIndex]] = [
-            personalInformation.languages[secondIndex],
-            personalInformation.languages[firstIndex],
-        ];
-        setPersonalInformation({
-            ...personalInformation,
-            languages: personalInformation.languages,
-        });
-    };
-
-    const deleteFromLanguages = (e: FormEvent, index: number) => {
-        e.preventDefault();
-        personalInformation.languages.splice(index, 1);
-        setPersonalInformation({
-            ...personalInformation,
-            languages: personalInformation.languages,
-        });
-    };
-
-    const addLanguagesInputField = (e: FormEvent) => {
-        e.preventDefault();
-        setPersonalInformation({
-            ...personalInformation,
-            languages: [...personalInformation.languages, ''],
-        });
     };
 
     /*
@@ -489,26 +453,39 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Sprachen'} />
-                {personalInformation.languages.map((language, index) => (
-                    <Swapper
-                        key={index}
-                        index={index}
-                        arrayLength={personalInformation.languages.length}
-                        swapCallback={swapLanguages}
-                        deleteCallback={deleteFromLanguages}
-                    >
-                        <input
-                            className={
-                                'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
-                            }
-                            type="text"
-                            placeholder="Verwende pro Sprache ein Feld"
-                            value={language}
-                            onChange={(e) => modifyLanguages(index, e.target.value)}
-                        />
-                    </Swapper>
-                ))}
-                <EditProfilePlusMinusButtons plusCallback={addLanguagesInputField} />
+                <CreatableSelect
+                    className="w-full mb-1"
+                    options={languageKeys.map((language) => ({
+                        label: t('common:languages.' + language),
+                        value: language,
+                    }))}
+                    onChange={(e) =>
+                        setPersonalInformation({
+                            ...personalInformation,
+                            languages: e!.map((option) => option.value),
+                        })
+                    }
+                    // if value is not null, placeholder wont show, even though value inside the object is ''
+                    value={
+                        personalInformation.languages
+                            ? personalInformation.languages.map((language) => ({
+                                  label: t('common:languages.' + language, {
+                                      defaultValue: language,
+                                  }),
+                                  value: language,
+                              }))
+                            : []
+                    }
+                    placeholder={'Sprachen auswählen oder neue durch Tippen hinzufügen'}
+                    isMulti
+                    isClearable={true}
+                    closeMenuOnSelect={false}
+                    formatCreateLabel={(inputValue) => (
+                        <span>
+                            <b>{inputValue}</b> erstellen
+                        </span>
+                    )}
+                />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={'Profilbild'} />

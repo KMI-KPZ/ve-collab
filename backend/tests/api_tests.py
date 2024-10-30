@@ -7815,7 +7815,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            languages="test",
+            languages=["test"],
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -7863,6 +7863,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
         )
@@ -8819,7 +8820,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "languages": "updated_languages",
+                    "languages": ["test", "updated_languages"],
                 }
             ],
         }
@@ -8847,7 +8848,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["target_groups"][0]["languages"], "updated_languages")
+        self.assertEqual(db_state["target_groups"][0]["languages"], ["test", "updated_languages"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
@@ -8861,7 +8862,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "languages": "updated_languages2",
+                    "languages": ["test", "updated_languages2"],
                 }
             ],
         }
@@ -8889,7 +8890,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
         self.assertEqual(
-            db_state["target_groups"][0]["languages"], "updated_languages2"
+            db_state["target_groups"][0]["languages"], ["test", "updated_languages2"]
         )
         self.assertEqual(db_state["topics"], [])
         self.assertEqual(db_state["steps"], [])
@@ -8971,7 +8972,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "languages": "updated_languages",
+                    "languages": ["test", "updated_languages"],
                 }
             ],
         }
@@ -9038,7 +9039,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": ["updated_experience"],
                     "academic_course": "updated_academic_course",
-                    "languages": "updated_languages",
+                    "languages": ["test", "updated_languages"],
                 }
             ],
         }
@@ -9066,7 +9067,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
-                    "languages": "updated_languages",
+                    "languages": ["test", "updated_languages"],
                 }
             ],
         }

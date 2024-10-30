@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { IFineStep } from '@/pages/ve-designer/step-data/[stepName]';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import {
     DragDropContext,
     Droppable,
@@ -33,18 +33,6 @@ import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 interface FormValues {
     stepNames: IFineStep[];
 }
-
-// const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-//     return stepNamesObject.stepNames.every((step) => {
-//         return (
-//             step.name === '' &&
-//             step.timestamp_from === '' &&
-//             step.timestamp_to === '' &&
-//             step.learning_goal === '' &&
-//             step.workload === 0
-//         );
-//     });
-// };
 
 export const emptyStepData: IFineStep = {
     _id: undefined,
@@ -78,7 +66,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const router = useRouter();
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
-    const noStepPage = '/ve-designer/no-step';
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
 
     const today = new Date().toISOString().split('T')[0];
@@ -92,6 +79,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         resolver: zodResolver(StepNamesFormSchema),
+        // TODO may load default values only on first visit of a plan?!
         defaultValues: {
             stepNames: [
                 {
@@ -148,15 +136,14 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const stepNames: IFineStep[] = data.stepNames;
         const stepNamesData = stepNames.map((step) => {
-            if (step._id == '') step._id = undefined
+            if (step._id == '') step._id = undefined;
 
             const prevData = steps.find((fineStep) => fineStep._id === step._id);
 
-            const payload: IFineStep = prevData !== undefined
-                ? {...prevData}
-                : {...emptyStepData};
+            const payload: IFineStep =
+                prevData !== undefined ? { ...prevData } : { ...emptyStepData };
 
-            return {...payload, ...step}
+            return { ...payload, ...step };
         });
 
         return [
@@ -276,7 +263,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                         className="grow text-right"
                                         title={t('step-names.last_modified')}
                                     >
-                                        <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                        <Timestamp
+                                            timestamp={plan.last_modified}
+                                            className="text-sm"
+                                        />
                                     </span>
                                 </div>
                                 {plan.steps.map((step, j) => (
@@ -290,7 +280,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             type="checkbox"
                                             className="mr-2"
                                             // BUGFIX: compare name and _id, because we had some finesteps with duplicated _ids ...
-                                            checked={stepsToImport.some((s) => (s._id == step._id && s.name == step.name))}
+                                            checked={stepsToImport.some(
+                                                (s) => s._id == step._id && s.name == step.name
+                                            )}
                                             readOnly
                                         />
                                         {step.name} ({step.workload} h)
@@ -298,7 +290,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 ))}
                             </div>
                         ))}
-
                 </div>
                 <div className="ml-auto text-right pt-4">
                     <button
@@ -328,29 +319,47 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
-                                    <div className="flex flex-wrap gap-y-2 items-center">
+                                    <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
                                         <div>
                                             <label>{t('step-names.from')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_from`
+                                                    `stepNames.${index}.timestamp_from`,
+                                                    {
+                                                        deps: `stepNames.${index}.timestamp_to`,
+                                                        onChange: (e) => {
+                                                            if ( !methods.watch(`stepNames.${index}.timestamp_to`) ) {
+                                                                const newDate = new Date(
+                                                                    e.target.value
+                                                                );
+                                                                newDate.setDate(newDate.getDate() + 1);
+                                                                methods.setValue(
+                                                                    `stepNames.${index}.timestamp_to`,
+                                                                    newDate.toISOString().split('T')[0]
+                                                                );
+                                                            }
+                                                        },
+                                                    }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.to')}</label>
+                                            <label>{t('step-names.to')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_to`
+                                                    `stepNames.${index}.timestamp_to`,
+                                                    {
+                                                        deps: `stepNames.${index}.timestamp_from`
+                                                    }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.name')}</label>
+                                            <label>{t('step-names.name')}</label>
                                             <input
                                                 type="text"
                                                 {...methods.register(`stepNames.${index}.name`)}
@@ -359,7 +368,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.time')}</label>
+                                            <label>{t('step-names.time')}</label>
                                             <input
                                                 type="number"
                                                 {...methods.register(
@@ -391,9 +400,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <div>
                                         <input
                                             type="hidden"
-                                            {...methods.register(
-                                                `stepNames.${index}._id`
-                                            )}
+                                            {...methods.register(`stepNames.${index}._id`)}
                                         />
                                         <input
                                             type="hidden"
@@ -473,11 +480,10 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 link: '/learning-material/left-bubble/Etappenplanung',
             }}
             methods={methods}
-            // prevpage={prevpage}
             nextpage={
-                `/ve-designer/step-data/${encodeURIComponent(
-                    methods.getValues('stepNames')[0]?.name as string
-                )}` || noStepPage
+                methods.getValues('stepNames').length
+                    ? `/ve-designer/step/1`
+                    : `/ve-designer/finish`
             }
             stageInMenu="steps"
             idOfProgress="stepsGenerally"
@@ -535,4 +541,4 @@ export async function getStaticProps({ locale }: { locale: any }) {
             ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
     };
-};
+}

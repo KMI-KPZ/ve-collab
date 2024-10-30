@@ -157,3 +157,29 @@ backend_attribute_renaming
 20.08.24 11:45
 
 ---
+
+#### Kurzfassung
+db.plan.target_groups.languages Datentyp str --> List[str]
+
+#### branch
+feedback_tweaks
+
+#### Beschreibung
+- Attribut `languages` in jeder `target_group` ändert Datentyp von `str` zu `List[str]`
+
+#### letzte Änderung
+17.10.24 11:45
+
+---
+
+#### Kurzfassung
+db.plan.evaluation.evaluation_before neu
+
+#### branch
+feedback_tweaks
+
+#### Beschreibung
+- Attribt `evaluation_before` ist neu in jeder `Evaluation` von einem Plan, Datentyp `str` oder `null`
+
+#### letzte Änderung
+21.10.24 14:30

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 const LectureFormSchema = z.object({
-    name: z.string().max(500, "messages.maxlength500"),
-    lecture_type: z.string().max(500, "messages.maxlength500"),
-    lecture_format: z.string().max(500, "messages.maxlength500"),
+    name: z.string().max(5000, "messages.maxlength5000"),
+    lecture_type: z.string().max(5000, "messages.maxlength5000"),
+    lecture_format: z.string().max(5000, "messages.maxlength5000"),
     participants_amount: z
         .number({
             invalid_type_error: "messages.only_positive_number",

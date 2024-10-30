@@ -542,7 +542,7 @@ class TargetGroup:
         "age_max": (int, str, type(None)),
         "experience": (str, type(None)),
         "academic_course": (str, type(None)),
-        "languages": (str, type(None)),
+        "languages": list,
     }
 
     def __init__(
@@ -553,7 +553,7 @@ class TargetGroup:
         age_max: int | str = None,
         experience: str = None,
         academic_course: str = None,
-        languages: str = None,
+        languages: List[str] = [],
     ) -> None:
         """
         Initialization of a `TargetGroup` instance.
@@ -1170,6 +1170,7 @@ class Evaluation:
         "is_graded": bool,
         "task_type": (str, type(None)),
         "assessment_type": (str, type(None)),
+        "evaluation_before": (str, type(None)),
         "evaluation_while": (str, type(None)),
         "evaluation_after": (str, type(None)),
     }
@@ -1181,6 +1182,7 @@ class Evaluation:
         is_graded: bool = None,
         task_type: str = None,
         assessment_type: str = None,
+        evaluation_before: str = None,
         evaluation_while: str = None,
         evaluation_after: str = None,
     ) -> None:
@@ -1194,6 +1196,7 @@ class Evaluation:
         self.is_graded = is_graded
         self.task_type = task_type
         self.assessment_type = assessment_type
+        self.evaluation_before = evaluation_before
         self.evaluation_while = evaluation_while
         self.evaluation_after = evaluation_after
 
@@ -1220,6 +1223,7 @@ class Evaluation:
             "is_graded": self.is_graded,
             "task_type": self.task_type,
             "assessment_type": self.assessment_type,
+            "evaluation_before": self.evaluation_before,
             "evaluation_while": self.evaluation_while,
             "evaluation_after": self.evaluation_after,
         }
@@ -1845,7 +1849,7 @@ class VEPlan:
                         "age_max": 99,
                         "experience": None,
                         "academic_course": None,
-                        "languages": None,
+                        "languages": [],
                     }
                 ],
                 "languages": [],
@@ -1856,6 +1860,7 @@ class VEPlan:
                         "is_graded": False,
                         "task_type": None,
                         "assessment_type": None,
+                        "evaluation_before": None,
                         "evaluation_while": None,
                         "evaluation_after": None,
                     }
@@ -2051,7 +2056,7 @@ class VEPlan:
                 # ensure that any other values are of type bool or None
                 for attr, value in checklist_item.items():
                     if attr != "username":
-                        if not isinstance(value, (bool, type(None))):
+                        if not isinstance(value, (bool, type(None), list)):
                             raise TypeError(
                                 "expected type 'bool|None' for attribute 'checklist[{}]', got {} instead".format(
                                     attr, type(value)

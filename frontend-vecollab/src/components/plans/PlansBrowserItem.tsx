@@ -11,7 +11,6 @@ import {
     ProgressState,
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { MdShare, MdDelete, MdEdit, MdOutlineCopyAll, MdOutlineFileDownload } from 'react-icons/md';
-import { GrStatusGood } from 'react-icons/gr';
 import Timestamp from '../common/Timestamp';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
@@ -20,8 +19,9 @@ import { PlanSummary } from '../planSummary/PlanSummary';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import Alert, { AlertState } from '../common/dialogs/Alert';
 import { useRouter } from 'next/router';
-import { FaEye } from 'react-icons/fa';
-import { useTranslation } from 'next-i18next';
+import { FaEye, FaMedal } from 'react-icons/fa';
+import { Trans, useTranslation } from 'next-i18next';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     plan: PlanPreview;
@@ -64,9 +64,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         Object.keys(plan.progress).filter(
             (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
         ).length +
-        plan.progress.steps.filter((a) =>
-            a[ Object.keys(a)[0] ] == ProgressState.completed
-        ).length
+        plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -94,12 +92,12 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             title={t('plans_share_dialog_title')}
             onClose={handleCloseShareDialog}
         >
-            <div className="w-getStepsToProgress[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
+            <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
                     <div tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
-                            planId={plan._id}
+                            plan={plan}
                             setAlert={setAlert}
                         />
                     </div>
@@ -118,55 +116,58 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     const SummaryDialog = () => (
         <Dialog
             isOpen={isSummaryOpen}
-            title={t('summary')}
+            title={
+                <>
+                    <div className="text-2xl font-semibold italic text-slate-900">
+                        <Trans i18nKey="summary">
+                            Summary of the
+                            <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
+                                <span className="relative text-white">plan</span>
+                            </span>
+                        </Trans>
+                    </div>
+
+                    <div className="flex ml-auto mr-2 gap-x-2">
+                        {plan.write_access.includes(username) && (
+                            <ButtonLightBlue
+                                classNameExtend="text-nowrap"
+                                onClick={() =>
+                                    router.push({
+                                        pathname: '/ve-designer/name',
+                                        query: { plannerId: plan._id },
+                                    })
+                                }
+                            >
+                                <MdEdit className="inline" /> {t('edit')}
+                            </ButtonLightBlue>
+                        )}
+
+                        <ButtonLightBlue
+                            classNameExtend="text-nowrap"
+                            onClick={() => {
+                                router.push({
+                                    pathname: `/api/pdf-plan`,
+                                    query: { planId: plan._id, locale: router.locale },
+                                });
+                            }}
+                        >
+                            <MdOutlineFileDownload className="inline" /> {t('download')}
+                        </ButtonLightBlue>
+                    </div>
+                </>
+            }
             onClose={() => {
                 setSummaryOpen(false);
                 setPlanSummary(undefined);
             }}
         >
             <div>
-                {plan.write_access.includes(username) ? (
-                    <div className="absolute top-0 right-10 flex">
-                        <div
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20 cursor-pointer"
-                            onClick={() => forward(plan._id)}
-                        >
-                            <MdEdit className="inline" />
-                            {t('edit')}
-                        </div>
-                        <Link
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            href={{
-                                pathname: `/api/pdf-plan`,
-                                query: { planId: plan._id },
-                            }}
-                        >
-                            <MdOutlineFileDownload className="inline" />
-                            {t('download')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="absolute top-0 right-10 flex">
-                        <Link
-                            className="m-4 p-2 rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            href={{
-                                pathname: `/api/pdf-plan`,
-                                query: { planId: plan._id },
-                            }}
-                        >
-                            <MdOutlineFileDownload className="inline" /> {t('download')}
-                        </Link>
-                    </div>
-                )}
-                <div className="w-[70vw] h-[60vh] overflow-y-auto content-scrollbar relative">
+                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
-                        <div className="gap-y-6 w-full px-12 py-6 max-w-screen-2xl items-center flex flex-col justify-content">
-                            <div className={'text-center font-bold text-3xl mb-2'}>{plan.name}</div>
-                            <div className="flex w-full">
-                                <PlanSummary plan={planSummary!} />
-                            </div>
+                        <div className="flex w-full">
+                            <PlanSummary plan={planSummary!} />
                         </div>
                     )}
                 </div>
@@ -316,7 +317,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             </div>
 
             <div
-                className="grow font-normal text-base group hover:cursor-pointer"
+                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -326,15 +327,15 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     }
                 }}
             >
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center">
                     <div className="mr-2 py-1 font-bold whitespace-nowrap">
                         <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
                         </Link>
                     </div>
                     {plan.is_good_practise && (
-                        <div className="mr-2 text-slate-700">
-                            <GrStatusGood title={t('plans_marked_as_good_practise')} />
+                        <div className="mx-2 text-ve-collab-blue">
+                            <FaMedal title={t('plans_marked_as_good_practise')} />
                         </div>
                     )}
                     <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -372,11 +373,11 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 )}
             </div>
 
-            <div className="basis-1/6">
+            <div className="basis-1/6 hidden md:block">
                 <Timestamp timestamp={plan.last_modified} className="text-sm" />
             </div>
 
-            <div className="basis-1/6">
+            <div className="basis-1/6 hidden md:block">
                 <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
             </div>
 

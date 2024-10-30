@@ -20,9 +20,9 @@ import {
 } from '@/interfaces/profile/profileInterfaces';
 import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
-import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -89,11 +89,16 @@ const defaultVeWindowItems: VEWindowItem[] = [
     },
 ];
 
+interface Props {
+    dropdowns: DropdownList;
+    languageKeys: string[];
+}
+
 EditProfile.auth = true;
-export default function EditProfile({
-    dropdowns,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>(defaultPersonalInformation);
+export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Element {
+    const [personalInformation, setPersonalInformation] = useState<PersonalInformation>(
+        defaultPersonalInformation
+    );
     const [veReady, setVeReady] = useState(defaultVeReady);
     const [excludedFromMatching, setExcludedFromMatching] = useState(defaultExcludedFromMatching);
     const [veInformation, setVeInformation] = useState<VEInformation>(defaultVeInformation);
@@ -161,8 +166,19 @@ export default function EditProfile({
                 description: elem.description,
             }))
         );
-
-    }, [session, isLoading, userInfo, personalInformation, veReady, excludedFromMatching, veInformation, researchandTeachingInformation, educations, workExperience, veWindowItems]);
+    }, [
+        session,
+        isLoading,
+        userInfo,
+        personalInformation,
+        veReady,
+        excludedFromMatching,
+        veInformation,
+        researchandTeachingInformation,
+        educations,
+        workExperience,
+        veWindowItems,
+    ]);
 
     /*
     sync the currently entered form data with the backend
@@ -207,7 +223,6 @@ export default function EditProfile({
 
         // trigger a re-fetch of the user's profile data to reflect the changes
         mutate();
-
 
         // if excludedFromMatching has changed from the previously saved state,
         // reload the page to reflect the changes to the parent (LayoutSection.tsx)
@@ -266,6 +281,7 @@ export default function EditProfile({
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                         dropdowns={dropdowns}
+                                        languageKeys={languageKeys}
                                     />
                                 </div>
                                 <div tabname="VE-Info">
@@ -333,13 +349,19 @@ export default function EditProfile({
                         )}
                     </div>
                 </WhiteBox>
-                {successPopupOpen && <Alert message='Gespeichert' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+                {successPopupOpen && (
+                    <Alert
+                        message="Gespeichert"
+                        autoclose={2000}
+                        onClose={() => setSuccessPopupOpen(false)}
+                    />
+                )}
             </div>
         </>
     );
 }
 
-export const getServerSideProps = (async () => {
+export async function getStaticProps({ locale }: { locale: any }) {
     // prepare select dropdown options
     const optionLists = {
         veInterests: [
@@ -450,5 +472,86 @@ export const getServerSideProps = (async () => {
         })),
     };
 
-    return { props: { dropdowns } };
-}) satisfies GetServerSideProps<{ dropdowns: DropdownList }>;
+    const languageKeys = [
+        'Afrikaans',
+        'Albanian',
+        'Arabic',
+        'Armenian',
+        'Basque',
+        'Bengali',
+        'Bulgarian',
+        'Catalan',
+        'Cambodian',
+        'Chinese (Mandarin)',
+        'Croatian',
+        'Czech',
+        'Danish',
+        'Dutch',
+        'English',
+        'Estonian',
+        'Fiji',
+        'Finnish',
+        'French',
+        'Georgian',
+        'German',
+        'Greek',
+        'Gujarati',
+        'Hebrew',
+        'Hindi',
+        'Hungarian',
+        'Icelandic',
+        'Indonesian',
+        'Irish',
+        'Italian',
+        'Japanese',
+        'Javanese',
+        'Korean',
+        'Latin',
+        'Latvian',
+        'Lithuanian',
+        'Macedonian',
+        'Malay',
+        'Malayalam',
+        'Maltese',
+        'Maori',
+        'Marathi',
+        'Mongolian',
+        'Nepali',
+        'Norwegian',
+        'Persian',
+        'Polish',
+        'Portuguese',
+        'Punjabi',
+        'Quechua',
+        'Romanian',
+        'Russian',
+        'Samoan',
+        'Serbian',
+        'Slovak',
+        'Slovenian',
+        'Spanish',
+        'Swahili',
+        'Swedish',
+        'Tamil',
+        'Tatar',
+        'Telugu',
+        'Thai',
+        'Tibetan',
+        'Tonga',
+        'Turkish',
+        'Ukrainian',
+        'Urdu',
+        'Uzbek',
+        'Vietnamese',
+        'Welsh',
+        'Xhosa',
+    ];
+
+    return {
+        props: {
+            dropdowns,
+            languageKeys,
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
+        },
+    };
+}
