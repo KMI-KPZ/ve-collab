@@ -7,6 +7,7 @@ import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
 import FeedbackBanner from '../FeedbackBanner';
+import { usePathname } from 'next/navigation';
 
 interface Props {
     children: JSX.Element;
@@ -25,6 +26,7 @@ export default function LayoutSection({
     const { data: session, status } = useSession();
 
     const router = useRouter();
+    const isFrontpage = usePathname() == '/';
 
     const { data: excludedFromMatching } = useGetExcludedFromMatching(
         session ? session.accessToken : ''
@@ -33,7 +35,7 @@ export default function LayoutSection({
     if (router.pathname === '/plan/pdf/[planId]') {
         return <main>{children}</main>;
     }
-    console.log(router.pathname);
+    // console.log(router.pathname);
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-100">
@@ -44,11 +46,9 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main
-                className={
-                    'flex-1 p-5 min-h-96' + router.isReady && router.pathname === '/'
-                        ? ' '
-                        : ' bg-pattern-left-blue bg-no-repeat'
-                }
+                className={`flex-1 min-h-96 ${
+                    isFrontpage ? ' bg-ve-collab-blue' : ' bg-pattern-left-blue bg-no-repeat'
+                }`}
             >
                 {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />

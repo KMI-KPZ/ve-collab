@@ -5,10 +5,11 @@ import { loadSlim } from '@tsparticles/slim';
 
 interface IBackgroundAnimationProps {
     className: string;
+    enable: Boolean;
 }
 
-export default function BackgroundAnimation({ className }: IBackgroundAnimationProps) {
-    const [init, setInit] = useState(false);
+export default function BackgroundAnimation({ className, enable }: IBackgroundAnimationProps) {
+    const [init, setInit] = useState<Boolean>(false);
 
     // this should be run only once per application lifetime
     useEffect(() => {
@@ -18,9 +19,9 @@ export default function BackgroundAnimation({ className }: IBackgroundAnimationP
             // starting from v2 you can add only the features you need reducing the bundle size
             await loadSlim(engine);
         }).then(() => {
-            setInit(true);
+            setInit(enable);
         });
-    }, []);
+    }, [enable]);
 
     const options: ISourceOptions = useMemo(
         () => ({
