@@ -48,6 +48,8 @@ jobs:
       - name: Create .env file
         run: |
           echo "${{ secrets.FRONTEND_ENV }}" > .env
+        env:
+          FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
 
       - name: Build React app
         run: npm run build
@@ -55,13 +57,9 @@ jobs:
       - name: Generate Sitemap
         run: npm run sitemap
 
-      #- name: run build
-      #  run: npm run build
-
-     # - name: run Lighthouse CI
-     #   env:
-     #     LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-     #   run: |
-     #     npm install -g @lhci/cli@0.14.x
-     #     npm run build
-     #     lhci autorun
+      - name: run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.14.x
+          lhci autorun --config=./lighthouserc.js
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
