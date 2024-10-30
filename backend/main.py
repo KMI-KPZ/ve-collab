@@ -509,7 +509,12 @@ def schedule_periodic_notifications():
                 scheduler.add_job(
                     periodic_notification_dispatch,
                     trigger,
-                    args=[notification["type"], notification["payload"]],
+                    args=[
+                        notification["type"],
+                        notification["payload"],
+                        notification["template"],
+                        notification["email_subject"],
+                    ],
                 )
 
     scheduler.start()
@@ -576,7 +581,17 @@ def main():
     # schedule periodic notifications
     schedule_periodic_notifications()
 
-    #util.send_email("schlecht@infai.org", "test", "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy \n \n eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.")
+    # for testing purposes, delete when done
+    """
+    tornado.ioloop.IOLoop.current().run_sync(
+        lambda: periodic_notification_dispatch(
+            "reminder_evaluation",
+            {"material_link": "http://localhost:3000/en/learning-material/2/Evaluation"},
+            "reminder_evaluation.html",
+            "Zeit zur Evaluation!"
+        )
+    )
+    """
 
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour

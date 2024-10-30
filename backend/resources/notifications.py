@@ -41,6 +41,7 @@ class NotificationResource:
             "space_invitation": "group_invite",
             "ve_invitation": "ve_invite",
             "ve_invitation_reply": "ve_invite",
+            "reminder_evaluation": "system"
         }
 
     async def send_notification(
@@ -90,7 +91,6 @@ class NotificationResource:
             recipient, self.notification_type_setting_mapper[notification_type]
         )
 
-        
         # user doesn't want to receive any notifications of this type
         if notification_setting == "none":
             return
@@ -101,11 +101,13 @@ class NotificationResource:
         elif notification_setting == "email":
             await self._notify_push(recipient, notification_type, payload)
             try:
-                self._notify_email(recipient, notification_type, payload)
+                self._notify_email(recipient, payload, "not_yet_existing", None)
             except Exception as e:
                 logger.error(e)
 
-    async def _notify_push(self, recipient: str, notification_type: str, payload: Dict) -> None:
+    async def _notify_push(
+        self, recipient: str, notification_type: str, payload: Dict
+    ) -> None:
         """
         helper function to dispatch a notification to the user given as `recipient` (username)
         via the internal platform push notification system.
@@ -142,20 +144,21 @@ class NotificationResource:
         # responsible event handler
         self.db.notifications.insert_one(notification_payload)
 
-    def _notify_email(self, recipient: str, notification_type: str, payload: Dict) -> None:
+    def _notify_email(
+        self, recipient: str, payload: Dict, template: str, email_subject: str
+    ) -> None:
         """
         helper function to dispatch a notification to the user given as `recipient` (username)
         via email
         """
 
         user_id = global_vars.keycloak_admin.get_user_id(recipient)
-        email = global_vars.keycloak_admin.get_user(user_id)["email"]
+        recipient_email = global_vars.keycloak_admin.get_user(user_id)["email"]
 
-        # TODO implement email templates, for now just send the stringified payload
-        util.send_email(email, notification_type, str(payload))
+        util.send_email(recipient, recipient_email, email_subject, template, payload)
 
     async def bulk_send_notifications(
-        self, notification_type: str, payload: Dict
+        self, notification_type: str, payload: Dict, template: str, email_subject: str
     ) -> None:
         """
         Dispatch a notification to ALL(!) users,
@@ -181,38 +184,34 @@ class NotificationResource:
         # i really don't know why, but top level import crashes the socketio server...
         from handlers.socket_io import emit_event, get_sid_of_user, recipient_online
 
-        all_users = [
-            user["username"] for user in global_vars.keycloak_admin.get_users()
-        ]
+        all_users_notification_settings = Profiles(self.db).get_all_profiles(
+            projection={"username": True, "notification_settings": True}
+        )
 
-        for recipient in all_users:
-            notification_payload = {
-                "_id": ObjectId(),
-                "type": notification_type,
-                "to": recipient,
-                "receive_state": "pending",
-                "creation_timestamp": datetime.datetime.now(),
-                "payload": payload,
-            }
+        # determine relevant notification settings for the notification type
+        notification_setting = self.notification_type_setting_mapper[notification_type]
 
-            # if recipient of the invitation is currently "online" (i.e. connected via socket),
-            # emit the notification instantly, otherwise it will be held back until
-            # until the user connects the next time
-            if recipient_online(recipient):
-                user_sid = get_sid_of_user(recipient)
-                if user_sid is not None:
-                    await emit_event("notification", notification_payload, user_sid)
-
-                    # store notification as "sent", because user was online
-                    # and notification is already dispatched
-                    notification_payload["receive_state"] = "sent"
-
-            # store notification, either as "pending" or "sent",
-            # depending on if the user was currently online or not.
-            # once the client sends the appropriate acknowledgement event,
-            # the receive_state will be changed to "acknowledged" by the
-            # responsible event handler
-            self.db.notifications.insert_one(notification_payload)
+        # dispatch the notification to each user, respecting their notification settings
+        for recipient in all_users_notification_settings:
+            # user doesn't want to receive any notifications of this type
+            if recipient["notification_settings"][notification_setting] == "none":
+                return
+            # user wants to receive notifications of this type via push only
+            elif recipient["notification_settings"][notification_setting] == "push":
+                await self._notify_push(
+                    recipient["username"], notification_type, payload
+                )
+            # user wants to receive notifications of this type via email and push
+            elif recipient["notification_settings"][notification_setting] == "email":
+                await self._notify_push(
+                    recipient["username"], notification_type, payload
+                )
+                try:
+                    self._notify_email(
+                        recipient["username"], payload, template, email_subject
+                    )
+                except Exception as e:
+                    logger.error(e)
 
     def acknowledge_notification(self, notification_id: str | ObjectId) -> None:
         """
@@ -307,12 +306,12 @@ class NotificationResource:
 
 
 async def periodic_notification_dispatch(
-    periodic_notification_type: str, payload: Dict
+    periodic_notification_type: str, payload: Dict, template: str, email_subject: str
 ) -> None:
     with util.get_mongodb() as db:
         notification_resource = NotificationResource(db)
 
         # dispatch the notification to all users
         await notification_resource.bulk_send_notifications(
-            periodic_notification_type, payload
+            periodic_notification_type, payload, template, email_subject
         )

@@ -20,7 +20,9 @@
             ],
             "payload": {
                 "material_link": "http://localhost:3000/en/learning-material/2/Evaluation"
-            }
+            },
+            "template": "reminder_evaluation.html",
+            "email_subject": "Zeit für Evaluation!"
         },
         {
             "type": "reminder_good_practise_examples",
@@ -42,7 +44,9 @@
             ],
             "payload": {
                 "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis"
-            }
+            },
+            "template": "reminder_good_practise_examples.html",
+            "email_subject": "Good Practise Beispiele zur Orientierung"
         },
         {
             "type": "reminder_icebreaker",
@@ -64,7 +68,9 @@
             ],
             "payload": {
                 "material_link": "http://localhost:3000/en/learning-material/2/VA-Planung"
-            }
+            },
+            "template": "reminder_icebreaker.html",
+            "email_subject": "Der Einstieg zum VE ist am wichtigsten!"
         }
     ]
 }

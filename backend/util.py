@@ -13,7 +13,9 @@ from bson import ObjectId
 import dateutil.parser
 from pymongo import MongoClient
 
+from exceptions import ProfileDoesntExistException
 import global_vars
+from resources.network.profile import Profiles
 
 logger = logging.getLogger(__name__)
 
@@ -153,15 +155,28 @@ def json_serialize_response(dictionary: dict) -> dict:
 
 
 def send_email(
-    recipient: str,
+    recipient_username: str,
+    recipient_email: str,
     subject: str,
     template: Literal[
         "reminder_evaluation.html", "reminder_good_practise_examples.html"
     ],
+    payload: Dict,
 ) -> None:
     """
     Send an Email to the recipient with the specified subject and text.
     """
+
+    # exchange recipient_username for first and last name, if available
+    with get_mongodb() as db:
+        profile_manager = Profiles(db)
+        try:
+            profile = profile_manager.get_profile(
+                recipient_username, projection={"first_name": True, "last_name": True}
+            )
+            display_name = "{} {}".format(profile["first_name"], profile["last_name"])
+        except ProfileDoesntExistException:
+            display_name = None
 
     mailserver = smtplib.SMTP(global_vars.smtp_host, global_vars.smtp_port)
     mailserver.starttls()
@@ -169,7 +184,11 @@ def send_email(
 
     msg = EmailMessage()
     msg["From"] = "VE-Collab Plattform NoReply <{}>".format(global_vars.smtp_username)
-    msg["To"] = recipient
+    msg["To"] = (
+        "{} <{}>".format(display_name, recipient_email)
+        if display_name is not None
+        else recipient_email
+    )
     msg["Subject"] = subject
 
     # image cid's
@@ -185,24 +204,25 @@ def send_email(
         with open("assets/email_templates/reminder_evaluation.txt", "r") as f:
             text = f.read()
             text = text.format(
-                recipient, "https://ve-collab.org/learning-material/2/Evaluation"
+                display_name if display_name is not None else "Nutzer:in",
+                payload["material_link"],
             )
         msg.set_content(text)
-
-        template = global_vars.email_template_env.get_template(template)
-        rendered = template.render(
-            logo_cid=logo_cid_bare,
-            bmbf_cid=bmbf_cid_bare,
-            eu_cid=eu_cid_bare,
-            name=recipient,
-            material_link="https://ve-collab.org/learning-material/2/Evaluation",
-        )
-        msg.add_alternative(rendered, subtype="html")
 
     elif template == "reminder_good_practise_examples.html":
         pass  # TODO
     else:
         raise ValueError("Invalid template name: {}".format(template))
+
+    template = global_vars.email_template_env.get_template(template)
+    rendered = template.render(
+        logo_cid=logo_cid_bare,
+        bmbf_cid=bmbf_cid_bare,
+        eu_cid=eu_cid_bare,
+        name=display_name if display_name is not None else "Nutzer:in",
+        **payload,
+    )
+    msg.add_alternative(rendered, subtype="html")
 
     # add images
     with open("assets/images/logo.png", "rb") as logo:
