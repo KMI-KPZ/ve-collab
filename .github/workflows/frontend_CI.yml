@@ -2,11 +2,6 @@ name: CI_frontend
 
 on:
   workflow_call:
-    secrets:
-      FRONTEND_ENV:
-        required: true
-      LHCI_GITHUB_APP_TOKEN:
-        required: true
   workflow_dispatch:
 
 jobs:
