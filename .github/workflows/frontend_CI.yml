@@ -2,6 +2,11 @@ name: CI_frontend
 
 on:
   workflow_call:
+    secrets:
+      FRONTEND_ENV:
+        required: true
+      LHCI_GITHUB_APP_TOKEN:
+        required: true
   workflow_dispatch:
 
 jobs:
@@ -43,8 +48,6 @@ jobs:
       - name: Create .env file
         run: |
           echo "${{ secrets.FRONTEND_ENV }}" > .env
-        env:
-          FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
 
       - name: Build React app
         run: npm run build
@@ -56,5 +59,3 @@ jobs:
         run: |
           npm install -g @lhci/cli@0.14.x
           lhci autorun --config=./lighthouserc.js
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
