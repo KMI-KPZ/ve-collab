@@ -7,7 +7,7 @@ from email.utils import make_msgid
 import logging
 import mimetypes
 import smtplib
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional
 
 from bson import ObjectId
 import dateutil.parser
@@ -152,7 +152,13 @@ def json_serialize_response(dictionary: dict) -> dict:
     return dictionary
 
 
-def send_email(recipient: str, subject: str, text: str) -> None:
+def send_email(
+    recipient: str,
+    subject: str,
+    template: Literal[
+        "reminder_evaluation.html", "reminder_good_practise_examples.html"
+    ],
+) -> None:
     """
     Send an Email to the recipient with the specified subject and text.
     """
@@ -166,9 +172,6 @@ def send_email(recipient: str, subject: str, text: str) -> None:
     msg["To"] = recipient
     msg["Subject"] = subject
 
-    # plain text
-    msg.set_content(text)
-
     # image cid's
     logo_cid = make_msgid(domain="ve-collab.org")
     logo_cid_bare = logo_cid.strip("<>")
@@ -177,15 +180,29 @@ def send_email(recipient: str, subject: str, text: str) -> None:
     eu_cid = make_msgid(domain="ve-collab.org")
     eu_cid_bare = eu_cid.strip("<>")
 
-    # html template
-    template = global_vars.email_template_env.get_template("reminder.html")
-    rendered = template.render(
-        logo_cid=logo_cid_bare,
-        bmbf_cid=bmbf_cid_bare,
-        eu_cid=eu_cid_bare,
-        text=text,
-    )
-    msg.add_alternative(rendered, subtype="html")
+    # set text and html according to the chosen template
+    if template == "reminder_evaluation.html":
+        with open("assets/email_templates/reminder_evaluation.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient, "https://ve-collab.org/learning-material/2/Evaluation"
+            )
+        msg.set_content(text)
+
+        template = global_vars.email_template_env.get_template(template)
+        rendered = template.render(
+            logo_cid=logo_cid_bare,
+            bmbf_cid=bmbf_cid_bare,
+            eu_cid=eu_cid_bare,
+            name=recipient,
+            material_link="https://ve-collab.org/learning-material/2/Evaluation",
+        )
+        msg.add_alternative(rendered, subtype="html")
+
+    elif template == "reminder_good_practise_examples.html":
+        pass  # TODO
+    else:
+        raise ValueError("Invalid template name: {}".format(template))
 
     # add images
     with open("assets/images/logo.png", "rb") as logo:

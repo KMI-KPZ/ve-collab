@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align: center;">
+    <h1>Zeit zur Evaluation!</h1>
+</div>
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>Für viele neigt sich das Semester dem Ende zu und damit naht auch die Zeit, Evaluationen durchzuführen - davon sind
+    deine VE's nicht ausgeschlossen.</p>
+<p>Wenn du noch Informationen und Tipps zur Evaluation suchst, dann schau doch mal in den <a
+        href="{{ material_link|default('https://ve-collab.org/learning-material') }}"><b>Selbstlernmaterialien</b></a>
+    vorbei!
+</p>
+<p style="margin-top: 30px;">Wir wünschen dir viel Erfolg!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}
