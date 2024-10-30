@@ -26,9 +26,9 @@ jobs:
 
       - name: Cache dependencies
         uses: actions/cache@v4
-        with:
+        with: # cache npm dependencies & next cache (build)
           path: |
-            ~/.npm
+            ~/.npm 
             ${{ github.workspace }}/.next/cache
           # Generate a new cache whenever packages or source files change.
           key: ${{ runner.os }}-node-${{ hashFiles('**/frontend-vecollab/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
