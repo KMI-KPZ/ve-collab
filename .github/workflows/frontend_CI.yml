@@ -69,3 +69,4 @@ jobs:
           lhci autorun --config=./lighthouserc.js
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
