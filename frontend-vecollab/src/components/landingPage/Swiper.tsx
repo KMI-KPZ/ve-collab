@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import Image from 'next/image';
@@ -7,7 +7,6 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
-import '@/styles/frontpageSwiper.css';
 
 import img1 from '@/images/frontpageSwiper/1.jpg';
 import img2 from '@/images/frontpageSwiper/2.jpg';

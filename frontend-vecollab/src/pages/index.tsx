@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
 import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
-import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import WhiteBox from '@/components/common/WhiteBox';
 import { SocketContext } from './_app';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
