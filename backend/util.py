@@ -157,9 +157,11 @@ def json_serialize_response(dictionary: dict) -> dict:
 def send_email(
     recipient_username: str,
     recipient_email: str,
-    subject: str,
+    subject: str | None,
     template: Literal[
-        "reminder_evaluation.html", "reminder_good_practise_examples.html"
+        "reminder_evaluation.html",
+        "reminder_good_practise_examples.html",
+        "reminder_icebreaker.html",
     ],
     payload: Dict,
 ) -> None:
@@ -189,7 +191,9 @@ def send_email(
         if display_name is not None
         else recipient_email
     )
-    msg["Subject"] = subject
+    msg["Subject"] = (
+        subject if subject is not None else "neue Benachrichtung auf VE-Collab"
+    )
 
     # image cid's
     logo_cid = make_msgid(domain="ve-collab.org")

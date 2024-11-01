@@ -32,6 +32,9 @@ class NotificationResource:
             "space_invitation",
             "ve_invitation",
             "ve_invitation_reply",
+            "reminder_evaluation",
+            "reminder_good_practise_examples",
+            "reminder_icebreaker",
         ]
 
         # mapping of notification types to the profile settings
@@ -44,6 +47,17 @@ class NotificationResource:
             "reminder_evaluation": "system",
             "reminder_good_practise_examples": "system",
             "reminder_icebreaker": "system",
+        }
+
+        # mapping of notification types to the email templates
+        self.notification_type_template_mapper = {
+            "space_join_request": "space_join_request.html",
+            "space_invitation": "space_invitation.html",
+            "ve_invitation": "ve_invitation.html",
+            "ve_invitation_reply": "ve_invitation_reply.html",
+            "reminder_evaluation": "reminder_evaluation.html",
+            "reminder_good_practise_examples": "reminder_good_practise_examples.html",
+            "reminder_icebreaker": "reminder_icebreaker.html",
         }
 
     async def send_notification(
@@ -103,7 +117,7 @@ class NotificationResource:
         elif notification_setting == "email":
             await self._notify_push(recipient, notification_type, payload)
             try:
-                self._notify_email(recipient, payload, "not_yet_existing", None)
+                self._notify_email(recipient, notification_type, payload, None)
             except Exception as e:
                 logger.error(e)
 
@@ -147,7 +161,7 @@ class NotificationResource:
         self.db.notifications.insert_one(notification_payload)
 
     def _notify_email(
-        self, recipient: str, payload: Dict, template: str, email_subject: str
+        self, recipient: str, notification_type: str, payload: Dict, email_subject: str | None
     ) -> None:
         """
         helper function to dispatch a notification to the user given as `recipient` (username)
@@ -157,10 +171,16 @@ class NotificationResource:
         user_id = global_vars.keycloak_admin.get_user_id(recipient)
         recipient_email = global_vars.keycloak_admin.get_user(user_id)["email"]
 
-        util.send_email(recipient, recipient_email, email_subject, template, payload)
+        util.send_email(
+            recipient,
+            recipient_email,
+            email_subject,
+            self.notification_type_template_mapper[notification_type],
+            payload,
+        )
 
     async def bulk_send_notifications(
-        self, notification_type: str, payload: Dict, template: str, email_subject: str
+        self, notification_type: str, payload: Dict, email_subject: str
     ) -> None:
         """
         Dispatch a notification to ALL(!) users,
@@ -207,7 +227,7 @@ class NotificationResource:
                 )
                 try:
                     self._notify_email(
-                        recipient["username"], payload, template, email_subject
+                        recipient["username"], notification_type, payload, email_subject
                     )
                 except Exception as e:
                     logger.error(e)
@@ -305,12 +325,12 @@ class NotificationResource:
 
 
 async def periodic_notification_dispatch(
-    periodic_notification_type: str, payload: Dict, template: str, email_subject: str
+    periodic_notification_type: str, payload: Dict, email_subject: str
 ) -> None:
     with util.get_mongodb() as db:
         notification_resource = NotificationResource(db)
 
         # dispatch the notification to all users
         await notification_resource.bulk_send_notifications(
-            periodic_notification_type, payload, template, email_subject
+            periodic_notification_type, payload, email_subject
         )

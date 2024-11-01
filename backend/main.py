@@ -512,7 +512,6 @@ def schedule_periodic_notifications():
                     args=[
                         notification["type"],
                         notification["payload"],
-                        notification["template"],
                         notification["email_subject"],
                     ],
                 )
@@ -589,7 +588,6 @@ def main():
                 "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
                 "designer_dashboard": "http://localhost:3000/plans",
             },
-            "reminder_icebreaker.html",
             "Lass dich inspirieren!",
         )
     )
