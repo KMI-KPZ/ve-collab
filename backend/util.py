@@ -264,7 +264,37 @@ def send_email(
         msg.set_content(text)
 
     elif template == "space_join_request.html":
-        pass
+        # exchange the space join request sender's username for their first
+        # and last name in the payload
+        with get_mongodb() as db:
+            profile_manager = Profiles(db)
+            try:
+                profile = profile_manager.get_profile(
+                    payload["join_request_sender"],
+                    projection={"first_name": True, "last_name": True},
+                )
+                sender_display_name = "{} {}".format(
+                    profile["first_name"], profile["last_name"]
+                )
+            except ProfileDoesntExistException:
+                sender_display_name = None
+            payload["join_request_sender"] = sender_display_name
+
+        with open("assets/email_templates/space_join_request.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=(
+                    display_name if display_name is not None else "Nutzer:in"
+                ),
+                join_request_sender=(
+                    sender_display_name
+                    if sender_display_name is not None
+                    else "Eine/r andere/r Nutzer:in"
+                ),
+                space_name=payload["space_name"],
+                space_id=payload["space_id"],
+            )
+        msg.set_content(text)
     elif template == "ve_invitation.html":
         pass
     elif template == "ve_invitation_reply.html":
