@@ -334,7 +334,47 @@ def send_email(
             )
         msg.set_content(text)
     elif template == "ve_invitation_reply.html":
-        pass
+        # exchange the invitation sender's username for their first
+        # and last name in the payload
+        with get_mongodb() as db:
+            profile_manager = Profiles(db)
+            try:
+                profile = profile_manager.get_profile(
+                    payload["from"],
+                    projection={"first_name": True, "last_name": True},
+                )
+                invitation_recipient_name = "{} {}".format(
+                    profile["first_name"], profile["last_name"]
+                )
+            except ProfileDoesntExistException:
+                invitation_recipient_name = None
+            payload["from"] = invitation_recipient_name
+
+        # depending on the accepted flag, the alternative text is different
+        if payload["accepted"]:
+            with open(
+                "assets/email_templates/ve_invitation_reply_success.txt", "r"
+            ) as f:
+                text = f.read()
+                text = text.format(
+                    recipient_name=(
+                        display_name if display_name is not None else "Nutzer:in"
+                    ),
+                    invitation_recipient_name=invitation_recipient_name,
+                )
+                msg.set_content(text)
+        else:
+            with open(
+                "assets/email_templates/ve_invitation_reply_failure.txt", "r"
+            ) as f:
+                text = f.read()
+                text = text.format(
+                    recipient_name=(
+                        display_name if display_name is not None else "Nutzer:in"
+                    ),
+                    invitation_recipient_name=invitation_recipient_name,
+                )
+                msg.set_content(text)
     else:
         raise ValueError("Invalid template name: {}".format(template))
 

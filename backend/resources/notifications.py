@@ -119,7 +119,7 @@ class NotificationResource:
             try:
                 self._notify_email(recipient, notification_type, payload, None)
             except Exception as e:
-                logger.error(e)
+                raise e
 
     async def _notify_push(
         self, recipient: str, notification_type: str, payload: Dict
