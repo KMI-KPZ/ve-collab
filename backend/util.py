@@ -208,9 +208,25 @@ def send_email(
                 payload["material_link"],
             )
         msg.set_content(text)
-
     elif template == "reminder_good_practise_examples.html":
-        pass  # TODO
+        with open(
+            "assets/email_templates/reminder_good_practise_examples.txt", "r"
+        ) as f:
+            text = f.read()
+            text = text.format(
+                display_name if display_name is not None else "Nutzer:in",
+                payload["material_link"],
+                payload["designer_dashboard"],
+            )
+        msg.set_content(text)
+    elif template == "reminder_icebreaker.html":
+        with open("assets/email_templates/reminder_icebreaker.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                display_name if display_name is not None else "Nutzer:in",
+                payload["material_link"],
+            )
+        msg.set_content(text)
     else:
         raise ValueError("Invalid template name: {}".format(template))
 

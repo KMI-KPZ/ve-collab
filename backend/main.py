@@ -582,16 +582,17 @@ def main():
     schedule_periodic_notifications()
 
     # for testing purposes, delete when done
-    """
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: periodic_notification_dispatch(
-            "reminder_evaluation",
-            {"material_link": "http://localhost:3000/en/learning-material/2/Evaluation"},
-            "reminder_evaluation.html",
-            "Zeit zur Evaluation!"
+            "reminder_icebreaker",
+            {
+                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
+                "designer_dashboard": "http://localhost:3000/plans",
+            },
+            "reminder_icebreaker.html",
+            "Lass dich inspirieren!",
         )
     )
-    """
 
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour

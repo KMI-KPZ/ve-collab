@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align: center;">
+    <h1>Der Einstieg ist die halbe Miete!</h1>
+</div>
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>wusstest du, dass der Einstieg in einen VE einer der wichtigsten Parts ist, damit der VE gelingt?</p>
+<p>Frische doch noch einmal dein Wissen auf, bevor du in die nächste Planung gehst. Informationen zur VE-Planung und
+    Icebreaker-Aktivitäten findest du in den <a
+        href="{{ material_link|default('https://ve-collab.org/learning-material') }}"><b>Selbstlernmaterialien</b></a>.
+</p>
+</p>
+<p style="margin-top: 30px;">Wir wünschen dir viel Erfolg!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

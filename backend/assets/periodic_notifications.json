@@ -43,10 +43,11 @@
                 }
             ],
             "payload": {
-                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis"
+                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
+                "designer_dashboard": "http://localhost:3000/plans"
             },
             "template": "reminder_good_practise_examples.html",
-            "email_subject": "Good Practise Beispiele zur Orientierung"
+            "email_subject": "Inspiration gefällig?"
         },
         {
             "type": "reminder_icebreaker",

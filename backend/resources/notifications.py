@@ -41,7 +41,9 @@ class NotificationResource:
             "space_invitation": "group_invite",
             "ve_invitation": "ve_invite",
             "ve_invitation_reply": "ve_invite",
-            "reminder_evaluation": "system"
+            "reminder_evaluation": "system",
+            "reminder_good_practise_examples": "system",
+            "reminder_icebreaker": "system",
         }
 
     async def send_notification(
@@ -180,9 +182,6 @@ class NotificationResource:
         `handlers.socket_io.acknowledge_notification` on how to send appropriate
         acknowledgements to notifications.
         """
-
-        # i really don't know why, but top level import crashes the socketio server...
-        from handlers.socket_io import emit_event, get_sid_of_user, recipient_online
 
         all_users_notification_settings = Profiles(self.db).get_all_profiles(
             projection={"username": True, "notification_settings": True}
