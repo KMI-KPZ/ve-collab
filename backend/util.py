@@ -296,7 +296,43 @@ def send_email(
             )
         msg.set_content(text)
     elif template == "ve_invitation.html":
-        pass
+        # exchange the invitation sender's username for their first
+        # and last name in the payload
+        with get_mongodb() as db:
+            profile_manager = Profiles(db)
+            try:
+                profile = profile_manager.get_profile(
+                    payload["from"],
+                    projection={"first_name": True, "last_name": True},
+                )
+                sender_display_name = "{} {}".format(
+                    profile["first_name"], profile["last_name"]
+                )
+            except ProfileDoesntExistException:
+                sender_display_name = None
+            payload["from"] = sender_display_name
+
+        # delete plan_id and message from the payload if they are not set
+        # for correct rendering in the email template
+        if payload["plan_id"] is None or payload["plan_id"] == "":
+            del payload["plan_id"]
+        if payload["message"] is None or payload["message"] == "":
+            del payload["message"]
+
+        with open("assets/email_templates/ve_invitation.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=(
+                    display_name if display_name is not None else "Nutzer:in"
+                ),
+                invitation_sender_name=(
+                    sender_display_name
+                    if sender_display_name is not None
+                    else "Eine/r andere/r Nutzer:in"
+                ),
+                message=payload["message"] if "message" in payload else "",
+            )
+        msg.set_content(text)
     elif template == "ve_invitation_reply.html":
         pass
     else:

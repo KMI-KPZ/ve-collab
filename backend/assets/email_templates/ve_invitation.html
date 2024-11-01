@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>es bahnt sich etwas an!</p>
+<p><b>{{ from|default("Ein/e andere/r Nutzer:in") }}</b> fragt an, ob ihr nicht gemeinsam einen VE machen wollt{% if
+    plan_id is defined %}: {%else %}. {% endif%}
+</p>
+{% if message is defined %}
+<div style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+    {{ message }}
+</div>
+{% endif %}
+{% if plan_id is defined %}
+<p><b>{{ from|default("Er/Sie") }}</b> hat bereits begonnen und einen ersten Entwurf dieser Einladung beigefügt. Du
+    findest diesen
+    <a href="https://ve-collab.org/plan/{{ plan_id }}"><b>hier</b></a> und in deinem persönliche Dashboard.
+</p>
+{% endif %}
+
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}
+
+
+
+
+
+notification_payload = {
+"from": self.current_user.username,
+"message": message,
+"plan_id": plan_id,
+"invitation_id": invitation_id,
+}

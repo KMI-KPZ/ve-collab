@@ -1,0 +1,15 @@
+Hallo {recipient_name},
+
+es bahnt sich etwas an!
+
+{invitation_sender_name} fragt an, ob ihr nicht gemeinsam einen VE machen wollt.
+
+Folgende Nachricht hat {invitation_sender_name} dieser Einladung beigefügt:
+{message}
+
+Evtl. wurde auch bereits ein erster Entwurf beigefügt. Diesen können wir allerdings nur anzeigen, wenn du die HTML-Version dieser E-Mail anzeigen lässt.
+
+Alternativ hast du die Benachrichtigung auch auf VE-Collab noch einmal mit allen Informationen bekommen, schau doch mal auf der Plattform vorbei!
+
+Viele Grüße!
+Dein VE-Collab Team
