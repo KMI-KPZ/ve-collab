@@ -1,7 +1,7 @@
 module.exports = {
     ci: {
         collect: {
-            url: ['http://localhost:3000/de'],
+            url: ['http://localhost:3000/de', 'https://ve-collab.org/de/learning-material'],
             startServerCommand: 'npm run start',
             settings: {
                 preset: 'desktop',
@@ -12,7 +12,7 @@ module.exports = {
             target: 'temporary-public-storage',
         },
         assertions: {
-            // does not work -> 'fatal' it doesnt fail the job
+            // does not work -> 'fatal' it doesnt fail the job if the score is below the threshold
             performance: ['error', { minScore: 0.7 }],
             seo: ['error', { minScore: 0.8 }],
             accessibility: ['error', { minScore: 0.9 }],

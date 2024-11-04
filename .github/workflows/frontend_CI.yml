@@ -26,7 +26,7 @@ jobs:
 
       - name: Cache dependencies
         uses: actions/cache@v4
-        with: # cache npm dependencies & next cache (build)
+        with: # cache npm dependencies & next cache - fasten build (does not work currently, nextjs bug)
           path: |
             ~/.npm 
             ${{ github.workspace }}/.next/cache
