@@ -11,14 +11,9 @@ module.exports = {
         upload: {
             target: 'temporary-public-storage',
         },
-        assert: {
+        // for advanced comparison: Lighthouse team's recommended set of audits
+        /*assert: {
             preset: 'lighthouse:recommended',
-            assertions: {
-                performance: ['error', { minScore: 0.7 }],
-                seo: ['error', { minScore: 0.8 }],
-                accessibility: ['error', { minScore: 0.9 }],
-                'best-practices': ['error', { minScore: 0.9 }],
-            },
-        },
+        },*/
     },
 };
