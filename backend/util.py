@@ -11,7 +11,9 @@ from typing import Dict, Literal, Optional
 
 from bson import ObjectId
 import dateutil.parser
+from jinja2 import TemplateNotFound
 from pymongo import MongoClient
+from pymongo.database import Database
 
 from exceptions import ProfileDoesntExistException
 import global_vars
@@ -154,163 +156,144 @@ def json_serialize_response(dictionary: dict) -> dict:
     return dictionary
 
 
-def send_email(
-    recipient_username: str,
-    recipient_email: str,
-    subject: str | None,
-    template: Literal[
-        "reminder_evaluation.html",
-        "reminder_good_practise_examples.html",
-        "reminder_icebreaker.html",
-    ],
-    payload: Dict,
-) -> None:
+def _construct_email_header(
+    recipient_name: str | None, recipient_email: str, subject: str | None
+) -> EmailMessage:
     """
-    Send an Email to the recipient with the specified subject and text.
+    Create a new `EmailMessage` object and set `From`, `To` and `Subject` fields
+    according to the given parameters.
+    If `recipient_name` is given, use 'Name <email>' format for the recipient,
+    otherwise just use the email.
+    Likewise, `subject` uses a default fallback if not given.
+
+    Returns the `EmailMessage` object.
     """
-
-    # exchange recipient_username for first and last name, if available
-    with get_mongodb() as db:
-        profile_manager = Profiles(db)
-        try:
-            profile = profile_manager.get_profile(
-                recipient_username, projection={"first_name": True, "last_name": True}
-            )
-            display_name = "{} {}".format(profile["first_name"], profile["last_name"])
-        except ProfileDoesntExistException:
-            display_name = None
-
-    mailserver = smtplib.SMTP(global_vars.smtp_host, global_vars.smtp_port)
-    mailserver.starttls()
-    mailserver.login(global_vars.smtp_username, global_vars.smtp_password)
 
     msg = EmailMessage()
     msg["From"] = "VE-Collab Plattform NoReply <{}>".format(global_vars.smtp_username)
     msg["To"] = (
-        "{} <{}>".format(display_name, recipient_email)
-        if display_name is not None
+        "{} <{}>".format(recipient_name, recipient_email)
+        if recipient_name is not None
         else recipient_email
     )
     msg["Subject"] = (
         subject if subject is not None else "neue Benachrichtung auf VE-Collab"
     )
 
-    # image cid's
-    logo_cid = make_msgid(domain="ve-collab.org")
-    logo_cid_bare = logo_cid.strip("<>")
-    bmbf_cid = make_msgid(domain="ve-collab.org")
-    bmbf_cid_bare = bmbf_cid.strip("<>")
-    eu_cid = make_msgid(domain="ve-collab.org")
-    eu_cid_bare = eu_cid.strip("<>")
+    return msg
 
-    # set text and html according to the chosen template
+
+def _exchange_username_for_display_name(username: str, db: Database) -> str | None:
+    """
+    Exchange a username (which could be cryptic) for a more human-readable
+    display name (first & last name), if the user exists in the database and return it.
+    Otherwise, return None.
+    """
+
+    profile_manager = Profiles(db)
+    try:
+        profile = profile_manager.get_profile(
+            username, projection={"first_name": True, "last_name": True}
+        )
+        return "{} {}".format(profile["first_name"], profile["last_name"])
+    except ProfileDoesntExistException:
+        return None
+
+
+def _append_msg_text(
+    db: Database,
+    msg: EmailMessage,
+    display_name: str,
+    template: Literal[
+        "reminder_evaluation.html",
+        "reminder_good_practise_examples.html",
+        "reminder_icebreaker.html",
+        "space_invitation.html",
+        "space_join_request.html",
+        "ve_invitation.html",
+        "ve_invitation_reply.html",
+    ],
+    payload: Dict,
+) -> None:
+    """
+    Depending on the chosen template, set the alternative text for the email.
+    This text is displayed in case the email client does not render the html content
+    and therefore functions as a fallback.
+
+    Some templates require additional information, which is extracted from the `payload`
+    and / or taken from the database, to which an open connection is passed as `db`.
+
+    Attention: as a side effect, the `payload` is modified in place for some templates to
+    ensure correct rendering not only of the alternative text, but also of the html content.
+    Therefore, this function should be called before setting the html content (in `send_mail()`)
+    """
+
+    # set text according to the chosen template
+    text = ""
     if template == "reminder_evaluation.html":
         with open("assets/email_templates/reminder_evaluation.txt", "r") as f:
             text = f.read()
-            text = text.format(
-                display_name if display_name is not None else "Nutzer:in",
-                payload["material_link"],
-            )
-        msg.set_content(text)
+            text = text.format(display_name, payload["material_link"])
+
     elif template == "reminder_good_practise_examples.html":
         with open(
             "assets/email_templates/reminder_good_practise_examples.txt", "r"
         ) as f:
             text = f.read()
             text = text.format(
-                display_name if display_name is not None else "Nutzer:in",
-                payload["material_link"],
-                payload["designer_dashboard"],
+                display_name, payload["material_link"], payload["designer_dashboard"]
             )
-        msg.set_content(text)
+
     elif template == "reminder_icebreaker.html":
         with open("assets/email_templates/reminder_icebreaker.txt", "r") as f:
             text = f.read()
-            text = text.format(
-                display_name if display_name is not None else "Nutzer:in",
-                payload["material_link"],
-            )
-        msg.set_content(text)
+            text = text.format(display_name, payload["material_link"])
+
     elif template == "space_invitation.html":
-        # exchange the space invitation sender's username for their first
-        # and last name in the payload
-        with get_mongodb() as db:
-            profile_manager = Profiles(db)
-            try:
-                profile = profile_manager.get_profile(
-                    payload["invitation_sender"],
-                    projection={"first_name": True, "last_name": True},
-                )
-                sender_display_name = "{} {}".format(
-                    profile["first_name"], profile["last_name"]
-                )
-            except ProfileDoesntExistException:
-                sender_display_name = None
-            payload["invitation_sender"] = sender_display_name
+        sender_display_name = _exchange_username_for_display_name(
+            payload["invitation_sender"], db
+        )
+
+        if sender_display_name is None:
+            sender_display_name = "einem/r anderen Nutzer:in"
+
+        payload["invitation_sender"] = sender_display_name
 
         with open("assets/email_templates/space_invitation.txt", "r") as f:
             text = f.read()
             text = text.format(
-                recipient_name=(
-                    display_name if display_name is not None else "Nutzer:in"
-                ),
-                invitation_sender=(
-                    sender_display_name
-                    if sender_display_name is not None
-                    else "einem/r anderen Nutzer:in"
-                ),
+                recipient_name=(display_name),
+                invitation_sender=(sender_display_name),
                 space_name=payload["space_name"],
             )
-        msg.set_content(text)
 
     elif template == "space_join_request.html":
-        # exchange the space join request sender's username for their first
-        # and last name in the payload
-        with get_mongodb() as db:
-            profile_manager = Profiles(db)
-            try:
-                profile = profile_manager.get_profile(
-                    payload["join_request_sender"],
-                    projection={"first_name": True, "last_name": True},
-                )
-                sender_display_name = "{} {}".format(
-                    profile["first_name"], profile["last_name"]
-                )
-            except ProfileDoesntExistException:
-                sender_display_name = None
-            payload["join_request_sender"] = sender_display_name
+
+        sender_display_name = _exchange_username_for_display_name(
+            payload["join_request_sender"], db
+        )
+
+        if sender_display_name is None:
+            sender_display_name = "Ein/e andere/r Nutzer:in"
+
+        payload["join_request_sender"] = sender_display_name
 
         with open("assets/email_templates/space_join_request.txt", "r") as f:
             text = f.read()
             text = text.format(
-                recipient_name=(
-                    display_name if display_name is not None else "Nutzer:in"
-                ),
-                join_request_sender=(
-                    sender_display_name
-                    if sender_display_name is not None
-                    else "Eine/r andere/r Nutzer:in"
-                ),
+                recipient_name=(display_name),
+                join_request_sender=(sender_display_name),
                 space_name=payload["space_name"],
                 space_id=payload["space_id"],
             )
-        msg.set_content(text)
+
     elif template == "ve_invitation.html":
-        # exchange the invitation sender's username for their first
-        # and last name in the payload
-        with get_mongodb() as db:
-            profile_manager = Profiles(db)
-            try:
-                profile = profile_manager.get_profile(
-                    payload["from"],
-                    projection={"first_name": True, "last_name": True},
-                )
-                sender_display_name = "{} {}".format(
-                    profile["first_name"], profile["last_name"]
-                )
-            except ProfileDoesntExistException:
-                sender_display_name = None
-            payload["from"] = sender_display_name
+
+        sender_display_name = _exchange_username_for_display_name(payload["from"], db)
+
+        if sender_display_name is None:
+            sender_display_name = "Ein/e andere/r Nutzer:in"
+        payload["from"] = sender_display_name
 
         # delete plan_id and message from the payload if they are not set
         # for correct rendering in the email template
@@ -322,33 +305,21 @@ def send_email(
         with open("assets/email_templates/ve_invitation.txt", "r") as f:
             text = f.read()
             text = text.format(
-                recipient_name=(
-                    display_name if display_name is not None else "Nutzer:in"
-                ),
-                invitation_sender_name=(
-                    sender_display_name
-                    if sender_display_name is not None
-                    else "Eine/r andere/r Nutzer:in"
-                ),
+                recipient_name=(display_name),
+                invitation_sender_name=(sender_display_name),
                 message=payload["message"] if "message" in payload else "",
             )
-        msg.set_content(text)
+
     elif template == "ve_invitation_reply.html":
-        # exchange the invitation sender's username for their first
-        # and last name in the payload
-        with get_mongodb() as db:
-            profile_manager = Profiles(db)
-            try:
-                profile = profile_manager.get_profile(
-                    payload["from"],
-                    projection={"first_name": True, "last_name": True},
-                )
-                invitation_recipient_name = "{} {}".format(
-                    profile["first_name"], profile["last_name"]
-                )
-            except ProfileDoesntExistException:
-                invitation_recipient_name = None
-            payload["from"] = invitation_recipient_name
+
+        invitation_recipient_name = _exchange_username_for_display_name(
+            payload["from"], db
+        )
+
+        if invitation_recipient_name is None:
+            invitation_recipient_name = "Ein/e andere/r Nutzer:in"
+
+        payload["from"] = invitation_recipient_name
 
         # depending on the accepted flag, the alternative text is different
         if payload["accepted"]:
@@ -357,38 +328,102 @@ def send_email(
             ) as f:
                 text = f.read()
                 text = text.format(
-                    recipient_name=(
-                        display_name if display_name is not None else "Nutzer:in"
-                    ),
+                    recipient_name=(display_name),
                     invitation_recipient_name=invitation_recipient_name,
                 )
-                msg.set_content(text)
         else:
             with open(
                 "assets/email_templates/ve_invitation_reply_failure.txt", "r"
             ) as f:
                 text = f.read()
                 text = text.format(
-                    recipient_name=(
-                        display_name if display_name is not None else "Nutzer:in"
-                    ),
+                    recipient_name=(display_name),
                     invitation_recipient_name=invitation_recipient_name,
                 )
-                msg.set_content(text)
     else:
         raise ValueError("Invalid template name: {}".format(template))
 
+    # set msg text and return
+    msg.set_content(text)
+    return msg
+
+
+def send_email(
+    recipient_username: str,
+    recipient_email: str,
+    subject: str | None,
+    template: Literal[
+        "reminder_evaluation.html",
+        "reminder_good_practise_examples.html",
+        "reminder_icebreaker.html",
+        "space_invitation.html",
+        "space_join_request.html",
+        "ve_invitation.html",
+        "ve_invitation_reply.html",
+    ],
+    payload: Dict,
+) -> None:
+    """
+    Send an Email to the recipient with the given username and email address.
+
+    The email is constructed based on the given template, which is chosen from a
+    set of predefined templates in the `assets/email_templates` directory.
+    If the template does not exist, an error is logged and the function returns without
+    sending an email, i.e. a valid, existing `template` is always required.
+
+    The payload is a dictionary containing arbitrary information that is used to fill
+    the placeholders in the email template. The keys in the payload are specific to the
+    chosen template and are documented in the respective template files.
+
+    Optionally a `subject` can be set for the email. If None is given, instead a generic
+    default is used.
+
+    Returns nothing
+    """
+
+    # sanity check: email template exists
+    try: 
+        global_vars.email_template_env.get_template(template)
+    except TemplateNotFound:
+        logger.error("Email template not found: {}".format(template))
+        return
+
+    # setup shenanigans
+    mailserver = smtplib.SMTP(global_vars.smtp_host, global_vars.smtp_port)
+    mailserver.starttls()
+    mailserver.login(global_vars.smtp_username, global_vars.smtp_password)
+
+    # set header and alternative text for the email
+    with get_mongodb() as db:
+        display_name = _exchange_username_for_display_name(recipient_username, db)
+        if display_name is None:
+            display_name = "Nutzer:in"
+
+        msg = _construct_email_header(display_name, recipient_email, subject)
+
+        # alt text is used in case clients dont want to render the html
+        msg = _append_msg_text(db, msg, display_name, template, payload)
+
+    # image cid's for vecollab logo and funding icons
+    logo_cid = make_msgid(domain="ve-collab.org")
+    logo_cid_bare = logo_cid.strip("<>")
+    bmbf_cid = make_msgid(domain="ve-collab.org")
+    bmbf_cid_bare = bmbf_cid.strip("<>")
+    eu_cid = make_msgid(domain="ve-collab.org")
+    eu_cid_bare = eu_cid.strip("<>")
+
+    # set html mail content based on the chosen template
     template = global_vars.email_template_env.get_template(template)
     rendered = template.render(
         logo_cid=logo_cid_bare,
         bmbf_cid=bmbf_cid_bare,
         eu_cid=eu_cid_bare,
-        name=display_name if display_name is not None else "Nutzer:in",
+        name=display_name,
         **payload,
     )
     msg.add_alternative(rendered, subtype="html")
 
-    # add images
+    # add images for pre-created cids
     with open("assets/images/logo.png", "rb") as logo:
         maintype, subtype = mimetypes.guess_type(logo.name)[0].split("/")
         msg.get_payload()[1].add_related(
@@ -406,4 +441,5 @@ def send_email(
         )
 
     mailserver.send_message(msg)
+
     mailserver.quit()

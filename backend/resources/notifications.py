@@ -72,9 +72,9 @@ class NotificationResource:
         i.e. if they want to receive notifications of this type via email and push, push only
         or not at all.
 
-        Payload can be an arbitrary str, respectively an arbitrary dict,
-        as long as the recipient is able the understand the content and react
-        accordingly. The notification feature itself does not enforce any format or content.
+        Payload can be an arbitrary Dict, as long as the recipient is able to 
+        understand the content and react accordingly. The notification feature 
+        itself does not enforce any format or content.
 
         If the user has complied to push notifications:
         If the recipient user is currently "online" (i.e. has an open and authenticated
@@ -87,6 +87,8 @@ class NotificationResource:
         they will always be re-sent (only applicable to push-notifications). See details in
         `handlers.socket_io.acknowledge_notification` on how to send appropriate
         acknowledgements to notifications.
+
+        Email notifications are sent instantly, if the user has complied to receive them.
 
         Returns nothing.
 
@@ -187,10 +189,19 @@ class NotificationResource:
         by specifying the `notification_type` and the `payload` that
         represents the body of the notification.
 
-        Both type and payload can be an arbitrary str, respectively an arbitrary dict,
-        as long as the recipient is able the understand the content and react
-        accordingly. The notification feature itself does not enforce any format or content.
+        These notifications obey the rules the recipient user has set in their profile,
+        i.e. if they want to receive notifications of this type via email and push, push only
+        or not at all.
 
+        Payload can be an arbitrary dict, as long as the recipient is able to 
+        understand the content and react accordingly. The notification feature 
+        itself does not enforce any format or content.
+
+        Optionally, an `email_subject` can be specified, which will be used as the
+        subject of the email notification. If `None` is passed, a generic default will
+        be used.
+
+        If the user has complied to push notifications:
         If the recipient user is currently "online" (i.e. has an open and authenticated
         socket connection) the notification is dispatched immediately via the socketio event
         "notification". Otherwise the notification is held back until the user is online
@@ -201,8 +212,23 @@ class NotificationResource:
         they will always be re-sent. See details in
         `handlers.socket_io.acknowledge_notification` on how to send appropriate
         acknowledgements to notifications.
+
+        Email notifications are sent instantly, if the user has complied to receive them.
+
+        Returns nothing.
+
+        Raises `ValueError` if the `notification_type` is not allowed.
         """
 
+        # check if the notification type is allowed
+        if notification_type not in self.allowed_notification_types:
+            raise ValueError(
+                "Notification type '{}' is not allowed.Allowed types are: {}".format(
+                    notification_type, self.allowed_notification_types
+                )
+            )
+
+        # grab users and their notification settings
         all_users_notification_settings = Profiles(self.db).get_all_profiles(
             projection={"username": True, "notification_settings": True}
         )
@@ -212,15 +238,15 @@ class NotificationResource:
 
         # dispatch the notification to each user, respecting their notification settings
         for recipient in all_users_notification_settings:
-            # user doesn't want to receive any notifications of this type
+            # no notifications at all
             if recipient["notification_settings"][notification_setting] == "none":
                 return
-            # user wants to receive notifications of this type via push only
+            # push only
             elif recipient["notification_settings"][notification_setting] == "push":
                 await self._notify_push(
                     recipient["username"], notification_type, payload
                 )
-            # user wants to receive notifications of this type via email and push
+            # email and push
             elif recipient["notification_settings"][notification_setting] == "email":
                 await self._notify_push(
                     recipient["username"], notification_type, payload
