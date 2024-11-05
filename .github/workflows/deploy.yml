@@ -18,6 +18,7 @@ jobs:
     uses: ./.github/workflows/frontend_CI.yml
     secrets:
       FRONTEND_ENV: ${{ secrets.FRONTEND_ENV }}
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
   deploy:
     name: deploy to staging
