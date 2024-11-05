@@ -460,7 +460,7 @@ export default function HeaderSection({
                                     'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
                                 }
                                 type="text"
-                                placeholder="Suchen ..."
+                                placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
                                 defaultValue={
@@ -469,7 +469,7 @@ export default function HeaderSection({
                             />
                             <button
                                 type="submit"
-                                title="Suchen"
+                                title={t('search_title')}
                                 className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
                             >
                                 <MdSearch className="text-white" />

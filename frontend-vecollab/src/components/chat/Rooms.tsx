@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import RoomSnippet from './RoomSnippet';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { MdOutlineAddCircleOutline } from 'react-icons/md';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     handleChatSelect: (chat: string) => void;
@@ -20,6 +21,8 @@ export default function Sidebar({
     profileSnippets,
 }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation('common');
+
     const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
     const { data: roomSnippets, isLoading, error, mutate } = useGetChatrooms(session!.accessToken);
@@ -36,7 +39,7 @@ export default function Sidebar({
     return (
         <div className="relative px-4 max-h-[80vh]">
             {isLoading ? (
-                <LoadingAnimation size='small' />
+                <LoadingAnimation size="small" />
             ) : (
                 <ul className="flex flex-col  overflow-y-auto">
                     {roomSnippets.map((room) => (
@@ -55,13 +58,13 @@ export default function Sidebar({
             <button
                 className="mt-4 p-2 rounded-full cursor-pointer hover:bg-slate-100"
                 onClick={(e) => handleOpenNewChatDialog()}
-                title="Neuen Chat erstellen"
+                title={t("create_new_chat_title")}
             >
                 <MdOutlineAddCircleOutline />
             </button>
             <Dialog
                 isOpen={isNewChatDialogOpen}
-                title={`Neuer Chat`}
+                title={t("new_chat_title")}
                 onClose={handleCloseNewChatDialog}
             >
                 <NewChatForm closeDialogCallback={handleCloseNewChatDialog} />
