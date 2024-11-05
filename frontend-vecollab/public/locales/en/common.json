@@ -212,6 +212,8 @@
   "show_less": "Show less",
   "loading": "loading...",
   "nothing_found": "nothing found",
+  "excluded_from_matching_banner_1": "You are currently excluded from matching, change ",
+  "excluded_from_matching_banner_2": "!",
   "languages": {
     "Afrikaans": "Afrikaans",
     "Albanian": "Albanian",

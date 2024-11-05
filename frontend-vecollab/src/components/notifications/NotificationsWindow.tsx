@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { MdClose } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
 import AllNotifications from '@/components/notifications/AllNotifications';
@@ -57,7 +57,7 @@ export default function NotificationsWindow({
 
             <div className="h-[60vh] min-h-[16rem] overflow-y-auto content-scrollbar text-sm">
                 <Tabs>
-                    <div tabname={t("new")}>
+                    <div tabname={t('new')}>
                         <ul className="-mt-4 divide-y">
                             {notificationEvents.map((notification, index) => (
                                 <div key={index}>
@@ -101,7 +101,7 @@ export default function NotificationsWindow({
                             ))}
                         </ul>
                     </div>
-                    <div tabname={t("all")}>
+                    <div tabname={t('all')}>
                         <div className="-mt-4">
                             <AllNotifications socket={socket} />
                         </div>
