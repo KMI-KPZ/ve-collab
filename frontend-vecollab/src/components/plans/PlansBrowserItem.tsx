@@ -167,7 +167,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                         <LoadingAnimation />
                     ) : (
                         <div className="flex w-full">
-                            <PlanSummary plan={planSummary!} />
+                            <PlanSummary plan={planSummary!} openAllBoxes={true} />
                         </div>
                     )}
                 </div>
