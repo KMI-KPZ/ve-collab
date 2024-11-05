@@ -1,74 +1,110 @@
-import { SideMenuStep } from '@/interfaces/startingWizard/sideProgressBar';
+import imageGeneralInformation from '@/images/icons/progressBar/topProgressBar/generalInformation.svg';
+import imageStagePlanner from '@/images/icons/progressBar/topProgressBar/stagePlanner.svg';
+import imageFinish from '@/images/icons/progressBar/topProgressBar/finish.svg';
+import { IMenuData, ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 
-export const sideMenuStepsData: SideMenuStep[] = [
-    {
-        text: 'Projektname',
-        id: 'name',
-        link: '/startingWizard/generalInformation/projectName',
+const itemsAllgemein: ISubmenuData[] = [
+        {
+            text: 'designer:sidebar.project_name',
+            id: 'name',
+            link: '/ve-designer/name',
+        },
+        {
+            text: "designer:sidebar.partners",
+            id: 'partners',
+            link: '/ve-designer/partners',
+        },
+        {
+            text: "designer:sidebar.institutions",
+            id: 'institutions',
+            link: '/ve-designer/institutions',
+        },
+        {
+            text: "designer:sidebar.courses",
+            id: 'lectures',
+            link: '/ve-designer/lectures',
+        },
+        {
+            text: "designer:sidebar.tg_and_language",
+            id: 'target_groups',
+            link: '/ve-designer/target-groups',
+        },
+        {
+            text: "designer:sidebar.learning_content",
+            id: 'learning_goals',
+            link: '/ve-designer/learning-goals',
+        },
+        {
+            text: "designer:sidebar.learning_env",
+            id: 'learning_env',
+            link: '/ve-designer/learning-env',
+        },
+        {
+            text: "designer:sidebar.methods",
+            id: 'methodical_approaches',
+            link: '/ve-designer/methodology',
+        },
+        {
+            text: "designer:sidebar.evaluation",
+            id: 'evaluation',
+            link: '/ve-designer/evaluation',
+        },
+        {
+            text: "designer:sidebar.checklist",
+            id: 'checklist',
+            link: '/ve-designer/checklist',
+        },
+    ];
+
+const itemsEtappenplaner : ISubmenuData[] =
+    [
+        {
+            text: "designer:sidebar.general_outline",
+            id: 'stepsGenerally',
+            link: '/ve-designer/steps',
+        },
+    ];
+
+export interface IMainMenuItems {
+    generally: IMenuData,
+    steps: IMenuData,
+    finish: IMenuData,
+    'post-process': IMenuData
+}
+
+export const mainMenuData: IMainMenuItems = {
+    'generally': {
+        text: 'designer:sidebar.general',
+        id: 'generally',
+        link: '',
+        image: imageGeneralInformation,
+        submenu: itemsAllgemein,
     },
-    {
-        text: 'Partner',
-        id: 'partners',
-        link: '/startingWizard/generalInformation/partners',
-    },
-    {
-        text: 'Externe Beteiligte',
-        id: 'involved_parties',
-        link: '/startingWizard/generalInformation/externalParties',
-    },
-    {
-        text: 'Institution',
-        id: 'institutions',
-        link: '/startingWizard/generalInformation/institutions',
-    },
-    {
-        text: 'Lehrveranstaltungen',
-        id: 'lectures',
-        link: '/startingWizard/generalInformation/participatingCourses',
-    },
-    {
-        text: 'Zielgruppen',
-        id: 'audience',
-        link: '/startingWizard/generalInformation/targetGroups',
-    },
-    {
-        text: 'Richtlernziele',
-        id: 'learning_goals',
-        link: '/startingWizard/generalInformation/globalGoals',
-    },
-    {
-        text: 'Thema/Themen',
-        id: 'topics',
-        link: '/startingWizard/generalInformation/veTopic',
-    },
-    {
-        text: 'Sprache(n)',
-        id: 'languages',
-        link: '/startingWizard/generalInformation/languages',
-    },
-    {
-        text: 'Bewertung und Evaluation',
-        id: 'evaluation',
-        link: '/startingWizard/generalInformation/evaluation',
-    },
-    {
-        text: '(Digitale) Formate',
-        id: 'realization',
-        link: '/startingWizard/generalInformation/courseFormat',
-    },
-    {
-        text: 'Digitale Lernumgebung',
-        id: 'learning_env',
-        link: '/startingWizard/generalInformation/learningPlatform',
-    },
-    {
-        text: 'Formale Rahmenbedingungen',
-        id: 'formalities',
-        link: '/startingWizard/generalInformation/formalConditions',
-    },
-    {
-        text: 'Etappenplanung',
+    'steps': {
+        text: "designer:sidebar.phases",
         id: 'steps',
-        link: '/startingWizard/broadPlanner',
+        link: '',
+        image: imageStagePlanner,
+        submenu: itemsEtappenplaner,
     },
-];
+    'finish': {
+        text: "designer:sidebar.summary",
+        id: 'finish',
+        link: '/ve-designer/finish',
+        image: imageFinish,
+        submenu: [],
+    },
+    'post-process': {
+        text: "designer:sidebar.post_processing",
+        id: 'post-process',
+        link: '/ve-designer/post-process',
+        image: imageStagePlanner,
+        submenu: [],
+    }
+}
+
+
+export interface IMenuDataState {
+    id: string;
+    open: boolean;
+}

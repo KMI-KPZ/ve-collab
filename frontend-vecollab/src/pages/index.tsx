@@ -1,39 +1,28 @@
-import React from 'react';
-import { fetchPOST } from '@/lib/backend';
-import { useRouter } from 'next/router';
-import Image from 'next/image';
-import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
+import React, { useContext } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
+import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
+import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
+import WhiteBox from '@/components/common/WhiteBox';
+import { SocketContext } from './_app';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { useTranslation } from 'next-i18next'
 
-export default function Home() {
-    const router = useRouter();
-    const { data: session } = useSession();
-
-    const createAndForwardNewPlanner = async () => {
-        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-        await router.push({
-            pathname: '/startingWizard/generalInformation/projectName',
-            query: { plannerId: newPlanner.inserted_id },
-        });
-    };
+export default function Home(): JSX.Element {
+    const { data: session, status } = useSession();
+    const socket = useContext(SocketContext);
+    const { t } = useTranslation('common')
 
     return (
-        <div className="bg-slate-100">
-            <div className="flex flex-col m-auto p-12 max-w-screen-[1500] items-center bg-pattern-left-blue bg-no-repeat">
-                <div className="w-5/6 h-40 mt-2 relative rounded-2xl z-10">
-                    <Image fill src={blueBackground} alt={''} />
-                    <div
-                        className={
-                            'absolute top-10 bottom-10 left-20 right-20 text-center items-center'
-                        }
-                    >
-                        <h1 className={'text-6xl text-white font-bold'}>
-                            LEHRE KOOPERATIV, DIGITAL UND INTERNATIONAL
-                        </h1>
-                    </div>
+        <div>
+            <div className="flex flex-col m-auto p-12 max-w-screen-2xl items-center">
+                <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl bg-footer-pattern-rounded">
+                    <h1 className='text-center content-center text-white font-bold uppercase text-2xl md:text-4xl'>
+                        Lehre kooperativ, digital und international
+                    </h1>
                 </div>
-                <p className="w-1/2 my-10 font-konnect">
+
+                <p className="md:w-1/2 my-10 font-konnect lg:text-xl">
                     VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim
                     eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung,
                     Planung und Durchführung internationaler und nationaler virtueller Austausche
@@ -41,28 +30,37 @@ export default function Home() {
                     wir zudem den aktiven kollegialen (virtuellen) Austausch.
                 </p>
 
-                {session && (
-                    <>
-                        <button
-                            onClick={createAndForwardNewPlanner}
-                            className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white"
-                        >
-                            neuen VA planen
-                        </button>
-                        <div className="w-1/2">
-                            <Timeline />
-                        </div>
-                    </>
-                )}
-                {!session && (
-                    <div
-                        onClick={() => signIn('keycloak')}
-                        className="py-4 pr-6 pl-5 m-10 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
-                    >
-                        Logge dich ein, um einen neuen VA zu planen
-                    </div>
+                {status != 'loading' && (
+                    <> {session
+                        ? <>
+                            <WhiteBox>
+                                <div className='text-center lg:text-xl p-6'>
+                                    <h2 className='text-2xl mb-4'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
+                                    <ButtonNewPlan socket={socket} label={t('btn_new_va')} />
+                                </div>
+                            </WhiteBox>
+                            <div className="w-1/2">
+                                <Timeline socket={socket} />
+                            </div>
+                        </> : <WhiteBox>
+                            <div className='text-center lg:text-xl'>
+                                <h2 className='text-2xl m-10'><span className='text-ve-collab-orange'>VE</span> <span className='text-ve-collab-blue'>Designer</span></h2>
+                                <p>Logge dich ein, um einen neuen VA zu planen.</p>
+                                <ButtonPrimary label='Login' onClick={() => signIn('keycloak')} classNameExtend='m-10' />
+                            </div></WhiteBox>
+                    } </>
                 )}
             </div>
         </div>
     );
 }
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+      props: {
+        ...(await serverSideTranslations(locale ?? 'en', [
+          'common',
+        ])),
+      },
+    }
+  }

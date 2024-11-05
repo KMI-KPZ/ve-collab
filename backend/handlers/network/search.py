@@ -280,7 +280,7 @@ class SearchHandler(BaseHandler):
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
             return space_manager.get_bulk_space_snippets(
-                space_ids, member=self.current_user.username
+                space_ids
             )
 
     def _search_tags(self, tags: List[str]) -> List[Dict]:

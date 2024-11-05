@@ -22,6 +22,7 @@ from exceptions import (
     FileAlreadyInRepoError,
     FileDoesntExistError,
     InvitationDoesntExistError,
+    MaximumFilesExceededError,
     MessageDoesntExistError,
     MissingKeyError,
     NoReadAccessError,
@@ -47,6 +48,7 @@ import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
 from model import (
     Evaluation,
+    IndividualLearningGoal,
     Institution,
     Lecture,
     PhysicalMobility,
@@ -152,12 +154,11 @@ class BaseResourceTestCase(TestCase):
             workload=10,
             timestamp_from=timestamp_from,
             timestamp_to=timestamp_to,
-            learning_env="test",
             learning_goal="test",
+            learning_activity="test",
+            has_tasks=True,
             tasks=[Task()],
-            evaluation_tools=["test", "test"],
-            attachments=[ObjectId()],
-            custom_attributes={"test": "test"},
+            original_plan=ObjectId(),
         )
 
     def create_target_group(self, name: str) -> TargetGroup:
@@ -170,8 +171,7 @@ class BaseResourceTestCase(TestCase):
             age_max=40,
             experience="test",
             academic_course="test",
-            mother_tongue="test",
-            foreign_languages={"test": "l1"},
+            languages=["test"],
         )
 
     def create_institution(self, name: str = "test") -> Institution:
@@ -183,8 +183,7 @@ class BaseResourceTestCase(TestCase):
             name=name,
             school_type="test",
             country="test",
-            departments=["test", "test"],
-            academic_courses=["test", "test"],
+            department="test",
         )
 
     def create_lecture(self, name: str = "test") -> Lecture:
@@ -220,8 +219,21 @@ class BaseResourceTestCase(TestCase):
             is_graded=True,
             task_type="test",
             assessment_type="test",
+            evaluation_before="test",
             evaluation_while="test",
             evaluation_after="test",
+        )
+
+    def create_individual_learning_goal(
+        self, username: str = "test_admin"
+    ) -> IndividualLearningGoal:
+        """
+        convenience method to create an individual learning goal with non-default values
+        """
+
+        return IndividualLearningGoal(
+            username=username,
+            learning_goal="test",
         )
 
 
@@ -1004,6 +1016,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [self.default_comment],
             "likers": [],
@@ -1071,6 +1084,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1089,6 +1103,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1122,6 +1137,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1140,6 +1156,7 @@ class PostResourceTest(BaseResourceTestCase):
             post["wordpress_post_id"], self.default_post["wordpress_post_id"]
         )
         self.assertEqual(post["tags"], self.default_post["tags"])
+        self.assertEqual(post["plans"], self.default_post["plans"])
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
@@ -1162,6 +1179,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test", "test2"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1177,6 +1195,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test2", "test3"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1211,6 +1230,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1230,6 +1250,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["isRepost"], new_post["isRepost"])
         self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
         self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["comments"], new_post["comments"])
         self.assertEqual(post["likers"], new_post["likers"])
@@ -1248,6 +1269,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1272,6 +1294,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],  # change this too, expecting it to not be updated
             "likers": [],
@@ -1294,6 +1317,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["isRepost"], new_post["isRepost"])
         self.assertEqual(post["wordpress_post_id"], new_post["wordpress_post_id"])
         self.assertEqual(post["tags"], new_post["tags"])
+        self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["likers"], new_post["likers"])
 
@@ -1312,6 +1336,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1373,6 +1398,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [
                 {
                     "file_id": file_id,
@@ -1439,6 +1465,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [
                 {
                     "file_id": file_id,
@@ -1493,6 +1520,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1507,6 +1535,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -1725,6 +1754,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1747,6 +1777,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["pinned"], repost["pinned"])
         self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
         self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["plans"], repost["plans"])
         self.assertEqual(post["files"], repost["files"])
         self.assertEqual(post["comments"], repost["comments"])
         self.assertEqual(post["likers"], repost["likers"])
@@ -1771,6 +1802,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1792,6 +1824,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": True,  # changed, but shouldnt be updated
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1816,6 +1849,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertNotEqual(post["pinned"], repost["pinned"])
         self.assertEqual(post["wordpress_post_id"], repost["wordpress_post_id"])
         self.assertEqual(post["tags"], repost["tags"])
+        self.assertEqual(post["plans"], repost["plans"])
         self.assertEqual(post["files"], repost["files"])
         self.assertEqual(post["comments"], repost["comments"])
         self.assertEqual(post["likers"], repost["likers"])
@@ -1837,6 +1871,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1858,6 +1893,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -1884,6 +1920,7 @@ class PostResourceTest(BaseResourceTestCase):
             "pinned": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2047,19 +2084,34 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
             }
             self.db.posts.insert_one(post)
 
+        # add one more post outside of the time frame (lies in the future just for the test)
+        post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime.now() + timedelta(days=1),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(post)
+
         post_manager = Posts(self.db)
-        # this should include the 5 posts, but not the default one because its creation date is
-        # in the past
-        posts = post_manager.get_full_timeline(
-            datetime.now() - timedelta(days=1), datetime.now()
-        )
-        self.assertEqual(len(posts), 5)
+        # this should include the 5 posts and the default one , but not the
+        # future one
+        posts = post_manager.get_full_timeline(datetime.now(), 10)
+        self.assertEqual(len(posts), 6)
 
     def test_get_space_timeline(self):
         """
@@ -2078,6 +2130,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -2097,6 +2150,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2129,6 +2183,7 @@ class PostResourceTest(BaseResourceTestCase):
                 "isRepost": False,
                 "wordpress_post_id": None,
                 "tags": ["test"],
+                "plans": [],
                 "files": [],
                 "comments": [],
                 "likers": [],
@@ -2169,6 +2224,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2183,6 +2239,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2215,6 +2272,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2229,6 +2287,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2245,6 +2304,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2262,6 +2322,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2309,6 +2370,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2323,6 +2385,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2355,6 +2418,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2369,6 +2433,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2385,6 +2450,7 @@ class PostResourceTest(BaseResourceTestCase):
             "isRepost": False,
             "wordpress_post_id": None,
             "tags": ["test"],
+            "plans": [],
             "files": [],
             "comments": [],
             "likers": [],
@@ -2462,13 +2528,23 @@ class ProfileResourceTest(BaseResourceTestCase):
             print(response.content)
 
     def create_profile(self, username: str, user_id: ObjectId) -> dict:
+        institution_id = ObjectId()
         return {
             "_id": user_id,
             "username": username,
             "role": "guest",
             "follows": [],
             "bio": "test",
-            "institution": "test",
+            "institutions": [
+                {
+                    "_id": institution_id,
+                    "name": "test",
+                    "department": "test",
+                    "school_type": "test",
+                    "country": "test",
+                }
+            ],
+            "chosen_institution_id": institution_id,
             "profile_pic": "default_profile_pic.jpg",
             "first_name": "Test",
             "last_name": "Admin",
@@ -2534,7 +2610,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], self.default_profile["role"])
         self.assertEqual(profile["follows"], self.default_profile["follows"])
         self.assertEqual(profile["bio"], self.default_profile["bio"])
-        self.assertEqual(profile["institution"], self.default_profile["institution"])
+        self.assertEqual(profile["institutions"], self.default_profile["institutions"])
+        self.assertEqual(
+            profile["chosen_institution_id"],
+            self.default_profile["chosen_institution_id"],
+        )
         self.assertEqual(profile["profile_pic"], self.default_profile["profile_pic"])
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
@@ -2584,7 +2664,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("role", profile)
         self.assertNotIn("follows", profile)
         self.assertNotIn("bio", profile)
-        self.assertNotIn("institution", profile)
+        self.assertNotIn("institutions", profile)
+        self.assertNotIn("chosen_institution_id", profile)
         self.assertNotIn("profile_pic", profile)
         self.assertNotIn("gender", profile)
         self.assertNotIn("address", profile)
@@ -2680,7 +2761,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "User")
@@ -2734,7 +2816,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "admin")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "Test")
         self.assertEqual(profile["last_name"], "Admin2")
@@ -2788,7 +2871,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["role"], "guest")
         self.assertEqual(result["follows"], [])
         self.assertEqual(result["bio"], "")
-        self.assertEqual(result["institution"], "")
+        self.assertEqual(result["institutions"], [])
+        self.assertEqual(result["chosen_institution_id"], "")
         self.assertEqual(result["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(result["first_name"], "")
         self.assertEqual(result["last_name"], "")
@@ -3022,7 +3106,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["role"], "guest")
         self.assertEqual(profile["follows"], [])
         self.assertEqual(profile["bio"], "")
-        self.assertEqual(profile["institution"], "")
+        self.assertEqual(profile["institutions"], [])
+        self.assertEqual(profile["chosen_institution_id"], "")
         self.assertEqual(profile["profile_pic"], "default_profile_pic.jpg")
         self.assertEqual(profile["first_name"], "")
         self.assertEqual(profile["last_name"], "")
@@ -3196,8 +3281,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         of the supplied users
         """
 
-        # add one more profile
+        # add one more profile, but unset "chosen_institution_id" to test if it is handled correctly:
+        # "institution" in the snippet should be an empty string, even though the profile
+        # contains institutions
         profile1 = self.create_profile("test1", ObjectId())
+        profile1["chosen_institution_id"] = ""
         self.db.profiles.insert_one(profile1)
 
         profile_manager = Profiles(self.db)
@@ -3210,7 +3298,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,
@@ -3220,7 +3315,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": profile1["username"],
                 "first_name": profile1["first_name"],
                 "last_name": profile1["last_name"],
-                "institution": profile1["institution"],
+                "institution": "",
                 "profile_pic": profile1["profile_pic"],
             },
             snippets,
@@ -3237,7 +3332,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "username": self.default_profile["username"],
                 "first_name": self.default_profile["first_name"],
                 "last_name": self.default_profile["last_name"],
-                "institution": self.default_profile["institution"],
+                "institution": next(
+                    (
+                        inst["name"]
+                        for inst in self.default_profile["institutions"]
+                        if inst["_id"] == self.default_profile["chosen_institution_id"]
+                    ),
+                    None,
+                ),
                 "profile_pic": self.default_profile["profile_pic"],
             },
             snippets,
@@ -4885,6 +4987,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.lecture = self.create_lecture("test")
         self.physical_mobility = self.create_physical_mobility("test")
         self.evaluation = self.create_evaluation("test")
+        self.individual_learning_goal = self.create_individual_learning_goal("test")
         self.default_plan = {
             "_id": self.plan_id,
             "author": "test_user",
@@ -4897,8 +5000,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test", "test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
-            "audience": [self.target_group.to_dict()],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approaches": ["test"],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -4908,8 +5013,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -4924,25 +5028,28 @@ class PlanResourceTest(BaseResourceTestCase):
             "duration": self.step.duration.total_seconds(),
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
-            "is_good_practise": True,
+            "is_good_practise": False,
+            "is_good_practise_ro": False,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "methodical_approaches": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -4970,6 +5077,38 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertTrue(self.planner._check_plan_exists(self.plan_id))
         self.assertFalse(self.planner._check_plan_exists(ObjectId()))
 
+    def test_check_below_max_literature_files(self):
+        """
+        expect: True is returned if the amount of literature files is below the maximum (5),
+        False otherwise
+        """
+
+        self.assertTrue(self.planner._check_below_max_literature_files(self.plan_id))
+
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+        self.assertFalse(self.planner._check_below_max_literature_files(self.plan_id))
+
+    def test_check_below_max_literature_files_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with this _id exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner._check_below_max_literature_files,
+            ObjectId(),
+        )
+
     def test_get_plan(self):
         """
         expect: sucessfully get the plan from the db, both by passing the _id as str
@@ -4995,11 +5134,22 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["lectures"],
                 )
                 self.assertEqual(
-                    plan.learning_goals, self.default_plan["learning_goals"]
+                    plan.major_learning_goals, self.default_plan["major_learning_goals"]
                 )
                 self.assertEqual(
-                    [target_group.to_dict() for target_group in plan.audience],
-                    self.default_plan["audience"],
+                    [
+                        individual_learning_goal.to_dict()
+                        for individual_learning_goal in plan.individual_learning_goals
+                    ],
+                    self.default_plan["individual_learning_goals"],
+                )
+                self.assertEqual(
+                    plan.methodical_approaches,
+                    self.default_plan["methodical_approaches"],
+                )
+                self.assertEqual(
+                    [target_group.to_dict() for target_group in plan.target_groups],
+                    self.default_plan["target_groups"],
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
@@ -5018,8 +5168,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["physical_mobilities"],
                 )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.new_content, self.default_plan["new_content"])
-                self.assertEqual(plan.formalities, self.default_plan["formalities"])
+                self.assertEqual(plan.checklist, self.default_plan["checklist"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -5027,15 +5176,19 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.is_good_practise, self.default_plan["is_good_practise"]
                 )
                 self.assertEqual(
+                    plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
+                )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
+                self.assertEqual(
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
-                self.assertEqual(
-                    plan.good_practise_evaluation,
-                    self.default_plan["good_practise_evaluation"],
-                )
+                self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
+                )
+                self.assertEqual(
+                    plan.literature_files, self.default_plan["literature_files"]
                 )
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
                 self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5070,11 +5223,22 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["lectures"],
                 )
                 self.assertEqual(
-                    plan.learning_goals, self.default_plan["learning_goals"]
+                    plan.major_learning_goals, self.default_plan["major_learning_goals"]
                 )
                 self.assertEqual(
-                    [target_group.to_dict() for target_group in plan.audience],
-                    self.default_plan["audience"],
+                    [
+                        individual_learning_goal.to_dict()
+                        for individual_learning_goal in plan.individual_learning_goals
+                    ],
+                    self.default_plan["individual_learning_goals"],
+                )
+                self.assertEqual(
+                    plan.methodical_approaches,
+                    self.default_plan["methodical_approaches"],
+                )
+                self.assertEqual(
+                    [target_group.to_dict() for target_group in plan.target_groups],
+                    self.default_plan["target_groups"],
                 )
                 self.assertEqual(plan.languages, self.default_plan["languages"])
                 self.assertEqual(
@@ -5093,8 +5257,7 @@ class PlanResourceTest(BaseResourceTestCase):
                     self.default_plan["physical_mobilities"],
                 )
                 self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-                self.assertEqual(plan.new_content, self.default_plan["new_content"])
-                self.assertEqual(plan.formalities, self.default_plan["formalities"])
+                self.assertEqual(plan.checklist, self.default_plan["checklist"])
                 self.assertEqual(
                     [step.to_dict() for step in plan.steps], self.default_plan["steps"]
                 )
@@ -5102,15 +5265,19 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.is_good_practise, self.default_plan["is_good_practise"]
                 )
                 self.assertEqual(
+                    plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
+                )
+                self.assertEqual(plan.abstract, self.default_plan["abstract"])
+                self.assertEqual(
                     plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
                 )
                 self.assertEqual(plan.reflection, self.default_plan["reflection"])
-                self.assertEqual(
-                    plan.good_practise_evaluation,
-                    self.default_plan["good_practise_evaluation"],
-                )
+                self.assertEqual(plan.literature, self.default_plan["literature"])
                 self.assertEqual(
                     plan.evaluation_file, self.default_plan["evaluation_file"]
+                )
+                self.assertEqual(
+                    plan.literature_files, self.default_plan["literature_files"]
                 )
                 self.assertEqual(plan.progress, self.default_plan["progress"])
                 self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
@@ -5119,6 +5286,27 @@ class PlanResourceTest(BaseResourceTestCase):
                 self.assertEqual(plan.duration, self.step.duration)
                 self.assertIsNotNone(plan.creation_timestamp)
                 self.assertIsNotNone(plan.last_modified)
+
+    def test_get_plan_with_user_good_practise(self):
+        """
+        expect: sucessfully get the plan from the db, both by passing the _id as str,
+        or as an ObjectId. access is granted, because the plan is marked as a
+        good practise example and therefore public
+        """
+
+        # create new good practise plan, user has no dedicated read access
+        good_practise_plan_id = ObjectId()
+        self.db.plans.insert_one(
+            VEPlan(_id=good_practise_plan_id, is_good_practise=True).to_dict()
+        )
+
+        # test with both input types (str and ObjectId)
+        for id_input in [good_practise_plan_id, str(good_practise_plan_id)]:
+            with self.subTest(id_input=id_input):
+                plan = self.planner.get_plan(id_input, "test_user")
+                self.assertIsInstance(plan, VEPlan)
+                self.assertEqual(plan._id, good_practise_plan_id)
+                self.assertTrue(plan.is_good_practise)
 
     def test_get_plan_error_plan_doesnt_exist(self):
         """
@@ -5156,6 +5344,26 @@ class PlanResourceTest(BaseResourceTestCase):
         wrong_id_format = "123"
         self.assertRaises(PlanDoesntExistError, self.planner.get_plan, wrong_id_format)
 
+    def test_get_bulk_plan(self):
+        """
+        expect: successfully get multiple plans from the db, both by passing the _ids as str
+        """
+
+        # create one more plan
+        additional_plan_id = ObjectId()
+        self.db.plans.insert_one(VEPlan(_id=additional_plan_id).to_dict())
+
+        # test with both input types (str and ObjectId)
+        for id_input in [
+            [self.plan_id, additional_plan_id],
+            [str(self.plan_id), str(additional_plan_id)],
+        ]:
+            with self.subTest(id_input=id_input):
+                plans = self.planner.get_bulk_plans(id_input)
+                self.assertEqual(len(plans), 2)
+                for plan in plans:
+                    self.assertIsInstance(plan, VEPlan)
+
     def test_get_all_plans(self):
         """
         expect: a list with exactly one VEPlan object inside
@@ -5180,10 +5388,22 @@ class PlanResourceTest(BaseResourceTestCase):
             [lecture.to_dict() for lecture in plan.lectures],
             self.default_plan["lectures"],
         )
-        self.assertEqual(plan.learning_goals, self.default_plan["learning_goals"])
         self.assertEqual(
-            [target_group.to_dict() for target_group in plan.audience],
-            self.default_plan["audience"],
+            plan.major_learning_goals, self.default_plan["major_learning_goals"]
+        )
+        self.assertEqual(
+            [
+                individual_learning_goal.to_dict()
+                for individual_learning_goal in plan.individual_learning_goals
+            ],
+            self.default_plan["individual_learning_goals"],
+        )
+        self.assertEqual(
+            plan.methodical_approaches, self.default_plan["methodical_approaches"]
+        )
+        self.assertEqual(
+            [target_group.to_dict() for target_group in plan.target_groups],
+            self.default_plan["target_groups"],
         )
         self.assertEqual(plan.languages, self.default_plan["languages"])
         self.assertEqual(
@@ -5198,20 +5418,22 @@ class PlanResourceTest(BaseResourceTestCase):
             self.default_plan["physical_mobilities"],
         )
         self.assertEqual(plan.learning_env, self.default_plan["learning_env"])
-        self.assertEqual(plan.new_content, self.default_plan["new_content"])
-        self.assertEqual(plan.formalities, self.default_plan["formalities"])
+        self.assertEqual(plan.checklist, self.default_plan["checklist"])
         self.assertEqual(
             [step.to_dict() for step in plan.steps], self.default_plan["steps"]
         )
         self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
         self.assertEqual(
+            plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
+        )
+        self.assertEqual(plan.abstract, self.default_plan["abstract"])
+        self.assertEqual(
             plan.underlying_ve_model, self.default_plan["underlying_ve_model"]
         )
         self.assertEqual(plan.reflection, self.default_plan["reflection"])
-        self.assertEqual(
-            plan.good_practise_evaluation, self.default_plan["good_practise_evaluation"]
-        )
+        self.assertEqual(plan.literature, self.default_plan["literature"])
         self.assertEqual(plan.evaluation_file, self.default_plan["evaluation_file"])
+        self.assertEqual(plan.literature_files, self.default_plan["literature_files"])
         self.assertEqual(plan.progress, self.default_plan["progress"])
         self.assertEqual(plan.timestamp_from, self.step.timestamp_from)
         self.assertEqual(plan.timestamp_to, self.step.timestamp_to)
@@ -5223,10 +5445,10 @@ class PlanResourceTest(BaseResourceTestCase):
     def test_get_plans_for_user(self):
         """
         expect: only show plans that the user is allowed to see, i.e. their
-        own and those with read/write permissions.
+        own and those with read/write permissions and good practise examples.
         """
 
-        # insert 2 more plans with different authorships
+        # insert 3 more plans with different authorships
         additional_plans = [
             {
                 "_id": ObjectId(),
@@ -5238,8 +5460,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
-                "learning_goals": ["test", "test"],
-                "audience": [self.target_group.to_dict()],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approaches": ["test"],
+                "target_groups": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
@@ -5249,8 +5473,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobility": True,
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
-                "new_content": False,
-                "formalities": [
+                "checklist": [
                     {
                         "username": "test_user",
                         "technology": False,
@@ -5261,24 +5484,27 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "is_good_practise_ro": False,
+                "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
-                "good_practise_evaluation": "test",
+                "literature": "test",
                 "evaluation_file": None,
+                "literature_files": [],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
-                    "audience": "not_started",
+                    "methodical_approaches": "not_started",
+                    "target_groups": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "new_content": "not_started",
-                    "formalities": "not_started",
+                    "checklist": "not_started",
                     "steps": "not_started",
                 },
             },
@@ -5291,8 +5517,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": [self.institution.to_dict()],
                 "topics": ["test"],
                 "lectures": [self.lecture.to_dict()],
-                "learning_goals": ["test", "test"],
-                "audience": [self.target_group.to_dict()],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approaches": ["test"],
+                "target_groups": [self.target_group.to_dict()],
                 "languages": ["test", "test"],
                 "evaluation": [self.evaluation.to_dict()],
                 "timestamp_from": self.step.timestamp_from,
@@ -5302,8 +5530,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "physical_mobility": True,
                 "physical_mobilities": [self.physical_mobility.to_dict()],
                 "learning_env": "test",
-                "new_content": False,
-                "formalities": [
+                "checklist": [
                     {
                         "username": "test_user",
                         "technology": False,
@@ -5314,24 +5541,84 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "is_good_practise_ro": False,
+                "abstract": "test",
                 "underlying_ve_model": "test",
                 "reflection": "test",
-                "good_practise_evaluation": "test",
+                "literature": "test",
                 "evaluation_file": None,
+                "literature_files": [],
                 "progress": {
                     "name": "not_started",
                     "institutions": "not_started",
                     "topics": "not_started",
                     "lectures": "not_started",
                     "learning_goals": "not_started",
-                    "audience": "not_started",
+                    "methodical_approaches": "not_started",
+                    "target_groups": "not_started",
                     "languages": "not_started",
                     "evaluation": "not_started",
                     "involved_parties": "not_started",
                     "realization": "not_started",
                     "learning_env": "not_started",
-                    "new_content": "not_started",
-                    "formalities": "not_started",
+                    "checklist": "not_started",
+                    "steps": "not_started",
+                },
+            },
+            {
+                "_id": ObjectId(),
+                "creation_timestamp": datetime.now(),
+                "last_modified": datetime.now(),
+                "name": "user",
+                "partners": ["test_user"],
+                "institutions": [self.institution.to_dict()],
+                "topics": ["test"],
+                "lectures": [self.lecture.to_dict()],
+                "major_learning_goals": ["test", "test"],
+                "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+                "methodical_approaches": ["test"],
+                "target_groups": [self.target_group.to_dict()],
+                "languages": ["test", "test"],
+                "evaluation": [self.evaluation.to_dict()],
+                "timestamp_from": self.step.timestamp_from,
+                "timestamp_to": self.step.timestamp_to,
+                "involved_parties": ["test", "test"],
+                "realization": "test",
+                "physical_mobility": True,
+                "physical_mobilities": [self.physical_mobility.to_dict()],
+                "learning_env": "test",
+                "checklist": [
+                    {
+                        "username": "test_user",
+                        "technology": False,
+                        "exam_regulations": False,
+                    }
+                ],
+                "duration": self.step.duration.total_seconds(),
+                "workload": self.step.workload,
+                "steps": [self.step.to_dict()],
+                "is_good_practise": False,
+                "is_good_practise_ro": False,
+                "abstract": "test",
+                "underlying_ve_model": "test",
+                "reflection": "test",
+                "literature": "test",
+                "evaluation_file": None,
+                "literature_files": [],
+                "progress": {
+                    "name": "not_started",
+                    "institutions": "not_started",
+                    "topics": "not_started",
+                    "lectures": "not_started",
+                    "learning_goals": "not_started",
+                    "methodical_approaches": "not_started",
+                    "target_groups": "not_started",
+                    "languages": "not_started",
+                    "evaluation": "not_started",
+                    "involved_parties": "not_started",
+                    "realization": "not_started",
+                    "learning_env": "not_started",
+                    "checklist": "not_started",
                     "steps": "not_started",
                 },
             },
@@ -5340,13 +5627,35 @@ class PlanResourceTest(BaseResourceTestCase):
 
         plans = self.planner.get_plans_for_user("test_admin")
         # since one of the plans belong to the user and he has read_access to the default one,
-        # we expect the result to be filtered accordingly (2 results here)
-        self.assertEqual(len(plans), 2)
+        # we expect the result to be filtered accordingly (3 results here)
+        self.assertEqual(len(plans), 3)
         plan = plans[0]
         for plan in plans:
             self.assertIn(
-                plan._id, [self.default_plan["_id"], additional_plans[0]["_id"]]
+                plan._id,
+                [
+                    self.default_plan["_id"],
+                    additional_plans[0]["_id"],
+                    additional_plans[1]["_id"],
+                ],
             )
+
+    def test_get_good_practise_plans(self):
+        """
+        expect: get all plans that are marked as good practise examples
+        """
+
+        # create one more good practise plan
+        additional_good_practise_plan_id = ObjectId()
+        self.db.plans.insert_one(
+            VEPlan(
+                _id=additional_good_practise_plan_id, is_good_practise=True
+            ).to_dict()
+        )
+
+        plans = self.planner.get_good_practise_plans()
+        self.assertEqual(len(plans), 1)
+        self.assertEqual(plans[0]._id, additional_good_practise_plan_id)
 
     def test_insert_plan(self):
         """
@@ -5363,8 +5672,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
-            "audience": [self.target_group.to_dict()],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approaches": ["test"],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -5374,8 +5685,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -5386,24 +5696,27 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "is_good_practise_ro": False,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "methodical_approaches": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -5433,8 +5746,10 @@ class PlanResourceTest(BaseResourceTestCase):
             "institutions": [self.institution.to_dict()],
             "topics": ["test"],
             "lectures": [self.lecture.to_dict()],
-            "learning_goals": ["test", "test"],
-            "audience": [self.target_group.to_dict()],
+            "major_learning_goals": ["test", "test"],
+            "individual_learning_goals": [self.individual_learning_goal.to_dict()],
+            "methodical_approaches": ["test"],
+            "target_groups": [self.target_group.to_dict()],
             "languages": ["test", "test"],
             "evaluation": [self.evaluation.to_dict()],
             "timestamp_from": self.step.timestamp_from,
@@ -5444,8 +5759,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "physical_mobility": True,
             "physical_mobilities": [self.physical_mobility.to_dict()],
             "learning_env": "test",
-            "new_content": False,
-            "formalities": [
+            "checklist": [
                 {
                     "username": "test_user",
                     "technology": False,
@@ -5456,24 +5770,27 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "is_good_practise_ro": False,
+            "abstract": "test",
             "underlying_ve_model": "test",
             "reflection": "test",
-            "good_practise_evaluation": "test",
+            "literature": "test",
             "evaluation_file": None,
+            "literature_files": [],
             "progress": {
                 "name": "not_started",
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "methodical_approaches": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         }
@@ -5640,21 +5957,26 @@ class PlanResourceTest(BaseResourceTestCase):
         self.planner.update_field(self.plan_id, "physical_mobility", False)
         self.planner.update_field(self.plan_id, "physical_mobilities", [])
         self.planner.update_field(self.plan_id, "learning_env", "updated_learning_env")
-        self.planner.update_field(self.plan_id, "new_content", True)
         self.planner.update_field(
-            self.plan_id, "learning_goals", ["update1", "update2"]
+            self.plan_id, "major_learning_goals", ["update1", "update2"]
+        )
+        self.planner.update_field(self.plan_id, "individual_learning_goals", [])
+        self.planner.update_field(
+            self.plan_id,
+            "methodical_approaches",
+            ["test", "updated_methodical_approaches"],
         )
         self.planner.update_field(
             self.plan_id,
-            "formalities",
+            "checklist",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.planner.update_field(self.plan_id, "is_good_practise", False)
+        self.planner.update_field(self.plan_id, "is_good_practise_ro", True)
+        self.planner.update_field(self.plan_id, "abstract", "updated_abstract")
         self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
         self.planner.update_field(self.plan_id, "reflection", "updated_reflection")
-        self.planner.update_field(
-            self.plan_id, "good_practise_evaluation", "updated_good_practise_evaluation"
-        )
+        self.planner.update_field(self.plan_id, "literature", "updated_literature")
         self.planner.update_field(
             self.plan_id,
             "progress",
@@ -5663,14 +5985,13 @@ class PlanResourceTest(BaseResourceTestCase):
                 "institutions": "not_started",
                 "topics": "not_started",
                 "lectures": "not_started",
-                "audience": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
         )
@@ -5683,18 +6004,21 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["physical_mobility"], False)
         self.assertEqual(db_state["physical_mobilities"], [])
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["new_content"], True)
-        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["individual_learning_goals"], [])
         self.assertEqual(
-            db_state["formalities"],
+            db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
+        )
+        self.assertEqual(
+            db_state["checklist"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["is_good_practise"], False)
+        self.assertEqual(db_state["is_good_practise_ro"], True)
+        self.assertEqual(db_state["abstract"], "updated_abstract")
         self.assertEqual(db_state["underlying_ve_model"], "updated_model")
         self.assertEqual(db_state["reflection"], "updated_reflection")
-        self.assertEqual(
-            db_state["good_practise_evaluation"], "updated_good_practise_evaluation"
-        )
+        self.assertEqual(db_state["literature"], "updated_literature")
         self.assertEqual(db_state["progress"]["name"], "completed")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
@@ -5725,17 +6049,20 @@ class PlanResourceTest(BaseResourceTestCase):
             requesting_username="test_user",
         )
         self.planner.update_field(
-            self.plan_id, "new_content", True, requesting_username="test_user"
-        )
-        self.planner.update_field(
             self.plan_id,
-            "learning_goals",
+            "major_learning_goals",
             ["update1", "update2"],
             requesting_username="test_user",
         )
         self.planner.update_field(
             self.plan_id,
-            "formalities",
+            "methodical_approaches",
+            ["test", "updated_methodical_approaches"],
+            requesting_username="test_user",
+        )
+        self.planner.update_field(
+            self.plan_id,
+            "checklist",
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
             requesting_username="test_user",
         )
@@ -5748,14 +6075,14 @@ class PlanResourceTest(BaseResourceTestCase):
                 "topics": "not_started",
                 "lectures": "not_started",
                 "learning_goals": "not_started",
-                "audience": "not_started",
+                "methodical_approaches": "not_started",
+                "target_groups": "not_started",
                 "languages": "not_started",
                 "evaluation": "not_started",
                 "involved_parties": "not_started",
                 "realization": "not_started",
                 "learning_env": "not_started",
-                "new_content": "not_started",
-                "formalities": "not_started",
+                "checklist": "not_started",
                 "steps": "not_started",
             },
             requesting_username="test_user",
@@ -5767,10 +6094,12 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertEqual(db_state["involved_parties"], ["update1", "update2"])
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["learning_env"], "updated_learning_env")
-        self.assertEqual(db_state["new_content"], True)
-        self.assertEqual(db_state["learning_goals"], ["update1", "update2"])
+        self.assertEqual(db_state["major_learning_goals"], ["update1", "update2"])
         self.assertEqual(
-            db_state["formalities"],
+            db_state["methodical_approaches"], ["test", "updated_methodical_approaches"]
+        )
+        self.assertEqual(
+            db_state["checklist"],
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["progress"]["name"], "completed")
@@ -5788,27 +6117,25 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            mother_tongue="de",
-            foreign_languages={"en": "c1"},
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
         # in creation_timestamp and last_modified being equal, despite correctly being
         # executed after each other
         time.sleep(0.1)
-        self.planner.update_field(self.plan_id, "audience", [tg.to_dict()])
+        self.planner.update_field(self.plan_id, "target_groups", [tg.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], tg.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
         self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
+            db_state["target_groups"][0]["academic_course"], tg.academic_course
         )
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5819,29 +6146,25 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            mother_tongue="de2",
-            foreign_languages={"en": "c1"},
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
         # in creation_timestamp and last_modified being equal, despite correctly being
         # executed after each other
         time.sleep(0.1)
-        self.planner.update_field(self.plan_id, "audience", [tg2.to_dict()])
+        self.planner.update_field(self.plan_id, "target_groups", [tg2.to_dict()])
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
-        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], tg2.academic_course
+            db_state["target_groups"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
-        )
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_object_with_user(self):
@@ -5856,8 +6179,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience",
             academic_course="updated_academic_course",
-            mother_tongue="de",
-            foreign_languages={"en": "c1"},
+            languages=["test", "updated_languages"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5865,20 +6187,22 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "audience", [tg.to_dict()], requesting_username="test_user"
+            self.plan_id,
+            "target_groups",
+            [tg.to_dict()],
+            requesting_username="test_user",
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIsInstance(db_state["audience"][0]["_id"], ObjectId)
-        self.assertEqual(db_state["audience"][0]["name"], tg.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg.experience)
-        self.assertEqual(db_state["audience"][0]["academic_course"], tg.academic_course)
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg.mother_tongue)
+        self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
         self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg.foreign_languages
+            db_state["target_groups"][0]["academic_course"], tg.academic_course
         )
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # same, but this time manually specify a _id
@@ -5889,8 +6213,7 @@ class PlanResourceTest(BaseResourceTestCase):
             age_max=20,
             experience="updated_experience2",
             academic_course="updated_academic_course2",
-            mother_tongue="de2",
-            foreign_languages={"en": "c1"},
+            languages=["test", "updated_languages2"],
         )
         # we need to delay our execution here just a little bit, because otherwise
         # the updated would happen too fast relative to the setup, which would result
@@ -5898,22 +6221,22 @@ class PlanResourceTest(BaseResourceTestCase):
         # executed after each other
         time.sleep(0.1)
         self.planner.update_field(
-            self.plan_id, "audience", [tg2.to_dict()], requesting_username="test_user"
+            self.plan_id,
+            "target_groups",
+            [tg2.to_dict()],
+            requesting_username="test_user",
         )
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(db_state["audience"][0]["_id"], tg2._id)
-        self.assertEqual(db_state["audience"][0]["name"], tg2.name)
-        self.assertEqual(db_state["audience"][0]["age_min"], str(tg2.age_min))
-        self.assertEqual(db_state["audience"][0]["experience"], tg2.experience)
+        self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
+        self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
+        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
-            db_state["audience"][0]["academic_course"], tg2.academic_course
+            db_state["target_groups"][0]["academic_course"], tg2.academic_course
         )
-        self.assertEqual(db_state["audience"][0]["mother_tongue"], tg2.mother_tongue)
-        self.assertEqual(
-            db_state["audience"][0]["foreign_languages"], tg2.foreign_languages
-        )
+        self.assertEqual(db_state["target_groups"][0]["languages"], tg2.languages)
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
     def test_update_field_upsert(self):
@@ -5939,8 +6262,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         institution = Institution(
             name="updated_institution_name",
-            departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
+            department="updated_department",
         )
         institution_dict = institution.to_dict()
 
@@ -5953,11 +6275,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["institutions"][0]["name"], "updated_institution_name"
         )
         self.assertEqual(
-            db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
+            db_state["institutions"][0]["department"], "updated_department"
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
@@ -5988,8 +6306,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         institution = Institution(
             name="updated_institution_name",
-            departments=["updated", "updated"],
-            academic_courses=["updated", "updated"],
+            department="updated_department",
         )
         institution_dict = institution.to_dict()
 
@@ -6008,11 +6325,7 @@ class PlanResourceTest(BaseResourceTestCase):
             db_state["institutions"][0]["name"], "updated_institution_name"
         )
         self.assertEqual(
-            db_state["institutions"][0]["departments"], ["updated", "updated"]
-        )
-        self.assertEqual(
-            db_state["institutions"][0]["academic_courses"],
-            ["updated", "updated"],
+            db_state["institutions"][0]["department"], "updated_department"
         )
         self.assertEqual(db_state["creation_timestamp"], db_state["last_modified"])
 
@@ -6053,7 +6366,10 @@ class PlanResourceTest(BaseResourceTestCase):
         """
 
         step = Step(name="test").to_dict()
-        step["tasks"] = [Task(title="test").to_dict(), Task(title="test").to_dict()]
+        step["tasks"] = [
+            Task(task_formulation="test").to_dict(),
+            Task(task_formulation="test").to_dict(),
+        ]
 
         self.assertRaises(
             NonUniqueTasksError,
@@ -6187,6 +6503,353 @@ class PlanResourceTest(BaseResourceTestCase):
             "image/jpg",
             "user_with_no_access_rights",
         )
+
+    def test_remove_evaluation_file(self):
+        """
+        expect: successfully remove an evaluation file from the plan
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.planner.remove_evaluation_file(self.plan_id, file_id)
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+        self.assertFalse(fs.exists(file_id))
+
+    def test_remove_evaluation_file_with_user(self):
+        """
+        expect: successfully remove an evaluation file from the plan and passing access checks
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.planner.remove_evaluation_file(
+            self.plan_id, file_id, requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNone(db_state["evaluation_file"])
+        self.assertFalse(fs.exists(file_id))
+
+    def test_remove_evaluation_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.remove_evaluation_file,
+            ObjectId(),
+            ObjectId(),
+        )
+
+    def test_remove_evaluation_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        # create a file manually
+        fs = gridfs.GridFS(self.db)
+        file_id = fs.put(b"test", filename="test_file")
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "evaluation_file": {"file_id": file_id, "file_name": "test_file"}
+                }
+            },
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.remove_evaluation_file,
+            self.plan_id,
+            file_id,
+            "user_with_no_access_rights",
+        )
+
+    def test_remove_evaluation_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            FileDoesntExistError,
+            self.planner.remove_evaluation_file,
+            self.plan_id,
+            ObjectId(),
+        )
+
+    def test_put_literature_file(self):
+        """
+        expect: successfully put literature file into the plan
+        """
+
+        file_id = self.planner.put_literature_file(
+            self.plan_id, "test_file", b"test", "image/jpg", None
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+            db_state["literature_files"],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_literature_file_with_user(self):
+        """
+        expect: successfully put literature file into the plan and passing access checks
+        """
+
+        file_id = self.planner.put_literature_file(
+            self.plan_id, "test_file", b"test", "image/jpg", CURRENT_USER.username
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIn(
+            {
+                "file_id": file_id,
+                "file_name": "test_file",
+            },
+            db_state["literature_files"],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(file_id).read(), b"test")
+
+    def test_put_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.put_literature_file,
+            ObjectId(),
+            "test_file",
+            b"test",
+            "image/jpg",
+            None,
+        )
+
+    def test_put_literature_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.put_literature_file,
+            self.plan_id,
+            "test_file",
+            b"test",
+            "image/jpg",
+            "user_with_no_access_rights",
+        )
+
+    def test_put_literature_file_error_max_files_reached(self):
+        """
+        expect: MaximumFilesExceededError is raised because the maximum amount of
+        literature files has been reached
+        """
+
+        # add 5 plans as max
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": ObjectId(), "file_name": "test_file"}
+                        for _ in range(5)
+                    ]
+                }
+            },
+        )
+
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self.planner.put_literature_file,
+            self.plan_id,
+            "test_file",
+            b"test",
+            "image/jpg",
+            None,
+        )
+
+    def test_remove_literature_file(self):
+        """
+        expect: successfully remove a literature file from the plan's list
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.planner.remove_literature_file(self.plan_id, file_ids[0])
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_remove_literature_file_with_user(self):
+        """
+        expect: successfully remove a literature file from its list
+        in the plan and passing access checks
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.planner.remove_literature_file(
+            self.plan_id, file_ids[0], requesting_username="test_user"
+        )
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state["literature_files"])
+        self.assertEqual(len(db_state["literature_files"]), 2)
+        self.assertNotIn(
+            {"file_id": file_ids[0], "file_name": "test_file_0"},
+            db_state["literature_files"],
+        )
+        self.assertFalse(fs.exists(file_ids[0]))
+
+    def test_remove_literature_file_error_plan_doesnt_exist(self):
+        """
+        expect: PlanDoesntExistError is raised because no plan with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            PlanDoesntExistError,
+            self.planner.remove_literature_file,
+            ObjectId(),
+            ObjectId(),
+        )
+
+    def test_remove_literature_file_error_no_write_access(self):
+        """
+        expect: NoWriteAccessError is raised because user has no write access to the plan
+        """
+
+        # create 3 files manually
+        fs = gridfs.GridFS(self.db)
+        file_ids = [fs.put(b"test", filename=f"test_file_{i}") for i in range(3)]
+        self.db.plans.update_one(
+            {"_id": self.plan_id},
+            {
+                "$set": {
+                    "literature_files": [
+                        {"file_id": file_id, "file_name": f"test_file_{i}"}
+                        for i, file_id in enumerate(file_ids)
+                    ]
+                }
+            },
+        )
+
+        self.assertRaises(
+            NoWriteAccessError,
+            self.planner.remove_literature_file,
+            self.plan_id,
+            file_ids[0],
+            "user_with_no_access_rights",
+        )
+
+    def test_remove_literature_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because no file with the specified _id
+        exists
+        """
+
+        self.assertRaises(
+            FileDoesntExistError,
+            self.planner.remove_literature_file,
+            self.plan_id,
+            ObjectId(),
+        )
+
+    def test_copy_plan(self):
+        """
+        expect: successfully copy plan
+        """
+
+        # copy the plan
+        copied_id = self.planner.copy_plan(self.plan_id)
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], self.default_plan["author"])
+        self.assertEqual(db_state["read_access"], [self.default_plan["author"]])
+        self.assertEqual(db_state["write_access"], [self.default_plan["author"]])
+
+        # copy the plan again with a different author
+        copied_id2 = self.planner.copy_plan(self.plan_id, "another_test_user")
+
+        # expect the plan to be in the db
+        db_state = self.db.plans.find_one({"_id": copied_id2})
+        self.assertIsNotNone(db_state)
+        self.assertNotEqual(copied_id2, self.plan_id)
+        self.assertEqual(db_state["name"], self.default_plan["name"] + " (Kopie)")
+        self.assertEqual(db_state["author"], "another_test_user")
+        self.assertEqual(db_state["read_access"], ["another_test_user"])
+        self.assertEqual(db_state["write_access"], ["another_test_user"])
 
     def test_set_read_permission(self):
         """

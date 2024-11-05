@@ -1,13 +1,7 @@
-import datetime
 import functools
-import json
 import logging
 from typing import Awaitable, Callable, Dict, List, Optional
 
-from bson import ObjectId
-from jose import jwt
-import jose.exceptions
-from keycloak import KeycloakGetError
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
 import tornado.web
@@ -61,106 +55,40 @@ class BaseHandler(tornado.web.RequestHandler):
             )
             return
 
-        # grab token from the cookie
-        token = self.get_secure_cookie("access_token")
-
-        # if there is no token in the cookie, try the Authorization Header for a JWT
-        if not token:
-            if "Authorization" in self.request.headers:
-                # remove the Bearer prefix to only keep the token
-                bearer_token = self.request.headers["Authorization"].replace(
-                    "Bearer ", ""
-                )
-
-                try:
-                    # in order to verify the JWT we need the public key from keycloak
-                    KEYCLOAK_PUBLIC_KEY = (
-                        "-----BEGIN PUBLIC KEY-----\n"
-                        + global_vars.keycloak.public_key()
-                        + "\n-----END PUBLIC KEY-----"
-                    )
-                except KeycloakGetError:
-                    self.current_user = None
-                    self._access_token = None
-                    return
-
-                # decode the JWT, if any error is thrown, the token
-                # is definetly invalid and therefore no session is set
-                # otherwise, set the current user as per the content of the
-                # token
-                try:
-                    token_info = jwt.decode(
-                        bearer_token, KEYCLOAK_PUBLIC_KEY, audience="account"
-                    )
-                except jose.exceptions.JWTError as e:
-                    self.current_user = None
-                    self._access_token = None
-                    return
-
-                self.current_user = User(
-                    token_info["preferred_username"],
-                    token_info["sub"],
-                    token_info["email"],
-                )
-
-                # if the user was authenticated via ORCiD,
-                # or atleast has their ORCiD account linked,
-                # set their id for use within the handlers
-                if "orcid" in token_info:
-                    self.current_user.orcid = token_info["orcid"]
-
-                self._access_token = bearer_token
-                return
-
-            # Authorization Header was not in the request
-            # so we cannot authentication any user
+        # abort if there is no Authorization header
+        if "Authorization" not in self.request.headers:
             self.current_user = None
             self._access_token = None
             return
 
-        # we got the token from the cookie, since this also has a refresh_token
-        # and other info, we have to decode it as json
-        # TODO once frontend is built with React, we can get rid of this whole
-        # following section, because the backend will become Bearer-only (i.e.
-        # never authenticate users itself).
-        token = json.loads(token)
+        # remove the Bearer prefix to only keep the token
+        bearer_token = self.request.headers["Authorization"].replace("Bearer ", "")
 
-        # check if the token is still valid
-        # this is quite costly, since its another API call round trip
-        # in case we need more performance, we can instead do offline validation
-        # by decoding the jwt and checking if it is not expired
-        # (tradeoff: we dont know if it was manually invalidated)
-        token_info = global_vars.keycloak.introspect(token)
+        # decode the JWT, if any error is thrown, the token
+        # is definetly invalid and therefore no session is set
+        # otherwise, set the current user as per the content of the
+        # token
+        try:
+            token_info = global_vars.keycloak.decode_token(bearer_token)
+        except Exception as e:
+            self.current_user = None
+            self._access_token = None
+            return
 
-        # access token is still valid, successfully set current_user
-        if token_info["active"]:
-            self.current_user = User(
-                token_info["preferred_username"], token_info["sub"], token_info["email"]
-            )
-            self._access_token = token
-        # token is expired, try to refresh it
-        else:
-            try:
-                # refresh the token to gain a new, valid access token
-                # if this fails, the refresh token is also no longer active
-                # and we set no current_user, demanding a new login
-                new_token = global_vars.keycloak.refresh_token(token["refresh_token"])
-                token_info = global_vars.keycloak.introspect(new_token["access_token"])
-            except KeycloakError as e:
-                self.current_user = None
-                self._access_token = None
-                return
+        self.current_user = User(
+            token_info["preferred_username"],
+            token_info["sub"],
+            token_info["email"],
+        )
 
-            # update the cookie to the new token value
-            self.set_secure_cookie("access_token", json.dumps(new_token))
+        # if the user was authenticated via ORCiD,
+        # or atleast has their ORCiD account linked,
+        # set their id for use within the handlers
+        if "orcid" in token_info:
+            self.current_user.orcid = token_info["orcid"]
 
-            # refresh was successful, so we set current_user
-            self.current_user = User(
-                token_info["preferred_username"],
-                token_info["sub"],
-                token_info["email"],
-            )
-            self._access_token = new_token
+        self._access_token = bearer_token
+        return
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -217,7 +145,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
         try:
             # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
-            global_vars.keycloak_admin.refresh_token()
+            global_vars.keycloak_admin.connection.refresh_token()
 
             # request user data from keycloak
             user_id = global_vars.keycloak_admin.get_user_id(username)
@@ -283,7 +211,7 @@ class BaseHandler(tornado.web.RequestHandler):
         else:
             try:
                 # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
-                global_vars.keycloak_admin.refresh_token()
+                global_vars.keycloak_admin.connection.refresh_token()
                 return global_vars.keycloak_admin.get_users()
             except KeycloakError as e:
                 logger.warn(

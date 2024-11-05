@@ -1,10 +1,12 @@
 from base64 import b64decode
 import json
 from typing import Dict, List, Tuple
+from bson import ObjectId
 from keycloak import KeycloakGetError
 import requests
 
 import tornado.web
+from resources.planner.ve_plan import VEPlanResource
 from resources.elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
@@ -39,7 +41,16 @@ class ProfileInformationHandler(BaseHandler):
                     "role": <string>,
                     "profile": {
                         "bio": <string>,
-                        "institution": <string>,
+                        "institutions": [
+                            {
+                                "_id": <string>,
+                                "name": <string>,
+                                "school_type": <string>,
+                                "department": <string>,
+                                "country": <string>,
+                            }
+                        ],
+                        "chosen_institution_id": <string>,
                         "research_tags": [<string1>, <string2>, ...],
                         "first_name": <string>,
                         "last_name": <string>,
@@ -147,6 +158,12 @@ class ProfileInformationHandler(BaseHandler):
             del profile["role"]
             del profile["follows"]
 
+            # agregate the ve_window with plan names in addition to the ids
+            if "ve_window" in profile and profile["ve_window"]:
+                plan_manager = VEPlanResource(db)
+                for window in profile["ve_window"]:
+                    window["plan_name"] = plan_manager.get_plan(window["plan_id"]).name
+
             # grab users that follow the user separately, because db model is 1:n
             followers = profile_manager.get_followers(username)
             user_information_response["followers"] = followers
@@ -180,7 +197,16 @@ class ProfileInformationHandler(BaseHandler):
             http body:
                 {
                     "bio": <string>,
-                    "institution": <string>,
+                    "institutions": [
+                        {
+                            "_id": <string>,
+                            "name": <string>,
+                            "school_type": <string>,
+                            "department": <string>,
+                            "country": <string>,
+                        }
+                    ],
+                    "chosen_institution_id": <string>,
                     "research_tags": [<string1>, <string2>, ...],
                     "first_name": <string>,
                     "last_name": <string>,
@@ -328,7 +354,16 @@ class BulkProfileSnippets(BaseHandler):
                         "first_name": "<string>",
                         "last_name": "<string>",
                         "profile_pic": "<string>",
-                        "institution": "<string>",
+                        "institutions": [
+                            {
+                                "_id": <string>,
+                                "name": <string>,
+                                "school_type": <string>,
+                                "department": <string>,
+                                "country": <string>,
+                            }
+                        ],
+                        "chosen_institution_id": <string>,
                     }
                  ]
                 }
@@ -476,7 +511,7 @@ class OrcidProfileHandler(BaseHandler):
         first_name, last_name = self._parse_name(orcid_record)
         profile_response = {
             "bio": self._parse_bio(orcid_record),
-            "institution": self._parse_institutions(orcid_record),
+            "institutions": self._parse_institutions(orcid_record),
             "research_tags": self._parse_keywords(orcid_record),
             "first_name": first_name,
             "last_name": last_name,
@@ -821,14 +856,33 @@ class OrcidProfileHandler(BaseHandler):
         employments = self._parse_employments(orcid_record)
         try:
             if employments:
-                return employments[0]["institution"]
+                return {
+                    "_id": ObjectId(),
+                    "name": employments[0]["institution"],
+                    "school_type": "",
+                    "department": "",
+                    "country": "",
+                }
             else:
                 educations = self._parse_educations(orcid_record)
                 if educations:
-                    return educations[0]["institution"]
+                    return {
+                        "_id": ObjectId(),
+                        "name": educations[0]["institution"],
+                        "school_type": "",
+                        "department": "",
+                        "country": "",
+                    }
 
             # no hits, cannnot determine institution
-            return ""
+            return {
+                "_id": ObjectId(),
+                "name": "",
+                "school_type": "",
+                "department": "",
+                "country": "",
+            }
+
         except Exception as e:
             print("caught exception @ institutions parsing:")
             print(e)

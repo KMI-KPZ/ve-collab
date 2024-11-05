@@ -1,3 +1,6 @@
+import { PlanPreview } from "../planner/plannerInterfaces";
+import { Course, Education, Institution, VEWindowItem, WorkExperience } from "../profile/profileInterfaces";
+
 export interface BackendUserSnippet {
     username: string;
     first_name: string;
@@ -10,6 +13,48 @@ export interface BackendProfileSnippetsResponse {
     success: boolean;
     user_snippets: BackendUserSnippet[];
 }
+
+export interface BackendUser {
+    user_id: string;
+    username: string;
+    email: string;
+    role: string;
+    followers: string[];
+    follows: string[];
+    spaces: string[];
+    profile: BackendProfile;
+}
+
+export interface BackendProfile {
+    address: string;
+    bio: string;
+    birthday: string;
+    chosen_institution_id: string;
+    courses: Course[];
+    educations: Education[];
+    excluded_from_matching: boolean;
+    experience: string[];
+    expertise: string;
+    first_name: string;
+    gender: string;
+    institutions: Institution[];
+    interdisciplinary_exchange: boolean;
+    languages: string[];
+    last_name: string;
+    lms: string[];
+    preferred_format: string;
+    profile_pic: string;
+    research_tags: string[];
+    tools: string[];
+    username: string;
+    ve_contents: string[];
+    ve_goals: string[];
+    ve_interests: string[];
+    ve_ready: boolean;
+    ve_window: VEWindowItem[];
+    work_experience: WorkExperience[];
+}
+
 
 export interface BackendSearchResponse {
     status: number;
@@ -42,7 +87,7 @@ export interface BackendFileSnippet {
     manually_uploaded: boolean,
 }
 
-export interface BackendSpace {
+export interface BackendGroup {
     _id: string;
     name: string;
     admins: string[];
@@ -56,9 +101,9 @@ export interface BackendSpace {
     space_description: string;
 }
 
-export interface BackendSpaceACLEntry {
+export interface BackendGroupACLEntry {
     username: string,
-    space: string,
+    group: string,
     read_timeline: boolean,
     comment: boolean,
     post: boolean,
@@ -96,6 +141,7 @@ export interface BackendPost {
     files: BackendPostFile[];
     likers: string[];
     pinned: boolean;
+    plans: PlanPreview[];
     space: string;
     tags: string[];
     text: string;

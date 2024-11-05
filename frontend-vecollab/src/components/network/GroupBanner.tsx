@@ -4,11 +4,11 @@ import Dialog from '../profile/Dialog';
 import { useState } from 'react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
-import { fetchDELETE, fetchPOST, useGetSpace } from '@/lib/backend';
+import { fetchDELETE, fetchPOST, useGetGroup } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import LoadingAnimation from '../LoadingAnimation';
-import AuthenticatedImage from '../AuthenticatedImage';
-import BoxHeadline from '../BoxHeadline';
+import LoadingAnimation from '../common/LoadingAnimation';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import BoxHeadline from '../common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 
 interface Props {
@@ -18,6 +18,8 @@ interface Props {
 export default function GroupBanner({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { groupId } = router.query;
+
 
     const [loading, setLoading] = useState(false);
 
@@ -27,16 +29,16 @@ export default function GroupBanner({ userIsAdmin }: Props) {
     ]);
 
     const {
-        data: space,
+        data: group,
         isLoading,
         error,
         mutate,
-    } = useGetSpace(session!.accessToken, router.query.id as string);
+    } = useGetGroup(session!.accessToken, groupId as string);
 
     const handleOpenMemberDialog = () => {
         setIsMemberDialogOpen(true);
         setLoading(true);
-        fetchPOST('/profile_snippets', { usernames: space.members }, session?.accessToken).then(
+        fetchPOST('/profile_snippets', { usernames: group.members }, session?.accessToken).then(
             (data) => {
                 setMemberSnippets(
                     data.user_snippets.map((snippet: any) => ({
@@ -57,7 +59,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
 
     const removeUserFromGroup = (username: string) => {
         fetchDELETE(
-            `/spaceadministration/kick?id=${space._id}&user=${username}`,
+            `/spaceadministration/kick?id=${group._id}&user=${username}`,
             {},
             session?.accessToken
         ).then(() => {
@@ -80,10 +82,10 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                         <div className={'flex items-center pr-6 text-lg text-white'}>
                             <div>
                                 <div className="font-bold">
-                                    {space.joinable ? 'öffentlich' : 'privat'}
+                                    {group.joinable ? 'öffentlich' : 'privat'}
                                 </div>
                                 <div className="font-bold">
-                                    {space.invisible ? 'unsichtbar' : 'sichtbar'}
+                                    {group.invisible ? 'unsichtbar' : 'sichtbar'}
                                 </div>
                             </div>
                         </div>
@@ -94,7 +96,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                 handleOpenMemberDialog();
                             }}
                         >
-                            <div className={'font-bold'}>{space.members.length}</div>
+                            <div className={'font-bold'}>{group.members.length}</div>
                             <div>Mitglieder</div>
                         </div>
                     </div>
@@ -119,7 +121,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             router.push(
-                                                `/profile?username=${snippet.preferredUsername}`
+                                                `/profile/user/${snippet.preferredUsername}`
                                             );
                                             handleCloseMemberDialog();
                                         }}
@@ -145,7 +147,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                             {!(
                                                 session?.user?.preferred_username ===
                                                     snippet.preferredUsername ||
-                                                space.admins.includes(snippet.preferredUsername)
+                                                group.admins.includes(snippet.preferredUsername)
                                             ) && (
                                                 <div className="ml-auto flex items-center">
                                                     <RxTrash

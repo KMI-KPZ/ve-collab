@@ -50,6 +50,15 @@ services:
       ELASTICSEARCH_PASSWORD:
       INITIAL_ADMIN_USERNAME:
       DUMMY_PERSONAS_PASSCODE:
+      MBR_TOKEN_ENDPOINT:
+      MBR_CLIENT_ID:
+      MBR_CLIENT_SECRET:
+      MBR_METADATA_BASE_ENDPOINT:
+      MBR_METADATA_SOURCE_SLUG:
+      SMTP_HOST:
+      SMTP_PORT:
+      SMTP_USERNAME:
+      SMTP_PASSWORD:
     network_mode: host
     depends_on:
       mongodb:
@@ -76,6 +85,7 @@ services:
         NEXT_PUBLIC_BACKEND_BASE_URL: "http://localhost:${BACKEND_PORT}"
         NEXT_PUBLIC_SOCKETIO_BASE_URL: "http://localhost:${BACKEND_PORT}"
         NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
+        NEXT_PUBLIC_FEEDBACK_FORM_URL: ${FEEDBACK_FORM_URL}
     network_mode: host
     logging:
       driver: "json-file"

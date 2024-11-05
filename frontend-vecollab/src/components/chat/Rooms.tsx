@@ -1,6 +1,6 @@
 import { useGetChatrooms } from '@/lib/backend';
 import { useState } from 'react';
-import LoadingAnimation from '../LoadingAnimation';
+import LoadingAnimation from '../common/LoadingAnimation';
 import Dialog from '../profile/Dialog';
 import NewChatForm from './NewChatForm';
 import { useSession } from 'next-auth/react';

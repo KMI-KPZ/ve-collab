@@ -1,14 +1,251 @@
 {
     "taxonomy": [
         {
+            "parent": 33,
+            "droppable": true,
+            "text": "Interaktion & kollaboratives Arbeiten",
+            "id": 17
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "kulturelle Aspekte",
+            "id": 19
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "sprachliche Aspekte",
+            "id": 20
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "Methodenkoffer",
+            "id": 58
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Einstieg",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung/"
+            },
+            "id": 53
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Ziele, Funktionen, Formen und Schwerpunkte",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte/"
+            },
+            "id": 54
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Evaluationsmethoden",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation/"
+            },
+            "id": 55
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Auswertung und Ergebnisse",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke/"
+            },
+            "id": 56
+        },
+        {
+            "parent": 29,
+            "droppable": false,
+            "text": "Reflexion",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion/"
+            },
+            "id": 57
+        },
+        {
+            "parent": 34,
+            "droppable": false,
+            "text": "Toolliste für virtuelle Austausche",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/8-1-liste-der-tools-fur-ve/#"
+            },
+            "id": 49
+        },
+        {
+            "parent": 34,
+            "droppable": false,
+            "text": "Kontakt und Organisation",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/8-2-tools-kontakte-und-organisation/",
+                "metadata": {
+                    "name": ""
+                }
+            },
+            "id": 50
+        },
+        {
+            "parent": 34,
+            "droppable": false,
+            "text": "Kollaboratives Arbeiten",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/8-3-tools-kollaboratives/",
+                "metadata": {
+                    "name": ""
+                }
+            },
+            "id": 51
+        },
+        {
+            "parent": 34,
+            "droppable": false,
+            "text": "Interaktive Lernbausteine",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/8-4-tools-spielerisches/",
+                "metadata": {
+                    "name": ""
+                }
+            },
+            "id": 52
+        },
+        {
+            "parent": 35,
+            "droppable": false,
+            "text": "Open Educational Resources",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/9-datenschutz-und-urheberrecht/",
+                "metadata": {
+                    "name": ""
+                }
+            },
+            "id": 48
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Digitale Medien",
+            "id": 18
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Datenschutz und Urheberrecht",
+            "id": 16
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "Tools",
+            "id": 34
+        },
+        {
+            "parent": 32,
+            "droppable": true,
+            "text": "OER",
+            "id": 35
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "VA-Planung",
+            "id": 14
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Evaluation",
+            "id": 29
+        },
+        {
+            "id": 8,
+            "parent": 30,
+            "droppable": true,
+            "text": "Einführung"
+        },
+        {
+            "parent": 30,
+            "droppable": true,
+            "text": "Potenziale",
+            "id": 11
+        },
+        {
+            "id": 1,
+            "parent": 30,
+            "droppable": true,
+            "text": "Herausforderungen"
+        },
+        {
+            "parent": 30,
+            "droppable": true,
+            "text": "Beispiele aus der Praxis",
+            "id": 12
+        },
+        {
             "parent": 12,
             "droppable": false,
             "text": "VE-Beispiele aus der Praxis",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/",
+                "mbr_id": "9d141248-b21f-40f4-a03c-71691284a39d"
             },
             "id": 27
+        },
+        {
+            "parent": 12,
+            "droppable": false,
+            "text": "VA in Englisch",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/6-3-beispiele-aus-der-praxis-lehramt-englisch/"
+            },
+            "id": 44
+        },
+        {
+            "parent": 12,
+            "droppable": false,
+            "text": "VA in Biologie",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/6-2-beispiele-aus-der-praxis-biologie/"
+            },
+            "id": 45
+        },
+        {
+            "parent": 12,
+            "droppable": false,
+            "text": "VA in Ingenieurwesen",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/6-4-beispiele-aus-der-praxis-ingenieurwesen/"
+            },
+            "id": 46
+        },
+        {
+            "parent": 12,
+            "droppable": false,
+            "text": "VA in Global Health",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/6-1-beispiele-aus-der-praxis/"
+            },
+            "id": 47
         },
         {
             "parent": 8,
@@ -16,144 +253,146 @@
             "text": "Was ist ein Virtueller Austausch",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/",
+                "mbr_id": "2ddf3b74-2784-41a2-9e6b-96d695cdadb5"
             },
             "id": 26
         },
         {
-            "parent": 11,
+            "parent": 8,
             "droppable": false,
-            "text": "2.1 Einstieg",
+            "text": "Merkmale virtueller Austausche",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-2-merkmale-ve/"
+            },
+            "id": 36
+        },
+        {
+            "parent": 8,
+            "droppable": false,
+            "text": "Begriffsabgrenzung",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-3-begriffsabgrenzung/"
+            },
+            "id": 37
+        },
+        {
+            "parent": 8,
+            "droppable": false,
+            "text": "Zusammenfassung",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/3-4-va-zusammenfassung/"
+            },
+            "id": 38
+        },
+        {
+            "parent": 11,
+            "droppable": false,
+            "text": "Einstieg",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/",
+                "metadata": {
+                    "name": ""
+                },
+                "mbr_id": "4f9e40f8-e0fe-40a3-9264-13e01d314ea8"
             },
             "id": 21
         },
         {
             "parent": 11,
             "droppable": false,
-            "text": "2.2 21st Century Skills",
+            "text": "Kompetenzmodelle",
             "data": {
                 "description": "",
                 "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/"
             },
-            "id": 22
+            "id": 41
         },
         {
             "parent": 11,
             "droppable": false,
-            "text": "2.3 Blick in die Forschung",
+            "text": "Blick in Literatur und Forschung",
             "data": {
                 "description": "",
                 "url": "https://soserve.rz.uni-leipzig.de:10001/elementor-849/"
             },
-            "id": 23
+            "id": 42
         },
         {
             "parent": 11,
             "droppable": false,
-            "text": "2.4 Schlussreflexion",
+            "text": "Reflexionsaufgabe zum Abschluss",
             "data": {
                 "description": "",
                 "url": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/"
             },
-            "id": 24
+            "id": 43
         },
         {
             "id": 3,
             "parent": 1,
             "droppable": false,
-            "text": "1.1 Herausforderungen in virtuellen Austauschen",
+            "text": "Erfahrungsberichte zum Einstieg",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/",
+                "metadata": {
+                    "name": ""
+                },
+                "mbr_id": "0f3a1cc1-8e5e-4c0f-a09b-66a8090c2711"
             }
         },
         {
             "parent": 1,
             "droppable": false,
-            "text": "1.2 Herausforderungen als Chance",
+            "text": "Herausforderungen als Chance - Tipps und Tricks",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/"
+                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/",
+                "metadata": {
+                    "name": ""
+                },
+                "mbr_id": "dfb0b9bf-7eae-42da-ad0d-97fa022f5260"
             },
             "id": 25
         },
         {
-            "id": 8,
-            "parent": 0,
-            "droppable": true,
-            "text": "Was ist ein VE",
+            "parent": 1,
+            "droppable": false,
+            "text": "Weiterführende Literatur",
             "data": {
-                "slug": "Was%20ist%20ein%20VE"
-            }
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/1-3-herausforderungen-weiterfuhrende-literatur/"
+            },
+            "id": 39
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Potenziale",
-            "id": 11
-        },
-        {
-            "id": 1,
-            "parent": 0,
-            "droppable": true,
-            "text": "Herausforderungen"
+            "text": "top-bubble",
+            "id": 30
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Beispiele aus der Praxis",
-            "id": 12
+            "text": "left-bubble",
+            "id": 31
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "Partnersuche",
-            "id": 13
+            "text": "right-bubble",
+            "id": 32
         },
         {
             "parent": 0,
             "droppable": true,
-            "text": "VE-Planung",
-            "id": 14
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Evaluation",
-            "id": 15
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Datenschutz",
-            "id": 16
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Kollaboratives Arbeiten",
-            "id": 17
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "Digitale Medien & Werkzeuge",
-            "id": 18
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "kulturelle Aspekte",
-            "id": 19
-        },
-        {
-            "parent": 0,
-            "droppable": true,
-            "text": "sprachliche Aspekte",
-            "id": 20
+            "text": "bottom-bubble",
+            "id": 33
         }
     ]
 }

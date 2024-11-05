@@ -1,93 +1,146 @@
 import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import { showDataOrEmptySign } from '@/pages/planSummary/[planSummarySlug]';
-import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
-import Image from 'next/image';
+import {
+    GridEntry,
+    GridEntry2Col,
+    showDataOrEmptySign,
+} from './PlanSummary';
+import { AuthenticatedFile } from '../common/AuthenticatedFile';
+import { RxFile } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
+import {
+    MdKeyboardDoubleArrowDown,
+    MdKeyboardDoubleArrowUp,
+} from 'react-icons/md';
+import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
     plan: IPlan;
+    openAllBoxes?: boolean;
+    isSingleView?: boolean;
 }
-export default function ViewAttributes({ plan }: Props): JSX.Element {
-    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(false);
+export default function ViewAttributes({ plan, openAllBoxes, isSingleView }: Props): JSX.Element {
+    const { t } = useTranslation('common');
+
+    const [isOpenShowMore, setIsOpenShowMore] = useState<boolean>(openAllBoxes ? true : false);
 
     return (
         <>
-            <div
-                className="flex cursor-pointer justify-start items-center space-x-10 mb-4 ml-1"
-                onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-            >
-                <Image
-                    src={iconDropdown}
-                    alt="Dropdown arrow"
-                    width={20}
-                    height={20}
-                    className={`${isOpenShowMore ? `rotate-180` : `rotate-0`}`}
-                />
-                <div className="text-2xl font-semibold">Good-Practise Dokumentation</div>
+            <div className="grid grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                <div className="col-span-4 mb-4 text-2xl font-semibold underline decoration-ve-collab-blue decoration-4 underline-offset-6">
+                    {t('plan_summary_gpb_documentation')}
+                </div>
+
+                {isOpenShowMore ? (
+                    <>
+                        <GridEntry2Col
+                            col1={{
+                                caption: t('plan_summary_is_good_practise'),
+                                value: plan.is_good_practise ? t('yes') : t('no'),
+                            }}
+                            col2={{
+                                caption: t('plan_summary_underlying_ve_model'),
+                                value: showDataOrEmptySign(plan.underlying_ve_model),
+                            }}
+                        />
+
+                        <GridEntry2Col
+                            col1={{
+                                caption: t('plan_summary_reflection'),
+                                value: showDataOrEmptySign(plan.reflection),
+                            }}
+                            col2={{
+                                caption: t('plan_summary_reflection_file'),
+                                value: (
+                                    <>
+                                        {plan.evaluation_file ? (
+                                            <AuthenticatedFile
+                                                url={`/uploads/${plan.evaluation_file.file_id}`}
+                                                filename={plan.evaluation_file.file_name}
+                                            >
+                                                <div className="flex justify-center">
+                                                    <RxFile size={40} />
+                                                </div>
+                                                <div className="justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                    {plan.evaluation_file.file_name}
+                                                </div>
+                                            </AuthenticatedFile>
+                                        ) : (
+                                            <span>/</span>
+                                        )}
+                                    </>
+                                ),
+                            }}
+                        />
+
+                        <GridEntry2Col
+                            col1={{
+                                caption: t('plan_summary_literature'),
+                                value: showDataOrEmptySign(plan.literature),
+                            }}
+                            col2={{
+                                caption: t('plan_summary_literature_files'),
+                                value: (
+                                    <div className="my-4 max-w-96">
+                                        {plan.literature_files && plan.literature_files.length ? (
+                                            <>
+                                                {plan.literature_files.map((file, index) => {
+                                                    return (
+                                                        <AuthenticatedFile
+                                                            key={index}
+                                                            url={`/uploads/${file.file_id}`}
+                                                            filename={file.file_name}
+                                                        >
+                                                            <div className="flex justify-center">
+                                                                <RxFile size={40} />
+                                                            </div>
+                                                            <div className="max-w-96 justify-center mx-2 px-1 my-1 font-bold text-slate-900 text-lg text-center truncate">
+                                                                {file.file_name}
+                                                            </div>
+                                                        </AuthenticatedFile>
+                                                    );
+                                                })}
+                                            </>
+                                        ) : (
+                                            <span>/</span>
+                                        )}
+                                    </div>
+                                ),
+                            }}
+                        />
+
+                        {isSingleView !== true && (
+                            <div className="col-span-4 flex justify-center">
+                                <ButtonLight
+                                    onClick={() => setIsOpenShowMore(!isOpenShowMore)}
+                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                >
+                                    {t('show_less')}
+                                    <MdKeyboardDoubleArrowUp className="inline ml-2" />
+                                </ButtonLight>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <GridEntry caption={t('plan_summary_is_good_practise')}>
+                            {plan.is_good_practise ? t('yes') : t('no')}
+                        </GridEntry>
+
+                        {isSingleView !== true && (
+                            <div className="col-span-4 flex justify-center">
+                                <ButtonLight
+                                    onClick={() => setIsOpenShowMore(!isOpenShowMore)}
+                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                >
+                                    {t('show_all')}
+                                    <MdKeyboardDoubleArrowDown className="inline ml-2" />
+                                </ButtonLight>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
-            {isOpenShowMore ? (
-                <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">
-                        Als Good-Practise Beispiel veröffentlicht
-                    </span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {plan.is_good_practise ? 'Ja' : 'Nein'}
-                        </li>
-                    </ul>
-                    <span className="text-base font-semibold pr-5">
-                        zugrundeliegendes VE-Modell:
-                    </span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.underlying_ve_model ? (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
-                                {showDataOrEmptySign(plan.underlying_ve_model)}
-                            </li>
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
-                    <span className="text-base font-semibold pr-5">Reflexion:</span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.reflection ? (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
-                                {showDataOrEmptySign(plan.reflection)}
-                            </li>
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
-                    <span className="text-base font-semibold pr-5">
-                        Evaluation der Teilnehmenden:
-                    </span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        {plan.good_practise_evaluation ? (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2 whitespace-pre-line">
-                                {showDataOrEmptySign(plan.good_practise_evaluation)}
-                            </li>
-                        ) : (
-                            <li className="flex w-fit bg-slate-200 rounded-lg p-2">/</li>
-                        )}
-                    </ul>
-                </section>
-            ) : (
-                <section className="grid grid-cols-4 gap-8 border-2 border-gray-400 rounded-3xl p-4">
-                    <span className="font-semibold pr-5">
-                        Als Good-Practise Beispiel veröffentlicht
-                    </span>
-                    <ul className="flex flex-col space-y-2 col-span-3">
-                        <li className="flex w-fit bg-slate-200 rounded-lg p-2">
-                            {plan.is_good_practise ? 'Ja' : 'Nein'}
-                        </li>
-                    </ul>
-                    <span
-                        onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-                        className="flex flex-col col-span-4  space-y-3 font-semibold pr-5 pt-4 cursor-pointer justify-center items-center"
-                    >
-                        mehr anzeigen...
-                    </span>
-                </section>
-            )}
         </>
     );
 }

@@ -115,6 +115,12 @@ class PlanAlreadyExistsError(Exception):
     pass
 
 
+class MaximumFilesExceededError(Exception):
+    """The maximum number of files in a repository has been exceeded"""
+
+    pass
+
+
 class NoReadAccessError(Exception):
     """a user has no read access to a VEPlan"""
 
@@ -149,3 +155,46 @@ class MessageDoesntExistError(Exception):
     """the requested message doesn't exist"""
 
     pass
+
+
+class MbrAPIError(Exception):
+    """any error related to the Mein Bildungsraum API"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message)
+        self.response = response
+
+
+class MbrAPIUnauthorizedError(MbrAPIError):
+    """The Mein Bildungsraum API returned a 401 status code"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message, response)
+
+
+class MbrAPINotFoundError(MbrAPIError):
+    """The Mein Bildungsraum API returned a 404 status code"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message, response)
+
+
+class MbrAPIForbiddenError(MbrAPIError):
+    """The Mein Bildungsraum API returned a 403 status code"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message, response)
+
+
+class MbrAPIBadRequestError(MbrAPIError):
+    """The Mein Bildungsraum API returned a 400 status code"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message, response)
+
+
+class MbrAPIConflictError(MbrAPIError):
+    """The Mein Bildungsraum API returned a 409 status code"""
+
+    def __init__(self, message, response=None) -> None:
+        super().__init__(message, response)

@@ -36,6 +36,7 @@ class Posts:
             "pinned",
             "wordpress_post_id",
             "tags",
+            "plans",
             "files",
             "comments",
             "likers",
@@ -186,7 +187,9 @@ class Posts:
                 space_manager = Spaces(self.db)
                 for file_obj in post["files"]:
                     try:
-                        space_manager.remove_post_file(post["space"], file_obj["file_id"])
+                        space_manager.remove_post_file(
+                            post["space"], file_obj["file_id"]
+                        )
                     except SpaceDoesntExistError:
                         pass
                     except FileDoesntExistError:
@@ -252,7 +255,7 @@ class Posts:
 
     def add_comment(self, post_id: str | ObjectId, comment: dict) -> ObjectId:
         """
-        add the given comment to the post, validating the attributes beforehand 
+        add the given comment to the post, validating the attributes beforehand
         and returning the comment _id
         """
 
@@ -350,7 +353,7 @@ class Posts:
         # we know that there was no post with the given _id
         if update_result.modified_count != 1:
             raise PostNotExistingException()
-        
+
         return repost_id
 
     def pin_post(self, post_id: str | ObjectId) -> None:
@@ -447,16 +450,32 @@ class Posts:
         return _id
 
     def get_full_timeline(
-        self, time_from: datetime.datetime, time_to: datetime.datetime
+        self, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
-        get the full timeline of all posts within the specified time frame.
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
+        get the full timeline of all posts.
+
+        The timeline will always include `limit` number of posts, that are older than the
+        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
+        posts as kind of a pagination approach, use the oldest timestamp of your current
+        result set as the new starting point.
+
+        If there are not enough posts, the timeline will include as many
+        posts as possible. In turn, if there are less then `limit` posts returned,
+        this timeline does not contain any more posts, so further requests with an even
+        older timestamp will not yield any more results.
+
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the maximum number of posts to be returned, default 10
         """
 
         return list(
-            self.db.posts.find({"creation_date": {"$gte": time_from, "$lte": time_to}})
+            self.db.posts.find(
+                {"creation_date": {"$lte": time_to}},
+                limit=limit,
+                sort=[("creation_date", -1)],
+            )
         )
 
     def get_space_timeline(
@@ -494,7 +513,9 @@ class Posts:
                     "$or": [
                         {"creation_date": {"$lte": time_to}},
                     ],
-                }, limit=limit, sort=[("creation_date", -1)]
+                },
+                limit=limit,
+                sort=[("creation_date", -1)],
             )
         )
 
@@ -538,7 +559,9 @@ class Posts:
                 {
                     "creation_date": {"$lte": time_to},
                     "author": username,
-                }, sort=[("creation_date", -1)], limit=limit
+                },
+                sort=[("creation_date", -1)],
+                limit=limit,
             )
         )
 

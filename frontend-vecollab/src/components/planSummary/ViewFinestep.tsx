@@ -1,14 +1,50 @@
 import React, { useState } from 'react';
-import { showDataOrEmptySign } from '@/pages/planSummary/[planSummarySlug]';
-import { IFineStep } from '@/pages/startingWizard/fineplanner/[stepSlug]';
-import iconDropdown from '@/images/icons/planSummary/iconDropdown.png';
-import Image from 'next/image';
+import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
+import {
+    Caption4,
+    GridEntry,
+    GridEntryCaption,
+    GridEntrySubGrid,
+    showDataOrEmptySign,
+} from './PlanSummary';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import Link from 'next/link';
+import {
+    MdArrowOutward,
+    MdImportExport,
+    MdKeyboardDoubleArrowDown,
+    MdKeyboardDoubleArrowUp,
+} from 'react-icons/md';
+import { useTranslation } from 'next-i18next';
+import { useSession } from 'next-auth/react';
+import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
+    index: number;
+    plan: IPlan;
     fineStep: IFineStep;
+    openAllBoxes?: boolean;
+    handleImportStep?: (step: IFineStep) => void;
+    availablePlans: IPlan[];
 }
 
-export default function ViewFinestep({ fineStep }: Props): JSX.Element {
+export default function ViewFinestep({
+    index,
+    plan,
+    fineStep,
+    openAllBoxes,
+    availablePlans,
+    handleImportStep,
+}: Props): JSX.Element {
+    const { data: session } = useSession();
+    const { t } = useTranslation('common');
+
+    const originalPlan = availablePlans.find((a) => a._id == fineStep.original_plan);
+
+    const canExport =
+        !plan.is_good_practise_ro ||
+        plan.write_access.includes(session?.user.preferred_username as string);
+
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
             year: 'numeric',
@@ -17,114 +53,210 @@ export default function ViewFinestep({ fineStep }: Props): JSX.Element {
         });
     };
 
-    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(false);
+    const [isOpenStepSection, setIsOpenStepSection] = useState<boolean>(
+        openAllBoxes ? true : false
+    );
+
+    const isLastStep = index + 1 == plan.steps.length;
 
     return (
-        <div className="p-4 my-8 bg-white border-2 border-gray-400 rounded-3xl">
-            <div
-                className="flex justify-start items-center space-x-10 cursor-pointer"
-                onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-            >
-                <Image
-                    src={iconDropdown}
-                    alt="Dropdown arrow"
-                    width={20}
-                    height={20}
-                    className={`${isOpenStepSection ? `rotate-180` : `rotate-0`}`}
-                />
-                <div className="flex">
-                    <div className="font-bold text-xl mx-2">Etappe:</div>
-                    <div className="font-bold text-xl">{showDataOrEmptySign(fineStep.name)}</div>
-                </div>
-                <div className="flex">
-                    <div className="font-bold mx-2">Zeitspanne:</div>
-                    <div className="mx-2">
-                        {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_from))}
-                        {' - '}
-                        {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
-                    </div>
-                </div>
-            </div>
-            {isOpenStepSection && (
-                <section>
-                    <hr className="h-px my-5 bg-gray-400 border-0" />
-                    <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Workload:</p>
-                        </div>
-                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                            {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2 ">digitale Lernumgebung:</p>
-                        </div>
-                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                            {showDataOrEmptySign(fineStep.learning_env)}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="w-1/6 flex items-center">
-                            <p className="font-semibold px-2 py-2">Groblernziel(e):</p>
-                        </div>
-                        <div className="flex items-center w-fit bg-slate-200 rounded-lg px-3">
-                            {showDataOrEmptySign(fineStep.learning_goal)}
-                        </div>
-                    </div>
-                    <div className="mt-4 flex">
-                        <div className="font-semibold w-1/5 flex items-center px-2 py-2px-2 py-2">
-                            Aufgabenstellungen:
-                        </div>
-                        {fineStep.tasks.map((task, taskIndex) => (
-                            <div
-                                className="flex flex-col space-y-1 w-1/2 p-4 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl"
-                                key={taskIndex}
+        <div className="mb-4">
+            {!isOpenStepSection ? (
+                <>
+                    <div className="group">
+                        <div className="flex flex-col">
+                            <h3
+                                className="my-2 w-fit font-bold text-xl cursor-pointer before:content-['•'] before:mr-2"
+                                onClick={() => setIsOpenStepSection(!isOpenStepSection)}
                             >
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Titel</span>
-                                    <span>{showDataOrEmptySign(task.title)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Feinlernziele</span>
-                                    <span>{showDataOrEmptySign(task.learning_goal)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Aufgabenstellung</span>
-                                    <span>{showDataOrEmptySign(task.task_formulation)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Sozialform</span>
-                                    <span>{showDataOrEmptySign(task.social_form)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Beschreibung</span>
-                                    <span>{showDataOrEmptySign(task.description)}</span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Tools</span>
-                                    <span>
-                                        {showDataOrEmptySign(
-                                            task.tools
-                                                .filter((element) => element !== '')
-                                                .join(', ')
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="flex space-x-8">
-                                    <span className="w-1/4 font-medium">Medien</span>
-                                    <span>
-                                        {showDataOrEmptySign(
-                                            task.media
-                                                .filter((element) => element !== '')
-                                                .join(', ')
-                                        )}
-                                    </span>
+                                {fineStep.name}
+                            </h3>
+                            <div className="ml-4 italic text-slate-800 self-start">
+                                <div className="my-2 text-nowrap">
+                                    {showDataOrEmptySign(
+                                        convertDateToLocal(fineStep.timestamp_from)
+                                    )}
+                                    {' - '}
+                                    {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="ml-4 mt-2 max-h-20 max-w-4xl text-ellipsis line-clamp-3 text-wrap">
+                                {fineStep.learning_goal}
+                            </div>
+                        </div>
+
+                        <hr
+                            className={`mt-10 -mb-5 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
+                                isLastStep ? '!h-0' : ''
+                            }`}
+                        />
+
+                        <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity ease-in-out">
+                            <ButtonLight
+                                onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                classNameExtend="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                            >
+                                {t('show_all')}
+                                <MdKeyboardDoubleArrowDown className="inline ml-2" />
+                            </ButtonLight>
+                        </div>
                     </div>
-                </section>
+                </>
+            ) : (
+                <>
+                    <div className="group">
+                        <div className="flex flex-wrap justify-between items-center">
+                            <div className="">
+                                <h3
+                                    className="my-2  grow font-bold text-xl cursor-pointer before:content-['•'] before:mr-2"
+                                    onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                >
+                                    {fineStep.name}
+                                </h3>
+                            </div>
+
+                            {typeof handleImportStep !== 'undefined' && canExport == true && (
+                                <div className="ml-auto">
+                                    <ButtonLight
+                                        classNameExtend="print:hidden"
+                                        title={t('plan_summary_btn_export_title')}
+                                        onClick={() => {
+                                            handleImportStep(fineStep);
+                                        }}
+                                    >
+                                        <MdImportExport className="inline mr-2" />
+                                        {t('plan_summary_btn_export')}
+                                    </ButtonLight>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="ml-4 mt-2 grid grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                        <div>
+                            <GridEntryCaption>{t('plan_summary_export_from')}</GridEntryCaption>
+                            <div className="ml-6">
+                                {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_from))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <GridEntryCaption>{t('plan_summary_export_to')}</GridEntryCaption>
+                            <div className="ml-6">
+                                {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <GridEntryCaption>{t('plan_summary_duration')}</GridEntryCaption>
+                            <div className="ml-6">
+                                {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
+                            </div>
+                        </div>
+
+                        <GridEntry caption={t('plan_summary_learning_goals')}>
+                            {showDataOrEmptySign(fineStep.learning_goal)}
+                        </GridEntry>
+
+                        <GridEntry caption={t('plan_summary_learning_activities')}>
+                            {showDataOrEmptySign(fineStep.learning_activity)}
+                        </GridEntry>
+
+                        <GridEntry caption={t('plan_summary_detailed_learning_activities')}>
+                            {showDataOrEmptySign(fineStep.has_tasks ? 'Ja' : 'Nein')}
+                        </GridEntry>
+
+                        {fineStep.has_tasks && (
+                            <GridEntry caption={t('plan_summary_tasks')}>
+                                <GridEntrySubGrid>
+                                    {fineStep.tasks.map((task, taskIndex) => (
+                                        <ul className="space-y-1 mr-2" key={taskIndex}>
+                                            <li className="flex">
+                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
+                                                    <Caption4>{t('plan_summary_task')}</Caption4>
+                                                </div>
+                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
+                                                    {showDataOrEmptySign(task.task_formulation)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
+                                                    <Caption4>
+                                                        {t('plan_summary_work_mode')}
+                                                    </Caption4>
+                                                </div>
+                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
+                                                    {showDataOrEmptySign(task.work_mode)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
+                                                    <Caption4>{t('plan_summary_notes')}</Caption4>
+                                                </div>
+                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
+                                                    {showDataOrEmptySign(task.notes)}
+                                                </div>
+                                            </li>
+                                            <li className="flex">
+                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
+                                                    <Caption4>{t('plan_summary_tools')}</Caption4>
+                                                </div>
+                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
+                                                    {showDataOrEmptySign(
+                                                        task.tools
+                                                            .filter((element) => element !== '')
+                                                            .join(', ')
+                                                    )}
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    ))}
+                                </GridEntrySubGrid>
+                            </GridEntry>
+                        )}
+
+                        {fineStep.original_plan && fineStep.original_plan !== '' && (
+                            <>
+                                <GridEntry caption={t('plan_summary_imported_from')}>
+                                    {typeof originalPlan !== 'undefined' ? (
+                                        <Link href={`/plan/${originalPlan?._id}`} target="_blank">
+                                            {originalPlan?.name}
+                                            <MdArrowOutward className="inline" />
+                                        </Link>
+                                    ) : (
+                                        <>{t('plan_summary_plan_no_longer_available')}</>
+                                    )}
+                                </GridEntry>
+
+                                {typeof originalPlan !== 'undefined' && (
+                                    <GridEntry caption={t('plan_summary_author_original_plan')}>
+                                        {showDataOrEmptySign(
+                                            `${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`
+                                        )}
+                                    </GridEntry>
+                                )}
+                            </>
+                        )}
+
+                        <div className="my-2 col-span-4">
+                            <hr
+                                className={`mt-6 -mb-4 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
+                                    isLastStep ? '!h-0' : ''
+                                }`}
+                            />
+                            <div className="flex justify-center">
+                                <ButtonLight
+                                    onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                    classNameExtend="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                                >
+                                    {t('show_less')}
+                                    <MdKeyboardDoubleArrowUp className="inline ml-2" />
+                                </ButtonLight>
+                            </div>
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

@@ -4,10 +4,10 @@ import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from '@/components/AuthenticatedImage';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
-import SuccessAlert from '@/components/SuccessAlert';
+import Alert from '../common/dialogs/Alert';
 
 interface Props {
     name: string;
@@ -74,12 +74,7 @@ export default function ProfileHeader({
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             console.log(response);
-
-            // render success message that disappears after 2 seconds
             setSuccessPopupOpen(true);
-            setTimeout(() => {
-                setSuccessPopupOpen((successPopupOpen) => false);
-            }, 2000);
         });
     };
 
@@ -97,7 +92,7 @@ export default function ProfileHeader({
                 <div className="mt-2 min-h-[2rem]">
                     {!foreignUser && (
                         <>
-                            <Link href={'/editProfile'}>
+                            <Link href={'/profile/edit'}>
                                 <button
                                     className={
                                         'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
@@ -173,11 +168,11 @@ export default function ProfileHeader({
                             {' '}
                             <span>VE-Einladung</span>
                         </button>
-                        <button className={'h-12 ml-2'}>
+                        {/* <button className={'h-12 ml-2'}>
                             <span>
                                 <RxDotsVertical size={30} color={''} />
                             </span>
-                        </button>
+                        </button> */}
                         <Dialog
                             isOpen={isInvitationDialogOpen}
                             title={`zum VE einladen`}
@@ -243,7 +238,7 @@ export default function ProfileHeader({
                                 </div>
                             </div>
                         </Dialog>
-                        {successPopupOpen && <SuccessAlert message={'Einladung gesendet'} />}
+                        {successPopupOpen && <Alert message='Einladung gesendet' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
                     </>
                 )}
             </div>

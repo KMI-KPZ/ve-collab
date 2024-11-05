@@ -1,0 +1,2335 @@
+{
+    "good_practise_plans": [
+        {
+            "_id": {
+                "$oid": "6661370cd165067323a17fd9"
+            },
+            "author": "ramona_schneider",
+            "read_access": [
+                "ramona_schneider",
+                "admin",
+                "dagmar_abendroth-timmer",
+                "christian_koch",
+                "admin_ul"
+            ],
+            "write_access": [
+                "ramona_schneider",
+                "admin",
+                "dagmar_abendroth-timmer",
+                "christian_koch",
+                "admin_ul"
+            ],
+            "creation_timestamp": {
+                "$date": "2024-06-06T04:11:56.711Z"
+            },
+            "last_modified": {
+                "$date": "2024-09-02T08:50:17.724Z"
+            },
+            "name": "CONFORME",
+            "partners": [
+                "Dagmar Abendroth-Timmer",
+                "José Aguilar Río"
+            ],
+            "institutions": [
+                {
+                    "_id": {
+                        "$oid": "6661386dd165067323a18054"
+                    },
+                    "name": "Universität Siegen",
+                    "school_type": "Hochschule / Universität / College",
+                    "country": "Deutschland",
+                    "department": "Lehramt Staatsexamen und Bachelor Französisch"
+                },
+                {
+                    "_id": {
+                        "$oid": "6661386dd165067323a18058"
+                    },
+                    "name": "Sorbonne Nouvelle - Paris 3",
+                    "school_type": "Hochschule / Universität / College",
+                    "country": "Frankreich",
+                    "department": "Master Französisch als Fremdsprache (FLE)"
+                }
+            ],
+            "topics": [
+                "Kognitionen - Emotionen - Mentoring in der Fremdsprachenlehrerbildung",
+                "cognitions, émotions et médiations en formation des enseignants de langues",
+                "Emotionen und Selbstkonzepte in der Ausbildung und Professionalisierung von Fremdsprachenlehrenden"
+            ],
+            "lectures": [
+                {
+                    "_id": {
+                        "$oid": "6661393dd165067323a18069"
+                    },
+                    "name": "Sorbonne Nouvelle - Paris 3",
+                    "lecture_type": "Pflichtveranstaltung",
+                    "lecture_format": "Präsenz",
+                    "participants_amount": "43"
+                },
+                {
+                    "_id": {
+                        "$oid": "66613a1bd165067323a180f6"
+                    },
+                    "name": "Universität Siegen",
+                    "lecture_type": "Wahlveranstaltung",
+                    "lecture_format": "Präsenz",
+                    "participants_amount": "11"
+                }
+            ],
+            "major_learning_goals": [
+                "Förderung kollaborativen Arbeitens",
+                "Förderung der kulturellen Kompetenz",
+                "Förderung der Sprachkompetenz",
+                "Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)"
+            ],
+            "individual_learning_goals": [
+                {
+                    "_id": {
+                        "$oid": "66d17f2defb603465abeb9aa"
+                    },
+                    "username": "Dagmar Abendroth-Timmer",
+                    "learning_goal": "Für die Siegener Studierenden stehen der sprachliche und kulturelle Austausch im Vordergrund. "
+                },
+                {
+                    "_id": {
+                        "$oid": "66d17f2defb603465abeb9ac"
+                    },
+                    "username": "José Aguilar Río",
+                    "learning_goal": "Für die Pariser Studierenden stehen der fachdidaktische Austausch sowie mediendidaktische Fragestellungen im Fokus."
+                }
+            ],
+            "target_groups": [
+                {
+                    "_id": {
+                        "$oid": "666139b8d165067323a18078"
+                    },
+                    "name": "Uni Siegen",
+                    "age_min": "20",
+                    "age_max": "29",
+                    "experience": "Die Siegener Studierenden verfügen über Französischkenntnisse auf Niveau B2-C1. Die Studierenden hatten zuvor noch an keinem virtuellen Austausch teilgenommen. Die Siegener Studierenden waren intrinsisch motiviert (freiwillige Teilnahme).",
+                    "academic_course": "Lehramt Französisch, Französisch als Fremdsprache",
+                    "languages": ["Deutsch", "Französisch", "Englisch"]
+                },
+                {
+                    "_id": {
+                        "$oid": "66616a97d165067323a1854f"
+                    },
+                    "name": "Uni Paris",
+                    "age_min": "20",
+                    "age_max": "40",
+                    "experience": "Die Pariser Studierenden verfügten über Französischkenntnisse auf Niveau B1-C2. Nicht alle Pariser Studierenden verfügten über Englischkenntnisse, so dass Französisch die lingua franca darstellte. 13 der 43 Studierenden hatten zuvor an einem virtuellen Austausch teilgenommen. Die Pariser Studierenden waren extrinsisch motiviert (benotete Pflichtveranstaltung).",
+                    "academic_course": "Lehramt Französisch, Französisch als Fremdsprache",
+                    "languages": ["Französisch"]
+                }
+            ],
+            "languages": [
+                "Französisch",
+                "Deutsch",
+                "Spanisch",
+                "Englisch"
+            ],
+            "evaluation": [
+                {
+                    "_id": {
+                        "$oid": "66669f7f559a9811dd5c6fca"
+                    },
+                    "username": "Dagmar Abendroth-Timmer",
+                    "is_graded": false,
+                    "task_type": "",
+                    "assessment_type": "",
+                    "evaluation_while": "Teilnahmebescheinigung (unbenotet) nach erfolgreichem Abschluss",
+                    "evaluation_after": ""
+                },
+                {
+                    "_id": {
+                        "$oid": "66669f7f559a9811dd5c6fcc"
+                    },
+                    "username": "José Aguilar Río",
+                    "is_graded": true,
+                    "task_type": "siehe Aufgabenstellungen",
+                    "assessment_type": "benotet",
+                    "evaluation_while": "Synthese 1 (20 %), Synthese 2 (20%), Beobachtungsraster (25 %), individueller Reflexionsbericht (35 % der Gesamtnote)",
+                    "evaluation_after": ""
+                }
+            ],
+            "timestamp_from": null,
+            "timestamp_to": null,
+            "involved_parties": [
+                "Ramona Schneider",
+                "Cédric Brudermann",
+                "Grégory Miras",
+                "Lin Xue",
+                "Sofia Stratilaki"
+            ],
+            "realization": "asynchron und synchron",
+            "physical_mobility": true,
+            "physical_mobilities": [
+                {
+                    "_id": {
+                        "$oid": "668b92ae5b82b31d6d6ce209"
+                    },
+                    "location": "Paris",
+                    "timestamp_from": {
+                        "$date": "2014-11-24T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-11-24T00:00:00Z"
+                    }
+                }
+            ],
+            "learning_env": "eigene Projektplattform (Google-Webseite mit extern eingebettetem Forum und Materialien)\n",
+            "new_content": null,
+            "checklist": [
+                {
+                    "username": "Dagmar Abendroth-Timmer",
+                    "time": false,
+                    "format": false,
+                    "topic": false,
+                    "goals": false,
+                    "languages": false,
+                    "media": false,
+                    "technicalEquipment": false,
+                    "evaluation": false,
+                    "institutionalRequirements": true,
+                    "dataProtection": false
+                },
+                {
+                    "username": "José Aguilar Río",
+                    "time": false,
+                    "format": false,
+                    "topic": false,
+                    "goals": false,
+                    "languages": false,
+                    "media": true,
+                    "technicalEquipment": false,
+                    "evaluation": false,
+                    "institutionalRequirements": false,
+                    "dataProtection": false
+                }
+            ],
+            "duration": null,
+            "workload": 0,
+            "steps": [
+                {
+                    "_id": {
+                        "$oid": "66617ab5d165067323a19534"
+                    },
+                    "name": "Vorab-Fragebogen zur Gruppenbildung",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2014-10-06T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-10-17T00:00:00Z"
+                    },
+                    "duration": 950400.0,
+                    "learning_goal": "Sensibilisierung der Studierenden für mögliche Probleme, die in virtuellen Kooperationsprojekten auftreten können, um Missverständnisse und Kommunikationsabbrüche zu vermeiden, Möglichkeit zur Vorab-Reflexion verschiedener Aspekte des Projektes, Abfrage der Motivation, Bereitschaft, Vorerfahrungen mit ähnlichen Projekten sowie ihrer Nutzungsgewohnheiten und -vorlieben in Bezug auf digitale Medien",
+                    "learning_activity": "Einzelarbeit",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66617ab5d165067323a19535"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "Der Fragebogen ist in deutscher und französischer Version online verfügbar unter https://doi.org/10.22000/275",
+                            "tools": [
+                                "Online-Fragebogen via Lime Survey",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66613e1ed165067323a1820b"
+                    },
+                    "name": "Synthese 1",
+                    "workload": 0,
+                    "timestamp_from": {
+                        "$date": "2014-10-20T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-10-31T00:00:00Z"
+                    },
+                    "duration": 950400.0,
+                    "learning_goal": "Rezeption wissenschaftlicher Texte (ggf. in verschiedenen Sprachen), Erfassung und Diskussion möglicher Unterschiede in den Konzepten in Frankreich und Deutschland, Arbeit in einem mehrsprachigen und mehrkulturellen Team,  Nutzung digitaler Kommunikationswege für die synchrone und asynchrone Arbeit, Verfassen eines wissenschaftlichen Textes und Erfassen sprachlich-kulturell bedingter unterschiedlicher Textkonventionen",
+                    "learning_activity": "think-pair-share",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66613e1ed165067323a1820c"
+                            },
+                            "task_formulation": "Avec quel type d’apprenants aimeriez-vous travailler?",
+                            "work_mode": "think - pair - share",
+                            "notes": "Schritt 1: Individuelle Reflexion\nSchritt 2: Diskussion in der Gruppe\nSchritt 3: Lektüre wissenschaftlicher Artikel\nSchritt 4: Verfassen einer Synthese",
+                            "tools": [
+                                "Projektplattform mit Diskussionsforum",
+                                "Skype (Chat oder Audiokonferenz)",
+                                "Mail",
+                                "weitere (z. B. WhatsApp)"
+                            ],
+                            "materials": [
+                                "Texte auf der Projektplattform",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66613e1ed165067323a1820b"
+                    },
+                    "name": "Synthese 2",
+                    "workload": 0,
+                    "timestamp_from": {
+                        "$date": "2014-11-03T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-11-21T00:00:00Z"
+                    },
+                    "duration": 1.5552E+06,
+                    "learning_goal": "Rezeption wissenschaftlicher Texte (ggf. in verschiedenen Sprachen), Erfassung und Diskussion möglicher Unterschiede in den Konzepten in Frankreich und Deutschland, Arbeit in einem mehrsprachigen und mehrkulturellen Team  Nutzung digitaler Kommunikationswege für die synchrone und asynchrone Arbeit, Verfassen eines wissenschaftlichen Textes und Erfassen sprachlich-kulturelle bedingter unterschiedlicher Textkonventionen",
+                    "learning_activity": "think-pair-share",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66613e1ed165067323a1820c"
+                            },
+                            "task_formulation": "„Y-a-t-il des enseignants qui vous ont fait une impression (dé)favorable au cours de votre apprentissage d’une langue?“ ",
+                            "work_mode": "think - pair - share",
+                            "notes": "Schritt 1: Individuelle Reflexion\nSchritt 2: Diskussion in der Gruppe\nSchritt 3: Lektüre wissenschaftlicher Artikel\nSchritt 4: Verfassen einer Synthese",
+                            "tools": [
+                                "eigene Projektplattform (mit Diskussionsforum)",
+                                "Skype (Chat oder Audiokonferenz)",
+                                "Mail",
+                                "weitere (z. B. WhatsApp)"
+                            ],
+                            "materials": [
+                                "Texte auf der Projektplattform",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66613e1ed165067323a1820b"
+                    },
+                    "name": "Präsenztreffen Paris",
+                    "workload": 0,
+                    "timestamp_from": {
+                        "$date": "2014-11-21T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-11-21T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Das Präsenztreffen in Paris diente dem gegenseitigen Kennenlernen der Studierenden. Darüber hinaus konnten sich die Studierenden über die Arbeit an Aufgabe 3, dem Beobachtungsraster verständigen und mit der Bearbeitung der Aufgabe beginnen.",
+                    "learning_activity": "",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66613e1ed165067323a1820c"
+                            },
+                            "task_formulation": "siehe nachfolgende Aufgabe",
+                            "work_mode": "kooperativ in Gruppen",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66613e1ed165067323a18213"
+                    },
+                    "name": "Erstellung des Beobachtungsrasters",
+                    "workload": 0,
+                    "timestamp_from": {
+                        "$date": "2014-11-24T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2014-12-19T00:00:00Z"
+                    },
+                    "duration": 2.16E+06,
+                    "learning_goal": "Rezeption wissenschaftlicher Texte (ggf. in verschiedenen Sprachen), Erfassung und Diskussion möglicher Unterschiede in den Konzepten in Frankreich und Deutschland, Arbeit in einem mehrsprachigen und mehrkulturellen Team  Nutzung digitaler Kommunikationswege für die synchrone und asynchrone Arbeit, Verfassen eines wissenschaftlichen Textes und Erfassen sprachlich-kulturelle bedingter unterschiedlicher Textkonventionen",
+                    "learning_activity": "",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66613e1ed165067323a18214"
+                            },
+                            "task_formulation": "„La grille devra être un outil opérationnel permettant la conduite d’une observation aurprès d’un(e) enseignant(e) en situation d’interaction didactique.“ ",
+                            "work_mode": "kooperativ in Gruppen",
+                            "notes": "Erstellung eines Analyserasters zur Beobachtung von Unterrichtssituationen. Dabei sollten die Studierenden drei unterschiedliche selbst gewählte Konzepte (z. B. aus der Bearbeitung der ersten beiden Aufgaben) in beobachtbare Parameter operationalisieren. Darüber hinaus sollten sie die Erstellung des Beobachtungsrasters und die hinzugezogenen Quellen erläutern.",
+                            "tools": [
+                                "eigene Projektplattform (mit Diskussionsforum)",
+                                "Skype (Chat oder Audiokonferenz)",
+                                "Mail",
+                                "weitere (z. B. WhatsApp)"
+                            ],
+                            "materials": [
+                                "Korpus mit Aufzeichnungen von Unterrichtssituationen",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66613e1ed165067323a18217"
+                    },
+                    "name": "Reflexionsbericht",
+                    "workload": 0,
+                    "timestamp_from": {
+                        "$date": "2015-01-12T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2015-01-16T00:00:00Z"
+                    },
+                    "duration": 345600.0,
+                    "learning_goal": "Reflexion der Projekterkenntnisse auf einer theoretischen, sprachlichen, interkulturellen, emotionalen, kooperativen, virtuellen, motivationalen Ebene, zur Unterrichtspraxis und Lernendenautonomie; Reflexion des potenziellen Transfers der Erkenntnisgewinne auf die zukünftige Tätigkeit als Fremdsprachenlehrkräfte; Reflexion des praktischen Kompetenzerwerbs für die zukünftige berufliche Tätigkeit",
+                    "learning_activity": "Verfassen eines individuellen Berichtes (4 Seiten) in wissenschaftlichem Stil unter Berücksichtigung wissenschaftlicher Quellen in einer der vier Projektsprachen. Die Studierenden sollten darin zeigen, dass sie die im Laufe des Semesters erarbeiteten theoretischen Konzepte mit ihrem beruflichen Selbstverständnis und den Erfahrungen im Projekt verknüpfen können.",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66613e1ed165067323a18218"
+                            },
+                            "task_formulation": "4)\tIndividueller Reflexionsbericht: „Il s’agit d’indiquer ce que votre participation au dispositif d’apprentissage vous a apporté: apports de la théorie, de l’expérience du travail en équipe et de communication médiatisée et apports de l’éxpérience en tant que participant, apprenant, futur enseignant.“  (Schneider 2020, S. 112)",
+                            "work_mode": "individuell",
+                            "notes": "Individuelle Reflexion des Projektes:\na. Welche Erkenntnisgewinne nehmen Sie aus der Teilnahme an dem Projekt mit? Beziehen Sie dabei berufliche Kompetenzen auf einer theoretischen, sprachlichen, interkulturellen, emotionalen, kooperativen, virtuellen, motivationalen Ebene sowie unterrichtspraktische bzw. Erkenntnisse zur Autonomie ein.\nb. Inwiefern sehen Sie einen Transfer der Erkenntnisgewinne des virtuellen Kooperationsprojektes auf Ihre zukünftige Tätigkeit als Fremdsprachenlehrperson?",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "wissenschaftliche Texte auf der Projektplattform",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                }
+            ],
+            "is_good_practise": true,
+            "is_good_practise_ro": false,
+            "underlying_ve_model": "Die Aufgabenstellungen basieren auf Esteve (2013) zur Überwindung der Theorie-Praxis-Lücke in der Lehrkräftebildung. Es liegt kein bekanntes VE-Modell zugrunde. Das Projekt hat gezeigt, dass Designvorschläge insofern problematisch sind, als sie nur eingeschränkt auf andere Settings übertragbar sind, da sich institutionelle Strukturen unterscheiden und sich virtuelle Austauschprojekte unter verschiedenen Bedingungen vollziehen (Mehrsprachigkeit- und Kulturalität, Kooperation, Projektkontext, Virtualität etc.). ",
+            "reflection": "Die Ergebnisse sind ausführlich beschrieben in Schneider, Ramona (2020): Virtuelle Aufgabenbearbeitung in mehrsprachigen Gruppen. Eine qualitative Studie in der Französischlehrerbildung. Stuttgart: Metzler. https://link.springer.com/book/10.1007/978-3-476-05627-6\n\nAls sinnvoll erwiesen haben sich:\n- Präsenztreffen zum gegenseitigen Kennenlernen\n-  Einräumung von Gestaltungsspielräumen bzgl. der Wahl der Kommunikationsmedien, -sprachen, der Arbeitsmaterialien, zeitlichen Gestaltung und Rollenverteilung. Hierdurch werden Prozessverluste aufgrund normativer Vorgaben vermieden, die den Bedürfnissen der Teilnehmenden nicht gerecht werden\n- kleinschrittige inhaltliche Strukturierung der Aufgabenstellung\ntransparente Bewertungskriterien mit Erwartungshorizont, Modelltexten und Beispielprodukten\n\nWünschenswert wäre darüber hinaus:\n- Matching (Gruppenzusammensetzung) nach Arbeitseinstellungen, Interessen, Kommunikationspräferenzen, Lehrerfahrungen etc.\n- Prozessbewertung durch Tutorierende und ggf. Peers statt Fokussierung auf (End-)Produkte, ggf. durch inhaltliches Peer-Feedback\n- Gruppenprodukt, welches auf die Auseinandersetzung mit konträren Sichtweisen, individuellen Erfahrungen und Vorstellungen vom Sprachenlernen abzielt, um tiefergehende Interaktionen zu fördern\n\nHerausforderungen:\n- In virtuellen Austauschprojekten scheint es unter institutionellen Bedingungen des Zeitdrucks, der Virtualität und der Unpersönlichkeit schwierig, sowohl ein gutes Ergebnis in Form einer anspruchsvollen wissenschaftlichen Textsorte zu erreichen als auch Diskussionen von individuellen und soziokulturell geprägten Sichtweisen auf Lehr-Lernprozesse anzuregen, die über eine oberflächliche Vergleichsebene hinausgehen.\nDer Einfluss institutioneller Strukturen (Pflicht- vs. Wahlveranstaltung) führt zu unterschiedlicher Motivation und Beteiligung der Studierenden.\n\n",
+            "good_practise_evaluation": null,
+            "evaluation_file": {
+                "file_id": {
+                    "$oid": "6682587f5b82b31d6d6cc50b"
+                },
+                "file_name": "CONFORME_Literatur.pdf"
+            },
+            "progress": {
+                "name": "completed",
+                "institutions": "completed",
+                "topics": "completed",
+                "lectures": "completed",
+                "learning_goals": "completed",
+                "methodical_approach": "completed",
+                "target_groups": "completed",
+                "languages": "completed",
+                "evaluation": "completed",
+                "involved_parties": "not_started",
+                "realization": "completed",
+                "learning_env": "completed",
+                "new_content": "not_started",
+                "checklist": "completed",
+                "steps": [
+                    {
+                        "Vorab-Fragebogen%20zur%20Gruppenbildung": "completed"
+                    },
+                    {
+                        "Synthese%201": "not_started"
+                    },
+                    {
+                        "Synthese%202": "not_started"
+                    },
+                    {
+                        "Pr%C3%A4senztreffen%20Paris": "not_started"
+                    },
+                    {
+                        "Erstellung%20des%20Beobachtungsrasters": "not_started"
+                    },
+                    {
+                        "Reflexionsbericht": "not_started"
+                    }
+                ],
+                "partners": "completed",
+                "methodical_approaches": "completed",
+                "stepsGenerally": "completed"
+            },
+            "methodical_approaches": [
+                "Aufgabeorientierter Ansatz",
+                "Reflexiver Ansatz"
+            ],
+            "abstract": "Das Projekt CONFORME (cognitions, émotions et médiations en formation des enseignants de langues) war ein mehrsprachiges Forschungsprojekt der Universität Siegen in Zusammenarbeit mit den Universitäten Sorbonne Nouvelle – Paris 3 und Pierre et Marie Curie – Paris 6, das von Prof. Dr. Dagmar Abendroth-Timmer und Dr. José Aguilar Río geleitet wurde. Thematisch widmete sich das Projekt Emotionen und Selbstkonzepten in der Ausbildung und Professionalisierung von zukünftigen Fremdsprachenlehrenden. Insgesamt nahmen 54 internationale Studierende an dem Blended Learning-Projekt teil und bearbeiteten ein Semester lang Aufgaben in Kleingruppen. Im Vordergrund stand das kollaborative Verfassen wissenschaftlicher Texte („Synthesen“) unter Einbezug einschlägiger (mehrsprachiger) Fachliteratur. Die Studierenden nutzten hierfür selbst gewählte Kommunikationsmedien wie z. B. Blog, Skype und Mail. Eine gemeinsame Präsenzsitzung diente dem gegenseitigen Kennenlernen.",
+            "literature": null,
+            "literature_files": []
+        },
+        {
+            "_id": {
+                "$oid": "667bc3de2169d7670df0d1fd"
+            },
+            "author": "david_fujisawa",
+            "read_access": [
+                "david_fujisawa",
+                "aketzer"
+            ],
+            "write_access": [
+                "david_fujisawa"
+            ],
+            "creation_timestamp": {
+                "$date": "2024-06-26T07:31:42.666Z"
+            },
+            "last_modified": {
+                "$date": "2024-08-20T12:51:19.964Z"
+            },
+            "name": "VE Leipzig und Dokkyo SoSe 2023",
+            "partners": [
+                "david_fujisawa",
+                "Almut Ketzer-Nöltge"
+            ],
+            "institutions": [
+                {
+                    "_id": {
+                        "$oid": "667bc5522169d7670df0d2af"
+                    },
+                    "name": "Universität Leipzig",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Deutschland",
+                    "department": "Herder-Institut, Deutsch als Fremd-und Zweitsprache"
+                },
+                {
+                    "_id": {
+                        "$oid": "667bc5522169d7670df0d2b5"
+                    },
+                    "name": "Dokkyo University",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Japan",
+                    "department": "Abteilung für deutsche Sprache und Kultur"
+                }
+            ],
+            "topics": [
+                "selbstgewählte Themen: z.B. Märchen, Essen, Filme, Alltag, Musik"
+            ],
+            "lectures": [
+                {
+                    "_id": {
+                        "$oid": "667bc5ac2169d7670df0d2d7"
+                    },
+                    "name": "Mediendidaktik (Uni Leipzig)",
+                    "lecture_type": "Pflichtveranstaltung",
+                    "lecture_format": "Präsenz",
+                    "participants_amount": "19"
+                },
+                {
+                    "_id": {
+                        "$oid": "667bc5e42169d7670df0d30f"
+                    },
+                    "name": "Kommunikationskurs (Dokkyo Univ.)",
+                    "lecture_type": "Pflichtveranstaltung",
+                    "lecture_format": "Präsenz",
+                    "participants_amount": "19"
+                }
+            ],
+            "major_learning_goals": [
+                "Förderung kollaborativen Arbeitens",
+                "Förderung kommunikativer Fähigkeiten",
+                "Förderung digitaler Kompetenzen",
+                "Förderung sozialer Kompetenzen",
+                "Förderung der kulturellen Kompetenz",
+                "Förderung der Sprachkompetenz",
+                "Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)"
+            ],
+            "individual_learning_goals": [
+                {
+                    "_id": {
+                        "$oid": "66c48f3befb603465abe73fe"
+                    },
+                    "username": "david_fujisawa",
+                    "learning_goal": "- Kommunikative, soziale und pragmatische Kompetenz fördern\n- Umgang mit Medien schulen, \n- authentische Alltagsgespräche führen,\n- eigene Interessen einbringen, \n- Meinungsaustausch"
+                },
+                {
+                    "_id": {
+                        "$oid": "66c48f3befb603465abe7400"
+                    },
+                    "username": "Almut Ketzer-Nöltge",
+                    "learning_goal": "- Sammeln erster Erfahrungen bei der Betreuung von DaF-Studierenden.\n- Planung, Durchführung und Reflexion eines DaF-Lehr-/Lernprojekts: Lerneranalyse, Formulierung lernerspezifischer Lehr-/Lernziele, Planung des Projektablaufs (Teilziele und -schritte), mediendidaktische Unterstützung des Projekts.\n- Sammeln von Erfahrungen mit VE-Projekten als didaktischem Konzept für den Fremdsprachenunterricht. \n- Reflexion dieser Erfahrungen."
+                }
+            ],
+            "target_groups": [
+                {
+                    "_id": {
+                        "$oid": "667bc72b2169d7670df0d3b0"
+                    },
+                    "name": "Studierende Herder-Institut ",
+                    "age_min": "19",
+                    "age_max": "26",
+                    "experience": "Die Studierenden tauschen sich in mindestens sechs 1-zu-1-Treffen aus (je mind. 45 min) und arbeiten gemeinsam an einem Projekt zu einem selbstgewählten Thema. Dabei entstehen mündliche Produkte (Vortrag, Podcast, Interview, Erklärfilm o. ä.), die über die Dozierenden veröffentlicht werden.",
+                    "academic_course": "Deutsch als Fremd-und Zweitsprache (Master)",
+                    "languages": []
+                },
+                {
+                    "_id": {
+                        "$oid": "667bc72b2169d7670df0d3b6"
+                    },
+                    "name": "Studierende Dokkyo Universität",
+                    "age_min": "18",
+                    "age_max": "22",
+                    "experience": "Die Studierenden tauschen sich in mindestens sechs 1-zu-1-Treffen aus (je mind. 45 min) und arbeiten gemeinsam an einem Projekt zu einem selbstgewählten Thema. Dabei entstehen mündliche Produkte (Vortrag, Podcast, Interview, Erklärfilm o. ä.), die über die Dozierenden veröffentlicht werden.",
+                    "academic_course": "Germanistik",
+                    "languages": []
+                }
+            ],
+            "languages": [
+                "Deutsch"
+            ],
+            "evaluation": [
+                {
+                    "_id": {
+                        "$oid": "667bc3de2169d7670df0d1fb"
+                    },
+                    "username": "david_fujisawa",
+                    "is_graded": true,
+                    "task_type": "Produkt (Video, Audio) innerhalb der 360-Grad-Tour",
+                    "assessment_type": "benotet",
+                    "evaluation_while": "Nachbesprechung der Onlinesessions im Unterricht",
+                    "evaluation_after": "Google Forms"
+                },
+                {
+                    "_id": {
+                        "$oid": "667bc4cb2169d7670df0d283"
+                    },
+                    "username": "Almut Ketzer-Nöltge",
+                    "is_graded": true,
+                    "task_type": "Seminararbeit (Erfahrungsreflexion)",
+                    "assessment_type": "benotet",
+                    "evaluation_while": "Nachbesprechung der Onlinesessions im Unterricht",
+                    "evaluation_after": "Dokumentation und Reflexion VE-Projekt (2-4 Seiten):\n\n- Beschreibung der Partner/in/nen, des Ziels, des Ablaufs, der genutzten Technologien...\n\nReflexion anhand von Leitfragen:\n\n- Welche Erwartungen hatte ich vor dem Projekt? Was hat sich erfüllt, was nicht?\n- Was hat gut / nicht so gut geklappt?\n- Was habe ich gelernt? Was hat mich überrascht?\n- Was würde ich anders machen, wenn ich nochmal die Möglichkeit hätte?\n- Wie finde ich das Konzept von VE-Projekten? (Wie) würde ich VE-Projekte in den Unterricht einbinden?\n - Welche Tools habe ich genutzt? Wie und warum? (medien-didaktische Begründung)"
+                }
+            ],
+            "timestamp_from": null,
+            "timestamp_to": null,
+            "involved_parties": [
+                ""
+            ],
+            "realization": "asynchron und synchron",
+            "physical_mobility": false,
+            "physical_mobilities": [
+                {
+                    "_id": {
+                        "$oid": "66b1cb8b53500153679a6ecc"
+                    },
+                    "location": "",
+                    "timestamp_from": null,
+                    "timestamp_to": null
+                }
+            ],
+            "learning_env": " Padlet, Slack, Moodle",
+            "new_content": null,
+            "checklist": [
+                {
+                    "username": "david_fujisawa"
+                },
+                {
+                    "username": "Almut Ketzer-Nöltge",
+                    "time": false,
+                    "format": false,
+                    "topic": false,
+                    "goals": false,
+                    "languages": false,
+                    "media": false,
+                    "technicalEquipment": false,
+                    "evaluation": false,
+                    "institutionalRequirements": false,
+                    "dataProtection": false
+                }
+            ],
+            "duration": null,
+            "workload": 0,
+            "steps": [
+                {
+                    "_id": {
+                        "$oid": "66b0534253500153679a5a80"
+                    },
+                    "name": "Vorbereitungsphase",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2023-05-03T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2023-05-05T00:00:00Z"
+                    },
+                    "duration": 172800.0,
+                    "learning_goal": "Die TN lernen sich kennen und erhalten einen Einblick in die Vielfalt von biografischen Hintergründen, Motivationen und Erwartungen.",
+                    "learning_activity": "Die Studierenden der beiden Standorte erstellen Vorstellungsvideos von sich selbst, die Sie an die/den jeweilige/n Dozierende/n schicken. Die Videos werden der jeweils anderen Gruppe zur Verfügung gestellt und für die Partnerzuordnung genutzt.\nInhalte der Videos: Selbstvorstellung, Interessen, Beziehungen zu / Erfahrungen mit Dtl., bzw. Japan",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0534253500153679a5a81"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0534253500153679a5a80"
+                    },
+                    "name": "Austauschphase ",
+                    "workload": 5,
+                    "timestamp_from": {
+                        "$date": "2023-05-08T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2023-06-16T00:00:00Z"
+                    },
+                    "duration": 3.3696E+06,
+                    "learning_goal": "Ziel ist die Erarbeitung des gemeinsamen Projektes zu einem Selbstgewählten Thema. Beispiele für Projektprodukte:•\tPodcast über Klimakatastrophe•\tInterview über Gendergerechtigkeit•\tVideo über Alltag an der Uni•\tReportage über KI•\tAnimationsfilm mit Tonspur•\tFotocollage mit Audiokommentar",
+                    "learning_activity": "Partnerfindung, Erstes Treffen zum gegenseitigen Kennenlernen und Erarbeitung der Zielsetzung für das eigene Projekt, mind. 6 x 45 min (es können notfalls auch 2 x 45 min hintereinander stattfinden)",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0534253500153679a5a81"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0534253500153679a5a80"
+                    },
+                    "name": "Projektabschluss",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2023-06-12T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2023-06-16T00:00:00Z"
+                    },
+                    "duration": 345600.0,
+                    "learning_goal": "Die Projektprodukte werden für alle ersichtlich geteilt, im Kurs gemeinsam angeschaut und anschließend über Padlet kommentiert.",
+                    "learning_activity": "Einreichung der Projektprodukte via Padlet.",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0534253500153679a5a81"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                }
+            ],
+            "is_good_practise": true,
+            "is_good_practise_ro": false,
+            "underlying_ve_model": "Telecollaboration, Virtual Cultural Exchange & Asynchronous Exchanges",
+            "reflection": "Insgesamt hat das Projekt sehr gut funktioniert. Besonders positiv war die Zusammenarbeit innerhalb der Gruppe, sobald sie erst einmal gebildet war. Die TN haben sich aktiv eingebracht, ihre Aufgaben engagiert übernommen und kreativ gearbeitet. Die Kommunikation lief reibungslos, und es gab ein hohes Maß an Kooperation und gegenseitiger Unterstützung. Das gemeinsame Ziel war immer im Fokus, was zu einem erfolgreichen Abschluss geführt hat.\n\nEine der größten Herausforderungen war die Gruppenfindung und Terminabsprache. Zu Beginn gab es Schwierigkeiten, passende Zeiten zu finden. Diese Phase war etwas holprig, aber letztendlich haben wir durch Flexibilität und Kompromissbereitschaft eine Lösung gefunden. Es hat geholfen, frühzeitig einen festen Kommunikationskanal zu etablieren und klare Deadlines zu setzen, sodass wir alle auf dem gleichen Stand waren.\n\nFür das nächste Mal würde ich die Gruppenbildung und Terminfindung strukturierter angehen. Ein Doodle oder eine ähnliche Umfrage könnte bereits vorab verschickt werden, um verfügbare Zeiten besser zu koordinieren. Auch die Bildung von kleineren, homogenen Gruppen könnte helfen, die Abstimmung zu erleichtern. Ich habe aus dem Feedback der Lernenden gelernt, dass sie sich frühere und klarere Absprachen gewünscht hätten, was ich in Zukunft besser berücksichtigen werde.",
+            "good_practise_evaluation": null,
+            "evaluation_file": null,
+            "progress": {
+                "name": "completed",
+                "institutions": "completed",
+                "topics": "completed",
+                "lectures": "completed",
+                "learning_goals": "completed",
+                "methodical_approach": "completed",
+                "target_groups": "completed",
+                "languages": "completed",
+                "evaluation": "completed",
+                "involved_parties": "not_started",
+                "realization": "completed",
+                "learning_env": "completed",
+                "new_content": "not_started",
+                "checklist": "not_started",
+                "steps": [
+                    {
+                        "Vorbereitungsphase": "not_started"
+                    },
+                    {
+                        "Austauschphase%20": "not_started"
+                    },
+                    {
+                        "Projektabschluss": "not_started"
+                    }
+                ],
+                "partners": "completed",
+                "stepsGenerally": "completed"
+            },
+            "methodical_approaches": [
+                "aufgabenorientierter Ansatz\nhandlungsorientierter Ansatz"
+            ],
+            "abstract": "Das Virtual Exchange Projekt zwischen Germanistik-Studierenden der Dokkyo Universität in Japan und DaF/DaZ-Studierenden des Herder Instituts der Universität Leipzig bot eine einzigartige Gelegenheit für sprachliche Zusammenarbeit und erste didaktisch-methodische Erfahrungen. Das Projekt, das parallel zum regulären Unterricht stattfand, kombinierte Elemente der Telecollaboration, des Virtual Cultural Exchange und der Asynchronous Exchanges. Über einen Zeitraum von sechs Wochen trafen sich die Studierenden in mindestens sechs 1-zu-1-Treffen à 45 Minuten, um gemeinsam an selbstgewählten Projekten zu arbeiten. Diese mündeten in kreativen Endprodukten wie Podcasts, Interviews, Videos oder Reportagen, die über ein Padlet veröffentlicht wurden. \nDie Vorbereitungsphase des Projekts begann mit der Erstellung von Vorstellungsvideos, die zur Partnerzuordnung dienten. Die eigentliche Austauschphase startete danach, wobei die Studierenden nicht nur ihre Sprachkenntnisse vertieften, sondern auch durch den regelmäßigen Austausch und die Zusammenarbeit mit ihren Partner:innen in Deutschland neue Perspektiven entwickelten. Die japanischen Studierenden profitierten dabei besonders sprachlich, indem sie ihre Deutschkenntnisse in realen Kommunikationssituationen anwenden und verbessern konnten. Gleichzeitig sammelten die DaF-Studierenden wertvolle Erfahrungen im Umgang mit Fremdsprachenlernenden und unternahmen erste didaktisch-methodische Schritte auf dem Gebiet der Mediendidaktik.\nDer Abschluss des Projekts war die Veröffentlichung der finalen Projektprodukte via Padlet. Beispiele für die entstandenen Arbeiten umfassen Podcasts zu den Themen Musik, Studienalltag, Reisen oder Essen.\n",
+            "literature": null,
+            "literature_files": []
+        },
+        {
+            "_id": {
+                "$oid": "668ce5ea5b82b31d6d6ced57"
+            },
+            "author": "dagmar_abendroth-timmer",
+            "read_access": [
+                "dagmar_abendroth-timmer",
+                "christian_koch"
+            ],
+            "write_access": [
+                "dagmar_abendroth-timmer",
+                "christian_koch"
+            ],
+            "creation_timestamp": {
+                "$date": "2024-07-09T07:25:30.24Z"
+            },
+            "last_modified": {
+                "$date": "2024-08-21T08:14:59.086Z"
+            },
+            "name": "ViMuLEnc 2",
+            "partners": [
+                "dagmar_abendroth-timmer",
+                "christian_koch"
+            ],
+            "institutions": [
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee1f"
+                    },
+                    "name": "Universität Siegen",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Deutschland",
+                    "department": "Romanistik, Sozialwissenschaften"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee21"
+                    },
+                    "name": "Gymnasium im Raum Siegen",
+                    "school_type": "Schule – Sekundarbereich",
+                    "country": "Deutschland",
+                    "department": "Fremdsprachen, SoWi"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee23"
+                    },
+                    "name": "İstanbul Üniversitesi-Cerrahpaşa",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Türkei",
+                    "department": "Anglistik"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee25"
+                    },
+                    "name": "Universität Bonn",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Deutschland",
+                    "department": "Interkulturelle Kommunikation und Mehrsprachigkeitsforschung"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee27"
+                    },
+                    "name": "University of Exeter",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Großbritannien",
+                    "department": "School of Education"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee29"
+                    },
+                    "name": "Universidad Anáhuac Mayab Mérida",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Mexiko",
+                    "department": "Wirtschaftswissenschaften"
+                },
+                {
+                    "_id": {
+                        "$oid": "668cea985b82b31d6d6cee2b"
+                    },
+                    "name": "Breda University of Applied Sciences",
+                    "school_type": "Fachhochschule/University of Applied Sciences",
+                    "country": "Niederlande",
+                    "department": "Französisch"
+                }
+            ],
+            "topics": [
+                "Mehrsprachigkeit",
+                "Digitalisierung",
+                "Nachhaltigkeit (Globales Lernen)"
+            ],
+            "lectures": [
+                {
+                    "_id": {
+                        "$oid": "668cead05b82b31d6d6cee43"
+                    },
+                    "name": "Language Club",
+                    "lecture_type": "Wahlveranstaltung",
+                    "lecture_format": "Hybrid",
+                    "participants_amount": "29"
+                }
+            ],
+            "major_learning_goals": [
+                "Förderung kollaborativen Arbeitens",
+                "Förderung digitaler Kompetenzen",
+                "Förderung der Sprachkompetenz",
+                "Förderung der kulturellen Kompetenz"
+            ],
+            "individual_learning_goals": [
+                {
+                    "_id": {
+                        "$oid": "66a75e4553500153679a3051"
+                    },
+                    "username": "dagmar_abendroth-timmer",
+                    "learning_goal": "Digitalisierung und Involvierung durch virtuelle Austausche, Entwicklung des mehrkulturellen und mehrsprachigen Repertoires durch Aktivitäten im virtuellen Raum, Entwicklung von Agency durch den inhaltsorientierten Austausch mit Expert:innen in authentischen Kommunikationssituationen"
+                },
+                {
+                    "_id": {
+                        "$oid": "66a75e4553500153679a3053"
+                    },
+                    "username": "christian_koch",
+                    "learning_goal": ""
+                }
+            ],
+            "target_groups": [
+                {
+                    "_id": {
+                        "$oid": "668cedbc5b82b31d6d6cef22"
+                    },
+                    "name": "Schüler:innen der gymnasialen Oberstufe",
+                    "age_min": "16",
+                    "age_max": "19",
+                    "experience": "Interesse an einem Sprachzertifikat für Englisch oder Französisch",
+                    "academic_course": "",
+                    "languages": []
+                }
+            ],
+            "languages": [
+                "Englisch",
+                "Deutsch",
+                "Französisch",
+                "Spanisch"
+            ],
+            "evaluation": [
+                {
+                    "_id": {
+                        "$oid": "668ce5ea5b82b31d6d6ced55"
+                    },
+                    "username": "dagmar_abendroth-timmer",
+                    "is_graded": false,
+                    "task_type": null,
+                    "assessment_type": null,
+                    "evaluation_while": "Kick-off-Treffen, Feedback-Runden nach verschiedenen Aktivitäten",
+                    "evaluation_after": "Einzelinterviews (n=25)"
+                },
+                {
+                    "_id": {
+                        "$oid": "668ce8115b82b31d6d6cedbd"
+                    },
+                    "username": "christian_koch",
+                    "is_graded": false,
+                    "task_type": "",
+                    "assessment_type": "",
+                    "evaluation_while": "",
+                    "evaluation_after": ""
+                }
+            ],
+            "timestamp_from": null,
+            "timestamp_to": null,
+            "involved_parties": [
+                "Hanna Butterer",
+                "Özlem Etuş",
+                "Devrim Günay",
+                "Eva-Maria Hennig-Klein",
+                "Gabriela Meier",
+                "María Cristina Osorio Vázquez",
+                "Anna Christine Quint",
+                "Marta Maria Röder",
+                "Berry Van de Wouw",
+                "Julian Biel",
+                "Lasse Birger Bohn",
+                "Aileen Fliegner",
+                "Rowena Seiwert",
+                "Hella Sellami"
+            ],
+            "realization": "synchron",
+            "physical_mobility": true,
+            "physical_mobilities": [
+                {
+                    "_id": {
+                        "$oid": "66a75e5f53500153679a311d"
+                    },
+                    "location": "Gymnasium im Raum Siegen",
+                    "timestamp_from": {
+                        "$date": "2022-03-04T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-03-04T00:00:00Z"
+                    }
+                }
+            ],
+            "learning_env": "Zoom\nPadlet\nMentimeter\nJamboard",
+            "new_content": null,
+            "checklist": [
+                {
+                    "username": "dagmar_abendroth-timmer",
+                    "time": true,
+                    "format": true,
+                    "topic": true,
+                    "goals": true,
+                    "languages": true,
+                    "media": true,
+                    "technicalEquipment": true,
+                    "evaluation": true,
+                    "institutionalRequirements": true,
+                    "dataProtection": true
+                },
+                {
+                    "username": "christian_koch",
+                    "time": true,
+                    "format": true,
+                    "topic": true,
+                    "goals": true,
+                    "languages": true,
+                    "media": true,
+                    "technicalEquipment": true,
+                    "evaluation": true,
+                    "institutionalRequirements": true,
+                    "dataProtection": true
+                }
+            ],
+            "duration": null,
+            "workload": 0,
+            "steps": [
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf080"
+                    },
+                    "name": "Kick-off mit Schulleitung und interessierten Lehrkräften",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2021-12-08T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2021-12-08T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Vorstellung des Vorhabens, Klärung formaler Rahmenvorgaben",
+                    "learning_activity": "",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf081"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf084"
+                    },
+                    "name": "Kick-off mit Schüler:innen",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2021-12-15T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2021-12-15T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Vorstellung des Projekts, Kennenlernen der Expert:innen sowie Schüler:innen untereinander, Nutzung eines breiten Spachrepertoires",
+                    "learning_activity": "Nutzung vieler Sprachen in verschiedenen Breakout-Rooms",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf085"
+                            },
+                            "task_formulation": "Besucht die verschiedenen Breakout-Rooms und führt Gespräche mit den Expert:innen. Verwendet nach Möglichkeit auch andere Sprachen als Deutsch und Englisch.",
+                            "work_mode": "Omniumkontakt",
+                            "notes": "Zur Sichtbarmachung der Sprachen können die Namen der Teilnehmenden um Sprachkürzel erweitert werden.",
+                            "tools": [
+                                "Offene Breakout-Room in Zoom"
+                            ],
+                            "materials": [
+                                "keine"
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf088"
+                    },
+                    "name": "Modul 1: Multilingualism",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2022-01-26T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-01-26T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Reflexionen über soziale und individuelle Mehrsprachigkeit",
+                    "learning_activity": "Spiel zum Erfinden und Erraten von Wörtern in verschiedenen Sprachen, Workshop zu Sprachbiographien und Linguistic Landscapes, Workshop zu mehrsprachiger Kommunikation",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf089"
+                            },
+                            "task_formulation": "Open the game in the Mentimenter and write your ideas for the words. As these are fantasy entries, there are no wrong answers.",
+                            "work_mode": "Moderation und virtuelle Interaktion",
+                            "notes": "Es wurden Fantasiewörter sowie Begriffe aus dem Türkischen, Griechischen und Italienischen eingesetzt: justantion, şahane, φιλικός, sicuro di sé",
+                            "tools": [
+                                "Mentimeter",
+                                "Zoom"
+                            ],
+                            "materials": [
+                                "ausgewählte Wörter und Bilder"
+                            ]
+                        },
+                        {
+                            "_id": {
+                                "$oid": "668d01085b82b31d6d6cfc1b"
+                            },
+                            "task_formulation": "What role(s) do languages play in our lives?, What languages are represented in your own environment?",
+                            "work_mode": "Unterrichtsgespräch",
+                            "notes": "",
+                            "tools": [
+                                "Zoom",
+                                "Powerpoint"
+                            ],
+                            "materials": [
+                                "mehrsprachige Linguistic Landscapes in unterschiedlichen Kontexten weltweit"
+                            ]
+                        },
+                        {
+                            "_id": {
+                                "$oid": "668d01085b82b31d6d6cfc1d"
+                            },
+                            "task_formulation": "How can we use our languages in everyday life? What opportunities do institutions offer to use languages other than the official one(s)?",
+                            "work_mode": "Unterrichtsgespräch",
+                            "notes": "",
+                            "tools": [
+                                "Zoom"
+                            ],
+                            "materials": [
+                                "Geschichte über die Verwendung verschiedener Sprachen in britischen Gesundheitsbehörden während COVID"
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf08c"
+                    },
+                    "name": "Modul 2: Digitalisation",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2022-02-09T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-02-09T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Kennenlernen neuester Entwicklungen des digitalen Fremdsprachenlernens und Zukunft sozialer Netzwerke, Austausch über internationale Perspektiven auf aktuelle Themen (Stand Februar 2022)",
+                    "learning_activity": "Teil 1: 7 kurze Workshops in Kleingruppen, Teil 2: Ask the experts “Digitalisation – in other countries – at school”",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf08d"
+                            },
+                            "task_formulation": "Choose two of the seven topics on offer and visit two of the breakout rooms in succession.",
+                            "work_mode": "Diskussion in Kleingruppen, Gruppenarbeit via Jamboard",
+                            "notes": "Innerhalb der verschiedenen Räume wurde mit Kurzpräsentationen, Postern, Quizzes und Videoclips gearbeitet.\nThemen: A1 Artificial intelligence, A2 Metaverse, A3 Fake News, A4 Foreign language learning and use 4.0, A5 Learning Apps",
+                            "tools": [
+                                "Zoom Breakout-Rooms",
+                                "Jamboard"
+                            ],
+                            "materials": [
+                                "jeweils von den Expert:innen in den Räumen individuell entwickeltes Material"
+                            ]
+                        },
+                        {
+                            "_id": {
+                                "$oid": "668d06c95b82b31d6d6cff90"
+                            },
+                            "task_formulation": "Choose a topic that you would like to discuss for 10 minutes in a smaller group. Ask the experts about the situation in their countries.",
+                            "work_mode": "Diskussion",
+                            "notes": "Themen: Q1 Future Language Learning, Q2 Digital classroom, Q3 Data protection, Q4 Digitalisation worldwide",
+                            "tools": [
+                                "Zoom Breakout-Rooms"
+                            ],
+                            "materials": [
+                                "keine"
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf090"
+                    },
+                    "name": "Modul 3: Sustainability",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2022-02-23T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-02-23T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Kennenlernen der Nachhaltigkeitsziele, Einblicke in mesoamerikanische Landwirtschaft, Reflexion über ökologische und soziale Entwicklungen der Zukunft",
+                    "learning_activity": "2 parallele Workshops zur Nachhaltigkeitszielen und zum Milpa-Anbau (Fortschritt als Rückkehr zu alten Traditionen), Austausch im Plenum über digitales Whiteboard",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf091"
+                            },
+                            "task_formulation": "Choose a sustainable development goal. Choose a language (English, French, German). Answer the following questions and take notes on the Padlet: What is the goal about? Why does it matter? What can we do (as individuals and as a school community)?",
+                            "work_mode": "Diskussion in Breakout-Room, Gruppenarbeit",
+                            "notes": "",
+                            "tools": [
+                                "Zoom Breakout-Rooms",
+                                "Padlet"
+                            ],
+                            "materials": [
+                                "PowerPoint-Präsentation"
+                            ]
+                        },
+                        {
+                            "_id": {
+                                "$oid": "668d18395b82b31d6d6d03b1"
+                            },
+                            "task_formulation": "Debate on the following topic: Conserve the milpa or promote modern agriculture?",
+                            "work_mode": "Unterrichtsgespräch, rollenbasierte Debatte",
+                            "notes": "Im Rahmen dieser Thematik sind Sprachmittlungs- und Interkomprehensionsübungen mit Einbindung des Spanischen durchgeführt worden. Wenige Teilnehmende hatten Spanisch gelernt und konnten mitteln.",
+                            "tools": [
+                                "Zoom Breakout-Rooms"
+                            ],
+                            "materials": [
+                                "PowerPoint-Präsentation mit diversen Schaubildern und Schlagwörtern auf Spanisch"
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf094"
+                    },
+                    "name": "VR-Session (hybrid)",
+                    "workload": 2,
+                    "timestamp_from": {
+                        "$date": "2022-04-03T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-04-03T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Testung von VR-Brillen, Reflexion über Nutzen und Mehrwert des Mediums für das Fremdsprachenlernen",
+                    "learning_activity": "Erprobung zweier Apps mit der VR-Brillen im Klassenraum (10 Geräte in drei Untergruppen), im Anschluss Reflexion mit einem online zugeschalteten VR-Experten",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf095"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf098"
+                    },
+                    "name": "„Become an Expert“: Ideen für die Projektwoche",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2022-03-09T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-03-09T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "Ausarbeitung der kennengelernten Inhalte für eine Projektwoche",
+                    "learning_activity": "Gestaltung eines vorbereiteten Padlets, Arbeit in Breakout-Rooms zu einem der drei Module, Austausch im Plenum",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf099"
+                            },
+                            "task_formulation": "Now it’s time that you become the experts... Inspired by the last module sessions on multilingualism, digitalisation, and sustainability, what kind of concrete project can you think of in order to address and inspire our school community during the project week (20.-22.06.2022)?",
+                            "work_mode": "Diskussion in Breakout-Rooms, Gruppenarbeit",
+                            "notes": "",
+                            "tools": [
+                                "Zoom Breakout-Rooms",
+                                "Padlet"
+                            ],
+                            "materials": [
+                                "zuvor eingesetzte Materialien"
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "668cf1e55b82b31d6d6cf09c"
+                    },
+                    "name": "Interviews",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2022-03-23T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2022-04-06T00:00:00Z"
+                    },
+                    "duration": 1.2096E+06,
+                    "learning_goal": "Feedback der Schüler:innen zu Inhalten, Methoden, Medien und verwendeten Sprachen",
+                    "learning_activity": "30-minütige, leitfadengetützte Interviews (im Anschluss transkribiert)",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "668cf1e55b82b31d6d6cf09d"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                }
+            ],
+            "is_good_practise": true,
+            "is_good_practise_ro": false,
+            "underlying_ve_model": "Wir haben unser Modell als \"Meet the expert\" bezeichnet und dabei einen gewissen Expertenbegriff der Experten-Novizen-Kommunikation aufgegriffen (vgl. Krauss 2020). Im Rahmen einer Masterarbeit hat eine Studentin das Konzept weiterentwickelt und einen Neuansatz für Sprachlerntandems entwickelt. Statt der Tandems, in denen jeweils die Sprache des Gegenübers gelernt wird, sollte es um Partnerschaften aus unterschiedlichen Ländern gehen, die eine gemeinsame Zielsprache anvisieren (in dem Fall Spanisch), die als Lingua franca des Projekts dient.\n\nKrauss, Stefan (2020): „Expertise-Paradigma in der Lehrerinnen- und Lehrerbildung“. In: Cramer, Colin/König, Johannes/Rothland, Martin / Blömeke, Sigrid (Hrsg.): Handbuch Lehrerinnen- und Lehrerbildung. Bad Heilbrunn: Klinkhardt, 154-162.",
+            "reflection": "Die aufwändige Planung und Durchführung fußte auf einer hohen Bereitschaft der teilnehmenden Expert:innen. Übertragbar auf kleinere Formate sollte aber in jedem die Idee sein, außerschulische Begegnungen – insbesondere auf internationaler Ebene – virtuell durchzuführen.\nGrößte Hürde für unser geplantes Design war die technische Ausstattung der Schüler:innen. Da nicht alle Zugang zu einem Laptop oder PC mit Webcam hatten, war etwa die Nutzung von gather.town nicht möglich, was eine andere physische Erfahrung der virtuellen Begegnung ermöglicht hätte. Wir konnten keine derartige Software ausfindig machen, die für Tablets und Smartphones (Apple und Android) einwandfrei funktioniert hätte.",
+            "good_practise_evaluation": null,
+            "evaluation_file": {
+                "file_id": {
+                    "$oid": "6690e2355b82b31d6d6d20bd"
+                },
+                "file_name": "Erziehung & Unterricht 2022 Artikel Hennig et al-1.pdf"
+            },
+            "progress": {
+                "name": "completed",
+                "institutions": "completed",
+                "topics": "completed",
+                "lectures": "completed",
+                "learning_goals": "completed",
+                "methodical_approach": "completed",
+                "target_groups": "completed",
+                "languages": "completed",
+                "evaluation": "completed",
+                "involved_parties": "not_started",
+                "realization": "completed",
+                "learning_env": "completed",
+                "new_content": "not_started",
+                "checklist": "completed",
+                "steps": [
+                    {
+                        "Kick-off mit Schulleitung und interessierten Lehrkräften": "completed"
+                    },
+                    {
+                        "Kick-off mit Schüler:innen": "completed"
+                    },
+                    {
+                        "Modul 1: Multilingualism": "not_started"
+                    },
+                    {
+                        "Modul 2: Digitalisation": "not_started"
+                    },
+                    {
+                        "Modul 3: Sustainability": "not_started"
+                    },
+                    {
+                        "VR-Session (hybrid)": "not_started"
+                    },
+                    {
+                        "„Become an Expert“: Ideen für die Projektwoche": "not_started"
+                    },
+                    {
+                        "Interviews": "not_started"
+                    }
+                ],
+                "partners": "completed"
+            },
+            "methodical_approaches": [
+                "außerschulisches Lernen (virtuell), Translanguaging, transformatives Lernen"
+            ],
+            "abstract": "ViMuLEnc 2.0 (Virtual Multilingual Learning Encounters in the Language Classroom) ist ein Schulprojekt, in dem Schülerinnen und Schüler der gymnasialen Oberstufe im Rahmen einer extracurricularen Arbeitsgemeinschaft mit internationalen Forschenden, Hochschullehrenden und Lehramtsstudierenden in einen virtuellen Austausch zu den Themen Mehrsprachigkeit, Digitalisierung und Nachhaltigkeit getreten sind. Ziel war es, authentische Gesprächssituationen zu schaffen, in denen neben der Lingua franca Englisch das mehrsprachige Repertoire der Teilnehmenden genutzt werden konnte.",
+            "literature": null,
+            "literature_files": []
+        },
+        {
+            "_id": {
+                "$oid": "66b058f353500153679a5f72"
+            },
+            "author": "david_fujisawa",
+            "read_access": [
+                "david_fujisawa"
+            ],
+            "write_access": [
+                "david_fujisawa"
+            ],
+            "creation_timestamp": {
+                "$date": "2024-08-05T04:45:39.504Z"
+            },
+            "last_modified": {
+                "$date": "2024-08-20T12:51:43.75Z"
+            },
+            "name": "VR Schreibprojekt mit der Maus",
+            "partners": [
+                "david_fujisawa",
+                "Christian Horn"
+            ],
+            "institutions": [
+                {
+                    "_id": {
+                        "$oid": "66b05a9953500153679a60ce"
+                    },
+                    "name": "Dokkyo Universität",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Japan",
+                    "department": "Abteilung für deutsche Sprache und Kultur"
+                },
+                {
+                    "_id": {
+                        "$oid": "66b05a9953500153679a60d0"
+                    },
+                    "name": "Hankuk University of Foreign Studies",
+                    "school_type": "Hochschule/Universität/College",
+                    "country": "Südkorea",
+                    "department": "Department of German Education"
+                }
+            ],
+            "topics": [
+                "Reisen"
+            ],
+            "lectures": [
+                {
+                    "_id": {
+                        "$oid": "66b05f8653500153679a6118"
+                    },
+                    "name": "Schreibkurs",
+                    "lecture_type": "Wahlveranstaltung",
+                    "lecture_format": "Präsenz",
+                    "participants_amount": "6"
+                },
+                {
+                    "_id": {
+                        "$oid": "66b05f8653500153679a611a"
+                    },
+                    "name": "TN des Mausprojekts",
+                    "lecture_type": "",
+                    "lecture_format": "Online",
+                    "participants_amount": null
+                }
+            ],
+            "major_learning_goals": [
+                "Förderung kreativen Denkens",
+                "Förderung kollaborativen Arbeitens",
+                "Förderung kommunikativer Fähigkeiten",
+                "Förderung digitaler Kompetenzen",
+                "Förderung sozialer Kompetenzen",
+                "Förderung der kulturellen Kompetenz",
+                "Förderung der Sprachkompetenz"
+            ],
+            "individual_learning_goals": [
+                {
+                    "_id": {
+                        "$oid": "66b6d46c53500153679a9a5c"
+                    },
+                    "username": "david_fujisawa",
+                    "learning_goal": "- schriftliche Kompetenz (Blogbeiträge, Kommentare und Antworten)\n- Kommunikative, soziale und pragmatische Kompetenz fördern\n- Umgang mit Medien (Blog- und Videobeitrag) schulen, \n- eigene Interessen einbringen, \n- Meinungsaustausch"
+                },
+                {
+                    "_id": {
+                        "$oid": "66b6d46c53500153679a9a5e"
+                    },
+                    "username": "Christian Horn",
+                    "learning_goal": "- Schreibkompetenzen auf Deutsch weiterentwickeln\n- Erhöhung der Motivation der Studierenden zum Deutschlernen\n- über die entstehenden zwischen­mensch­lichen Kontakte auch einen Beitrag zur Völkerverständigung zu leisten"
+                }
+            ],
+            "target_groups": [
+                {
+                    "_id": {
+                        "$oid": "66b060a553500153679a6275"
+                    },
+                    "name": "Studierende Dokkyo Universität",
+                    "age_min": "18",
+                    "age_max": "22",
+                    "experience": "Sprachniveau A2-B1",
+                    "academic_course": "Germanistik",
+                    "languages": []
+                },
+                {
+                    "_id": {
+                        "$oid": "66b060a553500153679a6277"
+                    },
+                    "name": "alle TN des Mausprojekts",
+                    "age_min": null,
+                    "age_max": null,
+                    "experience": "",
+                    "academic_course": "",
+                    "languages": []
+                }
+            ],
+            "languages": [
+                "Deutsch"
+            ],
+            "evaluation": [
+                {
+                    "_id": {
+                        "$oid": "66b058f353500153679a5f70"
+                    },
+                    "username": "david_fujisawa",
+                    "is_graded": true,
+                    "task_type": "Blogbeitrag",
+                    "assessment_type": "benotet",
+                    "evaluation_while": "Google Docs zur Verfolgung der entstehenden Texte",
+                    "evaluation_after": "Google Forms"
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0592e53500153679a5fa3"
+                    },
+                    "username": "Christian Horn",
+                    "is_graded": false,
+                    "task_type": "",
+                    "assessment_type": "",
+                    "evaluation_while": "",
+                    "evaluation_after": ""
+                }
+            ],
+            "timestamp_from": null,
+            "timestamp_to": null,
+            "involved_parties": [
+                ""
+            ],
+            "realization": "asynchron",
+            "physical_mobility": false,
+            "physical_mobilities": [
+                {
+                    "_id": {
+                        "$oid": "66b1ca9253500153679a6bec"
+                    },
+                    "location": "",
+                    "timestamp_from": null,
+                    "timestamp_to": null
+                }
+            ],
+            "learning_env": "https://maus-reisen.de",
+            "new_content": null,
+            "checklist": [
+                {
+                    "username": "david_fujisawa"
+                },
+                {
+                    "username": "Christian Horn",
+                    "time": false,
+                    "format": false,
+                    "topic": false,
+                    "goals": false,
+                    "languages": false,
+                    "media": false,
+                    "technicalEquipment": false,
+                    "evaluation": false,
+                    "institutionalRequirements": false,
+                    "dataProtection": false
+                }
+            ],
+            "duration": null,
+            "workload": 0,
+            "steps": [
+                {
+                    "_id": {
+                        "$oid": "66b0664d53500153679a671e"
+                    },
+                    "name": "Vorbereitungsphase",
+                    "workload": 3,
+                    "timestamp_from": {
+                        "$date": "2019-09-30T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2019-10-14T00:00:00Z"
+                    },
+                    "duration": 1.2096E+06,
+                    "learning_goal": "",
+                    "learning_activity": "Vertraut machen mit der Blog-Plattform von maus-reisen.de, Registrierung und Profilbild einstellen",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0664d53500153679a671f"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0664d53500153679a6722"
+                    },
+                    "name": "Schreibphase",
+                    "workload": 5,
+                    "timestamp_from": {
+                        "$date": "2019-10-14T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2019-12-23T00:00:00Z"
+                    },
+                    "duration": 6.048E+06,
+                    "learning_goal": "Schreibkompetenz fördern durch begleiteten Schreibprozess und Kommentierung des Beitrags zur Selbstkorrektur",
+                    "learning_activity": "Erstellung eines Blog-Beitrags (80-100 Wörter),\nKommentieren von 10 anderen Beiträgen von TN aus anderen Ländern. (20-30 Wörter),\nReaktion auf die Kommentare",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0664d53500153679a6723"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0664d53500153679a6726"
+                    },
+                    "name": "Videobeitragserstellung",
+                    "workload": 3,
+                    "timestamp_from": {
+                        "$date": "2019-12-23T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-01-20T00:00:00Z"
+                    },
+                    "duration": 2.4192E+06,
+                    "learning_goal": "Neben der schriftlichen Kompetenz soll auch die mündliche Kommunikation gefördert werden.",
+                    "learning_activity": "Erstellung eines Reisevideos, das zum Blog-Beitrag passt.",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0664d53500153679a6727"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66b0664d53500153679a672a"
+                    },
+                    "name": "Abschluss",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2020-01-20T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-01-20T00:00:00Z"
+                    },
+                    "duration": null,
+                    "learning_goal": "",
+                    "learning_activity": "Beantwortung des Feedbackfragebogens mit Google Forms.",
+                    "has_tasks": false,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66b0664d53500153679a672b"
+                            },
+                            "task_formulation": "",
+                            "work_mode": "",
+                            "notes": "",
+                            "tools": [
+                                "",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                }
+            ],
+            "is_good_practise": true,
+            "is_good_practise_ro": false,
+            "underlying_ve_model": "Telecollaboration & Virtual Cultural Exchange",
+            "reflection": "Das Virtual Exchange Projekt mit dem Fokus auf Schreiben verlief insgesamt sehr erfolgreich. Besonders gut hat die Kommentierung der einzelnen Blogbeiträge funktioniert. Die TN waren sehr engagiert, sich gegenseitig konstruktives Feedback zu geben, was zu einer proaktiven Verbesserung der Schreibfähigkeiten führte. Ein weiterer Höhepunkt war die kreative Gestaltung der ergänzenden Videobeiträge, die den Blogposts eine zusätzliche Dimension verliehen.\n\nDie größte Herausforderung bestand im Umgang mit der Blog-Plattform. Viele TN\nhatten anfänglich Schwierigkeiten, sich auf der Plattform zurechtzufinden. Diese Probleme wurden jedoch durch die Einführung eines interaktiven Tutorials behoben, das den TN schrittweise zeigte, wie sie die Plattform nutzen können.",
+            "good_practise_evaluation": null,
+            "evaluation_file": null,
+            "progress": {
+                "name": "completed",
+                "institutions": "completed",
+                "topics": "completed",
+                "lectures": "completed",
+                "learning_goals": "completed",
+                "methodical_approach": "completed",
+                "target_groups": "completed",
+                "languages": "completed",
+                "evaluation": "completed",
+                "involved_parties": "not_started",
+                "realization": "completed",
+                "learning_env": "completed",
+                "new_content": "not_started",
+                "checklist": "not_started",
+                "steps": [
+                    {
+                        "Vorbereitungsphase": "completed"
+                    },
+                    {
+                        "Schreibphase": "completed"
+                    },
+                    {
+                        "Videobeitragserstellung": "not_started"
+                    },
+                    {
+                        "Abschluss": "not_started"
+                    }
+                ],
+                "partners": "completed",
+                "stepsGenerally": "completed"
+            },
+            "methodical_approaches": [
+                "handlungsorientierte Interaktion"
+            ],
+            "abstract": "Das Virtual Exchange Schreibprojekt, das parallel zum regulären Unterricht stattfand, vereinte Germanistik-Studierende der Dokkyo Universität in Japan mit internationalen Germanistikstudierenden des Mausprojekts (maus-reisen.de) aus Ländern wie Südkorea, Vietnam, Frankreich, Chile, Großbritannien, Indien und weiteren. Koordiniert wurde das Projekt von der Hankuk University of Foreign Studies. Im Rahmen des Projekts wurden die schriftliche Kompetenz der Teilnehmenden durch das Verfassen von Blogbeiträgen, Kommentaren und Antworten gezielt gefördert. Zudem lag der Fokus auf der Entwicklung kommunikativer, sozialer und pragmatischer Kompetenzen sowie dem Umgang mit Medien, insbesondere der Erstellung von Blog- und Videobeiträgen.\nDas Thema des Projekts war \"Reisen mit der Maus\" von der bekannten Sendung mit der Maus. Die Teilnehmenden erstellten Blogbeiträge, die auf der Plattform maus-reisen.de veröffentlicht und von anderen Projektteilnehmenden kommentiert wurden. Die gesamte Interaktion erfolgte schriftlich, wobei die Möglichkeit bestand, Blogbeiträge durch Videos oder Audios zu ergänzen. Um den Austausch zu fördern, konnten die Verfasser direkt Fragen an die Leser:innen stellen. Das Projekt bot den Studierenden nicht nur die Möglichkeit, ihre sprachlichen und medialen Fähigkeiten zu verbessern, sondern auch ihre eigenen Interessen einzubringen und sich international zu vernetzen.",
+            "literature": null,
+            "literature_files": []
+        },
+        {
+            "_id": {
+                "$oid": "66bf60570fa797a13a7b80b0"
+            },
+            "author": "aketzer",
+            "read_access": [
+                "aketzer"
+            ],
+            "write_access": [
+                "aketzer"
+            ],
+            "creation_timestamp": {
+                "$date": "2024-08-16T14:21:11.101Z"
+            },
+            "last_modified": {
+                "$date": "2024-08-20T12:48:36.873Z"
+            },
+            "name": "COIL zu Critical Media Literacy: Leipzig - Athens",
+            "partners": [
+                "aketzer"
+            ],
+            "institutions": [
+                {
+                    "_id": {
+                        "$oid": "66bf61a00fa797a13a7b80dc"
+                    },
+                    "name": "Universität Leipzig",
+                    "school_type": "Hochschule / Universität / College",
+                    "country": "Deutschland",
+                    "department": "Deutsch als Fremdsprache"
+                },
+                {
+                    "_id": {
+                        "$oid": "66bf62660fa797a13a7b8106"
+                    },
+                    "name": "Ohio University at Athens",
+                    "school_type": "Hochschule / Universität / College",
+                    "country": "USA",
+                    "department": "Diverse"
+                }
+            ],
+            "topics": [
+                "Covid-19-Pandemie, Medienberichterstattung"
+            ],
+            "lectures": [
+                {
+                    "_id": {
+                        "$oid": "66bf62ad0fa797a13a7b8116"
+                    },
+                    "name": "Computergestütztes Lehren und Lernen",
+                    "lecture_type": "Wahlveranstaltung",
+                    "lecture_format": "Online",
+                    "participants_amount": "11"
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30b050fa797a13a7b8881"
+                    },
+                    "name": "Rhetoric and Writing II",
+                    "lecture_type": "Pflichtveranstaltung",
+                    "lecture_format": "Online",
+                    "participants_amount": "10"
+                }
+            ],
+            "major_learning_goals": [
+                "Förderung digitaler Kompetenzen",
+                "Förderung kritischen Denkens"
+            ],
+            "individual_learning_goals": [
+                {
+                    "_id": {
+                        "$oid": "66c30ba20fa797a13a7b88aa"
+                    },
+                    "username": "aketzer",
+                    "learning_goal": "Die Studierenden kennen Strategien, um die Glaubhaftigkeit von Medienberichten zu beurteilen und können diese anwenden (kritische Medienkompetenz). \nDie Studierenden kennen didaktische Materialien, um kritische Medienkompetenzen im eigenen Fremdsprachenunterricht zu fördern."
+                }
+            ],
+            "methodical_approaches": [
+                "problembasiertes / problemorientiertes Lernen"
+            ],
+            "target_groups": [
+                {
+                    "_id": {
+                        "$oid": "66bf63530fa797a13a7b8125"
+                    },
+                    "name": "Studierende",
+                    "age_min": "18",
+                    "age_max": "25",
+                    "experience": "keine",
+                    "academic_course": "Deutsch als Fremdsprache, Lehramt DaZ",
+                    "languages": ["Deutsch", "Englisch"]
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30b5d0fa797a13a7b8895"
+                    },
+                    "name": "Studierende",
+                    "age_min": "18",
+                    "age_max": "50",
+                    "experience": "",
+                    "academic_course": "verschiedene Studiengänge, v. a. Nursing",
+                    "languages": ["Englisch", "z. T. Spanisch", "z.T. Deutsch"]
+                }
+            ],
+            "languages": [
+                "Englisch"
+            ],
+            "evaluation": [
+                {
+                    "_id": {
+                        "$oid": "66bf60570fa797a13a7b80ae"
+                    },
+                    "username": "aketzer",
+                    "is_graded": false,
+                    "task_type": null,
+                    "assessment_type": null,
+                    "evaluation_while": "schriftliche Reflexionstagebücher mit Impulsfragen",
+                    "evaluation_after": "Pre- und Postbefragung zur Selbsteinschätzung der eigenen (kritischen) Medienkompetenz;\nReflexionsvideos (auf VoiceThread, zugänglich für beide Gruppen)"
+                }
+            ],
+            "timestamp_from": null,
+            "timestamp_to": null,
+            "involved_parties": [
+                "Jessica L. Hollis"
+            ],
+            "realization": "asynchron",
+            "physical_mobility": false,
+            "physical_mobilities": [
+                {
+                    "_id": {
+                        "$oid": "66bf64820fa797a13a7b8150"
+                    },
+                    "location": "",
+                    "timestamp_from": null,
+                    "timestamp_to": null
+                }
+            ],
+            "learning_env": "Blackboard (Ohio, gemeinsame Nutzung für VE-Austausch),\nMoodle (nur Leipzig),\nVoiceThread (beide Gruppen)",
+            "new_content": null,
+            "checklist": [
+                {
+                    "username": "aketzer",
+                    "time": true,
+                    "format": true,
+                    "topic": true,
+                    "goals": true,
+                    "languages": true,
+                    "media": true,
+                    "technicalEquipment": true,
+                    "evaluation": true,
+                    "institutionalRequirements": true,
+                    "dataProtection": true
+                }
+            ],
+            "duration": null,
+            "workload": 0,
+            "steps": [
+                {
+                    "_id": {
+                        "$oid": "66c30e16efb603465abe63d5"
+                    },
+                    "name": "Kennenlernen, IceBreaker",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2020-04-06T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-04-10T00:00:00Z"
+                    },
+                    "duration": 345600.0,
+                    "learning_goal": "Sie lernen Ihre Austauschpartner*inn*en kennen.",
+                    "learning_activity": "Audio- und videobasierte Vorstellungen (Voice Thread)",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30e16efb603465abe63d6"
+                            },
+                            "task_formulation": "Stellen Sie sich in einem kurzen Video vor und reagieren Sie auf die Vorstellungen der Ohio-Studierenden.",
+                            "work_mode": "Asynchrone individuelle Aufgabenbearbeitung",
+                            "notes": "",
+                            "tools": [
+                                "VoiceThread - Video- oder Audioaufnahmen",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30e16efb603465abe63d9"
+                    },
+                    "name": "Einstieg, Bewusstmachung",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2020-04-06T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-04-14T00:00:00Z"
+                    },
+                    "duration": 691200.0,
+                    "learning_goal": "Sie machen sich bewusst, welche Strategien Sie bereits nutzen, um die Glaubwürdigkeit von Meldungen beurteilen. Sie lernen die Strategien der anderen Teilnehmenden kennen.",
+                    "learning_activity": "Gruppendiskussionen 1 (in Kleingruppen): Strategien zur Beurteilung der Glaubhaftigkeit von Berichterstattung",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30e16efb603465abe63da"
+                            },
+                            "task_formulation": "Diskutieren Sie in gemischten Kleingruppen (2-3 Ohio-Studierende + 2-3 Studierende aus Leipzig) über Strategien, die Sie nutzen, um glaubwürdige Nachrichten von Fake-News zu unterscheiden.",
+                            "work_mode": "asynchrone Gruppenarbeit",
+                            "notes": "",
+                            "tools": [
+                                "Blackboard-Forum (Lernplattform)",
+                                "WhatsApp-Gruppenchat"
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30f63efb603465abe6433"
+                    },
+                    "name": "Erfahrungsaustausch",
+                    "workload": 2,
+                    "timestamp_from": {
+                        "$date": "2020-04-15T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-04-20T00:00:00Z"
+                    },
+                    "duration": 432000.0,
+                    "learning_goal": "Sie machen sich an konkreten Beispielen bewusst, wie Sie die Glaubhaftigkeit und Zuverlässigkeit von Meldungen beurteilen. Sie erweitern Ihre Strategien zur Bewertung von (Falsch-)Meldungen.",
+                    "learning_activity": "Padlet-Einträge: Online-Berichterstattung über Covid-19 und deren Glaubhaftigkeit,\nGruppendiskussionen 2 (in Kleingruppen): Covid-19-Pandemie",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30f63efb603465abe6434"
+                            },
+                            "task_formulation": "Posten Sie zwei Meldungen (auf Deutsch oder Englisch) über das Corona-Virus, die Sie online gelesen haben: eine, die Sie glaubhaft finden und eine, die Sie für unglaubwürdig halten. Hier können Sie gerne auf Meldungen zurückgreifen, die Sie über die sozialen Medien erhalten haben, z. B. über WhatsApp, Facebook oder Instagram, oder Sie suchen online nach aktuellen Meldungen. Beschreiben Sie dann kurz, wie Sie beurteilt haben, warum die Meldung jeweils glaubhaft oder unglaubhaft ist.",
+                            "work_mode": "asynchrone Einzelarbeit",
+                            "notes": "",
+                            "tools": [
+                                "Padlet",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        },
+                        {
+                            "_id": {
+                                "$oid": "66c31264efb603465abe654c"
+                            },
+                            "task_formulation": "Diskutieren Sie in Ihrer Gruppe, wie auf die Corona-Pandemie reagiert wurde: Beschreiben Sie wie man in Deutschland, in Ihrem Bundesland und/oder an der Universität Leipzig reagiert hat.",
+                            "work_mode": "asynchrone Gruppendiskussion",
+                            "notes": "",
+                            "tools": [
+                                "Blackboard-Forum (Lernplattform)",
+                                "WhatsApp"
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30f63efb603465abe6437"
+                    },
+                    "name": "Strategietraining",
+                    "workload": 3,
+                    "timestamp_from": {
+                        "$date": "2020-04-21T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-04-26T00:00:00Z"
+                    },
+                    "duration": 432000.0,
+                    "learning_goal": "Sie kennen die SIFT-Strategie. Sie können die SIFT-Strategie bei der Beurteilung von (Falsch-)Meldungen erfolgreich einsetzen. Sie werden sich der unterschiedlichen Nützlichkeit / Zuverlässigkeit verschiedener (bisheriger) Strategien bewusst.",
+                    "learning_activity": "SIFT Tutorial: Aufgabenfolge zum Training kritischer Medienkompetenzen (von Mike Caulfield),\nSIFT Journal: Individuelle Dokumentation zum Tutorial",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30f63efb603465abe6438"
+                            },
+                            "task_formulation": "Bearbeiten Sie das Tutorial \"Check, Please\", in dem vermittelt wird, wie man glaubhafte Meldungen von Falschmeldungen unterscheiden kann. Das Tutorial besteht aus 5 Lektionen, die ca. 30-45 min dauern. Im Tutorial werden Sie dazu aufgefordert, kurze Antworten auf Fragen in einem \"Journal\" (Notiz- oder Tagebuch) aufzuschreiben (auf Deutsch oder Englisch). Nutzen Sie dafür das \"Check Please-Journal\" auf der Blackboard-Plattform, das Sie im zweiten Kästchen finden.",
+                            "work_mode": "asynchrone Einzelarbeit",
+                            "notes": "",
+                            "tools": [
+                                "SIFT-Tutorial (Mike Caulfield): https://www.notion.so/Check-Please-Starter-Course-ae34d043575e42828dc2964437ea4eed ",
+                                "Journal auf Blackboard (Lernplattform)"
+                            ],
+                            "materials": [
+                                "SIFT-Tutorial ",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30ffeefb603465abe6499"
+                    },
+                    "name": "Strategieanwendung, Transfer",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2020-04-29T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-05-03T00:00:00Z"
+                    },
+                    "duration": 345600.0,
+                    "learning_goal": "Sie wenden die SIFT Strategie zur Beurteilung der Berichterstattungen aus Woche 2 an.",
+                    "learning_activity": "Weiterführung der Dokumentation zur Nutzung der SIFT-Strategie (Journal)",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30ffeefb603465abe649a"
+                            },
+                            "task_formulation": "SIFT earlier stories: Die Aufgabe ist, eine der Meldungen, die Sie oder ein/e Kommilitonin vor zwei Wochen auf Padlet gepostet haben auszuwählen und mit der Methode SIFT zu prüfen. Tragen Sie die Ergebnisse dann wieder in Ihr Journal ein.",
+                            "work_mode": "Asynchrone Einzelarbeit",
+                            "notes": "",
+                            "tools": [
+                                "Blackboard-Journal",
+                                "Padlet"
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                },
+                {
+                    "_id": {
+                        "$oid": "66c30ffeefb603465abe649d"
+                    },
+                    "name": "Abschluss, Reflexion",
+                    "workload": 1,
+                    "timestamp_from": {
+                        "$date": "2020-05-03T00:00:00Z"
+                    },
+                    "timestamp_to": {
+                        "$date": "2020-05-04T00:00:00Z"
+                    },
+                    "duration": 86400.0,
+                    "learning_goal": "Sie reflektieren, inwiefern Ihnen das Austauschprojekt bei Ihrer Kompetenzentwicklung (bzgl. kritischer Medienkompetenz) geholfen hat.",
+                    "learning_activity": "Reflektion des VA-Projekts",
+                    "has_tasks": true,
+                    "tasks": [
+                        {
+                            "_id": {
+                                "$oid": "66c30ffeefb603465abe649e"
+                            },
+                            "task_formulation": "Posten Sie dann ein kurzes Video auf VoiceThread, in dem Sie reflektieren, inwiefern das Virtual Exchange-Projekt Ihnen bei der Entwicklung Ihrer digitalen Kompetenzen geholfen hat. Geben Sie auch Rückmeldungen an die Studierenden aus Ohio.",
+                            "work_mode": "asynchron",
+                            "notes": "",
+                            "tools": [
+                                "VoiceThread",
+                                ""
+                            ],
+                            "materials": [
+                                "",
+                                ""
+                            ]
+                        }
+                    ],
+                    "original_plan": null,
+                    "attachments": [],
+                    "custom_attributes": {}
+                }
+            ],
+            "is_good_practise": true,
+            "is_good_practise_ro": false,
+            "abstract": "Das Projekt fand im Sommersemester 2020 zwischen Studierenden der Ohio University in Athens (USA) und der Universität Leipzig statt. Ziel war die Förderung der kritischen Medienkompetenzen in zwei sehr unterschiedlichen Gruppen. Aufgrund der Covid19-Beschränkungen und der z. T. beruflichen Verpflichtungen der Studierenden, konnten nur asynchrone Aufgaben eingesetzt werden. Auch die Zielaufgabe der Leipziger Studierenden, ein eigenes didaktisches Material zu Förderung von kritischer Medienkompetenz zu entwickeln, konnte nicht umgesetzt werden. Das Projekt ging über 4 Wochen, was die maximale Überschneidung der Semesterzeiten zwischen den beiden Universitäten darstellte.",
+            "underlying_ve_model": "COIL",
+            "reflection": "Die Studierenden bemängelten vor allem, dass es keine Möglichkeiten für einen synchronen, videobasierten Austausch gab. Dies konnte aber aufgrund der Covid19-Situation nicht realisiert werden. Dennoch ließ sich der Kompetenzzuwachs in der Gruppe der Leipziger Studierenden vor allem auf den Austausch mit der Gruppe der Ohio-Studierenden zurückführen, da dies sehr unterschiedliche Positionen und Meinungen aufzeigte (vgl. Ketzer-Nöltge / Markovic, 2022). Zudem waren die Reflexionen dafür besonders wichtig (ebd.).",
+            "good_practise_evaluation": null,
+            "literature": "Ketzer-Nöltge, Almut & Markovic, Mihaela (2022). Fostering Pre-Service Teachers' Information and Critical Digital Literacy Skills Through a COIL Project. International Journal of TESOL Studies 4(3), 125-142. Unter: https://doi.org/10.46451/ijts.2022.03.10.",
+            "evaluation_file": null,
+            "literature_files": [
+                {
+                    "file_id": {
+                        "$oid": "66c31648efb603465abe6664"
+                    },
+                    "file_name": "Ketzer-Noeltge_Markovic_Fostering Pre-Service Teachers' Information and Critical Digital Literacy Skills Through COIL_2022.pdf"
+                }
+            ],
+            "progress": {
+                "name": "completed",
+                "institutions": "completed",
+                "topics": "completed",
+                "lectures": "completed",
+                "learning_goals": "completed",
+                "methodical_approaches": "completed",
+                "target_groups": "completed",
+                "languages": "completed",
+                "evaluation": "completed",
+                "involved_parties": "not_started",
+                "realization": "completed",
+                "learning_env": "completed",
+                "new_content": "not_started",
+                "checklist": "completed",
+                "steps": [
+                    {
+                        "Kennenlernen,%20IceBreaker": "completed"
+                    },
+                    {
+                        "Einstieg,%20Bewusstmachung": "completed"
+                    },
+                    {
+                        "Erfahrungsaustausch": "completed"
+                    },
+                    {
+                        "Strategietraining": "completed"
+                    },
+                    {
+                        "Strategieanwendung,%20Transfer": "completed"
+                    },
+                    {
+                        "Abschluss,%20Reflexion": "completed"
+                    }
+                ],
+                "partners": "completed",
+                "stepsGenerally": "completed"
+            }
+        }
+    ]
+}

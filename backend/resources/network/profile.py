@@ -29,7 +29,8 @@ class Profiles:
 
         self.profile_attributes = {
             "bio": (str, type(None)),
-            "institution": (str, type(None)),
+            "institutions": list,
+            "chosen_institution_id": (str, type(None)),
             "first_name": (str, type(None)),
             "last_name": (str, type(None)),
             "gender": (str, type(None)),
@@ -116,7 +117,8 @@ class Profiles:
             "role": "guest",
             "follows": [],
             "bio": "",
-            "institution": "",
+            "institutions": [],
+            "chosen_institution_id": "",
             "profile_pic": "default_profile_pic.jpg",
             "first_name": first_name,
             "last_name": last_name,
@@ -174,7 +176,8 @@ class Profiles:
             "role": "admin",
             "follows": [],
             "bio": "",
-            "institution": "",
+            "institutions": [],
+            "chosen_institution_id": "",
             "profile_pic": "default_profile_pic.jpg",
             "first_name": first_name,
             "last_name": last_name,
@@ -511,6 +514,26 @@ class Profiles:
                     ve_window_entry["plan_id"]
                 )
 
+        # ensure that institutions objects contain an _id field with an ObjectId
+        # and the corresponding chosen_institution_id is also an ObjectId
+        if "institutions" in updated_profile:
+            for institution in updated_profile["institutions"]:
+                if (
+                    "_id" not in institution
+                    or not institution["_id"]
+                    or institution["_id"] == ""
+                ):
+                    institution["_id"] = ObjectId()
+                else:
+                    institution["_id"] = util.parse_object_id(institution["_id"])
+        if (
+            "chosen_institution_id" in updated_profile
+            and updated_profile["chosen_institution_id"] != ""
+        ):
+            updated_profile["chosen_institution_id"] = util.parse_object_id(
+                updated_profile["chosen_institution_id"]
+            )
+
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -537,6 +560,12 @@ class Profiles:
         request the profile snippet (i.e. username, first_name, last_name, institution
         and profile_pic) for every given username in `usernames` and return them as
         a Dict.
+        The `institution` field is somewhat special, as it is the name of the currently chosen
+        institution of the user instead of all institutions that he has supplied. The user's
+        currently chosen institution is determined by the `chosen_institution_id`. If the user
+        has not chosen an institution, the field is an empty string (""), even if he might have
+        listed institution in his profile (in case he has listed them, but not yet chosen one as
+        the current one).
         If any of the usernames has no profile, it is omitted from the response,
         meaning the length of the response list and the given list of usernames
         might differ.
@@ -559,10 +588,23 @@ class Profiles:
                 "username": True,
                 "first_name": True,
                 "last_name": True,
-                "institution": True,
+                "institutions": True,
+                "chosen_institution_id": True,
                 "profile_pic": True,
             },
         )
+
+        # refactor the institutions: only keep the name of the chosen institution as
+        # "institution" and discard "institutions" and "chosen_institution_id"
+        for profile in profiles:
+            profile["institution"] = "" # default empty string
+            for institution in profile["institutions"]:
+                if institution["_id"] == profile["chosen_institution_id"]:
+                    profile["institution"] = institution["name"]
+                    break
+            del profile["institutions"]
+            del profile["chosen_institution_id"]
+
         return profiles
 
     def get_matching_exclusion(self, username: str) -> bool:

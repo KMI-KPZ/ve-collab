@@ -1,5 +1,5 @@
 import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
-import SlateBox from '../Layout/SlateBox';
+import SlateBox from '../common/SlateBox';
 import EditProfileItemRow from './EditProfileItemRow';
 
 interface Props {
@@ -97,7 +97,7 @@ export default function EditProfileWorkExperienceItem({
                             placeholder="optional"
                             className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
-                        
+
                     </div>
                 </div>
                 <EditProfileItemRow

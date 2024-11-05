@@ -188,6 +188,9 @@ export const authOptions = {
                     orcid: profile.orcid,
                 };
             },
+            httpOptions: {
+                timeout: 5000
+            }
         }),
     ],
     callbacks: {
@@ -202,7 +205,7 @@ export const authOptions = {
                 token.refreshTokenExpired = Date.now() + (account.refresh_expires_in - 15) * 1000;
                 token.user = user;
 
-                // only after signin (when account & user is != null), 
+                // only after signin (when account & user is != null),
                 // ensure that the user gets a profile in the backend
                 // by simply fetching his profile information
                 fetchGET('/profileinformation', token.accessToken);

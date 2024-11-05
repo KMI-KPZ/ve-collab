@@ -5,6 +5,13 @@ import logging
 from bson.objectid import ObjectId
 import tornado.web
 
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_SLUG,
+    POST_DOESNT_EXIST,
+    SPACE_DOESNT_EXIST,
+)
+from exceptions import PlanDoesntExistError
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.post import (
@@ -13,24 +20,113 @@ from resources.network.post import (
     Posts,
     PostNotExistingException,
 )
+from model import VEPlan
+from resources.planner.ve_plan import VEPlanResource
 from resources.network.profile import Profiles
 from resources.network.space import (
     FileAlreadyInRepoError,
     Spaces,
     SpaceDoesntExistError,
 )
+from resources.planner.ve_plan import VEPlanResource
+from handlers.network.timeline import BaseTimelineHandler
 import util
 
 logger = logging.getLogger(__name__)
 
 
-class PostHandler(BaseHandler):
+class PostHandler(BaseTimelineHandler):
     """
     Make a new post
     """
 
     def get(self):
-        pass
+        """
+        GET /posts
+            retrieve a post by its id (obeying the visibility/access rules)
+
+            query params:
+                post_id: id of the post to retrieve
+
+            http body:
+                None
+
+            returns:
+                200 OK,
+                {"status": 200,
+                 "success": True,
+                 "post": {post}}
+
+                400 Bad Request,
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_query_param:post_id"}
+
+                401 Unauthorized,
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden,
+                {"status": 403,
+                 "success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict,
+                {"status": 409,
+                 "success": False,
+                 "reason": "post_doesnt_exist"}
+        """
+
+        try:
+            post_id = self.get_argument("post_id")
+        except tornado.web.MissingArgumentError:
+            self.set_status(400)
+            self.write({"success": False, "reason": MISSING_KEY_SLUG + "post_id"})
+            return
+
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
+
+            try:
+                post = post_manager.get_post(post_id)
+            except PostNotExistingException:
+                self.set_status(409)
+                self.write({"success": False, "reason": POST_DOESNT_EXIST})
+                return
+
+            # if the post is in a space, the user has to be a member and have
+            # read_timeline permissions to see the post
+            if post["space"]:
+                space_manager = Spaces(db)
+                space_id = util.parse_object_id(post["space"])
+                try:
+                    user_is_space_member = space_manager.check_user_is_member(
+                        space_id, self.current_user.username
+                    )
+                except SpaceDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": SPACE_DOESNT_EXIST})
+                    return
+
+                if not user_is_space_member:
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+                acl = ACL(db)
+                if not acl.space_acl.ask(
+                    self.current_user.username, space_id, "read_timeline"
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+        # permissions are fine, enhance the post with author profile details
+        post = self.add_profile_information_to_author([post])[0]
+
+        self.set_status(200)
+        self.serialize_and_write({"success": True, "post": post})
 
     @auth_needed
     def post(self):
@@ -46,6 +142,7 @@ class PostHandler(BaseHandler):
                 "tags": ["tag1", "tag2"], (json encoded list)
                 "space": "optional _id, post this post into a space, not directly into your profile",
                 "wordpress_post_id": "optional, id of associated wordpress post"
+                "plans": ["optional, list of plans to attach to the post"] (json encoded list)
             }
         return:
             200 OK,
@@ -77,6 +174,11 @@ class PostHandler(BaseHandler):
             {"status": 409,
              "success": False,
              "reason": "post_doesnt_exist"}
+
+            409 Conflict
+            {"status": 409,
+             "success": False,
+             "reason": "plan_doesnt_exist"}
         """
 
         _id = self.get_body_argument("_id", None)
@@ -87,12 +189,20 @@ class PostHandler(BaseHandler):
             creation_date = datetime.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
             wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
-            tags = self.get_body_argument("tags")  # http_body['tags']
-            # convert tags to list, because formdata will send it as a string
+            tags = self.get_body_argument("tags", [])  # http_body['tags']
+            plans = self.get_body_argument("plans", [])
+            # convert tags and plans to list, because formdata will send it as a string
+
             try:
                 tags = json.loads(tags)
             except Exception:
                 pass
+
+            try:
+                plans = json.loads(plans)
+            except Exception:
+                pass
+
             # if space is set, this post belongs to a space (only visible inside)
             space_id = self.get_body_argument("space", None)
 
@@ -145,12 +255,14 @@ class PostHandler(BaseHandler):
                             self.current_user.username,
                         )
 
-                        files.append({
-                            "file_id": stored_id,
-                            "file_name": file_obj["filename"],
-                            "file_type": file_obj["content_type"],
-                            "author": self.current_user.username,
-                        })
+                        files.append(
+                            {
+                                "file_id": stored_id,
+                                "file_name": file_obj["filename"],
+                                "file_type": file_obj["content_type"],
+                                "author": self.current_user.username,
+                            }
+                        )
 
                         # if the post was in a space, also store the file in the repo,
                         # indicating it is part of a post by setting manually_uploaded to False
@@ -165,6 +277,39 @@ class PostHandler(BaseHandler):
                             except FileAlreadyInRepoError:
                                 pass
 
+                # if plans are referenced, they have to exist and
+                # the user has to have write permission for them
+                if plans:
+                    plan_manager = VEPlanResource(db)
+                    for plan_id in plans:
+                        try:
+                            plan = plan_manager.get_plan(plan_id)
+                        except PlanDoesntExistError:
+                            self.set_status(409)
+                            self.write(
+                                {
+                                    "status": 409,
+                                    "success": False,
+                                    "reason": "plan_doesnt_exist",
+                                }
+                            )
+                            return
+
+                        # check if user has write permission for the plan
+                        if (
+                            self.current_user.username != plan.author
+                            and self.current_user.username not in plan.write_access
+                        ):
+                            self.set_status(403)
+                            self.write(
+                                {
+                                    "status": 403,
+                                    "success": False,
+                                    "reason": "insufficient_permission_plan",
+                                }
+                            )
+                            return
+
                 post = {
                     "author": author,
                     "creation_date": creation_date,
@@ -173,6 +318,7 @@ class PostHandler(BaseHandler):
                     "pinned": False,
                     "wordpress_post_id": wordpress_post_id,
                     "tags": tags,
+                    "plans": plans,
                     "files": files,
                     "comments": [],
                     "likers": [],
@@ -182,11 +328,32 @@ class PostHandler(BaseHandler):
 
                 post["_id"] = post_id
 
+                # enhance author with profile information
                 profile_manager = Profiles(db)
                 author_profile_snippet = profile_manager.get_profile_snippets([author])[
                     0
                 ]
                 post["author"] = author_profile_snippet
+
+                # enhance the post with the full plan objects
+                if post["plans"]:
+                    plan_ids = []
+
+                    for plan_id in post["plans"]:
+                        if plan_id not in plan_ids:
+                            plan_ids.append(plan_id)
+
+                    plan_manager = VEPlanResource(db)
+                    plans = plan_manager.get_bulk_plans(plan_ids)
+
+                    # replace the plan_ids with the full plan objects
+                    # post_plan_ids_copy = post["plans"].copy()
+                    post["plans"] = []
+                    for plan_id in plan_ids:
+                        plan = self._filter_from_plan_objects(plan_id, plans)
+                        if isinstance(plan, VEPlan):
+                            plan = plan.to_dict()
+                        post["plans"].append(plan)
 
                 self.set_status(200)
                 self.serialize_and_write(
@@ -851,6 +1018,7 @@ class RepostHandler(BaseHandler):
                         "post_id": "id_of__original_post",
                         "text": "new text for the repost",
                         "space": "space _id, the space where to post, None if no space"
+                        "plans": ["optional, list of plans to attach to the repost"] (json encoded list)
                     }
             or update existing repost:
                 http_body:
@@ -1024,6 +1192,10 @@ class RepostHandler(BaseHandler):
                 post["likers"] = []
                 post["comments"] = []
                 post["tags"] = []
+                if "plans" in http_body:
+                    post["plans"] = http_body["plans"]
+                else:
+                    post["plans"] = []
                 del post["_id"]
 
                 repost_id = post_manager.insert_repost(post)

@@ -1,12 +1,21 @@
 export interface PersonalInformation {
     firstName: string;
     lastName: string;
-    institution: string;
     bio: string;
     expertise: string;
     birthday: string;
     profilePicId?: string;
     languages: string[];
+    institutions: Institution[];
+    chosen_institution_id: string;
+}
+
+export interface Institution {
+    _id: string;
+    name: string;
+    school_type: string;
+    department: string;
+    country: string;
 }
 
 export interface LanguageTag {
