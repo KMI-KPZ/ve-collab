@@ -214,6 +214,11 @@
   "nothing_found": "nothing found",
   "excluded_from_matching_banner_1": "You are currently excluded from matching, change ",
   "excluded_from_matching_banner_2": "!",
+  "feedback": "Feedback",
+  "leave_feedback": "Please let us know what you think about the platform",
+  "to_survey": "open survey",
+  "or_contact_us": "or contact us directly ",
+  "via_email": "via email",
   "languages": {
     "Afrikaans": "Afrikaans",
     "Albanian": "Albanian",
