@@ -167,7 +167,7 @@
         "title": "Bewertung / Evaluation",
         "subtitle": "Wie kann der VE während der Durchführung und/oder abschließend bewertet und evaluiert werden?",
         "description": "Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden.",
-        "tooltip": "Mehr zu Optionen der Bewertung findest du hier in den Selbstlernmaterialien",
+        "tooltip": "Mehr zu Evaluation findest du hier in den Selbstlernmaterialien.",
         "planned": "Erfolgt eine Bewertung?",
         "formOf": "Art der Leistung",
         "formOfPlaceholder": "",
@@ -205,7 +205,9 @@
         "institutionalRequirements_title": "Institutionelle Vorgaben",
         "institutionalRequirements_descr": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",
         "dataProtection_title": "Datenschutz",
-        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes."
+        "dataProtection_descr": "Informiert euch über die relevanten Datenschutzbestimmungen eurer Institution / eures Landes.",
+        "add_userdefined_title": "Benutzerdefinierten Aspekt hinzufügen",
+        "new_userbox_placeholder": "Bezeichnung ..."
     },
     "step-names" : {
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",

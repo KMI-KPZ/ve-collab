@@ -361,7 +361,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
             description={t('target.description')}
             tooltip={{
                 text: t('target.tooltip'),
-                link: '',
+                link: '/learning-material/2/VA-Planung',
             }}
             stageInMenu="generally"
             idOfProgress="target_groups"

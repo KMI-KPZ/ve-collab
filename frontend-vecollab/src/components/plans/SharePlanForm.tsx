@@ -2,17 +2,18 @@ import { BackendSearchResponse, BackendUserSnippet } from '@/interfaces/api/apiI
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { Dispatch, SetStateAction, useState } from 'react';
-import AsyncCreatableSelect from 'react-select/async-creatable';
 import { AlertState } from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import AsyncSelect from 'react-select/async';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 
 interface Props {
     closeDialogCallback: () => void;
-    planId: string;
+    plan: PlanPreview;
     setAlert: Dispatch<SetStateAction<AlertState>>;
 }
 
-export default function SharePlanForm({ closeDialogCallback, planId, setAlert }: Props) {
+export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
@@ -23,8 +24,10 @@ export default function SharePlanForm({ closeDialogCallback, planId, setAlert }:
     >([]);
 
     const sharePlan = async () => {
+        if (!shareUsername) return
+
         const payload = {
-            plan_id: planId,
+            plan_id: plan._id,
             username: shareUsername,
             read: shareAccessRight === 'read' || shareAccessRight === 'write',
             write: shareAccessRight === 'write',
@@ -48,7 +51,13 @@ export default function SharePlanForm({ closeDialogCallback, planId, setAlert }:
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
                     callback(
-                        data.users.map((user) => ({
+                        data.users
+                        .filter(user =>
+                            !plan.read_access.includes(user.username)
+                            && !plan.write_access.includes(user.username)
+                        )
+                        .filter(user => user.username !== session!.user.preferred_username)
+                        .map((user) => ({
                             label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
                             value: user.username,
                         }))
@@ -62,10 +71,13 @@ export default function SharePlanForm({ closeDialogCallback, planId, setAlert }:
     return (
         <>
             <p className="my-2">{t("plans_share_dialog_text")}</p>
-            <AsyncCreatableSelect
+            <AsyncSelect
+                className="grow max-w-full"
                 loadOptions={loadOptions}
                 onChange={(e) => setShareUsername(e!.value)}
-                value={{
+                value={
+                    shareUsername
+                    ? {
                     label: searchResultProfileSnippets.find(
                         (user) => user.username === shareUsername
                     )
@@ -80,14 +92,18 @@ export default function SharePlanForm({ closeDialogCallback, planId, setAlert }:
                           } - ${shareUsername}`
                         : `${shareUsername}`,
                     value: shareUsername,
-                }}
+                    }
+                    : null
+                }
                 placeholder={t("plans_share_dialog_select_placeholder")}
                 getOptionLabel={(option) => option.label}
-                formatCreateLabel={(inputValue) => (
-                    <span>
-                        {t("plans_share_dialog_select_no_match_1")}<b>{inputValue}</b>{t("plans_share_dialog_select_no_match_2")}
-                    </span>
-                )}
+                loadingMessage={() => t('loading')}
+                noOptionsMessage={() => t('nothing_found')}
+                openMenuOnFocus={false}
+                openMenuOnClick={false}
+                components={{
+                    DropdownIndicator: null,
+                }}
             />
             <div className="flex justify-between my-8 mx-6">
                 <div>

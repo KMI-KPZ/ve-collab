@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import AsyncCreatableSelect from 'react-select/async-creatable';
+import AsyncSelect from 'react-select/async';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -33,13 +33,6 @@ interface Partner {
     label: string;
     value: string;
 }
-
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return (
-//         formValues.externalParties.every((party) => party.externalParty === '') &&
-//         formValues.partners.length === 1
-//     );
-// };
 
 interface Props {
     socket: Socket;
@@ -172,15 +165,16 @@ export default function Partners({ socket }: Props): JSX.Element {
                     return {
                         username: partner,
                         time: false,
-                        format: false,
+                        // format: false,
                         topic: false,
                         goals: false,
-                        languages: false,
+                        // languages: false,
                         media: false,
                         technicalEquipment: false,
-                        evaluation: false,
+                        // evaluation: false,
                         institutionalRequirements: false,
                         dataProtection: false,
+                        userDefinedAspects: []
                     };
                 }
             });
@@ -284,12 +278,13 @@ export default function Partners({ socket }: Props): JSX.Element {
         }
     };
 
-    function createableAsyncSelect(control: any, name: any, index: number): JSX.Element {
+    function createSelect(control: any, name: any, index: number): JSX.Element {
         return (
             <Controller
                 name={name}
+                control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
-                    <AsyncCreatableSelect
+                    <AsyncSelect
                         className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
@@ -305,21 +300,17 @@ export default function Partners({ socket }: Props): JSX.Element {
                         placeholder={t("common:search_users")}
                         getOptionLabel={(option) => option.label}
                         autoFocus={true}
-                        formatCreateLabel={(inputValue) => (
-                            <span>
-                                {t('common:search_users_no_hit', { value: inputValue })}
-                                {/* <Trans
-                                    i18nKey="search_users_no_hit" // optional -> fallbacks to defaults if not provided
-                                    values={{ value: inputValue }}
-                                    components={{ bold: <strong /> }}
-                                /> */}
-                            </span>
-                        )}
+                        loadingMessage={() => t('common:loading') + "..."}
+                        noOptionsMessage={() => t('common:nothing_found')}
+                        openMenuOnFocus={false}
+                        openMenuOnClick={false}
+                        components={{
+                            DropdownIndicator: null,
+                        }}
                     />
                 )}
-                control={control}
             />
-        );
+        )
     }
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
@@ -356,7 +347,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             ]}
             tooltip={{
                 text: t('partners.tooltip'),
-                link: '/learning-material/left-bubble/Partnersuche',
+                link: '/learning-material/2/VA-Planung',
             }}
             stageInMenu='generally'
             idOfProgress="partners"
@@ -369,13 +360,13 @@ export default function Partners({ socket }: Props): JSX.Element {
             <div>
                 <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
                 {fieldsPartners.map((partner, index) => {
-                    return (<>
+                    return (
                         <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
                             {partner.value == planAuthor ? (
                                 <div className="p-2">{partner.label}</div>
                             ) : (
                                 <>
-                                    {createableAsyncSelect(
+                                    {createSelect(
                                         methods.control,
                                         `partners.${index}`,
                                         index
@@ -385,13 +376,13 @@ export default function Partners({ socket }: Props): JSX.Element {
                                     </button>
                                 </>
                             )}
+                            {methods.formState.errors?.partners?.[index]?.value?.message && (
+                                <p className="text-red-600 pt-2">
+                                    {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
+                                </p>
+                            )}
                         </div>
-                        {methods.formState.errors?.partners?.[index]?.value?.message && (
-                            <p className="text-red-600 pt-2">
-                                {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
-                            </p>
-                        )}
-                    </>);
+                    );
                 })}
                 <div className="mt-4">
                     <button

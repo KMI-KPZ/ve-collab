@@ -167,7 +167,7 @@
         "title": "Assessment / Evaluation",
         "subtitle": "How can the VE be assessed and evaluated during and/or after the VE?",
         "description": "At this point, reflect whether your VE is more process- or product-oriented. Note whether an evaluation (of processes or products) of the VE is planned on your part. Additionally, select appropriate formative and/or summative evaluation methods.",
-        "tooltip": "More about assessment options can be found here in the self-learning materials…",
+        "tooltip": "More about evaluation can be found here in the self-learning materials…",
         "planned": "Is there an assessment planned?",
         "formOf": "Form of assessment",
         "formOfPlaceholder": "(e.g. exam, presentation)",
@@ -205,7 +205,9 @@
         "institutionalRequirements_title": "Institutional guidelines",
         "institutionalRequirements_descr": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
         "dataProtection_title": "Data Protection",
-        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country."
+        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country.",
+        "add_userdefined_title": "Add user-defined aspect",
+        "new_userbox_placeholder": "Label ..."
     },
     "step-names" : {
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",
