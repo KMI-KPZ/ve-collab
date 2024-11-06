@@ -301,5 +301,7 @@
   "accept": "Akzeptieren",
   "page_not_found": "Diese Seite konnte leider nicht gefunden werden.",
   "back_to_start": "Zurück zur Startseite",
-  "no_pad_access": "Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte zum zugehörigen Plan besitzt!"
+  "no_pad_access": "Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte zum zugehörigen Plan besitzt!",
+  "you_are_redirected": "Du wirst in Kürze weitergeleitet...",
+  "after_3_seconds_redirect_click": "Falls dies nicht innerhalb von 3 Sekunden automatisch passiert, klicke bitte "
 }

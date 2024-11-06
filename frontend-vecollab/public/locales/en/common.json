@@ -301,5 +301,7 @@
   "accept": "Accept",
   "page_not_found": "The page you are looking for unfortunately does not exist.",
   "back_to_start": "Back to Homepage",
-  "no_pad_access": "Sorry, you do not have access to this pad because you do not have writing permissions to the corresponding plan."
+  "no_pad_access": "Sorry, you do not have access to this pad because you do not have writing permissions to the corresponding plan.",
+  "you_are_redirected": "You are being redirected...",
+  "after_3_seconds_redirect_click": "If it does not happen automatically within 3 seconds, please click "
 }
