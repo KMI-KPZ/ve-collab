@@ -311,5 +311,7 @@
   "no_pad_access": "Sorry, you do not have access to this pad because you do not have writing permissions to the corresponding plan.",
   "you_are_redirected": "You are being redirected...",
   "after_3_seconds_redirect_click": "If it does not happen automatically within 3 seconds, please click ",
-  "generic_error": "An error occurred. Please try again later. If the problem persists, please contact us."
+  "generic_error": "An error occurred. Please try again later. If the problem persists, please contact us.",
+  "orcid_link_successful": "Your ORCID account has been successfully linked. We have to log you out and back in to complete the process. This should happen automatically within 5 seconds, if not, please click ",
+  "orcid_link_relog_successful": "Re-Login successful. You will be forwarded to your original page. This should happen automatically within 5 seconds, if not, please click "
 }

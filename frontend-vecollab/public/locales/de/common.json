@@ -311,5 +311,7 @@
   "no_pad_access": "Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte zum zugehörigen Plan besitzt!",
   "you_are_redirected": "Du wirst in Kürze weitergeleitet...",
   "after_3_seconds_redirect_click": "Falls dies nicht innerhalb von 3 Sekunden automatisch passiert, klicke bitte ",
-  "generic_error": "Ein Fehler ist aufgetreten. Bitte versuche es später erneut. Falls der Fehler besteht, kontaktiere uns bitte."
+  "generic_error": "Ein Fehler ist aufgetreten. Bitte versuche es später erneut. Falls der Fehler besteht, kontaktiere uns bitte.",
+  "orcid_link_successful": "ORCiD Account wurde erfolgreich verknüpft. Wir müssen dich einmal aus- und neu einloggen. Das sollte automatisch innerhalb von 5 Sekunden passieren. Falls nicht, klicke bitte ",
+  "orcid_link_relog_successful": "Re-Login Prozess erfolgreich. Du wirst zu deiner original Seite weitergeleitet. Das sollte automatisch innerhalb von 5 Sekunden passieren. Falls nicht, klicke bitte "
 }
