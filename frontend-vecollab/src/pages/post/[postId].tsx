@@ -17,7 +17,7 @@ import { GiSadCrab } from 'react-icons/gi';
 import { Socket } from 'socket.io-client';
 import GeneralError from '@/components/common/GeneralError';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { GetStaticPropsContext } from 'next';
+import { GetServerSidePropsContext } from 'next';
 
 /**
  * Single post view
@@ -143,7 +143,7 @@ export default function Post({ socket }: Props): JSX.Element {
     );
 }
 
-export async function getStaticProps({ locale }: GetStaticPropsContext) {
+export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),

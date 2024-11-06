@@ -16,6 +16,7 @@ import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetServerSidePropsContext } from 'next';
 
 interface Props {
     socket: Socket;
@@ -373,7 +374,7 @@ export default function Group({ socket }: Props): JSX.Element {
     );
 }
 
-export async function getStaticProps({ locale }: { locale: any }) {
+export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),
