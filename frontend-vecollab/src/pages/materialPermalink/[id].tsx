@@ -1,5 +1,6 @@
 import { getMaterialNodePath } from '@/lib/backend';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -37,15 +38,22 @@ export default function MaterialPermalink(props: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const path = await getMaterialNodePath(Number.parseInt(params?.id as string));
 
     const uri =
-        '/learning-material/' + path.bubble.text + '/' + path.category.text + '/' + path.material.text;
+        '/learning-material/' +
+        path.bubble.text +
+        '/' +
+        path.category.text +
+        '/' +
+        path.material.text;
 
     return {
         props: {
             uri,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };

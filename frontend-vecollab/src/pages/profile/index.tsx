@@ -20,6 +20,8 @@ import {
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { Socket } from 'socket.io-client';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 interface Props {
     socket: Socket;
@@ -251,4 +253,12 @@ export default function UserProfile({ socket }: Props): JSX.Element {
             )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

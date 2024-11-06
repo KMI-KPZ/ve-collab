@@ -1,7 +1,8 @@
+import { GetStaticPropsContext } from 'next';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
 
 // callback page that is being linked to if the client initiated account linking flow
 // was successful. however, keycloak does not manage to fire the attribute importers
@@ -68,4 +69,12 @@ export default function OrcidAccountLinkCallback() {
             )}
         </div>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

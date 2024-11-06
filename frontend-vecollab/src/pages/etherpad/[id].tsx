@@ -1,6 +1,7 @@
 import { fetchGET } from '@/lib/backend';
 import { GetServerSideProps, GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
-import { getSession, signIn} from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
@@ -54,7 +55,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     // break if not session --> force signIn from client side
     if (!session) {
         return {
-            props: { padID: null, error: 'no_auth' },
+            props: {
+                padID: null,
+                error: 'no_auth',
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
+            },
         };
     }
 
@@ -67,11 +72,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
         context.res.setHeader('Set-Cookie', `sessionID=${response.session_id}`);
 
         return {
-            props: { padID: response.pad_id, error: null },
+            props: {
+                padID: response.pad_id,
+                error: null,
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
+            },
         };
     } else {
         return {
-            props: { padID: null, error: response.reason },
+            props: {
+                padID: null,
+                error: response.reason,
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
+            },
         };
     }
 };

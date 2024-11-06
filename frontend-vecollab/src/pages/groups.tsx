@@ -17,6 +17,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { RxDotsVertical } from 'react-icons/rx';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 Groups.auth = true;
 export default function Groups() {
@@ -29,32 +31,26 @@ export default function Groups() {
 
     const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
 
-    const {
-        data: myGroups,
-        mutate: mutateMyGroups,
-    } = useGetMyGroups(session!.accessToken);
-    const {
-        data: allGroups,
-        mutate: mutateAllGroups,
-    } = useGetAllGroups(session!.accessToken);
+    const { data: myGroups, mutate: mutateMyGroups } = useGetMyGroups(session!.accessToken);
+    const { data: allGroups, mutate: mutateAllGroups } = useGetAllGroups(session!.accessToken);
 
-    const {
-        data: myGroupInvites,
-        mutate: mutateMyGroupInvites,
-    } = useGetMyGroupInvites(session!.accessToken);
+    const { data: myGroupInvites, mutate: mutateMyGroupInvites } = useGetMyGroupInvites(
+        session!.accessToken
+    );
 
-    const {
-        data: myGroupRequests,
-        mutate: mutateMyGroupRequests,
-    } = useGetMyGroupRequests(session!.accessToken);
+    const { data: myGroupRequests, mutate: mutateMyGroupRequests } = useGetMyGroupRequests(
+        session!.accessToken
+    );
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
         fetchGET(`/search?spaces=true&query=${event.target.value}`, session!.accessToken).then(
             (data) => {
-                setSearchResults(data.spaces.filter((space: BackendGroup) => {
-                    return !space.members.includes(session!.user?.preferred_username as string)
-                }));
+                setSearchResults(
+                    data.spaces.filter((space: BackendGroup) => {
+                        return !space.members.includes(session!.user?.preferred_username as string);
+                    })
+                );
             }
         );
     };
@@ -74,20 +70,26 @@ export default function Groups() {
     };
 
     function sendJoinRequest(groupId: string): void {
-        fetchPOST(`/spaceadministration/join?id=${groupId}`, {}, session!.accessToken).then((data) => {
-            mutateMyGroups();
-            mutateAllGroups();
-            mutateMyGroupRequests();
+        fetchPOST(`/spaceadministration/join?id=${groupId}`, {}, session!.accessToken).then(
+            (data) => {
+                mutateMyGroups();
+                mutateAllGroups();
+                mutateMyGroupRequests();
 
-            // if group is joinable, user is automatically joined
-            // and therefore remove the group from the list
-            if(data.join_type === "joined") {
-                searchResults.splice(searchResults.findIndex(group => group._id === groupId), 1);
+                // if group is joinable, user is automatically joined
+                // and therefore remove the group from the list
+                if (data.join_type === 'joined') {
+                    searchResults.splice(
+                        searchResults.findIndex((group) => group._id === groupId),
+                        1
+                    );
+                } else if (data.join_type === 'requested_join') {
+                    searchResults
+                        .find((group) => group._id === groupId)!
+                        .requests.push(session!.user.preferred_username!);
+                }
             }
-            else if(data.join_type === "requested_join") {
-                searchResults.find(group => group._id === groupId)!.requests.push(session!.user.preferred_username!);
-            }
-        });
+        );
     }
 
     function acceptInvite(groupId: string): void {
@@ -126,7 +128,7 @@ export default function Groups() {
     }
 
     return (
-        <div className='mt-12'>
+        <div className="mt-12">
             <WhiteBox>
                 <VerticalTabs>
                     <div tabname="meine Gruppen">
@@ -552,4 +554,12 @@ export default function Groups() {
             </Dialog>
         </div>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

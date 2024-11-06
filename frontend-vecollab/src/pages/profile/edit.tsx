@@ -23,6 +23,7 @@ import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -361,7 +362,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
     );
 }
 
-export async function getStaticProps({ locale }: { locale: any }) {
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
     // prepare select dropdown options
     const optionLists = {
         veInterests: [

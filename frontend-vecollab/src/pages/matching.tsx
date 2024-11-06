@@ -2,7 +2,9 @@ import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { useGetMatching } from '@/lib/backend';
+import { GetStaticPropsContext } from 'next';
 import { useSession } from 'next-auth/react';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 
@@ -13,7 +15,12 @@ export default function Matching() {
 
     const [triggerMatching, setTriggerMatching] = useState<boolean>(false);
 
-    const {data: matchedUserSnippets, isLoading, error, mutate} = useGetMatching(triggerMatching, session!.accessToken);
+    const {
+        data: matchedUserSnippets,
+        isLoading,
+        error,
+        mutate,
+    } = useGetMatching(triggerMatching, session!.accessToken);
 
     const getMatchingCandidates = () => {
         setTriggerMatching(true);
@@ -24,8 +31,8 @@ export default function Matching() {
             <div>
                 <h1 className="text-center font-bold text-4xl mb-2">Matching</h1>
                 <div className="text-center mb-14 w-[30rem]">
-                    Klicke auf den Button, um deine Top 5 passenden potenziellen Partner,
-                    basierend auf deinem Profil, zu bekommen.
+                    Klicke auf den Button, um deine Top 5 passenden potenziellen Partner, basierend
+                    auf deinem Profil, zu bekommen.
                 </div>
                 <div className="flex justify-around w-full mb-8">
                     <button
@@ -51,9 +58,7 @@ export default function Matching() {
                                         className="flex cursor-pointer"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            router.push(
-                                                `/profile/user/${snippet.username}`
-                                            );
+                                            router.push(`/profile/user/${snippet.username}`);
                                         }}
                                     >
                                         <div>
@@ -67,9 +72,7 @@ export default function Matching() {
                                         </div>
                                         <div>
                                             <BoxHeadline
-                                                title={
-                                                    snippet.first_name + ' ' + snippet.last_name
-                                                }
+                                                title={snippet.first_name + ' ' + snippet.last_name}
                                             />
                                             <div className="mx-2 px-1 my-1 text-gray-600">
                                                 {snippet.institution}
@@ -84,4 +87,12 @@ export default function Matching() {
             </div>
         </div>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

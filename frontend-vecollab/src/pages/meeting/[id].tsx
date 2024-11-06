@@ -1,5 +1,7 @@
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { JitsiMeeting } from '@jitsi/react-sdk';
+import { GetStaticProps, GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -30,4 +32,12 @@ export default function Meeting() {
             )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

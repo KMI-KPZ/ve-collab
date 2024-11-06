@@ -15,13 +15,14 @@ import { ChangeEvent, useEffect, useState } from 'react';
 import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 interface Props {
     socket: Socket;
 }
 
 Group.auth = true;
-export default function Group({socket}: Props): JSX.Element {
+export default function Group({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -36,7 +37,7 @@ export default function Group({socket}: Props): JSX.Element {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
-    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
+    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -47,7 +48,7 @@ export default function Group({socket}: Props): JSX.Element {
         error,
         mutate,
     } = useGetGroup(session!.accessToken, groupId as string);
-    console.log({group});
+    console.log({ group });
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -56,7 +57,7 @@ export default function Group({socket}: Props): JSX.Element {
         session!.accessToken,
         groupId as string
     );
-    console.log({groupACLEntry});
+    console.log({ groupACLEntry });
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -293,21 +294,21 @@ export default function Group({socket}: Props): JSX.Element {
                         <>
                             <GroupBanner userIsAdmin={userIsAdmin} />
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                                <GroupHeader
-                                    userIsAdmin={userIsAdmin}
-                                />
+                                <GroupHeader userIsAdmin={userIsAdmin} />
                             </div>
                             <div className={'mx-20 flex'}>
                                 <div className={'w-3/4  mr-4'}>
                                     {(() => {
                                         switch (renderPicker) {
                                             case 'timeline':
-                                                return <Timeline
-                                                            socket={socket}
-                                                            group={group._id}
-                                                            userIsAdmin={userIsAdmin()}
-                                                            groupACL={groupACLEntry}
-                                                        />;
+                                                return (
+                                                    <Timeline
+                                                        socket={socket}
+                                                        group={group._id}
+                                                        userIsAdmin={userIsAdmin()}
+                                                        groupACL={groupACLEntry}
+                                                    />
+                                                );
                                             case 'members':
                                                 return members();
                                             case 'files':
@@ -370,4 +371,12 @@ export default function Group({socket}: Props): JSX.Element {
             )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

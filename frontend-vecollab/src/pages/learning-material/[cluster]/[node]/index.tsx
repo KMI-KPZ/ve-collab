@@ -1,10 +1,15 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText, getNodeByText } from '@/lib/backend';
+import {
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+    getNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { getClusterSlugByRouteQuery } from '../..';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 interface Props {
     nodesOfCluster: INode[];
@@ -21,13 +26,13 @@ export default function PageCategorySelected(props: Props) {
         <ContentWrapper
             nodesOfCluster={props.nodesOfCluster}
             contentChildren={
-                <div className='mt-10 p-10 text-center '>
-                    {props.lectionsOfNode.length > 0
-                    ? (
+                <div className="mt-10 p-10 text-center ">
+                    {props.lectionsOfNode.length > 0 ? (
                         <>
                             <LoadingAnimation />
-                            <p className='mt-8'>
-                                Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies nicht funktioniert, klicken Sie bitte{' '}
+                            <p className="mt-8">
+                                Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies
+                                nicht funktioniert, klicken Sie bitte{' '}
                                 <a
                                     className="underline text-ve-collab-blue"
                                     href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
@@ -37,7 +42,9 @@ export default function PageCategorySelected(props: Props) {
                             </p>
                         </>
                     ) : (
-                        <div className='italic'>Leider gibt es noch keine Inhalte für dieses Modul</div>
+                        <div className="italic">
+                            Leider gibt es noch keine Inhalte für dieses Modul
+                        </div>
                     )}
                 </div>
             }
@@ -47,12 +54,13 @@ export default function PageCategorySelected(props: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
     const currentNode = await getNodeByText(params?.node as string);
 
     if (!clusterSlug || !currentNode) {
-        return { notFound: true }
+        return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
     const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
@@ -61,10 +69,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (lectionsOfNode.length > 0) {
         return {
             redirect: {
-              destination: `/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
-              permanent: false,
+                destination: `/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
+                permanent: false,
+                ...(await serverSideTranslations(locale ?? 'en', ['common'])),
             },
-        }
+        };
     }
 
     return {
@@ -73,6 +82,7 @@ export const getServerSideProps: GetServerSideProps = async ({
             lectionsOfNode,
             clusterSlug,
             nodeSlug: currentNode.text,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };
