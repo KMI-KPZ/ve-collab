@@ -2,6 +2,7 @@
     "my_groups": "Meine Gruppen",
     "you_are_member_of_groups": "Du bist Mitglied in diesen Gruppen",
     "group_picture": "Gruppenbild",
+    "profile_picture": "Profilbild",
     "no_description_available": "Keine Beschreibung vorhanden",
     "find_new_groups": "Neue Gruppen finden",
     "search_groups_placeholder": "Suche nach Gruppen, z.B. nach Namen oder der Beschreibung",
@@ -18,5 +19,8 @@
     "new_group_name": "Name:",
     "new_group_name_placeholder": "Name eingeben",
     "invisible": "unsichtbar",
-    "private": "privat"
+    "private": "privat",
+    "matching": "Matching",
+    "matching_instructions": "Klicke auf den Button, um deine Top 5 passenden potenziellen Partner:innen, basierend auf deinem Profil, zu bekommen.",
+    "find_partners": "Partner:in finden"
 }

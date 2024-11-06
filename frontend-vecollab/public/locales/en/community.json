@@ -2,6 +2,7 @@
     "my_groups": "My groups",
     "you_are_member_of_groups": "You are a member of these groups",
     "group_picture": "Group Picture",
+    "profile_picture": "Profile Picture",
     "no_description_available": "No description available",
     "find_new_groups": "Find new groups",
     "search_groups_placeholder": "Search for groups, e.g. by name or description",
@@ -18,5 +19,8 @@
     "new_group_name": "Name:",
     "new_group_name_placeholder": "name your group",
     "invisible": "invisible",
-    "private": "private"
+    "private": "private",
+    "matching": "Matching",
+    "matching_instructions": "Click the button to receive your top 5 potential partners for a VE. The ranking is based on your profile information.",
+    "find_partners": "Find partners"
 }

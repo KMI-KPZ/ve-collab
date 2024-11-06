@@ -4,6 +4,7 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { useGetMatching } from '@/lib/backend';
 import { GetStaticPropsContext } from 'next';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -11,6 +12,8 @@ import { useState } from 'react';
 Matching.auth = true;
 export default function Matching() {
     const { data: session } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const router = useRouter();
 
     const [triggerMatching, setTriggerMatching] = useState<boolean>(false);
@@ -29,11 +32,8 @@ export default function Matching() {
     return (
         <div className="gap-y-6 w-full p-12 items-center flex flex-col justify-content">
             <div>
-                <h1 className="text-center font-bold text-4xl mb-2">Matching</h1>
-                <div className="text-center mb-14 w-[30rem]">
-                    Klicke auf den Button, um deine Top 5 passenden potenziellen Partner, basierend
-                    auf deinem Profil, zu bekommen.
-                </div>
+                <h1 className="text-center font-bold text-4xl mb-2">{t('matching')}</h1>
+                <div className="text-center mb-14 w-[30rem]">{t('matching_instructions')}</div>
                 <div className="flex justify-around w-full mb-8">
                     <button
                         className={
@@ -41,7 +41,7 @@ export default function Matching() {
                         }
                         onClick={getMatchingCandidates}
                     >
-                        <span>Partner finden</span>
+                        <span>{t('find_partners')}</span>
                     </button>
                 </div>
                 {isLoading ? (
@@ -64,7 +64,7 @@ export default function Matching() {
                                         <div>
                                             <AuthenticatedImage
                                                 imageId={snippet.profile_pic}
-                                                alt={'Profilbild'}
+                                                alt={t('profile_picture')}
                                                 width={60}
                                                 height={60}
                                                 className="rounded-full"
@@ -92,7 +92,7 @@ export default function Matching() {
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }
