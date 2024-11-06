@@ -1,0 +1,22 @@
+{
+    "my_groups": "My groups",
+    "you_are_member_of_groups": "You are a member of these groups",
+    "group_picture": "Group Picture",
+    "no_description_available": "No description available",
+    "find_new_groups": "Find new groups",
+    "search_groups_placeholder": "Search for groups, e.g. by name or description",
+    "no_results_found": "no results found",
+    "join": "Join",
+    "join_requested": "requested to join",
+    "request_join": "Request to join",
+    "no_matching_result_question": "No desired result found?",
+    "create_new_group": "Create new group",
+    "my_requests_and_invitations": "My requests & invitations",
+    "pending_invitations": "Pending invitations",
+    "pending_requests": "Pending requests",
+    "revoke_request": "Revoke request",
+    "new_group_name": "Name:",
+    "new_group_name_placeholder": "name your group",
+    "invisible": "invisible",
+    "private": "private"
+}
