@@ -38,6 +38,12 @@
   "search": "Search",
   "search_placeholder": "Search...",
   "search_title": "Search",
+  "search_instructions": "Search for users, groups, plans, etc.",
+  "search_no_results": "No results found",
+  "search_result_users": "Users",
+  "search_result_groups": "Groups",
+  "search_result_posts": "Posts",
+  "search_result_show_more_posts": "Show more posts",
   "chats": "Chats",
   "type_message_placeholder": "Type your message here...",
   "no_messages_yet": "No messages yet",
@@ -304,5 +310,6 @@
   "back_to_start": "Back to Homepage",
   "no_pad_access": "Sorry, you do not have access to this pad because you do not have writing permissions to the corresponding plan.",
   "you_are_redirected": "You are being redirected...",
-  "after_3_seconds_redirect_click": "If it does not happen automatically within 3 seconds, please click "
+  "after_3_seconds_redirect_click": "If it does not happen automatically within 3 seconds, please click ",
+  "generic_error": "An error occurred. Please try again later. If the problem persists, please contact us."
 }

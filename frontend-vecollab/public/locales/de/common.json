@@ -38,6 +38,12 @@
   "search": "Suche",
   "search_placeholder": "Suche...",
   "search_title": "Suchen",
+  "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
+  "search_no_results": "Keine Ergebnisse",
+  "search_result_users": "Nutzer:innen",
+  "search_result_groups": "Gruppen",
+  "search_result_posts": "Beiträge",
+  "search_result_show_more_posts": "weitere Beiträge anzeigen",
   "chats": "Chats",
   "type_message_placeholder": "Nachricht eingeben...",
   "no_messages_yet": "Noch keine Nachrichten",
@@ -304,5 +310,6 @@
   "back_to_start": "Zurück zur Startseite",
   "no_pad_access": "Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte zum zugehörigen Plan besitzt!",
   "you_are_redirected": "Du wirst in Kürze weitergeleitet...",
-  "after_3_seconds_redirect_click": "Falls dies nicht innerhalb von 3 Sekunden automatisch passiert, klicke bitte "
+  "after_3_seconds_redirect_click": "Falls dies nicht innerhalb von 3 Sekunden automatisch passiert, klicke bitte ",
+  "generic_error": "Ein Fehler ist aufgetreten. Bitte versuche es später erneut. Falls der Fehler besteht, kontaktiere uns bitte."
 }

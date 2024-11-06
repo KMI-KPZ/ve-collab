@@ -11,9 +11,12 @@ import GeneralError from '@/components/common/GeneralError';
 import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 SearchResult.auth = true;
 export default function SearchResult() {
+    const { t } = useTranslation('common');
+
     const router = useRouter();
     const [postsPagination, setPostsPagination] = useState<number>(2);
 
@@ -33,16 +36,13 @@ export default function SearchResult() {
             <div className="">
                 <div className="flex flex-col m-auto md:p-12 p-6 max-w-screen-[1500] items-center">
                     <div className="md:w-1/2">
-                        <div className="font-bold text-4xl mb-4">Suche</div>
-                        <div className="text-gray-600">
-                            Suche nach Benutzern, Gruppen und Beiträgen
-                        </div>
-
+                        <div className="font-bold text-4xl mb-4">{t('search')}</div>
+                        <div className="text-gray-600">{t('search_instructions')}</div>
                         <form className="flex my-4 w-3/4" onSubmit={(e) => handleSearchSubmit(e)}>
                             <input
                                 className={'w-full border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
-                                placeholder="Suchen ..."
+                                placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
                                 defaultValue={
@@ -51,7 +51,7 @@ export default function SearchResult() {
                             />
                             <button
                                 type="submit"
-                                title="Suchen"
+                                title={t('search_title')}
                                 className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
                             >
                                 <MdSearch className="text-white" />
@@ -75,7 +75,6 @@ export default function SearchResult() {
     }
 
     if (error) {
-        // return  <Wrapper><div>Es ist ein Fehler aufgetreten</div></Wrapper>
         return (
             <Wrapper>
                 <GeneralError />
@@ -93,7 +92,7 @@ export default function SearchResult() {
             <Wrapper>
                 <div className="flex items-center">
                     <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">Leider nichts gefunden</div>
+                    <div className="text-xl text-slate-900">{t('search_no_results')}</div>
                 </div>
             </Wrapper>
         );
@@ -121,7 +120,7 @@ export default function SearchResult() {
                 {data.users.length > 0 && (
                     <>
                         <div className="font-bold text-xl text-slate-900">
-                            Benutzer ({data.users.length})
+                            {t('search_result_users')} ({data.users.length})
                         </div>
                         <div className="flex flex-wrap m-2">
                             {data.users.map((user, i) => {
@@ -133,7 +132,7 @@ export default function SearchResult() {
                                     >
                                         <AuthenticatedImage
                                             imageId={user.profile_pic}
-                                            alt={'Profilbild'}
+                                            alt={t('profile_picture')}
                                             width={50}
                                             height={50}
                                             className="rounded-full mr-2"
@@ -151,7 +150,7 @@ export default function SearchResult() {
                 {data.spaces.length > 0 && (
                     <>
                         <div className="font-bold text-xl text-slate-900">
-                            Gruppen ({data.spaces.length})
+                            {t('search_result_groups')} ({data.spaces.length})
                         </div>
                         <div className="flex m-2">
                             {data.spaces.map((space, i) => {
@@ -163,7 +162,7 @@ export default function SearchResult() {
                                     >
                                         <AuthenticatedImage
                                             imageId={space.space_pic}
-                                            alt={'Profilbild'}
+                                            alt={t('group_picture')}
                                             width={60}
                                             height={60}
                                             className="rounded-full mr-2"
@@ -181,7 +180,7 @@ export default function SearchResult() {
                 {data.posts.length > 0 && (
                     <>
                         <div className="font-bold text-xl text-slate-900">
-                            Beiträge ({data.posts.length})
+                            {t('search_result_posts')} ({data.posts.length})
                         </div>
                         <div className="m-2">
                             {data.posts.map((post, i) => {
@@ -190,7 +189,7 @@ export default function SearchResult() {
                                     return (
                                         <ButtonSecondary
                                             key={i}
-                                            label="Weitere Beiträge anzeigen"
+                                            label={t('search_result_show_more_posts')}
                                             onClick={() => setPostsPagination((x) => x + 10)}
                                         />
                                     );
