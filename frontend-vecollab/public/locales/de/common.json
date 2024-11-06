@@ -298,5 +298,7 @@
   "privacy": "Datenschutzerklärung",
   "contact_us": "Kontaktiere uns",
   "cookie_banner": "Diese Plattform ist ein Prototyp und wird fortlaufend weiterentwickelt, Datenverlust ist daher aktuell trotz größter Bemühungen nicht ausgeschlossen. Wir verwenden nur notwendige Cookies, um die Funktionalität der Seite zu gewährleisten.",
-  "accept": "Akzeptieren"
+  "accept": "Akzeptieren",
+  "page_not_found": "Diese Seite konnte leider nicht gefunden werden.",
+  "back_to_start": "Zurück zur Startseite"
 }

@@ -298,5 +298,7 @@
   "privacy": "Privacy Policy",
   "contact_us": "Contact us",
   "cookie_banner": "This platform is a prototype and continuously being developed, so data loss cannot be ruled out despite our best efforts. We only use necessary cookies to ensure the functionality of the site.",
-  "accept": "Accept"
+  "accept": "Accept",
+  "page_not_found": "The page you are looking for unfortunately does not exist.",
+  "back_to_start": "Back to Homepage"
 }
