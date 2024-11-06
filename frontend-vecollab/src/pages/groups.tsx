@@ -133,7 +133,7 @@ export default function Groups() {
         <div className="mt-12">
             <WhiteBox>
                 <VerticalTabs>
-                    <div tabname={t('my_groups')}>
+                    <div tabid="my_groups" tabname={t('my_groups')}>
                         <div className="min-h-[63vh]">
                             <BoxHeadline title={t('you_are_member_of_groups')} />
                             <div className="divide-y my-4">
@@ -171,7 +171,7 @@ export default function Groups() {
                             </div>
                         </div>
                     </div>
-                    <div tabname={t('find_new_groups')}>
+                    <div tabid="find_new_groups" tabname={t('find_new_groups')}>
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 <input
@@ -293,7 +293,7 @@ export default function Groups() {
                             </div>
                         </div>
                     </div>
-                    <div tabname={t('common:all')}>
+                    <div tabid='all_groups' tabname={t('common:all')}>
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 {allGroups.map((group, index) => (
@@ -388,7 +388,7 @@ export default function Groups() {
                             </div>
                         </div>
                     </div>
-                    <div tabname={t('my_requests_and_invitations')}>
+                    <div tabid='requests_invitations' tabname={t('my_requests_and_invitations')}>
                         <div className="min-h-[63vh]">
                             <BoxHeadline title={t('pending_invitations')} />
                             <div className="h-[25vh] mb-10 overflow-y-auto content-scrollbar">

@@ -67,12 +67,12 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
     return (
         <WhiteBox>
             <VerticalTabs>
-                <div tabname="Posts">
+                <div tabid='posts' tabname="Posts">
                     <div className="h-screen overflow-y-auto">
                         <Timeline socket={socket} userIsAdmin={true} adminDashboard={true} />
                     </div>
                 </div>
-                <div tabname="VE-Pläne">
+                <div tabid='plans' tabname="VE-Pläne">
                     <div className="h-screen overflow-y-auto">
                         {isLoading && <LoadingAnimation />}
                         <ul className="divide-y">

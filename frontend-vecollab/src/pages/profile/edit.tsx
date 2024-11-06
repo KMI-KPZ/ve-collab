@@ -274,7 +274,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                             <LoadingAnimation />
                         ) : (
                             <VerticalTabs>
-                                <div tabname="Stammdaten">
+                                <div tabid='Stammdaten' tabname="Stammdaten">
                                     <EditPersonalInformation
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
@@ -285,7 +285,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         languageKeys={languageKeys}
                                     />
                                 </div>
-                                <div tabname="VE-Info">
+                                <div tabid='VE-Info' tabname="VE-Info">
                                     <EditVEInfo
                                         veInformation={veInformation}
                                         setVeInformation={setVeInformation}
@@ -297,7 +297,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         dropdowns={dropdowns}
                                     />
                                 </div>
-                                <div tabname="Lehre & Forschung">
+                                <div tabid='Lehre & Forschung' tabname="Lehre & Forschung">
                                     <EditResearchAndTeachingInformation
                                         researchAndTeachingInformation={
                                             researchandTeachingInformation
@@ -310,7 +310,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Ausbildung">
+                                <div tabid='Ausbildung' tabname="Ausbildung">
                                     <EditEducationInformation
                                         educations={educations}
                                         setEducations={setEducations}
@@ -319,7 +319,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Berufserfahrung">
+                                <div tabid='Berufserfahrung' tabname="Berufserfahrung">
                                     <EditWorkExperienceInformation
                                         workExperience={workExperience}
                                         setWorkExperience={setWorkExperience}
@@ -328,7 +328,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="VE-Schaufenster">
+                                <div tabid='VE-Schaufenster' tabname="VE-Schaufenster">
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -337,7 +337,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Sichtbarkeiten">
+                                <div tabid='Sichtbarkeiten' tabname="Sichtbarkeiten">
                                     <EditVisibilitySettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
