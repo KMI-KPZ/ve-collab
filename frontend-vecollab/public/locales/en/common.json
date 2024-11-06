@@ -300,5 +300,6 @@
   "cookie_banner": "This platform is a prototype and continuously being developed, so data loss cannot be ruled out despite our best efforts. We only use necessary cookies to ensure the functionality of the site.",
   "accept": "Accept",
   "page_not_found": "The page you are looking for unfortunately does not exist.",
-  "back_to_start": "Back to Homepage"
+  "back_to_start": "Back to Homepage",
+  "no_pad_access": "Sorry, you do not have access to this pad because you do not have writing permissions to the corresponding plan."
 }

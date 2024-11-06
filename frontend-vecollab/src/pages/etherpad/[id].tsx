@@ -1,6 +1,7 @@
 import { fetchGET } from '@/lib/backend';
 import { GetServerSideProps, GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 import { getSession, signIn } from 'next-auth/react';
+import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -16,6 +17,7 @@ export default function Etherpad({
     error,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const router = useRouter();
+    const { t } = useTranslation('common');
 
     useEffect(() => {
         if (!router.isReady) {
@@ -38,8 +40,7 @@ export default function Etherpad({
                 <div className="w-full flex justify-center">
                     <div className="w-2/3 min-h-[80vh] flex justify-center items-center">
                         <p className="font-bold text-6xl text-center text-gray-500">
-                            Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte
-                            zum zugehörigen Plan besitzt!
+                            {t('no_pad_access')}
                         </p>
                     </div>
                 </div>

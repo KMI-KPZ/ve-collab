@@ -300,5 +300,6 @@
   "cookie_banner": "Diese Plattform ist ein Prototyp und wird fortlaufend weiterentwickelt, Datenverlust ist daher aktuell trotz größter Bemühungen nicht ausgeschlossen. Wir verwenden nur notwendige Cookies, um die Funktionalität der Seite zu gewährleisten.",
   "accept": "Akzeptieren",
   "page_not_found": "Diese Seite konnte leider nicht gefunden werden.",
-  "back_to_start": "Zurück zur Startseite"
+  "back_to_start": "Zurück zur Startseite",
+  "no_pad_access": "Sorry, du hast keinen Zugriff auf dieses Pad, da du keine Schreibrechte zum zugehörigen Plan besitzt!"
 }
