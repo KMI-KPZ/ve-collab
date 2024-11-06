@@ -292,5 +292,11 @@
     "Vietnamese": "Vietnamese",
     "Welsh": "Welsh",
     "Xhosa": "Xhosa"
-  }
+  },
+  "funding": "This research and development project is funded under the 'Initiative Nationale Bildungsplattform' (funding code 16INB2032A/B) by the Federal Ministry of Education and Research (BMBF) and is supervised by the project management agency VDI-VDE IT. The responsibility for the content of this publication lies with the authors.",
+  "imprint": "Imprint",
+  "privacy": "Privacy Policy",
+  "contact_us": "Contact us",
+  "cookie_banner": "This platform is a prototype and continuously being developed, so data loss cannot be ruled out despite our best efforts. We only use necessary cookies to ensure the functionality of the site.",
+  "accept": "Accept"
 }

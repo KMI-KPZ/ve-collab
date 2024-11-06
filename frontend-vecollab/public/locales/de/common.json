@@ -292,5 +292,11 @@
     "Vietnamese": "Vietnamesisch",
     "Welsh": "Walisisch",
     "Xhosa": "Xhosa"
-  }
+  },
+  "funding": "Dieses Forschungs- und Entwicklungsprojekt wird im Rahmen der Maßnahme „Initiative Nationale Bildungsplattform” (Förderkennzeichen 16INB2032A/B) vom Bundesministerium für Bildung und Forschung (BMBF) gefördert und vom Projektträger VDI-VDE IT betreut. Die Verantwortung für den Inhalt dieser Veröffentlichung liegt bei den Autor:innen.",
+  "imprint": "Impressum",
+  "privacy": "Datenschutzerklärung",
+  "contact_us": "Kontaktiere uns",
+  "cookie_banner": "Diese Plattform ist ein Prototyp und wird fortlaufend weiterentwickelt, Datenverlust ist daher aktuell trotz größter Bemühungen nicht ausgeschlossen. Wir verwenden nur notwendige Cookies, um die Funktionalität der Seite zu gewährleisten.",
+  "accept": "Akzeptieren"
 }
