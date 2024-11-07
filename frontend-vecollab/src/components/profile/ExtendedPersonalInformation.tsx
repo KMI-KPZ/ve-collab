@@ -9,6 +9,7 @@ import {
     VEInformation as IVEInformation, // name collision avoidance with VEInformation component
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
+import { useTranslation } from 'next-i18next';
 
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
@@ -33,15 +34,17 @@ export default function ExtendedPersonalInformation({
     researchAndTeachingInfo,
     cvInfo,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
         <Tabs>
-            <div tabid='ve_info' tabname="VE-Infos">
+            <div tabid="ve_info" tabname={t("ve_info")}>
                 <VEInformation veInfo={veInfo} />
             </div>
-            <div tabid='teaching_research' tabname="Lehre & Forschung">
+            <div tabid="teaching_research" tabname={t("research_and_teaching")}>
                 <TeachingAndResearchInformation researchAndTeachingInfo={researchAndTeachingInfo} />
             </div>
-            <div tabid='cv' tabname="CV">
+            <div tabid="cv" tabname={t("cv")}>
                 <CVInformation cvInfo={cvInfo} />
             </div>
         </Tabs>

@@ -15,7 +15,7 @@ export default function SelectedUserProfile({ socket }: Props): JSX.Element {
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', "community"])),
         },
     };
 }
