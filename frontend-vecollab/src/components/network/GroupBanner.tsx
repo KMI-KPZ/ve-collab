@@ -10,6 +10,7 @@ import LoadingAnimation from '../common/LoadingAnimation';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import BoxHeadline from '../common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -17,9 +18,10 @@ interface Props {
 
 export default function GroupBanner({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const router = useRouter();
     const { groupId } = router.query;
-
 
     const [loading, setLoading] = useState(false);
 
@@ -74,7 +76,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
     return (
         <>
             <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
-                <Image fill src={blueBackground} alt={''} />
+                <Image fill src={blueBackground} alt={t('background_picture')} />
                 {isLoading ? (
                     <LoadingAnimation />
                 ) : (
@@ -82,10 +84,10 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                         <div className={'flex items-center pr-6 text-lg text-white'}>
                             <div>
                                 <div className="font-bold">
-                                    {group.joinable ? 'öffentlich' : 'privat'}
+                                    {group.joinable ? t('public') : t('private')}
                                 </div>
                                 <div className="font-bold">
-                                    {group.invisible ? 'unsichtbar' : 'sichtbar'}
+                                    {group.invisible ? t('invisible') : t('visible')}
                                 </div>
                             </div>
                         </div>
@@ -97,14 +99,14 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                             }}
                         >
                             <div className={'font-bold'}>{group.members.length}</div>
-                            <div>Mitglieder</div>
+                            <div>{t('members')}</div>
                         </div>
                     </div>
                 )}
             </div>
             <Dialog
                 isOpen={isMemberDialogOpen}
-                title={'Mitglieder'}
+                title={t('members')}
                 onClose={handleCloseMemberDialog}
             >
                 <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
@@ -129,7 +131,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                         <div>
                                             <AuthenticatedImage
                                                 imageId={snippet.profilePicUrl}
-                                                alt={'Profilbild'}
+                                                alt={t('profile_picture')}
                                                 width={60}
                                                 height={60}
                                                 className="rounded-full"

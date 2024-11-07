@@ -35,13 +35,13 @@ export default function ExtendedPersonalInformation({
 }: Props) {
     return (
         <Tabs>
-            <div tabname="VE-Infos">
+            <div tabid='ve_info' tabname="VE-Infos">
                 <VEInformation veInfo={veInfo} />
             </div>
-            <div tabname="Lehre & Forschung">
+            <div tabid='teaching_research' tabname="Lehre & Forschung">
                 <TeachingAndResearchInformation researchAndTeachingInfo={researchAndTeachingInfo} />
             </div>
-            <div tabname="CV">
+            <div tabid='cv' tabname="CV">
                 <CVInformation cvInfo={cvInfo} />
             </div>
         </Tabs>

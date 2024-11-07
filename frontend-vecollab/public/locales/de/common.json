@@ -315,5 +315,6 @@
   "orcid_link_successful": "ORCiD Account wurde erfolgreich verknüpft. Wir müssen dich einmal aus- und neu einloggen. Das sollte automatisch innerhalb von 5 Sekunden passieren. Falls nicht, klicke bitte ",
   "orcid_link_relog_successful": "Re-Login Prozess erfolgreich. Du wirst zu deiner original Seite weitergeleitet. Das sollte automatisch innerhalb von 5 Sekunden passieren. Falls nicht, klicke bitte ",
   "homepage_banner": "Lehre kooperativ, digital und international",
-  "homepage_text": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch."
+  "homepage_text": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch.",
+  "access_denied": "Zugriff verweigert"
 }

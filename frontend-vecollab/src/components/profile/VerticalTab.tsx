@@ -5,7 +5,7 @@ interface TabProps {
     tabid: string;
     tabname: string;
     children?: JSX.Element | JSX.Element[];
-    onClick(tabname?: string): void;
+    onClick(tabid?: string): void;
 }
 
 class Tab extends Component<TabProps, {}> {

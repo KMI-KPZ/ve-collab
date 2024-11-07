@@ -315,5 +315,6 @@
   "orcid_link_successful": "Your ORCID account has been successfully linked. We have to log you out and back in to complete the process. This should happen automatically within 5 seconds, if not, please click ",
   "orcid_link_relog_successful": "Re-Login successful. You will be forwarded to your original page. This should happen automatically within 5 seconds, if not, please click ",
   "homepage_banner": "Cooperative, digital and international teaching",
-  "homepage_text": "VE-Collab supports educators with a variety of qualification offers in building their own competencies and provides assistance in the initiation, planning, and implementation of international and national virtual exchanges. By building a Community of Practice, we also promote active collegial (virtual) exchange."
+  "homepage_text": "VE-Collab supports educators with a variety of qualification offers in building their own competencies and provides assistance in the initiation, planning, and implementation of international and national virtual exchanges. By building a Community of Practice, we also promote active collegial (virtual) exchange.",
+  "access_denied": "Access denied"
 }
