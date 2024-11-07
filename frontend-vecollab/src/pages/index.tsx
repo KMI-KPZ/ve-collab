@@ -19,17 +19,11 @@ export default function Home(): JSX.Element {
             <div className="flex flex-col m-auto p-12 max-w-screen-2xl items-center">
                 <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl bg-footer-pattern-rounded">
                     <h1 className="text-center content-center text-white font-bold uppercase text-2xl md:text-4xl">
-                        Lehre kooperativ, digital und international
+                        {t('homepage_banner')}
                     </h1>
                 </div>
 
-                <p className="md:w-1/2 my-10 font-konnect lg:text-xl">
-                    VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim
-                    eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung,
-                    Planung und Durchführung internationaler und nationaler virtueller Austausche
-                    (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern
-                    wir zudem den aktiven kollegialen (virtuellen) Austausch.
-                </p>
+                <p className="md:w-1/2 my-10 font-konnect lg:text-xl">{t('homepage_text')}</p>
 
                 {status != 'loading' && (
                     <>
