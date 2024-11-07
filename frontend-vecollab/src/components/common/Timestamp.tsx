@@ -12,7 +12,7 @@ interface Props {
 export default function Timestamp({
     timestamp,
     className = '',
-    dateFormat = 'd. MMM yyyy H:mm',
+    dateFormat = "d. MMM yyyy H:mm 'Uhr'",
     relative = false,
     showTitle = false
 }: Props) {
@@ -21,7 +21,7 @@ export default function Timestamp({
             {relative ? (
                 <span
                     className={className}
-                    title={showTitle ? format(parseISO(timestamp), 'd. MMM yyyy H:mm', { locale: de }) : ""}
+                    title={showTitle ? format(parseISO(timestamp), dateFormat, { locale: de }) : ""}
                 >
                     {formatDistance(parseISO(timestamp), new Date(), { locale: de, addSuffix: true}  )}
                 </span>
@@ -29,7 +29,7 @@ export default function Timestamp({
                 <time
                     className={className}
                     dateTime={timestamp}
-                    title={showTitle ? format(parseISO(timestamp), 'd. MMM yyyy H:mm', { locale: de }) : ""}
+                    title={showTitle ? format(parseISO(timestamp), dateFormat, { locale: de }) : ""}
                 >
                     {format(parseISO(timestamp), dateFormat, {
                         locale: de,

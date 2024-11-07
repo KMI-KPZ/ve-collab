@@ -80,6 +80,9 @@ export default function HeaderSection({
             case 'contact':
                 window.open('mailto:schlecht@infai.org, mihaela.markovic@uni-leipzig.de', '_blank');
                 break;
+            case 'admin':
+                router.push('/admin');
+                break;
             default:
                 break;
         }
@@ -109,13 +112,13 @@ export default function HeaderSection({
     const Menu = () => {
         return (
             <>
-                {isGlobalAdmin && (
+                {/* {isGlobalAdmin && (
                     <li className={isActivePath('/admin') ? activeClass : inactiveClass}>
                         <Link href="/admin" className="px-2 py-1">
                             <span className="text-red-500">Admin</span>
                         </Link>
                     </li>
-                )}
+                )} */}
                 <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
                     <Link href="/learning-material" className="px-2 py-1">
                         Materialien
@@ -168,7 +171,7 @@ export default function HeaderSection({
                                 </span>
                             )}
                         </li>
-                        <li className="lg:hidden">
+                        <li className="lg:hidden px-2">
                             <Link href={'/search'}>
                                 <MdSearch size={20} />
                             </Link>
@@ -180,17 +183,18 @@ export default function HeaderSection({
                             <div className="flex items-center font-normal">
                                 <Dropdown
                                     options={[
+                                        Object.assign({}, isGlobalAdmin
+                                            ? {
+                                                value: "admin",
+                                                label: "Admin Dashboard",
+                                                liClasses: "text-red-600 border-b"
+                                            } : null
+                                        ),
                                         {
                                             value: 'profil',
                                             label: 'Profil bearbeiten',
                                             title: 'Eigenes Profil bearbeiten',
                                         },
-                                        // Object.assign({}, isGlobalAdmin
-                                        //     ? {
-                                        //         value: "admin",
-                                        //         label: "Admin Dashboard"
-                                        //     } : null
-                                        // ),
                                         {
                                             value: 'contact',
                                             label: 'Kontakt per Mail...',
@@ -298,7 +302,7 @@ export default function HeaderSection({
                                 <span className="text-ve-collab-blue">Designer</span>
                             </Link>
                         </li>
-                        <li className={`relative`}>
+                        {/* <li className={`relative`}>
                             <button
                                 className={sandwichItemClass}
                                 onClick={(e) => toggleChatWindow()}
@@ -323,7 +327,7 @@ export default function HeaderSection({
                                     {notificationEvents.length}
                                 </span>
                             )}
-                        </li>
+                        </li> */}
 
                         <li>
                             <Link
@@ -483,6 +487,49 @@ export default function HeaderSection({
                     <li>
                         <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
                     </li> */}
+                    <li>
+                            <button
+                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
+                                onClick={(e) => toggleChatWindow()}
+                                title="Chat Fenster öffnen"
+                            >
+                                <MdOutlineMessage size={20} />
+                            </button>
+                            {messageEventCount > 0 && (
+                                <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
+                                    {messageEventCount}
+                                </span>
+                            )}
+                        </li>
+                        <li>
+                            <button
+                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                onClick={(e) => toggleNotifWindow()}
+                                title="Notifications Fenster öffnen"
+                            >
+                                <IoMdNotificationsOutline size={20} />
+                            </button>
+                            {notificationEvents.length > 0 && (
+                                <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
+                                    {notificationEvents.length}
+                                </span>
+                            )}
+                        </li>
+                    <li>
+                        <Link href={"/profile"}>
+                                            <AuthenticatedImage
+                                                imageId={
+                                                    userProfile
+                                                        ? userProfile?.profile?.profile_pic
+                                                        : 'default_profile_pic.jpg'
+                                                }
+                                                alt={'Benutzerbild'}
+                                                width={30}
+                                                height={30}
+                                                className="rounded-full mx-3"
+                                            ></AuthenticatedImage>
+                                        </Link>
+                    </li>
                     <li>
                         <Dropdown
                             options={[

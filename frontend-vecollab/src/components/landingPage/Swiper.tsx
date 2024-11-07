@@ -1,12 +1,10 @@
-import { useEffect, useMemo } from 'react';
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
+import { Navigation, Pagination, A11y } from 'swiper/modules';
 import Image from 'next/image';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import 'swiper/css/scrollbar';
 
 import img1 from '@/images/frontpageSwiper/1.jpg';
 import img2 from '@/images/frontpageSwiper/2.jpg';
@@ -17,20 +15,14 @@ interface Props {
 }
 
 export default function Swiper({ className }: Props) {
-    // this should be run only once per application lifetime
-    useEffect(() => {}, []);
 
     return (
         <SwiperJS
             modules={[Navigation, Pagination, A11y]}
             navigation
             pagination={{ clickable: true }}
-            // scrollbar={{ draggable: true }}
-
             spaceBetween={50}
             slidesPerView={1}
-            // onSlideChange={() => console.log('slide change')}
-            // onSwiper={(swiper: any) => console.log(swiper)}
         >
             <SwiperSlide>
                 <div className="flex flex-wrap-reverse mx-12 my-2 gap-x-12 gap-y-6 pb-6 items-center justify-center">

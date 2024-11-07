@@ -182,6 +182,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                 setHeaderBarMessageEvents={
                                                     setMessageEventsHeaderBar
                                                 }
+                                                toggleNotifWindow={toggleNotifWindow}
                                             />
                                         </Auth>
                                     ) : (
@@ -194,6 +195,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                             setMessageEvents={setMessageEvents}
                                             headerBarMessageEvents={messageEventsHeaderBar}
                                             setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                            toggleNotifWindow={toggleNotifWindow}
                                         />
                                     )}
                                 </>
