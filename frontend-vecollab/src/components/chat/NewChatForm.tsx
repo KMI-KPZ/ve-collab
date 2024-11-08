@@ -1,6 +1,7 @@
 import { BackendSearchResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'next-i18next';
 import { FormEvent, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import AsyncSelect from 'react-select/async';
@@ -10,6 +11,7 @@ interface Props {
 }
 export default function NewChatForm({ closeDialogCallback }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation('common');
 
     const [members, setMembers] = useState(['']);
     const [usersProfileSnippets, setUsersProfileSnippets] = useState<{
@@ -46,18 +48,20 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                 (data: BackendSearchResponse) => {
                     // console.log({data});
                     setUsersProfileSnippets(
-                        data.users.reduce((acc, current, i) => (
-                            {...acc, [current.username]: current}
-                        ), {})
+                        data.users.reduce(
+                            (acc, current, i) => ({ ...acc, [current.username]: current }),
+                            {}
+                        )
                     );
 
                     callback(
                         data.users
-                        .filter(user => user.username !== session!.user.preferred_username)
-                        .map((user) => ({
-                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                            value: user.username,
-                        }))
+                            .filter((user) => user.username !== session!.user.preferred_username)
+                            .map((user) => ({
+                                label:
+                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                                value: user.username,
+                            }))
                     );
                 }
             );
@@ -78,13 +82,13 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
     };
 
     const getUserLabel = (user: BackendUserSnippet) => {
-        return `${user?.first_name} ${user?.last_name} - ${user?.username}`
-    }
+        return `${user?.first_name} ${user?.last_name} - ${user?.username}`;
+    };
 
     return (
         <div className="relative h-[47vh]">
             <div className="w-[30vw] min-w-96 h-[40vh] overflow-y-auto content-scrollbar relative px-2">
-                <h1 className="my-4">Füge Personen zum Chat hinzu</h1>
+                <h1 className="my-4">{t("add_members_to_chat")}</h1>
                 {members.map((member, index) => (
                     <div key={index} className="my-2">
                         <AsyncSelect
@@ -95,17 +99,15 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                             value={
                                 member
                                     ? {
-                                        label: getUserLabel(usersProfileSnippets[member]),
-                                        value: member
-                                    }
+                                          label: getUserLabel(usersProfileSnippets[member]),
+                                          value: member,
+                                      }
                                     : null
                             }
-
-                            placeholder={'Suche nach Nutzer:innen...'}
+                            placeholder={t("search_users_placeholder")}
                             getOptionLabel={(option) => option.label}
-
-                            loadingMessage={() => "lädt ..."}
-                            noOptionsMessage={() => "nichts gefunden"}
+                            loadingMessage={() => t("loading")}
+                            noOptionsMessage={() => t("user_search_no_results")}
                             openMenuOnFocus={false}
                             openMenuOnClick={false}
                             components={{
@@ -123,7 +125,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                     </button>
                 </div>
                 <div>
-                    <h1 className="my-4">Gib dem Chat einen Namen (optional)</h1>
+                    <h1 className="my-4">{t("give_chat_name")}</h1>
                     <input
                         type="text"
                         className="border border-gray-300 rounded-md w-full px-2 py-1"
@@ -139,7 +141,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                     }
                     onClick={closeDialogCallback}
                 >
-                    <span>Abbrechen</span>
+                    <span>{t("cancel")}</span>
                 </button>
                 <button
                     className={
@@ -150,7 +152,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                         closeDialogCallback();
                     }}
                 >
-                    <span>Absenden</span>
+                    <span>{t("create")}</span>
                 </button>
             </div>
         </div>

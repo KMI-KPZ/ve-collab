@@ -1,6 +1,7 @@
 import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'next-i18next';
 import { useEffect, useState } from 'react';
 
 interface Props {
@@ -17,10 +18,14 @@ export default function RoomSnippet({
     memberProfileSnippets,
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
+
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
 
     useEffect(() => {
-        setMessageEventCount(headerBarMessageEvents.filter((message) => message.room_id === room._id).length)
+        setMessageEventCount(
+            headerBarMessageEvents.filter((message) => message.room_id === room._id).length
+        );
     }, [headerBarMessageEvents, room._id]);
 
     return (
@@ -37,8 +42,13 @@ export default function RoomSnippet({
                     </p>
                     <p className="text-sm text-gray-500">
                         {room.last_message?.message
-                            ? `${room.last_message.sender}: ${room.last_message.message}`
-                            : 'No messages yet'}
+                            ? `${
+                                  memberProfileSnippets.find(
+                                      (member) =>
+                                          member.preferredUsername === room.last_message?.sender
+                                  )?.name || room.last_message.sender
+                              }: ${room.last_message.message}`
+                            : t('no_messages_yet')}
                     </p>
                 </div>
 
@@ -47,10 +57,10 @@ export default function RoomSnippet({
                 {/* {headerBarMessageEvents.filter((message) => message.room_id === room._id).length >
                     0 && <div className="bg-blue-500 w-2 h-2 rounded-full mr-2"></div>} */}
                 {messageEventCount > 0 && (
-                        <span className="px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
-                            {messageEventCount}
-                        </span>
-                    )}
+                    <span className="px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
+                        {messageEventCount}
+                    </span>
+                )}
             </div>
         </li>
     );

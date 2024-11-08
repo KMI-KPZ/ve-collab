@@ -16,6 +16,7 @@ import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 import Dropdown from '../common/Dropdown';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -23,6 +24,8 @@ interface Props {
 
 export default function GroupHeader({ userIsAdmin }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const router = useRouter();
     const { groupId } = router.query;
 
@@ -313,7 +316,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                         >
                             <AuthenticatedImage
                                 imageId={group.space_pic}
-                                alt={'Gruppenbild'}
+                                alt={t('group_picture')}
                                 width={180}
                                 height={180}
                             />
@@ -326,13 +329,11 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 {userIsAdmin() ? (
                                     <ButtonSecondary
                                         onClick={() => handleOpenEditDialog()}
-                                        label={'Gruppe bearbeiten'}
+                                        label={t('edit_group')}
                                     />
                                 ) : (
                                     <Dropdown
-                                        options={[
-                                            { value: 'leaveGroup', label: 'Gruppe verlassen' },
-                                        ]}
+                                        options={[{ value: 'leaveGroup', label: t('leave_group') }]}
                                         onSelect={handleClickGroupOptions}
                                     />
                                 )}
@@ -341,19 +342,19 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                     </div>
                     <Dialog
                         isOpen={isEditDialogOpen}
-                        title={'Gruppe bearbeiten'}
+                        title={t('edit_group')}
                         onClose={handleCloseEditDialog}
                     >
                         <div className="w-full h-full min-h-[60vh]">
                             <Tabs>
-                                <div tabname="Bild & Beschreibung">
+                                <div tabid="pic_description" tabname={t('pic_and_description')}>
                                     <div className="flex">
                                         <div className="flex justify-center mx-6">
                                             <div className="">
                                                 <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
                                                     <AuthenticatedImage
                                                         imageId={group.space_pic}
-                                                        alt={'Profilbild'}
+                                                        alt={t('group_picture')}
                                                         width={180}
                                                         height={180}
                                                     />
@@ -363,19 +364,18 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         onClick={() =>
                                                             setIsEditImageDialogOpen(true)
                                                         }
-                                                        label={'ändern'}
+                                                        label={t('change')}
                                                     />
                                                 </div>
                                             </div>
                                         </div>
                                         <Dialog
                                             isOpen={isEditImageDialogOpen}
-                                            title="Gruppenbild hochladen"
+                                            title={t('upload_group_picture')}
                                             onClose={handleCloseEditImageDialog}
                                         >
                                             <div className="my-2 mx-2">
-                                                Wähle ein neues Profilbild aus und schneide es
-                                                zurecht
+                                                {t('choose_picture_and_cut')}
                                             </div>
                                             <input
                                                 type="file"
@@ -408,14 +408,14 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         'mb-1 font-bold text-slate-900 text-lg'
                                                     }
                                                 >
-                                                    Beschreibung
+                                                    {t('description')}
                                                 </div>
                                                 <textarea
                                                     className={
                                                         'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'
                                                     }
                                                     rows={5}
-                                                    placeholder={'Beschreibe diese Gruppe'}
+                                                    placeholder={t('description_placeholder')}
                                                     value={updatedDescription}
                                                     onChange={(e) =>
                                                         setUpdatedDescription(e.target.value)
@@ -423,15 +423,15 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 ></textarea>
                                                 <ButtonPrimary
                                                     onClick={() => handleUpdateDescription()}
-                                                    label={'Speichern'}
+                                                    label={t('common:save')}
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div tabname="Sichtbarkeit">
+                                <div tabid="visibility" tabname={t('visibility')}>
                                     <div className="flex mx-4 my-4">
-                                        <div className="mx-4">öffentlich</div>
+                                        <div className="mx-4">{t('public')}</div>
                                         <div
                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleJoinability}
@@ -445,10 +445,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 }
                                             ></div>
                                         </div>
-                                        <div className="mx-4">privat</div>
+                                        <div className="mx-4">{t('private')}</div>
                                     </div>
                                     <div className="flex mx-4 my-4">
-                                        <div className="mx-4">unsichtbar</div>
+                                        <div className="mx-4">{t('invisible')}</div>
                                         <div
                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleVisibility}
@@ -462,13 +462,13 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 }
                                             ></div>
                                         </div>
-                                        <div className="mx-4">sichtbar</div>
+                                        <div className="mx-4">{t('visible')}</div>
                                     </div>
                                 </div>
-                                <div tabname="Anfragen">
+                                <div tabid="requests" tabname={t('requests')}>
                                     {group.requests.length === 0 && (
                                         <div className="mx-4 my-4 text-gray-600">
-                                            Keine Anfragen vorhanden
+                                            {t('no_requests')}
                                         </div>
                                     )}
                                     <div className="divide-y">
@@ -485,7 +485,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                 )?.profilePicUrl ||
                                                                 'default_profile_pic.jpg'
                                                             }
-                                                            alt={'Profilbild'}
+                                                            alt={t('profile_picture')}
                                                             width={60}
                                                             height={60}
                                                             className="rounded-full"
@@ -519,7 +519,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         }
                                                         onClick={(e) => acceptRequest(requestUser)}
                                                     >
-                                                        <span>Annehmen</span>
+                                                        <span>{t('common:accept')}</span>
                                                     </button>
                                                     <button
                                                         className={
@@ -527,26 +527,27 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         }
                                                         onClick={(e) => declineRequest(requestUser)}
                                                     >
-                                                        <span>Ablehnen</span>
+                                                        <span>{t('common:decline')}</span>
                                                     </button>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                <div tabname="Einladungen">
+                                <div tabid="invites" tabname={t('invitations')}>
                                     <div className="flex">
                                         <AsyncCreatableSelect
                                             className="w-3/4"
                                             loadOptions={loadOptions}
                                             onChange={(e) => setInvitedUser(e!)}
                                             value={invitedUser}
-                                            placeholder={'Suche nach Nutzer:innen...'}
+                                            placeholder={t('common:search_users')}
                                             getOptionLabel={(option) => option.label}
                                             formatCreateLabel={(inputValue) => (
                                                 <span>
-                                                    kein Treffer? <b>{inputValue}</b> trotzdem
-                                                    verwenden
+                                                    {t('common:search_users_no_hit', {
+                                                        value: inputValue,
+                                                    })}
                                                 </span>
                                             )}
                                         />
@@ -560,17 +561,17 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     inviteUserToGroup(invitedUser.value);
                                                 }}
                                             >
-                                                Einladen
+                                                {t('invite')}
                                             </button>
                                         </div>
                                     </div>
                                     <div className="my-4">
                                         <div className={'mb-1 font-bold text-slate-900 text-lg'}>
-                                            ausstehende Einladungen
+                                            {t('pending_invitations')}
                                         </div>
                                         {group.invites.length === 0 && (
                                             <div className="mx-4 my-4 text-gray-600">
-                                                Keine ausstehenden Einladungen
+                                                {t('no_pending_invitations')}
                                             </div>
                                         )}
                                         <div className="divide-y">
@@ -590,7 +591,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                     )?.profilePicUrl ||
                                                                     'default_profile_pic.jpg'
                                                                 }
-                                                                alt={'Profilbild'}
+                                                                alt={t('profile_picture')}
                                                                 width={60}
                                                                 height={60}
                                                                 className="rounded-full"
@@ -632,7 +633,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                         </div>
                                     </div>
                                 </div>
-                                <div tabname="Berechtigungen">
+                                <div tabid="permissions" tabname={t('permissions')}>
                                     <div>
                                         {!snippetsLoading && (
                                             <>
@@ -661,7 +662,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                             setChosenPermissionUser(e!)
                                                         }
                                                         value={chosenPermissionUser}
-                                                        placeholder={'Suche nach Nutzer:innen...'}
+                                                        placeholder={t('common:search_users')}
                                                         getOptionLabel={(option) => option.label}
                                                     />
                                                 </div>
@@ -671,18 +672,22 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                             'mb-1 font-bold text-slate-900 text-lg'
                                                         }
                                                     >
-                                                        Berechtigungen anpassen
+                                                        {t('adjust_permissions')}
                                                     </div>
                                                     {chosenPermissionUser.value === '' ? (
                                                         <div className="mx-4 my-4 text-gray-600">
-                                                            kein User ausgewählt
+                                                            {t('no_user_selected')}
                                                         </div>
                                                     ) : (
                                                         <>
                                                             {!permissionsLoading && (
                                                                 <>
                                                                     <div className="flex my-4 w-1/4 justify-between">
-                                                                        <div>Timeline lesen</div>
+                                                                        <div>
+                                                                            {t(
+                                                                                'permission_read_timeline'
+                                                                            )}
+                                                                        </div>
                                                                         <div
                                                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                                                             onClick={(e) =>
@@ -702,7 +707,9 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex my-4 w-1/4 justify-between">
-                                                                        <div>Posts verfassen</div>
+                                                                        <div>
+                                                                            {t('permission_post')}
+                                                                        </div>
                                                                         <div
                                                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                                                             onClick={(e) =>
@@ -723,7 +730,9 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                     </div>
                                                                     <div className="flex my-4 w-1/4 justify-between">
                                                                         <div>
-                                                                            Kommentare verfassen
+                                                                            {t(
+                                                                                'permission_comment'
+                                                                            )}
                                                                         </div>
                                                                         <div
                                                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
@@ -745,7 +754,9 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                     </div>
                                                                     <div className="flex my-4 w-1/4 justify-between">
                                                                         <div>
-                                                                            Dateien herunterladen
+                                                                            {t(
+                                                                                'permission_read_files'
+                                                                            )}
                                                                         </div>
                                                                         <div
                                                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
@@ -766,7 +777,11 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex my-4 w-1/4 justify-between">
-                                                                        <div>Dateien hochladen</div>
+                                                                        <div>
+                                                                            {t(
+                                                                                'permission_write_files'
+                                                                            )}
+                                                                        </div>
                                                                         <div
                                                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                                                             onClick={(e) =>
@@ -793,11 +808,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         'mb-1 font-bold text-slate-900 text-lg'
                                                                     }
                                                                 >
-                                                                    Zum Gruppen-Admin ernennen
+                                                                    {t('promote_admin')}
                                                                 </div>
                                                                 <div>
-                                                                    Achtung: diese Aktion kann nicht
-                                                                    rückgängig gemacht werden!
+                                                                    {t('promote_admin_warning')}
                                                                 </div>
                                                                 <button
                                                                     className={
@@ -808,7 +822,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         promoteToAdmin();
                                                                     }}
                                                                 >
-                                                                    Befördern
+                                                                    {t('promote')}
                                                                 </button>
                                                             </div>
                                                         </>
@@ -818,7 +832,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                         )}
                                     </div>
                                 </div>
-                                <div tabname="Gruppe verlassen">
+                                <div tabid="leave_group" tabname={t('leave_group')}>
                                     <div className="flex">
                                         <div>
                                             <button
@@ -830,8 +844,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     leaveGroup();
                                                 }}
                                             >
-                                                {' '}
-                                                <span>Gruppe verlassen</span>
+                                                <span>{t('leave_group')}</span>
                                             </button>
                                         </div>
                                     </div>
