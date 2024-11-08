@@ -378,17 +378,19 @@ export default function Groups() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="my-4">
-                                <BoxHeadline title={'Nichts passendes dabei?'} />
-                                <button
-                                    className={
-                                        'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
-                                    }
-                                    onClick={() => setIsNewDialogOpen(true)}
-                                >
-                                    <span>neue Gruppe erstellen</span>
-                                </button>
-                            </div>
+                            {myACL.create_space && (
+                                <div className="my-4">
+                                    <BoxHeadline title={'Nichts passendes dabei?'} />
+                                    <button
+                                        className={
+                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
+                                        }
+                                        onClick={() => setIsNewDialogOpen(true)}
+                                    >
+                                        <span>neue Gruppe erstellen</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div tabname="meine Anfragen & Einladungen">
