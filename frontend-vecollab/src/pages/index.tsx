@@ -69,7 +69,7 @@ export default function Home(): JSX.Element {
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', "community"])),
         },
     };
 }

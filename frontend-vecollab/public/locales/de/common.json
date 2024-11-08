@@ -96,6 +96,7 @@
   "plans_share_dialog_text_nobody_access": "Niemand anderes hat Zugriff auf diesen Plan",
   "summary": "Zusammenfassung des <1><0>Plans</0></1>",
   "show_summary": "Zusammenfassung anzeigen",
+  "delete": "Löschen",
   "edit": "Bearbeiten",
   "download": "Herunterladen",
   "delete_plan": "Plan löschen",
