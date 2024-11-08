@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
@@ -8,6 +8,7 @@ import {
     fetchGET,
     fetchPOST,
     useGetAllGroups,
+    useGetMyACL,
     useGetMyGroupInvites,
     useGetMyGroupRequests,
     useGetMyGroups,
@@ -47,6 +48,10 @@ export default function Groups() {
         data: myGroupRequests,
         mutate: mutateMyGroupRequests,
     } = useGetMyGroupRequests(session!.accessToken);
+
+    const {
+        data: myACL
+    } = useGetMyACL(session!.accessToken);
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
@@ -276,17 +281,19 @@ export default function Groups() {
                                     </>
                                 )}
                             </div>
-                            <div className="my-4">
-                                <BoxHeadline title={'Nichts passendes dabei?'} />
-                                <button
-                                    className={
-                                        'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
-                                    }
-                                    onClick={() => setIsNewDialogOpen(true)}
-                                >
-                                    <span>neue Gruppe erstellen</span>
-                                </button>
-                            </div>
+                            {myACL.create_space && (
+                                <div className="my-4">
+                                    <BoxHeadline title={'Nichts passendes dabei?'} />
+                                    <button
+                                        className={
+                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
+                                        }
+                                        onClick={() => setIsNewDialogOpen(true)}
+                                    >
+                                        <span>neue Gruppe erstellen</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div tabname="alle">
@@ -494,7 +501,7 @@ export default function Groups() {
                 title={'neue Gruppe erstellen'}
                 onClose={handleCloseNewDialog}
             >
-                <div className="w-[25vw] h-[30vh] relative">
+                <div className="w-[25vw] relative">
                     <div>Name:</div>
                     <input
                         className={'border border-gray-500 rounded-lg px-2 py-1 my-2 w-full'}
@@ -527,7 +534,7 @@ export default function Groups() {
                         />
                         <p>privat</p>
                     </div>
-                    <div className="flex absolute bottom-0 w-full">
+                    <div className="flex w-full">
                         <button
                             className={
                                 'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
