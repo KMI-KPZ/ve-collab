@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { TbBulb, TbClipboardList } from 'react-icons/tb';
 import { GiPuzzle } from 'react-icons/gi';
 import { FaLaptop } from 'react-icons/fa';
-import { Tooltip } from '@/components/common/Tooltip';
-import { PiBookOpenText } from 'react-icons/pi';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
+import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -49,6 +49,9 @@ interface Props {
 // Landing Page: no category (and therefore no learning-material is chosen)
 export default function PageCategoryNotSelected(props: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
+    const router = useRouter();
+
     const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
     const Bubble = (querySlug: number, wrapperStyle: string, nodes: string[]) => {
@@ -121,12 +124,9 @@ export default function PageCategoryNotSelected(props: Props) {
                         Selbstlernmaterialien
                     </div> */}
                     <div className="mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8">
-                        Selbstlernmaterialien
+                        {t('materials')}
                     </div>
-                    <div className={'text-gray-500 text-xl'}>
-                        Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von
-                        VE-Collab!
-                    </div>
+                    <div className={'text-gray-500 text-xl'}>{t('materials_welcome')}</div>
                 </div>
                 <div className="flex">
                     {isUserAdmin && (
@@ -141,16 +141,12 @@ export default function PageCategoryNotSelected(props: Props) {
                     )}
                 </div>
             </div>
+            <div className="columns-2 gab-6 mb-6">{t('materials_intro_text')}</div>
 
-            <div className="columns-2 gab-6 mb-6">
-                Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig
-                Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen
-                und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen
-                virtuellen Austausch. Sie konnten bereits Erfahrung mit VA sammeln? Dann können Sie
-                hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen
-                Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die
-                eigene Praxis und Forschung inspirieren lassen.
-            </div>
+            {/* disclaimer message if language is set to non-german */}
+            {router.locale !== 'de' && (
+                <div className="text-gray-500 text-sm">{t('materials_only_german')}</div>
+            )}
 
             <div className="relative mx-8 border-t-2 border-ve-collab-blue/50 xl:mt-6 xl:pt-12 xl:-mb-[3rem]">
                 <Bubbles />
