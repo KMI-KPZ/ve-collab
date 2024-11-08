@@ -144,7 +144,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className='flex-none'>
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
@@ -197,7 +197,7 @@ export default function Groups() {
                                         {searchResults.map((group, index) => (
                                             <div key={index} className="px-2 py-5">
                                                 <div className="flex cursor-pointer">
-                                                    <div>
+                                                    <div className='flex-none'>
                                                         <AuthenticatedImage
                                                             imageId={group.space_pic}
                                                             alt={'Profilbild'}
@@ -305,7 +305,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className='flex-none'>
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
@@ -403,7 +403,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className='flex-none'>
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
@@ -458,7 +458,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className='flex-none'>
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={'Gruppenbild'}
