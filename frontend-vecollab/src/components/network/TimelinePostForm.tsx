@@ -213,10 +213,10 @@ export default function TimelinePostForm(
     }
 
     const openPlanDialog = () => {
-        if (plans.length) return
         setIsPlanDialogOpen(true)
-        setLoadingPlans(true)
 
+        if (plans.length) return
+        setLoadingPlans(true)
         fetchGET('/planner/get_available', session?.accessToken)
         .then(data => setPlans(data.plans))
         .finally(() => setLoadingPlans(false))
@@ -460,8 +460,15 @@ export default function TimelinePostForm(
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {filesToAttach.map((file, index) => (
                             <div className="max-w-[250px] mr-4 flex items-center" key={index}>
-                                <RxFile size={30} className="m-1" />
-                                {/* TODO preview for certain file types*/}
+                                {file.type.startsWith("image/")
+                                    ? (<img
+                                            src={URL.createObjectURL(file)}
+                                            alt="THumb"
+                                            width={50}
+                                            className="m-1 rounded-md"
+                                        />)
+                                    : (<RxFile size={30} className="m-1" />)
+                                }
                                 <div className="truncate py-2">{file.name}</div>
                                 <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
                                         <IoMdClose />
@@ -472,14 +479,14 @@ export default function TimelinePostForm(
                 )}
 
                 {plansToAttach.length > 0 && (
-                    <div className="ml-16 mb-4 flex flex-col flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                    <div className="ml-16 mb-4 max-h-[40vh] overflow-y-auto overflow-x-clip content-scrollbar">
                         {plansToAttach.map((plan, index) => (
-                            <div className="mr-4 flex items-center gap-x-4 gap-y-6" key={index}>
-                                <MdNewspaper size={30} />
-                                <div className="truncate font-bold grow-0">{plan.name}</div>
-                                <div className="text-sm text-gray-500 gro">{plan.author.first_name} {plan.author.last_name}</div>
-                                <Timestamp timestamp={plan.last_modified} className='text-sm' />
-                                <button onClick={() => removePlanAttachment(plan)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Plan Entfernen">
+                            <div className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden" key={index}>
+                                <MdNewspaper size={20} className="flex-none" />
+                                <div className="truncate font-bold grow w-1/2">{plan.name}</div>
+                                <div className="text-sm text-gray-500 flex-none">{plan.author.first_name} {plan.author.last_name}</div>
+                                <Timestamp timestamp={plan.last_modified} className='text-sm flex-none' />
+                                <button onClick={() => removePlanAttachment(plan)} className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light" title="Plan Entfernen">
                                         <IoMdClose />
                                 </button>
                             </div>
