@@ -28,6 +28,7 @@ import { IPlan } from "@/interfaces/planner/plannerInterfaces";
 import Timestamp from "../common/Timestamp";
 import ButtonNewPlan from "../plans/ButtonNewPlan";
 import { Socket } from "socket.io-client";
+import Image from "next/image";
 
 interface Props {
     post?: BackendPost | undefined;
@@ -461,12 +462,13 @@ export default function TimelinePostForm(
                         {filesToAttach.map((file, index) => (
                             <div className="max-w-[250px] mr-4 flex items-center" key={index}>
                                 {file.type.startsWith("image/")
-                                    ? (<img
-                                            src={URL.createObjectURL(file)}
-                                            alt="THumb"
-                                            width={50}
-                                            className="m-1 rounded-md"
-                                        />)
+                                    ? (<Image
+                                        src={URL.createObjectURL(file)}
+                                        alt="Thumb"
+                                        width={50}
+                                        height={50}
+                                        className="m-1 rounded-md"
+                                    />)
                                     : (<RxFile size={30} className="m-1" />)
                                 }
                                 <div className="truncate py-2">{file.name}</div>
