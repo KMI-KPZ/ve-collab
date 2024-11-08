@@ -1,47 +1,53 @@
-import { BackendChatroomSnippet } from "@/interfaces/api/apiInterfaces";
-import { UserSnippet } from "@/interfaces/profile/profileInterfaces";
-import { fetchPOST, useGetChatrooms } from "@/lib/backend";
-import { useSession } from "next-auth/react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { MdClose } from "react-icons/md";
-import { Socket } from "socket.io-client";
-import LoadingAnimation from "../common/LoadingAnimation";
-import ChatRoom from "./ChatRoom";
-import Rooms from "@/components/chat/Rooms";
+import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
+import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
+import { fetchPOST, useGetChatrooms } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { MdClose } from 'react-icons/md';
+import { Socket } from 'socket.io-client';
+import LoadingAnimation from '../common/LoadingAnimation';
+import ChatRoom from './ChatRoom';
+import Rooms from '@/components/chat/Rooms';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
     messageEvents: any[];
     headerBarMessageEvents: any[];
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
-    toggleChatWindow: () => void
-    open: boolean
+    toggleChatWindow: () => void;
+    open: boolean;
 }
 
 ChatWindow.auth = true;
-export default function ChatWindow(
-{
+export default function ChatWindow({
     socket,
     messageEvents,
     headerBarMessageEvents,
     setHeaderBarMessageEvents,
     toggleChatWindow,
     open,
-}: Props
-) {
+}: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation('common');
+
     const [selectedRoom, setSelectedRoom] = useState<BackendChatroomSnippet>();
     const [profileSnippets, setProfileSnippets] = useState<UserSnippet[]>([]);
     const [profileSnippetsLoading, setProfileSnippetsLoading] = useState<boolean>(true);
 
-    const { data: rooms, isLoading: loadingRooms, error, mutate } = useGetChatrooms(session!.accessToken);
+    const {
+        data: rooms,
+        isLoading: loadingRooms,
+        error,
+        mutate,
+    } = useGetChatrooms(session!.accessToken);
 
     useEffect(() => {
         if (loadingRooms || !open) return;
 
         // edge case: having no rooms would cause loading animation to spin indefinitely
         // because of initial true state
-        if(rooms.length === 0){
+        if (rooms.length === 0) {
             setProfileSnippetsLoading(false);
             return;
         }
@@ -49,7 +55,7 @@ export default function ChatWindow(
         // filter a distinct list of usernames from the room snippets
         const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
 
-        if (profileSnippets.length) return
+        if (profileSnippets.length) return;
         // fetch profile snippets
         fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
             (data) => {
@@ -69,18 +75,28 @@ export default function ChatWindow(
     }, [loadingRooms, open, profileSnippets, rooms, session]);
 
     const handleChatSelect = (chat: string) => {
-        setSelectedRoom( rooms.find(room => room._id === chat) )
+        setSelectedRoom(rooms.find((room) => room._id === chat));
     };
 
-    if (!open) { return (<></>) }
+    if (!open) {
+        return <></>;
+    }
 
     return (
-        <div className={`absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}>
+        <div
+            className={`absolute z-50 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}
+        >
             <div className="absolute -top-[16px] -left-[16px]">
-                <button onClick={e => toggleChatWindow()} className="bg-white rounded-full shadow p-2 hover:bg-slate-50"><MdClose size={20} /></button>
+                <button
+                    onClick={(e) => toggleChatWindow()}
+                    className="bg-white rounded-full shadow p-2 hover:bg-slate-50"
+                >
+                    <MdClose size={20} />
+                </button>
             </div>
+            <div className="font-bold text-center mb-2">{t("chats")}</div>
 
-            {(selectedRoom) ? (
+            {selectedRoom ? (
                 <div className="h-[60vh] min-h-[16rem] flex flex-col">
                     <ChatRoom
                         socketMessages={messageEvents}
@@ -89,7 +105,7 @@ export default function ChatWindow(
                         socket={socket}
                         room={selectedRoom!}
                         closeRoom={() => setSelectedRoom(undefined)}
-                        memberProfileSnippets={profileSnippets.filter(profile =>
+                        memberProfileSnippets={profileSnippets.filter((profile) =>
                             selectedRoom.members.includes(profile.preferredUsername)
                         )}
                     />
@@ -108,5 +124,5 @@ export default function ChatWindow(
                 </div>
             )}
         </div>
-    )
+    );
 }

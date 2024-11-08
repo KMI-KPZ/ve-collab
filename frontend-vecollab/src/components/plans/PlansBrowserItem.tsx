@@ -94,14 +94,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         >
             <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
-                    <div tabname={t('plans_share_dialog_tabname_new')}>
+                    <div tabid='new' tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
                             setAlert={setAlert}
                         />
                     </div>
-                    <div tabname={t('plans_share_dialog_tabname_manage')}>
+                    <div tabid='manage' tabname={t('plans_share_dialog_tabname_manage')}>
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
