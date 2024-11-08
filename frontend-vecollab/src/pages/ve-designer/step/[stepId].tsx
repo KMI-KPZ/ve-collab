@@ -182,7 +182,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
             return { ...fineStepCopyTransformedTools };
         },
-        [stepId]
+        [stepId, router]
     );
 
     useEffect(() => {
