@@ -441,6 +441,7 @@ export default function TimelinePost(
                                     url={`/uploads/${file.file_id}`}
                                     filename={file.file_name}
                                     title="Download image"
+                                    className="m-2"
                                 >
                                     <div className="flex justify-center">
                                         <AuthenticatedImage
@@ -450,9 +451,6 @@ export default function TimelinePost(
                                             height={250}
                                             className="rounded-md drop-shadow"
                                         ></AuthenticatedImage>
-                                    </div>
-                                    <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate text-center">
-                                        {file.file_name}
                                     </div>
                                 </AuthenticatedFile>
                             ))}
@@ -491,6 +489,7 @@ export default function TimelinePost(
                                 <Link
                                     key={index}
                                     href={{pathname: `/plan/${plan._id}`}}
+                                    title="Open plan"
                                 >
                                     <div className="flex justify-center">
                                         <MdOutlineDocumentScanner size={50} />
