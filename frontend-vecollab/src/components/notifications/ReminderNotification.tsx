@@ -39,26 +39,33 @@ export default function ReminderNotification({
                                 return (
                                     <p>
                                         Für viele neigt sich das Semester dem Ende und damit auch
-                                        die Zeit, Evaluationen durchzuführen. Schau doch jetzt
-                                        nochmal in die <b>Materialien zur Evaluation von VE&apos;s</b>!
+                                        die Zeit, Evaluationen durchzuführen - davon sind auch deine
+                                        VE-Projekte nicht ausgeschlossen. Wenn du noch Informationen
+                                        und Inspiration für die Evaluation suchst, dann schau doch
+                                        mal in die <b>Materialien zur Evaluation von VE&apos;s</b>!
                                     </p>
                                 );
                             case 'reminder_good_practise_examples':
                                 return (
                                     <p>
-                                        Bist du gerade mitten in der Planung eines VE? Oder steckst
-                                        vielleicht gerade noch in der Durchführung? In den{' '}
-                                        <b>Selbstlernmaterialien</b> kannst du dir jederzeit neue
-                                        Inspiration holen!
+                                        Hakt die VE-Planung oder suchst du noch nach Ideen für die
+                                        methodisch-didaktische Gestaltung deines Projekts? Wirf doch
+                                        einen Blick in die Good-Practice-Beispiele auf deinem
+                                        <b>VE-Designer-Dashboard</b>, um neue Inspiration zu
+                                        schöpfen! Oder schau dir Beispiel-VE&apos;s aus
+                                        verschiedenen Fachbereichen in den{' '}
+                                        <b>Selbstlernmaterialien</b> an.
                                     </p>
                                 );
                             case 'reminder_icebreaker':
                                 return (
                                     <p>
-                                        Der Einstieg in einen VE ist oft nicht einfach, aber
-                                        unheimlich wichtig. Schau doch mal in die <b>Materialien</b>
-                                        , dort findest du Informationen zu verschiedenen{' '}
-                                        <b>Icebreakern</b>!
+                                        Wusstest du, dass der Einstieg in einen VE eine der
+                                        wichtigsten Phasen ist, damit der VE gelingt? Frische doch
+                                        noch einmal dein Wissen auf, bevor du in die nächste Planung
+                                        gehst. Informationen zur VE-Planung und
+                                        Icebreaker-Aktivitäten findest du in den{' '}
+                                        <b>Selbstlernmaterialien</b>!
                                     </p>
                                 );
                             default:

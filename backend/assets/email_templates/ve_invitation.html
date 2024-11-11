@@ -3,7 +3,7 @@
 
 <p>Hallo {{ name|default("Nutzer:in") }},</p>
 <p>es bahnt sich etwas an!</p>
-<p><b>{{ from|default("Ein/e andere/r Nutzer:in") }}</b> fragt an, ob ihr nicht gemeinsam einen VE machen wollt{% if
+<p><b>{{ from|default("Ein/e andere/r Nutzer:in") }}</b> fragt an, ob ihr nicht gemeinsam einen VE durchführen wollt{% if
     plan_id is defined %}: {%else %}. {% endif%}
 </p>
 {% if message is defined %}

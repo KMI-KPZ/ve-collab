@@ -2,7 +2,7 @@ Hallo {recipient_name},
 
 es bahnt sich etwas an!
 
-{invitation_sender_name} fragt an, ob ihr nicht gemeinsam einen VE machen wollt.
+{invitation_sender_name} fragt an, ob ihr nicht gemeinsam einen VE durchführen wollt.
 
 Folgende Nachricht hat {invitation_sender_name} dieser Einladung beigefügt:
 {message}
