@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { MdClose } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
 import AllNotifications from '@/components/notifications/AllNotifications';
@@ -9,6 +9,7 @@ import VeInvitationReplyNotification from '@/components/notifications/VeInvitati
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
 import ReminderNotification from './ReminderNotification';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
@@ -28,6 +29,8 @@ export default function NotificationsWindow({
     toggleNotifWindow,
     open,
 }: Props) {
+    const { t } = useTranslation('common');
+
     const removeNotificationFromList = (notificationId: string) => {
         setNotificationEvents(
             notificationEvents.filter((notification) => notification._id !== notificationId)
@@ -43,7 +46,7 @@ export default function NotificationsWindow({
     }
 
     return (
-        <div className="absolute z-30 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border">
+        <div className="absolute z-50 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border">
             <div className="absolute -top-[16px] -left-[16px]">
                 <button
                     onClick={(e) => toggleNotifWindow()}
@@ -55,7 +58,7 @@ export default function NotificationsWindow({
 
             <div className="h-[60vh] min-h-[16rem] overflow-y-auto content-scrollbar text-sm">
                 <Tabs>
-                    <div tabname="neu">
+                    <div tabid='new' tabname={t('new')}>
                         <ul className="-mt-4 divide-y">
                             {notificationEvents.map((notification, index) => (
                                 <div key={index}>
@@ -112,7 +115,7 @@ export default function NotificationsWindow({
                             ))}
                         </ul>
                     </div>
-                    <div tabname="alle">
+                    <div tabid='all' tabname={t('all')}>
                         <div className="-mt-4">
                             <AllNotifications socket={socket} />
                         </div>

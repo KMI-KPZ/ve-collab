@@ -314,8 +314,7 @@ class VEPlanHandler(BaseHandler):
                         "target_groups": [
                             {
                                 "name": "test",
-                                "age_min": 30,
-                                "age_max": 40,
+                                "semester": "test",
                                 "experience": "test",
                                 "academic_course": "test",
                                 "languages": ["test"],
@@ -547,8 +546,7 @@ class VEPlanHandler(BaseHandler):
                         "target_groups": [
                             {
                                 "name": "test",
-                                "age_min": 30,
-                                "age_max": 40,
+                                "semester": "test",
                                 "experience": "test",
                                 "academic_course": "test",
                                 "languages": ["test"],

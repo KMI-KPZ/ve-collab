@@ -3,6 +3,7 @@ import ViewFinestep from '@/components/planSummary/ViewFinestep';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import ViewAfterVE from './ViewAfterVE';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { useTranslation } from 'next-i18next';
 
 // same as the regular PlanOverview component, the profile snippets
 // have to be supplied, because in the headless browser that generates
@@ -15,15 +16,17 @@ interface Props {
     partnerProfileSnippets: {
         [Key: string]: BackendUserSnippet;
     };
-    availablePlans: IPlan[]
+    availablePlans: IPlan[];
 }
 
 export function PlanSummaryPDF({
     plan,
     openAllBoxes,
     partnerProfileSnippets,
-    availablePlans
+    availablePlans,
 }: Props): JSX.Element {
+    const { t } = useTranslation('common');
+
     return (
         <div className="bg-white rounded-lg p-4 w-full">
             <ViewAttributes
@@ -45,7 +48,7 @@ export function PlanSummaryPDF({
                     />
                 ))
             ) : (
-                <div className="ml-4"> Noch keine erstellt</div>
+                <div className="ml-4">{t('plan_summary_no_phases')}</div>
             )}
             <hr className="h-px my-10 bg-gray-400 border-0" />
             <ViewAfterVE plan={plan} openAllBoxes={openAllBoxes} />

@@ -15,14 +15,19 @@ import { ChangeEvent, useEffect, useState } from 'react';
 import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
 import { Socket } from 'socket.io-client';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetServerSidePropsContext } from 'next';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
 }
 
 Group.auth = true;
-export default function Group({socket}: Props): JSX.Element {
+export default function Group({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const router = useRouter();
 
     const { groupId } = router.query;
@@ -36,7 +41,7 @@ export default function Group({socket}: Props): JSX.Element {
         { name: '', profilePicUrl: '', institution: '', preferredUsername: '' },
     ]);
 
-    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken)
+    const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -47,7 +52,7 @@ export default function Group({socket}: Props): JSX.Element {
         error,
         mutate,
     } = useGetGroup(session!.accessToken, groupId as string);
-    console.log({group});
+    console.log({ group });
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -56,7 +61,7 @@ export default function Group({socket}: Props): JSX.Element {
         session!.accessToken,
         groupId as string
     );
-    console.log({groupACLEntry});
+    console.log({ groupACLEntry });
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -71,7 +76,7 @@ export default function Group({socket}: Props): JSX.Element {
     const uploadToBackend = async () => {
         // allow max 5 MB
         if (uploadFile!.size > 5242880) {
-            alert('max. 5 MB erlaubt');
+            alert(t('max_5_mb'));
             return;
         }
 
@@ -128,7 +133,7 @@ export default function Group({socket}: Props): JSX.Element {
                         <LoadingAnimation />
                     ) : (
                         <>
-                            <BoxHeadline title={'Dateiablage'} />
+                            <BoxHeadline title={t('fileshare')} />
                             <div className="absolute top-0 right-0 mx-2 p-4">
                                 <button
                                     className={
@@ -143,7 +148,7 @@ export default function Group({socket}: Props): JSX.Element {
                                     }}
                                 >
                                     <RxPlus />
-                                    <span className="mx-1">Hochladen</span>
+                                    <span className="mx-1">{t('upload')}</span>
                                 </button>
                             </div>
                             <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
@@ -168,7 +173,7 @@ export default function Group({socket}: Props): JSX.Element {
                                     </>
                                 ) : (
                                     <div className="mx-4 text-gray-600">
-                                        keine Berechtigung, um die Dateiablage zu sehen
+                                        {t('fileshare_insufficient_permissions')}
                                     </div>
                                 )}
                             </div>
@@ -177,7 +182,7 @@ export default function Group({socket}: Props): JSX.Element {
                 </WhiteBox>
                 <Dialog
                     isOpen={isUploadDialogOpen}
-                    title={'Datei hochladen'}
+                    title={t('upload_file')}
                     onClose={handleCloseUploadDialog}
                 >
                     <div className="w-[30rem] flex items-center">
@@ -190,7 +195,7 @@ export default function Group({socket}: Props): JSX.Element {
                             onClick={uploadToBackend}
                             disabled={!uploadFile}
                         >
-                            <span>Hochladen</span>
+                            <span>{t('upload')}</span>
                         </button>
                     </div>
                 </Dialog>
@@ -201,7 +206,7 @@ export default function Group({socket}: Props): JSX.Element {
     function members() {
         return (
             <WhiteBox>
-                <BoxHeadline title={'Admins'} />
+                <BoxHeadline title={t('admins')} />
                 <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
                 <div className="mb-8 flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
                     {group.admins.map((admin, index) => (
@@ -217,7 +222,7 @@ export default function Group({socket}: Props): JSX.Element {
                                             (snippet) => snippet.preferredUsername === admin
                                         )!.profilePicUrl
                                     }
-                                    alt={'Profilbild'}
+                                    alt={t('profile_picture')}
                                     width={100}
                                     height={100}
                                     className="rounded-full"
@@ -233,7 +238,7 @@ export default function Group({socket}: Props): JSX.Element {
                         </div>
                     ))}
                 </div>
-                <BoxHeadline title={'Mitglieder'} />
+                <BoxHeadline title={t('members')} />
                 <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
                 <div className="flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
                     {group.members
@@ -251,7 +256,7 @@ export default function Group({socket}: Props): JSX.Element {
                                                 (snippet) => snippet.preferredUsername === member
                                             )!.profilePicUrl
                                         }
-                                        alt={'Profilbild'}
+                                        alt={t('profile_picture')}
                                         width={100}
                                         height={100}
                                         className="rounded-full"
@@ -293,21 +298,21 @@ export default function Group({socket}: Props): JSX.Element {
                         <>
                             <GroupBanner userIsAdmin={userIsAdmin} />
                             <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                                <GroupHeader
-                                    userIsAdmin={userIsAdmin}
-                                />
+                                <GroupHeader userIsAdmin={userIsAdmin} />
                             </div>
                             <div className={'mx-20 flex'}>
                                 <div className={'w-3/4  mr-4'}>
                                     {(() => {
                                         switch (renderPicker) {
                                             case 'timeline':
-                                                return <Timeline
-                                                            socket={socket}
-                                                            group={group._id}
-                                                            userIsAdmin={userIsAdmin()}
-                                                            groupACL={groupACLEntry}
-                                                        />;
+                                                return (
+                                                    <Timeline
+                                                        socket={socket}
+                                                        group={group._id}
+                                                        userIsAdmin={userIsAdmin()}
+                                                        groupACL={groupACLEntry}
+                                                    />
+                                                );
                                             case 'members':
                                                 return members();
                                             case 'files':
@@ -328,7 +333,7 @@ export default function Group({socket}: Props): JSX.Element {
                                         }
                                         onClick={() => setRenderPicker('timeline')}
                                     >
-                                        <span>Dashboard</span>
+                                        <span>{t('dashboard')}</span>
                                     </button>
                                     <button
                                         className={
@@ -339,7 +344,7 @@ export default function Group({socket}: Props): JSX.Element {
                                         }
                                         onClick={() => setRenderPicker('members')}
                                     >
-                                        <span>Mitglieder</span>
+                                        <span>{t('members')}</span>
                                     </button>
                                     <button
                                         className={
@@ -350,15 +355,15 @@ export default function Group({socket}: Props): JSX.Element {
                                         }
                                         onClick={() => setRenderPicker('files')}
                                     >
-                                        <span>Dateiablage</span>
+                                        <span>{t('fileshare')}</span>
                                     </button>
                                     <WhiteBox>
-                                        <BoxHeadline title={'Beschreibung'} />
+                                        <BoxHeadline title={t('description')} />
                                         <div className="min-h-[20vh] mx-2 my-4 px-1">
                                             <div className={'text-gray-500'}>
                                                 {group?.space_description
                                                     ? group.space_description
-                                                    : 'Keine Beschreibung vorhanden.'}
+                                                    : t('no_description_available')}
                                             </div>
                                         </div>
                                     </WhiteBox>
@@ -370,4 +375,12 @@ export default function Group({socket}: Props): JSX.Element {
             )}
         </>
     );
+}
+
+export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+        },
+    };
 }

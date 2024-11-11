@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://ve-collab.org/
+
+# Sitemaps
+Sitemap: https://ve-collab.org/sitemap.xml

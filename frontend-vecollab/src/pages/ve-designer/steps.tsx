@@ -34,18 +34,6 @@ interface FormValues {
     stepNames: IFineStep[];
 }
 
-// const areAllFormValuesEmpty = (stepNamesObject: FormValues): boolean => {
-//     return stepNamesObject.stepNames.every((step) => {
-//         return (
-//             step.name === '' &&
-//             step.timestamp_from === '' &&
-//             step.timestamp_to === '' &&
-//             step.learning_goal === '' &&
-//             step.workload === 0
-//         );
-//     });
-// };
-
 export const emptyStepData: IFineStep = {
     _id: undefined,
     name: '',
@@ -78,7 +66,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const router = useRouter();
     const [steps, setSteps] = useState<IFineStep[]>([emptyStepData]);
-    const noStepPage = '/ve-designer/no-step';
     const [isImportStepsDialogOpen, setIsImportStepsDialogOpen] = useState<boolean>(false);
 
     const today = new Date().toISOString().split('T')[0];
@@ -92,6 +79,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const methods = useForm<FormValues>({
         mode: 'onChange',
         resolver: zodResolver(StepNamesFormSchema),
+        // TODO may load default values only on first visit of a plan?!
         defaultValues: {
             stepNames: [
                 {
@@ -331,7 +319,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         <div className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
-                                    <div className="flex flex-wrap gap-y-2 items-center">
+                                    <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
                                         <div>
                                             <label>{t('step-names.from')}</label>
                                             <input
@@ -339,15 +327,18 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 {...methods.register(
                                                     `stepNames.${index}.timestamp_from`,
                                                     {
+                                                        deps: `stepNames.${index}.timestamp_to`,
                                                         onChange: (e) => {
-                                                            const newDate = new Date(
-                                                                e.target.value
-                                                            );
-                                                            newDate.setDate(newDate.getDate() + 1);
-                                                            methods.setValue(
-                                                                `stepNames.${index}.timestamp_to`,
-                                                                newDate.toISOString().split('T')[0]
-                                                            );
+                                                            if ( !methods.watch(`stepNames.${index}.timestamp_to`) ) {
+                                                                const newDate = new Date(
+                                                                    e.target.value
+                                                                );
+                                                                newDate.setDate(newDate.getDate() + 1);
+                                                                methods.setValue(
+                                                                    `stepNames.${index}.timestamp_to`,
+                                                                    newDate.toISOString().split('T')[0]
+                                                                );
+                                                            }
                                                         },
                                                     }
                                                 )}
@@ -355,17 +346,20 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.to')}</label>
+                                            <label>{t('step-names.to')}</label>
                                             <input
                                                 type="date"
                                                 {...methods.register(
-                                                    `stepNames.${index}.timestamp_to`
+                                                    `stepNames.${index}.timestamp_to`,
+                                                    {
+                                                        deps: `stepNames.${index}.timestamp_from`
+                                                    }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.name')}</label>
+                                            <label>{t('step-names.name')}</label>
                                             <input
                                                 type="text"
                                                 {...methods.register(`stepNames.${index}.name`)}
@@ -374,7 +368,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             />
                                         </div>
                                         <div>
-                                            <label className="ml-2">{t('step-names.time')}</label>
+                                            <label>{t('step-names.time')}</label>
                                             <input
                                                 type="number"
                                                 {...methods.register(
@@ -483,7 +477,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             description={t('step-names.description')}
             tooltip={{
                 text: t('step-names.tooltip_text'),
-                link: '/learning-material/left-bubble/Etappenplanung',
+                link: '/learning-material/2/VA-Planung',
             }}
             methods={methods}
             nextpage={

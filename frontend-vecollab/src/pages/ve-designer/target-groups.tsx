@@ -15,8 +15,7 @@ import CreatableSelect from 'react-select/creatable';
 
 export interface TargetGroup {
     name: string;
-    age_min: number;
-    age_max: number;
+    semester: string;
     experience: string;
     academic_course: string;
     languages: string[];
@@ -24,8 +23,7 @@ export interface TargetGroup {
 
 interface TargetGroupWithLanguageOptions {
     name: string;
-    age_min: number;
-    age_max: number;
+    semester: string;
     experience: string;
     academic_course: string;
     languages: Language[];
@@ -59,10 +57,9 @@ interface Props {
     languageKeys: string[];
 }
 
-const emptyTG = {
+const emptyTG: TargetGroupWithLanguageOptions = {
     name: '',
-    age_min: 0,
-    age_max: 0,
+    semester: '',
     experience: '',
     academic_course: '',
     languages: [],
@@ -165,45 +162,20 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 </div>
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
-                        <label htmlFor="age" className="px-2 py-2">
-                            {t('common:age')}
+                        <label htmlFor="name" className="px-2 py-2">
+                            {t('target.semester')}
                         </label>
                     </div>
-                    <div className="w-3/4 flex">
-                        <div>
-                            <label className="mr-4"> {t('common:from')} </label>
-                            <input
-                                type="number"
-                                {...methods.register(`targetGroups.${index}.age_min`, {
-                                    valueAsNumber: true,
-                                })}
-                                placeholder={t('common:from')}
-                                className="border border-gray-400 rounded-lg w-1/2 p-2 mr-2"
-                            />
-                            <p className="text-red-600 pt-2 mr-4">
-                                {t(
-                                    methods.formState.errors?.targetGroups?.[index]?.age_min
-                                        ?.message!
-                                )}
-                            </p>
-                        </div>
-                        <div>
-                            <label className="mr-4"> {t('common:to')} </label>
-                            <input
-                                type="number"
-                                {...methods.register(`targetGroups.${index}.age_max`, {
-                                    valueAsNumber: true,
-                                })}
-                                placeholder={t('common:to')}
-                                className="border border-gray-400 rounded-lg w-1/2 p-2 ml-2"
-                            />
-                            <p className="text-red-600 pt-2">
-                                {t(
-                                    methods.formState.errors?.targetGroups?.[index]?.age_max
-                                        ?.message!
-                                )}
-                            </p>
-                        </div>
+                    <div className="w-3/4">
+                        <input
+                            type="text"
+                            {...methods.register(`targetGroups.${index}.semester`)}
+                            placeholder={t('target.semester_placeholder')}
+                            className="border border-gray-400 rounded-lg w-full p-2"
+                        />
+                        <p className="text-red-600 pt-2">
+                            {t(methods.formState.errors?.targetGroups?.[index]?.semester?.message!)}
+                        </p>
                     </div>
                 </div>
                 <div className="mt-2 flex">
@@ -361,7 +333,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
             description={t('target.description')}
             tooltip={{
                 text: t('target.tooltip'),
-                link: '',
+                link: '/learning-material/2/VA-Planung',
             }}
             stageInMenu="generally"
             idOfProgress="target_groups"

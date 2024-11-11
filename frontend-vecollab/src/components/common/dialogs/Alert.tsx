@@ -100,7 +100,7 @@ export default function Alert({state, open=true, type='info', children, message,
 
     return (
         <div className="fixed inset-x-0 bottom-0 w-full z-50 items-center" style={{color: 'red'}}>
-            <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex rounded-xl p-2 border border-2 border-slate-50 shadow-white/25 text-slate-50 ${typedStyles[_type||'info']}`}>
+            <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 w-80 flex rounded-xl p-2 border-2 border-slate-50 shadow-white/25 text-slate-50 ${typedStyles[_type||'info']}`}>
                 <div className='m-2 font-bold'>{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button

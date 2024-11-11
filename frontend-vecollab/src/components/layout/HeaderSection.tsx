@@ -3,7 +3,7 @@ import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRouter } from "next/router";
+import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
@@ -28,7 +28,7 @@ export default function HeaderSection({
 }: Props) {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation('common')
+    const { t } = useTranslation('common');
 
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
@@ -42,7 +42,7 @@ export default function HeaderSection({
     const sandwichActiveItemClass = `${sandwichItemClass} font-bold`;
 
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
-    const {data: userProfile} = useGetOwnProfile(session ? session.accessToken : '')
+    const { data: userProfile } = useGetOwnProfile(session ? session.accessToken : '');
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -59,7 +59,7 @@ export default function HeaderSection({
 
     const isFrontpage = () => currentPath == '/';
 
-    const changeToLanguage = router.locale === 'en' ? 'de' : 'en'
+    const changeToLanguage = router.locale === 'en' ? 'de' : 'en';
 
     const hideSandwichMenu = () => {
         document.dispatchEvent(new Event('mousedown'));
@@ -69,16 +69,16 @@ export default function HeaderSection({
         switch (value) {
             case 'logout':
                 await signOut();
-                router.push('/')
+                router.push('/');
                 break;
-            case 'profil':
+            case 'profile':
                 router.push('/profile');
                 break;
-            case 'language':
-                onToggleLanguage()
+            case 'edit_profile':
+                router.push('/profile/edit');
                 break;
-            case 'contact':
-                window.open('mailto:schlecht@infai.org, mihaela.markovic@uni-leipzig.de', '_blank');
+            case 'language':
+                onToggleLanguage();
                 break;
             default:
                 break;
@@ -92,19 +92,21 @@ export default function HeaderSection({
     };
 
     const onToggleLanguage = () => {
-        const { pathname, asPath, query } = router
-        router.push({ pathname, query }, asPath, { locale: changeToLanguage })
-    }
+        const { pathname, asPath, query } = router;
+        router.push({ pathname, query }, asPath, { locale: changeToLanguage });
+    };
 
     const LanguageSelector = () => (
         <button
             onClick={onToggleLanguage}
             className="p-2 rounded-full hover:bg-ve-collab-blue-light"
-            title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+            title={t('change_language', {
+                language: changeToLanguage == 'de' ? 'german' : 'englisch',
+            })}
         >
-            {changeToLanguage == "de" ? "EN" : "DE"}
+            {changeToLanguage == 'de' ? 'EN' : 'DE'}
         </button>
-    )
+    );
 
     const Menu = () => {
         return (
@@ -118,14 +120,14 @@ export default function HeaderSection({
                 )}
                 <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
                     <Link href="/learning-material" className="px-2 py-1">
-                        Materialien
+                        {t('materials')}
                     </Link>
                 </li>
                 {session ? (
                     <>
                         <li className={isActivePath('/group') ? activeClass : inactiveClass}>
                             <Link href="/groups" className="px-2 py-1">
-                                Gruppen
+                                {t('groups')}
                             </Link>
                         </li>
                         <li
@@ -144,7 +146,7 @@ export default function HeaderSection({
                             <button
                                 className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
                                 onClick={(e) => toggleChatWindow()}
-                                title="Chat Fenster öffnen"
+                                title={t('toggle_chat_window')}
                             >
                                 <MdOutlineMessage size={20} />
                             </button>
@@ -158,7 +160,7 @@ export default function HeaderSection({
                             <button
                                 className="p-2 rounded-full hover:bg-ve-collab-blue-light"
                                 onClick={(e) => toggleNotifWindow()}
-                                title="Notifications Fenster öffnen"
+                                title={t('toggle_notification_window')}
                             >
                                 <IoMdNotificationsOutline size={20} />
                             </button>
@@ -181,26 +183,20 @@ export default function HeaderSection({
                                 <Dropdown
                                     options={[
                                         {
-                                            value: 'profil',
-                                            label: 'mein Profil',
-                                            title: 'Eigenes Profil öffnen',
+                                            value: 'profile',
+                                            label: t('profile'),
+                                            title: t('profile_title'),
                                         },
-                                        // Object.assign({}, isGlobalAdmin
-                                        //     ? {
-                                        //         value: "admin",
-                                        //         label: "Admin Dashboard"
-                                        //     } : null
-                                        // ),
                                         {
-                                            value: 'contact',
-                                            label: 'Kontakt per Mail...',
-                                            title: 'Kontaktiere uns per Mail ...',
+                                            value: 'edit_profile',
+                                            label: t('edit_profile'),
+                                            title: t('edit_profile_title'),
                                         },
                                         {
                                             value: 'logout',
-                                            label: 'Abmelden'
+                                            label: t('logout'),
                                         },
-                                    ].filter(a => "value" in a)}
+                                    ].filter((a) => 'value' in a)}
                                     icon={
                                         <div className="flex items-center">
                                             <AuthenticatedImage
@@ -209,7 +205,7 @@ export default function HeaderSection({
                                                         ? userProfile?.profile?.profile_pic
                                                         : 'default_profile_pic.jpg'
                                                 }
-                                                alt={'Benutzerbild'}
+                                                alt={t('profile_pic')}
                                                 width={30}
                                                 height={30}
                                                 className="rounded-full mr-3"
@@ -218,7 +214,8 @@ export default function HeaderSection({
                                                 title={`${userProfile?.profile?.first_name} ${userProfile?.profile?.last_name}`}
                                                 className="max-w-[96px] truncate font-semibold"
                                             >
-                                                {userProfile?.profile?.first_name} {userProfile?.profile?.last_name}
+                                                {userProfile?.profile?.first_name}{' '}
+                                                {userProfile?.profile?.last_name}
                                             </div>
                                             <MdArrowDropDown />
                                         </div>
@@ -236,7 +233,7 @@ export default function HeaderSection({
                                 onClick={() => signIn('keycloak')}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
-                                Login
+                                {t('login')}
                             </button>
                         </li>
                         <li>
@@ -244,7 +241,7 @@ export default function HeaderSection({
                                 onClick={() => signIn('keycloak')}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
-                                Registrieren
+                                {t('register')}
                             </button>
                         </li>
                         <li>
@@ -268,7 +265,7 @@ export default function HeaderSection({
                                 : sandwichItemClass
                         }
                     >
-                        Materialien
+                        {t('materials')}
                     </Link>
                 </li>
                 {session ? (
@@ -282,7 +279,7 @@ export default function HeaderSection({
                                         : sandwichItemClass
                                 }
                             >
-                                Gruppen
+                                {t('groups')}
                             </Link>
                         </li>
                         <li>
@@ -303,7 +300,7 @@ export default function HeaderSection({
                                 className={sandwichItemClass}
                                 onClick={(e) => toggleChatWindow()}
                             >
-                                Chat
+                                {t('chat')}
                             </button>
                             {messageEventCount > 0 && (
                                 <span className="absolute top-0 right-0 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
@@ -316,7 +313,7 @@ export default function HeaderSection({
                                 className={sandwichItemClass}
                                 onClick={(e) => toggleNotifWindow()}
                             >
-                                Benachrichtigungen
+                                {t('notifications')}
                             </button>
                             {notificationEvents.length > 0 && (
                                 <span className="absolute top-0 right-0 py-1 px-2 rounded-[50%] bg-blue-500/75 font-semibold">
@@ -334,7 +331,7 @@ export default function HeaderSection({
                                         : sandwichItemClass
                                 }
                             >
-                                Suche
+                                {t('search')}
                             </Link>
                         </li>
                         {isGlobalAdmin && (
@@ -364,36 +361,30 @@ export default function HeaderSection({
                                         : sandwichItemClass
                                 }
                             >
-                                Profil
+                                {t('profile')}
                             </Link>
-                        </li>
-                        <li>
-                            <button
-                                onClick={() =>
-                                    window.open(
-                                        'mailto:schlecht@infai.org, mihaela.markovic@uni-leipzig.de',
-                                        '_blank'
-                                    )
-                                }
-                                className={sandwichItemClass}
-                            >
-                                Kontakt
-                            </button>
                         </li>
                         <li>
                             <button
                                 className={sandwichItemClass}
                                 onClick={onToggleLanguage}
-                                title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+                                title={t('change_language', {
+                                    language: changeToLanguage == 'de' ? 'german' : 'englisch',
+                                })}
                             >
                                 {t('language')}:&nbsp;
-                                <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
-                                <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
+                                <span className={`${changeToLanguage == 'en' ? 'underline' : ''}`}>
+                                    DE
+                                </span>
+                                &nbsp;|&nbsp;
+                                <span className={`${changeToLanguage == 'de' ? 'underline' : ''}`}>
+                                    EN
+                                </span>
                             </button>
                         </li>
                         <li>
                             <button onClick={() => signOut()} className={sandwichItemClass}>
-                                Abmelden
+                                {t('logout')}
                             </button>
                         </li>
                     </>
@@ -404,7 +395,7 @@ export default function HeaderSection({
                                 onClick={() => signIn('keycloak')}
                                 className={sandwichItemClass}
                             >
-                                Login
+                                {t('login')}
                             </button>
                         </li>
                         <li>
@@ -412,7 +403,7 @@ export default function HeaderSection({
                                 onClick={() => signIn('keycloak')}
                                 className={sandwichItemClass}
                             >
-                                Registrieren
+                                {t('register')}
                             </button>
                         </li>
                         <li>
@@ -422,16 +413,23 @@ export default function HeaderSection({
                             <button
                                 className={sandwichItemClass}
                                 onClick={onToggleLanguage}
-                                title={t('change_language', { language: changeToLanguage == "de" ? 'german' : 'englisch' })}
+                                title={t('change_language', {
+                                    language: changeToLanguage == 'de' ? 'german' : 'englisch',
+                                })}
                             >
                                 {t('language')}:&nbsp;
-                                <span className={`${changeToLanguage == 'en' ? "underline" : ""}`}>DE</span>&nbsp;|&nbsp;
-                                <span className={`${changeToLanguage == 'de' ? "underline" : ""}`}>EN</span>
+                                <span className={`${changeToLanguage == 'en' ? 'underline' : ''}`}>
+                                    DE
+                                </span>
+                                &nbsp;|&nbsp;
+                                <span className={`${changeToLanguage == 'de' ? 'underline' : ''}`}>
+                                    EN
+                                </span>
                             </button>
                         </li>
                         <li>
                             <Link href={'/search'} className={`px-2 py-1`}>
-                                Suche
+                                {t('search')}
                             </Link>
                         </li>
                     </>
@@ -462,14 +460,16 @@ export default function HeaderSection({
                                     'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
                                 }
                                 type="text"
-                                placeholder="Suchen ..."
+                                placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
-                                defaultValue={router.query.search ? router.query.search as string : ''}
+                                defaultValue={
+                                    router.query.search ? (router.query.search as string) : ''
+                                }
                             />
                             <button
                                 type="submit"
-                                title="Suchen"
+                                title={t('search_title')}
                                 className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
                             >
                                 <MdSearch className="text-white" />

@@ -102,6 +102,8 @@
         "subtitle": "Which target groups is the VE designed for?",
         "description": "It is important to consider the target group in order to tailor the teaching/learning objectives and content of the VE to the learners. Asking about the participants' first languages and other languages can be important in identifying a lingua franca or establishing a multilingual setting.",
         "tooltip": "More about language(s) in VE can be found in the self-learning materials…",
+        "semester": "Semester",
+        "semester_placeholder": "in which semester are the students? If multiple, separate them by comma",
         "language_title": "Which languages will (mainly) be spoken during the VE?",
         "language_description": "Consider the linguistic diversity in your groups and discuss how you can utilise this potential for the VE.",
         "relevant_exp": "VE-related experience ",
@@ -167,7 +169,7 @@
         "title": "Assessment / Evaluation",
         "subtitle": "How can the VE be assessed and evaluated during and/or after the VE?",
         "description": "At this point, reflect whether your VE is more process- or product-oriented. Note whether an evaluation (of processes or products) of the VE is planned on your part. Additionally, select appropriate formative and/or summative evaluation methods.",
-        "tooltip": "More about assessment options can be found here in the self-learning materials…",
+        "tooltip": "More about evaluation can be found here in the self-learning materials…",
         "planned": "Is there an assessment planned?",
         "formOf": "Form of assessment",
         "formOfPlaceholder": "(e.g. exam, presentation)",
@@ -205,7 +207,9 @@
         "institutionalRequirements_title": "Institutional guidelines",
         "institutionalRequirements_descr": "Discuss how attendance and participation will be handled at your institutions and within the VE.",
         "dataProtection_title": "Data Protection",
-        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country."
+        "dataProtection_descr": "Inform yourselves about the relevant data protection regulations at your institution/country.",
+        "add_userdefined_title": "Add user-defined aspect",
+        "new_userbox_placeholder": "Label ..."
     },
     "step-names" : {
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",

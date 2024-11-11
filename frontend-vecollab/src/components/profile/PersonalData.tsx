@@ -2,6 +2,7 @@ import { format, parseISO } from 'date-fns';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import PersonalInformationItem from './PersonalInformationItem';
 import TagBox from './TagBox';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     name: string;
@@ -12,17 +13,21 @@ interface Props {
 }
 
 export default function PersonalData({ bio, name, expertise, birthday, languages }: Props) {
+    const { t } = useTranslation(['community', 'common']);
     return (
         <>
-            <BoxHeadline title={'Bio'} />
+            <BoxHeadline title={t('bio')} />
             <ul className={'mx-2 px-1 divide-y'}>
                 <li className={'pb-4'}>
                     <div className={'text-sm my-1'}>{bio}</div>
                 </li>
-                <PersonalInformationItem attributeName={'Name'} attributeValue={name} />
-                <PersonalInformationItem attributeName={'Fachgebiet'} attributeValue={expertise} />
+                <PersonalInformationItem attributeName={t('common:name')} attributeValue={name} />
                 <PersonalInformationItem
-                    attributeName={'Geburtstag'}
+                    attributeName={t('expertise')}
+                    attributeValue={expertise}
+                />
+                <PersonalInformationItem
+                    attributeName={t('birthday')}
                     attributeValue={
                         birthday === '' || birthday === undefined || birthday === null
                             ? ''
@@ -30,10 +35,13 @@ export default function PersonalData({ bio, name, expertise, birthday, languages
                     }
                 />
                 <li className={'py-4'}>
-                    <div className={'text-sm text-gray-600 my-1'}>Sprachen</div>
+                    <div className={'text-sm text-gray-600 my-1'}>{t('languages')}</div>
                     <div className={'font-bold text-slate-900 flex flex-wrap'}>
                         {languages.map((language) => (
-                            <TagBox key={language} text={language} />
+                            <TagBox
+                                key={language}
+                                text={t('common:languages.' + language, { defaultValue: language })}
+                            />
                         ))}
                     </div>
                 </li>
