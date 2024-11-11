@@ -102,6 +102,8 @@
         "subtitle": "An welche Zielgruppen richtet sich der VE?",
         "description": "Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VE optimal an die Lernenden anzupassen. Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.",
         "tooltip": "Mehr zu Sprache(n) im VA findest du hier in den Selbstlernmaterialien …",
+        "semester": "Semester",
+        "semester_placeholder": "In welchem Semester sind die Studierenden? Mehrere durch Komma trennen",
         "language_title": "In welchen Sprachen findet der VE (hauptsächlich) statt?",
         "language_description": "Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen könnt.",
         "relevant_exp": "VE-Projektrelevante Erfahrungen",

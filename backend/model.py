@@ -538,8 +538,7 @@ class TargetGroup:
     # this lookup allows to check for the correct types
     EXPECTED_DICT_ENTRIES = {
         "name": (str, type(None)),
-        "age_min": (int, str, type(None)),
-        "age_max": (int, str, type(None)),
+        "semester": (str, type(None)),
         "experience": (str, type(None)),
         "academic_course": (str, type(None)),
         "languages": list,
@@ -549,8 +548,7 @@ class TargetGroup:
         self,
         _id: str | ObjectId = None,
         name: str = None,
-        age_min: int | str = None,
-        age_max: int | str = None,
+        semester: int | str = None,
         experience: str = None,
         academic_course: str = None,
         languages: List[str] = [],
@@ -578,29 +576,7 @@ class TargetGroup:
         self._id = util.parse_object_id(_id) if _id != None else ObjectId()
 
         self.name = name
-
-        if isinstance(age_min, str):
-            # since we allow empty string, we have to check for it
-            # because otherwise it would try to cast it to int which
-            # results in a value error
-            if age_min == "":
-                self.age_min = None
-            else:
-                self.age_min = int(age_min)
-        else:
-            self.age_min = age_min
-
-        if isinstance(age_max, str):
-            # since we allow empty string, we have to check for it
-            # because otherwise it would try to cast it to int which
-            # results in a value error
-            if age_max == "":
-                self.age_max = None
-            else:
-                self.age_max = int(age_max)
-        else:
-            self.age_max = age_max
-
+        self.semester = semester
         self.experience = experience
         self.academic_course = academic_course
         self.languages = languages
@@ -625,8 +601,7 @@ class TargetGroup:
         return {
             "_id": self._id,
             "name": self.name,
-            "age_min": str(self.age_min) if self.age_min != None else None,
-            "age_max": str(self.age_max) if self.age_max != None else None,
+            "semester": self.semester,
             "experience": self.experience,
             "academic_course": self.academic_course,
             "languages": self.languages,
@@ -637,11 +612,10 @@ class TargetGroup:
         """
         initialize a `TargetGroup`-object from a dictionary (`params`).
         All of the followings keys have to be present in the dict:
-        `"name"`, `"age_min"`, `"age_max"`, `"experience"`, `"academic_course"`,
+        `"name"`, `"semester"`, `"experience"`, `"academic_course"`,
         `"languages"`.
         However values are not required, any attributes may be
-        initialized with None (name/experience/academic_course/languages) or
-        0 (age_min/age_max).
+        initialized with None (name/experience/semester/academic_course/languages).
 
         Optionally, a `"_id"` may be supplied, conveying the semantics that this TargetGroup
         already exists. However, true existence is handled by the database itself and
@@ -707,23 +681,6 @@ class TargetGroup:
             params["_id"] = util.parse_object_id(params["_id"])
         else:
             params["_id"] = ObjectId()
-
-        # handle correct transformation of age_min to int or None
-        # e.g. if a string is supplied
-        if "age_min" in params:
-            if params["age_min"] != None:
-                if params["age_min"] == "":
-                    params["age_min"] = None
-                else:
-                    params["age_min"] = int(params["age_min"])
-        # handle correct transformation of age_max to int or None
-        # e.g. if a string is supplied
-        if "age_max" in params:
-            if params["age_max"] != None:
-                if params["age_max"] == "":
-                    params["age_max"] = None
-                else:
-                    params["age_max"] = int(params["age_max"])
 
         # create and return object
         instance = cls()
@@ -1845,8 +1802,7 @@ class VEPlan:
                     {
                         "_id": "object_id_str",
                         "name": None,
-                        "age_min": 0,
-                        "age_max": 99,
+                        "semester": None,
                         "experience": None,
                         "academic_course": None,
                         "languages": [],
