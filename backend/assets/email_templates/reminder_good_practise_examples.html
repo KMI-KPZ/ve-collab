@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align: center;">
+    <h1>Lass dich inspirieren!</h1>
+</div>
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>hakt die VE-Planung oder suchst du noch nach Ideen für die methodisch-didaktische Gestaltung deines Projekts?</p>
+<p>Wirf doch einen Blick in die Good-Practice-Beispiele auf deinem <a
+        href="{{ designer_dashboard|default('https://ve-collab.org/plans') }}"><b>VE-Designer Dashboard</b></a>, um neue
+    Inspiration zu schöpfen!
+    Oder schau dir Beispiel-VE aus verschiedenen Fachbereichen in den <a
+        href="{{ material_link|default('https://ve-collab.org/learning-material') }}"><b>Selbstlernmaterialien</b></a>
+    an.</p>
+
+<p style="margin-top: 30px;">Wir wünschen dir viel Erfolg!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}
