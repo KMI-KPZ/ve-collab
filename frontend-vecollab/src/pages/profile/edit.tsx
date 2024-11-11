@@ -358,7 +358,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                     />
                                 </div>
                                 <div tabid='Einstellungen' tabname="Einstellungen">
-                                    <EditVisibilitySettings
+                                    <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
