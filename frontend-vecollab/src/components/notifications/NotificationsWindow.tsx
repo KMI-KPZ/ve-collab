@@ -8,6 +8,7 @@ import VeInvitationNotification from '@/components/notifications/VeInvitationNot
 import VeInvitationReplyNotification from '@/components/notifications/VeInvitationReplyNotification';
 import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
+import ReminderNotification from './ReminderNotification';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
@@ -90,6 +91,19 @@ export default function NotificationsWindow({
                                     )}
                                     {notification.type === 'space_join_request' && (
                                         <GroupJoinRequestNotification
+                                            notification={notification}
+                                            acknowledgeNotificationCallback={
+                                                acknowledgeNotification
+                                            }
+                                            removeNotificationCallback={removeNotificationFromList}
+                                        />
+                                    )}
+                                    {[
+                                        'reminder_evaluation',
+                                        'reminder_good_practise_examples',
+                                        'reminder_icebreaker',
+                                    ].includes(notification.type) && (
+                                        <ReminderNotification
                                             notification={notification}
                                             acknowledgeNotificationCallback={
                                                 acknowledgeNotification

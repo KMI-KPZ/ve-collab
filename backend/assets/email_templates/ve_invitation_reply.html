@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+{% if accepted %}
+<p>herzlichen Glückwunsch! {{ from }} hat deine VE-Einladung angenommen.</p>
+<p>Falls ihr es nicht schon getan habt, tretet doch direkt in Kontakt und startet gemeinsam in die Planung!</p>
+
+<p style="margin-top: 30px;">Wir wünschen euch viel Erfolg beim VE!</p>
+{% else %}
+<p>schade! Diesmal hat es nicht geklappt, {{ from }} hat deine VE-Einladung abgelehnt.</p>
+<p>Begib dich doch noch einmal auf die Suche in der Community, oder probiere das Matching, um eine:n geeignete:n
+    Partner:in zu finden.</p>
+
+<p style="margin-top: 30px;">Viele Erfolg bei der Suche!</p>
+{% endif %}
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

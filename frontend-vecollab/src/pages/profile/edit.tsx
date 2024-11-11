@@ -12,13 +12,14 @@ import EditEducationInformation from '@/components/profile/EditEducationInformat
 import EditWorkExperienceInformation from '@/components/profile/EditWorkExperienceInformation';
 import {
     Education,
+    NotificationSettings,
     PersonalInformation,
     ResearchAndTeachingInformation,
     VEInformation,
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
+import EditSettings from '@/components/profile/EditSettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
@@ -90,6 +91,13 @@ const defaultVeWindowItems: VEWindowItem[] = [
     },
 ];
 
+const defaultNotificationSettings: NotificationSettings = {
+    messages: 'email',
+    ve_invite: 'email',
+    group_invite: 'email',
+    system: 'email',
+};
+
 interface Props {
     dropdowns: DropdownList;
     languageKeys: string[];
@@ -109,6 +117,9 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
     const [workExperience, setWorkExperience] = useState<WorkExperience[]>(defaultWorkExperience);
 
     const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>(defaultVeWindowItems);
+    const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(
+        defaultNotificationSettings
+    );
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -130,6 +141,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
         if (educations !== defaultEducations) return;
         if (workExperience !== defaultWorkExperience) return;
         if (veWindowItems !== defaultVeWindowItems) return;
+        if (notificationSettings !== defaultNotificationSettings) return;
 
         setPersonalInformation({
             firstName: userInfo.profile.first_name,
@@ -167,6 +179,12 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                 description: elem.description,
             }))
         );
+        setNotificationSettings({
+            messages: userInfo.profile.notification_settings.messages,
+            ve_invite: userInfo.profile.notification_settings.ve_invite,
+            group_invite: userInfo.profile.notification_settings.group_invite,
+            system: userInfo.profile.notification_settings.system,
+        });
     }, [
         session,
         isLoading,
@@ -179,6 +197,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
         educations,
         workExperience,
         veWindowItems,
+        notificationSettings,
     ]);
 
     /*
@@ -217,6 +236,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                     description: elem.description,
                 })),
                 excluded_from_matching: excludedFromMatching,
+                notification_settings: notificationSettings,
             },
             session?.accessToken
         );
@@ -337,13 +357,15 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid='Sichtbarkeiten' tabname="Sichtbarkeiten">
-                                    <EditVisibilitySettings
+                                <div tabid='Einstellungen' tabname="Einstellungen">
+                                    <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                         excludedFromMatching={excludedFromMatching}
                                         setExcludedFromMatching={setExcludedFromMatching}
+                                        notificationSettings={notificationSettings}
+                                        setNotificationSettings={setNotificationSettings}
                                     />
                                 </div>
                             </VerticalTabs>
