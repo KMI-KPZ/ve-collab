@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import { useState, useCallback, useRef } from 'react';
 import ReactCrop, { Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -60,12 +61,14 @@ export function getCroppedImg(image: HTMLImageElement | null, crop: Crop): Promi
 interface Props {
     sourceImg: string;
     onFinishUpload: (blob: Blob) => void;
-};
+}
 
 /*
 the cropping overlay that is rendered and draggable over the image
 */
 function AvatarEditor({ sourceImg, onFinishUpload }: Props) {
+    const { t } = useTranslation('community');
+
     const imgRef = useRef<HTMLImageElement | null>(null);
     const [crop, setCrop] = useState<Crop>({
         unit: '%',
@@ -108,7 +111,7 @@ function AvatarEditor({ sourceImg, onFinishUpload }: Props) {
                 className={'bg-ve-collab-orange text-white py-2 px-5 mt-2 rounded-lg'}
                 onClick={uploadImage}
             >
-                Hochladen
+                {t('upload')}
             </button>
         </div>
     );

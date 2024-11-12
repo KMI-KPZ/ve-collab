@@ -328,7 +328,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
             description={t('checklist.description')}
             tooltip={{
                 text: t('checklist.tooltip'),
-                link: '/learning-material/top-bubble/Herausforderungen',
+                link: '/learning-material/1/Herausforderungen',
             }}
             stageInMenu='generally'
             idOfProgress="checklist"

@@ -258,13 +258,11 @@ export default function ViewAttributes({
                                             <li className="flex">
                                                 <div className="w-1/3">
                                                     <Caption4>
-                                                        {t('plan_summary_target_groups_age')}
+                                                        {t('plan_summary_target_groups_semester')}
                                                     </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
-                                                    {showDataOrEmptySign(studyGroup.age_min)}
-                                                    {' - '}
-                                                    {showDataOrEmptySign(studyGroup.age_max)}
+                                                    {showDataOrEmptySign(studyGroup.semester)}
                                                 </div>
                                             </li>
                                             <li className="flex">

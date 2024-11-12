@@ -6,6 +6,7 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import DialogUserList from './DialogUserList';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     follows: string[];
@@ -24,6 +25,8 @@ export default function ProfileBanner({
     username,
 }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const [loading, setLoading] = useState(false);
 
     const [isFollowingDialogOpen, setIsFollowingDialogOpen] = useState(false);
@@ -91,7 +94,7 @@ export default function ProfileBanner({
     return (
         <>
             <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
-                <Image className={'z-10'} fill src={blueBackground} alt={''} />
+                <Image className={'z-10'} fill src={blueBackground} alt={t('background_picture')} />
                 <div className={'flex absolute bottom-5 right-14 divide-x z-20 cursor-pointer'}>
                     <div
                         className={'pr-6 text-lg text-white'}
@@ -101,7 +104,7 @@ export default function ProfileBanner({
                         }}
                     >
                         <div className={'font-bold'}>{follows.length}</div>
-                        <div>Folgt</div>
+                        <div>{t('following')}</div>
                     </div>
                     <div
                         className={'pl-6 text-lg text-white'}
@@ -111,13 +114,13 @@ export default function ProfileBanner({
                         }}
                     >
                         <div className={'font-bold'}>{followers.length}</div>
-                        <div>Follower</div>
+                        <div>{t('followers')}</div>
                     </div>
                 </div>
             </div>
             <Dialog
                 isOpen={isFollowingDialogOpen}
-                title={`${username} folgt:`}
+                title={t('user_follows', { username: username })}
                 onClose={handleCloseFollowingDialog}
             >
                 <DialogUserList
@@ -131,7 +134,7 @@ export default function ProfileBanner({
             </Dialog>
             <Dialog
                 isOpen={isFollowerDialogOpen}
-                title={`Nutzer:innen, die ${username} folgen:`}
+                title={t("users_that_follow", {username: username})}
                 onClose={handleCloseFollowerDialog}
             >
                 <DialogUserList

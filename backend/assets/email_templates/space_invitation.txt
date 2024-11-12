@@ -1,0 +1,7 @@
+Hallo {recipient_name},
+du wurdest von {invitation_sender} in die Gruppe {space_name} eingeladen.
+
+Auf https://ve-collab.org/groups kannst du unter "meine Anfragen & Einladungen" akzeptieren oder ablehnen.
+
+Viele Grüße!
+Dein VE-Collab Team

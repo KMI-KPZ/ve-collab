@@ -321,7 +321,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
             description={t('evaluation.description')}
             tooltip={{
                 text: t('evaluation.tooltip'),
-                link: '/learning-material/left-bubble/VA-Planung',
+                link: '/learning-material/2/Evaluation',
             }}
             stageInMenu='generally'
             idOfProgress="evaluation"

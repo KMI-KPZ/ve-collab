@@ -10,6 +10,7 @@ import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { GetServerSidePropsContext } from 'next';
 
 Plan.auth = true;
 export default function Plan() {
@@ -85,7 +86,7 @@ export default function Plan() {
                         </div>
                     </div>
                     <div className="flex w-full">
-                        <PlanSummary plan={plan} openAllBoxes={false} isSingleView={true} />
+                        <PlanSummary plan={plan} openAllBoxes={true} isSingleView={true} />
                     </div>
                 </>
             )}
@@ -93,7 +94,7 @@ export default function Plan() {
     );
 }
 
-export async function getServerSideProps({ locale }: { locale: any }) {
+export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),

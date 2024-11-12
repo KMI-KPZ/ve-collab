@@ -20,6 +20,9 @@ import {
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { Socket } from 'socket.io-client';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     socket: Socket;
@@ -27,6 +30,8 @@ interface Props {
 
 UserProfile.auth = true;
 export default function UserProfile({ socket }: Props): JSX.Element {
+    const { t } = useTranslation(['community', 'common']);
+
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
@@ -251,4 +256,12 @@ export default function UserProfile({ socket }: Props): JSX.Element {
             )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+        },
+    };
 }

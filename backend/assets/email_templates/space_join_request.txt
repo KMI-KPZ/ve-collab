@@ -1,0 +1,9 @@
+Hallo {recipient_name},
+du erhältst diese Benachrichtigung, da du Administrator der Gruppe {space_name} bist.
+ 
+{join_request_sender} möchte der Gruppe beitreten.
+
+Bitte überprüfe diese Anfrage im Admin-Bereich der Gruppe unter https://ve-collab.org/group/{space_id}
+
+Viele Grüße!
+Dein VE-Collab Team

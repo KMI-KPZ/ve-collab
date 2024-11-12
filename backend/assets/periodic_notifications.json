@@ -1,0 +1,74 @@
+{
+    "periodic_notifications": [
+        {
+            "type": "reminder_evaluation",
+            "triggers": [
+                {
+                    "year": "*",
+                    "month": "1",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                },
+                {
+                    "year": "*",
+                    "month": "7",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                }
+            ],
+            "payload": {
+                "material_link": "http://localhost:3000/en/learning-material/2/Evaluation"
+            },
+            "email_subject": "Zeit für Evaluation!"
+        },
+        {
+            "type": "reminder_good_practise_examples",
+            "triggers": [
+                {
+                    "year": "*",
+                    "month": "4",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                },
+                {
+                    "year": "*",
+                    "month": "8",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                }
+            ],
+            "payload": {
+                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
+                "designer_dashboard": "http://localhost:3000/plans"
+            },
+            "email_subject": "Inspiration gefällig?"
+        },
+        {
+            "type": "reminder_icebreaker",
+            "triggers": [
+                {
+                    "year": "*",
+                    "month": "3",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                },
+                {
+                    "year": "*",
+                    "month": "9",
+                    "day": "1",
+                    "hour": "0",
+                    "minute": "0"
+                }
+            ],
+            "payload": {
+                "material_link": "http://localhost:3000/en/learning-material/2/VA-Planung"
+            },
+            "email_subject": "Der Einstieg zum VE ist am wichtigsten!"
+        }
+    ]
+}

@@ -278,7 +278,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
             description={t('goals.description')}
             tooltip={{
                 text: t('goals.tooltip'),
-                link: '/learning-material/top-bubble/Potenziale',
+                link: '/learning-material/1/Potenziale',
             }}
             stageInMenu='generally'
             idOfProgress="learning_goals"
