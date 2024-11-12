@@ -7328,10 +7328,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test",
             "sender": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 1, 8, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "acknowledged",
-                CURRENT_USER.username: "sent",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
+                {"username": CURRENT_USER.username, "send_state": "sent"},
+            ],
         }
         self.default_room = {
             "_id": self.room_id,
@@ -7471,10 +7471,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test2",
             "sender": CURRENT_USER.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "sent",
-                CURRENT_USER.username: "acknowledged",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "sent"},
+                {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            ],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -7505,10 +7505,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test2",
             "sender": CURRENT_USER.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "sent",
-                CURRENT_USER.username: "acknowledged",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "sent"},
+                {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            ],
         }
 
         self.chat_manager.store_message(self.room_id, message)
@@ -7551,10 +7551,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test2",
             "sender": CURRENT_USER.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "sent",
-                CURRENT_USER.username: "acknowledged",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "sent"},
+                {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            ],
         }
 
         self.assertRaises(
@@ -7581,12 +7581,13 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         self.assertIn(
             message_content, [message["message"] for message in db_state["messages"]]
         )
-        self.assertEqual(
-            db_state["messages"][1]["send_states"][CURRENT_ADMIN.username],
-            "acknowledged",
+        self.assertIn(
+            {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
+            db_state["messages"][1]["send_states"],
         )
-        self.assertEqual(
-            db_state["messages"][1]["send_states"][CURRENT_USER.username], "pending"
+        self.assertIn(
+            {"username": CURRENT_USER.username, "send_state": "pending"},
+            db_state["messages"][1]["send_states"],
         )
 
     @gen_test
@@ -7624,9 +7625,9 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         # expect the send_state to be acknowledged now (was "sent" before)
         db_state = self.db.chatrooms.find_one({"_id": self.room_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(
-            db_state["messages"][0]["send_states"][CURRENT_USER.username],
-            "acknowledged",
+        self.assertIn(
+            {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            db_state["messages"][0]["send_states"],
         )
 
     def test_acknowledge_message_error_room_doesnt_exist(self):
@@ -7685,10 +7686,13 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "message": "test2",
                     "sender": CURRENT_USER.username,
                     "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-                    "send_states": {
-                        "some_other_user": "sent",
-                        CURRENT_ADMIN.username: "acknowledged",
-                    },
+                    "send_states": [
+                        {"username": "some_other_user", "send_state": "sent"},
+                        {
+                            "username": CURRENT_ADMIN.username,
+                            "send_state": "acknowledged",
+                        },
+                    ],
                 }
             ],
         }
@@ -7702,10 +7706,16 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "message": "test2",
                     "sender": CURRENT_USER.username,
                     "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-                    "send_states": {
-                        CURRENT_ADMIN.username: "acknowledged",
-                        CURRENT_USER.username: "acknowledged",
-                    },
+                    "send_states": [
+                        {
+                            "username": CURRENT_ADMIN.username,
+                            "send_state": "acknowledged",
+                        },
+                        {
+                            "username": CURRENT_USER.username,
+                            "send_state": "acknowledged",
+                        },
+                    ],
                 }
             ],
         }
@@ -7718,10 +7728,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test2",
             "sender": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "acknowledged",
-                CURRENT_USER.username: "acknowledged",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
+                {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            ],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -7746,10 +7756,10 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             "message": "test2",
             "sender": CURRENT_USER.username,
             "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-            "send_states": {
-                CURRENT_ADMIN.username: "pending",
-                CURRENT_USER.username: "acknowledged",
-            },
+            "send_states": [
+                {"username": CURRENT_ADMIN.username, "send_state": "pending"},
+                {"username": CURRENT_USER.username, "send_state": "acknowledged"},
+            ],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -7766,20 +7776,29 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "message": "test2",
                     "sender": CURRENT_USER.username,
                     "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-                    "send_states": {
-                        CURRENT_ADMIN.username: "acknowledged",
-                        CURRENT_USER.username: "acknowledged",
-                    },
+                    "send_states": [
+                        {
+                            "username": CURRENT_ADMIN.username,
+                            "send_state": "acknowledged",
+                        },
+                        {
+                            "username": CURRENT_USER.username,
+                            "send_state": "acknowledged",
+                        },
+                    ],
                 },
                 {
                     "_id": ObjectId(),
                     "message": "test2",
                     "sender": CURRENT_USER.username,
                     "creation_date": datetime(2023, 1, 1, 9, 0, 0),
-                    "send_states": {
-                        CURRENT_ADMIN.username: "pending",
-                        CURRENT_USER.username: "acknowledged",
-                    },
+                    "send_states": [
+                        {"username": CURRENT_ADMIN.username, "send_state": "pending"},
+                        {
+                            "username": CURRENT_USER.username,
+                            "send_state": "acknowledged",
+                        },
+                    ],
                 },
             ],
         }
@@ -7795,22 +7814,23 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         # to sent
         db_state = self.db.chatrooms.find_one({"_id": self.room_id})
         self.assertIsNotNone(db_state)
-        self.assertEqual(
+
+        self.assertIn(
+            {"username": CURRENT_ADMIN.username, "send_state": "sent"},
             list(filter(lambda m: m["_id"] == message["_id"], db_state["messages"]))[0][
                 "send_states"
-            ][CURRENT_ADMIN.username],
-            "sent",
+            ],
         )
         other_room = self.db.chatrooms.find_one({"_id": room1["_id"]})
         self.assertIsNotNone(other_room)
-        self.assertEqual(
+        self.assertIn(
+            {"username": CURRENT_ADMIN.username, "send_state": "sent"},
             list(
                 filter(
                     lambda m: m["_id"] == room1["messages"][1]["_id"],
                     other_room["messages"],
                 )
-            )[0]["send_states"][CURRENT_ADMIN.username],
-            "sent",
+            )[0]["send_states"],
         )
 
 
