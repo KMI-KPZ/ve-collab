@@ -7,10 +7,8 @@ import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
 import FeedbackBanner from '../FeedbackBanner';
-import { metadataConfig } from '@/components/layout/MetaDataConfig';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = metadataConfig;
+import MetaDataConfig2 from '@/components/layout/MetaDataConfig2';
+import Head from 'next/head';
 
 interface Props {
     children: JSX.Element;
@@ -29,6 +27,7 @@ export default function LayoutSection({
     const { data: session } = useSession();
 
     const router = useRouter();
+    const language = router.locale;
 
     const { data: excludedFromMatching } = useGetExcludedFromMatching(
         session ? session.accessToken : ''
@@ -40,6 +39,15 @@ export default function LayoutSection({
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-100">
+            {/*Important: children elements have to be direct children, no nesting
+                next/script -> for generating
+                TODO bessere keywords
+                TODO -> merge -> dann pages ändern
+                TODO title und canonical links auf unterseiten
+                TODO include <Favicon /*/}
+            <Head>
+                <MetaDataConfig2 />
+            </Head>
             <HeaderSection
                 notificationEvents={notificationEvents}
                 headerBarMessageEvents={headerBarMessageEvents}
