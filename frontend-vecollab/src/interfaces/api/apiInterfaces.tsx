@@ -1,5 +1,12 @@
-import { PlanPreview } from "../planner/plannerInterfaces";
-import { Course, Education, Institution, NotificationSettings, VEWindowItem, WorkExperience } from "../profile/profileInterfaces";
+import { PlanPreview } from '../planner/plannerInterfaces';
+import {
+    Course,
+    Education,
+    Institution,
+    NotificationSettings,
+    VEWindowItem,
+    WorkExperience,
+} from '../profile/profileInterfaces';
 
 export interface BackendUserSnippet {
     username: string;
@@ -56,7 +63,6 @@ export interface BackendProfile {
     notification_settings: NotificationSettings;
 }
 
-
 export interface BackendSearchResponse {
     status: number;
     success: boolean;
@@ -78,14 +84,19 @@ export interface BackendChatMessage {
     recipients?: string[];
     message: string;
     creation_date: string;
-    send_states: Record<string, string>;
+    send_states: [
+        {
+            username: string;
+            send_state: 'sent' | 'pending' | 'acknowledged';
+        }
+    ];
 }
 
 export interface BackendFileSnippet {
-    author: string,
-    file_id: string,
-    file_name: string,
-    manually_uploaded: boolean,
+    author: string;
+    file_id: string;
+    file_name: string;
+    manually_uploaded: boolean;
 }
 
 export interface BackendGroup {
@@ -103,13 +114,13 @@ export interface BackendGroup {
 }
 
 export interface BackendGroupACLEntry {
-    username: string,
-    group: string,
-    read_timeline: boolean,
-    comment: boolean,
-    post: boolean,
-    read_files: boolean,
-    write_files: boolean,
+    username: string;
+    group: string;
+    read_timeline: boolean;
+    comment: boolean;
+    post: boolean;
+    read_files: boolean;
+    write_files: boolean;
 }
 
 export interface BackendPostAuthor {
@@ -123,7 +134,7 @@ export interface BackendPostComment {
     _id: string;
     author: BackendPostAuthor;
     creation_date: string;
-    pinned: boolean
+    pinned: boolean;
     text: string;
 }
 
