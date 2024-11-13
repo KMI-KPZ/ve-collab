@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
@@ -8,6 +8,7 @@ import {
     fetchGET,
     fetchPOST,
     useGetAllGroups,
+    useGetMyACL,
     useGetMyGroupInvites,
     useGetMyGroupRequests,
     useGetMyGroups,
@@ -43,6 +44,8 @@ export default function Groups() {
     const { data: myGroupRequests, mutate: mutateMyGroupRequests } = useGetMyGroupRequests(
         session!.accessToken
     );
+
+    const { data: myACL } = useGetMyACL(session!.accessToken);
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
@@ -143,7 +146,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={t('group_picture')}
@@ -194,7 +197,7 @@ export default function Groups() {
                                         {searchResults.map((group, index) => (
                                             <div key={index} className="px-2 py-5">
                                                 <div className="flex cursor-pointer">
-                                                    <div>
+                                                    <div className="flex-none">
                                                         <AuthenticatedImage
                                                             imageId={group.space_pic}
                                                             alt={t('group_picture')}
@@ -280,20 +283,22 @@ export default function Groups() {
                                     </>
                                 )}
                             </div>
-                            <div className="my-4">
-                                <BoxHeadline title={t('no_matching_result_question')} />
-                                <button
-                                    className={
-                                        'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
-                                    }
-                                    onClick={() => setIsNewDialogOpen(true)}
-                                >
-                                    <span>{t('create_new_group')}</span>
-                                </button>
-                            </div>
+                            {myACL.create_space && (
+                                <div className="my-4">
+                                    <BoxHeadline title={t('no_matching_result_question')} />
+                                    <button
+                                        className={
+                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
+                                        }
+                                        onClick={() => setIsNewDialogOpen(true)}
+                                    >
+                                        <span>{t('create_new_group')}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div tabid='all_groups' tabname={t('common:all')}>
+                    <div tabid="all_groups" tabname={t('common:all')}>
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 {allGroups.map((group, index) => (
@@ -302,7 +307,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={t('group_picture')}
@@ -375,20 +380,22 @@ export default function Groups() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="my-4">
-                                <BoxHeadline title={t('no_matching_result_question')} />
-                                <button
-                                    className={
-                                        'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
-                                    }
-                                    onClick={() => setIsNewDialogOpen(true)}
-                                >
-                                    <span>{t('create_new_group')}</span>
-                                </button>
-                            </div>
+                            {myACL.create_space && (
+                                <div className="my-4">
+                                    <BoxHeadline title={t('no_matching_result_question')} />
+                                    <button
+                                        className={
+                                            'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
+                                        }
+                                        onClick={() => setIsNewDialogOpen(true)}
+                                    >
+                                        <span>{t('create_new_group')}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div tabid='requests_invitations' tabname={t('my_requests_and_invitations')}>
+                    <div tabid="requests_invitations" tabname={t('my_requests_and_invitations')}>
                         <div className="min-h-[63vh]">
                             <BoxHeadline title={t('pending_invitations')} />
                             <div className="h-[25vh] mb-10 overflow-y-auto content-scrollbar">
@@ -398,7 +405,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={t('group_picture')}
@@ -453,7 +460,7 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
                                                     alt={t('group_picture')}
@@ -498,7 +505,7 @@ export default function Groups() {
                 title={t('create_new_group')}
                 onClose={handleCloseNewDialog}
             >
-                <div className="w-[25vw] h-[30vh] relative">
+                <div className="w-[25vw] relative">
                     <div>{t('new_group_name')}</div>
                     <input
                         className={'border border-gray-500 rounded-lg px-2 py-1 my-2 w-full'}
@@ -531,7 +538,7 @@ export default function Groups() {
                         />
                         <p>{t('private')}</p>
                     </div>
-                    <div className="flex absolute bottom-0 w-full">
+                    <div className="flex w-full">
                         <button
                             className={
                                 'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'

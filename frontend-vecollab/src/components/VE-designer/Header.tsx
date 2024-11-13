@@ -31,19 +31,19 @@ export default function Header({
 
     return (
         <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
-            <div className="grow text-4xl font-bold flex flex-nowrap items-center text-slate-400 truncate w-full lg:w-1/2">
+            <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
                 <span className="text-ve-collab-orange">VE</span>
                 <span className="text-ve-collab-blue ml-2">Designer</span>
-                {plan && plan.name && <span className="ml-4 text-2xl before:content-['•'] before:mr-2">{plan.name}</span>}
+                {plan && plan.name && <span className="ml-4 text-2xl truncate before:content-['•'] before:mr-2">{plan.name}</span>}
+                {plan.is_good_practise && (
+                    <span className='mx-2 self-center text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue'>
+                        <FaMedal title={t('plans_marked_as_good_practise')} size={18} />
+                    </span>
+                )}
             </div>
 
             <div className="flex items-center justify-between w-full lg:w-fit">
                 <div className='flex items-center'>
-                    {plan.is_good_practise && (
-                        <span className='mx-2 text-ve-collab-blue'>
-                            <FaMedal title={t('plans_marked_as_good_practise')} size={20} />
-                        </span>
-                    )}
                     <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
                     <button
                         type="submit"
