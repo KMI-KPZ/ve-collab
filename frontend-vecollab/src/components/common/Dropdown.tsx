@@ -60,7 +60,7 @@ export default function Dropdown({
                             ? (<li key={i}
                                 title={element.title}
                                 onClick={() => _handleSelect(element.value)}
-                                className={`flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue/50 rounded-lg ${element.liClasses}`}
+                                className={`flex px-2 py-1 items-center hover:cursor-pointer hover:bg-ve-collab-blue-light rounded-lg ${element.liClasses}`}
                                 >
                                     {typeof element.label === "string"
                                         ? (<>

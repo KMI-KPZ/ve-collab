@@ -13,7 +13,7 @@ interface Props {
 export default function Timestamp({
     timestamp,
     className = '',
-    dateFormat = 'd. MMM yyyy H:mm',
+    dateFormat = "d. MMM yyyy H:mm 'Uhr'",
     relative = false,
     showTitle = false,
 }: Props) {
