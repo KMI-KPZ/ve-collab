@@ -44,12 +44,12 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
     hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300
     hover:-translate-y-105 hover:scale-110`;
 
-    if (!firstVisit) return null;
+    if (firstVisit === false) return null;
 
     return (
         <div className="w-11/12 min-w-96 py-2 m-auto mb-8 bg-white rounded-md relative">
-            <div className="w-fit absolute top-3 right-3">
-                <button onClick={onClick} className="">
+            <div className="w-fit absolute top-3 right-3 z-10">
+                <button onClick={onClick}>
                     <MdClose size={20} />
                 </button>
             </div>
