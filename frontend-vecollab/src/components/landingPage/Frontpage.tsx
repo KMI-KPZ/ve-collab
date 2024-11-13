@@ -14,17 +14,11 @@ export default function Frontpage() {
     return (
         <>
             <h1 className="px-6 mt-6 text-white font-bold uppercase text-2xl md:text-4xl">
-                Lehre kooperativ, digital und international
+                {t('homepage_banner')}
             </h1>
 
             <div className="flex flex-wrap items-center justify-center lg:w-5/6 m-auto">
-                <p className="w-1/2 p-4 text-white lg:text-xl">
-                    VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim
-                    eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung,
-                    Planung und Durchführung internationaler und nationaler virtueller Austausche
-                    (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern
-                    wir zudem den aktiven kollegialen (virtuellen) Austausch.
-                </p>
+                <p className="w-1/2 p-4 text-white lg:text-xl">{t('homepage_text')}</p>
 
                 <div className="w-1/2 min-w-96 my-10 flex justify-center">
                     <div className="-space-y-14 w-fit p-6 rounded-[3rem] border border-4 border-ve-collab-orange bg-white text-white shadow">
