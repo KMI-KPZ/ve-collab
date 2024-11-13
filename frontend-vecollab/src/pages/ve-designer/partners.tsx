@@ -347,7 +347,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             ]}
             tooltip={{
                 text: t('partners.tooltip'),
-                link: '/learning-material/left-bubble/Partnersuche',
+                link: '/learning-material/2/VA-Planung',
             }}
             stageInMenu='generally'
             idOfProgress="partners"

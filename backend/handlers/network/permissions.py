@@ -181,6 +181,11 @@ class RoleHandler(BaseHandler):
 
 
 class GlobalACLHandler(BaseHandler):
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     def resolve_inconsistency(self, role: str) -> dict:
         """
         resolve inconsistency problem when the role exists,

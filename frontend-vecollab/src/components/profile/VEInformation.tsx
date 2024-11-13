@@ -1,29 +1,32 @@
 import { VEInformation as IVEInformation } from '@/interfaces/profile/profileInterfaces';
 import BoxContentHeadline from './BoxContentHeadline';
 import VEInformationContentList from './VEInformationContentList';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     veInfo: IVEInformation;
 }
 
 export default function VEInformation({ veInfo }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
         <div className={'min-h-[30rem] mx-2 my-1 overflow-y-auto content-scrollbar'}>
-            <BoxContentHeadline className={'my-1'} text={'VE-Themen'} />
+            <BoxContentHeadline className={'my-1'} text={t('ve_topics')} />
             <VEInformationContentList items={veInfo.veInterests} />
-            <BoxContentHeadline className={'mt-6'} text={'VE-Inhalte'} />
+            <BoxContentHeadline className={'mt-6'} text={t('ve_contents')} />
             <VEInformationContentList items={veInfo.veContents} />
-            <BoxContentHeadline className={'mt-6'} text={'VE-Zielsetzungen'} />
+            <BoxContentHeadline className={'mt-6'} text={t('ve_goals')} />
             <VEInformationContentList items={veInfo.veGoals} />
-            <BoxContentHeadline className={'mt-6'} text={'Erfahrungen'} />
+            <BoxContentHeadline className={'mt-6'} text={t('ve_experience')} />
             <VEInformationContentList items={veInfo.experience} />
-            <BoxContentHeadline className={'mt-6'} text={'interdisziplinärer Austausch'} />
+            <BoxContentHeadline className={'mt-6'} text={t('interdisciplinary_exchange')} />
             <div className={'mb-4 py-2 font-bold text-slate-900 flex flex-wrap'}>
                 <div className={'mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg'}>
-                    {veInfo.interdisciplinaryExchange ? 'ja' : 'nein'}
+                    {veInfo.interdisciplinaryExchange ? t('common:yes') : t('common:no')}
                 </div>
             </div>
-            <BoxContentHeadline className={'mt-6'} text={'präferierte Formate'} />
+            <BoxContentHeadline className={'mt-6'} text={t('preferred_formats')} />
             <div className={'mb-4 py-2 font-bold text-slate-900 flex flex-wrap'}>
                 <div className={'mr-2 mb-2 px-2 rounded-lg bg-gray-300 shadow-lg'}>
                     {veInfo.preferredFormat}

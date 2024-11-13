@@ -2,6 +2,7 @@
 
 from typing import Dict
 from bson import ObjectId
+from jinja2 import Environment
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import socketio
 
@@ -39,3 +40,4 @@ smtp_password: str = ""
 socket_io = socketio.AsyncServer
 username_sid_map: Dict[str, str] = {} # username -> sid
 plan_write_lock_map: Dict[ObjectId, Dict] = {} # plan_id -> {"username": username, "expires": datetime.datetime}
+email_template_env: Environment

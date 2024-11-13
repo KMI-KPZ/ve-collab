@@ -4,6 +4,7 @@ import { RxTrash } from 'react-icons/rx';
 import LoadingAnimation from '../common/LoadingAnimation';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     loading: boolean;
@@ -22,6 +23,8 @@ export default function DialogUserList({
     foreignUser,
     trashCallback,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     const router = useRouter();
     return (
         <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
@@ -44,7 +47,7 @@ export default function DialogUserList({
                                 <div>
                                     <AuthenticatedImage
                                         imageId={snippet.profilePicUrl}
-                                        alt={'Profilbild'}
+                                        alt={t("profile_picture")}
                                         width={60}
                                         height={60}
                                         className="rounded-full"

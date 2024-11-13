@@ -1,5 +1,6 @@
 import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
 import moment from 'moment';
+import { useTranslation } from 'next-i18next';
 import { RxDotFilled } from 'react-icons/rx';
 
 export function CVWorkItem({
@@ -11,6 +12,8 @@ export function CVWorkItem({
     country,
     additional_info,
 }: WorkExperience) {
+    const { t } = useTranslation(['community', 'common']);
+
     const preciseDiff = (d1: string, d2: string) => {
         var m1 = moment(d1),
             m2 = moment(d2),
@@ -103,9 +106,11 @@ export function CVWorkItem({
                     <RxDotFilled />
                     <div>
                         {diff.years > 0 ? (
-                            <>{`${diff.years} Jahre, ${diff.months} Monate`}</>
+                            <>{`${diff.years} ${t('common:years')}, ${diff.months} ${t(
+                                'common:months'
+                            )}`}</>
                         ) : (
-                            <>{`${diff.months} Monate`}</>
+                            <>{`${diff.months} ${t('common:months')}`}</>
                         )}
                     </div>
                 </div>

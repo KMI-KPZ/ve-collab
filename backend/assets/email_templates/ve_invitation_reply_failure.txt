@@ -1,0 +1,8 @@
+Hallo {recipient_name},
+
+Schade! Diesmal hat es leider nicht geklappt. {invitation_recipient_name} hat deine VE-Einladung abgelehnt.
+
+Begib dich doch noch einmal auf die Suche in der Community, oder probiere das Matching, um eine:n geeignete:n Partner:in zu finden.
+
+Viele Erfolg bei der Suche!
+Dein VE-Collab Team

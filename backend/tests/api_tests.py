@@ -222,6 +222,12 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "educations": [],
                 "work_experience": [],
                 "ve_window": [],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -255,6 +261,12 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "educations": [],
                 "work_experience": [],
                 "ve_window": [],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
             },
         }
 
@@ -7811,8 +7823,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         """
         return TargetGroup(
             name=name,
-            age_min=30,
-            age_max=40,
+            semester="test",
             experience="test",
             academic_course="test",
             languages=["test"],
@@ -8816,8 +8827,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "value": [
                 {
                     "name": "updated_name",
-                    "age_min": 10,
-                    "age_max": 20,
+                    "semester": "updated_semester",
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
                     "languages": ["test", "updated_languages"],
@@ -8840,15 +8850,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["target_groups"]), 1)
         self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
         self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
-        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
-        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["semester"], "updated_semester")
         self.assertEqual(
             db_state["target_groups"][0]["experience"], "updated_experience"
         )
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], "updated_academic_course"
         )
-        self.assertEqual(db_state["target_groups"][0]["languages"], ["test", "updated_languages"])
+        self.assertEqual(
+            db_state["target_groups"][0]["languages"], ["test", "updated_languages"]
+        )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
         # again, but this time upsert
@@ -8858,8 +8869,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "value": [
                 {
                     "name": "updated_name",
-                    "age_min": 10,
-                    "age_max": 20,
+                    "semester": "updated_semester",
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
                     "languages": ["test", "updated_languages2"],
@@ -8881,8 +8891,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["target_groups"]), 1)
         self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
         self.assertEqual(db_state["target_groups"][0]["name"], "updated_name")
-        self.assertEqual(db_state["target_groups"][0]["age_min"], "10")
-        self.assertEqual(db_state["target_groups"][0]["age_max"], "20")
+        self.assertEqual(db_state["target_groups"][0]["semester"], "updated_semester")
         self.assertEqual(
             db_state["target_groups"][0]["experience"], "updated_experience"
         )
@@ -8968,8 +8977,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 {
                     "_id": "123",
                     "name": "updated_name",
-                    "age_min": 10,
-                    "age_max": 20,
+                    "semester": "updated_semester",
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
                     "languages": ["test", "updated_languages"],
@@ -9035,8 +9043,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 {
                     "_id": ObjectId(),
                     "name": "updated_name",
-                    "age_min": 10,
-                    "age_max": 20,
+                    "semester": "updated_semester",
                     "experience": ["updated_experience"],
                     "academic_course": "updated_academic_course",
                     "languages": ["test", "updated_languages"],
@@ -9057,14 +9064,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         expect: fail message because update of compound attribute misses a required key
         """
 
-        # age_min is missing
+        # semester is missing
         payload = {
             "plan_id": self.plan_id,
             "field_name": "target_groups",
             "value": [
                 {
                     "name": "updated_name",
-                    "age_max": 20,
                     "experience": "updated_experience",
                     "academic_course": "updated_academic_course",
                     "languages": ["test", "updated_languages"],
@@ -9080,7 +9086,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertEqual(
-            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "age_min"
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "semester"
         )
 
     def test_post_update_field_error_non_unique_steps(self):

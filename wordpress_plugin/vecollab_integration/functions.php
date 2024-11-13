@@ -1,28 +1,35 @@
 <?php
 
 /*
-* send the height of the document to the parent window 
+* send the height of the document to the parent window
 * used to make the iframe full size in the parent when embedded
 */
 function send_doc_height() {
     echo '<script type="text/javascript">
-            let lastSize = 0
-            function sendDocHeight(event) {
-                const el = document.querySelector("html");
+			const plusHeight = 50
+            function getDocHeight() {
+				const el = document.querySelector("html");
                 const styles = window.getComputedStyle(el);
                 const margin = parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"]);
-
                 const height = Math.ceil(el.offsetHeight + margin);
-                if (height != lastSize) {
-                    window.parent.postMessage({
-                        type: "resize",
-                        value: height
-                    }, "*");
-                }
-
+				return height + plusHeight;
+			}
+            function sendDocHeight(event) {
+                const height = getDocHeight();
+				window.parent.postMessage({
+					type: "docHeightRespond",
+                    value: height
+                }, "*");
             }
-            window.addEventListener("load", sendDocHeight);
-            window.addEventListener("resize", sendDocHeight);
+
+			function handleDocHeightRequest(event) {
+				if (event.data.type == "docHeightRequest") {
+					sendDocHeight(event)
+				}
+			}
+			window.addEventListener("message", handleDocHeightRequest);
+			// window.addEventListener("load", docLoaded);
+			// window.addEventListener("resize", resizedDoc);
         </script>';
 }
 add_action( 'wp_footer', 'send_doc_height' );
@@ -89,7 +96,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
                         const value = cookie.substring(nameEQ.length);
                         return decodeURIComponent(value); // returns first found cookie
                     }
-            
+
                 }
                 return null;
             }
@@ -97,7 +104,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
             jQuery(document).ready(function($){
                 $("#form_' . $shortcode_atts['id'] . '").submit(function(e){
                     e.preventDefault();
-                    
+
                     // save the given answer in a cookie
                     let text = document.getElementById("' . $shortcode_atts['id'] . '").value;
                     let d = new Date();
@@ -126,7 +133,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
                     console.log(cookie);
                     document.getElementById("' . $shortcode_atts['id'] . '").value = cookie;
                 }
-                    
+
                 $("#show_other_answers").click(function(){
                     $.ajax({
                         type: "POST",
@@ -150,7 +157,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
                     });
                 });
 
-            });    
+            });
         </script>
     ';
 
@@ -192,7 +199,7 @@ add_action( 'admin_post_vecollab_response_form', 'vecollab_response_form_handler
 */
 function vecollab_get_random_responses(){
     $id = sanitize_text_field($_POST['id']);
-    
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'vecollab_responses';
 
@@ -235,7 +242,7 @@ function vecollab_inject_my_response($atts = [], $content = null){
 
     if($shortcode_atts['show_others_responses'] === "true"){
         $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
-        $html .= 
+        $html .=
             '<button
                 type="button"
                 class="orangeBtn"

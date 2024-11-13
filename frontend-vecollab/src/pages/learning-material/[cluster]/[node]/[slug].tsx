@@ -1,10 +1,6 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import {
-    getChildrenOfNodeByText,
-    getMaterialNodesOfNodeByText,
-    getNodeByText,
-} from '@/lib/backend';
+import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -12,6 +8,8 @@ import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import { getClusterSlugByRouteQuery } from '../..';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 
 interface Props {
     nodesOfCluster: INode[];
@@ -28,21 +26,61 @@ interface Props {
 export default function LearningContentView(props: Props) {
     const router = useRouter();
     const iframeRef = useRef<null | HTMLIFrameElement>(null);
-    const [iframeHeight, setIframeHeight] = useState<string>('100%');
+    const [frameHeight, setFrameHeight] = useState<string>('100%');
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const framesizeRequest = () => {
+        if (!iframeRef.current?.contentWindow) return;
+        iframeRef.current.contentWindow.postMessage(
+            {
+                type: 'docHeightRequest',
+                value: true,
+            },
+            '*'
+        );
+    };
+
+    const handleFramesizeRespond = (event: MessageEvent) => {
+        if (event.data.type == 'docHeightRespond') {
+            setLoading(false);
+            setFrameHeight(`${event.data.value}px`);
+        }
+    };
 
     useEffect(() => {
-        const messageHandler = (event: MessageEvent) => {
-            if (event.data.type == 'resize') {
-                console.log('setIframeHeight', event.data);
-                setIframeHeight(`${event.data.value}px`);
-            }
+        let reqDebounce: ReturnType<typeof setTimeout>;
+        setFrameHeight('100%');
+        setLoading(true);
+
+        const resizedWindow = (event: Event) => {
+            setFrameHeight('100%');
+            if (reqDebounce) clearTimeout(reqDebounce);
+            reqDebounce = setTimeout(() => {
+                framesizeRequest();
+            }, 50);
         };
 
-        window.addEventListener('message', messageHandler);
+        window.addEventListener('message', handleFramesizeRespond);
+        window.addEventListener('resize', resizedWindow);
+
+        // first request after short delay
+        setTimeout(() => {
+            framesizeRequest();
+        }, 150);
+
+        // second request after some time to give nested iframes a chance to load
+        setTimeout(() => {
+            setLoading(false); // fallback if framesize respond failed
+            framesizeRequest();
+        }, 3000);
+
         return () => {
-            window.removeEventListener('message', messageHandler);
+            if (reqDebounce) clearTimeout(reqDebounce);
+            window.removeEventListener('message', handleFramesizeRespond);
+            window.removeEventListener('resize', resizedWindow);
+            setFrameHeight('100%');
         };
-    }, [iframeRef]);
+    }, [router]);
 
     const ListOfLectionsSidebar = ({ lections }: { lections: IMaterialNode[] }) => (
         <ul className="flex flex-col divide-y gap-1 bg-white">
@@ -114,12 +152,21 @@ export default function LearningContentView(props: Props) {
                         </div>
                     )}
 
-                    <div className="w-full md:pl-6 pt-1">
+                    <div className="w-full md:pl-6 pt-1 relative">
+                        {loading && (
+                            <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                <span className="m-2">
+                                    <LoadingAnimation />
+                                </span>
+                            </div>
+                        )}
+
                         <iframe
-                            style={{ height: iframeHeight }}
-                            className="rounded-xl"
+                            style={{ height: frameHeight }}
+                            className="rounded-xl overflow-hidden"
                             src={props.currentNode.data.url}
                             ref={iframeRef}
+                            scrolling="no"
                         ></iframe>
 
                         {(props.prevNode || props.nextNode) && (
@@ -164,6 +211,7 @@ export default function LearningContentView(props: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
     if (!clusterSlug) return { notFound: true };
@@ -190,6 +238,7 @@ export const getServerSideProps: GetServerSideProps = async ({
             nextNode,
             clusterSlug,
             nodeSlug: params?.node,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };

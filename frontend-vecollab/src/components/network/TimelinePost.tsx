@@ -37,6 +37,7 @@ import Alert from '../common/dialogs/Alert';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     post: BackendPost;
@@ -69,6 +70,8 @@ export default function TimelinePost({
     socket,
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const ref = useRef<any>(null);
     const commentFormref = useRef<any>(null);
     const [willRemvoe, setWillRemove] = useState<boolean>(false);
@@ -81,6 +84,9 @@ export default function TimelinePost({
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+
+    const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
+    const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
 
     // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
@@ -285,7 +291,7 @@ export default function TimelinePost({
                         <Link key={i} href={`/profile/user/${liker.username}`} className="truncate">
                             <AuthenticatedImage
                                 imageId={liker.profile_pic}
-                                alt={'Benutzerbild'}
+                                alt={t('profile_picture')}
                                 width={20}
                                 height={20}
                                 className="rounded-full mr-3 inline"
@@ -317,7 +323,7 @@ export default function TimelinePost({
                         <button
                             className="p-2 rounded-full hover:bg-ve-collab-blue-light"
                             onClick={(e) => pinComment(comment)}
-                            title={comment.pinned ? 'Kommentar abheften' : 'Kommentar anheften'}
+                            title={comment.pinned ? t('unpin_comment') : t('pin_comment')}
                         >
                             {comment.pinned ? <TiPin /> : <TiPinOutline />}
                         </button>
@@ -338,7 +344,11 @@ export default function TimelinePost({
             return (
                 <Dropdown
                     options={[
-                        { value: 'remove-comment', label: 'löschen', icon: <MdDeleteOutline /> },
+                        {
+                            value: 'remove-comment',
+                            label: t('common:delete'),
+                            icon: <MdDeleteOutline />,
+                        },
                     ]}
                     onSelect={(value) => {
                         handleSelectOption(value, comment);
@@ -350,16 +360,7 @@ export default function TimelinePost({
     };
 
     const FileIcon = ({ _file }: { _file: BackendPostFile }) => {
-        if (_file.file_type?.startsWith('image/')) {
-            return (
-                <AuthenticatedImage
-                    imageId={_file.file_id}
-                    alt={_file.file_name}
-                    width={50}
-                    height={50}
-                ></AuthenticatedImage>
-            );
-        } else if (_file.file_type?.startsWith('video/')) {
+        if (_file.file_type?.startsWith('video/')) {
             return (
                 <div className="h-[50px] flex items-center">
                     <MdVideoFile size={35} />
@@ -387,17 +388,17 @@ export default function TimelinePost({
     };
 
     const PostHeaderDropdown = ({ post }: { post: BackendPost }) => {
-        let options = [{ value: 'share', label: 'Link kopieren', icon: <MdShare /> }];
+        let options = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username) ||
             (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
         ) {
             options.push(
-                { value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> },
-                { value: 'edit', label: 'bearbeiten', icon: <MdModeEdit /> }
+                { value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> },
+                { value: 'edit', label: t('common:edit'), icon: <MdModeEdit /> }
             );
         } else if (userIsAdmin) {
-            options.push({ value: 'remove', label: 'löschen', icon: <MdDeleteOutline /> });
+            options.push({ value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> });
         }
 
         return <Dropdown options={options} onSelect={handleSelectOption} />;
@@ -407,13 +408,13 @@ export default function TimelinePost({
         <>
             {shareDialogIsOpen && (
                 <Alert autoclose={3000} onClose={() => setShareDialogIsOpen(false)}>
-                    <>Link kopiert</>
+                    <>{t('link_copied')}</>
                 </Alert>
             )}
 
             {askDeletion && (
                 <ConfirmDialog
-                    message="Beitrag löschen?"
+                    message={t('confirm_delete_post')}
                     callback={(proceed) => {
                         if (proceed) deletePost();
                         setAskDeletion(false);
@@ -466,7 +467,7 @@ export default function TimelinePost({
                             <button
                                 className="p-2 rounded-full hover:bg-ve-collab-blue-light"
                                 onClick={onClickPin}
-                                title={post.pinned ? 'Beitrag abheften' : 'Beitrag anheften'}
+                                title={post.pinned ? t('unpin_post') : t('pin_post')}
                             >
                                 {post.pinned ? <TiPin /> : <TiPinOutline />}
                             </button>
@@ -474,7 +475,7 @@ export default function TimelinePost({
                         <button
                             className="p-2 rounded-full hover:bg-ve-collab-blue-light"
                             onClick={onClickRepostBtn}
-                            title="Beitrag zitieren"
+                            title={t('cite_post')}
                         >
                             <TiArrowForward />
                         </button>
@@ -504,7 +505,7 @@ export default function TimelinePost({
                                 <button
                                     className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light"
                                     onClick={() => setRepostExpand(true)}
-                                    title="Erweitern"
+                                    title={t('expand')}
                                 >
                                     <MdOutlineKeyboardDoubleArrowDown />
                                 </button>
@@ -530,16 +531,42 @@ export default function TimelinePost({
                     )}
                 </div>
 
-                {post.files.length > 0 && (
+                {attachedImages.length > 0 && (
                     <div className="my-4">
-                        <div className="mb-2 text-slate-900 font-bold">Dateien</div>
-                        <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                            {post.files.map((file, index) => (
+                        <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
+                            {attachedImages.map((file, index) => (
                                 <AuthenticatedFile
                                     key={index}
                                     url={`/uploads/${file.file_id}`}
                                     filename={file.file_name}
-                                    title="Download file"
+                                    title="Download image"
+                                    className="m-2"
+                                >
+                                    <div className="flex justify-center">
+                                        <AuthenticatedImage
+                                            imageId={file.file_id}
+                                            alt={file.file_name}
+                                            width={250}
+                                            height={250}
+                                            className="rounded-md drop-shadow"
+                                        ></AuthenticatedImage>
+                                    </div>
+                                </AuthenticatedFile>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {attachedFiles.length > 0 && (
+                    <div className="my-4">
+                        <div className="mb-2 text-slate-900 font-bold">{t('files')}</div>
+                        <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                            {attachedFiles.map((file, index) => (
+                                <AuthenticatedFile
+                                    key={index}
+                                    url={`/uploads/${file.file_id}`}
+                                    filename={file.file_name}
+                                    title={t('common:download')}
                                 >
                                     <div className="flex justify-center">
                                         <FileIcon _file={file} />
@@ -550,16 +577,19 @@ export default function TimelinePost({
                                 </AuthenticatedFile>
                             ))}
                         </div>
-                        ^
                     </div>
                 )}
 
                 {post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
-                        <div className="mb-2 text-slate-900 font-bold">Pläne</div>
+                        <div className="mb-2 text-slate-900 font-bold">{t('plans')}</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
                             {post.plans.map((plan, index) => (
-                                <Link key={index} href={{ pathname: `/plan/${plan._id}` }}>
+                                <Link
+                                    key={index}
+                                    href={{ pathname: `/plan/${plan._id}` }}
+                                    title="Open plan"
+                                >
                                     <div className="flex justify-center">
                                         <MdOutlineDocumentScanner size={50} />
                                     </div>
@@ -580,14 +610,14 @@ export default function TimelinePost({
                             onClick={openCommentForm}
                             className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate"
                         >
-                            Kommentar schreiben ...
+                            {t('write_comment')}
                         </button>
                     </div>
                 )}
 
                 {(comments.length > 0 || showCommentForm) && (
                     <div className="mt-4 pt-4 px-4 border-t-2 border-ve-collab-blue/50">
-                        <div className="mb-4 text-slate-900 font-bold text-lg">Kommentare</div>
+                        <div className="mb-4 text-slate-900 font-bold text-lg">{t('comments')}</div>
 
                         {(!groupACL || groupACL.comment) && (
                             <form
@@ -600,11 +630,11 @@ export default function TimelinePost({
                                         'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'
                                     }
                                     type="text"
-                                    placeholder={'Kommentar schreiben ...'}
+                                    placeholder={t('write_comment')}
                                     name="text"
                                     autoComplete="off"
                                 />
-                                <button className="p-2" type="submit" title="Senden">
+                                <button className="p-2" type="submit" title={t('send')}>
                                     <IoIosSend />
                                 </button>
                             </form>
@@ -635,7 +665,7 @@ export default function TimelinePost({
                                                         onClick={() =>
                                                             setShowXComments(showXComments + 5)
                                                         }
-                                                        title="Weitere Kommentare anzeigen"
+                                                        title={t('show_more_comments')}
                                                     >
                                                         <MdOutlineKeyboardDoubleArrowDown />
                                                     </button>

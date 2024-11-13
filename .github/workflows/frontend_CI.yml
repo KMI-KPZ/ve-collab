@@ -5,7 +5,8 @@ on:
     secrets:
       FRONTEND_ENV:
         required: true
-  #pull_request:
+      LHCI_GITHUB_APP_TOKEN:
+        required: true
   workflow_dispatch:
 
 jobs:
@@ -25,15 +26,15 @@ jobs:
 
       - name: Cache dependencies
         uses: actions/cache@v4
-        with:
+        with: # cache npm dependencies & next cache - fasten build (does not work currently, nextjs bug)
           path: |
-            ~/.npm
+            ~/.npm 
             ${{ github.workspace }}/.next/cache
           # Generate a new cache whenever packages or source files change.
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/frontend-vecollab/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-node-${{ hashFiles('**/frontend-vecollab/package-lock.json') }}-
 
       - name: Install dependencies
         run: npm ci
@@ -50,3 +51,13 @@ jobs:
 
       - name: Build React app
         run: npm run build
+
+      - name: Generate Sitemap
+        run: npm run sitemap
+
+      - name: run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.14.x
+          lhci autorun --config=./lighthouserc.js
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

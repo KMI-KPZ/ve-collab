@@ -4,6 +4,7 @@ import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { RxCross2, RxFace } from 'react-icons/rx';
 import { IoIosSend } from 'react-icons/io';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     roomID: string;
@@ -11,11 +12,12 @@ interface Props {
 }
 
 export default function InputArea({ roomID, socket }: Props) {
+    const { t } = useTranslation('common');
+
     const [sendingMessage, setSendingMessage] = useState<string>('');
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
 
     const handleMessageSend = () => {
-        console.log(`Sending message "${sendingMessage}" to ${roomID}`);
         socket.emit('message', {
             message: sendingMessage,
             room_id: roomID,
@@ -24,19 +26,18 @@ export default function InputArea({ roomID, socket }: Props) {
     };
 
     const sendOnEnter = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.code == "Enter" && !e.shiftKey) {
-            handleMessageSend()
-            e.preventDefault()
+        if (e.code == 'Enter' && !e.shiftKey) {
+            handleMessageSend();
+            e.preventDefault();
         }
-    }
+    };
 
     return (
         <div className="my-2">
             <div className="border border-[#cccccc] bg-white rounded-md ">
-
                 <textarea
                     className="w-full h-16 p-2 border-b rounded-t-md resize-none"
-                    placeholder="Type your message here..."
+                    placeholder={t("type_message_placeholder")}
                     value={sendingMessage}
                     onChange={(e) => setSendingMessage(e.target.value)}
                     onKeyDown={(e) => sendOnEnter(e)}
@@ -64,7 +65,7 @@ export default function InputArea({ roomID, socket }: Props) {
                         </div>
                     </div>
                 )}
-                <div className='flex justify-end'>
+                <div className="flex justify-end">
                     <button
                         className="font-bold py-2 px-4 rounded-md ml-2"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -79,7 +80,7 @@ export default function InputArea({ roomID, socket }: Props) {
                         Send
                     </button> */}
                     <button
-                        type='submit'
+                        type="submit"
                         className="py-2 px-4 rounded-md ml-2"
                         onClick={handleMessageSend}
                     >

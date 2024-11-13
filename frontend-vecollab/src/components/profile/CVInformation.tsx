@@ -2,6 +2,7 @@ import { Education, WorkExperience } from '@/interfaces/profile/profileInterface
 import BoxContentHeadline from './BoxContentHeadline';
 import CVEducationItem from './CVEducationItem';
 import { CVWorkItem } from './CVWorkItem';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     cvInfo: {
@@ -11,11 +12,13 @@ interface Props {
 }
 
 export default function CVInformation({ cvInfo }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
         <div className={'min-h-[30rem] mx-2 my-1 flex'}>
             {/* fixed height to enable scrolling instead of letting to box grow very large */}
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
-                <BoxContentHeadline className={'text-center'} text={'Ausbildung'} />
+                <BoxContentHeadline className={'text-center'} text={t("education")} />
                 <ul className={'divide-y mr-4'}>
                     {cvInfo.educations.map((education, index) => (
                         <CVEducationItem
@@ -31,7 +34,7 @@ export default function CVInformation({ cvInfo }: Props) {
                 </ul>
             </div>
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
-                <BoxContentHeadline className={'text-center'} text={'Berufserfahrung'} />
+                <BoxContentHeadline className={'text-center'} text={t("work_experience")} />
                 <ul className={'divide-y ml-4'}>
                     {cvInfo.workExperience.map((workExp, index) => (
                         <CVWorkItem

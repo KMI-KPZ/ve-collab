@@ -22,6 +22,7 @@ import { useRouter } from 'next/router';
 import { FaEye, FaMedal } from 'react-icons/fa';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
+import { HiOutlineCheckCircle } from 'react-icons/hi';
 
 interface Props {
     plan: PlanPreview;
@@ -56,15 +57,17 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         await refetchPlansCallback();
     };
 
-    const getStepsToProgress = () =>
+    const stepsToProgress =
         Object.keys(initialSideProgressBarStates).filter((a) => a !== 'steps').length +
         plan.steps.length;
 
-    const getCompletedSteps = () =>
+    const completedSteps =
         Object.keys(plan.progress).filter(
             (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
         ).length +
         plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
+
+    const isPlanProgressCompleted = () => completedSteps == stepsToProgress
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -94,14 +97,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         >
             <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
-                    <div tabname={t('plans_share_dialog_tabname_new')}>
+                    <div tabid='new' tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
                             setAlert={setAlert}
                         />
                     </div>
-                    <div tabname={t('plans_share_dialog_tabname_manage')}>
+                    <div tabid='manage' tabname={t('plans_share_dialog_tabname_manage')}>
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
@@ -167,7 +170,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                         <LoadingAnimation />
                     ) : (
                         <div className="flex w-full">
-                            <PlanSummary plan={planSummary!} />
+                            <PlanSummary plan={planSummary!} openAllBoxes={true} />
                         </div>
                     )}
                 </div>
@@ -309,15 +312,22 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
 
     return (
         <>
-            <div className="basis-1/12 text-center">
-                {/* {isPlanProgressCompleted() ?<MdCheck /> : <></>} */}
-                <span className="rounded-full border p-2 whitespace-nowrap">
-                    {getCompletedSteps()} / {getStepsToProgress()}
-                </span>
+            <div className="basis-1/12 flex justify-center">
+                {isPlanProgressCompleted()
+                    ? (
+                        <span className='cursor-pointer' title='Alle Schritte als "erledigt" markiert'>
+                            <HiOutlineCheckCircle size={23} />
+                        </span>
+                    ) : (
+                        <span className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer" title={`${completedSteps} von ${stepsToProgress} Schritten als "erledigt" markiert`}>
+                            {completedSteps} / {stepsToProgress}
+                        </span>
+                    )
+                }
             </div>
 
             <div
-                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer"
+                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -327,14 +337,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     }
                 }}
             >
-                <div className="flex flex-wrap items-center">
-                    <div className="mr-2 py-1 font-bold whitespace-nowrap">
+                <div className="flex flex-wrap xl:flex-nowrap items-center">
+                    <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
                         <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
                         </Link>
                     </div>
                     {plan.is_good_practise && (
-                        <div className="mx-2 text-ve-collab-blue">
+                        <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
                             <FaMedal title={t('plans_marked_as_good_practise')} />
                         </div>
                     )}

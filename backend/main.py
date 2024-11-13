@@ -3,9 +3,12 @@ import logging
 import logging.handlers
 import os
 
+from apscheduler.schedulers.tornado import TornadoScheduler
+from apscheduler.triggers.cron import CronTrigger
 import bson.json_util
 from dotenv import load_dotenv
 import gridfs
+from jinja2 import Environment, FileSystemLoader
 from keycloak import KeycloakOpenID, KeycloakAdmin
 import pymongo
 import pymongo.errors
@@ -47,6 +50,8 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
+from handlers.template_debug_handler import TemplateDebugHandler
+from resources.notifications import periodic_notification_dispatch
 import util
 
 logger = logging.getLogger(__name__)
@@ -142,6 +147,7 @@ def make_app(cookie_secret: str, debug: bool = False):
                 tornado.web.StaticFileHandler,
                 {"path": "./knowledgeworker_courses", "default_filename": "index.html"},
             ),
+            (r"/template/(.*)", TemplateDebugHandler),
         ],
         cookie_secret=cookie_secret,
         template_path="html",
@@ -480,6 +486,51 @@ def hook_tornado_access_log():
         tornado_access_logger.propagate = False
 
 
+def schedule_periodic_notifications():
+    """
+    Schedule and start all (periodic) notifications from
+    `assets/periodic_notifications.json`.
+    """
+
+    scheduler = TornadoScheduler()
+
+    with open("assets/periodic_notifications.json", "r") as fp:
+        periodic_notifications = json.load(fp)["periodic_notifications"]
+
+        for notification in periodic_notifications:
+            for execution_dates in notification["triggers"]:
+                trigger = CronTrigger(
+                    year=execution_dates["year"],
+                    month=execution_dates["month"],
+                    day=execution_dates["day"],
+                    hour=execution_dates["hour"],
+                    minute=execution_dates["minute"],
+                )
+                scheduler.add_job(
+                    periodic_notification_dispatch,
+                    trigger,
+                    args=[
+                        notification["type"],
+                        notification["payload"],
+                        notification["email_subject"],
+                    ],
+                )
+
+    scheduler.start()
+
+
+def load_email_templates():
+    """
+    set up the jinja2 environment for email templates and
+    store it in `global_vars.email_template_env`
+    """
+
+    jinja_env = Environment(
+        loader=FileSystemLoader("assets/email_templates"), autoescape=True
+    )
+    global_vars.email_template_env = jinja_env
+
+
 def main():
     define(
         "debug",
@@ -505,6 +556,9 @@ def main():
     # setup global vars from env
     set_global_vars()
 
+    # load email template env
+    load_email_templates()
+
     # insert default admin role and acl templates
     create_initial_admin()
 
@@ -523,8 +577,26 @@ def main():
     # write tornado access log to separate logfile
     hook_tornado_access_log()
 
+    # schedule periodic notifications
+    schedule_periodic_notifications()
+
+    # for testing purposes, delete when done
+    """
+    tornado.ioloop.IOLoop.current().run_sync(
+        lambda: periodic_notification_dispatch(
+            "reminder_icebreaker",
+            {
+                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
+                "designer_dashboard": "http://localhost:3000/plans",
+            },
+            "Lass dich inspirieren!",
+        )
+    )
+    """
+
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour
+    # TODO can also do this using APScheduler since we have to use it now anyways
     tornado.ioloop.PeriodicCallback(cleanup_unused_rules, 3_600_000).start()
 
     # build and start server

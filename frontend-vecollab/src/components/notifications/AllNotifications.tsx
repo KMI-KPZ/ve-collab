@@ -5,6 +5,7 @@ import { Socket } from 'socket.io-client';
 import VeInvitationReplyNotification from './VeInvitationReplyNotification';
 import GroupInvitationNotification from './GroupInvitationNotification';
 import GroupJoinRequestNotification from './GroupJoinRequestNotification';
+import ReminderNotification from './ReminderNotification';
 
 interface Props {
     socket: Socket;
@@ -70,6 +71,21 @@ export default function AllNotifications({ socket }: Props) {
                             )}
                             {notification.type === 'space_join_request' && (
                                 <GroupJoinRequestNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {[
+                                'reminder_evaluation',
+                                'reminder_good_practise_examples',
+                                'reminder_icebreaker',
+                            ].includes(notification.type) && (
+                                <ReminderNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string

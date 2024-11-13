@@ -7,6 +7,7 @@ import {
     BackendUserSnippet,
     BackendUser,
     BackendProfile,
+    BackendUserACLEntry,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -450,6 +451,27 @@ export function useGetMyGroupACLEntry(
     );
     return {
         data: isLoading || error || !groupId ? null : data.acl_entry,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMyACL(
+    accessToken: string
+): {
+    data: BackendUserACLEntry;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/global_acl/get`, accessToken],
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+    return {
+        data: isLoading || error || data.acl_entry,
         isLoading,
         error,
         mutate,

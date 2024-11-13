@@ -477,7 +477,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             description={t('step-names.description')}
             tooltip={{
                 text: t('step-names.tooltip_text'),
-                link: '/learning-material/left-bubble/Etappenplanung',
+                link: '/learning-material/2/VA-Planung',
             }}
             methods={methods}
             nextpage={

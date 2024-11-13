@@ -8,6 +8,7 @@ import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     name: string;
@@ -29,6 +30,7 @@ export default function ProfileHeader({
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
 
@@ -83,7 +85,7 @@ export default function ProfileHeader({
             <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
                 <AuthenticatedImage
                     imageId={profilePictureUrl}
-                    alt={'Profilbild'}
+                    alt={t('profile_picture')}
                     width={180}
                     height={180}
                 />
@@ -98,7 +100,7 @@ export default function ProfileHeader({
                                         'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
                                     }
                                 >
-                                    <span>Profil bearbeiten</span>
+                                    <span>{t("edit_profile")}</span>
                                 </button>
                             </Link>
                         </>
@@ -116,7 +118,7 @@ export default function ProfileHeader({
                                 className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,1)]"
                             />
                             <div className="flex items-center text-green-600">
-                                für VE&apos;s verfügbar
+                                {t('ve_ready_true')}
                             </div>
                         </>
                     ) : (
@@ -126,7 +128,7 @@ export default function ProfileHeader({
                                 className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)]"
                             />
                             <div className="flex items-center text-red-600">
-                                zur Zeit keine VE&apos;s
+                                {t("ve_ready_false")}
                             </div>
                         </>
                     )}
@@ -143,7 +145,7 @@ export default function ProfileHeader({
                                 onClick={unfollowUser}
                             >
                                 {' '}
-                                <span>gefolgt</span>
+                                <span>{t("is_following")}</span>
                             </button>
                         ) : (
                             <button
@@ -153,7 +155,7 @@ export default function ProfileHeader({
                                 onClick={followUser}
                             >
                                 {' '}
-                                <span>Folgen</span>
+                                <span>{t("follow")}</span>
                             </button>
                         )}
                         <button
@@ -166,7 +168,7 @@ export default function ProfileHeader({
                             }}
                         >
                             {' '}
-                            <span>VE-Einladung</span>
+                            <span>{t("ve_invitation")}</span>
                         </button>
                         {/* <button className={'h-12 ml-2'}>
                             <span>
@@ -175,18 +177,18 @@ export default function ProfileHeader({
                         </button> */}
                         <Dialog
                             isOpen={isInvitationDialogOpen}
-                            title={`zum VE einladen`}
+                            title={t("invite_to_ve", {name: name})}
                             onClose={handleCloseInvitationDialog}
                         >
                             <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
-                                <div>Nachricht:</div>
+                                <div>{t("ve_invitation_message")}</div>
                                 <textarea
                                     className={
                                         'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
                                     }
                                     rows={5}
                                     placeholder={
-                                        'Beschreibe, worum es in deinem VE gehen soll. Das erhöht die Chance, dass die Person annimmt!'
+                                        t("ve_invitation_message_placeholder")
                                     }
                                     value={veInvitationMessage}
                                     onChange={(e) => setVeInvitationMessage(e.target.value)}
@@ -200,7 +202,7 @@ export default function ProfileHeader({
                                             setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
                                         }
                                     />
-                                    <p>vorhandenen Plan anhängen</p>
+                                    <p>{t("append_existing_plan")}</p>
                                 </div>
                                 {appendPlanCheckboxChecked && (
                                     <>
@@ -209,8 +211,7 @@ export default function ProfileHeader({
                                             setChosenPlanId={setChosenPlanId}
                                         />
                                         <p className="my-2 text-gray-400">
-                                            es werden automatisch Leserechte an eingeladene Personen
-                                            vergeben!
+                                            {t("append_plan_disclaimer")}
                                         </p>
                                     </>
                                 )}
@@ -222,7 +223,7 @@ export default function ProfileHeader({
                                         }
                                         onClick={handleCloseInvitationDialog}
                                     >
-                                        <span>Abbrechen</span>
+                                        <span>{t("common:cancel")}</span>
                                     </button>
                                     <button
                                         className={
@@ -233,12 +234,18 @@ export default function ProfileHeader({
                                             handleCloseInvitationDialog();
                                         }}
                                     >
-                                        <span>Absenden</span>
+                                        <span>{t("common:send")}</span>
                                     </button>
                                 </div>
                             </div>
                         </Dialog>
-                        {successPopupOpen && <Alert message='Einladung gesendet' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+                        {successPopupOpen && (
+                            <Alert
+                                message={t("alert_ve_invitation_sent")}
+                                autoclose={2000}
+                                onClose={() => setSuccessPopupOpen(false)}
+                            />
+                        )}
                     </>
                 )}
             </div>

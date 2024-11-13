@@ -37,6 +37,8 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
 import { Socket } from 'socket.io-client';
+import { useTranslation } from 'next-i18next';
+import Image from 'next/image';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -61,6 +63,8 @@ export default function TimelinePostForm({
     socket,
 }: Props) {
     const { data: session } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const ref = useRef<HTMLFormElement>(null);
     const fileUploadRef = useRef<HTMLInputElement>(null);
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
@@ -226,10 +230,10 @@ export default function TimelinePostForm({
     };
 
     const openPlanDialog = () => {
-        if (plans.length) return;
         setIsPlanDialogOpen(true);
-        setLoadingPlans(true);
 
+        if (plans.length) return;
+        setLoadingPlans(true);
         fetchGET('/planner/get_available', session?.accessToken)
             .then((data) => setPlans(data.plans))
             .finally(() => setLoadingPlans(false));
@@ -260,13 +264,13 @@ export default function TimelinePostForm({
     };
 
     var BtnClearFormatting = createButton(
-        'Clear formatting',
+        t('clear_formatting'),
         <MdFormatClear className="m-auto" />,
         'removeFormat'
     );
 
     var BtnLink = createButton(
-        cursorInLink ? 'Remove Link' : 'Create Link',
+        cursorInLink ? t('remove_link') : t('create_link'),
         cursorInLink ? <MdLinkOff className="m-auto" /> : <MdInsertLink className="m-auto" />,
         function (_a) {
             var $selection = _a.$selection;
@@ -343,8 +347,8 @@ export default function TimelinePostForm({
         if (!plans.length)
             return (
                 <>
-                    Noch keine Pläne erstellt.{' '}
-                    <ButtonNewPlan socket={socket} label="Neuen Plan erstellen" />
+                    {t('no_plans_yet')}{' '}
+                    <ButtonNewPlan socket={socket} label={t('create_new_plan')} />
                 </>
             );
 
@@ -364,7 +368,7 @@ export default function TimelinePostForm({
                         <div
                             key={plan._id}
                             className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                            title="Auswählen"
+                            title={t('common:choose')}
                             onClick={(e) => {
                                 addPlanAttachment(plan);
                             }}
@@ -373,7 +377,7 @@ export default function TimelinePostForm({
                             <div className="text-xl font-bold grow-0">{plan.name}</div>
                             {plan.is_good_practise && (
                                 <div className="text-slate-700">
-                                    <MdPublic title='Plan ist als "Good Practice" markiert' />
+                                    <MdPublic title={t('common:plans_marked_as_good_practise')} />
                                 </div>
                             )}
                             {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
@@ -397,7 +401,7 @@ export default function TimelinePostForm({
             {/* link dialog */}
             <Dialog
                 isOpen={isLinkDialogOpen}
-                title={'Link'}
+                title={t('link')}
                 onClose={() => setIsLinkDialogOpen(false)}
             >
                 <div className="w-[20vw]">
@@ -415,7 +419,7 @@ export default function TimelinePostForm({
                                 type="submit"
                                 className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
                             >
-                                OK
+                                {t('common:ok')}
                             </button>
                         </form>
                     </div>
@@ -425,7 +429,7 @@ export default function TimelinePostForm({
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
-                title={'Plan hinzufügen'}
+                title={t('add_plan')}
                 onClose={() => setIsPlanDialogOpen(false)}
             >
                 <div className="w-[40vw]">
@@ -450,12 +454,12 @@ export default function TimelinePostForm({
                             left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
                             top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
                         <a
                             href={cursorInLink.getAttribute('href') as string}
                             className="hover:underline"
-                            title="Link öffnen"
+                            title={t('open_link')}
                             target="_blank"
                             rel="noreferrer"
                         >
@@ -464,7 +468,7 @@ export default function TimelinePostForm({
                         <button
                             onClick={(e) => openLinkEditor(e)}
                             className=""
-                            title="Link bearbeiten"
+                            title={t('edit_link')}
                         >
                             <MdEdit className="ml-2" />
                         </button>
@@ -479,7 +483,7 @@ export default function TimelinePostForm({
                                     ? userProfileSnippet?.profile?.profile_pic
                                     : 'default_profile_pic.jpg'
                             }
-                            alt={'Benutzerbild'}
+                            alt={t('profile_picture')}
                             width={40}
                             height={40}
                             className="rounded-full mr-3 mt-5 self-start"
@@ -490,7 +494,7 @@ export default function TimelinePostForm({
                         <EditorProvider>
                             <Editor
                                 value={text}
-                                placeholder="Beitrag schreiben..."
+                                placeholder={t('post_editor_placeholder')}
                                 onChange={(e) => setText(sanitizedText(e.target.value))}
                                 onKeyUp={editorCaretChanged}
                                 onClick={editorCaretChanged}
@@ -546,13 +550,22 @@ export default function TimelinePostForm({
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {filesToAttach.map((file, index) => (
                             <div className="max-w-[250px] mr-4 flex items-center" key={index}>
-                                <RxFile size={30} className="m-1" />
-                                {/* TODO preview for certain file types*/}
+                                {file.type.startsWith('image/') ? (
+                                    <Image
+                                        src={URL.createObjectURL(file)}
+                                        alt="Thumb"
+                                        width={50}
+                                        height={50}
+                                        className="m-1 rounded-md"
+                                    />
+                                ) : (
+                                    <RxFile size={30} className="m-1" />
+                                )}
                                 <div className="truncate py-2">{file.name}</div>
                                 <button
                                     onClick={() => removeSelectedFile(index)}
                                     className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
-                                    title="Datei Entfernen"
+                                    title={t('remove_file')}
                                 >
                                     <IoMdClose />
                                 </button>
@@ -562,19 +575,25 @@ export default function TimelinePostForm({
                 )}
 
                 {plansToAttach.length > 0 && (
-                    <div className="ml-16 mb-4 flex flex-col flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
+                    <div className="ml-16 mb-4 max-h-[40vh] overflow-y-auto overflow-x-clip content-scrollbar">
                         {plansToAttach.map((plan, index) => (
-                            <div className="mr-4 flex items-center gap-x-4 gap-y-6" key={index}>
-                                <MdNewspaper size={30} />
-                                <div className="truncate font-bold grow-0">{plan.name}</div>
-                                <div className="text-sm text-gray-500 gro">
+                            <div
+                                className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden"
+                                key={index}
+                            >
+                                <MdNewspaper size={20} className="flex-none" />
+                                <div className="truncate font-bold grow w-1/2">{plan.name}</div>
+                                <div className="text-sm text-gray-500 flex-none">
                                     {plan.author.first_name} {plan.author.last_name}
                                 </div>
-                                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                <Timestamp
+                                    timestamp={plan.last_modified}
+                                    className="text-sm flex-none"
+                                />
                                 <button
                                     onClick={() => removePlanAttachment(plan)}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
-                                    title="Plan Entfernen"
+                                    className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    title={t('remove_plan')}
                                 >
                                     <IoMdClose />
                                 </button>
@@ -595,24 +614,25 @@ export default function TimelinePostForm({
                                 onClick={onCancel}
                                 type="button"
                             >
-                                Abbrechen
+                                {t('common:cancel')}
                             </button>
                         )}
                         {!postToEdit && !postToRepost && (
                             <>
                                 <div
-                                    title="Datei oder Plan hinzufügen"
+                                    title={t('add_file_or_plan')}
                                     className="mt-2 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                                 >
                                     <Dropdown
                                         options={[
-                                            { value: 'local', label: 'lokale Datei' },
-                                            { value: 'plan', label: 'VE Collab Plan' },
+                                            { value: 'local', label: t('local_file') },
+                                            { value: 'plan', label: t('ve_plan') },
                                         ]}
                                         icon={
                                             <span className="">
-                                                <MdAttachFile className="mr-2 inline" /> Medien
-                                                hinzufügen <MdArrowDropDown className="inline" />
+                                                <MdAttachFile className="mr-2 inline" />
+                                                {t('add_media')}
+                                                <MdArrowDropDown className="inline" />
                                             </span>
                                         }
                                         onSelect={(value) => {
@@ -637,10 +657,10 @@ export default function TimelinePostForm({
                             }`}
                         >
                             {postToEdit ? (
-                                <>Aktualisieren</>
+                                <>{t('refresh')}</>
                             ) : (
                                 <>
-                                    <IoIosSend className="mr-2 inline" /> Senden
+                                    <IoIosSend className="mr-2 inline" /> {t('send')}
                                 </>
                             )}
                         </button>

@@ -10,7 +10,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         super(props);
 
         this.state = {
-            activeTab: this.props.children[0].props.tabname,
+            activeTab: this.props.children[0].props.tabid,
         };
     }
 
@@ -33,6 +33,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                             <Tab
                                 activeTab={activeTab}
                                 key={child.props.tabname}
+                                tabid={child.props.tabid}
                                 tabname={child.props.tabname}
                                 onClick={onClickTabItem}
                             />
@@ -42,7 +43,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                 <div className={'mt-6'}>
                     {/* tab content wrapper*/}
                     {children.map((child) => {
-                        if (child.props.tabname !== activeTab) return undefined;
+                        if (child.props.tabid !== activeTab) return undefined;
                         return child.props.children;
                     })}
                 </div>

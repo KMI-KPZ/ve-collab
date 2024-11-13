@@ -80,7 +80,7 @@ export function PlansBrowser({
                         plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className="flex flex-row py-3 space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
+                                className="flex flex-row py-3 px-1 space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
                             >
                                 <PlansBrowserItem
                                     key={index}
