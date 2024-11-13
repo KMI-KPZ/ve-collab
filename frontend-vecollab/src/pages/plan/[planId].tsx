@@ -85,7 +85,7 @@ export default function Plan() {
                         </div>
                     </div>
                     <div className="flex w-full">
-                        <PlanSummary plan={plan} openAllBoxes={false} isSingleView={true} />
+                        <PlanSummary plan={plan} openAllBoxes={true} isSingleView={true} />
                     </div>
                 </>
             )}

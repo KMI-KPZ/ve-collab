@@ -291,7 +291,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             description={description}
             tooltip={{
                 text: t('step-data.tooltip_text'),
-                link: '/learning-material/left-bubble/Etappenplanung',
+                link: '/learning-material/2/VA-Planung',
             }}
             methods={methods}
             prevpage={prevpage}

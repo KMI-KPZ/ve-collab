@@ -252,7 +252,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
             description={t('learningEnv.description')}
             tooltip={{
                 text: t('learningEnv.tooltip'),
-                link: '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge',
+                link: '/learning-material/3/Digitale%20Medien',
             }}
             stageInMenu='generally'
             idOfProgress="learning_env"
