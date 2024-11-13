@@ -1,6 +1,9 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
+import {
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -8,6 +11,7 @@ import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import { getClusterSlugByRouteQuery } from '../..';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 
 interface Props {
@@ -210,6 +214,7 @@ export default function LearningContentView(props: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
     if (!clusterSlug) return { notFound: true };
@@ -236,6 +241,7 @@ export const getServerSideProps: GetServerSideProps = async ({
             nextNode,
             clusterSlug,
             nodeSlug: params?.node,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };

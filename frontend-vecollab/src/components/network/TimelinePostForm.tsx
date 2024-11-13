@@ -1,14 +1,23 @@
-import { fetchGET, fetchPOST, useGetOwnProfile } from "@/lib/backend";
-import { useSession } from "next-auth/react";
-import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from "react";
-import { IoIosSend, IoMdClose } from "react-icons/io";
-import AuthenticatedImage from "../common/AuthenticatedImage";
-import { BackendPost, BackendPostAuthor, BackendUserSnippet } from "@/interfaces/api/apiInterfaces";
-import { useRef } from 'react'
-import PostHeader from "./PostHeader";
-import { MdArrowDropDown, MdAttachFile, MdEdit, MdFormatClear, MdInsertLink, MdLinkOff, MdNewspaper, MdPublic } from "react-icons/md";
-import { RxFile } from "react-icons/rx";
-import LoadingAnimation from "../common/LoadingAnimation";
+import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from 'react';
+import { IoIosSend, IoMdClose } from 'react-icons/io';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import { BackendPost, BackendPostAuthor, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { useRef } from 'react';
+import PostHeader from './PostHeader';
+import {
+    MdArrowDropDown,
+    MdAttachFile,
+    MdEdit,
+    MdFormatClear,
+    MdInsertLink,
+    MdLinkOff,
+    MdNewspaper,
+    MdPublic,
+} from 'react-icons/md';
+import { RxFile } from 'react-icons/rx';
+import LoadingAnimation from '../common/LoadingAnimation';
 import {
     BtnBold,
     BtnItalic,
@@ -19,31 +28,31 @@ import {
     EditorProvider,
     Toolbar,
     createButton,
-  } from 'react-simple-wysiwyg';
-import TimelinePostText from "./TimelinePostText";
-import { sanitizedText } from "./sanitizedText";
-import Dialog from "../profile/Dialog";
-import Dropdown from "../common/Dropdown";
-import { IPlan } from "@/interfaces/planner/plannerInterfaces";
-import Timestamp from "../common/Timestamp";
-import ButtonNewPlan from "../plans/ButtonNewPlan";
-import { Socket } from "socket.io-client";
-import Image from "next/image";
+} from 'react-simple-wysiwyg';
+import TimelinePostText from './TimelinePostText';
+import { sanitizedText } from './sanitizedText';
+import Dialog from '../profile/Dialog';
+import Dropdown from '../common/Dropdown';
+import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import Timestamp from '../common/Timestamp';
+import ButtonNewPlan from '../plans/ButtonNewPlan';
+import { Socket } from 'socket.io-client';
+import { useTranslation } from 'next-i18next';
+import Image from 'next/image';
 
 interface Props {
     post?: BackendPost | undefined;
     group?: string | undefined;
-    postToRepost?: BackendPost | null
+    postToRepost?: BackendPost | null;
     onCancelForm?: Function;
     onCancelRepost?: MouseEventHandler;
-    onUpdatedPost?: (text: string) => void
-    onCreatedPost?: (post: BackendPost) => void,
+    onUpdatedPost?: (text: string) => void;
+    onCreatedPost?: (post: BackendPost) => void;
     socket: Socket;
 }
 
-TimelinePostForm.auth = true
-export default function TimelinePostForm(
-{
+TimelinePostForm.auth = true;
+export default function TimelinePostForm({
     post: postToEdit,
     group,
     postToRepost,
@@ -51,256 +60,269 @@ export default function TimelinePostForm(
     onCancelRepost,
     onCreatedPost,
     onUpdatedPost,
-    socket
+    socket,
 }: Props) {
     const { data: session } = useSession();
-    const ref = useRef<HTMLFormElement>(null)
-    const fileUploadRef = useRef<HTMLInputElement>(null)
+    const { t } = useTranslation(['community', 'common']);
+
+    const ref = useRef<HTMLFormElement>(null);
+    const fileUploadRef = useRef<HTMLInputElement>(null);
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
-    const [selectedLinkText, setSelectedLinkText] = useState<{
-        parentNode: Node,
-        selectionStart: number,
-        selectionEnd: number} | undefined>();
+    const [selectedLinkText, setSelectedLinkText] = useState<
+        | {
+              parentNode: Node;
+              selectionStart: number;
+              selectionEnd: number;
+          }
+        | undefined
+    >();
     const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
-    const [formHadFocus, setFormHadFocus] = useState<boolean>(false)
-    const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false)
-    const [loadingPlans, setLoadingPlans] = useState<boolean>(true)
-    const [plans, setPlans] = useState<IPlan[]>([])
-    const [plansToAttach, setPlansToAttach] = useState<IPlan[]>([])
-    const domParser = new DOMParser()
+    const [formHadFocus, setFormHadFocus] = useState<boolean>(false);
+    const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false);
+    const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
+    const [plans, setPlans] = useState<IPlan[]>([]);
+    const [plansToAttach, setPlansToAttach] = useState<IPlan[]>([]);
+    const domParser = new DOMParser();
 
-    const {data: userProfileSnippet} = useGetOwnProfile(session!.accessToken)
+    const { data: userProfileSnippet } = useGetOwnProfile(session!.accessToken);
 
     useEffect(() => {
         if (postToEdit) {
-            setText(postToEdit.isRepost ? postToEdit.repostText as string : postToEdit.text)
-            setFocus()
+            setText(postToEdit.isRepost ? (postToEdit.repostText as string) : postToEdit.text);
+            setFocus();
         }
-    }, [postToEdit])
+    }, [postToEdit]);
 
     // scroll up to the form if user clicked to re-post a post
     useEffect(() => {
         if (postToRepost && ref.current) {
-            window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 })
-            setFocus()
+            window.scrollTo({ behavior: 'smooth', top: ref.current.offsetTop - 75 });
+            setFocus();
         }
-    }, [ref, postToRepost])
+    }, [ref, postToRepost]);
 
     const setFocus = () => {
-        const el = ref?.current?.querySelector(".rsw-ce") as HTMLElement
-        if (el) el.focus()
-    }
+        const el = ref?.current?.querySelector('.rsw-ce') as HTMLElement;
+        if (el) el.focus();
+    };
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // require domparser to check empty lines, eg `<p></p>`
-        var newValueDoc = domParser.parseFromString(text, "text/html");
+        var newValueDoc = domParser.parseFromString(text, 'text/html');
 
-        if (text == "" || newValueDoc.body.innerText == '') return
+        if (text == '' || newValueDoc.body.innerText == '') return;
 
-        setLoading(true)
+        setLoading(true);
 
         const updatePost = async (id: string) => {
             return await fetchPOST(
                 '/posts',
-                Object.assign({},
-                    {_id: id},
-                    { text },
-                ),
+                Object.assign({}, { _id: id }, { text }),
                 session?.accessToken,
                 true
-            )
-        }
+            );
+        };
 
         const createPost = async () => {
             return await fetchPOST(
                 '/posts',
-                Object.assign({},
+                Object.assign(
+                    {},
                     { tags: [] },
                     group ? { space: group } : {},
                     { text },
                     filesToAttach
                         ? {
-                            file_amount: filesToAttach.length,
-                            ...filesToAttach.reduce((o, file, i) => ({ ...o, [`file${i}`]: file}), {})
-                        }
+                              file_amount: filesToAttach.length,
+                              ...filesToAttach.reduce(
+                                  (o, file, i) => ({ ...o, [`file${i}`]: file }),
+                                  {}
+                              ),
+                          }
                         : {},
                     plansToAttach.length
-                        ? { plans: JSON.stringify(plansToAttach.map(plan => plan._id.toString())) }
+                        ? {
+                              plans: JSON.stringify(
+                                  plansToAttach.map((plan) => plan._id.toString())
+                              ),
+                          }
                         : {}
                 ),
                 session?.accessToken,
                 true
-            )
-        }
+            );
+        };
 
         const createRePost = async () => {
             return await fetchPOST(
                 '/repost',
-                Object.assign({},
+                Object.assign(
+                    {},
                     {
                         post_id: postToRepost?._id,
-                        text
+                        text,
                     },
                     group ? { space: group } : { space: null }
                 ),
                 session?.accessToken
-            )
-        }
+            );
+        };
 
         const updateRePost = async (id: string) => {
             return await fetchPOST(
                 '/repost',
-                Object.assign({},
-                    {_id: id},
-                    { text },
-                ),
+                Object.assign({}, { _id: id }, { text }),
                 session?.accessToken
-            )
-        }
+            );
+        };
 
         try {
             let res: {
-                inserted_repost?: BackendPost,
-                inserted_post?: BackendPost
-            } = {}
+                inserted_repost?: BackendPost;
+                inserted_post?: BackendPost;
+            } = {};
 
             if (postToEdit) {
                 res = postToEdit.isRepost
                     ? await updateRePost(postToEdit._id)
-                    : await updatePost(postToEdit._id)
-                if (onUpdatedPost) onUpdatedPost(text)
+                    : await updatePost(postToEdit._id);
+                if (onUpdatedPost) onUpdatedPost(text);
+            } else if (postToRepost) {
+                res = await createRePost();
+                if (onCreatedPost) onCreatedPost(res.inserted_repost as BackendPost);
+            } else {
+                res = await createPost();
+                if (onCreatedPost) onCreatedPost(res.inserted_post as BackendPost);
             }
-            else if (postToRepost) {
-                res = await createRePost()
-                if (onCreatedPost) onCreatedPost(res.inserted_repost as BackendPost)
-            }
-            else {
-                res = await createPost()
-                if (onCreatedPost) onCreatedPost(res.inserted_post as BackendPost)
-            }
-            ref.current?.reset()
-            setText('')
-            setFilesToAttach(null)
-            setPlansToAttach([])
+            ref.current?.reset();
+            setText('');
+            setFilesToAttach(null);
+            setPlansToAttach([]);
         } catch (error) {
-            alert(`Error:\n${error as string}\nSee console for details`)
+            alert(`Error:\n${error as string}\nSee console for details`);
             console.error(error);
         }
-        setLoading(false)
-    }
+        setLoading(false);
+    };
 
     const onCancel = () => {
-        ref.current?.reset()
-        if (onCancelForm) onCancelForm()
-    }
+        ref.current?.reset();
+        if (onCancelForm) onCancelForm();
+    };
 
     const chooseAttachMedia = (value: string) => {
         switch (value) {
             case 'local':
-                openFileOpenDialog()
+                openFileOpenDialog();
                 break;
 
             case 'plan':
-                openPlanDialog()
+                openPlanDialog();
                 break;
 
             default:
                 break;
         }
-    }
+    };
 
     const openPlanDialog = () => {
-        setIsPlanDialogOpen(true)
+        setIsPlanDialogOpen(true);
 
-        if (plans.length) return
-        setLoadingPlans(true)
+        if (plans.length) return;
+        setLoadingPlans(true);
         fetchGET('/planner/get_available', session?.accessToken)
-        .then(data => setPlans(data.plans))
-        .finally(() => setLoadingPlans(false))
-    }
+            .then((data) => setPlans(data.plans))
+            .finally(() => setLoadingPlans(false));
+    };
 
     const addPlanAttachment = (plan: IPlan) => {
-        setPlansToAttach(prev => [...prev, plan])
-        setIsPlanDialogOpen(false)
-    }
+        setPlansToAttach((prev) => [...prev, plan]);
+        setIsPlanDialogOpen(false);
+    };
 
     const removePlanAttachment = (plan: IPlan) => {
-        setPlansToAttach(prev => prev ? prev.filter((a, i) => a._id != plan._id) : [])
-    }
+        setPlansToAttach((prev) => (prev ? prev.filter((a, i) => a._id != plan._id) : []));
+    };
 
     const openFileOpenDialog = () => {
-        if (fileUploadRef?.current) fileUploadRef.current.click()
-    }
+        if (fileUploadRef?.current) fileUploadRef.current.click();
+    };
 
     const addFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
-            const files = Array.from(event.target.files)
-            setFilesToAttach((prev) => prev ? [...prev, ...files] : files);
+            const files = Array.from(event.target.files);
+            setFilesToAttach((prev) => (prev ? [...prev, ...files] : files));
         }
-    }
+    };
 
     const removeSelectedFile = (fileId: any) => {
-        setFilesToAttach(prev => prev ? prev.filter((a, i) => i != fileId) : null)
-    }
+        setFilesToAttach((prev) => (prev ? prev.filter((a, i) => i != fileId) : null));
+    };
 
-    var BtnClearFormatting = createButton('Clear formatting', <MdFormatClear className="m-auto" />, 'removeFormat');
+    var BtnClearFormatting = createButton(
+        t('clear_formatting'),
+        <MdFormatClear className="m-auto" />,
+        'removeFormat'
+    );
 
     var BtnLink = createButton(
-        cursorInLink ? 'Remove Link' : 'Create Link',
+        cursorInLink ? t('remove_link') : t('create_link'),
         cursorInLink ? <MdLinkOff className="m-auto" /> : <MdInsertLink className="m-auto" />,
         function (_a) {
             var $selection = _a.$selection;
-            if (($selection === null || $selection === void 0 ? void 0 : $selection.nodeName) === 'A') {
+            if (
+                ($selection === null || $selection === void 0 ? void 0 : $selection.nodeName) ===
+                'A'
+            ) {
                 if (window.getSelection()?.getRangeAt(0).toString() == '') {
-                    window.getSelection()?.selectAllChildren($selection as Node)
+                    window.getSelection()?.selectAllChildren($selection as Node);
                 }
                 document.execCommand('unlink');
-                setCursorInLink(false)
+                setCursorInLink(false);
             } else if ($selection) {
                 setSelectedLinkText({
                     parentNode: window.getSelection()?.focusNode as Node,
                     selectionStart: window.getSelection()?.anchorOffset as number,
-                    selectionEnd: window.getSelection()?.focusOffset as number
-                })
-                setIsLinkDialogOpen(true)
+                    selectionEnd: window.getSelection()?.focusOffset as number,
+                });
+                setIsLinkDialogOpen(true);
             }
         }
     );
 
     const submitNewLinkDialog = (event: FormEvent) => {
-        event.preventDefault()
-        const target = event.currentTarget.querySelector('input')
+        event.preventDefault();
+        const target = event.currentTarget.querySelector('input');
 
         if (!target?.value || target.value == '' || !target.value.startsWith('http')) {
-            return
+            return;
         }
 
         if (cursorInLink !== false) {
             // update existing link
-            cursorInLink.href = target.value
-        }
-        else if (selectedLinkText !== undefined) {
+            cursorInLink.href = target.value;
+        } else if (selectedLinkText !== undefined) {
             // create new link in selected range
             const range = new Range();
-            range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart)
-            range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd)
+            range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart);
+            range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd);
             var selection = window.getSelection();
             selection?.removeAllRanges();
             selection?.addRange(range);
-            document.execCommand('createLink', false, target.value );
+            document.execCommand('createLink', false, target.value);
         }
 
-        setIsLinkDialogOpen(false)
-        setSelectedLinkText(undefined)
-    }
+        setIsLinkDialogOpen(false);
+        setSelectedLinkText(undefined);
+    };
 
     const openLinkEditor = (event: MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault()
-        if (!cursorInLink) return
+        event.preventDefault();
+        if (!cursorInLink) return;
 
         var selection = window.getSelection();
         var range = document.createRange();
@@ -308,21 +330,27 @@ export default function TimelinePostForm(
         selection?.removeAllRanges();
         selection?.addRange(range);
 
-        setIsLinkDialogOpen(true)
-    }
+        setIsLinkDialogOpen(true);
+    };
 
     const editorCaretChanged = () => {
         if (window.getSelection()?.focusNode?.parentNode?.nodeName === 'A') {
-            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLLinkElement)
+            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLLinkElement);
         } else {
-            setCursorInLink(false)
+            setCursorInLink(false);
         }
-    }
+    };
 
     const PlansDialog = () => {
-        if (loadingPlans) return <LoadingAnimation />
+        if (loadingPlans) return <LoadingAnimation />;
 
-        if (!plans.length) return <>Noch keine Pläne erstellt. <ButtonNewPlan socket={socket} label="Neuen Plan erstellen" /></>
+        if (!plans.length)
+            return (
+                <>
+                    {t('no_plans_yet')}{' '}
+                    <ButtonNewPlan socket={socket} label={t('create_new_plan')} />
+                </>
+            );
 
         // TODO add simple filter input
         // TODO order by date
@@ -330,42 +358,68 @@ export default function TimelinePostForm(
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 {plans
-                    .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
-                    .map(plan => (
-                    <div key={plan._id} className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer" title="Auswählen" onClick={e => {addPlanAttachment(plan)}}>
-                        <MdNewspaper />
-                        <div className="text-xl font-bold grow-0">{plan.name}</div>
-                        {plan.is_good_practise && (
-                            <div className="text-slate-700">
-                                <MdPublic title='Plan ist als "Good Practice" markiert' />
-                            </div>
-                        )}
-                        {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
-                        {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
-                        {session?.user.preferred_username != plan.author.username && (
-                            <div className="text-sm text-gray-500">von {plan.author.first_name} {plan.author.last_name}</div>
-                        )}
-                        <span className="grow text-right" title="zuletzt geändert"><Timestamp timestamp={plan.last_modified} className='text-sm' /></span>
-                    </div>
-                ))}
+                    .sort((a, b) => {
+                        return (
+                            new Date(b.last_modified).getTime() -
+                            new Date(a.last_modified).getTime()
+                        );
+                    })
+                    .map((plan) => (
+                        <div
+                            key={plan._id}
+                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                            title={t('common:choose')}
+                            onClick={(e) => {
+                                addPlanAttachment(plan);
+                            }}
+                        >
+                            <MdNewspaper />
+                            <div className="text-xl font-bold grow-0">{plan.name}</div>
+                            {plan.is_good_practise && (
+                                <div className="text-slate-700">
+                                    <MdPublic title={t('common:plans_marked_as_good_practise')} />
+                                </div>
+                            )}
+                            {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
+                            {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
+                            {session?.user.preferred_username != plan.author.username && (
+                                <div className="text-sm text-gray-500">
+                                    von {plan.author.first_name} {plan.author.last_name}
+                                </div>
+                            )}
+                            <span className="grow text-right" title="zuletzt geändert">
+                                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                            </span>
+                        </div>
+                    ))}
             </div>
-        )
-    }
+        );
+    };
 
     return (
         <>
             {/* link dialog */}
             <Dialog
                 isOpen={isLinkDialogOpen}
-                title={'Link'}
+                title={t('link')}
                 onClose={() => setIsLinkDialogOpen(false)}
             >
                 <div className="w-[20vw]">
                     <div>
                         <form onSubmit={submitNewLinkDialog}>
-                            <input type="url" name="url" defaultValue={cursorInLink ? cursorInLink.href : ''} autoComplete="off" autoFocus className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500" />
-                            <button type="submit" className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white">
-                                OK
+                            <input
+                                type="url"
+                                name="url"
+                                defaultValue={cursorInLink ? cursorInLink.href : ''}
+                                autoComplete="off"
+                                autoFocus
+                                className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
+                            />
+                            <button
+                                type="submit"
+                                className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
+                            >
+                                {t('common:ok')}
                             </button>
                         </form>
                     </div>
@@ -375,38 +429,61 @@ export default function TimelinePostForm(
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
-                title={'Plan hinzufügen'}
+                title={t('add_plan')}
                 onClose={() => setIsPlanDialogOpen(false)}
             >
-                <div className="w-[40vw]"><PlansDialog /></div>
+                <div className="w-[40vw]">
+                    <PlansDialog />
+                </div>
             </Dialog>
 
             <form onSubmit={onSubmit} ref={ref} className="relative">
                 {loading && (
                     <>
-                        <div className="absolute w-full items-center top-10 z-20"><LoadingAnimation /></div>
+                        <div className="absolute w-full items-center top-10 z-20">
+                            <LoadingAnimation />
+                        </div>
                         <div className="absolute w-full h-full bg-white/50 z-10"></div>
                     </>
                 )}
 
                 {/* link tooltip  */}
                 {cursorInLink && (
-                    <div style={{
-                            left: `${cursorInLink.offsetLeft-(cursorInLink.offsetWidth/2)}px`,
-                            top: `${2+cursorInLink.offsetHeight+cursorInLink.offsetTop}px`
+                    <div
+                        style={{
+                            left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
+                            top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
-                        <a href={cursorInLink.getAttribute('href') as string} className="hover:underline" title="Link öffnen" target="_blank" rel="noreferrer">{cursorInLink.getAttribute('href') as string}</a>
-                        <button onClick={e => openLinkEditor(e)} className="" title="Link bearbeiten"><MdEdit className="ml-2" /></button>
+                        <a
+                            href={cursorInLink.getAttribute('href') as string}
+                            className="hover:underline"
+                            title={t('open_link')}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {cursorInLink.getAttribute('href') as string}
+                        </a>
+                        <button
+                            onClick={(e) => openLinkEditor(e)}
+                            className=""
+                            title={t('edit_link')}
+                        >
+                            <MdEdit className="ml-2" />
+                        </button>
                     </div>
                 )}
 
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <AuthenticatedImage
-                            imageId={userProfileSnippet ? userProfileSnippet?.profile?.profile_pic : "default_profile_pic.jpg"}
-                            alt={'Benutzerbild'}
+                            imageId={
+                                userProfileSnippet
+                                    ? userProfileSnippet?.profile?.profile_pic
+                                    : 'default_profile_pic.jpg'
+                            }
+                            alt={t('profile_picture')}
                             width={40}
                             height={40}
                             className="rounded-full mr-3 mt-5 self-start"
@@ -417,19 +494,19 @@ export default function TimelinePostForm(
                         <EditorProvider>
                             <Editor
                                 value={text}
-                                placeholder="Beitrag schreiben..."
+                                placeholder={t('post_editor_placeholder')}
                                 onChange={(e) => setText(sanitizedText(e.target.value))}
                                 onKeyUp={editorCaretChanged}
                                 onClick={editorCaretChanged}
-                                onFocus={e => setFormHadFocus(true)}
+                                onFocus={(e) => setFormHadFocus(true)}
                             />
                             {(postToEdit || postToRepost || formHadFocus) && (
                                 <Toolbar>
                                     <BtnBold />
                                     <BtnItalic />
                                     <BtnUnderline />
-                                    <BtnBulletList style={{ paddingLeft: "5px" }} />
-                                    <BtnNumberedList style={{ paddingLeft: "5px" }} />
+                                    <BtnBulletList style={{ paddingLeft: '5px' }} />
+                                    <BtnNumberedList style={{ paddingLeft: '5px' }} />
                                     <BtnLink />
                                     <BtnClearFormatting />
                                 </Toolbar>
@@ -441,39 +518,56 @@ export default function TimelinePostForm(
                 {postToRepost && (
                     <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
                         <div className="flex items-center mb-6">
-                            {postToRepost.isRepost
-                                ? ( <PostHeader author={postToRepost.repostAuthor as BackendPostAuthor} date={postToRepost.creation_date} /> )
-                                : ( <PostHeader author={postToRepost.author} date={postToRepost.creation_date} /> )
-                            }
-                            <button onClick={onCancelRepost} className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue-light">
+                            {postToRepost.isRepost ? (
+                                <PostHeader
+                                    author={postToRepost.repostAuthor as BackendPostAuthor}
+                                    date={postToRepost.creation_date}
+                                />
+                            ) : (
+                                <PostHeader
+                                    author={postToRepost.author}
+                                    date={postToRepost.creation_date}
+                                />
+                            )}
+                            <button
+                                onClick={onCancelRepost}
+                                className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue-light"
+                            >
                                 <IoMdClose />
                             </button>
                         </div>
-                        <TimelinePostText text={
-                            postToRepost.isRepost
-                                ? postToRepost.repostText as string
-                                : postToRepost.text as string
-                        } />
+                        <TimelinePostText
+                            text={
+                                postToRepost.isRepost
+                                    ? (postToRepost.repostText as string)
+                                    : (postToRepost.text as string)
+                            }
+                        />
                     </div>
                 )}
 
-                {(filesToAttach && filesToAttach.length > 0) && (
+                {filesToAttach && filesToAttach.length > 0 && (
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {filesToAttach.map((file, index) => (
                             <div className="max-w-[250px] mr-4 flex items-center" key={index}>
-                                {file.type.startsWith("image/")
-                                    ? (<Image
+                                {file.type.startsWith('image/') ? (
+                                    <Image
                                         src={URL.createObjectURL(file)}
                                         alt="Thumb"
                                         width={50}
                                         height={50}
                                         className="m-1 rounded-md"
-                                    />)
-                                    : (<RxFile size={30} className="m-1" />)
-                                }
+                                    />
+                                ) : (
+                                    <RxFile size={30} className="m-1" />
+                                )}
                                 <div className="truncate py-2">{file.name}</div>
-                                <button onClick={() => removeSelectedFile(index)} className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light" title="Datei Entfernen">
-                                        <IoMdClose />
+                                <button
+                                    onClick={() => removeSelectedFile(index)}
+                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    title={t('remove_file')}
+                                >
+                                    <IoMdClose />
                                 </button>
                             </div>
                         ))}
@@ -483,41 +577,92 @@ export default function TimelinePostForm(
                 {plansToAttach.length > 0 && (
                     <div className="ml-16 mb-4 max-h-[40vh] overflow-y-auto overflow-x-clip content-scrollbar">
                         {plansToAttach.map((plan, index) => (
-                            <div className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden" key={index}>
+                            <div
+                                className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden"
+                                key={index}
+                            >
                                 <MdNewspaper size={20} className="flex-none" />
                                 <div className="truncate font-bold grow w-1/2">{plan.name}</div>
-                                <div className="text-sm text-gray-500 flex-none">{plan.author.first_name} {plan.author.last_name}</div>
-                                <Timestamp timestamp={plan.last_modified} className='text-sm flex-none' />
-                                <button onClick={() => removePlanAttachment(plan)} className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light" title="Plan Entfernen">
-                                        <IoMdClose />
+                                <div className="text-sm text-gray-500 flex-none">
+                                    {plan.author.first_name} {plan.author.last_name}
+                                </div>
+                                <Timestamp
+                                    timestamp={plan.last_modified}
+                                    className="text-sm flex-none"
+                                />
+                                <button
+                                    onClick={() => removePlanAttachment(plan)}
+                                    className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    title={t('remove_plan')}
+                                >
+                                    <IoMdClose />
                                 </button>
                             </div>
                         ))}
                     </div>
                 )}
 
-                <div className={`flex items-center ${(!postToEdit && !postToRepost && !formHadFocus) ? 'hidden' : ''}`}>
+                <div
+                    className={`flex items-center ${
+                        !postToEdit && !postToRepost && !formHadFocus ? 'hidden' : ''
+                    }`}
+                >
                     <div className="ml-auto text-right">
-                        {postToEdit && (<button className={`py-2 px-5 border border-ve-collab-orange rounded-lg`} onClick={onCancel} type="button">
-                            Abbrechen
-                        </button>)}
-                        {(!postToEdit && !postToRepost) && (
+                        {postToEdit && (
+                            <button
+                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg`}
+                                onClick={onCancel}
+                                type="button"
+                            >
+                                {t('common:cancel')}
+                            </button>
+                        )}
+                        {!postToEdit && !postToRepost && (
                             <>
-                                <div title="Datei oder Plan hinzufügen" className="mt-2 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20">
+                                <div
+                                    title={t('add_file_or_plan')}
+                                    className="mt-2 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                >
                                     <Dropdown
-                                            options={[
-                                                {value: 'local', label: 'lokale Datei' },
-                                                {value: 'plan', label: 'VE Collab Plan' }
-                                            ]}
-                                            icon={<span className=""><MdAttachFile className="mr-2 inline" /> Medien hinzufügen <MdArrowDropDown className="inline" /></span>}
-                                            onSelect={value => {chooseAttachMedia(value)}}
+                                        options={[
+                                            { value: 'local', label: t('local_file') },
+                                            { value: 'plan', label: t('ve_plan') },
+                                        ]}
+                                        icon={
+                                            <span className="">
+                                                <MdAttachFile className="mr-2 inline" />
+                                                {t('add_media')}
+                                                <MdArrowDropDown className="inline" />
+                                            </span>
+                                        }
+                                        onSelect={(value) => {
+                                            chooseAttachMedia(value);
+                                        }}
                                     />
                                 </div>
-                                <input type="file" multiple name="file" onChange={addFiles} className="hidden" ref={fileUploadRef} />
+                                <input
+                                    type="file"
+                                    multiple
+                                    name="file"
+                                    onChange={addFiles}
+                                    className="hidden"
+                                    ref={fileUploadRef}
+                                />
                             </>
                         )}
-                        <button type="submit" className={`relative py-2 px-5 ml-2 mt-2 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''}`}>
-                            {postToEdit ? ( <>Aktualisieren</> ) : ( <><IoIosSend className="mr-2 inline" /> Senden</> )}
+                        <button
+                            type="submit"
+                            className={`relative py-2 px-5 ml-2 mt-2 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${
+                                text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''
+                            }`}
+                        >
+                            {postToEdit ? (
+                                <>{t('refresh')}</>
+                            ) : (
+                                <>
+                                    <IoIosSend className="mr-2 inline" /> {t('send')}
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

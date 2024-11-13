@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>du erhältst diese Benachrichtigung, da du Administrator der Gruppe <b>{{ space_name }}</b> bist.</p>
+<p style="margin-top: 30px;"><b>{{ join_request_sender|default("Ein/e andere/r Nutzer:in") }}</b> möchte der Gruppe
+    beitreten.
+</p>
+<p>Bitte überprüfe diese Anfrage im <a href="https://ve-collab.org/group/{{ space_id }}"><b>Admin-Bereich</b></a> der
+    Gruppe!</p>
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

@@ -135,7 +135,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                     <SocketAuthenticationProvider>
                         <SocketContext.Provider value={socket}>
                             <Head>
-                                <title>Ve Collab</title>
+                                <title>VE-Collab</title>
                                 <Favicon />
                                 <LinkPreview />
                             </Head>

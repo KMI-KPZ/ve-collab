@@ -1,5 +1,5 @@
 import { PlanPreview } from "../planner/plannerInterfaces";
-import { Course, Education, Institution, VEWindowItem, WorkExperience } from "../profile/profileInterfaces";
+import { Course, Education, Institution, NotificationSettings, VEWindowItem, WorkExperience } from "../profile/profileInterfaces";
 
 export interface BackendUserSnippet {
     username: string;
@@ -53,6 +53,7 @@ export interface BackendProfile {
     ve_ready: boolean;
     ve_window: VEWindowItem[];
     work_experience: WorkExperience[];
+    notification_settings: NotificationSettings;
 }
 
 

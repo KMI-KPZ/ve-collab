@@ -167,8 +167,7 @@ class BaseResourceTestCase(TestCase):
         """
         return TargetGroup(
             name=name,
-            age_min=30,
-            age_max=40,
+            semester="test",
             experience="test",
             academic_course="test",
             languages=["test"],
@@ -2596,6 +2595,12 @@ class ProfileResourceTest(BaseResourceTestCase):
                     "description": "test",
                 }
             ],
+            "notification_settings": {
+                "messages": "push",
+                "ve_invite": "push",
+                "group_invite": "push",
+                "system": "push",
+            },
         }
 
     def test_get_profile(self):
@@ -2650,6 +2655,10 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["work_experience"], self.default_profile["work_experience"]
         )
         self.assertEqual(profile["ve_window"], self.default_profile["ve_window"])
+        self.assertEqual(
+            profile["notification_settings"],
+            self.default_profile["notification_settings"],
+        )
 
         # test again, but specify a projection of only first_name, last_name and expertise
         profile = profile_manager.get_profile(
@@ -2686,6 +2695,7 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("educations", profile)
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
+        self.assertNotIn("notification_settings", profile)
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
         self.assertEqual(profile["expertise"], self.default_profile["expertise"])
@@ -2786,6 +2796,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2841,6 +2860,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2896,6 +2924,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(result["educations"], [])
         self.assertEqual(result["work_experience"], [])
         self.assertEqual(result["ve_window"], [])
+        self.assertEqual(
+            result["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3131,6 +3168,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(profile["educations"], [])
         self.assertEqual(profile["work_experience"], [])
         self.assertEqual(profile["ve_window"], [])
+        self.assertEqual(
+            profile["notification_settings"],
+            {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
+        )
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(
@@ -3402,6 +3448,58 @@ class ProfileResourceTest(BaseResourceTestCase):
         result2 = self.db.profiles.find_one({"username": "test1"})
         self.assertEqual(len(result2["ve_window"]), 1)
         self.assertIn(profile1["ve_window"][0], result2["ve_window"])
+
+    def test_get_notification_setting(self):
+        """
+        expect: successfully retrieve a single notification setting
+        """
+
+        profile_manager = Profiles(self.db)
+        notification_setting = profile_manager.get_notification_setting(
+            CURRENT_ADMIN.username, "messages"
+        )
+        self.assertEqual(
+            notification_setting,
+            self.default_profile["notification_settings"]["messages"],
+        )
+
+    def test_get_notification_setting_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_notification_setting,
+            "non_existing",
+            "messages",
+        )
+
+    def test_get_notification_settings(self):
+        """
+        expect: successfully retrieve all notification settings
+        """
+
+        profile_manager = Profiles(self.db)
+        notification_settings = profile_manager.get_all_notification_settings(
+            CURRENT_ADMIN.username
+        )
+        self.assertEqual(
+            notification_settings, self.default_profile["notification_settings"]
+        )
+
+    def test_get_notification_settings_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.get_all_notification_settings,
+            "non_existing",
+        )
 
 
 class SpaceResourceTest(BaseResourceTestCase):
@@ -6113,8 +6211,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         tg = TargetGroup(
             name="updated_name",
-            age_min=10,
-            age_max=20,
+            semester="updated_semester",
             experience="updated_experience",
             academic_course="updated_academic_course",
             languages=["test", "updated_languages"],
@@ -6130,7 +6227,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
         self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
-        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["semester"], tg.semester)
         self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], tg.academic_course
@@ -6142,8 +6239,7 @@ class PlanResourceTest(BaseResourceTestCase):
         tg2 = TargetGroup(
             _id=ObjectId(),
             name="updated_name2",
-            age_min=10,
-            age_max=20,
+            semester="updated_semester2",
             experience="updated_experience2",
             academic_course="updated_academic_course2",
             languages=["test", "updated_languages"],
@@ -6159,7 +6255,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
         self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
-        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["semester"], tg2.semester)
         self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], tg2.academic_course
@@ -6175,8 +6271,7 @@ class PlanResourceTest(BaseResourceTestCase):
 
         tg = TargetGroup(
             name="updated_name",
-            age_min=10,
-            age_max=20,
+            semester="updated_semester",
             experience="updated_experience",
             academic_course="updated_academic_course",
             languages=["test", "updated_languages"],
@@ -6197,7 +6292,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertIsInstance(db_state["target_groups"][0]["_id"], ObjectId)
         self.assertEqual(db_state["target_groups"][0]["name"], tg.name)
-        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg.age_min))
+        self.assertEqual(db_state["target_groups"][0]["semester"], tg.semester)
         self.assertEqual(db_state["target_groups"][0]["experience"], tg.experience)
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], tg.academic_course
@@ -6209,8 +6304,7 @@ class PlanResourceTest(BaseResourceTestCase):
         tg2 = TargetGroup(
             _id=ObjectId(),
             name="updated_name2",
-            age_min=10,
-            age_max=20,
+            semester="updated_semester2",
             experience="updated_experience2",
             academic_course="updated_academic_course2",
             languages=["test", "updated_languages2"],
@@ -6231,7 +6325,7 @@ class PlanResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["target_groups"][0]["_id"], tg2._id)
         self.assertEqual(db_state["target_groups"][0]["name"], tg2.name)
-        self.assertEqual(db_state["target_groups"][0]["age_min"], str(tg2.age_min))
+        self.assertEqual(db_state["target_groups"][0]["semester"], tg2.semester)
         self.assertEqual(db_state["target_groups"][0]["experience"], tg2.experience)
         self.assertEqual(
             db_state["target_groups"][0]["academic_course"], tg2.academic_course

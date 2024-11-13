@@ -1,0 +1,9 @@
+Hallo {recipient_name},
+
+herzlichen Glückwunsch! 
+{invitation_recipient_name} hat deine VE-Einladung angenommen.
+
+Falls ihr es nicht schon getan habt, tretet doch direkt in Kontakt und startet gemeinsam in die Planung!
+
+Wir wünschen euch viel Erfolg beim VE!
+Dein VE-Collab Team

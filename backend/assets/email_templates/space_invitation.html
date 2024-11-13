@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>du wurdest von <b>{{ invitation_sender|default("einem/r Nutzer:in") }}</b> in die Gruppe <b>{{ space_name }}</b> eingeladen.
+</p>
+<p><a href="{{ groups_link|default('https://ve-collab.org/groups') }}"><b>Hier</b></a> kannst du unter "meine Anfragen &
+    Einladungen" akzeptieren oder ablehnen.</p>
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

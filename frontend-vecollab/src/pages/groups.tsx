@@ -16,12 +16,16 @@ import {
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { RxDotsVertical } from 'react-icons/rx';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 
 Groups.auth = true;
 export default function Groups() {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
+
     const [searchInput, setSearchInput] = useState('');
     const [newInput, setNewInput] = useState('');
     const [newGroupInvisibleCheckboxChecked, setNewGroupInvisibleCheckboxChecked] = useState(false);
@@ -30,36 +34,28 @@ export default function Groups() {
 
     const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
 
-    const {
-        data: myGroups,
-        mutate: mutateMyGroups,
-    } = useGetMyGroups(session!.accessToken);
-    const {
-        data: allGroups,
-        mutate: mutateAllGroups,
-    } = useGetAllGroups(session!.accessToken);
+    const { data: myGroups, mutate: mutateMyGroups } = useGetMyGroups(session!.accessToken);
+    const { data: allGroups, mutate: mutateAllGroups } = useGetAllGroups(session!.accessToken);
 
-    const {
-        data: myGroupInvites,
-        mutate: mutateMyGroupInvites,
-    } = useGetMyGroupInvites(session!.accessToken);
+    const { data: myGroupInvites, mutate: mutateMyGroupInvites } = useGetMyGroupInvites(
+        session!.accessToken
+    );
 
-    const {
-        data: myGroupRequests,
-        mutate: mutateMyGroupRequests,
-    } = useGetMyGroupRequests(session!.accessToken);
+    const { data: myGroupRequests, mutate: mutateMyGroupRequests } = useGetMyGroupRequests(
+        session!.accessToken
+    );
 
-    const {
-        data: myACL
-    } = useGetMyACL(session!.accessToken);
+    const { data: myACL } = useGetMyACL(session!.accessToken);
 
     const handleSearchInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchInput(event.target.value);
         fetchGET(`/search?spaces=true&query=${event.target.value}`, session!.accessToken).then(
             (data) => {
-                setSearchResults(data.spaces.filter((space: BackendGroup) => {
-                    return !space.members.includes(session!.user?.preferred_username as string)
-                }));
+                setSearchResults(
+                    data.spaces.filter((space: BackendGroup) => {
+                        return !space.members.includes(session!.user?.preferred_username as string);
+                    })
+                );
             }
         );
     };
@@ -79,20 +75,26 @@ export default function Groups() {
     };
 
     function sendJoinRequest(groupId: string): void {
-        fetchPOST(`/spaceadministration/join?id=${groupId}`, {}, session!.accessToken).then((data) => {
-            mutateMyGroups();
-            mutateAllGroups();
-            mutateMyGroupRequests();
+        fetchPOST(`/spaceadministration/join?id=${groupId}`, {}, session!.accessToken).then(
+            (data) => {
+                mutateMyGroups();
+                mutateAllGroups();
+                mutateMyGroupRequests();
 
-            // if group is joinable, user is automatically joined
-            // and therefore remove the group from the list
-            if(data.join_type === "joined") {
-                searchResults.splice(searchResults.findIndex(group => group._id === groupId), 1);
+                // if group is joinable, user is automatically joined
+                // and therefore remove the group from the list
+                if (data.join_type === 'joined') {
+                    searchResults.splice(
+                        searchResults.findIndex((group) => group._id === groupId),
+                        1
+                    );
+                } else if (data.join_type === 'requested_join') {
+                    searchResults
+                        .find((group) => group._id === groupId)!
+                        .requests.push(session!.user.preferred_username!);
+                }
             }
-            else if(data.join_type === "requested_join") {
-                searchResults.find(group => group._id === groupId)!.requests.push(session!.user.preferred_username!);
-            }
-        });
+        );
     }
 
     function acceptInvite(groupId: string): void {
@@ -131,12 +133,12 @@ export default function Groups() {
     }
 
     return (
-        <div className='mt-12'>
+        <div className="mt-12">
             <WhiteBox>
                 <VerticalTabs>
-                    <div tabname="meine Gruppen">
+                    <div tabid="my_groups" tabname={t('my_groups')}>
                         <div className="min-h-[63vh]">
-                            <BoxHeadline title={'Du bist Mitglied in diesen Gruppen'} />
+                            <BoxHeadline title={t('you_are_member_of_groups')} />
                             <div className="divide-y my-4">
                                 {myGroups.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
@@ -144,10 +146,10 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div className='flex-none'>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
-                                                    alt={'Gruppenbild'}
+                                                    alt={t('group_picture')}
                                                     width={60}
                                                     height={60}
                                                     className="rounded-full"
@@ -158,7 +160,7 @@ export default function Groups() {
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
                                                     {group.space_description
                                                         ? group.space_description
-                                                        : 'Keine Beschreibung vorhanden'}
+                                                        : t('no_description_available')}
                                                 </div>
                                             </div>
                                             {/* <div className="flex ml-auto px-2 items-center justify-center">
@@ -172,7 +174,7 @@ export default function Groups() {
                             </div>
                         </div>
                     </div>
-                    <div tabname="neue finden">
+                    <div tabid="find_new_groups" tabname={t('find_new_groups')}>
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 <input
@@ -180,16 +182,14 @@ export default function Groups() {
                                         'border border-gray-500 rounded-lg px-2 py-1 mb-1 w-11/12'
                                     }
                                     type="text"
-                                    placeholder={
-                                        'Suche nach Gruppen, z.B. nach dem Namen oder der Beschreibung'
-                                    }
+                                    placeholder={t('search_groups_placeholder')}
                                     value={searchInput}
                                     onChange={handleSearchInput}
                                 />
                                 {searchInput && searchResults.length === 0 ? (
                                     <div className="px-2 py-5">
                                         <div className="mx-2 px-1 my-1 text-gray-600">
-                                            leider keine Ergebnisse gefunden
+                                            {t('no_results_found')}
                                         </div>
                                     </div>
                                 ) : (
@@ -197,10 +197,10 @@ export default function Groups() {
                                         {searchResults.map((group, index) => (
                                             <div key={index} className="px-2 py-5">
                                                 <div className="flex cursor-pointer">
-                                                    <div className='flex-none'>
+                                                    <div className="flex-none">
                                                         <AuthenticatedImage
                                                             imageId={group.space_pic}
-                                                            alt={'Profilbild'}
+                                                            alt={t('group_picture')}
                                                             width={60}
                                                             height={60}
                                                             className="rounded-full"
@@ -211,7 +211,7 @@ export default function Groups() {
                                                         <div className="mx-2 px-1 my-1 text-gray-600">
                                                             {group.space_description
                                                                 ? group.space_description
-                                                                : 'keine Beschreibung vorhanden'}
+                                                                : t('no_description_available')}
                                                         </div>
                                                     </div>
                                                     <div className="flex ml-auto px-2 items-center justify-center">
@@ -240,7 +240,7 @@ export default function Groups() {
                                                                             );
                                                                         }}
                                                                     >
-                                                                        <span>Beitreten</span>
+                                                                        <span>{t('join')}</span>
                                                                     </button>
                                                                 ) : // if group is not joinable and user has already requested to join, render disabled "already requested" button
                                                                 group.requests.includes(
@@ -253,7 +253,9 @@ export default function Groups() {
                                                                             'h-10 bg-transparent border border-ve-collab-orange/50 text-ve-collab-orange/50 cursor-not-allowed px-4 mx-2 rounded-lg shadow-xl'
                                                                         }
                                                                     >
-                                                                        <span>angefragt</span>
+                                                                        <span>
+                                                                            {t('join_requested')}
+                                                                        </span>
                                                                     </button>
                                                                 ) : (
                                                                     // if space is not joinable and user has not already requested to join, render request button
@@ -269,7 +271,7 @@ export default function Groups() {
                                                                         }}
                                                                     >
                                                                         <span>
-                                                                            Beitritt anfragen
+                                                                            {t('request_join')}
                                                                         </span>
                                                                     </button>
                                                                 ))}
@@ -283,20 +285,20 @@ export default function Groups() {
                             </div>
                             {myACL.create_space && (
                                 <div className="my-4">
-                                    <BoxHeadline title={'Nichts passendes dabei?'} />
+                                    <BoxHeadline title={t('no_matching_result_question')} />
                                     <button
                                         className={
                                             'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                         }
                                         onClick={() => setIsNewDialogOpen(true)}
                                     >
-                                        <span>neue Gruppe erstellen</span>
+                                        <span>{t('create_new_group')}</span>
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
-                    <div tabname="alle">
+                    <div tabid="all_groups" tabname={t('common:all')}>
                         <div className="min-h-[63vh]">
                             <div className="h-[50vh] overflow-y-auto content-scrollbar">
                                 {allGroups.map((group, index) => (
@@ -305,10 +307,10 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div className='flex-none'>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
-                                                    alt={'Gruppenbild'}
+                                                    alt={t('group_picture')}
                                                     width={60}
                                                     height={60}
                                                     className="rounded-full"
@@ -319,7 +321,7 @@ export default function Groups() {
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
                                                     {group.space_description
                                                         ? group.space_description
-                                                        : 'Keine Beschreibung vorhanden'}
+                                                        : t('no_description_available')}
                                                 </div>
                                             </div>
                                             <div className="flex ml-auto px-2 items-center justify-center">
@@ -344,7 +346,7 @@ export default function Groups() {
                                                                     sendJoinRequest(group._id);
                                                                 }}
                                                             >
-                                                                <span>Beitreten</span>
+                                                                <span>{t('join')}</span>
                                                             </button>
                                                         ) : // if group is not joinable and user has already requested to join, render disabled "already requested" button
                                                         group.requests.includes(
@@ -356,7 +358,7 @@ export default function Groups() {
                                                                     'h-10 bg-transparent border border-ve-collab-orange/50 text-ve-collab-orange/50 cursor-not-allowed px-4 mx-2 rounded-lg shadow-xl'
                                                                 }
                                                             >
-                                                                <span>angefragt</span>
+                                                                <span>{t('join_requested')}</span>
                                                             </button>
                                                         ) : (
                                                             // if group is not joinable and user has not already requested to join, render request button
@@ -369,7 +371,7 @@ export default function Groups() {
                                                                     sendJoinRequest(group._id);
                                                                 }}
                                                             >
-                                                                <span>Beitritt anfragen</span>
+                                                                <span>{t('request_join')}</span>
                                                             </button>
                                                         ))}
                                                 </div>
@@ -380,22 +382,22 @@ export default function Groups() {
                             </div>
                             {myACL.create_space && (
                                 <div className="my-4">
-                                    <BoxHeadline title={'Nichts passendes dabei?'} />
+                                    <BoxHeadline title={t('no_matching_result_question')} />
                                     <button
                                         className={
                                             'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                         }
                                         onClick={() => setIsNewDialogOpen(true)}
                                     >
-                                        <span>neue Gruppe erstellen</span>
+                                        <span>{t('create_new_group')}</span>
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
-                    <div tabname="meine Anfragen & Einladungen">
+                    <div tabid="requests_invitations" tabname={t('my_requests_and_invitations')}>
                         <div className="min-h-[63vh]">
-                            <BoxHeadline title={'ausstehende Einladungen'} />
+                            <BoxHeadline title={t('pending_invitations')} />
                             <div className="h-[25vh] mb-10 overflow-y-auto content-scrollbar">
                                 {myGroupInvites.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
@@ -403,10 +405,10 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div className='flex-none'>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
-                                                    alt={'Gruppenbild'}
+                                                    alt={t('group_picture')}
                                                     width={60}
                                                     height={60}
                                                     className="rounded-full"
@@ -417,7 +419,7 @@ export default function Groups() {
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
                                                     {group.space_description
                                                         ? group.space_description
-                                                        : 'Keine Beschreibung vorhanden'}
+                                                        : t('no_description_available')}
                                                 </div>
                                             </div>
                                             <div className="flex ml-auto px-2 items-center justify-center">
@@ -431,7 +433,7 @@ export default function Groups() {
                                                             acceptInvite(group._id);
                                                         }}
                                                     >
-                                                        <span>Annehmen</span>
+                                                        <span>{t('common:accept')}</span>
                                                     </button>
                                                     <button
                                                         className={
@@ -442,7 +444,7 @@ export default function Groups() {
                                                             declineInvite(group._id);
                                                         }}
                                                     >
-                                                        <span>Ablehnen</span>
+                                                        <span>{t('common:decline')}</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -450,7 +452,7 @@ export default function Groups() {
                                     </div>
                                 ))}
                             </div>
-                            <BoxHeadline title={'ausstehende Anfragen'} />
+                            <BoxHeadline title={t('pending_requests')} />
                             <div className="h-[25vh] overflow-y-auto content-scrollbar">
                                 {myGroupRequests.map((group, index) => (
                                     <div key={index} className="px-2 py-5">
@@ -458,10 +460,10 @@ export default function Groups() {
                                             href={`/group/${group._id}`}
                                             className="flex cursor-pointer"
                                         >
-                                            <div className='flex-none'>
+                                            <div className="flex-none">
                                                 <AuthenticatedImage
                                                     imageId={group.space_pic}
-                                                    alt={'Gruppenbild'}
+                                                    alt={t('group_picture')}
                                                     width={60}
                                                     height={60}
                                                     className="rounded-full"
@@ -472,7 +474,7 @@ export default function Groups() {
                                                 <div className="mx-2 px-1 my-1 text-gray-600">
                                                     {group.space_description
                                                         ? group.space_description
-                                                        : 'Keine Beschreibung vorhanden'}
+                                                        : t('no_description_available')}
                                                 </div>
                                             </div>
                                             <div className="flex ml-auto px-2 items-center justify-center">
@@ -486,7 +488,7 @@ export default function Groups() {
                                                             revokeRequest(group._id);
                                                         }}
                                                     >
-                                                        <span>Anfrage zurückziehen</span>
+                                                        <span>{t('revoke_request')}</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -500,15 +502,15 @@ export default function Groups() {
             </WhiteBox>
             <Dialog
                 isOpen={isNewDialogOpen}
-                title={'neue Gruppe erstellen'}
+                title={t('create_new_group')}
                 onClose={handleCloseNewDialog}
             >
                 <div className="w-[25vw] relative">
-                    <div>Name:</div>
+                    <div>{t('new_group_name')}</div>
                     <input
                         className={'border border-gray-500 rounded-lg px-2 py-1 my-2 w-full'}
                         type="text"
-                        placeholder={'Namen eingeben'}
+                        placeholder={t('new_group_name_placeholder')}
                         value={newInput}
                         onChange={(e) => setNewInput(e.target.value)}
                     />
@@ -523,7 +525,7 @@ export default function Groups() {
                                 )
                             }
                         />
-                        <p>unsichtbar</p>
+                        <p>{t('invisible')}</p>
                     </div>
                     <div className="flex my-2">
                         <input
@@ -534,7 +536,7 @@ export default function Groups() {
                                 setNewGroupJoinableCheckboxChecked(!newGroupJoinableCheckboxChecked)
                             }
                         />
-                        <p>privat</p>
+                        <p>{t('private')}</p>
                     </div>
                     <div className="flex w-full">
                         <button
@@ -543,7 +545,7 @@ export default function Groups() {
                             }
                             onClick={handleCloseNewDialog}
                         >
-                            <span>Abbrechen</span>
+                            <span>{t('common:cancel')}</span>
                         </button>
                         <button
                             className={
@@ -554,11 +556,19 @@ export default function Groups() {
                                 handleCloseNewDialog();
                             }}
                         >
-                            <span>Erstellen</span>
+                            <span>{t('common:create')}</span>
                         </button>
                     </div>
                 </div>
             </Dialog>
         </div>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+        },
+    };
 }

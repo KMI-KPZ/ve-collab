@@ -90,3 +90,10 @@ export interface VEWindowItem {
     title: string;
     description: string;
 }
+
+export interface NotificationSettings {
+    messages: "email" | "push" | "none";
+    ve_invite: "email" | "push" | "none";
+    group_invite: "email" | "push" | "none";
+    system: "email" | "push" | "none";
+}

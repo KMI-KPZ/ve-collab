@@ -103,8 +103,7 @@
                         "$oid": "666139b8d165067323a18078"
                     },
                     "name": "Uni Siegen",
-                    "age_min": "20",
-                    "age_max": "29",
+                    "semester": "Alter ca. 20 - 29",
                     "experience": "Die Siegener Studierenden verfügen über Französischkenntnisse auf Niveau B2-C1. Die Studierenden hatten zuvor noch an keinem virtuellen Austausch teilgenommen. Die Siegener Studierenden waren intrinsisch motiviert (freiwillige Teilnahme).",
                     "academic_course": "Lehramt Französisch, Französisch als Fremdsprache",
                     "languages": ["Deutsch", "Französisch", "Englisch"]
@@ -114,8 +113,7 @@
                         "$oid": "66616a97d165067323a1854f"
                     },
                     "name": "Uni Paris",
-                    "age_min": "20",
-                    "age_max": "40",
+                    "semester": "Alter ca. 20 - 40",
                     "experience": "Die Pariser Studierenden verfügten über Französischkenntnisse auf Niveau B1-C2. Nicht alle Pariser Studierenden verfügten über Englischkenntnisse, so dass Französisch die lingua franca darstellte. 13 der 43 Studierenden hatten zuvor an einem virtuellen Austausch teilgenommen. Die Pariser Studierenden waren extrinsisch motiviert (benotete Pflichtveranstaltung).",
                     "academic_course": "Lehramt Französisch, Französisch als Fremdsprache",
                     "languages": ["Französisch"]
@@ -599,8 +597,7 @@
                         "$oid": "667bc72b2169d7670df0d3b0"
                     },
                     "name": "Studierende Herder-Institut ",
-                    "age_min": "19",
-                    "age_max": "26",
+                    "semester": "Alter ca. 19 - 26",
                     "experience": "Die Studierenden tauschen sich in mindestens sechs 1-zu-1-Treffen aus (je mind. 45 min) und arbeiten gemeinsam an einem Projekt zu einem selbstgewählten Thema. Dabei entstehen mündliche Produkte (Vortrag, Podcast, Interview, Erklärfilm o. ä.), die über die Dozierenden veröffentlicht werden.",
                     "academic_course": "Deutsch als Fremd-und Zweitsprache (Master)",
                     "languages": []
@@ -610,8 +607,7 @@
                         "$oid": "667bc72b2169d7670df0d3b6"
                     },
                     "name": "Studierende Dokkyo Universität",
-                    "age_min": "18",
-                    "age_max": "22",
+                    "semester": "Alter ca. 18 - 22",
                     "experience": "Die Studierenden tauschen sich in mindestens sechs 1-zu-1-Treffen aus (je mind. 45 min) und arbeiten gemeinsam an einem Projekt zu einem selbstgewählten Thema. Dabei entstehen mündliche Produkte (Vortrag, Podcast, Interview, Erklärfilm o. ä.), die über die Dozierenden veröffentlicht werden.",
                     "academic_course": "Germanistik",
                     "languages": []
@@ -974,8 +970,7 @@
                         "$oid": "668cedbc5b82b31d6d6cef22"
                     },
                     "name": "Schüler:innen der gymnasialen Oberstufe",
-                    "age_min": "16",
-                    "age_max": "19",
+                    "semester": "Alter ca. 16 - 19",
                     "experience": "Interesse an einem Sprachzertifikat für Englisch oder Französisch",
                     "academic_course": "",
                     "languages": []
@@ -1591,8 +1586,7 @@
                         "$oid": "66b060a553500153679a6275"
                     },
                     "name": "Studierende Dokkyo Universität",
-                    "age_min": "18",
-                    "age_max": "22",
+                    "semester": "Alter ca. 18 - 22",
                     "experience": "Sprachniveau A2-B1",
                     "academic_course": "Germanistik",
                     "languages": []
@@ -1602,8 +1596,7 @@
                         "$oid": "66b060a553500153679a6277"
                     },
                     "name": "alle TN des Mausprojekts",
-                    "age_min": null,
-                    "age_max": null,
+                    "semester": "",
                     "experience": "",
                     "academic_course": "",
                     "languages": []
@@ -1960,8 +1953,7 @@
                         "$oid": "66bf63530fa797a13a7b8125"
                     },
                     "name": "Studierende",
-                    "age_min": "18",
-                    "age_max": "25",
+                    "semester": "Alter ca. 18 - 25",
                     "experience": "keine",
                     "academic_course": "Deutsch als Fremdsprache, Lehramt DaZ",
                     "languages": ["Deutsch", "Englisch"]
@@ -1971,8 +1963,7 @@
                         "$oid": "66c30b5d0fa797a13a7b8895"
                     },
                     "name": "Studierende",
-                    "age_min": "18",
-                    "age_max": "50",
+                    "semester": "Alter ca. 18 - 50",
                     "experience": "",
                     "academic_course": "verschiedene Studiengänge, v. a. Nursing",
                     "languages": ["Englisch", "z. T. Spanisch", "z.T. Deutsch"]

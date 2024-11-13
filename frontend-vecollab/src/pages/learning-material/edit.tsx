@@ -17,6 +17,7 @@ import { useSession } from 'next-auth/react';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Alert from '@/components/common/dialogs/Alert';
 import BoxHeadline from '@/components/common/BoxHeadline';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 export type Metadata = {
     name: string;
@@ -417,7 +418,21 @@ export default function Edit() {
                     </div>
                 </Dialog>
             </div>
-            {successPopupOpen && <Alert message={'Gespeichert'} autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+            {successPopupOpen && (
+                <Alert
+                    message={'Gespeichert'}
+                    autoclose={2000}
+                    onClose={() => setSuccessPopupOpen(false)}
+                />
+            )}
         </>
     );
+}
+
+export async function getStaticProps({ locale }: { locale: any }) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

@@ -15,7 +15,7 @@ interface Props {
     headerBarMessageEvents: any[];
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
     room: BackendChatroomSnippet;
-    closeRoom: () => void,
+    closeRoom: () => void;
     memberProfileSnippets: UserSnippet[];
 }
 
@@ -69,7 +69,7 @@ export default function ChatRoom({
 
     useEffect(() => {
         // wait till message history is loaded
-        if (isLoading) return
+        if (isLoading) return;
 
         // filter only those socket messages that are in this selected chat room
         const filteredSocketMessages = socketMessages.filter(
@@ -79,9 +79,7 @@ export default function ChatRoom({
         // join message history and filtered socket messages, removing duplicates based on _id
         const allMessages = [...messageHistory, ...filteredSocketMessages];
         const uniqueMessages = allMessages.reduce((acc, message) => {
-            return acc.find((m: any) => m._id === message._id)
-                ? acc
-                : [...acc, message];
+            return acc.find((m: any) => m._id === message._id) ? acc : [...acc, message];
         }, []);
         setDisplayMessages(uniqueMessages);
     }, [isLoading, messageHistory, socketMessages, room._id]);
@@ -95,19 +93,26 @@ export default function ChatRoom({
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex flex-nowrap text-nowrap items-center mb-2">
-                <button onClick={closeRoom} className="flex rounded-full items-center inline px-1 mr-1 hover:bg-slate-100">
-                    <MdArrowBackIosNew />&nbsp;
+                <button
+                    onClick={closeRoom}
+                    className="flex rounded-full items-center px-1 mr-1 hover:bg-slate-100"
+                >
+                    <MdArrowBackIosNew />
+                    &nbsp;
                 </button>
                 {room.name ? (
                     <>
                         <span className="font-bold">{room.name}</span>&nbsp;|&nbsp;
-                        <div className="flex items-center" title={memberProfileSnippets.map(profile => profile.name).join(', ')
-                        }>{room.members.length}&nbsp;<MdOutlineGroup /></div>
+                        <div
+                            className="flex items-center"
+                            title={memberProfileSnippets.map((profile) => profile.name).join(', ')}
+                        >
+                            {room.members.length}&nbsp;
+                            <MdOutlineGroup />
+                        </div>
                     </>
                 ) : (
-                    <>
-                        {memberProfileSnippets.map((member) => member.name).join(', ')}
-                    </>
+                    <>{memberProfileSnippets.map((member) => member.name).join(', ')}</>
                 )}
             </div>
             <div
@@ -116,7 +121,7 @@ export default function ChatRoom({
             >
                 {/* Chat messages */}
                 {isLoading ? (
-                    <LoadingAnimation size='small' />
+                    <LoadingAnimation size="small" />
                 ) : (
                     <ul className="flex flex-col justify-end">
                         {displayMessages.map((message, index) => (
@@ -129,10 +134,8 @@ export default function ChatRoom({
                         <li ref={messageBottomRef} className="h-12"></li>
                     </ul>
                 )}
-
             </div>
             <InputArea roomID={room._id} socket={socket} />
-
         </div>
     );
 }
