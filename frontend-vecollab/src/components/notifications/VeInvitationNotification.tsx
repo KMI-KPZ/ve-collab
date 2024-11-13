@@ -67,7 +67,7 @@ export default function VeInvitationNotification({
 
     return (
         <>
-            <li className="flex mx-2 py-4 items-center rounded-xl hover:bg-slate-200">
+            <li className="flex py-4 items-center rounded-md hover:bg-slate-50">
                 <div
                     className="px-2 cursor-pointer"
                     onClick={(e) => {
@@ -75,6 +75,7 @@ export default function VeInvitationNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
+                    <p className='mb-1 underline decoration-ve-collab-blue'>VE-Einladung</p>
                     <p>
                         Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen:{' '}
                         <b>{invitedVePlan?.name}</b>

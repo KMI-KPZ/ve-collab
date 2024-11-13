@@ -66,7 +66,7 @@ export default function GroupJoinRequestNotification({
 
     return (
         <>
-            <li className="flex mx-2 py-4 items-center rounded-xl hover:bg-slate-200">
+            <li className="flex py-4 items-center rounded-md hover:bg-slate-50">
                 <div
                     className="px-2 cursor-pointer"
                     onClick={(e) => {
@@ -74,6 +74,7 @@ export default function GroupJoinRequestNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
+                    <p className='mb-1 underline decoration-ve-collab-blue'>Gruppen-Einladung</p>
                     <p>
                         <b>{requestedUser?.name}</b> möchte deiner Gruppe{' '}
                         <b>{notification.payload.space_name}</b> beitreten.

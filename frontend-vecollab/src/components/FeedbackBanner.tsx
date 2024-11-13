@@ -8,7 +8,7 @@ export default function FeedbackBanner(): JSX.Element {
     return (
         <>
             {typeof process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL == 'string' && (
-                <div className="fixed z-40 -right-56 bottom-20 w-72 h-48 -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-white/25 flex flex-row divide-x transition ease-in-out delay-150 hover:-translate-x-56 hover:cursor-pointer">
+                <div className="hidden sm:flex fixed z-40 -right-56 bottom-20 w-72 h-48 -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-white/25 flex flex-row divide-x transition ease-in-out delay-150 hover:-translate-x-56 hover:cursor-pointer">
                     <div className="flex justify-center items-center flex-none w-14 text-xl nowrap">
                         <span className="-rotate-90 text-nowrap inline-block">
                             {t('feedback')}

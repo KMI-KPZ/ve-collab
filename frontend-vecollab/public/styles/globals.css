@@ -190,7 +190,7 @@ iframe {
 {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
   border-radius: 10px;
-  
+
 }
 
 .content-scrollbar::-webkit-scrollbar
@@ -209,4 +209,12 @@ iframe {
 body{
   -webkit-print-color-adjust:exact !important;
   print-color-adjust:exact !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #8c8c8c !important;
+}
+.swiper-button-disabled {
+    visibility: hidden !important;
 }

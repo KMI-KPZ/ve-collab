@@ -1,9 +1,6 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import {
-    getChildrenOfNodeByText,
-    getMaterialNodesOfNodeByText,
-} from '@/lib/backend';
+import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
