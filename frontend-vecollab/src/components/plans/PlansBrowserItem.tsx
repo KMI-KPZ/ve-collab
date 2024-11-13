@@ -67,7 +67,7 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         ).length +
         plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
 
-    const isPlanProgressCompleted = () => completedSteps == stepsToProgress
+    const isPlanProgressCompleted = () => completedSteps == stepsToProgress;
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -97,14 +97,14 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         >
             <div className="w-[30rem] h-[30rem] overflow-y-auto content-scrollbar relative">
                 <Tabs>
-                    <div tabid='new' tabname={t('plans_share_dialog_tabname_new')}>
+                    <div tabid="new" tabname={t('plans_share_dialog_tabname_new')}>
                         <SharePlanForm
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
                             setAlert={setAlert}
                         />
                     </div>
-                    <div tabid='manage' tabname={t('plans_share_dialog_tabname_manage')}>
+                    <div tabid="manage" tabname={t('plans_share_dialog_tabname_manage')}>
                         <EditAccessList
                             closeDialogCallback={handleCloseShareDialog}
                             plan={plan}
@@ -313,17 +313,18 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
     return (
         <>
             <div className="basis-1/12 flex justify-center">
-                {isPlanProgressCompleted()
-                    ? (
-                        <span className='cursor-pointer' title='Alle Schritte als "erledigt" markiert'>
-                            <HiOutlineCheckCircle size={23} />
-                        </span>
-                    ) : (
-                        <span className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer" title={`${completedSteps} von ${stepsToProgress} Schritten als "erledigt" markiert`}>
-                            {completedSteps} / {stepsToProgress}
-                        </span>
-                    )
-                }
+                {isPlanProgressCompleted() ? (
+                    <span className="cursor-pointer" title='Alle Schritte als "erledigt" markiert'>
+                        <HiOutlineCheckCircle size={23} />
+                    </span>
+                ) : (
+                    <span
+                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer"
+                        title={`${completedSteps} von ${stepsToProgress} Schritten als "erledigt" markiert`}
+                    >
+                        {completedSteps} / {stepsToProgress}
+                    </span>
+                )}
             </div>
 
             <div
@@ -338,7 +339,10 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                 }}
             >
                 <div className="flex flex-wrap xl:flex-nowrap items-center">
-                    <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
+                    <div
+                        className="mr-2 py-1 font-bold whitespace-nowrap truncate"
+                        title={plan.name}
+                    >
                         <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                             {plan.name}
                         </Link>
