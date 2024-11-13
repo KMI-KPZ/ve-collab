@@ -134,6 +134,7 @@
                     "is_graded": false,
                     "task_type": "",
                     "assessment_type": "",
+                    "evaluation_before": "",
                     "evaluation_while": "Teilnahmebescheinigung (unbenotet) nach erfolgreichem Abschluss",
                     "evaluation_after": ""
                 },
@@ -145,6 +146,7 @@
                     "is_graded": true,
                     "task_type": "siehe Aufgabenstellungen",
                     "assessment_type": "benotet",
+                    "evaluation_before": "",
                     "evaluation_while": "Synthese 1 (20 %), Synthese 2 (20%), Beobachtungsraster (25 %), individueller Reflexionsbericht (35 % der Gesamtnote)",
                     "evaluation_after": ""
                 }
@@ -625,6 +627,7 @@
                     "is_graded": true,
                     "task_type": "Produkt (Video, Audio) innerhalb der 360-Grad-Tour",
                     "assessment_type": "benotet",
+                    "evaluation_before": "",
                     "evaluation_while": "Nachbesprechung der Onlinesessions im Unterricht",
                     "evaluation_after": "Google Forms"
                 },
@@ -636,6 +639,7 @@
                     "is_graded": true,
                     "task_type": "Seminararbeit (Erfahrungsreflexion)",
                     "assessment_type": "benotet",
+                    "evaluation_before": "",
                     "evaluation_while": "Nachbesprechung der Onlinesessions im Unterricht",
                     "evaluation_after": "Dokumentation und Reflexion VE-Projekt (2-4 Seiten):\n\n- Beschreibung der Partner/in/nen, des Ziels, des Ablaufs, der genutzten Technologien...\n\nReflexion anhand von Leitfragen:\n\n- Welche Erwartungen hatte ich vor dem Projekt? Was hat sich erfüllt, was nicht?\n- Was hat gut / nicht so gut geklappt?\n- Was habe ich gelernt? Was hat mich überrascht?\n- Was würde ich anders machen, wenn ich nochmal die Möglichkeit hätte?\n- Wie finde ich das Konzept von VE-Projekten? (Wie) würde ich VE-Projekte in den Unterricht einbinden?\n - Welche Tools habe ich genutzt? Wie und warum? (medien-didaktische Begründung)"
                 }
@@ -991,6 +995,7 @@
                     "is_graded": false,
                     "task_type": null,
                     "assessment_type": null,
+                    "evaluation_before": "",
                     "evaluation_while": "Kick-off-Treffen, Feedback-Runden nach verschiedenen Aktivitäten",
                     "evaluation_after": "Einzelinterviews (n=25)"
                 },
@@ -1002,6 +1007,7 @@
                     "is_graded": false,
                     "task_type": "",
                     "assessment_type": "",
+                    "evaluation_before": "",
                     "evaluation_while": "",
                     "evaluation_after": ""
                 }
@@ -1614,6 +1620,7 @@
                     "is_graded": true,
                     "task_type": "Blogbeitrag",
                     "assessment_type": "benotet",
+                    "evaluation_before": "",
                     "evaluation_while": "Google Docs zur Verfolgung der entstehenden Texte",
                     "evaluation_after": "Google Forms"
                 },
@@ -1625,6 +1632,7 @@
                     "is_graded": false,
                     "task_type": "",
                     "assessment_type": "",
+                    "evaluation_before": "",
                     "evaluation_while": "",
                     "evaluation_after": ""
                 }
@@ -1981,6 +1989,7 @@
                     "is_graded": false,
                     "task_type": null,
                     "assessment_type": null,
+                    "evaluation_before": "",
                     "evaluation_while": "schriftliche Reflexionstagebücher mit Impulsfragen",
                     "evaluation_after": "Pre- und Postbefragung zur Selbsteinschätzung der eigenen (kritischen) Medienkompetenz;\nReflexionsvideos (auf VoiceThread, zugänglich für beide Gruppen)"
                 }
