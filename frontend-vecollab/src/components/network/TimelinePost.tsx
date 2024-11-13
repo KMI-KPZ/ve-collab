@@ -85,6 +85,9 @@ export default function TimelinePost({
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
 
+    const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
+    const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
+
     // infinity scroll (detect intersection of window viewport with last post)
     useEffect(() => {
         if (!ref?.current) return;
@@ -357,16 +360,7 @@ export default function TimelinePost({
     };
 
     const FileIcon = ({ _file }: { _file: BackendPostFile }) => {
-        if (_file.file_type?.startsWith('image/')) {
-            return (
-                <AuthenticatedImage
-                    imageId={_file.file_id}
-                    alt={_file.file_name}
-                    width={50}
-                    height={50}
-                ></AuthenticatedImage>
-            );
-        } else if (_file.file_type?.startsWith('video/')) {
+        if (_file.file_type?.startsWith('video/')) {
             return (
                 <div className="h-[50px] flex items-center">
                     <MdVideoFile size={35} />
@@ -537,11 +531,37 @@ export default function TimelinePost({
                     )}
                 </div>
 
-                {post.files.length > 0 && (
+                {attachedImages.length > 0 && (
+                    <div className="my-4">
+                        <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
+                            {attachedImages.map((file, index) => (
+                                <AuthenticatedFile
+                                    key={index}
+                                    url={`/uploads/${file.file_id}`}
+                                    filename={file.file_name}
+                                    title="Download image"
+                                    className="m-2"
+                                >
+                                    <div className="flex justify-center">
+                                        <AuthenticatedImage
+                                            imageId={file.file_id}
+                                            alt={file.file_name}
+                                            width={250}
+                                            height={250}
+                                            className="rounded-md drop-shadow"
+                                        ></AuthenticatedImage>
+                                    </div>
+                                </AuthenticatedFile>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {attachedFiles.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('files')}</div>
                         <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                            {post.files.map((file, index) => (
+                            {attachedFiles.map((file, index) => (
                                 <AuthenticatedFile
                                     key={index}
                                     url={`/uploads/${file.file_id}`}
@@ -557,7 +577,6 @@ export default function TimelinePost({
                                 </AuthenticatedFile>
                             ))}
                         </div>
-                        ^
                     </div>
                 )}
 
@@ -566,7 +585,11 @@ export default function TimelinePost({
                         <div className="mb-2 text-slate-900 font-bold">{t('plans')}</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
                             {post.plans.map((plan, index) => (
-                                <Link key={index} href={{ pathname: `/plan/${plan._id}` }}>
+                                <Link
+                                    key={index}
+                                    href={{ pathname: `/plan/${plan._id}` }}
+                                    title="Open plan"
+                                >
                                     <div className="flex justify-center">
                                         <MdOutlineDocumentScanner size={50} />
                                     </div>

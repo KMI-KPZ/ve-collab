@@ -112,6 +112,11 @@ export interface BackendGroupACLEntry {
     write_files: boolean,
 }
 
+export interface BackendUserACLEntry {
+    role: string,
+    create_space: boolean,
+}
+
 export interface BackendPostAuthor {
     username: string;
     profile_pic: string;
