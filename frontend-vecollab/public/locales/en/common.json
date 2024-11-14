@@ -60,7 +60,7 @@
   "user_search_no_results": "No results found",
   "give_chat_name": "Name your new chat (optional)",
   "create": "Create",
-  "btn_new_va": "Start a new VE",
+  "btn_new_ve": "Start a new VE",
   "plans": "Plans",
   "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
   "matching_question": "Still looking for new partners for your next VE?",
@@ -337,8 +337,9 @@
   "virtual_community_of_practice": "Virtual Community of Practice",
   "community_li_1": "get in touch with other educators around the world - public or private",
   "community_li_2": "matching with potential VE-partners based on your profile",
-  "community_li_3": "VE-Shopwindow: highlight your current and past VE-projects",
+  "community_li_3": "VE-Vitrine: highlight your current and past VE-projects",
   "join_now": "Register now and get started",
   "more": "More",
-  "video_not_supported": "Your browser does not support video playback."
+  "video_not_supported": "Your browser does not support video playback.",
+  "platform_tour": "Platform Tour"
 }

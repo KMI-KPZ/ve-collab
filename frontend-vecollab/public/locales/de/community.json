@@ -137,5 +137,21 @@
     "no_posts_in_your_timeline_yet": "Noch keine Beiträge in deiner Timeline...",
     "matching": "Matching",
     "matching_instructions": "Klicke auf den Button, um deine Top 5 passenden potenziellen Partner:innen, basierend auf deinem Profil, zu bekommen.",
-    "find_partners": "Partner:in finden"
+    "find_partners": "Partner:in finden",
+    "groups": "Gruppen",
+    "search_create": "Suchen / Erstellen",
+    "complete_profile": "Profil vervollständigen",
+    "complete_profile_text": "Die Vervollständigung des Profils hilft anderen Benutzer:innen, dich für einen VE zu finden. Folgende Daten sind zum Beispiel noch nicht ausgefüllt:",
+    "institutions": "Institutionen",
+    "recommended_materials": "Empfohlene Selbstlernmaterialien",
+    "recommended_materials_text": "Für den Einstieg in VEs empfehlen wir die folgenden Module",
+    "form_image": "Bild eines Formulars",
+    "puzzle_image": "Bild von puzzelnden Händen",
+    "find_ve_partners": "VE-Partner:innen finden",
+    "ve_feed": "VE-Feed",
+    "posts": "Beiträge",
+    "one_new_notification": "Du hast eine neue Benachrichtigung",
+    "multiple_new_notifications": "Du hast {{count}} neue Benachrichtigungen",
+    "details": "Details",
+    "suggested_materials": "Vorgeschlagene Module"
 }

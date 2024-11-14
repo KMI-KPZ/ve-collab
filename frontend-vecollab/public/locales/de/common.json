@@ -60,7 +60,7 @@
   "user_search_no_results": "Keine Ergebnisse",
   "give_chat_name": "Gib dem Chat einen Namen (optional)",
   "create": "Erstellen",
-  "btn_new_va": "Neuen VA planen",
+  "btn_new_ve": "Neuen VA planen",
   "plans": "Pläne",
   "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
   "matching_question": "Noch auf der Suche nach neuen Partner:innen für deinen nächsten VE?",
@@ -340,5 +340,6 @@
   "community_li_3": "VE-Schaufenster für aktuelle und vergangene Projekte",
   "join_now": "Jetzt registieren und loslegen",
   "more": "Mehr",
-  "video_not_supported": "Dein Browser unterstützt das Anzeigen von Videos nicht."
+  "video_not_supported": "Dein Browser unterstützt das Anzeigen von Videos nicht.",
+  "platform_tour": "Plattform-Tour"
 }

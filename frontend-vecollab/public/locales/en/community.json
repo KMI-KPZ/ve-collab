@@ -137,5 +137,21 @@
     "no_posts_in_your_timeline_yet": "No posts in your timeline yet...",
     "matching": "Matching",
     "matching_instructions": "Click the button to receive your top 5 potential partners for a VE. The ranking is based on your profile information.",
-    "find_partners": "Find partners"
+    "find_partners": "Find partners",
+    "groups": "Groups",
+    "search_create": "Search / Create",
+    "complete_profile": "Complete profile",
+    "complete_profile_text": "Completing your profile helps other users to find you as a partner for a VE. The following fields are e.g. not yet filled out:",
+    "institutions": "Institutions",
+    "recommended_materials": "Recommended Learning Material",
+    "recommended_materials_text": "To get started with VEs we recommend the following modules",
+    "form_image": "Image of a form",
+    "puzzle_image": "Image of puzzling hands",
+    "find_ve_partners": "Find VE partners",
+    "ve_feed": "VE Feed",
+    "posts": "Posts",
+    "one_new_notification": "You have one new notification",
+    "multiple_new_notifications": "You have {{count}} new notifications",
+    "details": "Details",
+    "suggested_materials": "Suggested Learning Modules"
 }
