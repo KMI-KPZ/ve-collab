@@ -59,10 +59,13 @@ class RoomHandler(BaseHandler):
                                 "message": str,
                                 "sender": str,
                                 "creation_date": str,
-                                "send_states": {
-                                    "<username>": "pending|sent|acknowledged",
+                                "send_states": [
+                                    {
+                                        "username": "<username>",
+                                        "state": "pending|sent|acknowledged"
+                                    },
                                     ...
-                                },
+                                ],
                             }
                         },
                         {...}
@@ -95,10 +98,13 @@ class RoomHandler(BaseHandler):
                             "message": str,
                             "sender": str,
                             "creation_date": str,
-                            "send_states": {
-                                "<username>": "pending|sent|acknowledged",
+                            "send_states": [
+                                {
+                                    "username": "<username>",
+                                    "state": "pending|sent|acknowledged"
+                                },
                                 ...
-                            },
+                            ],
                         },
                         {...},
                     ]}
