@@ -1,3 +1,5 @@
+// OBSOLETE ?!
+
 import React from 'react';
 
 export default function MetaDataConfig2(): JSX.Element {

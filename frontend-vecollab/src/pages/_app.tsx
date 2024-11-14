@@ -13,6 +13,7 @@ import { CookiesProvider } from 'react-cookie';
 import NotificationsWindow from '@/components/notifications/NotificationsWindow';
 import ChatWindow from '@/components/chat/ChatWindow';
 import { appWithTranslation } from 'next-i18next';
+import VEHead from '@/components/metaData/VEHead';
 
 export const SocketContext = createContext(socket);
 
@@ -131,6 +132,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                 <CookiesProvider defaultSetOptions={{ path: '/' }}>
                     <SocketAuthenticationProvider>
                         <SocketContext.Provider value={socket}>
+                            <VEHead />
                             <LayoutSection
                                 notificationEvents={notificationEvents}
                                 headerBarMessageEvents={messageEventsHeaderBar}

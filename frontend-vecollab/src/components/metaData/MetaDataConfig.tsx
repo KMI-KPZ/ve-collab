@@ -1,3 +1,5 @@
+// OBSOLETE ?!
+
 // unused -> next js metadata not working -> only Head component works
 import { Metadata } from 'next';
 
