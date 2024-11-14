@@ -324,5 +324,21 @@
   "orcid_link_relog_successful": "Re-Login Prozess erfolgreich. Du wirst zu deiner original Seite weitergeleitet. Das sollte automatisch innerhalb von 5 Sekunden passieren. Falls nicht, klicke bitte ",
   "homepage_banner": "Lehre kooperativ, digital und international",
   "homepage_text": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch.",
-  "access_denied": "Zugriff verweigert"
+  "access_denied": "Zugriff verweigert",
+  "qualification": "Qualifikation",
+  "designer_screenshot": "Screenshot des VE-Designers",
+  "material_screenshot": "Screenshot der Selbstlernmaterialien",
+  "community_screenshot": "Screenshot der Virtual Community of Practice",
+  "ve_designer_li_1": "leitet VE-Partner:innen Schritt für Schritt durch die Planung eines VE",
+  "ve_designer_li_2": "Möglichkeit, erarbeitete VE-Pläne der Community als Good-Practise-Beispiel zur Verfügung zu stellen",
+  "materials_li_1": "interaktive, kontinuierlich erweiterte Qualifizierungsmaterialien als OER",
+  "materials_li_2": "thematische Cluster: Grundlagen, Planung, Zusammenarbeit, technische Aspekte",
+  "materials_li_3": "sowohl einführende als auch vertiefende Module für Novizen und Expert:innen",
+  "virtual_community_of_practice": "Virtual Community of Practice",
+  "community_li_1": "themengebundener Austausch mit anderen Personen weltweit, öffentlich und privat",
+  "community_li_2": "Partner:innen-Matching auf Basis von Profilinformationen",
+  "community_li_3": "VE-Schaufenster für aktuelle und vergangene Projekte",
+  "join_now": "Jetzt registieren und loslegen",
+  "more": "Mehr",
+  "video_not_supported": "Dein Browser unterstützt das Anzeigen von Videos nicht."
 }
