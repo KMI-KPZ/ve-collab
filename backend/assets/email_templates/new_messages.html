@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>innerhalb der letzten 24h hast du <b>{{ unread_messages_amount|default("einige") }}</b> neue Nachricht(en) in
+    <b>{{ unread_rooms_amount|default("diversen") }}</b> Chats erhalten.
+</p>
+<p>Schau doch mal auf der <b><a href="https://ve-collab.org">Plattform</a></b> vorbei und sieh nach, wer dir geschrieben
+    hat!
+</p>
+
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}
