@@ -37,7 +37,7 @@ export default function EditPersonalInformation({
     languageKeys,
 }: Props) {
     const { data: session } = useSession();
-    const { t } = useTranslation(['common']);
+    const { t } = useTranslation(['community', 'common']);
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -162,13 +162,13 @@ export default function EditPersonalInformation({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Name'} />
+                <EditProfileHeadline name={t('common:name')} />
                 <div className={'flex justify-between'}>
                     {/* TODO validation: treat first name and last name as required information*/}
                     <input
                         className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
-                        placeholder={'Vorname'}
+                        placeholder={t('first_name')}
                         value={personalInformation.firstName}
                         onChange={(e) =>
                             setPersonalInformation({
@@ -180,7 +180,7 @@ export default function EditPersonalInformation({
                     <input
                         className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
-                        placeholder={'Nachname'}
+                        placeholder={t('last_name')}
                         value={personalInformation.lastName}
                         onChange={(e) =>
                             setPersonalInformation({
@@ -194,7 +194,7 @@ export default function EditPersonalInformation({
             <EditProfileVerticalSpacer>
                 <div className="flex justify-between">
                     <div className="relative">
-                        <EditProfileHeadline name={'Institutionen'} />
+                        <EditProfileHeadline name={t('institutions')} />
                         <div className="absolute top-0 left-full">
                             <div className="group relative inline-block">
                                 <div className="inline-flex rounded bg-primary px-[2px] text-base font-semibold">
@@ -202,9 +202,7 @@ export default function EditPersonalInformation({
                                 </div>
                                 <div className="absolute bottom-full left-1/2 w-[20rem] z-20 mb-1 -translate-x-1/2 rounded bg-gray-200 border border-gray-200 shadow-2xl px-4 py-[6px] text-sm font-semibold hidden group-hover:block">
                                     <span className="absolute bottom-[-3px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm bg-gray-200"></span>
-                                    Das Anlegen der Institution im Profil gewährt dir einige
-                                    Automatisierungen, z.B. kannst du im VE-Designer deine
-                                    Institution direkt importieren
+                                    {t('institutions_tooltip')}
                                 </div>
                             </div>
                         </div>
@@ -234,8 +232,8 @@ export default function EditPersonalInformation({
                                     title={
                                         personalInformation.chosen_institution_id ===
                                         institution._id
-                                            ? 'aktuelle Institution'
-                                            : 'Klicke, um diese als deine aktuelle Institution zu wählen'
+                                            ? t('current_institution')
+                                            : t('choose_as_current_institution')
                                     }
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -257,7 +255,7 @@ export default function EditPersonalInformation({
                                     </button>
                                     {askDeletion && (
                                         <ConfirmDialog
-                                            message="Institution wirklich löschen?"
+                                            message={t('confirm_delete_institution')}
                                             callback={(proceed) => {
                                                 if (proceed) deleteInstitution(index);
                                                 setAskDeletion(false);
@@ -275,14 +273,14 @@ export default function EditPersonalInformation({
                 </div>
                 <Dialog
                     isOpen={isNewInstitutionDialogOpen}
-                    title={'neue Institution anlegen'}
+                    title={t('create_new_institution')}
                     onClose={handleCloseNewInstitutionDialog}
                 >
                     <div className="h-[19rem] relative">
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="name" className="px-2 py-2">
-                                    Name
+                                    {t('common:name')}
                                 </label>
                             </div>
                             <div className="w-2/3">
@@ -302,13 +300,13 @@ export default function EditPersonalInformation({
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="department" className="px-2 py-2">
-                                    Fachbereich
+                                    {t('department')}
                                 </label>
                             </div>
                             <div className="w-2/3">
                                 <input
                                     type="text"
-                                    placeholder="z.B. Fakultät, Abteilung, etc."
+                                    placeholder={t('department_placeholder')}
                                     className="border border-gray-400 rounded-lg w-full p-2"
                                     value={newInstitution.department}
                                     onChange={(e) =>
@@ -323,12 +321,12 @@ export default function EditPersonalInformation({
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="schoolType" className="px-2 py-2">
-                                    Bildungseinrichtung
+                                    {t('school_type')}
                                 </label>
                             </div>
                             <div className="w-2/3">
                                 <select
-                                    placeholder="Bildungseinrichtung eingeben"
+                                    placeholder={t('school_type_placeholder')}
                                     className="border border-gray-400 rounded-lg w-full px-1 py-2"
                                     value={newInstitution.school_type}
                                     onChange={(e) =>
@@ -359,7 +357,7 @@ export default function EditPersonalInformation({
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="country" className="px-2 py-2">
-                                    Land
+                                    {t('country')}
                                 </label>
                             </div>
                             <div className="w-2/3">
@@ -383,7 +381,7 @@ export default function EditPersonalInformation({
                                 }
                                 onClick={handleCloseNewInstitutionDialog}
                             >
-                                <span>Abbrechen</span>
+                                <span>{t('common:cancel')}</span>
                             </button>
                             <button
                                 className={
@@ -395,18 +393,18 @@ export default function EditPersonalInformation({
                                     handleCloseNewInstitutionDialog();
                                 }}
                             >
-                                <span>Erstellen</span>
+                                <span>{t('common:create')}</span>
                             </button>
                         </div>
                     </div>
                 </Dialog>
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Bio'} />
+                <EditProfileHeadline name={t('bio')} />
                 <textarea
                     className={'w-full border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     rows={5}
-                    placeholder={'Erzähle kurz etwas über dich'}
+                    placeholder={t('bio_placeholder')}
                     value={personalInformation.bio}
                     onChange={(e) =>
                         setPersonalInformation({ ...personalInformation, bio: e.target.value })
@@ -414,7 +412,7 @@ export default function EditPersonalInformation({
                 ></textarea>
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Fachgebiet'} />
+                <EditProfileHeadline name={t('expertise')} />
                 <CreatableSelect
                     className="w-full mb-1"
                     options={dropdowns.expertise}
@@ -430,18 +428,17 @@ export default function EditPersonalInformation({
                               }
                             : null
                     }
-                    placeholder={
-                        'Fachgebiet auswählen oder neues Fachgebiet durch Tippen hinzufügen'
-                    }
+                    placeholder={t('expertise_placeholder')}
                     formatCreateLabel={(inputValue) => (
                         <span>
-                            Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                            {t('expertise_select_no_matching_result1')} <b>{inputValue}</b>{' '}
+                            {t('expertise_select_no_matching_result2')}
                         </span>
                     )}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Geburtstag'} />
+                <EditProfileHeadline name={t('birthday')} />
                 <input
                     className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                     type="date"
@@ -452,7 +449,7 @@ export default function EditPersonalInformation({
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Sprachen'} />
+                <EditProfileHeadline name={t('languages')} />
                 <CreatableSelect
                     className="w-full mb-1"
                     options={languageKeys.map((language) => ({
@@ -476,25 +473,29 @@ export default function EditPersonalInformation({
                               }))
                             : []
                     }
-                    placeholder={'Sprachen auswählen oder neue durch Tippen hinzufügen'}
+                    placeholder={t('languages_placeholder')}
                     isMulti
                     isClearable={true}
                     closeMenuOnSelect={false}
                     formatCreateLabel={(inputValue) => (
                         <span>
-                            <b>{inputValue}</b> erstellen
+                                {t('languages_no_matching_result1')}
+                            <b>
+                                {inputValue}
+                            </b>{' '}
+                            {t('languages_no_matching_result2')}
                         </span>
                     )}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Profilbild'} />
+                <EditProfileHeadline name={t("profile_picture")} />
                 <div>
                     <div className="w-fit">
                         <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
                             <AuthenticatedImage
                                 imageId={personalInformation.profilePicId as string}
-                                alt={'Profilbild'}
+                                alt={t('profile_picture')}
                                 width={180}
                                 height={180}
                             />
@@ -507,17 +508,17 @@ export default function EditPersonalInformation({
                                     handleOpenProfilePicDialog();
                                 }}
                             >
-                                ändern
+                                {t("common:edit")}
                             </button>
                         </div>
                     </div>
                     <Dialog
                         isOpen={isProfilePicDialogOpen}
-                        title="Profilbild hochladen"
+                        title={t("upload_profile_picture")}
                         onClose={handleCloseProfilePicDialog}
                     >
                         <div className="my-2 mx-2">
-                            Wähle ein neues Profilbild aus und schneide es zurecht
+                            {t("upload_profile_picture_description")}
                         </div>
                         <input
                             type="file"

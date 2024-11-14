@@ -25,6 +25,7 @@ import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticPropsContext } from 'next';
+import { useTranslation } from 'next-i18next';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -105,6 +106,8 @@ interface Props {
 
 EditProfile.auth = true;
 export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Element {
+    const { t } = useTranslation(['community', 'common']);
+
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>(
         defaultPersonalInformation
     );
@@ -294,7 +297,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                             <LoadingAnimation />
                         ) : (
                             <VerticalTabs>
-                                <div tabid='Stammdaten' tabname="Stammdaten">
+                                <div tabid="Stammdaten" tabname={t("general")}>
                                     <EditPersonalInformation
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
@@ -305,7 +308,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         languageKeys={languageKeys}
                                     />
                                 </div>
-                                <div tabid='VE-Info' tabname="VE-Info">
+                                <div tabid="VE-Info" tabname={t("ve_info")}>
                                     <EditVEInfo
                                         veInformation={veInformation}
                                         setVeInformation={setVeInformation}
@@ -317,7 +320,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         dropdowns={dropdowns}
                                     />
                                 </div>
-                                <div tabid='Lehre & Forschung' tabname="Lehre & Forschung">
+                                <div tabid="Lehre & Forschung" tabname={t("research_and_teaching")}>
                                     <EditResearchAndTeachingInformation
                                         researchAndTeachingInformation={
                                             researchandTeachingInformation
@@ -330,7 +333,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid='Ausbildung' tabname="Ausbildung">
+                                <div tabid="Ausbildung" tabname={t("education")}>
                                     <EditEducationInformation
                                         educations={educations}
                                         setEducations={setEducations}
@@ -339,7 +342,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid='Berufserfahrung' tabname="Berufserfahrung">
+                                <div tabid="Berufserfahrung" tabname={t("work_experience")}>
                                     <EditWorkExperienceInformation
                                         workExperience={workExperience}
                                         setWorkExperience={setWorkExperience}
@@ -348,7 +351,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid='VE-Schaufenster' tabname="VE-Schaufenster">
+                                <div tabid="VE-Schaufenster" tabname={t("ve_window")}>
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -357,7 +360,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid='Einstellungen' tabname="Einstellungen">
+                                <div tabid="Einstellungen" tabname={t("settings")}>
                                     <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
@@ -374,7 +377,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                 </WhiteBox>
                 {successPopupOpen && (
                     <Alert
-                        message="Gespeichert"
+                        message={t("saved")}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}
                     />
@@ -574,7 +577,7 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
         props: {
             dropdowns,
             languageKeys,
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

@@ -7,6 +7,8 @@
   "search_users": "Suche nach Nutzer:innen...",
   "search_users_no_hit": "kein Treffer? \"{{value}}\" trotzdem verwenden",
   "name": "Name",
+  "first_name": "Vorname",
+  "last_name": "Nachname",
   "edit_profile": "Profil bearbeiten",
   "import": "Importieren",
   "new": "Neu",
