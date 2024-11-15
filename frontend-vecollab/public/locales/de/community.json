@@ -177,5 +177,20 @@
     "languages_no_matching_result1": "",
     "languages_no_matching_result2": "erstellen",
     "upload_profile_picture": "Profilbild hochladen",
-    "upload_profile_picture_description": "Wähle ein neues Profilbild aus und schneide es zurecht"
+    "upload_profile_picture_description": "Wähle ein neues Profilbild aus und schneide es zurecht",
+    "current_ve_availability": "Verfügbarkeit für VEs",
+    "current_ve_availability_question": "Bist du aktuell für VEs verfügbar?",
+    "ve_topics_question": "Welche Themen rund um VE interessieren dich besonders?",
+    "ve_topics_placeholder": "Thema auswählen oder neues durch Tippen hinzufügen",
+    "ve_topics_select_no_matching_result1": "Kein passendes Thema gefunden? ",
+    "ve_topics_select_no_matching_result2": "verwenden",
+    "ve_contents_question": "Zu welchen (fachlichen, sprachlichen, kulturellen) Inhalten würdest du gerne einen VE planen?",
+    "ve_goals_question": "Welche Ziele möchtest du mit deinem VE erreichen?",
+    "ve_goals_placeholder": "Ziel auswählen oder neues durch Tippen hinzufügen",
+    "ve_goals_select_no_matching_result1": "Kein passendes Ziel gefunden? ",
+    "ve_goals_select_no_matching_result2": "verwenden",
+    "interdisciplinary_exchange_question": "Bist du an einem interdisziplinären Austausch interessiert?",
+    "ve_experience_question": "Welche VE-Erfahrungen konntest du bereits sammeln?",
+    "preferred_formats_question": "In welchen Formaten möchtest du VEs bevorzugt abhalten?",
+    "preferred_formats_placeholder": "präferiertes Format auswählen"
 }

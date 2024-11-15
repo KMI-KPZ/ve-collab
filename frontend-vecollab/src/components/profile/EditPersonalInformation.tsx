@@ -168,7 +168,7 @@ export default function EditPersonalInformation({
                     <input
                         className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
-                        placeholder={t('first_name')}
+                        placeholder={t('common:first_name')}
                         value={personalInformation.firstName}
                         onChange={(e) =>
                             setPersonalInformation({
@@ -180,7 +180,7 @@ export default function EditPersonalInformation({
                     <input
                         className={'border border-[#cccccc] rounded-md px-2 py-[6px]'}
                         type="text"
-                        placeholder={t('last_name')}
+                        placeholder={t('common:last_name')}
                         value={personalInformation.lastName}
                         onChange={(e) =>
                             setPersonalInformation({

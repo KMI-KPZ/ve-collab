@@ -8,6 +8,7 @@ import Swapper from './Swapper';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 import { DropdownList } from '@/interfaces/dropdowns';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     veInformation: VEInformation;
@@ -30,6 +31,8 @@ export default function EditVEInfo({
     importOrcidProfile,
     dropdowns,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     const modifyVeInterests = (index: number, value: string) => {
         let newInterests = [...veInformation.veInterests];
         newInterests[index] = value;
@@ -154,29 +157,27 @@ export default function EditVEInfo({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'aktuelle Verfügbarkeit für VE'} />
-                <div className="mb-2 text-sm">Bist du aktuell für einen VE verfügbar?</div>
+                <EditProfileHeadline name={t('current_ve_availability')} />
+                <div className="mb-2 text-sm">{t('current_ve_availability_question')}</div>
                 <Select
                     className="w-1/2 mb-1"
                     options={[
-                        { label: 'Ja', value: 'true' },
-                        { label: 'Nein', value: 'false' },
+                        { label: t('common:yes'), value: 'true' },
+                        { label: t('common:no'), value: 'false' },
                     ]}
                     onChange={(e) => (e!.value === 'true' ? setVeReady(true) : setVeReady(false))}
                     value={
                         veReady === true
-                            ? { label: 'Ja', value: 'true' }
-                            : { label: 'Nein', value: 'false' }
+                            ? { label: t('common:yes'), value: 'true' }
+                            : { label: t('common:no'), value: 'false' }
                     }
-                    placeholder={'auswählen...'}
+                    placeholder={t('common:choose_option')}
                 />
                 <div className="min-h-[20px]" /> {/* spacer to match "+" button spacing */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Themen'} />
-                <div className="mb-2 text-sm">
-                    Welche Themen rund um VE interessieren dich besonders?
-                </div>
+                <EditProfileHeadline name={t('ve_topics')} />
+                <div className="mb-2 text-sm">{t('ve_topics_question')}</div>
                 {veInformation.veInterests.map((interest, index) => (
                     <Swapper
                         key={index}
@@ -191,10 +192,11 @@ export default function EditVEInfo({
                             onChange={(e) => modifyVeInterests(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
                             value={interest !== '' ? { label: interest, value: interest } : null}
-                            placeholder={'Thema auswählen oder neues Thema durch Tippen hinzufügen'}
+                            placeholder={t('ve_topics_placeholder')}
                             formatCreateLabel={(inputValue) => (
                                 <span>
-                                    Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                                    {t('ve_topics_select_no_matching_result1')} <b>{inputValue}</b>{' '}
+                                    {t('ve_topics_select_no_matching_result2')}
                                 </span>
                             )}
                         />
@@ -203,11 +205,8 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addVeInterestInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Inhalte'} />
-                <div className="mb-2 text-sm">
-                    Zu welchen (fachlichen, sprachlichen, kulturellen) Inhalten würdest du gern
-                    einen VE planen?
-                </div>
+                <EditProfileHeadline name={t('ve_contents')} />
+                <div className="mb-2 text-sm">{t('ve_contents_question')}</div>
                 {veInformation.veContents.map((content, index) => (
                     <Swapper
                         key={index}
@@ -229,10 +228,8 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addVeContentsInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Zielsetzung'} />
-                <div className="mb-2 text-sm">
-                    Welche Ziele möchtest du mit deinem VE erreichen?
-                </div>
+                <EditProfileHeadline name={t('ve_goals')} />
+                <div className="mb-2 text-sm">{t('ve_goals_question')}</div>
                 {veInformation.veGoals.map((goal, index) => (
                     <Swapper
                         key={index}
@@ -247,10 +244,11 @@ export default function EditVEInfo({
                             onChange={(e) => modifyVeGoals(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
                             value={goal !== '' ? { label: goal, value: goal } : null}
-                            placeholder={'Ziel auswählen oder neues Ziel durch Tippen hinzufügen'}
+                            placeholder={t('ve_goals_placeholder')}
                             formatCreateLabel={(inputValue) => (
                                 <span>
-                                    Nichts passendes dabei? <b>{inputValue}</b> verwenden
+                                    {t('ve_goals_select_no_matching_result1')} <b>{inputValue}</b>{' '}
+                                    {t('ve_goals_select_no_matching_result2')}
                                 </span>
                             )}
                         />
@@ -259,15 +257,13 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addVeGoalsInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'interdisziplinärer Austausch'} />
-                <div className="mb-2 text-sm">
-                    Bist du an einem interdisziplinären Austausch interessiert?
-                </div>
+                <EditProfileHeadline name={t('interdisciplinary_exchange')} />
+                <div className="mb-2 text-sm">{t('interdisciplinary_exchange_question')}</div>
                 <Select
                     className="w-1/2 mb-1"
                     options={[
-                        { label: 'Ja', value: 'true' },
-                        { label: 'Nein', value: 'false' },
+                        { label: t('common:yes'), value: 'true' },
+                        { label: t('common:no'), value: 'false' },
                     ]}
                     onChange={(e) =>
                         e!.value === 'true'
@@ -276,18 +272,16 @@ export default function EditVEInfo({
                     }
                     value={
                         veInformation.interdisciplinaryExchange === true
-                            ? { label: 'Ja', value: 'true' }
-                            : { label: 'Nein', value: 'false' }
+                            ? { label: t('common:yes'), value: 'true' }
+                            : { label: t('common:no'), value: 'false' }
                     }
-                    placeholder={'auswählen...'}
+                    placeholder={t('common:choose_option')}
                 />
                 <div className="min-h-[20px]" /> {/* vertical spacer to match "+" button spacing */}
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Erfahrungen'} />
-                <div className="mb-2 text-sm">
-                    Welche VE-Erfahrungen konntest du bereits sammeln?
-                </div>
+                <EditProfileHeadline name={t('ve_experience')} />
+                <div className="mb-2 text-sm">{t('ve_experience_question')}</div>
                 {veInformation.experience.map((exp, index) => (
                     <Swapper
                         key={index}
@@ -309,8 +303,8 @@ export default function EditVEInfo({
                 <EditProfilePlusMinusButtons plusCallback={addExperienceInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'präferierte Formate'} />
-                <div className="mb-2 text-sm">In welchen Formaten möchtest du den VE abhalten?</div>
+                <EditProfileHeadline name={t('preferred_formats')} />
+                <div className="mb-2 text-sm">{t('preferred_formats_question')}</div>
                 <Select
                     className="w-1/2 mb-1"
                     options={dropdowns.preferredFormat}
@@ -324,7 +318,7 @@ export default function EditVEInfo({
                               }
                             : null
                     }
-                    placeholder={'präferiertes Format auswählen'}
+                    placeholder={t('preferred_formats_placeholder')}
                 />
             </EditProfileVerticalSpacer>
         </form>
