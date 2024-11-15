@@ -192,5 +192,17 @@
     "interdisciplinary_exchange_question": "Bist du an einem interdisziplinären Austausch interessiert?",
     "ve_experience_question": "Welche VE-Erfahrungen konntest du bereits sammeln?",
     "preferred_formats_question": "In welchen Formaten möchtest du VEs bevorzugt abhalten?",
-    "preferred_formats_placeholder": "präferiertes Format auswählen"
+    "preferred_formats_placeholder": "präferiertes Format auswählen",
+    "research_focus_question": "Worin liegen deine Forschungsschwerpunkte?",
+    "one_field_per_research_focus": "Verwende ein Feld pro Forschungsschwerpunkt",
+    "lectures_question": "In welchen Lehrveranstaltungen würdest du gerne einen VE integrieren?",
+    "lecture_title": "Titel",
+    "lecture_title_placeholder": "Titel der Lehrveranstaltung",
+    "academic_courses": "Studiengänge",
+    "semester": "Semester",
+    "semester_placeholder": "In welchen Semestern findet die Lehrveranstaltung statt?",
+    "lms_question": "Mit welchen LMS arbeitest du überwiegend?",
+    "one_field_per_lms": "Verwende ein Feld pro LMS",
+    "tools_question": "Mit welchen (digitalen) Tools arbeitest du überwiegend?",
+    "one_field_per_tool": "Verwende ein Feld pro Tool"
 }

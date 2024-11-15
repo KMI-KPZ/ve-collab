@@ -8,7 +8,7 @@ import Swapper from './Swapper';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 import { DropdownList } from '@/interfaces/dropdowns';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     veInformation: VEInformation;
