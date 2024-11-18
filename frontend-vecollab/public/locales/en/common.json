@@ -348,5 +348,6 @@
   "title": "Title",
   "split_multiple_by_comma": "Split multiple entries by comma",
   "move_up": "Move up",
-  "move_down": "Move down"
+  "move_down": "Move down",
+  "city": "City"
 }

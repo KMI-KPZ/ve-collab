@@ -213,5 +213,12 @@
     "education_department": "Department",
     "education_department_placeholder": "optional, e.g. faculty",
     "additional_info": "Extra Info",
-    "additional_info_placeholder": "optional, e.g. grade, specialization, thesis, ..."
+    "additional_info_placeholder": "optional, e.g. grade, specialization, thesis, ...",
+    "work_experience_question": "Document relevant stages of your career path",
+    "position": "Position",
+    "position_placeholder": "Job description",
+    "work_experience_institution_placeholder": "Name of the institution",
+    "work_experience_department": "Department",
+    "work_experience_department_placeholder": "optional, e.g. faculty of the university",
+    "work_experience_additional_info": "optional, e.g. activities, projects, ..."
 }

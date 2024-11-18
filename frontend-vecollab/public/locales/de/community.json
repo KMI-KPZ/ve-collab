@@ -213,5 +213,12 @@
     "education_department": "Abteilung",
     "education_department_placeholder": "optional, z.B. Fakultät",
     "additional_info": "Zusatzinfos",
-    "additional_info_placeholder": "optional, z.B. Note, Spezialisierung, Thesis, ..."
+    "additional_info_placeholder": "optional, z.B. Note, Spezialisierung, Thesis, ...",
+    "work_experience_question": "Dokumentiere relevante Abschnitte in deinem beruflichen Werdegang",
+    "position": "Position",
+    "position_placeholder": "Berufsbezeichnung",
+    "work_experience_institution_placeholder": "Name der Institution",
+    "work_experience_department": "Abteilung",
+    "work_experience_department_placeholder": "optional, z.B. Fakultät der Uni",
+    "work_experience_additional_info": "optional, z.B. Tätigkeit, Projekt, ..."
 }
