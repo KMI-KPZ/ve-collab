@@ -224,5 +224,15 @@
     "ve_window_question": "Display your planned VEs in your profile",
     "choose_plan": "Choose a plan",
     "ve_window_title_placeholder": "optional, set different title in the VE Vitrine",
-    "ve_window_description_placeholder": "optional, set different description in the VE Vitrine"
+    "ve_window_description_placeholder": "optional, set different description in the VE Vitrine",
+    "email_and_push": "Email & Push",
+    "push_only": "Push only",
+    "new_messages": "New messages",
+    "group_invitation": "Group invitation",
+    "system_notifications": "System notifications",
+    "matching_exclusion": "Exclusion from Matching",
+    "attention": "Attention",
+    "matching_exclusion_question": "If you exclude yourself from the matching, other users won't have the chance to find you as a VE-partner using the matching feature!",
+    "attend_matching": "I participate in the matching",
+    "exclude_matching": "exclude me from the matching"
 }

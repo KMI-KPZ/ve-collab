@@ -224,5 +224,15 @@
     "ve_window_question": "Stelle deine bereits geplanten VEs in deinem Profil aus",
     "choose_plan": "Plan auswählen",
     "ve_window_title_placeholder": "optional, anderer Titel für das VE-Schaufenster",
-    "ve_window_description_placeholder": "optional, andere Beschreibung für das VE-Schaufenster"
+    "ve_window_description_placeholder": "optional, andere Beschreibung für das VE-Schaufenster",
+    "email_and_push": "E-Mail & Push",
+    "push_only": "nur Push",
+    "new_messages": "Neue Nachrichten",
+    "group_invitation": "Gruppen-Einladung",
+    "system_notifications": "Systembenachrichtigungen",
+    "matching_exclusion": "Ausschluss vom Matching",
+    "attention": "Achtung",
+    "matching_exclusion_question": "Wenn du dich vim Matching ausschließt, gibt es keine Chance für andere Personen dich im Rahmen der VE-Partner:innensuche zu finden!",
+    "attend_matching": "Ich nehme am Matching teil",
+    "exclude_matching": "vom Matching ausschließen"
 }

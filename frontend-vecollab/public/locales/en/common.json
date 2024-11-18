@@ -349,5 +349,6 @@
   "split_multiple_by_comma": "Split multiple entries by comma",
   "move_up": "Move up",
   "move_down": "Move down",
-  "city": "City"
+  "city": "City",
+  "none": "None"
 }
