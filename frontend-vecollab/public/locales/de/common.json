@@ -346,5 +346,7 @@
   "video_not_supported": "Dein Browser unterstützt das Anzeigen von Videos nicht.",
   "platform_tour": "Plattform-Tour",
   "title": "Titel",
-  "split_multiple_by_comma": "Mehrere durch Komma trennen"
+  "split_multiple_by_comma": "Mehrere durch Komma trennen",
+  "move_up": "Nach oben",
+  "move_down": "Nach unten"
 }

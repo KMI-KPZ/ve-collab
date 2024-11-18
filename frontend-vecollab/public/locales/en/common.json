@@ -346,5 +346,7 @@
   "video_not_supported": "Your browser does not support video playback.",
   "platform_tour": "Platform Tour",
   "title": "Title",
-  "split_multiple_by_comma": "Split multiple entries by comma"
+  "split_multiple_by_comma": "Split multiple entries by comma",
+  "move_up": "Move up",
+  "move_down": "Move down"
 }

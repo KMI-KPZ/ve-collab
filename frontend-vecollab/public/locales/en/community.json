@@ -143,6 +143,7 @@
     "complete_profile": "Complete profile",
     "complete_profile_text": "Completing your profile helps other users to find you as a partner for a VE. The following fields are e.g. not yet filled out:",
     "institutions": "Institutions",
+    "institution": "Institution",
     "recommended_materials": "Recommended Learning Material",
     "recommended_materials_text": "To get started with VEs we recommend the following modules",
     "form_image": "Image of a form",
@@ -204,5 +205,13 @@
     "lms_question": "Which LMS do you use mainly?",
     "one_field_per_lms": "Use one field per LMS",
     "tools_question": "Which (digital) tools do you use mainly?",
-    "one_field_per_tool": "Use one field per tool"
+    "one_field_per_tool": "Use one field per tool",
+    "education_question": "Document relevant stages of you education",
+    "education_institution_placeholder": "Name of the institution",
+    "degree_and_field": "Degree and field",
+    "degree_and_field_placeholder": "e.g. Bachelor/Master/PhD in Computer Science",
+    "education_department": "Department",
+    "education_department_placeholder": "optional, e.g. faculty",
+    "additional_info": "Extra Info",
+    "additional_info_placeholder": "optional, e.g. grade, specialization, thesis, ..."
 }

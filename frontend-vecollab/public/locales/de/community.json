@@ -143,6 +143,7 @@
     "complete_profile": "Profil vervollständigen",
     "complete_profile_text": "Die Vervollständigung des Profils hilft anderen Benutzer:innen, dich für einen VE zu finden. Folgende Daten sind zum Beispiel noch nicht ausgefüllt:",
     "institutions": "Institutionen",
+    "instution": "Institution",
     "recommended_materials": "Empfohlene Selbstlernmaterialien",
     "recommended_materials_text": "Für den Einstieg in VEs empfehlen wir die folgenden Module",
     "form_image": "Bild eines Formulars",
@@ -204,5 +205,13 @@
     "lms_question": "Mit welchen LMS arbeitest du überwiegend?",
     "one_field_per_lms": "Verwende ein Feld pro LMS",
     "tools_question": "Mit welchen (digitalen) Tools arbeitest du überwiegend?",
-    "one_field_per_tool": "Verwende ein Feld pro Tool"
+    "one_field_per_tool": "Verwende ein Feld pro Tool",
+    "education_question": "Dokumentiere relevante Abschnitte in deiner Ausbildung",
+    "education_institution_placeholder": "Name der Bildungseinrichtung",
+    "degree_and_field": "Abschluss & Fach",
+    "degree_and_field_placeholder": "z.B. Bachelor/Master/PhD in Informatik",
+    "education_department": "Abteilung",
+    "education_department_placeholder": "optional, z.B. Fakultät",
+    "additional_info": "Zusatzinfos",
+    "additional_info_placeholder": "optional, z.B. Note, Spezialisierung, Thesis, ..."
 }
