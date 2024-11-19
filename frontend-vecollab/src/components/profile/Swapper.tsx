@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import { FormEvent } from 'react';
 import { RxArrowUp, RxArrowDown, RxTrash } from 'react-icons/rx';
 
@@ -18,6 +19,8 @@ export default function Swapper({
     swapCallback,
     deleteCallback,
 }: Props) {
+    const { t } = useTranslation('common');
+
     return (
         <div className="flex">
             {children}
@@ -27,8 +30,9 @@ export default function Swapper({
                         onClick={(e) => {
                             swapCallback(e, index - 1, index);
                         }}
+                        title={t("move_up")}
                     >
-                        <RxArrowUp size={20} color='gray'/>
+                        <RxArrowUp size={20} color="gray" />
                     </button>
                 )}
                 {/* use same for min-w as for icon size*/}
@@ -38,8 +42,9 @@ export default function Swapper({
                             onClick={(e) => {
                                 swapCallback(e, index, index + 1);
                             }}
+                            title={t("move_down")}
                         >
-                            <RxArrowDown size={20} color='gray'/>
+                            <RxArrowDown size={20} color="gray" />
                         </button>
                     )}
                 </div>
@@ -47,8 +52,9 @@ export default function Swapper({
                     onClick={(e) => {
                         deleteCallback(e, index);
                     }}
+                    title={t("delete")}
                 >
-                    <RxTrash size={20} color='gray'/>
+                    <RxTrash size={20} color="gray" />
                 </button>
             </div>
         </div>

@@ -6,6 +6,7 @@ import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileEducationItem from './EditProfileEducationItem';
 import Swapper from './Swapper';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     educations: Education[];
@@ -22,6 +23,8 @@ export default function EditEducationInformation({
     orcid,
     importOrcidProfile,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     const modifyEducationInstitution = (index: number, value: string) => {
         let newEducations = [...educations];
         newEducations[index].institution = value;
@@ -99,9 +102,9 @@ export default function EditEducationInformation({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Ausbildung'} />
+                <EditProfileHeadline name={t("education")} />
                 <div className="mb-2 text-sm">
-                    Dokumentiere relevante Abschnitte in deiner Ausbildung
+                    {t("education_question")}
                 </div>
                 {educations.map((education, index) => (
                     <Swapper

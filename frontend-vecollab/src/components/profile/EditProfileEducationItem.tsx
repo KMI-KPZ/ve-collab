@@ -1,6 +1,7 @@
 import { Education } from '@/interfaces/profile/profileInterfaces';
 import EditProfileItemRow from './EditProfileItemRow';
 import SlateBox from '../common/SlateBox';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     education: Education;
@@ -16,41 +17,43 @@ interface Props {
 }
 
 export default function EditProfileEducationItem({ education, index, modifyCallbacks }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
         <div className="w-full">
             <SlateBox>
                 <EditProfileItemRow
-                    label={'Institution'}
+                    label={t('institution')}
                     value={education.institution}
                     onChange={(e) =>
                         modifyCallbacks.modifyEducationInstitution(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="Name der Bildungseinrichtung"
+                    placeholder={t('education_institution_placeholder')}
                 />
                 <EditProfileItemRow
-                    label={'Abschluss und Fach'}
+                    label={t('degree_and_field')}
                     value={education.degree}
                     onChange={(e) => modifyCallbacks.modifyEducationDegree(index, e.target.value)}
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="z.B. Bachelor/Master/PhD Informatik"
+                    placeholder={t('degree_and_field_placeholder')}
                 />
                 <EditProfileItemRow
-                    label={'Abteilung'}
+                    label={t('education_department')}
                     value={education.department}
                     onChange={(e) =>
                         modifyCallbacks.modifyEducationDepartment(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional, Abteilung der Einrichtung, z.B. Fakultät"
+                    placeholder={t('education_department_placeholder')}
                 />
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="timestampFrom" className="px-2 py-2">
-                            von
+                            {t('common:from')}
                         </label>
                     </div>
                     <div className="w-2/3">
@@ -61,7 +64,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                             onChange={(e) =>
                                 modifyCallbacks.modifyEducationTimestampFrom(index, e.target.value)
                             }
-                            placeholder="optional"
+                            placeholder={t('common:optional')}
                             className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
@@ -69,7 +72,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="timestampTo" className="px-2 py-2">
-                            bis
+                            {t('common:to')}
                         </label>
                     </div>
                     <div className="w-2/3 flex">
@@ -80,20 +83,20 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                             onChange={(e) =>
                                 modifyCallbacks.modifyEducationTimestampTo(index, e.target.value)
                             }
-                            placeholder="optional"
+                            placeholder={t('common:optional')}
                             className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>
                 <EditProfileItemRow
-                    label={'Zusatzinfos'}
+                    label={t('additional_info')}
                     value={education.additional_info}
                     onChange={(e) =>
                         modifyCallbacks.modifyEducationAdditionalInfo(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional, z.B. Note, Spezialisierungen, Thesis-Titel, ..."
+                    placeholder={t('additional_info_placeholder')}
                 />
             </SlateBox>
         </div>

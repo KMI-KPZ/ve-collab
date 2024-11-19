@@ -25,7 +25,7 @@ export default function FooterSection() {
                 <div className="flex-none">
                     <Image src={euFundingLogo} height={100} alt="NextGenerationEU Logo"></Image>
                 </div>
-                <p className="flex-1 mx-4 text-white">{t('funding')}</p>
+                <p className="flex-1 mx-4">{t('funding')}</p>
             </div>
             <hr className="w-8/12 mx-auto mb-4 border-gray-400/50 border-0.5" />
             <div className="flex flex-wrap justify-center">
