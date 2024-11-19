@@ -24,7 +24,9 @@ export default function PersonalData({ bio, name, expertise, birthday, languages
                 <PersonalInformationItem attributeName={t('common:name')} attributeValue={name} />
                 <PersonalInformationItem
                     attributeName={t('expertise')}
-                    attributeValue={expertise}
+                    attributeValue={t('expertise_options.' + expertise, {
+                        defaultValue: expertise,
+                    })}
                 />
                 <PersonalInformationItem
                     attributeName={t('birthday')}

@@ -1,5 +1,9 @@
 import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
-import { Institution, PersonalInformation } from '@/interfaces/profile/profileInterfaces';
+import {
+    Institution,
+    OptionLists,
+    PersonalInformation,
+} from '@/interfaces/profile/profileInterfaces';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
@@ -10,7 +14,6 @@ import { useSession } from 'next-auth/react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
-import { DropdownList } from '@/interfaces/dropdowns';
 import LoadingAnimation from '../common/LoadingAnimation';
 import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
@@ -23,8 +26,7 @@ interface Props {
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
-    dropdowns: DropdownList;
-    languageKeys: string[];
+    optionLists: OptionLists;
 }
 
 export default function EditPersonalInformation({
@@ -33,8 +35,7 @@ export default function EditPersonalInformation({
     updateProfileData,
     orcid,
     importOrcidProfile,
-    dropdowns,
-    languageKeys,
+    optionLists,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
@@ -415,7 +416,10 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('expertise')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={dropdowns.expertise}
+                    options={optionLists.expertiseKeys.map((expertise) => ({
+                        label: t('expertise_options.' + expertise, { defaultValue: expertise }),
+                        value: expertise,
+                    }))}
                     onChange={(e) =>
                         setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
@@ -423,7 +427,9 @@ export default function EditPersonalInformation({
                     value={
                         personalInformation.expertise !== ''
                             ? {
-                                  label: personalInformation.expertise,
+                                  label: t('expertise_options.' + personalInformation.expertise, {
+                                      defaultValue: personalInformation.expertise,
+                                  }),
                                   value: personalInformation.expertise,
                               }
                             : null
@@ -452,8 +458,8 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('languages')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={languageKeys.map((language) => ({
-                        label: t('common:languages.' + language),
+                    options={optionLists.languageKeys.map((language) => ({
+                        label: t('common:languages.' + language, { defaultValue: language }),
                         value: language,
                     }))}
                     onChange={(e) =>
@@ -479,17 +485,14 @@ export default function EditPersonalInformation({
                     closeMenuOnSelect={false}
                     formatCreateLabel={(inputValue) => (
                         <span>
-                                {t('languages_no_matching_result1')}
-                            <b>
-                                {inputValue}
-                            </b>{' '}
-                            {t('languages_no_matching_result2')}
+                            {t('languages_no_matching_result1')}
+                            <b>{inputValue}</b> {t('languages_no_matching_result2')}
                         </span>
                     )}
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t("profile_picture")} />
+                <EditProfileHeadline name={t('profile_picture')} />
                 <div>
                     <div className="w-fit">
                         <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
@@ -508,18 +511,16 @@ export default function EditPersonalInformation({
                                     handleOpenProfilePicDialog();
                                 }}
                             >
-                                {t("common:edit")}
+                                {t('common:edit')}
                             </button>
                         </div>
                     </div>
                     <Dialog
                         isOpen={isProfilePicDialogOpen}
-                        title={t("upload_profile_picture")}
+                        title={t('upload_profile_picture')}
                         onClose={handleCloseProfilePicDialog}
                     >
-                        <div className="my-2 mx-2">
-                            {t("upload_profile_picture_description")}
-                        </div>
+                        <div className="my-2 mx-2">{t('upload_profile_picture_description')}</div>
                         <input
                             type="file"
                             accept="image/*"

@@ -1,4 +1,4 @@
-import { VEInformation } from '@/interfaces/profile/profileInterfaces';
+import { OptionLists, VEInformation } from '@/interfaces/profile/profileInterfaces';
 import { Dispatch, FormEvent, SetStateAction } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
@@ -7,7 +7,6 @@ import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import Swapper from './Swapper';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
-import { DropdownList } from '@/interfaces/dropdowns';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
@@ -18,7 +17,7 @@ interface Props {
     updateProfileData(evt: FormEvent): Promise<void>;
     orcid: string | null | undefined;
     importOrcidProfile(evt: FormEvent): Promise<void>;
-    dropdowns: DropdownList;
+    optionLists: OptionLists;
 }
 
 export default function EditVEInfo({
@@ -29,7 +28,7 @@ export default function EditVEInfo({
     updateProfileData,
     orcid,
     importOrcidProfile,
-    dropdowns,
+    optionLists,
 }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
@@ -188,10 +187,22 @@ export default function EditVEInfo({
                     >
                         <CreatableSelect
                             className="w-full mb-1"
-                            options={dropdowns.veInterests}
+                            options={optionLists.veInterestsKeys.map((key) => ({
+                                label: t('ve_interests_options.' + key, { defaultValue: key }),
+                                value: key,
+                            }))}
                             onChange={(e) => modifyVeInterests(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
-                            value={interest !== '' ? { label: interest, value: interest } : null}
+                            value={
+                                interest !== ''
+                                    ? {
+                                          label: t('ve_interests_options.' + interest, {
+                                              defaultValue: interest,
+                                          }),
+                                          value: interest,
+                                      }
+                                    : null
+                            }
                             placeholder={t('ve_topics_placeholder')}
                             formatCreateLabel={(inputValue) => (
                                 <span>
@@ -240,10 +251,22 @@ export default function EditVEInfo({
                     >
                         <CreatableSelect
                             className="w-full mb-1"
-                            options={dropdowns.veGoals}
+                            options={optionLists.veGoalsKeys.map((key) => ({
+                                label: t('ve_goals_options.' + key, { defaultValue: key }),
+                                value: key,
+                            }))}
                             onChange={(e) => modifyVeGoals(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
-                            value={goal !== '' ? { label: goal, value: goal } : null}
+                            value={
+                                goal !== ''
+                                    ? {
+                                          label: t('ve_goals_options.' + goal, {
+                                              defaultValue: goal,
+                                          }),
+                                          value: goal,
+                                      }
+                                    : null
+                            }
                             placeholder={t('ve_goals_placeholder')}
                             formatCreateLabel={(inputValue) => (
                                 <span>
@@ -307,13 +330,21 @@ export default function EditVEInfo({
                 <div className="mb-2 text-sm">{t('preferred_formats_question')}</div>
                 <Select
                     className="w-1/2 mb-1"
-                    options={dropdowns.preferredFormat}
+                    options={optionLists.preferredFormatKeys.map((key) => ({
+                        label: t('preferred_formats_options.' + key, { defaultValue: key }),
+                        value: key,
+                    }))}
                     onChange={(e) => modifyPreferredFormat(e!.value)}
                     // if value is not null, placeholder wont show, even though value inside the object is ''
                     value={
                         veInformation.preferredFormat !== ''
                             ? {
-                                  label: veInformation.preferredFormat,
+                                  label: t(
+                                      'preferred_formats_options.' + veInformation.preferredFormat,
+                                      {
+                                          defaultValue: veInformation.preferredFormat,
+                                      }
+                                  ),
                                   value: veInformation.preferredFormat,
                               }
                             : null
