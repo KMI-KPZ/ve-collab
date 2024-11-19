@@ -2,8 +2,8 @@ import { ChangeEvent, Dispatch, FormEvent, SetStateAction, useState } from 'reac
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
-import EditVisibilityRadioButtons from './EditVisibilityRadioButtons';
 import { NotificationSettings } from '@/interfaces/profile/profileInterfaces';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     excludedFromMatching: boolean;
@@ -23,35 +23,7 @@ export default function EditVisibilitySettings({
     orcid,
     importOrcidProfile,
 }: Props) {
-    /*
-    const [visibilities, setVisibilities] = useState({
-        veInfo: 'public',
-        teaching: 'public',
-        research: 'public',
-        education: 'public',
-        workExperience: 'public',
-        veWindow: 'public',
-    });
-
-    const updateVeInfo = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, veInfo: e.target.value });
-    };
-    const updateTeaching = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, teaching: e.target.value });
-    };
-    const updateResearch = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, research: e.target.value });
-    };
-    const updateEducation = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, education: e.target.value });
-    };
-    const updateWorkExperience = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, workExperience: e.target.value });
-    };
-    const updateVeWindow = (e: ChangeEvent<HTMLInputElement>) => {
-        setVisibilities({ ...visibilities, veWindow: e.target.value });
-    };
-    */
+    const { t } = useTranslation(['community', 'common']);
 
     const updateNotificationSettings = (
         setting: keyof NotificationSettings,
@@ -67,20 +39,22 @@ export default function EditVisibilitySettings({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Benachrichtigungen'} />
+                <EditProfileHeadline name={t('common:notifications')} />
                 <div className="my-4 border border-slate-300 rounded-xl overflow-hidden">
                     <table className="table-auto w-full border-collapse">
                         <thead>
                             <tr className="border-b border-slate-300 bg-slate-100">
                                 <th></th>
-                                <th className="text-center p-4 font-medium">E-Mail & Push</th>
-                                <th className="text-center p-4 font-medium">Push</th>
-                                <th className="text-center p-4 font-medium">keine</th>
+                                <th className="text-center p-4 font-medium">
+                                    {t('email_and_push')}
+                                </th>
+                                <th className="text-center p-4 font-medium">{t('push_only')}</th>
+                                <th className="text-center p-4 font-medium">{t('common:none')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr className="border-b border-slate-300">
-                                <td className="p-4">Neue Nachrichten</td>
+                                <td className="p-4">{t('new_messages')}</td>
                                 <td className="text-center p-4">
                                     <input
                                         type="radio"
@@ -100,16 +74,11 @@ export default function EditVisibilitySettings({
                                     />
                                 </td>
                                 <td className="text-center p-4">
-                                    <input
-                                        type="radio"
-                                        name="newMessages"
-                                        value="none"
-                                        disabled
-                                    />
+                                    <input type="radio" name="newMessages" value="none" disabled />
                                 </td>
                             </tr>
                             <tr className="border-b border-slate-300">
-                                <td className="p-4">VE-Einladung</td>
+                                <td className="p-4">{t('ve_invitation')}</td>
                                 <td className="text-center p-4">
                                     <input
                                         type="radio"
@@ -139,7 +108,7 @@ export default function EditVisibilitySettings({
                                 </td>
                             </tr>
                             <tr className="border-b border-slate-300">
-                                <td className="p-4">Gruppen-Einladung</td>
+                                <td className="p-4">{t('group_invitation')}</td>
                                 <td className="text-center p-4">
                                     <input
                                         type="radio"
@@ -175,7 +144,7 @@ export default function EditVisibilitySettings({
                                 </td>
                             </tr>
                             <tr>
-                                <td className="p-4">Systembenachrichtigungen</td>
+                                <td className="p-4">{t('system_notifications')}</td>
                                 <td className="text-center p-4">
                                     <input
                                         type="radio"
@@ -259,10 +228,9 @@ export default function EditVisibilitySettings({
             */}
             <EditProfileVerticalSpacer>
                 <div className="p-2 rounded-xl border border-red-600">
-                    <EditProfileHeadline name={'Ausschluss vom Matching'} />
+                    <EditProfileHeadline name={t('matching_exclusion')} />
                     <div>
-                        Achtung: wenn du dich vom Matching ausschließt, gibt es keine Chance für
-                        andere Personen dich im Rahmen der VE-Partnersuche zu finden!
+                        <u>{t('attention')}:</u> {t('matching_exclusion_question')}
                     </div>
                     <select
                         value={excludedFromMatching === true ? 'true' : 'false'}
@@ -277,10 +245,10 @@ export default function EditVisibilitySettings({
                         }
                     >
                         <option value="false" className="text-green-500">
-                            ich nehme am Matching teil
+                            {t('attend_matching')}
                         </option>
                         <option value="true" className="text-red-500">
-                            vom Matching ausschließen
+                            {t('exclude_matching')}
                         </option>
                     </select>
                 </div>

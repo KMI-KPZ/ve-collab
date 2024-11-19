@@ -1,3 +1,4 @@
+import { useTranslation } from 'next-i18next';
 import { FormEvent } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 
@@ -14,15 +15,17 @@ export default function EditProfilePlusMinusButtons({
     plusCallback,
     extendClassName,
 }: Props) {
+    const { t } = useTranslation('common');
+
     return (
         <div className={'w-full mt-1 flex justify-end' + ' ' + extendClassName}>
             {minusCallback !== undefined && (
-                <button onClick={minusCallback}>
+                <button onClick={minusCallback} title={t("delete")}>
                     <RxMinus size={20} />
                 </button>
             )}
             {plusCallback !== undefined && (
-                <button onClick={plusCallback}>
+                <button onClick={plusCallback} title={t("new")}>
                     <RxPlus size={20} />
                 </button>
             )}

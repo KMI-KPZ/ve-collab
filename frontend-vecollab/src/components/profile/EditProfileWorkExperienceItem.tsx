@@ -1,6 +1,7 @@
 import { WorkExperience } from '@/interfaces/profile/profileInterfaces';
 import SlateBox from '../common/SlateBox';
 import EditProfileItemRow from './EditProfileItemRow';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     workExperience: WorkExperience;
@@ -22,43 +23,45 @@ export default function EditProfileWorkExperienceItem({
     index,
     modifyCallbacks,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
         <div className="w-full">
             <SlateBox>
                 <EditProfileItemRow
-                    label={'Position'}
+                    label={t('position')}
                     value={workExperience.position}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperiencePosition(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="Berufsbezeichnung"
+                    placeholder={t('position_placeholder')}
                 />
                 <EditProfileItemRow
-                    label={'Institution'}
+                    label={t('institution')}
                     value={workExperience.institution}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperienceInstitution(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="Name der Institution"
+                    placeholder={t('work_experience_institution_placeholder')}
                 />
                 <EditProfileItemRow
-                    label={'Abteilung'}
+                    label={t('work_experience_department')}
                     value={workExperience.department}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperienceDepartment(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional, z.B. Fakultät der Uni / Abteilung der Firma"
+                    placeholder={t('work_experience_department_placeholder')}
                 />
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="timestampFrom" className="px-2 py-2">
-                            von
+                            {t('common:from')}
                         </label>
                     </div>
                     <div className="w-2/3">
@@ -72,7 +75,7 @@ export default function EditProfileWorkExperienceItem({
                                     e.target.value
                                 )
                             }
-                            placeholder="optional"
+                            placeholder={t('common:optional')}
                             className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
@@ -80,7 +83,7 @@ export default function EditProfileWorkExperienceItem({
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="timestampTo" className="px-2 py-2">
-                            bis
+                            {t('common:to')}
                         </label>
                     </div>
                     <div className="w-2/3 flex">
@@ -94,41 +97,40 @@ export default function EditProfileWorkExperienceItem({
                                     e.target.value
                                 )
                             }
-                            placeholder="optional"
+                            placeholder={t('common:optional')}
                             className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
-
                     </div>
                 </div>
                 <EditProfileItemRow
-                    label={'Stadt'}
+                    label={t('common:city')}
                     value={workExperience.city}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperienceCity(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional"
+                    placeholder={t('common:optional')}
                 />
                 <EditProfileItemRow
-                    label={'Land'}
+                    label={t('country')}
                     value={workExperience.country}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperienceCountry(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional"
+                    placeholder={t('common:optional')}
                 />
                 <EditProfileItemRow
-                    label={'Zusatzinfos'}
+                    label={t('additional_info')}
                     value={workExperience.additional_info}
                     onChange={(e) =>
                         modifyCallbacks.modifyWorkExperienceAdditionalInfo(index, e.target.value)
                     }
                     labelElementWidth="w-1/3"
                     inputElemenWidth="w-2/3"
-                    placeholder="optional, z.B. Tätigkeiten"
+                    placeholder={t('work_experience_additional_info')}
                 />
             </SlateBox>
         </div>

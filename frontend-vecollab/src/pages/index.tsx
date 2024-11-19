@@ -47,7 +47,7 @@ export default function Home({ notificationEvents, toggleNotifWindow }: Props): 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

@@ -6,6 +6,7 @@ import EditProfileHeadline from './EditProfileHeadline';
 import EditProfileWorkExperienceItem from './EditProfileWorkExperienceItem';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import Swapper from './Swapper';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     workExperience: WorkExperience[];
@@ -22,6 +23,8 @@ export default function EditWorkExperienceInformation({
     orcid,
     importOrcidProfile,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     const modifyWorkExperiencePosition = (index: number, value: string) => {
         let newExperiences = [...workExperience];
         newExperiences[index].position = value;
@@ -112,9 +115,9 @@ export default function EditWorkExperienceInformation({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Berufserfahrung'} />
+                <EditProfileHeadline name={t("work_experience")} />
                 <div className="mb-2 text-sm">
-                    Dokumentiere relevante Abschnitte in deinem beruflichen Werdegang
+                    {t("work_experience_question")}
                 </div>
                 {workExperience.map((workExp, index) => (
                     <Swapper
