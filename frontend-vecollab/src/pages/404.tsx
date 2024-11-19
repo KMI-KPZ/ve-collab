@@ -8,7 +8,7 @@ export default function Custom404() {
     const { t } = useTranslation('common');
 
     return (
-        <div className="flex items-start w-1/2">
+        <div className="flex items-start w-1/2 mx-auto my-20">
             <GiSadCrab size={60} className="-rotate-12" />
             <div className="flex flex-col items-start ml-6">
                 <div className="text-xl text-slate-900">{t('page_not_found')}</div>
