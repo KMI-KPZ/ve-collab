@@ -1049,6 +1049,19 @@ class PostResourceTest(BaseResourceTestCase):
                 "educations": [],
                 "work_experience": [],
                 "ve_window": [],
+                "notification_settings": {
+                    "messages": "email",
+                    "ve_invite": "email",
+                    "group_invite": "email",
+                    "system": "email",
+                },
+                "achievements": [
+                    {"type": "create_posts", "progress": 0, "level": None},
+                    {"type": "join_groups", "progress": 0, "level": None},
+                    {"type": "good_practice_plans", "progress": 0, "level": None},
+                    {"type": "unique_partners", "progress": 0, "level": None},
+                ],
+                "chosen_achievement": {"type": None, "level": None},
             }
         )
 
@@ -2601,6 +2614,16 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "group_invite": "push",
                 "system": "push",
             },
+            "achievements": [
+                {"type": "create_posts", "progress": 105, "level": "platinum"},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 1, "level": "bronze"},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+            "chosen_achievement": {
+                "type": "create_posts",
+                "level": "platinum",
+            },
         }
 
     def test_get_profile(self):
@@ -2659,6 +2682,10 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["notification_settings"],
             self.default_profile["notification_settings"],
         )
+        self.assertEqual(profile["achievements"], self.default_profile["achievements"])
+        self.assertEqual(
+            profile["chosen_achievement"], self.default_profile["chosen_achievement"]
+        )
 
         # test again, but specify a projection of only first_name, last_name and expertise
         profile = profile_manager.get_profile(
@@ -2696,6 +2723,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
         self.assertNotIn("notification_settings", profile)
+        self.assertNotIn("achievements", profile)
+        self.assertNotIn("chosen_achievement", profile)
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
         self.assertEqual(profile["expertise"], self.default_profile["expertise"])
@@ -2805,6 +2834,16 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+        )
+        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2869,6 +2908,16 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+        )
+        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2933,6 +2982,16 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            result["achievements"],
+            [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+        )
+        self.assertEqual(result["chosen_achievement"], {"type": None, "level": None})
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3177,6 +3236,16 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+        )
+        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(
@@ -3278,6 +3347,32 @@ class ProfileResourceTest(BaseResourceTestCase):
         fs_file = fs.get(profile_pic_id)
         self.assertIsNotNone(fs_file)
 
+        # try again with updating the achievements manually, expecting that they
+        # will be ignored because they are auto-tracked
+        profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"achievements": [{"type": "join_groups", "progress": 100}]},
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"],
+            self.default_profile["achievements"],
+        )
+
+        # try again choosing a new achievement, expecting that it will be set
+        # because user has reached the needed level
+        # TODO for now, set arbitrary achievement since tracking is not yet implemented
+        # after tracking is implemented, check if the to-bet-set level is actually achieved
+        profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"chosen_achievement": {"type": "join_groups", "level": "bronze"}},
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["chosen_achievement"],
+            {"type": "join_groups", "level": "bronze"},
+        )
+
     def test_update_profile_information_upsert(self):
         """
         expect: successfully upsert if no profile exists yet
@@ -3320,10 +3415,29 @@ class ProfileResourceTest(BaseResourceTestCase):
             {"bio": 123},
         )
 
+    def test_update_profile_information_error_invalid_achievement(self):
+        """
+        expect: ValueError is raised because the achievement type or level is invalid
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "non_existing", "level": "bronze"}},
+        )
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "create_posts", "level": "non_existing"}},
+        )
+
     def test_get_profile_snippets(self):
         """
         expect: successfully get snippets
-        (username, first_name, last_name, institution, profile_pic)
+        (username, first_name, last_name, institution, profile_pic, chosen_achievement)
         of the supplied users
         """
 
@@ -3353,6 +3467,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                     None,
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
+                "chosen_achievement": self.default_profile["chosen_achievement"],
             },
             snippets,
         )
@@ -3363,6 +3478,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "last_name": profile1["last_name"],
                 "institution": "",
                 "profile_pic": profile1["profile_pic"],
+                "chosen_achievement": profile1["chosen_achievement"],
             },
             snippets,
         )
@@ -3387,6 +3503,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                     None,
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
+                "chosen_achievement": self.default_profile["chosen_achievement"],
             },
             snippets,
         )

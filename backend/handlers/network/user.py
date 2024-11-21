@@ -107,6 +107,23 @@ class ProfileInformationHandler(BaseHandler):
                                 "description": "<string>",
                             }
                         ],
+                        "notification_settings": {
+                            "messages": "email|push",
+                            "ve_invite": "email|push|none",
+                            "group_invite": "email|push|none",
+                            "system": "email|push",
+                        },
+                        "achievements" : [
+                            {
+                                "type": "<string>",      --> see ACHIEVEMENT_TYPES in class `Profiles`
+                                "progress": <int>,
+                                "level": "null|bronze|silver|gold|platinum"
+                            }, ...
+                        ],
+                        "chosen_achievement": {
+                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
+                            "level": "null|bronze|silver|gold|platinum"
+                        }
                     },
                     "spaces": [<string1>, <string2>, ...],
                     "follows": [<string1>, <string2>, ...],
@@ -331,8 +348,8 @@ class BulkProfileSnippets(BaseHandler):
         """
         POST /profile_snippets
             request profile snippets, i.e. username, first_name, last_name,
-            institution and profile_pic for a list of users. Specify
-            this list of usernames in the body.
+            institution, profile_pic and chosen_achievement for a list of users.
+            Specify this list of usernames in the body.
             The profile_pic is an identifier that can be exchanged for the actual
             profile image at the /uploads endpoint. See the documentation for
             `GridFSStaticFileHandler` for reference.
@@ -354,16 +371,11 @@ class BulkProfileSnippets(BaseHandler):
                         "first_name": "<string>",
                         "last_name": "<string>",
                         "profile_pic": "<string>",
-                        "institutions": [
-                            {
-                                "_id": <string>,
-                                "name": <string>,
-                                "school_type": <string>,
-                                "department": <string>,
-                                "country": <string>,
-                            }
-                        ],
-                        "chosen_institution_id": <string>,
+                        "institution": "<string>",
+                        "chosen_achievement": {
+                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
+                            "level": "null|bronze|silver|gold|platinum"
+                        }
                     }
                  ]
                 }

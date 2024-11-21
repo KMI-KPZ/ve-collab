@@ -54,6 +54,44 @@ class Profiles:
             "work_experience": list,
             "ve_window": list,
             "notification_settings": dict,
+            "achievements": list,
+            "chosen_achievement": dict,
+        }
+
+        self.ALLOWED_ACHIEVEMENT_TYPES = [
+            "create_posts",
+            "join_groups",
+            "good_practice_plans",
+            "unique_partners",
+        ]
+
+        self.ALLOWED_ACHIEVEMENT_LEVELS = ["bronze", "silver", "gold", "platinum"]
+
+        self.ACHIEVEMENT_PROGRESS = {
+            "create_posts": {
+                "bronze": 10,
+                "silver": 25,
+                "gold": 50,
+                "platinum": 100,
+            },
+            "join_groups": {
+                "bronze": 2,
+                "silver": 5,
+                "gold": 10,
+                "platinum": 20,
+            },
+            "good_practice_plans": {
+                "bronze": 1,
+                "silver": 3,
+                "gold": 5,
+                "platinum": 10,
+            },
+            "unique_partners": {
+                "bronze": 1,
+                "silver": 3,
+                "gold": 5,
+                "platinum": 10,
+            },
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
@@ -149,6 +187,13 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
+            "achievements": [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+            "chosen_achievement": {"type": None, "level": None},
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -214,6 +259,13 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
+            "achievements": [
+                {"type": "create_posts", "progress": 0, "level": None},
+                {"type": "join_groups", "progress": 0, "level": None},
+                {"type": "good_practice_plans", "progress": 0, "level": None},
+                {"type": "unique_partners", "progress": 0, "level": None},
+            ],
+            "chosen_achievement": {"type": None, "level": None},
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -547,6 +599,26 @@ class Profiles:
                 updated_profile["chosen_institution_id"]
             )
 
+        # achievements cannot be modified here obviously (they are auto-updated)
+        # so we remove them from the update dict
+        if "achievements" in updated_profile:
+            del updated_profile["achievements"]
+
+        # if user has updated the chosen achievement, we need to check if it is valid,
+        # i.e. if he has reached the level he is trying to set
+        if "chosen_achievement" in updated_profile:
+            # check type/level validity
+            if (
+                updated_profile["chosen_achievement"]["type"]
+                not in self.ALLOWED_ACHIEVEMENT_TYPES
+            ) or (
+                updated_profile["chosen_achievement"]["level"]
+                not in self.ALLOWED_ACHIEVEMENT_LEVELS
+            ):
+                raise ValueError("Invalid achievement type")
+            
+            # TODO implement check as soon as achievements are tracked
+
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -570,9 +642,9 @@ class Profiles:
 
     def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
         """
-        request the profile snippet (i.e. username, first_name, last_name, institution
-        and profile_pic) for every given username in `usernames` and return them as
-        a Dict.
+        request the profile snippet (i.e. username, first_name, last_name, institution,
+        profile_pic and chosen_achievement) for every given username in `usernames` 
+        and return them as a Dict.
         The `institution` field is somewhat special, as it is the name of the currently chosen
         institution of the user instead of all institutions that he has supplied. The user's
         currently chosen institution is determined by the `chosen_institution_id`. If the user
@@ -604,6 +676,7 @@ class Profiles:
                 "institutions": True,
                 "chosen_institution_id": True,
                 "profile_pic": True,
+                "chosen_achievement": True,
             },
         )
 

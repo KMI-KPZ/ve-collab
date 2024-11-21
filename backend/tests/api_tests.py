@@ -228,6 +228,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "group_invite": "push",
                     "system": "push",
                 },
+                "achievements": [
+                    {"type": "create_posts", "progress": 105, "level": "platinum"},
+                    {"type": "join_groups", "progress": 0, "level": None},
+                    {"type": "good_practice_plans", "progress": 1, "level": "bronze"},
+                    {"type": "unique_partners", "progress": 0, "level": None},
+                ],
+                "chosen_achievement": {
+                    "type": "create_posts",
+                    "level": "platinum",
+                },
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -266,6 +276,16 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "ve_invite": "push",
                     "group_invite": "push",
                     "system": "push",
+                },
+                "achievements": [
+                    {"type": "create_posts", "progress": 0, "level": None},
+                    {"type": "join_groups", "progress": 0, "level": None},
+                    {"type": "good_practice_plans", "progress": 0, "level": None},
+                    {"type": "unique_partners", "progress": 0, "level": None},
+                ],
+                "chosen_achievement": {
+                    "type": None,
+                    "level": None,
                 },
             },
         }
