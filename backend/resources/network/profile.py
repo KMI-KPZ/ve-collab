@@ -59,10 +59,15 @@ class Profiles:
         }
 
         self.ALLOWED_ACHIEVEMENT_TYPES = [
-            "create_posts",
-            "join_groups",
-            "good_practice_plans",
-            "unique_partners",
+            "create_posts",  # x posts created
+            "create_comments",  # x comments created
+            "give_likes",  # x posts and/or comments liked
+            "posts_liked",  # posts of user has received x likes (combined)
+            "join_groups",  # member of x groups
+            "admin_groups",  # admin of x groups
+            "ve_plans",  # x VE plans created
+            "good_practice_plans",  # x VE plans marked as good practise examples
+            "unique_partners",  # x unique partners across all VE plans
         ]
 
         self.ALLOWED_ACHIEVEMENT_LEVELS = ["bronze", "silver", "gold", "platinum"]
@@ -74,11 +79,41 @@ class Profiles:
                 "gold": 50,
                 "platinum": 100,
             },
+            "create_comments": {
+                "bronze": 10,
+                "silver": 25,
+                "gold": 50,
+                "platinum": 100,
+            },
+            "give_likes": {
+                "bronze": 10,
+                "silver": 25,
+                "gold": 50,
+                "platinum": 100,
+            },
+            "posts_liked": {
+                "bronze": 10,
+                "silver": 25,
+                "gold": 50,
+                "platinum": 100,
+            },
             "join_groups": {
                 "bronze": 2,
                 "silver": 5,
                 "gold": 10,
                 "platinum": 20,
+            },
+            "admin_groups": {
+                "bronze": 1,
+                "silver": 3,
+                "gold": 5,
+                "platinum": 10,
+            },
+            "ve_plans": {
+                "bronze": 1,
+                "silver": 3,
+                "gold": 5,
+                "platinum": 10,
             },
             "good_practice_plans": {
                 "bronze": 1,
@@ -187,12 +222,21 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
-            "achievements": [
-                {"type": "create_posts", "progress": 0, "level": None},
-                {"type": "join_groups", "progress": 0, "level": None},
-                {"type": "good_practice_plans", "progress": 0, "level": None},
-                {"type": "unique_partners", "progress": 0, "level": None},
-            ],
+            "achievements": {
+                "social": [
+                    {"type": "create_posts", "progress": 0, "level": None},
+                    {"type": "create_comments", "progress": 0, "level": None},
+                    {"type": "give_likes", "progress": 0, "level": None},
+                    {"type": "posts_liked", "progress": 0, "level": None},
+                    {"type": "join_groups", "progress": 0, "level": None},
+                    {"type": "admin_groups", "progress": 0, "level": None},
+                ],
+                "ve": [
+                    {"type": "ve_plans", "progress": 0, "level": None},
+                    {"type": "good_practice_plans", "progress": 0, "level": None},
+                    {"type": "unique_partners", "progress": 0, "level": None},
+                ],
+            },
             "chosen_achievement": {"type": None, "level": None},
         }
         result = self.db.profiles.insert_one(profile)
@@ -259,12 +303,21 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
-            "achievements": [
-                {"type": "create_posts", "progress": 0, "level": None},
-                {"type": "join_groups", "progress": 0, "level": None},
-                {"type": "good_practice_plans", "progress": 0, "level": None},
-                {"type": "unique_partners", "progress": 0, "level": None},
-            ],
+            "achievements": {
+                "social": [
+                    {"type": "create_posts", "progress": 0, "level": None},
+                    {"type": "create_comments", "progress": 0, "level": None},
+                    {"type": "give_likes", "progress": 0, "level": None},
+                    {"type": "posts_liked", "progress": 0, "level": None},
+                    {"type": "join_groups", "progress": 0, "level": None},
+                    {"type": "admin_groups", "progress": 0, "level": None},
+                ],
+                "ve": [
+                    {"type": "ve_plans", "progress": 0, "level": None},
+                    {"type": "good_practice_plans", "progress": 0, "level": None},
+                    {"type": "unique_partners", "progress": 0, "level": None},
+                ],
+            },
             "chosen_achievement": {"type": None, "level": None},
         }
         result = self.db.profiles.insert_one(profile)
@@ -616,7 +669,7 @@ class Profiles:
                 not in self.ALLOWED_ACHIEVEMENT_LEVELS
             ):
                 raise ValueError("Invalid achievement type")
-            
+
             # TODO implement check as soon as achievements are tracked
 
         result = self.db.profiles.find_one_and_update(
@@ -643,7 +696,7 @@ class Profiles:
     def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
         """
         request the profile snippet (i.e. username, first_name, last_name, institution,
-        profile_pic and chosen_achievement) for every given username in `usernames` 
+        profile_pic and chosen_achievement) for every given username in `usernames`
         and return them as a Dict.
         The `institution` field is somewhat special, as it is the name of the currently chosen
         institution of the user instead of all institutions that he has supplied. The user's

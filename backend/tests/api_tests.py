@@ -228,12 +228,25 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "group_invite": "push",
                     "system": "push",
                 },
-                "achievements": [
-                    {"type": "create_posts", "progress": 105, "level": "platinum"},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 1, "level": "bronze"},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "achievements": {
+                    "social": [
+                        {"type": "create_posts", "progress": 105, "level": "platinum"},
+                        {"type": "create_comments", "progress": 0, "level": None},
+                        {"type": "give_likes", "progress": 0, "level": None},
+                        {"type": "posts_liked", "progress": 0, "level": None},
+                        {"type": "join_groups", "progress": 0, "level": None},
+                        {"type": "admin_groups", "progress": 0, "level": None},
+                    ],
+                    "ve": [
+                        {"type": "ve_plans", "progress": 0, "level": None},
+                        {
+                            "type": "good_practice_plans",
+                            "progress": 1,
+                            "level": "bronze",
+                        },
+                        {"type": "unique_partners", "progress": 0, "level": None},
+                    ],
+                },
                 "chosen_achievement": {
                     "type": "create_posts",
                     "level": "platinum",
@@ -277,12 +290,21 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "group_invite": "push",
                     "system": "push",
                 },
-                "achievements": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "achievements": {
+                    "social": [
+                        {"type": "create_posts", "progress": 0, "level": None},
+                        {"type": "create_comments", "progress": 0, "level": None},
+                        {"type": "give_likes", "progress": 0, "level": None},
+                        {"type": "posts_liked", "progress": 0, "level": None},
+                        {"type": "join_groups", "progress": 0, "level": None},
+                        {"type": "admin_groups", "progress": 0, "level": None},
+                    ],
+                    "ve": [
+                        {"type": "ve_plans", "progress": 0, "level": None},
+                        {"type": "good_practice_plans", "progress": 0, "level": None},
+                        {"type": "unique_partners", "progress": 0, "level": None},
+                    ],
+                },
                 "chosen_achievement": {
                     "type": None,
                     "level": None,
