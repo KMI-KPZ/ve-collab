@@ -876,6 +876,7 @@ class Profiles:
 
         # determine if the user has reached the next level and update it,
         # but only if it is not already platinum
+        # TODO send notification to user
         if (
             achievement["progress"]
             >= self.ACHIEVEMENT_PROGRESS[achievement_type][achievement["level"]]

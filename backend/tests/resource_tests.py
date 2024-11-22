@@ -1275,6 +1275,38 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["comments"], new_post["comments"])
         self.assertEqual(post["likers"], new_post["likers"])
 
+        # check if post counted towards "create_posts" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            1,
+        )
+
+        # add one more post with empty text that should not count towards achievement
+        new_post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post_id = post_manager.insert_post(new_post)
+
+        # check if post was inserted, but not counted towards achievement
+        self.assertIsNotNone(self.db.posts.find_one({"_id": post_id}))
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            1,
+        )
+
     def test_insert_post_error_missing_attributes(self):
         """
         expect: ValueError is raised because post dict is missing an attribute
@@ -1340,6 +1372,13 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["likers"], new_post["likers"])
+
+        # since it was an update, the post should not count towards "create_posts" achievement
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            0,
+        )
 
     def test_insert_post_update_instead_error_missing_attribute(self):
         """
@@ -3719,7 +3758,7 @@ class ProfileResourceTest(BaseResourceTestCase):
 
     def test_achievement_count_up_error_profile_doesnt_exist(self):
         """
-        expect: ProfileDoesntExistException is raised because no 
+        expect: ProfileDoesntExistException is raised because no
         profile with this username exists
         """
 

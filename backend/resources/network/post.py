@@ -1,16 +1,16 @@
 import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from bson.objectid import ObjectId
-import gridfs
-from pymongo.database import Database
-
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
+import gridfs
+from pymongo.database import Database
 
+from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 import util
 
@@ -144,6 +144,12 @@ class Posts:
             raise ValueError("Post misses required attribute")
 
         result = self.db.posts.insert_one(post)
+
+        # the post is viable for the achievement "create_posts", when the
+        # text ist not empty
+        if post["text"] and post["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(post["author"], "create_posts")
 
         return result.inserted_id
 
