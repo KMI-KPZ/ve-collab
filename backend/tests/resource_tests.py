@@ -3671,6 +3671,66 @@ class ProfileResourceTest(BaseResourceTestCase):
             "non_existing",
         )
 
+    def test_achievement_count_up(self):
+        """
+        expect: successfully increase the progress of an achievement
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts")
+
+        # expect the progress to be increased by 1
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["social"][0]["progress"],
+            self.default_profile["achievements"]["social"][0]["progress"] + 1,
+        )
+
+    def test_achievement_count_up_level_up(self):
+        """
+        expect: successfully increase the progress of an achievement and level up
+        """
+
+        profile_manager = Profiles(self.db)
+
+        # use unique_partners, default is 0 and level up to bronze is at 1
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "unique_partners")
+
+        # expect the progress to be increased by 1 and level to be set to bronze
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][2]["progress"],
+            self.default_profile["achievements"]["ve"][2]["progress"] + 1,
+        )
+        self.assertEqual(result["achievements"]["ve"][2]["level"], "bronze")
+
+    def test_achievement_count_up_error_invalid_achievement(self):
+        """
+        expect: ValueError is raised because the achievement type is invalid
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.achievement_count_up,
+            CURRENT_ADMIN.username,
+            "non_existing",
+        )
+
+    def test_achievement_count_up_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no 
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up,
+            "non_existing",
+            "create_posts",
+        )
+
 
 class SpaceResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:

@@ -70,58 +70,68 @@ class Profiles:
             "unique_partners",  # x unique partners across all VE plans
         ]
 
-        self.ALLOWED_ACHIEVEMENT_LEVELS = ["bronze", "silver", "gold", "platinum"]
+        self.ALLOWED_ACHIEVEMENT_LEVELS = [None, "bronze", "silver", "gold", "platinum"]
 
+        # None is the default state for easier count up handling
         self.ACHIEVEMENT_PROGRESS = {
             "create_posts": {
+                None: 0,
                 "bronze": 10,
                 "silver": 25,
                 "gold": 50,
                 "platinum": 100,
             },
             "create_comments": {
+                None: 0,
                 "bronze": 10,
                 "silver": 25,
                 "gold": 50,
                 "platinum": 100,
             },
             "give_likes": {
+                None: 0,
                 "bronze": 10,
                 "silver": 25,
                 "gold": 50,
                 "platinum": 100,
             },
             "posts_liked": {
+                None: 0,
                 "bronze": 10,
                 "silver": 25,
                 "gold": 50,
                 "platinum": 100,
             },
             "join_groups": {
+                None: 0,
                 "bronze": 2,
                 "silver": 5,
                 "gold": 10,
                 "platinum": 20,
             },
             "admin_groups": {
+                None: 0,
                 "bronze": 1,
                 "silver": 3,
                 "gold": 5,
                 "platinum": 10,
             },
             "ve_plans": {
+                None: 0,
                 "bronze": 1,
                 "silver": 3,
                 "gold": 5,
                 "platinum": 10,
             },
             "good_practice_plans": {
+                None: 0,
                 "bronze": 1,
                 "silver": 3,
                 "gold": 5,
                 "platinum": 10,
             },
             "unique_partners": {
+                None: 0,
                 "bronze": 1,
                 "silver": 3,
                 "gold": 5,
@@ -818,3 +828,69 @@ class Profiles:
             raise
 
         return result["notification_settings"]
+
+    def achievement_count_up(
+        self,
+        username: str,
+        achievement_type: Literal[
+            "create_posts",
+            "create_comments",
+            "give_likes",
+            "posts_liked",
+            "join_groups",
+            "admin_groups",
+            "ve_plans",
+            "good_practice_plans",
+            "unique_partners",
+        ],
+    ) -> None:
+        """
+        Increase the progress of the given achievement type by 1.
+        If the user has reached the next level (as determined by `self.ACHIEVEMENT_PROGRESS`),
+        it will also be updated accordingly.
+        """
+
+        # sanity check
+        if achievement_type not in self.ALLOWED_ACHIEVEMENT_TYPES:
+            raise ValueError("Invalid achievement type")
+
+        # get current achievement status of user
+        profile = self.get_profile(username, projection={"achievements": True})
+        achievements = profile["achievements"]
+
+        # find the relevant achievement
+        achievement = None
+        for group in achievements.values():
+            for a in group:
+                if a["type"] == achievement_type:
+                    achievement = a
+                    break
+            if achievement:
+                break
+
+        if not achievement:
+            raise ValueError("Achievement type not found in profile")
+
+        # count up the progress
+        achievement["progress"] += 1
+
+        # determine if the user has reached the next level and update it,
+        # but only if it is not already platinum
+        if (
+            achievement["progress"]
+            >= self.ACHIEVEMENT_PROGRESS[achievement_type][achievement["level"]]
+        ):
+            if achievement["level"] == None:
+                achievement["level"] = "bronze"
+            elif achievement["level"] == "bronze":
+                achievement["level"] = "silver"
+            elif achievement["level"] == "silver":
+                achievement["level"] = "gold"
+            elif achievement["level"] == "gold":
+                achievement["level"] = "platinum"
+
+        # update the profile with the new achievement status
+        self.db.profiles.update_one(
+            {"username": username},
+            {"$set": {"achievements": achievements}},
+        )
