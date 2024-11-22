@@ -1022,55 +1022,112 @@ class PostResourceTest(BaseResourceTestCase):
         }
         self.db.posts.insert_one(self.default_post)
 
-        # insert a default profile for CURRENT_ADMIN (needed for timeline)
-        self.db.profiles.insert_one(
-            {
-                "username": CURRENT_ADMIN.username,
-                "role": "admin",
-                "follows": [],
-                "bio": "",
-                "institution": "",
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": "",
-                "last_name": "",
-                "gender": "",
-                "address": "",
-                "birthday": "",
-                "experience": [""],
-                "expertise": "",
-                "languages": [],
-                "ve_ready": True,
-                "excluded_from_matching": False,
-                "ve_interests": [""],
-                "ve_goals": [""],
-                "preferred_formats": [""],
-                "research_tags": [],
-                "courses": [],
-                "educations": [],
-                "work_experience": [],
-                "ve_window": [],
-                "notification_settings": {
-                    "messages": "email",
-                    "ve_invite": "email",
-                    "group_invite": "email",
-                    "system": "email",
+        # insert a default profiles
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": [
+                            {"type": "create_posts", "progress": 0, "level": None},
+                            {"type": "create_comments", "progress": 0, "level": None},
+                            {"type": "give_likes", "progress": 0, "level": None},
+                            {"type": "posts_liked", "progress": 0, "level": None},
+                            {"type": "join_groups", "progress": 0, "level": None},
+                            {"type": "admin_groups", "progress": 0, "level": None},
+                        ],
+                        "ve": [
+                            {"type": "ve_plans", "progress": 0, "level": None},
+                            {
+                                "type": "good_practice_plans",
+                                "progress": 0,
+                                "level": None,
+                            },
+                            {"type": "unique_partners", "progress": 0, "level": None},
+                        ],
+                    },
                 },
-                "achievements": {
-                    "social": [
-                        {"type": "create_posts", "progress": 0, "level": None},
-                        {"type": "create_comments", "progress": 0, "level": None},
-                        {"type": "give_likes", "progress": 0, "level": None},
-                        {"type": "posts_liked", "progress": 0, "level": None},
-                        {"type": "join_groups", "progress": 0, "level": None},
-                        {"type": "admin_groups", "progress": 0, "level": None},
-                    ],
-                    "ve": [
-                        {"type": "ve_plans", "progress": 0, "level": None},
-                        {"type": "good_practice_plans", "progress": 0, "level": None},
-                        {"type": "unique_partners", "progress": 0, "level": None},
-                    ],
+                {
+                    "username": CURRENT_USER.username,
+                    "role": "user",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": [
+                            {"type": "create_posts", "progress": 0, "level": None},
+                            {"type": "create_comments", "progress": 0, "level": None},
+                            {"type": "give_likes", "progress": 0, "level": None},
+                            {"type": "posts_liked", "progress": 0, "level": None},
+                            {"type": "join_groups", "progress": 0, "level": None},
+                            {"type": "admin_groups", "progress": 0, "level": None},
+                        ],
+                        "ve": [
+                            {"type": "ve_plans", "progress": 0, "level": None},
+                            {
+                                "type": "good_practice_plans",
+                                "progress": 0,
+                                "level": None,
+                            },
+                            {"type": "unique_partners", "progress": 0, "level": None},
+                        ],
+                    },
                 },
-            }
+            ]
         )
 
     def tearDown(self) -> None:
@@ -1626,10 +1683,27 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(post)
         self.assertIn(CURRENT_ADMIN.username, post["likers"])
 
-        # check if post counted towards "give_likes" achievement of user
+        # check if like counted towards "give_likes" achievement of user
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"][2]["progress"],
+            1,
+        )
+
+        # since this was the users own post, the like should not count towards
+        # "posts_liked" achievement
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
+            0,
+        )
+
+        post_manager.like_post(self.post_id, CURRENT_USER.username)
+
+        # now check if like counted towards "posts_liked" achievement, because
+        # it was from a different user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
             1,
         )
 

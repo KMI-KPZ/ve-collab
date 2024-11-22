@@ -2840,6 +2840,33 @@ class LikePostHandlerTest(BaseApiTestCase):
             + 1,
         )
 
+        # since the liker is the author himself, this should not count towards
+        # the achievement "posts_liked"
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][3][
+                "progress"
+            ],
+        )
+
+        # switch to user mode to test the achievement "posts_liked"
+        options.test_admin = False
+        options.test_user = True
+
+        request = {"post_id": str(self.post_oid)}
+
+        self.base_checks("POST", "/like", True, 200, body=request)
+
+        # check that the like counted towards the achievement "posts_liked"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][3][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_like_error_no_post_id(self):
         """
         expect: fail message because request misses post_id
@@ -2866,6 +2893,16 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertEqual(
             profile["achievements"]["social"][2]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][2][
+                "progress"
+            ],
+        )
+
+        # check that the like did not count towards the achievement "posts_liked",
+        # because the post does not exist at all
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][3][
                 "progress"
             ],
         )
@@ -2897,6 +2934,16 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertEqual(
             profile["achievements"]["social"][2]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][2][
+                "progress"
+            ],
+        )
+
+        # check that the like did not count towards the achievement "posts_liked",
+        # because the post does not exist at all
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][3]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][3][
                 "progress"
             ],
         )
