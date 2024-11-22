@@ -235,6 +235,11 @@ class Posts:
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
+        
+        # count towards the achievement "give_likes", since all previous
+        # checks have succeeded
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "give_likes")
 
     def unlike_post(self, post_id: str | ObjectId, username: str) -> None:
         """

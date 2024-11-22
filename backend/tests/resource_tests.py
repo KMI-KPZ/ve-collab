@@ -1619,12 +1619,19 @@ class PostResourceTest(BaseResourceTestCase):
         """
 
         post_manager = Posts(self.db)
-        post_manager.like_post(self.post_id, CURRENT_USER.username)
+        post_manager.like_post(self.post_id, CURRENT_ADMIN.username)
 
         # check if post was liked
         post = self.db.posts.find_one({"_id": self.post_id})
         self.assertIsNotNone(post)
-        self.assertIn(CURRENT_USER.username, post["likers"])
+        self.assertIn(CURRENT_ADMIN.username, post["likers"])
+
+        # check if post counted towards "give_likes" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][2]["progress"],
+            1,
+        )
 
     def test_like_post_error_post_doesnt_exist(self):
         """

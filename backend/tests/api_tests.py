@@ -2830,6 +2830,16 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertIn("likers", db_state)
         self.assertIn(CURRENT_ADMIN.username, db_state["likers"])
 
+        # check that the like counted towards the achievement "give_likes"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][2]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][2][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_like_error_no_post_id(self):
         """
         expect: fail message because request misses post_id
@@ -2849,6 +2859,16 @@ class LikePostHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/like", False, 409, body=request)
         self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+        # check that the like did not count towards the achievement "give_likes",
+        # because the post does not exist at all
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][2]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][2][
+                "progress"
+            ],
+        )
 
     def test_post_like_error_already_liker(self):
         """
@@ -2870,6 +2890,16 @@ class LikePostHandlerTest(BaseApiTestCase):
             allow_nonstandard_methods=True,
         )
         self.assertEqual(response.code, 304)
+
+        # check that the like did not count towards the achievement "give_likes",
+        # because the post does not exist at all
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][2]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][2][
+                "progress"
+            ],
+        )
 
     def test_delete_like(self):
         """
