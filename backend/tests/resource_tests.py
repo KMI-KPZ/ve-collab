@@ -1722,6 +1722,31 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIn(comment["text"], comment_text)
         self.assertIn(comment_id, comment_ids)
 
+        # check if comment counted towards "create_comments" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][1]["progress"],
+            1,
+        )
+
+        # try another comment with empty text that should not count towards achievement
+        comment = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "text": "",
+            "pinned": False,
+        }
+
+        post_manager.add_comment(self.post_id, comment)
+
+        # check if comment was added, but not counted towards achievement
+        self.assertIsNotNone(self.db.posts.find_one({"_id": self.post_id}))
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][1]["progress"],
+            1,
+        )
+
     def test_add_comment_error_post_doesnt_exist(self):
         """
         expect: PostNotExistingException is raised because no post with this _id
@@ -1738,6 +1763,14 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         self.assertRaises(
             PostNotExistingException, post_manager.add_comment, ObjectId(), comment
+        )
+
+        # since the post didnt exist, the comment should also not count towards
+        # "create_comments" achievement
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][1]["progress"],
+            0,
         )
 
     def test_add_comment_error_missing_attributes(self):

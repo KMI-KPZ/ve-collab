@@ -1589,6 +1589,16 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
 
+        # check that the post counted towards the achievement "create_posts"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_create_post_space(self):
         """
         expect: successful post creation into space
@@ -1641,6 +1651,16 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["tags"], json.loads(request_json["tags"]))
         self.assertEqual(db_state["plans"], json.loads(request_json["plans"]))
         self.assertEqual(db_state["files"], [])
+
+        # check that the post counted towards the achievement "create_posts"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][0][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_create_post_space_with_file(self):
         """
@@ -1718,7 +1738,6 @@ class PostHandlerTest(BaseApiTestCase):
         )
 
         # expect file to be in space as well
-
         space_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn("files", space_state)
         self.assertIn(
@@ -1729,6 +1748,16 @@ class PostHandlerTest(BaseApiTestCase):
                 "manually_uploaded": False,
             },
             space_state["files"],
+        )
+
+        # check that the post counted towards the achievement "create_posts"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][0][
+                "progress"
+            ]
+            + 1,
         )
 
     def test_post_create_post_error_insufficient_permission(self):
@@ -1859,6 +1888,15 @@ class PostHandlerTest(BaseApiTestCase):
         self.assertIn("text", updated_post)
         self.assertEqual(updated_post["text"], updated_text)
 
+        # check that the update did not count towards the achievement "create_posts"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][0][
+                "progress"
+            ],
+        )
+
     def test_post_edit_post_space(self):
         """
         expect: successfully edit post
@@ -1904,6 +1942,15 @@ class PostHandlerTest(BaseApiTestCase):
         updated_post = self.db.posts.find_one({"_id": oid})
         self.assertIn("text", updated_post)
         self.assertEqual(updated_post["text"], updated_text)
+
+        # check that the update did not count towards the achievement "create_posts"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][0][
+                "progress"
+            ],
+        )
 
     def test_post_edit_post_space_error_insufficient_permission(self):
         """
@@ -2431,6 +2478,16 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["comments"]), 1)
         self.assertEqual(db_state["comments"][0]["text"], request["text"])
 
+        # check that the comment counted towards the achievement "create_comments"
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][1][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_comment_error_missing_post_id(self):
         """
         expect: fail message because post_id is not in the request
@@ -2442,6 +2499,27 @@ class CommentHandlerTest(BaseApiTestCase):
 
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
+        )
+
+    def test_post_comment_error_post_doesnt_exist(self):
+        """
+        expect: fail message because post_id doesnt exist
+        """
+
+        request = {"post_id": str(ObjectId()), "text": "test_comment"}
+
+        response = self.base_checks("POST", "/comment", False, 409, body=request)
+
+        self.assertEqual(response["reason"], POST_DOESNT_EXIST_ERROR)
+
+        # check that the comment did not count towards the achievement "create_comments",
+        # because the post does not exist at all
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][1][
+                "progress"
+            ],
         )
 
     def test_post_comment_space_error_insufficient_permission(self):

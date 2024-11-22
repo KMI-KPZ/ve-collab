@@ -283,6 +283,12 @@ class Posts:
         if update_result.matched_count != 1:
             raise PostNotExistingException()
 
+        # the comment is viable for the achievement "create_comments", when the
+        # text ist not empty
+        if comment["text"] and comment["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(comment["author"], "create_comments")
+
         return comment["_id"]
 
     def delete_comment(
