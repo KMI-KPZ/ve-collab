@@ -18,6 +18,8 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Alert from '@/components/common/dialogs/Alert';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import CustomHead from '@/components/metaData/CustomHead';
+import { useTranslation } from 'next-i18next';
 
 export type Metadata = {
     name: string;
@@ -71,6 +73,7 @@ Edit.auth = true;
 export default function Edit() {
     const { data: session } = useSession();
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+    const { t } = useTranslation('common');
 
     const {
         data: isUserAdmin,
@@ -250,6 +253,7 @@ export default function Edit() {
 
     return (
         <>
+            <CustomHead pageTitle={t('edit')} pageSlug={`learning-material/edit`} />
             <div className="flex justify-center">
                 <WhiteBox>
                     <div className="w-[60vw] h-[70vh] overflow-y-auto content-scrollbar">

@@ -11,6 +11,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { GetServerSidePropsContext } from 'next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 Plan.auth = true;
 export default function Plan() {
@@ -18,7 +19,8 @@ export default function Plan() {
     const { t } = useTranslation('common');
 
     const router = useRouter();
-    const { data: plan, isLoading } = useGetPlanById(router.query.planId as string);
+    const planId = router.query.planId as string;
+    const { data: plan, isLoading } = useGetPlanById(planId);
 
     const username = session?.user.preferred_username;
 
@@ -42,6 +44,7 @@ export default function Plan() {
                 <LoadingAnimation />
             ) : (
                 <>
+                    <CustomHead pageTitle={`${plan?.name}`} pageSlug={`plan/${planId}`} />
                     <div className="mb-6 mt-12">
                         <div className={'flex justify-between font-bold mb-2'}>
                             <h1 className="text-3xl font-bold text-slate-650">{plan.name}</h1>

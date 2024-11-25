@@ -23,8 +23,7 @@ export default function LayoutSection({
     toggleChatWindow,
     toggleNotifWindow,
 }: Props): JSX.Element {
-    const { data: session, status } = useSession();
-
+    const { data: session } = useSession();
     const router = useRouter();
     const isFrontpage = usePathname() == '/';
 
@@ -35,7 +34,6 @@ export default function LayoutSection({
     if (router.pathname === '/plan/pdf/[planId]') {
         return <main>{children}</main>;
     }
-    // console.log(router.pathname);
 
     return (
         <div className="flex flex-col min-h-screen bg-slate-100">

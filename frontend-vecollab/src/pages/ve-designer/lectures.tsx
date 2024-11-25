@@ -7,10 +7,11 @@ import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { LecturesFormSchema } from '../../zod-schemas/lecturesSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface LectureOld {
     name: string;
@@ -46,7 +47,7 @@ const areAllValuesEmpty = (lecture: LectureOld): boolean => {
 Lectures.auth = true;
 export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common'])
+    const { t } = useTranslation(['designer', 'common']);
 
     const prevpage = '/ve-designer/institutions';
     const nextpage = '/ve-designer/target-groups';
@@ -75,16 +76,14 @@ export default function Lectures({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const lectures = data.lectures.filter((lecture =>
-            !areAllValuesEmpty(lecture)
-        ))
+        const lectures = data.lectures.filter((lecture) => !areAllValuesEmpty(lecture));
 
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'lectures',
                 value: lectures,
-            }
+            },
         ];
     };
 
@@ -128,7 +127,9 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             {...methods.register(`lectures.${index}.lecture_type`)}
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value={t('lectures.compulsory')}>{t('lectures.compulsory')}</option>
+                            <option value={t('lectures.compulsory')}>
+                                {t('lectures.compulsory')}
+                            </option>
                             <option value={t('lectures.elective')}>{t('lectures.elective')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
@@ -148,12 +149,17 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             placeholder="z.B. online, hybrid, präsenz"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
-                            <option value={t('lectures.face2face')}>{t('lectures.face2face')}</option>
+                            <option value={t('lectures.face2face')}>
+                                {t('lectures.face2face')}
+                            </option>
                             <option value={t('lectures.online')}>{t('lectures.online')}</option>
                             <option value={t('lectures.hybrid')}>{t('lectures.hybrid')}</option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.lectures?.[index]?.lecture_format?.message!)}
+                            {t(
+                                methods.formState.errors?.lectures?.[index]?.lecture_format
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -174,10 +180,10 @@ export default function Lectures({ socket }: Props): JSX.Element {
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
-                            {
-                                t(methods.formState.errors?.lectures?.[index]?.participants_amount
-                                    ?.message!)
-                            }
+                            {t(
+                                methods.formState.errors?.lectures?.[index]?.participants_amount
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -196,47 +202,48 @@ export default function Lectures({ socket }: Props): JSX.Element {
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('lectures.title')}
-            subtitle={t('lectures.subtitle')}
-            stageInMenu='generally'
-            idOfProgress="lectures"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
-                <div className="divide-y">{renderLecturesInputs()}</div>
-                <div className="flex justify-center">
-                    <button
-                        className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
-                        type="button"
-                        onClick={() => {
-                            append({
-                                name: '',
-                                lecture_type: '',
-                                lecture_format: '',
-                                participants_amount: 0,
-                            });
-                        }}
-                    >
-                        <RxPlus size={24} />
-                    </button>
+        <>
+            <CustomHead pageTitle={t('lectures.title')} pageSlug={'ve-designer/lectures'} />
+            <Wrapper
+                socket={socket}
+                title={t('lectures.title')}
+                subtitle={t('lectures.subtitle')}
+                stageInMenu="generally"
+                idOfProgress="lectures"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
+                    <div className="divide-y">{renderLecturesInputs()}</div>
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {
+                                append({
+                                    name: '',
+                                    lecture_type: '',
+                                    lecture_format: '',
+                                    participants_amount: 0,
+                                });
+                            }}
+                        >
+                            <RxPlus size={24} />
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </Wrapper>
+            </Wrapper>
+        </>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

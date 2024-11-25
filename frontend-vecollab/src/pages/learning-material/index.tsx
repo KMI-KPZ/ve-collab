@@ -9,6 +9,8 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
+import CustomHead from '@/components/metaData/CustomHead';
+import React from 'react';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -117,6 +119,7 @@ export default function PageCategoryNotSelected(props: Props) {
 
     return (
         <>
+            <CustomHead pageTitle={t('materials')} pageSlug={`learning-material`} />
             <div className="flex justify-between pt-12 mb-4">
                 <div>
                     {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}

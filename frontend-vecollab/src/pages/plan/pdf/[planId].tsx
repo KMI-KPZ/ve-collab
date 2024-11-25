@@ -8,6 +8,8 @@ import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces
 import { PlanSummaryPDF } from '@/components/planSummary/PlanSummaryPDF';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Trans } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
+import { useRouter } from 'next/router';
 
 // This is the component that gets rendered into the PDF of a plan
 // In contrast to the other pages, it is only accessible by directly
@@ -22,6 +24,8 @@ interface Props {
 }
 
 export default function PDFPlan({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
+    const router = useRouter();
+    const planId = router.query.planId as string;
 
     if (error) {
         let message = '';
@@ -60,6 +64,7 @@ export default function PDFPlan({ plan, error, partnerProfileSnippets, available
     }
     return (
         <>
+            <CustomHead pageTitle={`PDF ${plan?.name}`} pageSlug={`plan/pdf/${planId}`} />
             <div className="mb-6">
                 <div className={'flex justify-between font-bold text-4xl mb-2'}>
                     <h1>{plan!.name}</h1>
@@ -79,7 +84,6 @@ export default function PDFPlan({ plan, error, partnerProfileSnippets, available
                     openAllBoxes={true}
                     partnerProfileSnippets={partnerProfileSnippets}
                     availablePlans={availablePlans}
-
                 />
             </div>
         </>
@@ -94,7 +98,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     const planResponse = await fetchGET(`/planner/get?_id=${context.params?.planId}`, token);
     if (planResponse.success === true) {
-        const availablePlansResponse = await fetchGET('/planner/get_available', token)
+        const availablePlansResponse = await fetchGET('/planner/get_available', token);
         const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
             '/profile_snippets',
             { usernames: [...planResponse.plan.partners, planResponse.plan.author.username] },
@@ -110,7 +114,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 partnerProfileSnippets: partnerSnippets,
                 availablePlans: availablePlansResponse.plans,
                 error: null,
-                ...(await serverSideTranslations(context.locale ?? 'en', ['common']))
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
             },
         };
     } else {
@@ -120,7 +124,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 partnerProfileSnippets: {},
                 availablePlans: [],
                 error: planResponse.reason ? planResponse.reason : 'fetch_failed',
-                ...(await serverSideTranslations(context.locale ?? 'en', ['common']))
+                ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
             },
         };
     }

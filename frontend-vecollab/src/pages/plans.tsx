@@ -12,6 +12,7 @@ import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { GetStaticPropsContext } from 'next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface IfilterBy {
     /** compare function
@@ -99,6 +100,8 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
+            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+
             <div className="flex justify-between mb-6 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>

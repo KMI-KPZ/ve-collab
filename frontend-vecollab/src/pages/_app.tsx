@@ -1,13 +1,9 @@
 import React, { createContext, useEffect, useState } from 'react';
 import '@/styles/globals.css';
 import '@/styles/networkPostsFormatter.css';
-
 import type { AppProps } from 'next/app';
 import LayoutSection from '@/components/layout/LayoutSection';
-import Head from 'next/head';
 import { SessionProvider, signIn, useSession } from 'next-auth/react';
-import Favicon from '@/components/metaTags/Favicon';
-import LinkPreview from '@/components/metaTags/LinkPreview';
 import { socket } from '@/lib/socket';
 import SocketAuthenticationProvider from '@/components/SocketAuthenticationProvider';
 import { Notification } from '@/interfaces/socketio';
@@ -16,7 +12,8 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 import NotificationsWindow from '@/components/notifications/NotificationsWindow';
 import ChatWindow from '@/components/chat/ChatWindow';
-import { appWithTranslation } from 'next-i18next'
+import { appWithTranslation } from 'next-i18next';
+import VEHead from '@/components/metaData/VEHead';
 
 export const SocketContext = createContext(socket);
 
@@ -134,11 +131,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                 <CookiesProvider defaultSetOptions={{ path: '/' }}>
                     <SocketAuthenticationProvider>
                         <SocketContext.Provider value={socket}>
-                            <Head>
-                                <title>VE-Collab</title>
-                                <Favicon />
-                                <LinkPreview />
-                            </Head>
+                            <VEHead />
                             <LayoutSection
                                 notificationEvents={notificationEvents}
                                 headerBarMessageEvents={messageEventsHeaderBar}
@@ -205,5 +198,5 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
             </SessionProvider>
         </>
     );
-}
-export default appWithTranslation(App)
+};
+export default appWithTranslation(App);

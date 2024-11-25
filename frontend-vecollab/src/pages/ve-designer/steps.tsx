@@ -29,6 +29,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -329,14 +330,22 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                     {
                                                         deps: `stepNames.${index}.timestamp_to`,
                                                         onChange: (e) => {
-                                                            if ( !methods.watch(`stepNames.${index}.timestamp_to`) ) {
+                                                            if (
+                                                                !methods.watch(
+                                                                    `stepNames.${index}.timestamp_to`
+                                                                )
+                                                            ) {
                                                                 const newDate = new Date(
                                                                     e.target.value
                                                                 );
-                                                                newDate.setDate(newDate.getDate() + 1);
+                                                                newDate.setDate(
+                                                                    newDate.getDate() + 1
+                                                                );
                                                                 methods.setValue(
                                                                     `stepNames.${index}.timestamp_to`,
-                                                                    newDate.toISOString().split('T')[0]
+                                                                    newDate
+                                                                        .toISOString()
+                                                                        .split('T')[0]
                                                                 );
                                                             }
                                                         },
@@ -352,7 +361,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                                 {...methods.register(
                                                     `stepNames.${index}.timestamp_to`,
                                                     {
-                                                        deps: `stepNames.${index}.timestamp_from`
+                                                        deps: `stepNames.${index}.timestamp_from`,
                                                     }
                                                 )}
                                                 className="border border-gray-400 rounded-lg p-2 mx-2"
@@ -470,68 +479,71 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('step-names.title')}
-            subtitle={t('step-names.subtitle')}
-            description={t('step-names.description')}
-            tooltip={{
-                text: t('step-names.tooltip_text'),
-                link: '/learning-material/2/VA-Planung',
-            }}
-            methods={methods}
-            nextpage={
-                methods.getValues('stepNames').length
-                    ? `/ve-designer/step/1`
-                    : `/ve-designer/finish`
-            }
-            stageInMenu="steps"
-            idOfProgress="stepsGenerally"
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <Dialog
-                isOpen={isImportStepsDialogOpen}
-                title={t('step-names.import_phases')}
-                onClose={() => setIsImportStepsDialogOpen(false)}
+        <>
+            <CustomHead pageTitle={t('step-names.title')} pageSlug={'ve-designer/steps'} />
+            <Wrapper
+                socket={socket}
+                title={t('step-names.title')}
+                subtitle={t('step-names.subtitle')}
+                description={t('step-names.description')}
+                tooltip={{
+                    text: t('step-names.tooltip_text'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                methods={methods}
+                nextpage={
+                    methods.getValues('stepNames').length
+                        ? `/ve-designer/step/1`
+                        : `/ve-designer/finish`
+                }
+                stageInMenu="steps"
+                idOfProgress="stepsGenerally"
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
             >
-                <div className="w-[40vw]">
-                    <ImportStepsDialog />
-                </div>
-            </Dialog>
-
-            <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="stepNames-items">
-                    {(provided: DroppableProvided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                            {renderStepNamesInputs()}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </Droppable>
-            </DragDropContext>
-            <div className="flex justify-center">
-                <button
-                    className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
-                    type="button"
-                    title={t('step-names.new_phase')}
-                    onClick={() => {
-                        append(emptyStepData);
-                    }}
-                >
-                    <RxPlus size={25} />
-                </button>
-
-                <button
-                    className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                    type="button"
+                <Dialog
+                    isOpen={isImportStepsDialogOpen}
                     title={t('step-names.import_phases')}
-                    onClick={(e) => openStepsImportDialog()}
+                    onClose={() => setIsImportStepsDialogOpen(false)}
                 >
-                    {t('common:import')}
-                </button>
-            </div>
-        </Wrapper>
+                    <div className="w-[40vw]">
+                        <ImportStepsDialog />
+                    </div>
+                </Dialog>
+
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="stepNames-items">
+                        {(provided: DroppableProvided) => (
+                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                                {renderStepNamesInputs()}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
+                <div className="flex justify-center">
+                    <button
+                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        type="button"
+                        title={t('step-names.new_phase')}
+                        onClick={() => {
+                            append(emptyStepData);
+                        }}
+                    >
+                        <RxPlus size={25} />
+                    </button>
+
+                    <button
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        type="button"
+                        title={t('step-names.import_phases')}
+                        onClick={(e) => openStepsImportDialog()}
+                    >
+                        {t('common:import')}
+                    </button>
+                </div>
+            </Wrapper>
+        </>
     );
 }
 

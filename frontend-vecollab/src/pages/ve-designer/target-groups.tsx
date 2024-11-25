@@ -12,6 +12,7 @@ import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 import CreatableSelect from 'react-select/creatable';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface TargetGroup {
     name: string;
@@ -91,30 +92,33 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
         control: methods.control,
     });
 
-    const setPlanerData = useCallback((plan: IPlan) => {
-        const targetGroups =
-            plan.target_groups.length > 0
-                ? plan.target_groups.map((tg) => ({
-                      ...tg,
-                      languages: tg.languages.map((language) => ({
+    const setPlanerData = useCallback(
+        (plan: IPlan) => {
+            const targetGroups =
+                plan.target_groups.length > 0
+                    ? plan.target_groups.map((tg) => ({
+                          ...tg,
+                          languages: tg.languages.map((language) => ({
+                              value: language,
+                              label: t('common:languages.' + language, { defaultValue: language }),
+                          })),
+                      }))
+                    : [emptyTG];
+
+            methods.setValue('targetGroups', targetGroups);
+
+            const languages =
+                plan.languages.length > 0
+                    ? plan.languages.map((language) => ({
                           value: language,
                           label: t('common:languages.' + language, { defaultValue: language }),
-                      })),
-                  }))
-                : [emptyTG];
-
-        methods.setValue('targetGroups', targetGroups);
-
-        const languages =
-            plan.languages.length > 0
-                ? plan.languages.map((language) => ({
-                      value: language,
-                      label: t('common:languages.' + language, { defaultValue: language }),
-                  }))
-                : [];
-        methods.setValue('languages', languages);
-        return { targetGroups, languages };
-    }, [methods, t]);
+                      }))
+                    : [];
+            methods.setValue('languages', languages);
+            return { targetGroups, languages };
+        },
+        [methods, t]
+    );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const transformedTargetGroups = data.targetGroups.map((tg) => ({
@@ -326,44 +330,47 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('target.title')}
-            subtitle={t('target.subtitle')}
-            description={t('target.description')}
-            tooltip={{
-                text: t('target.tooltip'),
-                link: '/learning-material/2/VA-Planung',
-            }}
-            stageInMenu="generally"
-            idOfProgress="target_groups"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
-                <div className="divide-y">{renderTargetGroupsInputs()}</div>
-                <div className="flex justify-center">
-                    <button
-                        className="p-2 m-2 bg-white rounded-full shadow"
-                        type="button"
-                        onClick={() => {
-                            appendTg(emptyTG);
-                        }}
-                    >
-                        <RxPlus size={24} />
-                    </button>
+        <>
+            <CustomHead pageTitle={t('target.title')} pageSlug={'ve-designer/target-groups'} />
+            <Wrapper
+                socket={socket}
+                title={t('target.title')}
+                subtitle={t('target.subtitle')}
+                description={t('target.description')}
+                tooltip={{
+                    text: t('target.tooltip'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                stageInMenu="generally"
+                idOfProgress="target_groups"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y">{renderTargetGroupsInputs()}</div>
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-2 bg-white rounded-full shadow"
+                            type="button"
+                            onClick={() => {
+                                appendTg(emptyTG);
+                            }}
+                        >
+                            <RxPlus size={24} />
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="">
-                <div className="text-xl text-slate-600">{t('target.language_title')}</div>
-                <div className="mb-8">{t('target.language_description')}</div>
-                <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
-            </div>
-        </Wrapper>
+                <div className="">
+                    <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                    <div className="mb-8">{t('target.language_description')}</div>
+                    <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
+                </div>
+            </Wrapper>
+        </>
     );
 }
 

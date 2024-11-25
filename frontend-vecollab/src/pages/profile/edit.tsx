@@ -26,6 +26,7 @@ import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticPropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -289,6 +290,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
     return (
         <>
+            <CustomHead pageTitle={t('edit_profile_title')} pageSlug={'profile/edit'} />
             <div className={'flex justify-center'}>
                 <WhiteBox>
                     <div className={'w-[60rem]'}>

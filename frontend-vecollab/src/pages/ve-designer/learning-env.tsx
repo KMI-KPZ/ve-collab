@@ -12,6 +12,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LearningEnvFormSchema } from '../../zod-schemas/learningEnvSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface FormValues {
     learningEnv: string;
@@ -53,7 +54,7 @@ const emptyPysicalMobility: PhysicalMobility = {
 Methodology.auth = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common']) // designer is default ns
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
     const prevpage = '/ve-designer/learning-goals';
     const nextpage = '/ve-designer/methodology';
 
@@ -129,7 +130,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'physical_mobilities',
                 value: data.physicalMobilities,
-            }
+            },
         ];
     };
 
@@ -245,95 +246,104 @@ export default function Methodology({ socket }: Props): JSX.Element {
     }
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('learningEnv.title')}
-            subtitle={t('learningEnv.subtitle')}
-            description={t('learningEnv.description')}
-            tooltip={{
-                text: t('learningEnv.tooltip'),
-                link: '/learning-material/3/Digitale%20Medien',
-            }}
-            stageInMenu='generally'
-            idOfProgress="learning_env"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div className="mt-4">
-                <textarea
-                    rows={3}
-                    placeholder={t('learningEnv.placeholder')}
-                    className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
-                    {...methods.register('learningEnv')}
-                />
-                <p className="text-red-600 pt-2">
-                    {t(methods.formState.errors?.learningEnv?.message!)}
-                </p>
-            </div>
+        <>
+            <CustomHead pageTitle={t('learningEnv.title')} pageSlug={'ve-designer/learning-env'} />
+            <Wrapper
+                socket={socket}
+                title={t('learningEnv.title')}
+                subtitle={t('learningEnv.subtitle')}
+                description={t('learningEnv.description')}
+                tooltip={{
+                    text: t('learningEnv.tooltip'),
+                    link: '/learning-material/3/Digitale%20Medien',
+                }}
+                stageInMenu="generally"
+                idOfProgress="learning_env"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div className="mt-4">
+                    <textarea
+                        rows={3}
+                        placeholder={t('learningEnv.placeholder')}
+                        className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
+                        {...methods.register('learningEnv')}
+                    />
+                    <p className="text-red-600 pt-2">
+                        {t(methods.formState.errors?.learningEnv?.message!)}
+                    </p>
+                </div>
 
-            <div className="mt-4">
-                <div
-                    className={'flex justify-between items-center text-slate-600 text-xl relative'}
-                >
-                    {t('learningEnv.subtitle2')}
-                    <Tooltip tooltipsText={t('learningEnv.tooltip2')}>
-                        <Link
-                            target="_blank"
-                            href={
-                                '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
-                            }
-                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-                <p className="mb-8">{t('learningEnv.description2')}</p>
-                <div className="w-full lg:w-1/2">
-                    <div className="flex items-center">
-                        <label htmlFor="courseFormat" className="mr-2">
-                            {t('learningEnv.format')}:
-                        </label>
-                        <select
-                            placeholder={`${t('common:choose')}...`}
-                            className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
-                            {...methods.register(`courseFormat`)}
-                        >
-                            <option value={t('learningEnv.sync')}>{t('learningEnv.sync')}</option>
-                            <option value={t('learningEnv.async')}>{t('learningEnv.async')}</option>
-                            <option value={t('learningEnv.asyncAndSync')}>
-                                {t('learningEnv.asyncAndSync')}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                    {t('learningEnv.pysicalSupp')}
-                    <div className="flex w-40 justify-end gap-x-5">
-                        {radioBooleanInput(methods.control, `usePhysicalMobility`)}
-                    </div>
-                </div>
-                {methods.watch('usePhysicalMobility') && (
-                    <div className="mt-4 rounded shadow p-2 w-full lg:w-2/3">
-                        <div className="divide-y my-2">{renderMobilitiesInputs()}</div>
-                        <div className="flex justify-center">
-                            <button
-                                className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
-                                type="button"
-                                onClick={() => {
-                                    append(emptyPysicalMobility);
-                                }}
+                <div className="mt-4">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('learningEnv.subtitle2')}
+                        <Tooltip tooltipsText={t('learningEnv.tooltip2')}>
+                            <Link
+                                target="_blank"
+                                href={
+                                    '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
+                                }
+                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
                             >
-                                <RxPlus size={20} />
-                            </button>
+                                <PiBookOpenText size={30} color="#00748f" />
+                            </Link>
+                        </Tooltip>
+                    </div>
+                    <p className="mb-8">{t('learningEnv.description2')}</p>
+                    <div className="w-full lg:w-1/2">
+                        <div className="flex items-center">
+                            <label htmlFor="courseFormat" className="mr-2">
+                                {t('learningEnv.format')}:
+                            </label>
+                            <select
+                                placeholder={`${t('common:choose')}...`}
+                                className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
+                                {...methods.register(`courseFormat`)}
+                            >
+                                <option value={t('learningEnv.sync')}>
+                                    {t('learningEnv.sync')}
+                                </option>
+                                <option value={t('learningEnv.async')}>
+                                    {t('learningEnv.async')}
+                                </option>
+                                <option value={t('learningEnv.asyncAndSync')}>
+                                    {t('learningEnv.asyncAndSync')}
+                                </option>
+                            </select>
                         </div>
                     </div>
-                )}
-            </div>
-        </Wrapper>
+                    <div className="mt-4 flex w-full lg:w-2/3 items-center">
+                        {t('learningEnv.pysicalSupp')}
+                        <div className="flex w-40 justify-end gap-x-5">
+                            {radioBooleanInput(methods.control, `usePhysicalMobility`)}
+                        </div>
+                    </div>
+                    {methods.watch('usePhysicalMobility') && (
+                        <div className="mt-4 rounded shadow p-2 w-full lg:w-2/3">
+                            <div className="divide-y my-2">{renderMobilitiesInputs()}</div>
+                            <div className="flex justify-center">
+                                <button
+                                    className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
+                                    type="button"
+                                    onClick={() => {
+                                        append(emptyPysicalMobility);
+                                    }}
+                                >
+                                    <RxPlus size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </Wrapper>
+        </>
     );
 }
 
