@@ -3,11 +3,13 @@ import { JitsiMeeting } from '@jitsi/react-sdk';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import CustomHead from '@/components/metaData/CustomHead';
 
 Meeting.auth = true;
 export default function Meeting() {
     const router = useRouter();
+    const id = router.query.id as string;
     const [loading, setLoading] = useState(true);
 
     // we need to wait for the router to be ready to initialize the jitsi meeting,
@@ -23,6 +25,7 @@ export default function Meeting() {
 
     return (
         <>
+            <CustomHead pageTitle={'Meeting'} pageSlug={`meeting/${id}`} />
             {loading ? (
                 <div className="h-96 flex items-center justify-center">
                     <LoadingAnimation />

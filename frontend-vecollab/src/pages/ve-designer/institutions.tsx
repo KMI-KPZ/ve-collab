@@ -19,10 +19,11 @@ import Dialog from '@/components/profile/Dialog';
 import Link from 'next/link';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface Institution {
     name: string;
@@ -37,12 +38,12 @@ interface FormValues {
 
 const areAllFieldsEmpty = (institution: Institution): boolean => {
     return (
-        institution.name.trim()  == "" &&
-        institution.school_type.trim()  == "" &&
-        institution.country.trim()  == "" &&
-        institution.department.trim()  == ""
-    )
-}
+        institution.name.trim() == '' &&
+        institution.school_type.trim() == '' &&
+        institution.country.trim() == '' &&
+        institution.department.trim() == ''
+    );
+};
 
 interface Props {
     socket: Socket;
@@ -52,7 +53,7 @@ Institutions.auth = true;
 export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation(['designer', 'common'])
+    const { t } = useTranslation(['designer', 'common']);
 
     const [importDialog, setImportDialog] = useState<{
         isOpen: boolean;
@@ -95,15 +96,13 @@ export default function Institutions({ socket }: Props): JSX.Element {
     );
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-        const institutions = data.institutions.filter(inst =>
-            !areAllFieldsEmpty(inst)
-        )
+        const institutions = data.institutions.filter((inst) => !areAllFieldsEmpty(inst));
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'institutions',
                 value: institutions,
-            }
+            },
         ];
     };
 
@@ -145,16 +144,25 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             <option value={t('institutions.eduinst_appliedsc')}>
                                 {t('institutions.eduinst_appliedsc')}
                             </option>
-                            <option value={t('institutions.eduinst_voc')}>{t('institutions.eduinst_voc')}</option>
-                            <option value={t('institutions.eduinst_school1')}>{t('institutions.eduinst_school1')}</option>
+                            <option value={t('institutions.eduinst_voc')}>
+                                {t('institutions.eduinst_voc')}
+                            </option>
+                            <option value={t('institutions.eduinst_school1')}>
+                                {t('institutions.eduinst_school1')}
+                            </option>
                             <option value={t('institutions.eduinst_school2')}>
                                 {t('institutions.eduinst_school2')}
                             </option>
 
-                            <option value={t('institutions.eduinst_other')}>{t('institutions.eduinst_other')}</option>
+                            <option value={t('institutions.eduinst_other')}>
+                                {t('institutions.eduinst_other')}
+                            </option>
                         </select>
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.institutions?.[index]?.school_type?.message!)}
+                            {t(
+                                methods.formState.errors?.institutions?.[index]?.school_type
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -190,7 +198,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {...methods.register(`institutions.${index}.department`)}
                         />
                         <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.institutions?.[index]?.department?.message!)}
+                            {t(
+                                methods.formState.errors?.institutions?.[index]?.department
+                                    ?.message!
+                            )}
                         </p>
                     </div>
                 </div>
@@ -260,8 +271,8 @@ export default function Institutions({ socket }: Props): JSX.Element {
             return (
                 <div>
                     <p>{t('institutions.no_inst_in_profile')}</p>
-                    <Link href={'/profile/edit'} target='_blank'>
-                        <span className='border border-white bg-black/75 text-white rounded-lg px-3 py-1' >
+                    <Link href={'/profile/edit'} target="_blank">
+                        <span className="border border-white bg-black/75 text-white rounded-lg px-3 py-1">
                             {t('edit_profile')}
                         </span>
                     </Link>
@@ -273,9 +284,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 {importDialog.institutions.map((institution, i) => {
                     return (
-                        <div key={i}
-                            className='ml-10 hover:cursor-pointer flex'
-                            onClick={e => toggleImport(i, institution)}
+                        <div
+                            key={i}
+                            className="ml-10 hover:cursor-pointer flex"
+                            onClick={(e) => toggleImport(i, institution)}
                         >
                             <input
                                 type="checkbox"
@@ -286,13 +298,14 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             {institution.name}
                             {institution.department && <>({institution.department})</>}
                         </div>
-                    )
+                    );
                 })}
-                <div className='ml-auto text-right'>
+                <div className="ml-auto text-right">
                     <button
-                        type='button'
-                        className='py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg'
-                        onClick={e => setImportDialog(prev => ({...prev, isOpen: false}))}>
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        onClick={(e) => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
+                    >
                         {t('common:cancel')}
                     </button>
                     <ButtonPrimary label={t('common:import')} onClick={() => handleImport()} />
@@ -302,87 +315,89 @@ export default function Institutions({ socket }: Props): JSX.Element {
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('institutions.title')}
-            subtitle={t('institutions.subtitle')}
-            description={t('institutions.description')}
-            stageInMenu='generally'
-            idOfProgress="institutions"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <Dialog
-                isOpen={importDialog.isOpen}
-                title={t('institutions.import_institutions')}
-                onClose={() => setImportDialog(prev => ({...prev, isOpen: false}))}
+        <>
+            <CustomHead pageTitle={t('institutions.title')} pageSlug={'ve-designer/institutions'} />
+            <Wrapper
+                socket={socket}
+                title={t('institutions.title')}
+                subtitle={t('institutions.subtitle')}
+                description={t('institutions.description')}
+                stageInMenu="generally"
+                idOfProgress="institutions"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
             >
-                <div className="w-[40vw]">
-                    <ImportDialog />
-                </div>
-            </Dialog>
-
-            <div className={'px-4 w-full lg:w-2/3'}>
-                <div className="flex">
-                    <button
-                        className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        type='button'
-                        title={t('institutions.import_institutions')}
-                        onClick={e => openImportDialog()}
-                    >
-                        {t('common:import')}
-                    </button>
-                    {fields.length == 0 && (
-                        <button
-                            className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
-                            type="button"
-                            onClick={() => {
-                                append({
-                                    name: '',
-                                    school_type: '',
-                                    country: '',
-                                    department: '',
-                                });
-                            }}
-                        >
-                            {t('common:new')}
-                    </button>)}
-                </div>
-
-                <div className="divide-y">{renderInstitutionInputs()}</div>
-
-                {fields.length > 0 && (
-                    <div className="flex justify-center">
-                        <button
-                            className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
-                            type="button"
-                            onClick={() => {
-                                append({
-                                    name: '',
-                                    school_type: '',
-                                    country: '',
-                                    department: '',
-                                });
-                            }}
-                        >
-                            <RxPlus size={25} />
-                        </button>
+                <Dialog
+                    isOpen={importDialog.isOpen}
+                    title={t('institutions.import_institutions')}
+                    onClose={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
+                >
+                    <div className="w-[40vw]">
+                        <ImportDialog />
                     </div>
-                )}
-            </div>
-        </Wrapper>
+                </Dialog>
+
+                <div className={'px-4 w-full lg:w-2/3'}>
+                    <div className="flex">
+                        <button
+                            className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            type="button"
+                            title={t('institutions.import_institutions')}
+                            onClick={(e) => openImportDialog()}
+                        >
+                            {t('common:import')}
+                        </button>
+                        {fields.length == 0 && (
+                            <button
+                                className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        name: '',
+                                        school_type: '',
+                                        country: '',
+                                        department: '',
+                                    });
+                                }}
+                            >
+                                {t('common:new')}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="divide-y">{renderInstitutionInputs()}</div>
+
+                    {fields.length > 0 && (
+                        <div className="flex justify-center">
+                            <button
+                                className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        name: '',
+                                        school_type: '',
+                                        country: '',
+                                        department: '',
+                                    });
+                                }}
+                            >
+                                <RxPlus size={25} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </Wrapper>
+        </>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }
