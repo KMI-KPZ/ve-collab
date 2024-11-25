@@ -65,7 +65,7 @@ class Profiles:
             "posts_liked",  # posts of user has received x likes (combined)
             "join_groups",  # member of x groups
             "admin_groups",  # admin of x groups
-            "ve_plans",  # x VE plans created
+            "ve_plans",  # x update operations done on VE plans
             "good_practice_plans",  # x VE plans marked as good practise examples
             "unique_partners",  # x unique partners across all VE plans
         ]
@@ -118,10 +118,10 @@ class Profiles:
             },
             "ve_plans": {
                 None: 0,
-                "bronze": 1,
-                "silver": 3,
-                "gold": 5,
-                "platinum": 10,
+                "bronze": 10,
+                "silver": 100,
+                "gold": 500,
+                "platinum": 2000,
             },
             "good_practice_plans": {
                 None: 0,

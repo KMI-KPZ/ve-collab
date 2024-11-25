@@ -1983,6 +1983,10 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
+        # count towards the achievement "ve_plans"
+        profile_manager = Profiles(db)
+        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
     def update_full_plan(
@@ -2047,6 +2051,10 @@ class VEPlanHandler(BaseHandler):
                 er.initiate_etherpad_for_plan(_id)
             except Exception:
                 logger.warn("etherpad is possibly down")
+
+        # count towards the achievement "ve_plans" since update was successfull
+        profile_manager = Profiles(db)
+        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -2160,6 +2168,10 @@ class VEPlanHandler(BaseHandler):
                 except Exception:
                     logger.warn("etherpad is possibly down")
 
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def bulk_update_fields_in_plan(self, db: Database, update_instructions: List[Dict]):
@@ -2254,6 +2266,10 @@ class VEPlanHandler(BaseHandler):
                 {"success": False, "reason": "operation_errors", "errors": errors}
             )
         else:
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
             self.serialize_and_write({"success": True})
 
     def append_step_to_plan(
@@ -2337,6 +2353,10 @@ class VEPlanHandler(BaseHandler):
         if error_reason:
             self.write({"success": False, "reason": error_reason})
         else:
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def put_evaluation_file(
@@ -2396,6 +2416,10 @@ class VEPlanHandler(BaseHandler):
                 self.set_status(403)
                 self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                 return
+
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
@@ -2464,6 +2488,10 @@ class VEPlanHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": MAXIMUM_FILES_EXCEEDED})
                 return
+
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})

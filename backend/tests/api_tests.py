@@ -9025,6 +9025,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         self.assertEqual(db_state, plan)
 
+        # check that the insert has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_insert_plan_error_plan_already_exists(self):
         """
         expect: fail message because a plan with the same _id already exists
@@ -9035,6 +9045,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "POST", "/planner/insert", False, 409, body=self.json_serialize(plan)
         )
         self.assertEqual(response["reason"], PLAN_ALREADY_EXISTS_ERROR)
+
+        # check that the insert has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_insert_empty_plan(self):
         """
@@ -9075,6 +9094,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(len(db_state["checklist"]), 1)
         self.assertEqual(db_state["checklist"][0]["username"], CURRENT_ADMIN.username)
 
+        # check that the insert has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_update_plan(self):
         """
         expect: successfully overwrite a plan
@@ -9099,6 +9128,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["name"], "updated_plan")
         self.assertEqual(db_state["topics"], [])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_upsert_plan(self):
         """
@@ -9127,6 +9166,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         default_plan = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(default_plan)
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_update_plan_error_invalid_query_param(self):
         """
         expect: fail message because the "upsert" parameter is
@@ -9141,6 +9190,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(VEPlan().to_dict()),
         )
         self.assertEqual(response["reason"], INVALID_KEY_ERROR_SLUG + "upsert")
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_plan_error_plan_doesnt_exist(self):
         """
@@ -9157,6 +9215,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_DOESNT_EXIST_ERROR)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_plan_error_insufficient_permission(self):
         """
         expect: fail message because user has no write access to the plan
@@ -9165,6 +9232,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+
         global_vars.plan_write_lock_map[self.plan_id] = {
             "username": CURRENT_USER.username,
             "expires": datetime.now() + timedelta(hours=1),
@@ -9180,6 +9248,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(plan.to_dict()),
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_plan_error_plan_locked(self):
         """
@@ -9203,6 +9280,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_primitive_attribute(self):
         """
@@ -9229,6 +9315,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
 
         # again with checklist dict attribute
         payload = {
@@ -9267,6 +9363,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 2,  # +2 because the first update also counted towards the achievement
+        )
+
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
@@ -9289,6 +9395,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["realization"], None)
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 3,  # +3 because the first two updates also counted towards the achievement
+        )
 
     def test_post_update_field_compound_attribute(self):
         """
@@ -9336,6 +9452,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
@@ -9379,6 +9505,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["steps"], [])
         self.assertEqual(db_state["last_modified"], db_state["creation_timestamp"])
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 2, # +2 because the first update also counted towards the achievements
+        )
+
     def test_post_update_field_error_missing_key(self):
         """
         expect: fail message because plan_id, field_name or value is missing
@@ -9398,6 +9534,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "plan_id"
         )
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
         # field_name is missing
         payload = {"plan_id": self.plan_id, "value": "updated"}
 
@@ -9410,6 +9555,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "field_name"
+        )
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
         )
 
         # value is missing
@@ -9427,6 +9581,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "value")
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_field_error_invalid_id(self):
         """
         expect: fail message because the supplied _id is not a valid ObjectId
@@ -9442,6 +9605,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
         # also test an invalid object id within a compound object
         payload = {
@@ -9467,6 +9639,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INVALID_OBJECT_ID)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_field_error_unexpected_attribute(self):
         """
         expect: fail message because the supplied field name that should be updated
@@ -9488,6 +9669,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], "unexpected_attribute")
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_field_error_wrong_type(self):
         """
         expect: fail message because the value is of wrong type
@@ -9507,6 +9697,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertTrue(response["reason"].startswith("TypeError"))
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
         # also check for object-like attribute case
         # experience is mistakenly a list
@@ -9532,6 +9731,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertTrue(response["reason"].startswith("TypeError"))
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_missing_key_model(self):
         """
@@ -9561,6 +9769,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "semester"
+        )
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
         )
 
     def test_post_update_field_error_non_unique_steps(self):
@@ -9611,6 +9828,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], NON_UNIQUE_STEPS_ERROR)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_field_error_non_unique_tasks(self):
         """
         expect: fail message because tasks in the step don't have unique task_formulations
@@ -9648,6 +9874,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], NON_UNIQUE_TASKS_ERROR)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_update_field_error_insufficient_permission(self):
         """
         expect: fail message because user has no write access to plan
@@ -9656,6 +9891,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+
         global_vars.plan_write_lock_map[self.plan_id] = {
             "username": CURRENT_USER.username,
             "expires": datetime.now() + timedelta(hours=1),
@@ -9675,6 +9911,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_unsupported_field(self):
         """
@@ -9696,6 +9941,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             body=self.json_serialize(payload),
         )
         self.assertEqual(response["reason"], "unsupported_field:evaluation_file")
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_plan_locked(self):
         """
@@ -9724,6 +9978,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_update_fields(self):
         """
@@ -9758,6 +10021,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertEqual(db_state["topics"], ["updated_topic", "test"])
         self.assertGreater(db_state["last_modified"], db_state["creation_timestamp"])
+
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_update_fields_errors(self):
         """
@@ -9802,6 +10075,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["realization"], "updated_realization")
         self.assertNotEqual(db_state["topics"], ["updated_topic", "test"])
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
         # try as a separate case that a plan is locked
         global_vars.plan_write_lock_map[self.plan_id] = {
@@ -9848,6 +10130,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(response["errors"][1]["error_reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["errors"][1]["lock_holder"], CURRENT_USER.username)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_put_evaluation_file(self):
         """
         expect: successfully upload an evaluation file
@@ -9887,6 +10178,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             db_state["evaluation_file"],
         )
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_put_evaluation_file_error_missing_key(self):
         """
         expect: fail message because no file is supplied or the plan_id is missing
@@ -9922,6 +10223,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_put_evaluation_file_error_insufficient_permission(self):
         """
         expect: fail message because user has no write access to the plan
@@ -9930,6 +10240,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+
         global_vars.plan_write_lock_map[self.plan_id] = {
             "username": CURRENT_USER.username,
             "expires": datetime.now() + timedelta(hours=1),
@@ -9963,6 +10274,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         file = fs.find_one({"filename": file_name})
         self.assertIsNone(file)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_put_evaluation_file_error_plan_locked(self):
         """
         expect: fail message because plan is locked by another user
@@ -9993,6 +10313,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_put_literature_file(self):
         """
@@ -10033,6 +10362,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             db_state["literature_files"],
         )
 
+        # check that the update has counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_put_literature_file_error_missing_key(self):
         """
         expect: fail message because no file is supplied or the plan_id is missing
@@ -10051,6 +10390,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
         # missing plan_id
         file_name = "test_file.txt"
         file = io.BytesIO()
@@ -10068,6 +10416,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "plan_id")
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_put_literature_file_error_insufficient_permission(self):
         """
         expect: fail message because user has no write access to the plan
@@ -10076,6 +10433,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # switch to user mode
         options.test_admin = False
         options.test_user = True
+
         global_vars.plan_write_lock_map[self.plan_id] = {
             "username": CURRENT_USER.username,
             "expires": datetime.now() + timedelta(hours=1),
@@ -10109,6 +10467,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         file = fs.find_one({"filename": file_name})
         self.assertIsNone(file)
 
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
     def test_post_put_literature_file_error_plan_locked(self):
         """
         expect: fail message because plan is locked by another user
@@ -10139,6 +10506,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_LOCKED_ERROR)
         self.assertEqual(response["lock_holder"], CURRENT_USER.username)
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
 
     def test_post_put_literature_file_error_maximum_files_exceeded(self):
         """
@@ -10185,6 +10561,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             [
                 literature_file["file_name"]
                 for literature_file in db_state["literature_files"]
+            ],
+        )
+
+        # check that the update has not counted towards achievement "ve_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][0]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
             ],
         )
 
