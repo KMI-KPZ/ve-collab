@@ -5,6 +5,10 @@ import LinkPreview from '@/components/metaData/LinkPreview';
 export default function VEHead() {
     const title = 'VE Collab';
 
+    const baseURL = 'https://ve-collab.org/';
+    const baseURLen = 'https://ve-collab.org/en';
+    const baseURLde = 'https://ve-collab.org/de';
+
     const keywords =
         'virtual exchange, collaboration, VE Collab, online learning, VE Designer, Selbstlernmaterialien'; // 5-10 keywords
 
@@ -25,9 +29,9 @@ export default function VEHead() {
             <meta name="publisher" content="VE Collab Team" />
             <meta name="keywords" content={keywords} />
             <meta name="description" content={description} />
-            <link rel="canonical" href="/" />
-            <link rel="alternate" href="/en" hrefLang="en-US" />
-            <link rel="alternate" href="/de" hrefLang="de-DE" />
+            <link rel="canonical" href={baseURL} />
+            <link rel="alternate" href={baseURLen} hrefLang="en-US" />
+            <link rel="alternate" href={baseURLde} hrefLang="de-DE" />
             <meta name="language" content="de" />
             <LinkPreview description={description} title={title} />
             <Favicon />
