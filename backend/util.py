@@ -212,6 +212,7 @@ def _append_msg_text(
         "space_join_request.html",
         "ve_invitation.html",
         "ve_invitation_reply.html",
+        "new_messages.html",
     ],
     payload: Dict,
 ) -> None:
@@ -340,6 +341,15 @@ def _append_msg_text(
                     recipient_name=(display_name),
                     invitation_recipient_name=invitation_recipient_name,
                 )
+
+    elif template == "new_messages.html":
+        with open("assets/email_templates/new_messages.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                unread_messages_amount=payload["unread_messages_amount"],
+                unread_rooms_amount=payload["unread_rooms_amount"],
+            )
     else:
         raise ValueError("Invalid template name: {}".format(template))
 
@@ -360,6 +370,7 @@ def send_email(
         "space_join_request.html",
         "ve_invitation.html",
         "ve_invitation_reply.html",
+        "new_messages.html",
     ],
     payload: Dict,
 ) -> None:
@@ -382,7 +393,7 @@ def send_email(
     """
 
     # sanity check: email template exists
-    try: 
+    try:
         global_vars.email_template_env.get_template(template)
     except TemplateNotFound:
         logger.error("Email template not found: {}".format(template))

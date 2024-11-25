@@ -7,6 +7,7 @@ import { useGetExcludedFromMatching } from '@/lib/backend';
 import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
 import FeedbackBanner from '../FeedbackBanner';
+import { usePathname } from 'next/navigation';
 
 interface Props {
     children: JSX.Element;
@@ -24,6 +25,7 @@ export default function LayoutSection({
 }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
+    const isFrontpage = usePathname() == '/';
 
     const { data: excludedFromMatching } = useGetExcludedFromMatching(
         session ? session.accessToken : ''
@@ -41,8 +43,12 @@ export default function LayoutSection({
                 toggleChatWindow={toggleChatWindow}
                 toggleNotifWindow={toggleNotifWindow}
             />
-            <main className="flex-1 p-5 bg-pattern-left-blue bg-no-repeat min-h-96">
-                {excludedFromMatching && <ExcludedFromMatchingBanner />}
+            <main
+                className={`flex-1 min-h-96 ${
+                    isFrontpage ? ' bg-ve-collab-blue' : ' bg-pattern-left-blue bg-no-repeat'
+                }`}
+            >
+                {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
                 <div className="container mx-auto max-w-screen-2xl">{children}</div>
             </main>

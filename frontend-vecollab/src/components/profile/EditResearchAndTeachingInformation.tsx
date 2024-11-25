@@ -6,6 +6,7 @@ import EditProfileHeadline from './EditProfileHeadline';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileTeachingItem from './EditProfileTeachingItem';
 import Swapper from './Swapper';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     researchAndTeachingInformation: ResearchAndTeachingInformation;
@@ -22,6 +23,8 @@ export default function EditResearchAndTeachingInformation({
     orcid,
     importOrcidProfile,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     const modifyResearchTags = (index: number, value: string) => {
         let newResearchTags = [...researchAndTeachingInformation.researchTags];
         newResearchTags[index] = value;
@@ -190,8 +193,8 @@ export default function EditResearchAndTeachingInformation({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Forschungsschwerpunkte'} />
-                <div className="mb-2 text-sm">Worin liegen deine Forschungsschwerpunkte?</div>
+                <EditProfileHeadline name={t('research_focus')} />
+                <div className="mb-2 text-sm">{t('research_focus_question')}</div>
                 {researchAndTeachingInformation.researchTags.map((researchTag, index) => (
                     <Swapper
                         key={index}
@@ -205,7 +208,7 @@ export default function EditResearchAndTeachingInformation({
                                 'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
                             }
                             type="text"
-                            placeholder="Verwende ein Feld pro Forschungsschwerpunkt"
+                            placeholder={t('one_field_per_research_focus')}
                             value={researchTag}
                             onChange={(e) => modifyResearchTags(index, e.target.value)}
                         />
@@ -214,10 +217,8 @@ export default function EditResearchAndTeachingInformation({
                 <EditProfilePlusMinusButtons plusCallback={addResearchTagInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Lehrveranstaltungen'} />
-                <div className="mb-2 text-sm">
-                    In welchen Lehrveranstaltungen würdest du gern einen VE integrieren?
-                </div>
+                <EditProfileHeadline name={t('lectures')} />
+                <div className="mb-2 text-sm">{t('lectures_question')}</div>
                 {researchAndTeachingInformation.courses.map((course, index) => (
                     <Swapper
                         key={index}
@@ -240,8 +241,8 @@ export default function EditResearchAndTeachingInformation({
                 <EditProfilePlusMinusButtons plusCallback={addCourseField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'LMS'} />
-                <div className="mb-2 text-sm">Mit welchen LMS arbeitest du überwiegend?</div>
+                <EditProfileHeadline name={t('lms')} />
+                <div className="mb-2 text-sm">{t('lms_question')}</div>
                 {researchAndTeachingInformation.lms.map((lmsItem, index) => (
                     <Swapper
                         key={index}
@@ -255,7 +256,7 @@ export default function EditResearchAndTeachingInformation({
                                 'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
                             }
                             type="text"
-                            placeholder="Verwende ein Feld pro LMS"
+                            placeholder={t('one_field_per_lms')}
                             value={lmsItem}
                             onChange={(e) => modifyLms(index, e.target.value)}
                         />
@@ -264,10 +265,8 @@ export default function EditResearchAndTeachingInformation({
                 <EditProfilePlusMinusButtons plusCallback={addLmsInputField} />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'Tools'} />
-                <div className="mb-2 text-sm">
-                    Mit welchen (digitalen) Tools arbeitest du überwiegend?
-                </div>
+                <EditProfileHeadline name={t('tools')} />
+                <div className="mb-2 text-sm">{t('tools_question')}</div>
                 {researchAndTeachingInformation.tools.map((tool, index) => (
                     <Swapper
                         key={index}
@@ -281,7 +280,7 @@ export default function EditResearchAndTeachingInformation({
                                 'border border-[#cccccc] rounded-md px-2 py-[6px] mb-1 w-full'
                             }
                             type="text"
-                            placeholder="Verwende ein Feld pro verwendetem Tool"
+                            placeholder={t('one_field_per_tool')}
                             value={tool}
                             onChange={(e) => modifyTools(index, e.target.value)}
                         />

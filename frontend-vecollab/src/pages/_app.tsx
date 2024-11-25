@@ -90,8 +90,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                 (notification) => notification._id === value._id
             );
             if (alreadyExisting === undefined) {
-                console.log('new notification:');
-                console.log(value);
+                // console.log('new notification:', {value});
                 setNotificationEvents([value, ...notificationEvents]);
             }
         }
@@ -175,6 +174,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                 setHeaderBarMessageEvents={
                                                     setMessageEventsHeaderBar
                                                 }
+                                                toggleNotifWindow={toggleNotifWindow}
                                             />
                                         </Auth>
                                     ) : (
@@ -187,6 +187,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                             setMessageEvents={setMessageEvents}
                                             headerBarMessageEvents={messageEventsHeaderBar}
                                             setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                            toggleNotifWindow={toggleNotifWindow}
                                         />
                                     )}
                                 </>

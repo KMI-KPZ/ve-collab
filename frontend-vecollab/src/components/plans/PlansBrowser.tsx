@@ -38,7 +38,7 @@ export function PlansBrowser({
 
     return (
         <>
-            <div className="rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
+            <div className="mb-6 rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
                     <div className="basis-1/12 text-center">{t('plans_table_progress')}</div>
                     <div
@@ -80,7 +80,7 @@ export function PlansBrowser({
                         plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className="flex flex-row py-3 space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
+                                className="flex flex-row py-3 px-1 space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
                             >
                                 <PlansBrowserItem
                                     key={index}

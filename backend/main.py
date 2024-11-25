@@ -51,8 +51,12 @@ from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
 from handlers.template_debug_handler import TemplateDebugHandler
-from resources.notifications import periodic_notification_dispatch
+from resources.notifications import (
+    new_message_mail_notification_dispatch,
+    periodic_notification_dispatch,
+)
 import util
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -486,14 +490,19 @@ def hook_tornado_access_log():
         tornado_access_logger.propagate = False
 
 
-def schedule_periodic_notifications():
+def schedule_periodic_tasks():
     """
     Schedule and start all (periodic) notifications from
     `assets/periodic_notifications.json`.
     """
 
     scheduler = TornadoScheduler()
+    executor = ThreadPoolExecutor(max_workers=4)
 
+    def run_in_executor(func, *args, **kwargs):
+        return executor.submit(func, *args, **kwargs)
+
+    # reminder notifications
     with open("assets/periodic_notifications.json", "r") as fp:
         periodic_notifications = json.load(fp)["periodic_notifications"]
 
@@ -507,14 +516,22 @@ def schedule_periodic_notifications():
                     minute=execution_dates["minute"],
                 )
                 scheduler.add_job(
-                    periodic_notification_dispatch,
+                    run_in_executor,
                     trigger,
                     args=[
+                        periodic_notification_dispatch,
                         notification["type"],
                         notification["payload"],
                         notification["email_subject"],
                     ],
                 )
+
+    # new message mail notifications
+    scheduler.add_job(
+        run_in_executor,
+        CronTrigger(hour=2, minute=0),
+        args=[new_message_mail_notification_dispatch],
+    )
 
     scheduler.start()
 
@@ -577,8 +594,8 @@ def main():
     # write tornado access log to separate logfile
     hook_tornado_access_log()
 
-    # schedule periodic notifications
-    schedule_periodic_notifications()
+    # schedule periodic tasks (new message and reminder notifications)
+    schedule_periodic_tasks()
 
     # for testing purposes, delete when done
     """

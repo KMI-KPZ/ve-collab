@@ -1,64 +1,42 @@
-import React, { useContext } from 'react';
-import { signIn, useSession } from 'next-auth/react';
-import Timeline from '@/components/network/Timeline';
-import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
-import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
-import WhiteBox from '@/components/common/WhiteBox';
+import React, { Dispatch, SetStateAction, useContext } from 'react';
+import { useSession } from 'next-auth/react';
 import { SocketContext } from './_app';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { GetStaticPropsContext } from 'next';
+import BackgroundAnimation from '@/components/landingPage/BackgroundAnimation';
 
-export default function Home(): JSX.Element {
+import Frontpage from '@/components/landingPage/Frontpage';
+import Frontpage_LoggedIn from '@/components/landingPage/Frontpage_LoggedIn';
+
+import { Notification } from '@/interfaces/socketio';
+
+interface Props {
+    notificationEvents: Notification[];
+    toggleNotifWindow(value?: boolean): void;
+}
+
+export default function Home({ notificationEvents, toggleNotifWindow }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const socket = useContext(SocketContext);
     const { t } = useTranslation('common');
 
     return (
-        <div>
-            <div className="flex flex-col m-auto p-12 max-w-screen-2xl items-center">
-                <div className="flex justify-center w-full md:w-5/6 h-40 mt-2 p-12 rounded-2xl bg-footer-pattern-rounded">
-                    <h1 className="text-center content-center text-white font-bold uppercase text-2xl md:text-4xl">
-                        {t('homepage_banner')}
-                    </h1>
-                </div>
-
-                <p className="md:w-1/2 my-10 font-konnect lg:text-xl">{t('homepage_text')}</p>
-
+        <div className="">
+            <div>
+                <BackgroundAnimation className="-z-10" enable={true} />
+            </div>
+            <div className="flex flex-col m-auto p-6 sm:p-12 max-w-screen-2xl z-0 relative gap-y-12">
                 {status != 'loading' && (
                     <>
-                        {' '}
                         {session ? (
-                            <>
-                                <WhiteBox>
-                                    <div className="text-center lg:text-xl p-6">
-                                        <h2 className="text-2xl mb-4">
-                                            <span className="text-ve-collab-orange">VE</span>{' '}
-                                            <span className="text-ve-collab-blue">Designer</span>
-                                        </h2>
-                                        <ButtonNewPlan socket={socket} label={t('btn_new_va')} />
-                                    </div>
-                                </WhiteBox>
-                                <div className="w-1/2">
-                                    <Timeline socket={socket} />
-                                </div>
-                            </>
+                            <Frontpage_LoggedIn
+                                notificationEvents={notificationEvents}
+                                toggleNotifWindow={toggleNotifWindow}
+                            />
                         ) : (
-                            <WhiteBox>
-                                <div className="text-center lg:text-xl">
-                                    <h2 className="text-2xl m-10">
-                                        <span className="text-ve-collab-orange">VE</span>{' '}
-                                        <span className="text-ve-collab-blue">Designer</span>
-                                    </h2>
-                                    <p>Logge dich ein, um einen neuen VA zu planen.</p>
-                                    <ButtonPrimary
-                                        label="Login"
-                                        onClick={() => signIn('keycloak')}
-                                        classNameExtend="m-10"
-                                    />
-                                </div>
-                            </WhiteBox>
-                        )}{' '}
+                            <Frontpage />
+                        )}
                     </>
                 )}
             </div>
@@ -69,7 +47,7 @@ export default function Home(): JSX.Element {
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common', "community"])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

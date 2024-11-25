@@ -1,0 +1,7 @@
+Hallo {recipient_name},
+
+innerhalb der letzten 24h hast du {unread_messages_amount} neue Nachricht(en) in {unread_rooms_amount} Chat(s) erhalten.
+Schau doch mal auf der Plattform vorbei, wer dir geschrieben hat!
+
+Viele Grüße!
+Dein VE-Collab Team
