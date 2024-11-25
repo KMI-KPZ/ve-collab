@@ -100,7 +100,7 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <CustomHead title={t('plans')} />
+            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
 
             <div className="flex justify-between mb-6 mt-12">
                 <div>

@@ -23,9 +23,7 @@ export default function LayoutSection({
     toggleNotifWindow,
 }: Props): JSX.Element {
     const { data: session } = useSession();
-
     const router = useRouter();
-    const language = router.locale;
 
     const { data: excludedFromMatching } = useGetExcludedFromMatching(
         session ? session.accessToken : ''

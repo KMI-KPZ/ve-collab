@@ -1,24 +1,47 @@
 import Head from 'next/head';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { useRouter } from 'next/router';
 
 type Props = {
-    title?: string;
-    content?: string;
+    pageTitle?: string;
+    pageDescription?: string;
     pageSlug?: string;
 };
 
-export default function CustomHead({ title, content, pageSlug }: Props) {
-    const { t } = useTranslation('common');
+export default function CustomHead({ pageTitle, pageDescription, pageSlug }: Props) {
+    const router = useRouter();
+    const language = router.locale === 'de' ? 'de-DE' : 'en-US';
 
-    const pageTitle = title ? `VE Collab | ${title}` : 'Ve Collab';
-    const pageURL = `${process.env.NEXT_PUBLIC_BASE_URL}${pageSlug}`;
+    const pageTitleTemplate = pageTitle ? `VE Collab | ${pageTitle}` : 'Ve Collab';
+
+    const baseURL =
+        process.env.NODE_ENV === 'production' ? 'https://ve-collab.org/' : 'http://localhost:3000/';
+    const url = pageSlug ? `${baseURL}/${pageSlug}` : baseURL;
+    const urlAlternateGerman = pageSlug ? `${baseURL}/de/${pageSlug}` : `${baseURL}/de`;
+    const urlAlternateEnglish = pageSlug ? `${baseURL}/en/${pageSlug}` : `${baseURL}/en`;
 
     return (
         <Head>
-            <title>{pageTitle}</title>
-            <meta name="description" content={content} />
-            <link rel="canonical" href={pageURL} />
-            <meta property="og:title" content={pageTitle} />
+            <title>{pageTitleTemplate}</title>
+
+            <link rel="canonical" href={url} />
+            <link rel="alternate" href={urlAlternateEnglish} hrefLang="en-US" />
+            <link rel="alternate" href={urlAlternateGerman} hrefLang="de-DE" />
+
+            {pageDescription && (
+                <>
+                    <meta name="description" content={pageDescription} />
+                    <meta name="twitter:description" content={pageDescription} />
+                    <meta property="og:description" content={pageDescription} />
+                </>
+            )}
+
+            <meta name="twitter:title" content={pageTitleTemplate} />
+            <meta property="og:site_name" content={pageTitleTemplate} />
+            <meta property="og:title" content={pageTitleTemplate} />
+
+            <meta property="og:locale" content={language} />
+            <meta name="language" content={language} />
         </Head>
     );
 }
