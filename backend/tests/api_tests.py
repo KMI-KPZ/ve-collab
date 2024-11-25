@@ -4995,6 +4995,23 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual((len(space_acl_records)), 1)
         self.assertEqual(space_acl_records[0]["username"], CURRENT_ADMIN.username)
 
+        # check that creation has counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_create_space_invisible(self):
         """
         expect: successfully create invisible space
@@ -5014,6 +5031,23 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["invisible"])
 
+        # check that creation has counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_create_space_joinable(self):
         """
         expect: successfully create joinable (=public) space
@@ -5032,6 +5066,23 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"_id": ObjectId(response["space_id"])})
         self.assertIsNotNone(db_state)
         self.assertTrue(db_state["joinable"])
+
+        # check that creation has counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_create_space_invisible_and_joinable(self):
         """
@@ -5055,6 +5106,23 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertTrue(db_state["invisible"])
         self.assertTrue(db_state["joinable"])
 
+        # check that creation has counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_create_space_error_no_name(self):
         """
         expect: fail message because request misses "name" parameter
@@ -5062,6 +5130,21 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/spaceadministration/create", False, 400)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "name")
+
+        # check that creation has not counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ],
+        )
 
     def test_post_create_space_error_insufficient_permission(self):
         """
@@ -5081,6 +5164,21 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # check that creation has not counted towards achievements "join_groups" and "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ],
+        )
 
     def test_post_join_space_joinable(self):
         """
@@ -5120,6 +5218,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertIsNotNone(acl_entry)
 
+        # check that joining has counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_join_space_admin(self):
         """
         expect: successfully join space because user is an admin and can join any space
@@ -5144,6 +5252,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         # expect user to be a member now
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["members"])
+
+        # check that joining has counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_join_space_join_request(self):
         """
@@ -5175,6 +5293,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["requests"])
 
+        # check that joining has not counted towards achievements "join_groups", because it is
+        # just a request
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
+
     def test_post_join_space_error_no_name(self):
         """
         expect: fail message because request misses "name" parameter
@@ -5182,6 +5310,15 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         response = self.base_checks("POST", "/spaceadministration/join", False, 400)
         self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_join_space_error_space_doesnt_exist(self):
         """
@@ -5195,6 +5332,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             409,
         )
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_join_space_error_user_already_member(self):
         """
@@ -5212,6 +5358,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             409,
         )
         self.assertEqual(response["reason"], USER_ALREADY_MEMBER_ERROR)
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_space_add_admin_global_admin(self):
         """
@@ -5235,6 +5390,16 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["admins"])
+
+        # check that adding has counted towards achievements "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_space_add_admin_space_admin(self):
         """
@@ -5262,6 +5427,16 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["admins"])
+
+        # check that adding has counted towards achievements "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ]
+            + 1,
+        )
 
     def test_post_space_add_admin_error_no_user(self):
         """
@@ -5291,6 +5466,15 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
+        # check that adding has not counted towards achievements "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ],
+        )
+
     def test_post_space_add_admin_error_user_not_member(self):
         """
         expect: fail message because is not member of the space and thus
@@ -5311,6 +5495,15 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
 
+        # check that adding has not counted towards achievements "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][5][
+                "progress"
+            ],
+        )
+
     def test_post_space_add_admin_error_insufficient_permission(self):
         """
         expect: fail message because user is neither global admin nor space admin
@@ -5329,6 +5522,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # check that adding has not counted towards achievements "admin_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][5]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][5][
+                "progress"
+            ],
+        )
 
     def test_post_space_information_global_admin(self):
         """
@@ -5767,6 +5969,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
+        # check that joining has counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_space_accept_invite_error_space_doesnt_exist(self):
         """
         expect: fail message because space doesnt exist
@@ -5793,6 +6005,15 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
+
     def test_post_space_accept_invite_error_user_not_invited(self):
         """
         expect: fail message because user wasnt event invited into the space
@@ -5817,6 +6038,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             409,
         )
         self.assertEqual(response["reason"], USER_NOT_INVITED_ERROR)
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_space_decline_invite(self):
         """
@@ -6073,6 +6303,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_USER.username, db_state["members"])
 
+        # check that joining has counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_space_accept_request_space_admin(self):
         """
         expect: successfully accept join request of a user, making him a member
@@ -6107,6 +6347,16 @@ class SpaceHandlerTest(BaseApiTestCase):
         db_state = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertIn(CURRENT_ADMIN.username, db_state["members"])
 
+        # check that joining has counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ]
+            + 1,
+        )
+
     def test_post_space_accept_request_error_no_user(self):
         """
         expect: fail message because request misses "user" parameter
@@ -6135,6 +6385,15 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
 
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
+
     def test_post_space_accept_request_error_user_didnt_request(self):
         """
         expect: fail message because user didnt even request to join the space
@@ -6159,6 +6418,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             409,
         )
         self.assertEqual(response["reason"], USER_DIDNT_REQUEST_TO_JOIN_ERROR)
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_space_accept_request_error_insufficient_permission(self):
         """
@@ -6189,6 +6457,15 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # check that joining has not counted towards achievements "join_groups"
+        user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            user["achievements"]["social"][4]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["social"][4][
+                "progress"
+            ],
+        )
 
     def test_post_space_reject_request_global_admin(self):
         """

@@ -3905,12 +3905,120 @@ class SpaceResourceTest(BaseResourceTestCase):
             "space_description": "test",
         }
 
+        # insert default profiles
+        self.default_profiles = [
+            {
+                "username": CURRENT_ADMIN.username,
+                "role": "admin",
+                "follows": [],
+                "bio": "",
+                "institution": "",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "",
+                "last_name": "",
+                "gender": "",
+                "address": "",
+                "birthday": "",
+                "experience": [""],
+                "expertise": "",
+                "languages": [],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": [""],
+                "ve_goals": [""],
+                "preferred_formats": [""],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
+                "notification_settings": {
+                    "messages": "email",
+                    "ve_invite": "email",
+                    "group_invite": "email",
+                    "system": "email",
+                },
+                "achievements": {
+                    "social": [
+                        {"type": "create_posts", "progress": 0, "level": None},
+                        {"type": "create_comments", "progress": 0, "level": None},
+                        {"type": "give_likes", "progress": 0, "level": None},
+                        {"type": "posts_liked", "progress": 0, "level": None},
+                        {"type": "join_groups", "progress": 0, "level": None},
+                        {"type": "admin_groups", "progress": 0, "level": None},
+                    ],
+                    "ve": [
+                        {"type": "ve_plans", "progress": 0, "level": None},
+                        {
+                            "type": "good_practice_plans",
+                            "progress": 0,
+                            "level": None,
+                        },
+                        {"type": "unique_partners", "progress": 0, "level": None},
+                    ],
+                },
+            },
+            {
+                "username": CURRENT_USER.username,
+                "role": "user",
+                "follows": [],
+                "bio": "",
+                "institution": "",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "",
+                "last_name": "",
+                "gender": "",
+                "address": "",
+                "birthday": "",
+                "experience": [""],
+                "expertise": "",
+                "languages": [],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": [""],
+                "ve_goals": [""],
+                "preferred_formats": [""],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
+                "notification_settings": {
+                    "messages": "email",
+                    "ve_invite": "email",
+                    "group_invite": "email",
+                    "system": "email",
+                },
+                "achievements": {
+                    "social": [
+                        {"type": "create_posts", "progress": 0, "level": None},
+                        {"type": "create_comments", "progress": 0, "level": None},
+                        {"type": "give_likes", "progress": 0, "level": None},
+                        {"type": "posts_liked", "progress": 0, "level": None},
+                        {"type": "join_groups", "progress": 0, "level": None},
+                        {"type": "admin_groups", "progress": 0, "level": None},
+                    ],
+                    "ve": [
+                        {"type": "ve_plans", "progress": 0, "level": None},
+                        {
+                            "type": "good_practice_plans",
+                            "progress": 0,
+                            "level": None,
+                        },
+                        {"type": "unique_partners", "progress": 0, "level": None},
+                    ],
+                },
+            },
+        ]
+        self.db.profiles.insert_many(self.default_profiles)
+
         self.db.spaces.insert_one(self.default_space)
 
     def tearDown(self) -> None:
         super().tearDown()
 
         self.db.spaces.delete_many({})
+        self.db.profiles.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
@@ -4320,7 +4428,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "name": "new_space",
             "invisible": False,
             "joinable": True,
-            "members": [CURRENT_ADMIN.username],
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
@@ -4360,6 +4468,28 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+        # check count towards achievements:
+        # admin user towards join_groups and admin_groups
+        # normal user towards join_groups
+        result_admin = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        result_user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result_admin["achievements"]["social"][4]["progress"],
+            self.default_profiles[0]["achievements"]["social"][4]["progress"] + 1,
+        )
+        self.assertEqual(
+            result_admin["achievements"]["social"][5]["progress"],
+            self.default_profiles[0]["achievements"]["social"][5]["progress"] + 1,
+        )
+        self.assertEqual(
+            result_user["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+        )
+        self.assertEqual(
+            result_user["achievements"]["social"][5]["progress"],
+            self.default_profiles[1]["achievements"]["social"][5]["progress"],
+        )
+
     def test_create_space_failure_invalid_attributes(self):
         """
         expect: a) ValueError is raised because space is missing an attribute,
@@ -4382,9 +4512,23 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         self.assertRaises(ValueError, space_manager.create_space, new_space, "test")
 
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[0]["achievements"]["social"][4]["progress"],
+        )
+
         # invisible has wrong type
         new_space["invisible"] = "test"
         self.assertRaises(TypeError, space_manager.create_space, new_space, "test")
+
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[0]["achievements"]["social"][4]["progress"],
+        )
 
     def test_delete_space(self):
         """
@@ -4443,6 +4587,13 @@ class SpaceResourceTest(BaseResourceTestCase):
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that join counted towards achievements "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+        )
+
     def test_join_space_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4457,6 +4608,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+        )
+
     def test_join_space_error_already_member(self):
         """
         expect: AlreadyMemberError is raised because is already a member of
@@ -4469,6 +4627,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.join_space,
             self.space_id,
             CURRENT_ADMIN.username,
+        )
+
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
         )
 
     def test_join_space_request(self):
@@ -4530,6 +4695,13 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the join counted towards achievement "admin_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][5]["progress"],
+            self.default_profiles[1]["achievements"]["social"][5]["progress"] + 1,
+        )
+
     def test_add_space_admin_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4544,6 +4716,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "admin_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][5]["progress"],
+            self.default_profiles[1]["achievements"]["social"][5]["progress"],
+        )
+
     def test_add_space_admin_error_already_admin(self):
         """
         expect: AlreadyAdminError is raised because user is already an admin in this space
@@ -4555,6 +4734,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.add_space_admin,
             self.space_id,
             CURRENT_ADMIN.username,
+        )
+
+        # check that the join didnt count towards achievement "admin_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][5]["progress"],
+            self.default_profiles[1]["achievements"]["social"][5]["progress"],
         )
 
     def test_set_space_picture(self):
@@ -4673,6 +4859,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the join counted towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+        )
+
+
     def test_accept_space_invite_error_user_not_invited(self):
         """
         expect: UserNotInvitedError is raised because user is not invited to the space
@@ -4687,6 +4881,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+        )
+
     def test_accept_space_invite_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4699,6 +4900,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.accept_space_invite,
             ObjectId(),
             CURRENT_USER.username,
+        )
+
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
         )
 
     def test_decline_space_invite(self):
@@ -4785,6 +4993,13 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the join counted towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+        )
+
     def test_accept_join_request_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4799,6 +5014,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+        )
+
     def test_accept_join_request_error_not_request_to_join(self):
         """
         expect: NotRequestedJoinError is raised because user didnt request
@@ -4811,6 +5033,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.accept_join_request,
             self.space_id,
             CURRENT_USER.username,
+        )
+
+        # check that the join didnt count towards achievement "join_groups"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"][4]["progress"],
+            self.default_profiles[1]["achievements"]["social"][4]["progress"],
         )
 
     def test_reject_join_request(self):
