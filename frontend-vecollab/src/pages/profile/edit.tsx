@@ -391,7 +391,7 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
     // prepare select dropdown options
     const optionLists = {
         veInterestsKeys: [
-            'Best Practise Examples',
+            'Good Practice Examples',
             'Evaluation',
             'Subject-specific Implementation Options',
             'Research',
