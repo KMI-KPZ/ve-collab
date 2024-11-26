@@ -297,7 +297,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     </ButtonNewPlan> */}
 
                     <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 w-fit -ml-[8px] xl:-ml-[24px] pt-[11px]">
+                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
@@ -305,7 +305,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <ButtonNewPlan
                             socket={socket}
                             label={t('common:btn_new_ve')}
-                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2"
+                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px]"
                         >
                             <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                                 <Image
