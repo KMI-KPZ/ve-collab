@@ -191,7 +191,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 <LoadingAnimation />
             ) : (
                 <>
-                    <CustomHead pageTitle={t('profile')} pageSlug={'profile'} />
+                    <CustomHead pageTitle={t('common:profile')} pageSlug={'profile'} />
                     <ProfileBanner
                         follows={follows}
                         setFollows={setFollows}

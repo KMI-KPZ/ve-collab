@@ -17,8 +17,8 @@ export default function SelectedUserProfile({ socket }: Props): JSX.Element {
     const username: string = router.query.username as string;
     return (
         <>
-            <CustomHead pageTitle={t('profile')} pageSlug={`profile/user/${username}`} />
-            <UserProfile socket={socket} />)
+            <CustomHead pageTitle={t('common:profile')} pageSlug={`profile/user/${username}`} />
+            <UserProfile socket={socket} />
         </>
     );
 }

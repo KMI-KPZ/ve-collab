@@ -290,7 +290,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('edit_profile_title')} pageSlug={'profile/edit'} />
+            <CustomHead pageTitle={t('common:edit_profile_title')} pageSlug={'profile/edit'} />
             <div className={'flex justify-center'}>
                 <WhiteBox>
                     <div className={'w-[60rem]'}>
