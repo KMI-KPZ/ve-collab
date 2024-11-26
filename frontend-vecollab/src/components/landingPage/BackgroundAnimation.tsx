@@ -44,7 +44,7 @@ export default function BackgroundAnimation({ className, enable }: IBackgroundAn
                 },
                 modes: {
                     push: {
-                        quantity: 2,
+                        quantity: 1,
                     },
                     repulse: {
                         distance: 50,
