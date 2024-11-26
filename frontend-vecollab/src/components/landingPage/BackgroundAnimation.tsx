@@ -35,7 +35,7 @@ export default function BackgroundAnimation({ className, enable }: IBackgroundAn
                 events: {
                     onClick: {
                         enable: true,
-                        mode: 'repulse',
+                        mode: 'push',
                     },
                     onHover: {
                         enable: false,
@@ -44,10 +44,10 @@ export default function BackgroundAnimation({ className, enable }: IBackgroundAn
                 },
                 modes: {
                     push: {
-                        quantity: 4,
+                        quantity: 2,
                     },
                     repulse: {
-                        distance: 200,
+                        distance: 50,
                         duration: 0.4,
                     },
                 },

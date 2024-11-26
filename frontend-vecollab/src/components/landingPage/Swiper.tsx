@@ -1,5 +1,5 @@
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, A11y } from 'swiper/modules';
+import { Navigation, Pagination, A11y, Autoplay } from 'swiper/modules';
 import Image from 'next/image';
 
 import 'swiper/css';
@@ -20,9 +20,11 @@ export default function Swiper({ className }: Props) {
 
     return (
         <SwiperJS
-            modules={[Navigation, Pagination, A11y]}
+            modules={[Navigation, Pagination, A11y, Autoplay]}
             navigation
             pagination={{ clickable: true }}
+            autoplay={{ delay: 5000 }}
+            loop
             spaceBetween={50}
             slidesPerView={1}
         >
