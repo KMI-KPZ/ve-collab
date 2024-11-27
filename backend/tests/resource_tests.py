@@ -1074,6 +1074,10 @@ class PostResourceTest(BaseResourceTestCase):
                             },
                             {"type": "unique_partners", "progress": 0, "level": None},
                         ],
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
                     },
                 },
                 {
@@ -1125,6 +1129,10 @@ class PostResourceTest(BaseResourceTestCase):
                             },
                             {"type": "unique_partners", "progress": 0, "level": None},
                         ],
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
                     },
                 },
             ]
@@ -2789,6 +2797,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                     {"type": "good_practice_plans", "progress": 1, "level": "bronze"},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
             },
             "chosen_achievement": {
                 "type": "create_posts",
@@ -2852,6 +2864,8 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["notification_settings"],
             self.default_profile["notification_settings"],
         )
+        self.assertNotIn("tracking", profile["achievements"])
+        del self.default_profile["achievements"]["tracking"]
         self.assertEqual(profile["achievements"], self.default_profile["achievements"])
         self.assertEqual(
             profile["chosen_achievement"], self.default_profile["chosen_achievement"]
@@ -2919,6 +2933,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile2 = self.create_profile("test2", ObjectId())
         self.db.profiles.insert_many([profile1, profile2])
 
+        # remove achievement tracking information from the profiles, because it
+        # should not be included in the response (easier check for equality)
+        del self.default_profile["achievements"]["tracking"]
+        del profile1["achievements"]["tracking"]
+        del profile2["achievements"]["tracking"]
+
         profile_manager = Profiles(self.db)
         profiles = profile_manager.get_all_profiles()
         self.assertEqual(len(profiles), 3)
@@ -2935,6 +2955,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile1 = self.create_profile("test1", ObjectId())
         profile2 = self.create_profile("test2", ObjectId())
         self.db.profiles.insert_many([profile1, profile2])
+
+        # remove achievement tracking information from the profiles, because it
+        # should not be included in the response (easier check for equality)
+        del self.default_profile["achievements"]["tracking"]
+        del profile1["achievements"]["tracking"]
+        del profile2["achievements"]["tracking"]
 
         # request profiles of CURRENT_ADMIN.username and test1
         profile_manager = Profiles(self.db)
@@ -3020,6 +3046,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                }
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3103,6 +3133,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                }
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3186,6 +3220,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                }
             },
         )
         self.assertEqual(result["chosen_achievement"], {"type": None, "level": None})
@@ -3449,6 +3487,10 @@ class ProfileResourceTest(BaseResourceTestCase):
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                }
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3956,6 +3998,10 @@ class SpaceResourceTest(BaseResourceTestCase):
                         },
                         {"type": "unique_partners", "progress": 0, "level": None},
                     ],
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
                 },
             },
             {
@@ -4007,6 +4053,10 @@ class SpaceResourceTest(BaseResourceTestCase):
                         },
                         {"type": "unique_partners", "progress": 0, "level": None},
                     ],
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
                 },
             },
         ]
@@ -4865,7 +4915,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             result["achievements"]["social"][4]["progress"],
             self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
         )
-
 
     def test_accept_space_invite_error_user_not_invited(self):
         """

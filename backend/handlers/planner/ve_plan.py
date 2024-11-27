@@ -1983,9 +1983,14 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
-        # count towards the achievement "ve_plans"
+        # count towards the achievements "ve_plans"
+        # and "good_practice_plans" (obeying unique constraint)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        if plan.is_good_practise:
+            profile_manager.achievement_count_up_check_constraint_good_practice(
+                self.current_user.username, plan._id
+            )
 
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
@@ -2053,8 +2058,13 @@ class VEPlanHandler(BaseHandler):
                 logger.warn("etherpad is possibly down")
 
         # count towards the achievement "ve_plans" since update was successfull
+        # and towards the "good_practice_plans" achievement (obeying unique constraint)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        if plan.is_good_practise:
+            profile_manager.achievement_count_up_check_constraint_good_practice(
+                self.current_user.username, plan._id
+            )
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -2169,8 +2179,13 @@ class VEPlanHandler(BaseHandler):
                     logger.warn("etherpad is possibly down")
 
             # count towards the achievement "ve_plans" since update was successfull
+            # and towards the "good_practice_plans" achievement (obeying unique constraint)
             profile_manager = Profiles(db)
             profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+            if field_name == "is_good_practise" and field_value is True:
+                profile_manager.achievement_count_up_check_constraint_good_practice(
+                    self.current_user.username, plan_id
+                )
 
             self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -2194,6 +2209,7 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
+        profile_manager = Profiles(db)
         errors = []
 
         for update_instruction in update_instructions:
@@ -2219,6 +2235,16 @@ class VEPlanHandler(BaseHandler):
                     )
                     # after a successful update, extend the lock expiry
                     self._extend_lock(plan_id)
+
+                    # conditionally count towards the "good_practice_plans" achievement
+                    # (obeying unique constraint)
+                    if (
+                        update_instruction["field_name"] == "is_good_practise"
+                        and update_instruction["value"] is True
+                    ):
+                        profile_manager.achievement_count_up_check_constraint_good_practice(
+                            self.current_user.username, plan_id
+                        )
                 else:
                     error_reason = PLAN_LOCKED
                     error_status_code = 403
@@ -2267,7 +2293,6 @@ class VEPlanHandler(BaseHandler):
             )
         else:
             # count towards the achievement "ve_plans" since update was successfull
-            profile_manager = Profiles(db)
             profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
             self.serialize_and_write({"success": True})

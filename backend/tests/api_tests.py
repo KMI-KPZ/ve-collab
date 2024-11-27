@@ -246,6 +246,10 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                         },
                         {"type": "unique_partners", "progress": 0, "level": None},
                     ],
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
                 },
                 "chosen_achievement": {
                     "type": "create_posts",
@@ -304,6 +308,10 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                         {"type": "good_practice_plans", "progress": 0, "level": None},
                         {"type": "unique_partners", "progress": 0, "level": None},
                     ],
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
                 },
                 "chosen_achievement": {
                     "type": None,
@@ -9035,6 +9043,32 @@ class VEPlanHandlerTest(BaseApiTestCase):
             + 1,
         )
 
+        # one more plan as good practice to test achievement count up for "good_practise_plans"
+        plan = VEPlan(name="new", is_good_practise=True).to_dict()
+        del plan["_id"]
+
+        response = self.base_checks("POST", "/planner/insert", True, 200, body=plan)
+        self.assertIn("inserted_id", response)
+
+        # check that plan was inserted
+        self.assertIsNotNone(
+            self.db.plans.find_one({"_id": ObjectId(response["inserted_id"])})
+        )
+
+        # check that the insert has counted towards achievement "good_practise_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertIn(
+            ObjectId(response["inserted_id"]),
+            user["achievements"]["tracking"]["good_practice_plans"],
+        )
+
     def test_post_insert_plan_error_plan_already_exists(self):
         """
         expect: fail message because a plan with the same _id already exists
@@ -9046,11 +9080,18 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], PLAN_ALREADY_EXISTS_ERROR)
 
-        # check that the insert has not counted towards achievement "ve_plans"
+        # check that the insert has not counted towards achievements "ve_plans"
+        # and "good_practice_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9104,6 +9145,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
             + 1,
         )
 
+        # check that the insert has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
     def test_post_update_plan(self):
         """
         expect: successfully overwrite a plan
@@ -9139,12 +9188,72 @@ class VEPlanHandlerTest(BaseApiTestCase):
             + 1,
         )
 
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
+        # test one more time with setting the plan to a good practise example to trigger
+        # the achievement count up for "good_practice_plans" once
+        plan2 = VEPlan(_id=self.plan_id, name="updated_plan", is_good_practise=True)
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full",
+            True,
+            200,
+            body=self.json_serialize(plan2.to_dict()),
+        )
+        self.assertIn("updated_id", response)
+        self.assertEqual(ObjectId(response["updated_id"]), plan2._id)
+
+        # check that the update has counted towards achievement "good_practice_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertIn(
+            ObjectId(response["updated_id"]),
+            user["achievements"]["tracking"]["good_practice_plans"],
+        )
+
+        # if we update this plan one more time, the achievement count should not go up again
+        plan3 = VEPlan(_id=self.plan_id, name="updated_plan", is_good_practise=True)
+        response = self.base_checks(
+            "POST",
+            "/planner/update_full",
+            True,
+            200,
+            body=self.json_serialize(plan3.to_dict()),
+        )
+        self.assertIn("updated_id", response)
+        self.assertEqual(ObjectId(response["updated_id"]), plan3._id)
+
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["tracking"]["good_practice_plans"],
+            [ObjectId(response["updated_id"])],
+        )
+
     def test_post_upsert_plan(self):
         """
         expect: successfully upsert new plan
         """
 
-        plan = VEPlan(name="upsert_this").to_dict()
+        plan = VEPlan(name="upsert_this", is_good_practise=True).to_dict()
         del plan["_id"]
 
         response = self.base_checks(
@@ -9171,6 +9280,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ]
+            + 1,
+        )
+
+        # check that the update has counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ]
             + 1,
@@ -9224,6 +9342,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
             ],
         )
 
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
     def test_post_update_plan_error_insufficient_permission(self):
         """
         expect: fail message because user has no write access to the plan
@@ -9258,6 +9384,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
             ],
         )
 
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
     def test_post_update_plan_error_plan_locked(self):
         """
         expect: fail message because plan is locked by another user
@@ -9286,6 +9420,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9324,6 +9466,76 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ]
             + 1,
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
+        # again, but this time updating is_good_practice and triggering the achievement count up
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "is_good_practise",
+            "value": True,
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["is_good_practise"], True)
+
+        # check that the update has counted towards achievement "good_practice_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertIn(
+            self.plan_id, user["achievements"]["tracking"]["good_practice_plans"]
+        )
+
+        # doing the same update again should not count up the achievement again
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "is_good_practise",
+            "value": True,
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+        self.assertEqual(
+            user["achievements"]["tracking"]["good_practice_plans"], [self.plan_id]
         )
 
         # again with checklist dict attribute
@@ -9370,7 +9582,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
                 "progress"
             ]
-            + 2,  # +2 because the first update also counted towards the achievement
+            + 4,  # +4 because the first updates also counted towards the achievement
+        )
+
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,  # +1 because the first update counted towards the achievement
         )
 
         # again, but this time upsert
@@ -9403,7 +9624,16 @@ class VEPlanHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
                 "progress"
             ]
-            + 3,  # +3 because the first two updates also counted towards the achievement
+            + 5,  # +5 because the first two updates also counted towards the achievement
+        )
+
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,  # +1 because the first update counted towards the achievement
         )
 
     def test_post_update_field_compound_attribute(self):
@@ -9462,6 +9692,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
             + 1,
         )
 
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
+
         # again, but this time upsert
         payload = {
             "plan_id": ObjectId(),
@@ -9512,7 +9750,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
                 "progress"
             ]
-            + 2, # +2 because the first update also counted towards the achievements
+            + 2,  # +2 because the first update also counted towards the achievements
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
         )
 
     def test_post_update_field_error_missing_key(self):
@@ -9542,6 +9787,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
         # field_name is missing
         payload = {"plan_id": self.plan_id, "value": "updated"}
@@ -9562,6 +9814,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9589,6 +9848,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_invalid_id(self):
         """
@@ -9611,6 +9877,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9647,6 +9920,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_unexpected_attribute(self):
         """
@@ -9677,6 +9957,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_wrong_type(self):
         """
@@ -9703,6 +9990,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9737,6 +10031,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9776,6 +10077,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9836,6 +10144,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_non_unique_tasks(self):
         """
@@ -9882,6 +10197,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_insufficient_permission(self):
         """
@@ -9920,6 +10242,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_field_error_unsupported_field(self):
         """
@@ -9947,6 +10276,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -9987,6 +10323,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_update_fields(self):
         """
@@ -10004,6 +10347,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
                     "plan_id": self.plan_id,
                     "field_name": "topics",
                     "value": ["updated_topic", "test"],
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "is_good_practise",
+                    "value": True,
                 },
             ]
         }
@@ -10030,6 +10378,51 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ]
             + 1,
+        )
+
+        # check that the update has counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,
+        )
+
+        # doing an update to this plan again should not count up "good_practice_plans" again
+        payload = {
+            "update": [
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "realization",
+                    "value": "updated_realization",
+                },
+                {
+                    "plan_id": self.plan_id,
+                    "field_name": "topics",
+                    "value": ["updated_topic", "test"],
+                },
+            ]
+        }
+
+        self.base_checks(
+            "POST",
+            "/planner/update_fields",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ]
+            + 1,  # +1 because the first update counted towards the achievement
+        )
+        self.assertEqual(
+            user["achievements"]["tracking"]["good_practice_plans"], [self.plan_id]
         )
 
     def test_post_update_fields_errors(self):
@@ -10081,6 +10474,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -10138,6 +10538,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_put_evaluation_file(self):
         """
@@ -10187,6 +10594,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
             ]
             + 1,
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_put_evaluation_file_error_missing_key(self):
         """
@@ -10228,6 +10642,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -10282,6 +10703,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_put_evaluation_file_error_plan_locked(self):
         """
@@ -10319,6 +10747,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -10371,6 +10806,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
             ]
             + 1,
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_put_literature_file_error_missing_key(self):
         """
@@ -10398,6 +10840,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
         # missing plan_id
         file_name = "test_file.txt"
@@ -10421,6 +10870,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -10475,6 +10931,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_USER.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_put_literature_file_error_plan_locked(self):
         """
@@ -10512,6 +10975,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"][0]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][0][
+                "progress"
+            ],
+        )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
                 "progress"
             ],
         )
@@ -10572,6 +11042,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
                 "progress"
             ],
         )
+        # check that the update has not counted towards achievement "good_practice_plans"
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_copy_plan_author(self):
         """
@@ -10620,6 +11097,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
         self.assertEqual(db_state["read_access"], [CURRENT_ADMIN.username])
         self.assertEqual(db_state["write_access"], [CURRENT_ADMIN.username])
+
+        # check that the update has not counted towards achievement "good_practice_plans"
+        user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            user["achievements"]["ve"][1]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"][1][
+                "progress"
+            ],
+        )
 
     def test_post_copy_plan_write_access(self):
         """

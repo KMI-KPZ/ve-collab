@@ -340,9 +340,11 @@ class VEPlanResource:
         now_timestamp = datetime.datetime.now()
         plan.last_modified = now_timestamp
         plan_dict = plan.to_dict()
-        del plan_dict[
-            "creation_timestamp"
-        ]  # make sure creation timestamp doesn't get overridden
+        # make sure meta attributes are not overwritten
+        del plan_dict["creation_timestamp"]
+        del plan_dict["author"]
+        del plan_dict["read_access"]
+        del plan_dict["write_access"]
 
         # if a user is given, check if he/she has appropriate write access
         if requesting_username is not None:

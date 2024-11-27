@@ -154,6 +154,11 @@ class Profiles:
         )
         if not result:
             raise ProfileDoesntExistException()
+
+        # hide the achievement tracking from the frontend
+        if "achievements" in result and "tracking" in result["achievements"]:
+            del result["achievements"]["tracking"]
+
         return result
 
     def get_all_profiles(self, projection: dict = None) -> List[Dict]:
@@ -162,7 +167,14 @@ class Profiles:
         reduce response to the necessary fields (increases performance)
         """
 
-        return list(self.db.profiles.find(projection=projection))
+        profiles = list(self.db.profiles.find(projection=projection))
+
+        # hide the achievement tracking from the frontend
+        for profile in profiles:
+            if "achievements" in profile and "tracking" in profile["achievements"]:
+                del profile["achievements"]["tracking"]
+
+        return profiles
 
     def get_bulk_profiles(
         self, usernames: List[str], projection: dict = None
@@ -174,11 +186,18 @@ class Profiles:
         can differ.
         """
 
-        return list(
+        profiles = list(
             self.db.profiles.find(
                 {"username": {"$in": usernames}}, projection=projection
             )
         )
+
+        # hide the achievement tracking from the frontend
+        for profile in profiles:
+            if "achievements" in profile and "tracking" in profile["achievements"]:
+                del profile["achievements"]["tracking"]
+
+        return profiles
 
     def insert_default_profile(
         self,
@@ -246,6 +265,10 @@ class Profiles:
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
             },
             "chosen_achievement": {"type": None, "level": None},
         }
@@ -327,6 +350,10 @@ class Profiles:
                     {"type": "good_practice_plans", "progress": 0, "level": None},
                     {"type": "unique_partners", "progress": 0, "level": None},
                 ],
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
             },
             "chosen_achievement": {"type": None, "level": None},
         }
@@ -855,7 +882,12 @@ class Profiles:
             raise ValueError("Invalid achievement type")
 
         # get current achievement status of user
-        profile = self.get_profile(username, projection={"achievements": True})
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
         achievements = profile["achievements"]
 
         # find the relevant achievement
@@ -895,3 +927,32 @@ class Profiles:
             {"username": username},
             {"$set": {"achievements": achievements}},
         )
+
+    def achievement_count_up_check_constraint_good_practice(
+        self, username: str, plan_id: str | ObjectId
+    ):
+        """
+        check if the `plan_id` in question is accountable for the achievement
+        "good_practice_plans" (i.e. it has not been marked as good practice before) and
+        if so, count up the achievement. Otherwise do nothing.
+        """
+
+        # ensure valid ObjectId
+        plan_id = util.parse_object_id(plan_id)
+
+        # get current achievement status of user
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
+        if plan_id not in profile["achievements"]["tracking"]["good_practice_plans"]:
+            # count up the achievement
+            self.achievement_count_up(username, "good_practice_plans")
+
+            # update the tracking list that this plan does not count again anymore
+            self.db.profiles.update_one(
+                {"username": username},
+                {"$push": {"achievements.tracking.good_practice_plans": plan_id}},
+            )
