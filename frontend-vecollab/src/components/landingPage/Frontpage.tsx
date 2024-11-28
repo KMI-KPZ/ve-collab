@@ -21,9 +21,9 @@ export default function Frontpage() {
                 <p className="w-1/2 p-4 text-white lg:text-xl">{t('homepage_text')}</p>
 
                 <div className="w-1/2 min-w-96 my-10 flex justify-center">
-                    <div className="-space-y-14 w-fit p-6 rounded-[3rem] border border-4 border-ve-collab-orange bg-white text-white shadow">
+                    <div className="-space-y-14 w-fit p-6 rounded-[3rem] border-4 border-ve-collab-orange bg-white text-white shadow">
                         <div className="w-[160px] h-[160px] mix-blend-multiply bg-[#ae6afc]/75 rounded-full m-auto flex justify-center cursor-pointer transition ease-in-out hover:scale-105">
-                            <span className="pt-12 drop-shadow-[0_0_4px_#fff]">VE Planer</span>
+                            <span className="pt-12 drop-shadow-[0_0_4px_#fff]">VE Designer</span>
                         </div>
                         <div className="h-16 flex items-center justify-center z-10 relative top-3">
                             <div className="py-1 px-2 rounded-md text-black bg-white/75">
@@ -33,11 +33,11 @@ export default function Frontpage() {
                         </div>
                         <div className="flex justify-center -space-x-12">
                             <div className="w-[160px] h-[160px] mix-blend-multiply bg-[#f37b27]/75 rounded-full flex items-center cursor-pointer transition ease-in-out hover:scale-105">
-                                <span className="ml-2 drop-shadow-[0_0_4px_#fff]">Netzwerk</span>
+                                <span className="ml-2 drop-shadow-[0_0_4px_#fff]">Community</span>
                             </div>
                             <div className="w-[160px] h-[160px] mix-blend-multiply bg-[#1f9dba]/75 rounded-full flex items-center justify-end cursor-pointer transition ease-in-out hover:scale-105">
                                 <span className="mr-2 drop-shadow-[0_0_4px_#fff]">
-                                    Qualifikation
+                                    {t('qualification')}
                                 </span>
                             </div>
                         </div>
@@ -49,16 +49,17 @@ export default function Frontpage() {
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75">
                 <div className="m-auto p-6 lg:p-12 max-w-screen-2xl">
-                    <Swiper className="" />
+                    <Swiper />
                 </div>
             </div>
 
-            <Button
-                onClick={() => {
-                    signIn('keycloak');
-                }}
-            >
-                <div className="w-fit m-auto p-8 flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105">
+            <div className="py-2 px-4">
+                <div
+                    onClick={() => {
+                        signIn('keycloak');
+                    }}
+                    className="w-fit m-auto p-10 flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105"
+                >
                     <Image
                         src={teamCollabImg}
                         alt="Eine Gruppe von Menschen"
@@ -69,10 +70,10 @@ export default function Frontpage() {
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Collab</span>
                         </div>
-                        Jetzt registrieren und loslegen
+                        {t('join_now')}
                     </div>
                 </div>
-            </Button>
+            </div>
 
             {/* <span className='mb-4 text-xl underline decoration-ve-collab-orange underline-offset-4'>
                 Weitere Informationen
@@ -92,7 +93,7 @@ export default function Frontpage() {
                     </p>
                     <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                         <Button onClick={() => {}}>
-                            Mehr <MdArrowRight size={24} className="inline mx-1" />
+                            {t('more')} <MdArrowRight size={24} className="inline mx-1" />
                         </Button>
                     </div>
                 </div>
@@ -110,22 +111,16 @@ export default function Frontpage() {
                     </p>
                     <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                         <Button onClick={() => {}}>
-                            Mehr <MdArrowRight size={24} className="inline mx-1" />
+                            {t('more')} <MdArrowRight size={24} className="inline mx-1" />
                         </Button>
                     </div>
                 </div>
             </div>
 
             <div className="w-5/6 bg-white/50 m-auto flex justify-center rounded-md drop-shadow-lg p-4">
-                <video
-                    width="320"
-                    height="240"
-                    controls
-                    preload="none"
-                    className="w-full h-auto rounded-md"
-                >
+                <video width="320" height="240" controls className="w-full h-auto rounded-md">
                     <source src="/videos/screencast-web.webm" type="video/webm" />
-                    Your browser does not support the video tag.
+                    {t('video_not_supported')}
                 </video>
             </div>
         </>

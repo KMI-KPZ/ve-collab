@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { createHash } from 'crypto';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     orcid: string | undefined | null;
@@ -15,6 +16,7 @@ interface Props {
 export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation(['community', 'common']);
 
     // trigger a client initiated account linking flow with orcid as per
     // https://www.keycloak.org/docs/latest/server_development/#client-initiated-account-linking
@@ -58,7 +60,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    ORCiD Account verbinden
+                    {t("link_orcid_account")}
                 </button>
             ) : (
                 <button
@@ -75,21 +77,21 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    von ORCiD importieren
+                    {t("import_orcid_profile")}
                 </button>
             )}
 
             <div className="flex justify-end">
                 <Link href={'/profile'}>
                     <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'}>
-                        Abbrechen
+                        {t("common:cancel")}
                     </button>
                 </Link>
                 <button
                     type="submit"
                     className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
                 >
-                    Speichern
+                    {t("common:save")}
                 </button>
             </div>
         </div>

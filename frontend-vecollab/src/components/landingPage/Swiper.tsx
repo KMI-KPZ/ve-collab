@@ -1,5 +1,5 @@
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, A11y } from 'swiper/modules';
+import { Navigation, Pagination, A11y, Autoplay } from 'swiper/modules';
 import Image from 'next/image';
 
 import 'swiper/css';
@@ -9,18 +9,22 @@ import 'swiper/css/pagination';
 import img1 from '@/images/frontpageSwiper/1.jpg';
 import img2 from '@/images/frontpageSwiper/2.jpg';
 import img3 from '@/images/frontpageSwiper/3.jpg';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
-    className: string;
+    className?: string;
 }
 
 export default function Swiper({ className }: Props) {
+    const { t } = useTranslation('common');
 
     return (
         <SwiperJS
-            modules={[Navigation, Pagination, A11y]}
+            modules={[Navigation, Pagination, A11y, Autoplay]}
             navigation
             pagination={{ clickable: true }}
+            autoplay={{ delay: 5000 }}
+            loop
             spaceBetween={50}
             slidesPerView={1}
         >
@@ -29,23 +33,17 @@ export default function Swiper({ className }: Props) {
                     {/* drop-shadow-[0_0_8px_#00748f] */}
                     <Image
                         src={img1}
-                        alt={'Screenshot des VE-Designers'}
+                        alt={t('designer_screenshot')}
                         className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
                     ></Image>
 
                     <div className="w-1/2 min-w-96">
                         <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            VE-Planungsassistent
+                            VE-Designer
                         </span>
                         <ul className="list-disc ml-6">
-                            <li>
-                                leitet VE-Partner:innen Schritt für Schritt durch die Planung eines
-                                VE
-                            </li>
-                            <li>
-                                Möglichkeit, erarbeitete VA-Pläne der Community als
-                                Good-Practise-Beispiele zur Verfügung zu stellen
-                            </li>
+                            <li>{t('ve_designer_li_1')}</li>
+                            <li>{t('ve_designer_li_2')}</li>
                         </ul>
                     </div>
                 </div>
@@ -55,27 +53,18 @@ export default function Swiper({ className }: Props) {
                     {/* drop-shadow-[0_0_8px_#00748f] */}
                     <Image
                         src={img2}
-                        alt={'Screenshot des VE-Designers'}
+                        alt={t('material_screenshot')}
                         className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
                     ></Image>
 
                     <div className="w-1/2 min-w-96">
                         <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            Selbstlernmaterialien
+                            {t('materials')}
                         </span>
                         <ul className="list-disc ml-6">
-                            <li>
-                                Interaktive, kontinuierlich erweiterte Qualifizierungsmaterialien
-                                als OER
-                            </li>
-                            <li>
-                                thematische Cluster: Grundlagen, Planung, Zusammenarbeit, technische
-                                Aspekte
-                            </li>
-                            <li>
-                                sowohl einführende als auch vertiefende Module für Novizen und
-                                Expert:innen
-                            </li>
+                            <li>{t('materials_li_1')}</li>
+                            <li>{t('materials_li_2')}</li>
+                            <li>{t('materials_li_3')}</li>
                         </ul>
                     </div>
                 </div>
@@ -85,21 +74,18 @@ export default function Swiper({ className }: Props) {
                     {/* drop-shadow-[0_0_8px_#00748f] */}
                     <Image
                         src={img3}
-                        alt={'Screenshot des VE-Designers'}
+                        alt={t('community_screenshot')}
                         className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
                     ></Image>
 
                     <div className="w-1/2 min-w-96">
                         <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            Virtual Community of Practise
+                            {t('virtual_community_of_practice')}
                         </span>
                         <ul className="list-disc ml-6">
-                            <li>
-                                themengebundener Austausch mit anderen Personen weltweit, öffentlich
-                                und privat
-                            </li>
-                            <li>Profilinformationen als Grundlage für Partner:innen-Matching</li>
-                            <li>VE-Schaufenster für aktuelle und vergangene Projekte</li>
+                            <li>{t('community_li_1')}</li>
+                            <li>{t('community_li_2')}</li>
+                            <li>{t('community_li_3')}</li>
                         </ul>
                     </div>
                 </div>

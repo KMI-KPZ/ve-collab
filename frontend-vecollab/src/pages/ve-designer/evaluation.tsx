@@ -11,6 +11,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EvaluationFormSchema } from '../../zod-schemas/evaluationSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface EvaluationPerPartner {
     username: string;
@@ -46,7 +47,7 @@ Evaluation.auth = true;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
-    const { t } = useTranslation(['designer', 'common']) // designer is default ns
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
     const [partnerProfileSnippets, setPartnerProfileSnippets] = useState<{
         [Key: string]: BackendUserSnippet;
     }>({});
@@ -121,7 +122,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'evaluation',
                 value: data.evaluationPerPartner,
-            }
+            },
         ];
     };
 
@@ -314,25 +315,28 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     }
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('evaluation.title')}
-            subtitle={t('evaluation.subtitle')}
-            description={t('evaluation.description')}
-            tooltip={{
-                text: t('evaluation.tooltip'),
-                link: '/learning-material/2/Evaluation',
-            }}
-            stageInMenu='generally'
-            idOfProgress="evaluation"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
-        </Wrapper>
+        <>
+            <CustomHead pageTitle={t('evaluation.title')} pageSlug={'ve-designer/evaluation'} />
+            <Wrapper
+                socket={socket}
+                title={t('evaluation.title')}
+                subtitle={t('evaluation.subtitle')}
+                description={t('evaluation.description')}
+                tooltip={{
+                    text: t('evaluation.tooltip'),
+                    link: '/learning-material/2/Evaluation',
+                }}
+                stageInMenu="generally"
+                idOfProgress="evaluation"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
+            </Wrapper>
+        </>
     );
 }
 

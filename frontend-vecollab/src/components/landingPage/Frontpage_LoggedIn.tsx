@@ -31,7 +31,7 @@ Frontpage_LoggedIn.auth = true;
 export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWindow }: Props) {
     const socket = useContext(SocketContext);
     const { data: session } = useSession();
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['community', 'common']);
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
 
     const {
@@ -94,7 +94,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                     href={'/profile/edit'}
                                     className="absolute -bottom-5 right-0 invisible group-hover:visible"
                                 >
-                                    <MdEdit className="inline" /> bearbeiten
+                                    <MdEdit className="inline" /> {t('common:edit')}
                                 </Link>
                             </div>
 
@@ -103,29 +103,30 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             <div className="">
                                 {profileInformation.profile.ve_ready ? (
                                     <span className="text-green-500">
-                                        <MdCheck className="inline mr-1 mb-1" /> Für VE&apos;s verfügbar
+                                        <MdCheck className="inline mr-1 mb-1" />
+                                        {t('ve_ready_true')}
                                     </span>
                                 ) : (
-                                    <span className="text-red-600">Nicht für VE&apos;s verfügbar</span>
+                                    <span className="text-red-600">{t('ve_ready_false')}</span>
                                 )}
                             </div>
                         </div>
 
                         <div className={'flex divide-x'}>
                             <div className="pr-4">
-                                <span>{profileInformation.followers.length}</span> Folgt
+                                <span>{profileInformation.followers.length}</span> {t('following')}
                             </div>
                             <div className="pl-4">
-                                <span>{profileInformation.follows.length}</span> Follower
+                                <span>{profileInformation.follows.length}</span> {t('followers')}
                             </div>
                         </div>
 
                         <div className="mt-4 border-t pt-4">
                             <div className="group/veWindow">
-                                <H2 className="inline">VE Schaufenster</H2>
+                                <H2 className="inline">{t('ve_window')}</H2>
                                 <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/veWindow:visible">
                                     <Link href={'/profle/edit'} className="">
-                                        <MdEdit className="inline" /> hinzufügen
+                                        <MdEdit className="inline" /> {t('add_plan')}
                                     </Link>
                                 </span>
                             </div>
@@ -145,12 +146,10 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
 
                         <div className="mt-4 mb-4">
                             <div className="group/groups mb-4">
-                                <H2 className="inline">
-                                    <>Gruppen</>
-                                </H2>
+                                <H2 className="inline">{t('groups')}</H2>
                                 <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/groups:visible">
                                     <Link href={'/groups'}>
-                                        <MdEdit className="inline" /> suchen/erstellen
+                                        <MdEdit className="inline" /> {t('search_create')}
                                     </Link>
                                 </span>
                             </div>
@@ -164,7 +163,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                         >
                                             <AuthenticatedImage
                                                 imageId={group.space_pic}
-                                                alt={'Profilbild'}
+                                                alt={t('group_picture')}
                                                 width={60}
                                                 height={60}
                                                 className="rounded-full mx-auto my-1"
@@ -181,10 +180,10 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                 </div>
 
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 ">
-                    <Swiper_LoggedIn className="" profileInformation={profileInformation} />
+                    <Swiper_LoggedIn profileInformation={profileInformation} />
 
                     <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md">
-                        <div className="flex sm:hidden mb-6 pb-6 flex-row items-center border-b border-b-2 border-b-ve-collab-orange">
+                        <div className="flex sm:hidden mb-6 pb-6 flex-row items-center border-b-2 border-b-ve-collab-orange">
                             <div className="text-2xl text-center">
                                 <span className="text-ve-collab-orange">VE</span>{' '}
                                 <span className="text-ve-collab-blue">Designer</span>
@@ -192,17 +191,17 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
 
                             <ButtonNewPlan
                                 socket={socket}
-                                label={t('btn_new_va')}
+                                label={t('common:btn_new_ve')}
                                 className="bg-none !p-0"
                             >
                                 <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                                     <Image
                                         src={newFormImg}
-                                        alt="Bild eines Formulars"
+                                        alt={'form_image'}
                                         className="w-[96px] rounded-full"
                                     />
                                     <div className="text-center text-wrap xl:w-1/2">
-                                        {t('btn_new_va')}
+                                        {t('common:btn_new_ve')}
                                     </div>
                                 </div>
                             </ButtonNewPlan>
@@ -213,17 +212,17 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             >
                                 <Image
                                     src={handsPuzzleImg}
-                                    alt="Hände puzzlen"
+                                    alt={t('puzzle_image')}
                                     className="w-[96px] rounded-full"
                                 />
                                 <div className="text-center text-wrap xl:w-1/2">
-                                    VE Partner:innen finden
+                                    {t('find_ve_partners')}
                                 </div>
                             </Link>
                         </div>
 
-                        <div className="pb-6 mb-6 border-b border-b-2 border-b-ve-collab-orange">
-                            <H1 className="">VE-Feed</H1>
+                        <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
+                            <H1 className="">{t('ve_feed')}</H1>
                             <div>
                                 {sortedPlans.map((plan) => {
                                     return (
@@ -263,13 +262,14 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             </div>
                             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                                 <Link href={`/plans`} onClick={(e) => e.preventDefault()}>
-                                    Alle <MdArrowRight size={24} className="inline mx-1" />
+                                    {t('common:all')}{' '}
+                                    <MdArrowRight size={24} className="inline mx-1" />
                                 </Link>
                             </div>
                         </div>
 
                         <div>
-                            <H1 className="mt-6">Beiträge</H1>
+                            <H1 className="mt-6">{t('posts')}</H1>
                             <div className=" ">
                                 <Timeline socket={socket} />
                             </div>
@@ -297,24 +297,24 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     </ButtonNewPlan> */}
 
                     <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 w-fit -ml-[8px] xl:-ml-[24px] pt-[11px]">
+                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
 
                         <ButtonNewPlan
                             socket={socket}
-                            label={t('btn_new_va')}
-                            className="bg-none mb-6 border-b border-b-2 border-b-ve-collab-orange !px-2"
+                            label={t('common:btn_new_ve')}
+                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px]"
                         >
                             <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                                 <Image
                                     src={newFormImg}
-                                    alt="Bild eines Formulars"
+                                    alt={t('form_image')}
                                     className="w-[96px] rounded-full"
                                 />
                                 <div className="text-center text-wrap xl:w-1/2">
-                                    {t('btn_new_va')}
+                                    {t('common:btn_new_ve')}
                                 </div>
                             </div>
                         </ButtonNewPlan>
@@ -325,11 +325,11 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         >
                             <Image
                                 src={handsPuzzleImg}
-                                alt="Hände puzzlen"
+                                alt={t('puzzle_image')}
                                 className="w-[96px] rounded-full"
                             />
                             <div className="text-center text-wrap xl:w-1/2">
-                                VE Partner:innen finden
+                                {t('find_ve_partners')}
                             </div>
                         </Link>
                     </div>
@@ -338,17 +338,19 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
                             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
                             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                            <H2>Benachrichtigungen</H2>
+                            <H2>{t('common:notifications')}</H2>
 
                             <div className="flex  items-center ">
                                 <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">
                                     <IoMdNotificationsOutline size={30} className="" />
                                 </span>
                                 {notificationEvents.length == 1 ? (
-                                    <span>Du hast eine neue Benachrichtigung</span>
+                                    <span>{t('one_new_notification')}</span>
                                 ) : (
                                     <span>
-                                        Du hast {notificationEvents.length} neue Benachrichtigungen
+                                        {t('multiple_new_notifications', {
+                                            count: notificationEvents.length,
+                                        })}
                                     </span>
                                 )}
                             </div>
@@ -359,7 +361,8 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                         toggleNotifWindow();
                                     }}
                                 >
-                                    Details <MdArrowRight size={24} className="inline mx-1" />
+                                    {t('details')}{' '}
+                                    <MdArrowRight size={24} className="inline mx-1" />
                                 </Button>
                             </div>
                         </div>
@@ -368,7 +371,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
                         <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
                         <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                        <H2>Aktuelle Lernmaterialien</H2>
+                        <H2>{t('suggested_materials')}</H2>
                         <ul className="d1ivide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-2 *:text-ve-collab-blue">
                             <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
                                 <Link
@@ -403,7 +406,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         </ul>
                         <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                             <Link href={`/learning-material`} onClick={(e) => e.preventDefault()}>
-                                Alle <MdArrowRight size={24} className="inline mx-1" />
+                                {t('common:all')} <MdArrowRight size={24} className="inline mx-1" />
                             </Link>
                         </div>
                     </div>

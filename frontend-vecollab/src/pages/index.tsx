@@ -10,6 +10,7 @@ import Frontpage from '@/components/landingPage/Frontpage';
 import Frontpage_LoggedIn from '@/components/landingPage/Frontpage_LoggedIn';
 
 import { Notification } from '@/interfaces/socketio';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     notificationEvents: Notification[];
@@ -22,32 +23,35 @@ export default function Home({ notificationEvents, toggleNotifWindow }: Props): 
     const { t } = useTranslation('common');
 
     return (
-        <div className="">
-            <div>
-                <BackgroundAnimation className="-z-10" enable={true} />
+        <>
+            <CustomHead />
+            <div className="">
+                <div>
+                    <BackgroundAnimation className="-z-10" enable={true} />
+                </div>
+                <div className="flex flex-col m-auto p-6 sm:p-12 max-w-screen-2xl z-0 relative gap-y-12">
+                    {status != 'loading' && (
+                        <>
+                            {session ? (
+                                <Frontpage_LoggedIn
+                                    notificationEvents={notificationEvents}
+                                    toggleNotifWindow={toggleNotifWindow}
+                                />
+                            ) : (
+                                <Frontpage />
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
-            <div className="flex flex-col m-auto p-6 sm:p-12 max-w-screen-2xl z-0 relative gap-y-12">
-                {status != 'loading' && (
-                    <>
-                        {session ? (
-                            <Frontpage_LoggedIn
-                                notificationEvents={notificationEvents}
-                                toggleNotifWindow={toggleNotifWindow}
-                            />
-                        ) : (
-                            <Frontpage />
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
+        </>
     );
 }
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

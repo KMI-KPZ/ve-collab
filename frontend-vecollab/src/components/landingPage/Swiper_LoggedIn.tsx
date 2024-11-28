@@ -13,16 +13,21 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 
 import veCollabLogo from '@/images/veCollabLogo.png';
+import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 
 const FIRST_VISIT = 'first_visit';
 
 interface Props {
-    className: string;
+    className?: string;
     profileInformation: BackendUser;
 }
 
 Swiper_LoggedIn.auth = true;
 export default function Swiper_LoggedIn({ className, profileInformation }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+    const router = useRouter();
+
     const [cookies, setCookie] = useCookies([FIRST_VISIT]);
     const [firstVisit, setFirstVisit] = useState(
         cookies[FIRST_VISIT] === undefined || cookies[FIRST_VISIT] === true
@@ -62,40 +67,36 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
             >
                 <SwiperSlide>
                     <div className="min-h-64 mx-12 my-2">
-                        <H2 className="mb-4">Profil vervollständigen</H2>
+                        <H2 className="mb-4">{t('complete_profile')}</H2>
 
-                        <p className="mb-1">
-                            Die Vervollständigung des Profils hilft anderen Benutzer:innen, dich für
-                            einen VE zu finden. Folgende Daten sind zum Beispiel noch nicht
-                            ausgefüllt:
-                        </p>
+                        <p className="mb-1">{t('complete_profile_text')}</p>
 
                         <ul className="ml-6 mb-6 flex *:p-2 *:shadow *:rounded-md *:m-2">
                             {profileInformation.profile.institutions.length == 0 && (
-                                <li>Institutionen</li>
+                                <li>{t('institutions')}</li>
                             )}
 
-                            {profileInformation.profile.bio == '' && <li>Bio</li>}
+                            {profileInformation.profile.bio == '' && <li>{t('bio')}</li>}
 
                             {(profileInformation.profile.ve_contents.length == 0 ||
                                 profileInformation.profile.ve_contents.every((a) => a == '')) && (
-                                <li>VE Contents</li>
+                                <li>{t('ve_contents')}</li>
                             )}
 
                             {(profileInformation.profile.ve_goals.length == 0 ||
                                 profileInformation.profile.ve_goals.every((a) => a == '')) && (
-                                <li>VE Ziele</li>
+                                <li>{t('ve_goals')}</li>
                             )}
 
                             {(profileInformation.profile.ve_interests.length == 0 ||
                                 profileInformation.profile.ve_interests.every((a) => a == '')) && (
-                                <li>VE Interessen</li>
+                                <li>{t('ve_topics')}</li>
                             )}
                         </ul>
 
                         <Link href={'/profile/edit'} className="absolute bottom-0">
                             <ButtonSecondary onClick={() => {}}>
-                                <MdEdit className="inline mr-1" /> bearbeiten
+                                <MdEdit className="inline mr-1" /> {t('common:edit')}
                             </ButtonSecondary>
                         </Link>
                     </div>
@@ -103,7 +104,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
 
                 <SwiperSlide>
                     <div className="mb-4 mx-12 my-2">
-                        <H2>Tour</H2>
+                        <H2>{t('common:platform_tour')}</H2>
                         <video
                             width="320"
                             height="240"
@@ -112,27 +113,24 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                             className="w-full h-auto m-auto rounded-md"
                         >
                             <source src="/videos/screencast-web.webm" type="video/webm" />
-                            Your browser does not support the video tag.
+                            {t('common:video_not_supported')}
                         </video>
                     </div>
                 </SwiperSlide>
 
                 <SwiperSlide>
                     <div className="mx-12 my-2 items-center">
-                        <H2>Empfohlenes Lernmaterial</H2>
-                        <p className="mb-1">
-                            Für den Einstieg in die Erstellung und Bearbeitung eines VE empfehlen
-                            wir folgende Lernmaterialien
-                        </p>
-                        <div className="relative w-32 mx-auto mt-[2rem]">
-                            <div
-                                className="w-32 h-32 z-10 block relative rounded-full
-    bg-footer-pattern bg-center bg-cover drop-shadow-lg opacity-85 flex justify-center items-center #
-    transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110"
-                            >
+                        <H2>{t('recommended_materials')}</H2>
+                        <p className="mb-1">{t('recommended_materials_text')}</p>
+                        {/* disclaimer message if language is set to non-german */}
+            {router.locale !== 'de' && (
+                <div className="text-gray-500 text-sm">{t('common:materials_only_german')}</div>
+            )}
+                        <div className="relative w-32 mx-auto mt-[3.5rem]">
+                            <div className="w-32 h-32 z-10 relative rounded-full bg-footer-pattern bg-center bg-cover drop-shadow-lg opacity-85 flex justify-center items-center transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110">
                                 <Image
                                     src={veCollabLogo}
-                                    alt="Ve Collab Logo"
+                                    alt="VE-Collab Logo"
                                     width={75}
                                     className="hover:scale-110 drop-shadow-[0_0_8px_#fff]"
                                 ></Image>
@@ -157,7 +155,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                             </Link>
 
                             <Link
-                                href={'/learning-material//3/Tools'}
+                                href={'/learning-material/3/Tools'}
                                 className={`${learningLeafStyle} bottom-[1rem] -left-[5.5rem]`}
                             >
                                 Tools

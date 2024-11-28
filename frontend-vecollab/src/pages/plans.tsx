@@ -12,6 +12,7 @@ import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { GetStaticPropsContext } from 'next';
+import CustomHead from '@/components/metaData/CustomHead';
 import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
 import Image from 'next/image';
 
@@ -104,6 +105,8 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
+            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
