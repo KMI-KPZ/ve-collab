@@ -13,6 +13,11 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { GetStaticPropsContext } from 'next';
 import CustomHead from '@/components/metaData/CustomHead';
+import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
+import Image from 'next/image';
+
+import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
+import newFormImg from '@/images/newForm_sm.jpg';
 
 export interface IfilterBy {
     /** compare function
@@ -102,20 +107,43 @@ export default function Plans({ socket }: Props) {
         <>
             <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
 
-            <div className="flex justify-between mb-6 mt-12">
+            <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
                 </div>
 
-                <div className="w-1/3 p-2 text-center rounded-lg shadow bg-white">
-                    <div>{t('matching_question')}</div>
+                <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
                     <Link
                         href={'/matching'}
-                        className=" inline-block py-2 px-5 text-ve-collab-blue font-bold"
+                        className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
                     >
-                        <MdKeyboardDoubleArrowRight className="inline" /> {t('go_matching')}
+                        <Image
+                            src={handsPuzzleImg}
+                            alt={t('find_ve_partners')}
+                            className="w-[96px] rounded-full"
+                        />
+                        <div className="font-bold text-center text-wrap xl:w-1/2">
+                            {t('find_ve_partners')}
+                        </div>
                     </Link>
+
+                    <ButtonNewPlan
+                        socket={socket}
+                        label={t('btn_new_va')}
+                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
+                    >
+                        <div className="flex flex-wrap items-center justify-center ">
+                            <Image
+                                src={newFormImg}
+                                alt={t('btn_new_va')}
+                                className="w-[96px] rounded-full"
+                            />
+                            <div className="font-bold text-center text-wrap xl:w-1/2">
+                                {t('btn_new_va')}
+                            </div>
+                        </div>
+                    </ButtonNewPlan>
                 </div>
             </div>
 

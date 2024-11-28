@@ -50,7 +50,7 @@ export default function LayoutSection({
             >
                 {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
-                <div className="container mx-auto max-w-screen-2xl">{children}</div>
+                <div className="container mx-auto max-w-screen-2xl px-2">{children}</div>
             </main>
             <FooterSection />
         </div>
