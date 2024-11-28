@@ -870,11 +870,15 @@ class Profiles:
             "good_practice_plans",
             "unique_partners",
         ],
+        amount: int = 1,
     ) -> None:
         """
         Increase the progress of the given achievement type by 1.
         If the user has reached the next level (as determined by `self.ACHIEVEMENT_PROGRESS`),
         it will also be updated accordingly.
+
+        Optionally, you can specify the `amount` by which the progress should be increased.
+        default is one.
         """
 
         # sanity check
@@ -904,7 +908,7 @@ class Profiles:
             raise ValueError("Achievement type not found in profile")
 
         # count up the progress
-        achievement["progress"] += 1
+        achievement["progress"] += amount
 
         # determine if the user has reached the next level and update it,
         # but only if it is not already platinum
@@ -935,6 +939,8 @@ class Profiles:
         check if the `plan_id` in question is accountable for the achievement
         "good_practice_plans" (i.e. it has not been marked as good practice before) and
         if so, count up the achievement. Otherwise do nothing.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
         """
 
         # ensure valid ObjectId
@@ -954,5 +960,66 @@ class Profiles:
             # update the tracking list that this plan does not count again anymore
             self.db.profiles.update_one(
                 {"username": username},
-                {"$push": {"achievements.tracking.good_practice_plans": plan_id}},
+                {"$addToSet": {"achievements.tracking.good_practice_plans": plan_id}},
             )
+
+    def achievement_count_up_check_constraint_unique_partners(
+        self, username: str, partners: List[str]
+    ):
+        """
+        check if any of the users in the `partners` list is a new unique partner
+        for the user and if so, count up the achievement "unique_partners"
+        for each one. Otherwise do nothing.
+
+        The user himself is not counted as a partner, so he is removed from the list
+        if he is in there.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+
+        # nothing to do if there are no partners to check
+        if not partners:
+            return
+        
+        # remove the user himself from the list, if he is in there
+        if username in partners:
+            partners.remove(username)
+
+        # if the list is empty now, there is nothing to do again
+        if not partners:
+            return
+
+        # get current achievement status of user
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
+        # determine which users are new unique partners, if any
+        new_unique_partners = [
+            partner
+            for partner in partners
+            if partner not in profile["achievements"]["tracking"]["unique_partners"]
+        ]
+
+        # there is nothing to do if there are no new unique partners
+        if not new_unique_partners:
+            return
+
+        # count up the achievement for each new unique partner
+        self.achievement_count_up(
+            username, "unique_partners", amount=len(new_unique_partners)
+        )
+
+        # update the tracking list that these partners do not count again anymore
+        self.db.profiles.update_one(
+            {"username": username},
+            {
+                "$addToSet": {
+                    "achievements.tracking.unique_partners": {
+                        "$each": new_unique_partners
+                    }
+                }
+            },
+        )

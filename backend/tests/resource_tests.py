@@ -3049,7 +3049,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
-                }
+                },
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3136,7 +3136,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
-                }
+                },
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3223,7 +3223,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
-                }
+                },
             },
         )
         self.assertEqual(result["chosen_achievement"], {"type": None, "level": None})
@@ -3490,7 +3490,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
-                }
+                },
             },
         )
         self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
@@ -3881,6 +3881,21 @@ class ProfileResourceTest(BaseResourceTestCase):
             self.default_profile["achievements"]["social"][0]["progress"] + 1,
         )
 
+    def test_achievement_count_up_arbitrary_amount(self):
+        """
+        expect: successfully increase the progress of an achievement by an arbitrary amount
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts", 5)
+
+        # expect the progress to be increased by 5
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["social"][0]["progress"],
+            self.default_profile["achievements"]["social"][0]["progress"] + 5,
+        )
+
     def test_achievement_count_up_level_up(self):
         """
         expect: successfully increase the progress of an achievement and level up
@@ -3924,6 +3939,118 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile_manager.achievement_count_up,
             "non_existing",
             "create_posts",
+        )
+
+    def test_achievement_count_up_constraint_good_practice_plans(self):
+        """
+        expect: successfully increase the progress of an achievement
+        that satisfies the constraint of good_practice_plans
+        """
+
+        plan_id = ObjectId()
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up_check_constraint_good_practice(
+            CURRENT_ADMIN.username, plan_id
+        )
+
+        # expect the progress to be increased by 1
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][1]["progress"],
+            self.default_profile["achievements"]["ve"][1]["progress"] + 1,
+        )
+
+        # expect the plan_id to be added to the tracking list
+        self.assertIn(
+            plan_id, result["achievements"]["tracking"]["good_practice_plans"]
+        )
+
+        # using the same plan_id again should not increase the progress any further
+        profile_manager.achievement_count_up_check_constraint_good_practice(
+            CURRENT_ADMIN.username, plan_id
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][1]["progress"],
+            self.default_profile["achievements"]["ve"][1]["progress"] + 1,
+        )
+
+    def test_achievement_count_up_constraint_good_practice_plans_eroor_profile_doesnt_exist(
+        self,
+    ):
+        """
+        expect: ProfileDoesntExistException is raised because no
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up_check_constraint_good_practice,
+            "non_existing",
+            ObjectId(),
+        )
+
+    def test_achievement_count_up_constraint_unique_partners(self):
+        """
+        expect: successfully increase the progress of an achievement
+        that satisfies the constraint of unique_partners
+        """
+
+        partners = ["test", "test2", CURRENT_ADMIN.username]
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, partners
+        )
+
+        # expect the progress to be increased by 2 (one for each partner, except the user self)
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][2]["progress"],
+            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+        )
+
+        # expect the partners to be added to the tracking list
+        self.assertEqual(
+            result["achievements"]["tracking"]["unique_partners"], ["test", "test2"]
+        )
+
+        # using yn of the same partners again should not increase the progress any further
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, ["test"]
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][2]["progress"],
+            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+        )
+
+        # empty partners list should not increase the progress
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, []
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"][2]["progress"],
+            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+        )
+
+    def test_achievement_count_up_constraint_unique_partners_error_profile_doesnt_exist(
+        self,
+    ):
+        """
+        expect: ProfileDoesntExistException is raised because no
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up_check_constraint_unique_partners,
+            "non_existing",
+            ["test"],
         )
 
 

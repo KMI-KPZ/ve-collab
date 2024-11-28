@@ -1983,10 +1983,14 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
-        # count towards the achievements "ve_plans"
-        # and "good_practice_plans" (obeying unique constraint)
+        # count towards the achievements "ve_plans" and 
+        # conditionally count towards the "good_practice_plans" and 
+        # "unique_partners" achievements (obeying their constraints)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            self.current_user.username, plan.partners
+        )
         if plan.is_good_practise:
             profile_manager.achievement_count_up_check_constraint_good_practice(
                 self.current_user.username, plan._id
@@ -2058,9 +2062,13 @@ class VEPlanHandler(BaseHandler):
                 logger.warn("etherpad is possibly down")
 
         # count towards the achievement "ve_plans" since update was successfull
-        # and towards the "good_practice_plans" achievement (obeying unique constraint)
+        # conditionally count towards the "good_practice_plans" and 
+        # "unique_partners" achievements (obeying their constraints)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            self.current_user.username, plan.partners
+        )
         if plan.is_good_practise:
             profile_manager.achievement_count_up_check_constraint_good_practice(
                 self.current_user.username, plan._id
@@ -2179,12 +2187,17 @@ class VEPlanHandler(BaseHandler):
                     logger.warn("etherpad is possibly down")
 
             # count towards the achievement "ve_plans" since update was successfull
-            # and towards the "good_practice_plans" achievement (obeying unique constraint)
+            # conditionally count towards the "good_practice_plans" and 
+            # "unique_partners" achievements (obeying their constraints)
             profile_manager = Profiles(db)
             profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
             if field_name == "is_good_practise" and field_value is True:
                 profile_manager.achievement_count_up_check_constraint_good_practice(
                     self.current_user.username, plan_id
+                )
+            if field_name == "partners":
+                profile_manager.achievement_count_up_check_constraint_unique_partners(
+                    self.current_user.username, field_value
                 )
 
             self.serialize_and_write({"success": True, "updated_id": _id})
@@ -2236,14 +2249,18 @@ class VEPlanHandler(BaseHandler):
                     # after a successful update, extend the lock expiry
                     self._extend_lock(plan_id)
 
-                    # conditionally count towards the "good_practice_plans" achievement
-                    # (obeying unique constraint)
+                    # conditionally count towards the "good_practice_plans" and 
+                    # "unique_partners" achievements (obeying their constraints)
                     if (
                         update_instruction["field_name"] == "is_good_practise"
                         and update_instruction["value"] is True
                     ):
                         profile_manager.achievement_count_up_check_constraint_good_practice(
                             self.current_user.username, plan_id
+                        )
+                    if update_instruction["field_name"] == "partners":
+                        profile_manager.achievement_count_up_check_constraint_unique_partners(
+                            self.current_user.username, update_instruction["value"]
                         )
                 else:
                     error_reason = PLAN_LOCKED
