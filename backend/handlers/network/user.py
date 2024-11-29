@@ -113,16 +113,24 @@ class ProfileInformationHandler(BaseHandler):
                             "group_invite": "email|push|none",
                             "system": "email|push",
                         },
-                        "achievements" : [
-                            {
-                                "type": "<string>",      --> see ACHIEVEMENT_TYPES in class `Profiles`
-                                "progress": <int>,
-                                "level": "null|bronze|silver|gold|platinum"
-                            }, ...
-                        ],
+                        "achievements" : {
+                            "social": [
+                                {"type": "create_posts", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "create_comments", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "give_likes", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "posts_liked", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "join_groups", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "admin_groups", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                            ],
+                            "ve": [
+                                {"type": "ve_plans", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "good_practice_plans", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                                {"type": "unique_partners", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
+                            ],
+                        },
                         "chosen_achievement": {
-                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                            "level": "null|bronze|silver|gold|platinum"
+                            "type": "<string>",           --> one of achievement types above
+                            "level": "null|'bronze'|'silver'|'gold'|'platinum'"
                         }
                     },
                     "spaces": [<string1>, <string2>, ...],
@@ -278,6 +286,16 @@ class ProfileInformationHandler(BaseHandler):
                             "description": "<string>",
                         }
                     ],
+                    "notification_settings": {
+                        "messages": "email|push",
+                        "ve_invite": "email|push|none",
+                        "group_invite": "email|push|none",
+                        "system": "email|push",
+                    },
+                    "chosen_achievement": {
+                        "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
+                        "level": "null|'bronze'|'silver'|'gold'|'platinum'"
+                    },
                     "profile_pic": {
                         "payload": "<base64_encoded_image>",
                         "type": "<image/jpeg|image/png|...>"
@@ -302,6 +320,10 @@ class ProfileInformationHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "reason": "user_doesnt_exist"}
         """
 
         updated_attribute_dict = json.loads(self.request.body)
@@ -317,12 +339,25 @@ class ProfileInformationHandler(BaseHandler):
                 updated_attribute_dict["profile_pic"] = "avatar_{}".format(
                     self.current_user.username
                 )
-                profile_pic_id = profile_manager.update_profile_information(
-                    self.current_user.username,
-                    updated_attribute_dict,
-                    profile_pic_obj["body"],
-                    profile_pic_obj["content_type"],
-                )
+                try:
+                    profile_pic_id = profile_manager.update_profile_information(
+                        self.current_user.username,
+                        updated_attribute_dict,
+                        profile_pic_obj["body"],
+                        profile_pic_obj["content_type"],
+                    )
+                except ProfileDoesntExistException:
+                    self.set_status(409)
+                    self.write({"status": 409, "reason": USER_DOESNT_EXIST})
+                    return
+                except TypeError as e:
+                    self.set_status(400)
+                    self.write({"status": 400, "reason": str(e)})
+                    return
+                except ValueError as e:
+                    self.set_status(400)
+                    self.write({"status": 400, "reason": str(e)})
+                    return
 
                 self.set_status(200)
                 self.write(
@@ -334,12 +369,25 @@ class ProfileInformationHandler(BaseHandler):
                 )
                 return
             else:
-                profile_manager.update_profile_information(
-                    self.current_user.username, updated_attribute_dict
-                )
+                try:
+                    profile_manager.update_profile_information(
+                        self.current_user.username, updated_attribute_dict
+                    )
+                except ProfileDoesntExistException:
+                    self.set_status(409)
+                    self.write({"status": 409, "reason": USER_DOESNT_EXIST})
+                    return
+                except TypeError as e:
+                    self.set_status(400)
+                    self.write({"status": 400, "reason": str(e)})
+                    return
+                except ValueError as e:
+                    self.set_status(400)
+                    self.write({"status": 400, "reason": str(e)})
+                    return
 
-            self.set_status(200)
-            self.write({"status": 200, "success": True})
+                self.set_status(200)
+                self.write({"status": 200, "success": True})
 
 
 class BulkProfileSnippets(BaseHandler):

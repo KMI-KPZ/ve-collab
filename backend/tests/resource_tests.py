@@ -3609,16 +3609,25 @@ class ProfileResourceTest(BaseResourceTestCase):
 
         # try again choosing a new achievement, expecting that it will be set
         # because user has reached the needed level
-        # TODO for now, set arbitrary achievement since tracking is not yet implemented
-        # after tracking is implemented, check if the to-bet-set level is actually achieved
         profile_manager.update_profile_information(
             CURRENT_ADMIN.username,
-            {"chosen_achievement": {"type": "join_groups", "level": "bronze"}},
+            {"chosen_achievement": {"type": "create_posts", "level": "platinum"}},
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["chosen_achievement"],
-            {"type": "join_groups", "level": "bronze"},
+            {"type": "create_posts", "level": "platinum"},
+        )
+
+        # try also setting a lower lewel of a received achievement, expecting that it will be set
+        profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"chosen_achievement": {"type": "create_posts", "level": "gold"}},
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["chosen_achievement"],
+            {"type": "create_posts", "level": "gold"},
         )
 
     def test_update_profile_information_upsert(self):
@@ -3680,6 +3689,25 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile_manager.update_profile_information,
             self.default_profile["username"],
             {"chosen_achievement": {"type": "create_posts", "level": "non_existing"}},
+        )
+
+    def test_update_profile_information_error_achievement_level_not_reached(self):
+        """
+        expect: ValueError is raised because the user has not reached the needed level
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "create_comments", "level": "bronze"}},
+        )
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "good_practice_plans", "level": "silver"}},
         )
 
     def test_get_profile_snippets(self):

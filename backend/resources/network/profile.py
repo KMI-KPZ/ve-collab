@@ -707,8 +707,54 @@ class Profiles:
             ):
                 raise ValueError("Invalid achievement type")
 
-            # TODO implement check as soon as achievements are tracked
+            # filter out the relevant achievement
+            try:
+                profile = self.get_profile(username, projection={"achievements": True})
+            except ProfileDoesntExistException:
+                raise
+            achievements = profile["achievements"]
+            relevent_achievement = None
+            for group in achievements.values():
+                for a in group:
+                    if a["type"] == updated_profile["chosen_achievement"]["type"]:
+                        relevent_achievement = a
+                        break
 
+            # check if the user has reached the level (or a higher one) he is trying to set
+            if relevent_achievement["level"] == None:
+                if updated_profile["chosen_achievement"]["level"] in [
+                    "bronze",
+                    "silver",
+                    "gold",
+                    "platinum",
+                ]:
+                    raise ValueError(
+                        "User has not reached the level he is trying to set"
+                    )
+            elif relevent_achievement["level"] == "bronze":
+                if updated_profile["chosen_achievement"]["level"] in [
+                    "silver",
+                    "gold",
+                    "platinum",
+                ]:
+                    raise ValueError(
+                        "User has not reached the level he is trying to set"
+                    )
+            elif relevent_achievement["level"] == "silver":
+                if updated_profile["chosen_achievement"]["level"] in [
+                    "gold",
+                    "platinum",
+                ]:
+                    raise ValueError(
+                        "User has not reached the level he is trying to set"
+                    )
+            elif relevent_achievement["level"] == "gold":
+                if updated_profile["chosen_achievement"]["level"] in ["platinum"]:
+                    raise ValueError(
+                        "User has not reached the level he is trying to set"
+                    )
+
+        # all checks passed, update the profile
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -980,7 +1026,7 @@ class Profiles:
         # nothing to do if there are no partners to check
         if not partners:
             return
-        
+
         # remove the user himself from the list, if he is in there
         if username in partners:
             partners.remove(username)
