@@ -12,13 +12,16 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { CookiesProvider } from 'react-cookie';
 import NotificationsWindow from '@/components/notifications/NotificationsWindow';
 import ChatWindow from '@/components/chat/ChatWindow';
-import { appWithTranslation } from 'next-i18next';
+import { appWithTranslation, useTranslation } from 'next-i18next';
 import VEHead from '@/components/metaData/VEHead';
 
 export const SocketContext = createContext(socket);
 
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
+    autoForward?: boolean;
+    wrapsPopupComponent?: boolean;
+    noAuthPreview?: JSX.Element;
 };
 declare type AppPropsWithAuth = AppProps & {
     Component: ComponentWithAuth;
@@ -28,15 +31,20 @@ declare type AppPropsWithAuth = AppProps & {
 // meaning that inside a component no session check is required, one can
 // be assured that the component is onyl rendered if the session is valid.
 function Auth({
-    autoForward = true,
+    autoForward = false,
     showLoader = true,
+    wrapsPopupComponent = false,
+    noAuthPreview,
     children,
 }: {
     autoForward?: boolean;
     showLoader?: boolean;
+    wrapsPopupComponent?: boolean;
+    noAuthPreview?: JSX.Element;
     children: JSX.Element;
 }): JSX.Element {
     const { data: session, status } = useSession();
+    const { t } = useTranslation('common');
 
     if (status === 'loading') {
         return showLoader ? <LoadingAnimation /> : <></>;
@@ -45,7 +53,35 @@ function Auth({
         if (autoForward === true) {
             signIn('keycloak');
         }
-        return <></>;
+        if (wrapsPopupComponent) {
+            return <></>;
+        }
+        return (
+            <div className="relative min-h-screen">
+                {noAuthPreview}
+                <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-5 bg-white border border-gray-300 shadow-lg z-50">
+                    <p>This page is only available if you are logged in.</p>
+                    <div className="flex mt-10">
+                        <button
+                            className={
+                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                            }
+                            onClick={() => signIn('keycloak')}
+                        >
+                            <span>{t('register')}</span>
+                        </button>
+                        <button
+                            className={
+                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                            }
+                            onClick={() => signIn('keycloak')}
+                        >
+                            <span>{t('login')}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     } else {
         return children;
     }
@@ -139,7 +175,11 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                 toggleNotifWindow={toggleNotifWindow}
                             >
                                 <>
-                                    <Auth showLoader={false} autoForward={false}>
+                                    <Auth
+                                        showLoader={false}
+                                        autoForward={false}
+                                        wrapsPopupComponent={true}
+                                    >
                                         <>
                                             <ChatWindow
                                                 socket={socket}
@@ -162,7 +202,13 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                     </Auth>
 
                                     {Component.auth ? (
-                                        <Auth>
+                                        <Auth
+                                            autoForward={Component.autoForward ?? false}
+                                            wrapsPopupComponent={
+                                                Component.wrapsPopupComponent ?? false
+                                            }
+                                            noAuthPreview={Component.noAuthPreview}
+                                        >
                                             <Component
                                                 {...pageProps}
                                                 socket={socket}

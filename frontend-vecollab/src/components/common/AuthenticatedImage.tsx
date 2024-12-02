@@ -9,15 +9,26 @@ interface Props {
     width: number;
     height: number;
     className?: string;
+    isNoAuthPreview?: boolean;
 }
 
 AuthenticatedImage.auth = true;
-export default function AuthenticatedImage({ imageId, alt, width, height, className }: Props) {
+export default function AuthenticatedImage({
+    imageId,
+    alt,
+    width,
+    height,
+    className,
+    isNoAuthPreview,
+}: Props) {
     const { data: session, status } = useSession();
     const [image, setImage] = useState('');
 
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
         if (status === 'loading' || !session) return;
+
         (async () => {
             if (imageId) {
                 //Get if url already exists in local storage
@@ -43,10 +54,28 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
 
     return (
         <>
-            {image !== '' ? (
-                <Image src={image} alt={alt} width={width} height={height} className={className} />
+            {isNoAuthPreview ? (
+                <Image
+                    src={`/images/${imageId}`}
+                    alt={alt}
+                    width={width}
+                    height={height}
+                    className={className}
+                />
             ) : (
-                imageId && <div className={className} style={{ height, width }}></div>
+                <>
+                    {image !== '' ? (
+                        <Image
+                            src={image}
+                            alt={alt}
+                            width={width}
+                            height={height}
+                            className={className}
+                        />
+                    ) : (
+                        imageId && <div className={className} style={{ height, width }}></div>
+                    )}
+                </>
             )}
         </>
     );
