@@ -130,17 +130,17 @@ export default function Plans({ socket }: Props) {
 
                     <ButtonNewPlan
                         socket={socket}
-                        label={t('btn_new_va')}
+                        label={t('btn_new_ve')}
                         className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
                     >
                         <div className="flex flex-wrap items-center justify-center ">
                             <Image
                                 src={newFormImg}
-                                alt={t('btn_new_va')}
+                                alt={t('btn_new_ve')}
                                 className="w-[96px] rounded-full"
                             />
                             <div className="font-bold text-center text-wrap xl:w-1/2">
-                                {t('btn_new_va')}
+                                {t('btn_new_ve')}
                             </div>
                         </div>
                     </ButtonNewPlan>
