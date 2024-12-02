@@ -125,7 +125,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             <div className="group/veWindow">
                                 <H2 className="inline">{t('ve_window')}</H2>
                                 <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/veWindow:visible">
-                                    <Link href={'/profle/edit'} className="">
+                                    <Link href={'/profile/edit'} className="">
                                         <MdEdit className="inline" /> {t('add_plan')}
                                     </Link>
                                 </span>
