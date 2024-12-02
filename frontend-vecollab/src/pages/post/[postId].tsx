@@ -11,13 +11,15 @@ import {
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { MdOutlineDeleteForever } from 'react-icons/md';
 import { GiSadCrab } from 'react-icons/gi';
 import { Socket } from 'socket.io-client';
 import GeneralError from '@/components/common/GeneralError';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
+import CustomHead from '@/components/metaData/CustomHead';
+import { useTranslation } from 'next-i18next';
 
 /**
  * Single post view
@@ -33,6 +35,7 @@ export default function Post({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { postId } = router.query;
     const [deleted, setDeleted] = useState<boolean>(false);
+    const { t } = useTranslation(['common']);
 
     const {
         data: post,
@@ -121,25 +124,28 @@ export default function Post({ socket }: Props): JSX.Element {
     }
 
     return (
-        <Wrapper>
-            <TimelinePost
-                socket={socket}
-                post={post}
-                allGroups={allGroups}
-                groupACL={groupACLEntry}
-                updatePost={() => {
-                    mutate();
-                }}
-                userIsAdmin={userIsAdmin()}
-                removePost={() => {
-                    setDeleted(true);
-                }}
-                updatePinnedPosts={mutate}
-                rePost={rePost}
-                isLast={false}
-                fetchNextPosts={() => {}}
-            />
-        </Wrapper>
+        <>
+            <CustomHead pageTitle={t('search_result_posts')} pageSlug={`post/${postId}`} />
+            <Wrapper>
+                <TimelinePost
+                    socket={socket}
+                    post={post}
+                    allGroups={allGroups}
+                    groupACL={groupACLEntry}
+                    updatePost={() => {
+                        mutate();
+                    }}
+                    userIsAdmin={userIsAdmin()}
+                    removePost={() => {
+                        setDeleted(true);
+                    }}
+                    updatePinnedPosts={mutate}
+                    rePost={rePost}
+                    isLast={false}
+                    fetchNextPosts={() => {}}
+                />
+            </Wrapper>
+        </>
     );
 }
 

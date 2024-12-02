@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Stage from '@/components/VE-designer/FinePlanner/Stage';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import {
-    ISubmenuData,
-} from '@/interfaces/ve-designer/sideProgressBar';
+import { ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
@@ -18,6 +16,7 @@ import { FineStepFormSchema } from '../../../zod-schemas/finestepSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import WhiteBox from '@/components/common/WhiteBox';
 import { GiSadCrab } from 'react-icons/gi';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface ITask {
     task_formulation: string;
@@ -135,7 +134,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
-    const [loadingStep, setLoadingStep] = useState<boolean>(true)
+    const [loadingStep, setLoadingStep] = useState<boolean>(true);
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -143,13 +142,13 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 // TODO ???
                 return {};
             }
-            if (stepId == "1") {
+            if (stepId == '1') {
                 return router.push({
                     pathname: `/ve-designer/step/${plan.steps[0]._id}`,
                     query: {
                         plannerId: router.query.plannerId,
                     },
-                })
+                });
             }
             let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
@@ -177,8 +176,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 setCurrentFineStep(fineStepCopyTransformedTools);
                 setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
             }
-            setLoadingStep(false)
-
+            setLoadingStep(false);
 
             return { ...fineStepCopyTransformedTools };
         },
@@ -235,7 +233,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: [...updateStepsData],
-            }
+            },
         ];
     };
 
@@ -275,35 +273,40 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             <WhiteBox>
                 <div className="flex items-center">
                     <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">{ t('common:plans_alert_step_doesnt_exist')}</div>
+                    <div className="text-xl text-slate-900">
+                        {t('common:plans_alert_step_doesnt_exist')}
+                    </div>
                     <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
                         <Link href="/plans">{t('back_to_overview')}</Link>
                     </button>
                 </div>
             </WhiteBox>
-        )
+        );
     }
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('step-data.title', { name: currentFineStep.name })}
-            description={description}
-            tooltip={{
-                text: t('step-data.tooltip_text'),
-                link: '/learning-material/2/VA-Planung',
-            }}
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            stageInMenu="steps"
-            idOfProgress={currentFineStep._id!}
-            // idOfProgress={encodeURI(currentFineStep.name as string)}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <Stage fineStep={currentFineStep} />
-        </Wrapper>
+        <>
+            <CustomHead pageTitle={currentFineStep.name} pageSlug={`ve-designer/step/${stepId}`} />
+            <Wrapper
+                socket={socket}
+                title={t('step-data.title', { name: currentFineStep.name })}
+                description={description}
+                tooltip={{
+                    text: t('step-data.tooltip_text'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                stageInMenu="steps"
+                idOfProgress={currentFineStep._id!}
+                // idOfProgress={encodeURI(currentFineStep.name as string)}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <Stage fineStep={currentFineStep} />
+            </Wrapper>
+        </>
     );
 }
 

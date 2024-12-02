@@ -53,12 +53,13 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <Button
-                onClick={() => {
-                    signIn('keycloak');
-                }}
-            >
-                <div className="w-fit m-auto p-8 flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105">
+            <div className="py-2 px-4">
+                <div
+                    onClick={() => {
+                        signIn('keycloak');
+                    }}
+                    className="w-fit m-auto p-10 flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105"
+                >
                     <Image
                         src={teamCollabImg}
                         alt="Eine Gruppe von Menschen"
@@ -72,7 +73,7 @@ export default function Frontpage() {
                         {t('join_now')}
                     </div>
                 </div>
-            </Button>
+            </div>
 
             {/* <span className='mb-4 text-xl underline decoration-ve-collab-orange underline-offset-4'>
                 Weitere Informationen

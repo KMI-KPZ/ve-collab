@@ -12,10 +12,11 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LearningGoalsFormSchema } from '../../zod-schemas/learningGoalsSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface FormValues {
     individualLearningGoals: IndividualLearningGoal[];
@@ -56,7 +57,7 @@ LearningGoals.auth = true;
 export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common'])
+    const { t } = useTranslation(['designer', 'common']);
     const [usersFirstLastNames, setUsersFirstLastNames] = useState<BackendUserSnippet[]>([]);
 
     const prevpage = '/ve-designer/target-groups';
@@ -144,7 +145,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'topics',
                 value: data.topics.map((element) => element.name),
-            }
+            },
         ];
     };
 
@@ -238,7 +239,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                         {...methods.register(`topics.${index}.name`, {
                                             maxLength: {
                                                 value: 500,
-                                                message: t('messages.max_length', {count: 500}),
+                                                message: t('messages.max_length', { count: 500 }),
                                             },
                                         })}
                                     />
@@ -271,116 +272,119 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('goals.title')}
-            subtitle={t('goals.subtitle')}
-            description={t('goals.description')}
-            tooltip={{
-                text: t('goals.tooltip'),
-                link: '/learning-material/1/Potenziale',
-            }}
-            stageInMenu='generally'
-            idOfProgress="learning_goals"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div>
-                <div className="flex flex-wrap">
-                    {fieldsLearnings.map((individualLearningGoalPerPartner, index) => (
-                        <div key={individualLearningGoalPerPartner.id} className="flex mx-2">
-                            <div className="shadow rounded p-2 w-fit h-fit">
-                                <div className="flex flex-col">
-                                    <div className="font-bold text-lg mb-4 text-center">
-                                        {findPartnerFirstAndLastName(
-                                            individualLearningGoalPerPartner.username
-                                        )}
-                                    </div>
-                                    <textarea
-                                        rows={3}
-                                        className="border border-gray-400 rounded-lg p-2 ml-2 w-96"
-                                        {...methods.register(
-                                            `individualLearningGoals.${index}.learningGoal`
-                                        )}
-                                        placeholder={
-                                            t('goals.learningGoal_placeholder', {username: findPartnerFirstAndLastName(
+        <>
+            <CustomHead pageTitle={t('goals.title')} pageSlug={'ve-designer/learning-goals'} />
+            <Wrapper
+                socket={socket}
+                title={t('goals.title')}
+                subtitle={t('goals.subtitle')}
+                description={t('goals.description')}
+                tooltip={{
+                    text: t('goals.tooltip'),
+                    link: '/learning-material/1/Potenziale',
+                }}
+                stageInMenu="generally"
+                idOfProgress="learning_goals"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div>
+                    <div className="flex flex-wrap">
+                        {fieldsLearnings.map((individualLearningGoalPerPartner, index) => (
+                            <div key={individualLearningGoalPerPartner.id} className="flex mx-2">
+                                <div className="shadow rounded p-2 w-fit h-fit">
+                                    <div className="flex flex-col">
+                                        <div className="font-bold text-lg mb-4 text-center">
+                                            {findPartnerFirstAndLastName(
                                                 individualLearningGoalPerPartner.username
-                                            )})
-                                        }
-                                    ></textarea>
-                                    <p className="text-red-600 pt-2">
-                                        {
-                                            t(methods.formState.errors?.individualLearningGoals?.[
-                                                index
-                                            ]?.learningGoal?.message!)
-                                        }
-                                    </p>
+                                            )}
+                                        </div>
+                                        <textarea
+                                            rows={3}
+                                            className="border border-gray-400 rounded-lg p-2 ml-2 w-96"
+                                            {...methods.register(
+                                                `individualLearningGoals.${index}.learningGoal`
+                                            )}
+                                            placeholder={t('goals.learningGoal_placeholder', {
+                                                username: findPartnerFirstAndLastName(
+                                                    individualLearningGoalPerPartner.username
+                                                ),
+                                            })}
+                                        ></textarea>
+                                        <p className="text-red-600 pt-2">
+                                            {t(
+                                                methods.formState.errors?.individualLearningGoals?.[
+                                                    index
+                                                ]?.learningGoal?.message!
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
-            <div className="mt-12">
-                <div
-                    className={'flex justify-between items-center text-slate-600 text-xl relative'}
-                >
-                    {t('goals.2-title')}
-                    <Tooltip tooltipsText={t('goals.2-tooltip')}>
-                        <Link
-                            target="_blank"
-                            href={'/learning-material/top-bubble/Potenziale'}
-                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-                <p className="mb-8">
-                    {t('goals.2-subtitle')}
-                </p>
+                <div className="mt-12">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('goals.2-title')}
+                        <Tooltip tooltipsText={t('goals.2-tooltip')}>
+                            <Link
+                                target="_blank"
+                                href={'/learning-material/top-bubble/Potenziale'}
+                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                            >
+                                <PiBookOpenText size={30} color="#00748f" />
+                            </Link>
+                        </Tooltip>
+                    </div>
+                    <p className="mb-8">{t('goals.2-subtitle')}</p>
 
-                <div className="w-full lg:w-1/2">
-                    {createableSelect(methods.control, 'majorLearningGoals', options)}
+                    <div className="w-full lg:w-1/2">
+                        {createableSelect(methods.control, 'majorLearningGoals', options)}
+                    </div>
+                    <p className="text-red-600 pt-2">
+                        {t(methods.formState.errors?.majorLearningGoals?.message!)}
+                    </p>
                 </div>
-                <p className="text-red-600 pt-2">
-                    {t(methods.formState.errors?.majorLearningGoals?.message!)}
-                </p>
-            </div>
-            <div className="mt-12">
-                <div
-                    className={'flex justify-between items-center text-slate-600 text-xl relative'}
-                >
-                    {t('goals.3-title')}
-                    <Tooltip tooltipsText={t('goals.3-tooltip')}>
-                        <Link
-                            target="_blank"
-                            href={'/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'}
-                            className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
-                        >
-                            <PiBookOpenText size={30} color="#00748f" />
-                        </Link>
-                    </Tooltip>
-                </div>
-                <p className="mb-8">
-                    {t('goals.3-subtitle')}
-                </p>
+                <div className="mt-12">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('goals.3-title')}
+                        <Tooltip tooltipsText={t('goals.3-tooltip')}>
+                            <Link
+                                target="_blank"
+                                href={
+                                    '/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'
+                                }
+                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                            >
+                                <PiBookOpenText size={30} color="#00748f" />
+                            </Link>
+                        </Tooltip>
+                    </div>
+                    <p className="mb-8">{t('goals.3-subtitle')}</p>
 
-                <div className="w-full lg:w-1/2">{renderTopics()}</div>
-            </div>
-        </Wrapper>
+                    <div className="w-full lg:w-1/2">{renderTopics()}</div>
+                </div>
+            </Wrapper>
+        </>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

@@ -11,13 +11,14 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetMyGroupACLEntry, useGetGroup, useIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { RxFile, RxPlus } from 'react-icons/rx';
 import Timeline from '@/components/network/Timeline';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     socket: Socket;
@@ -122,8 +123,6 @@ export default function Group({ socket }: Props): JSX.Element {
             }
         );
     }, [group, isLoading, session]);
-
-    console.log(group);
 
     function files() {
         return (
@@ -292,6 +291,7 @@ export default function Group({ socket }: Props): JSX.Element {
                 <LoadingAnimation />
             ) : (
                 <>
+                    <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
                     {!(userIsMember() || userIsAdmin()) ? (
                         <AccessDenied />
                     ) : (

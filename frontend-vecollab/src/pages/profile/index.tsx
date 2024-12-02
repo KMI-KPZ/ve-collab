@@ -23,6 +23,7 @@ import { Socket } from 'socket.io-client';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     socket: Socket;
@@ -190,6 +191,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 <LoadingAnimation />
             ) : (
                 <>
+                    <CustomHead pageTitle={t('common:profile')} pageSlug={'profile'} />
                     <ProfileBanner
                         follows={follows}
                         setFollows={setFollows}

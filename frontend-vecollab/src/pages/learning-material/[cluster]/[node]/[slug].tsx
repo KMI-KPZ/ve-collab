@@ -3,13 +3,15 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import { getClusterSlugByRouteQuery } from '../..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
+import CustomHead from '@/components/metaData/CustomHead';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     nodesOfCluster: INode[];
@@ -28,6 +30,11 @@ export default function LearningContentView(props: Props) {
     const iframeRef = useRef<null | HTMLIFrameElement>(null);
     const [frameHeight, setFrameHeight] = useState<string>('100%');
     const [loading, setLoading] = useState<boolean>(true);
+
+    const slug = router.query.slug as string;
+    const cluster = router.query.cluster as string;
+    const node = router.query.node as string;
+    const { t } = useTranslation('common');
 
     const framesizeRequest = () => {
         if (!iframeRef.current?.contentWindow) return;
@@ -133,79 +140,85 @@ export default function LearningContentView(props: Props) {
     );
 
     return (
-        <ContentWrapper
-            nodesOfCluster={props.nodesOfCluster}
-            headerChildren={
-                <>
-                    {props.lectionsOfNode.length && (
-                        <div className="md:hidden">
-                            <ListOfLectionsTopbar lections={props.lectionsOfNode} />
-                        </div>
-                    )}
-                </>
-            }
-            contentChildren={
-                <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
-                    {props.lectionsOfNode.length && (
-                        <div className="w-80 hidden md:block">
-                            <ListOfLectionsSidebar lections={props.lectionsOfNode} />
-                        </div>
-                    )}
-
-                    <div className="w-full md:pl-6 pt-1 relative">
-                        {loading && (
-                            <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
-                                <span className="m-2">
-                                    <LoadingAnimation />
-                                </span>
+        <>
+            <CustomHead
+                pageTitle={t('materials')}
+                pageSlug={`learning-material/${cluster}/${node}/${slug}`}
+            />
+            <ContentWrapper
+                nodesOfCluster={props.nodesOfCluster}
+                headerChildren={
+                    <>
+                        {props.lectionsOfNode.length && (
+                            <div className="md:hidden">
+                                <ListOfLectionsTopbar lections={props.lectionsOfNode} />
+                            </div>
+                        )}
+                    </>
+                }
+                contentChildren={
+                    <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
+                        {props.lectionsOfNode.length && (
+                            <div className="w-80 hidden md:block">
+                                <ListOfLectionsSidebar lections={props.lectionsOfNode} />
                             </div>
                         )}
 
-                        <iframe
-                            style={{ height: frameHeight }}
-                            className="rounded-xl overflow-hidden"
-                            src={props.currentNode.data.url}
-                            ref={iframeRef}
-                            scrolling="no"
-                        ></iframe>
+                        <div className="w-full md:pl-6 pt-1 relative">
+                            {loading && (
+                                <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                    <span className="m-2">
+                                        <LoadingAnimation />
+                                    </span>
+                                </div>
+                            )}
 
-                        {(props.prevNode || props.nextNode) && (
-                            <div className="flex my-4 pt-4 border-t">
-                                {/* <div className="my-8 border-t py-3 flex justify-between"> */}
-                                {props.prevNode && (
-                                    <Link
-                                        className="mr-auto"
-                                        href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.prevNode.text}`}
-                                    >
-                                        <button
-                                            className={
-                                                'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                            }
+                            <iframe
+                                style={{ height: frameHeight }}
+                                className="rounded-xl overflow-hidden"
+                                src={props.currentNode.data.url}
+                                ref={iframeRef}
+                                scrolling="no"
+                            ></iframe>
+
+                            {(props.prevNode || props.nextNode) && (
+                                <div className="flex my-4 pt-4 border-t">
+                                    {/* <div className="my-8 border-t py-3 flex justify-between"> */}
+                                    {props.prevNode && (
+                                        <Link
+                                            className="mr-auto"
+                                            href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.prevNode.text}`}
                                         >
-                                            zurück zu: {props.prevNode.text}
-                                        </button>
-                                    </Link>
-                                )}
-                                {props.nextNode && (
-                                    <Link
-                                        className="ml-auto"
-                                        href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.nextNode.text}`}
-                                    >
-                                        <button
-                                            className={
-                                                'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                            }
+                                            <button
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                            >
+                                                zurück zu: {props.prevNode.text}
+                                            </button>
+                                        </Link>
+                                    )}
+                                    {props.nextNode && (
+                                        <Link
+                                            className="ml-auto"
+                                            href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.nextNode.text}`}
                                         >
-                                            weiter zu: {props.nextNode.text}
-                                        </button>
-                                    </Link>
-                                )}
-                            </div>
-                        )}
+                                            <button
+                                                className={
+                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                }
+                                            >
+                                                weiter zu: {props.nextNode.text}
+                                            </button>
+                                        </Link>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            }
-        />
+                }
+            />
+        </>
     );
 }
 

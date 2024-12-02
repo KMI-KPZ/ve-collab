@@ -9,6 +9,8 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
+import CustomHead from '@/components/metaData/CustomHead';
+import React from 'react';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -69,13 +71,16 @@ export default function PageCategoryNotSelected(props: Props) {
                     })}
                 </Link>
                 {nodes.map((style, i) => (
-                    <Link
-                        key={i}
-                        href={`/learning-material/${querySlug}/${props.nodes[slug][i].text}`}
-                        className={`${styleBubbleLeaf} ${style}`}
-                    >
-                        {props.nodes[slug][i].text}
-                    </Link>
+                    <div key={i}>
+                        {props.nodes[slug][i]?.text && (
+                            <Link
+                                href={`/learning-material/${querySlug}/${props.nodes[slug][i]?.text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.nodes[slug][i]?.text}
+                            </Link>
+                        )}
+                    </div>
                 ))}
             </div>
         );
@@ -83,7 +88,7 @@ export default function PageCategoryNotSelected(props: Props) {
 
     const Bubbles = () => (
         <>
-            {/* TOP BUBBLE */}
+            {/* 1 BUBBLE */}
             {Bubble(1, 'xl:left-[37%] xl:-translate-x-1/1', [
                 '-top-[1.5rem] -left-[5rem]', //einfuehrung
                 'top-[.5rem] -right-[6.5rem]', // potenziale
@@ -91,13 +96,13 @@ export default function PageCategoryNotSelected(props: Props) {
                 '-bottom-[.5rem] -left-[10rem]', // beispiele aus der praxis
             ])}
 
-            {/* LEFT BUBBLE */}
+            {/* 2 BUBBLE */}
             {Bubble(2, 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
-                '-top-[1.5rem] -left-[5rem]', // va-planung
+                '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
             ])}
 
-            {/* RIGHT BUBBLE */}
+            {/* 3 BUBBLE */}
             {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
                 '-top-[2.5rem] -left-[5rem]', // digitale medien
                 '-bottom-[3.5rem] -right-[7rem]', // datenschutz
@@ -105,7 +110,7 @@ export default function PageCategoryNotSelected(props: Props) {
                 'top-0 -right-[4rem]', // oer
             ])}
 
-            {/* BOTTOM BUBBLE */}
+            {/* 4 BUBBLE */}
             {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
                 '-bottom-[.5rem] -left-[10.5rem]', // interaktion
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
@@ -117,6 +122,7 @@ export default function PageCategoryNotSelected(props: Props) {
 
     return (
         <>
+            <CustomHead pageTitle={t('materials')} pageSlug={`learning-material`} />
             <div className="flex justify-between pt-12 mb-4">
                 <div>
                     {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}

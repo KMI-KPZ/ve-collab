@@ -7,6 +7,7 @@ import { Socket } from 'socket.io-client';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     socket: Socket;
@@ -20,37 +21,40 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
     const [plan, setPlanData] = useState<IPlan>();
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('finish.title')}
-            subtitle={t('finish.subtitle')}
-            methods={useForm<any>()}
-            preventToLeave={false}
-            nextpage="/ve-designer/post-process"
-            nextpageBtnLabel={t('finish.to_post_process')}
-            stageInMenu="finish"
-            planerDataCallback={(d) => {
-                setPlanData(d);
-                return {};
-            }}
-            submitCallback={(d) => {}}
-        >
-            {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
-            {feedbackFormURL && (
-                <div className="mt-4 font-bold text-lg">
-                    {t('finish.feedback_1')}
-                    <a
-                        className="underline text-ve-collab-orange"
-                        href={feedbackFormURL}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        {t('common:here')}
-                    </a>{' '}
-                    {t('finish.feedback_2')}
-                </div>
-            )}
-        </Wrapper>
+        <>
+            <CustomHead pageTitle={t('finish.title')} pageSlug={'ve-designer/finish'} />
+            <Wrapper
+                socket={socket}
+                title={t('finish.title')}
+                subtitle={t('finish.subtitle')}
+                methods={useForm<any>()}
+                preventToLeave={false}
+                nextpage="/ve-designer/post-process"
+                nextpageBtnLabel={t('finish.to_post_process')}
+                stageInMenu="finish"
+                planerDataCallback={(d) => {
+                    setPlanData(d);
+                    return {};
+                }}
+                submitCallback={(d) => {}}
+            >
+                {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
+                {feedbackFormURL && (
+                    <div className="mt-4 font-bold text-lg">
+                        {t('finish.feedback_1')}
+                        <a
+                            className="underline text-ve-collab-orange"
+                            href={feedbackFormURL}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {t('common:here')}
+                        </a>{' '}
+                        {t('finish.feedback_2')}
+                    </div>
+                )}
+            </Wrapper>
+        </>
     );
 }
 

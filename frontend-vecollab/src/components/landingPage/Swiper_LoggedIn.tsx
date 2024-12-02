@@ -155,7 +155,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                             </Link>
 
                             <Link
-                                href={'/learning-material//3/Tools'}
+                                href={'/learning-material/3/Tools'}
                                 className={`${learningLeafStyle} bottom-[1rem] -left-[5.5rem]`}
                             >
                                 Tools
