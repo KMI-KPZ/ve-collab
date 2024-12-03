@@ -353,5 +353,13 @@
     "move_up": "Move up",
     "move_down": "Move down",
     "city": "City",
-    "none": "None"
+    "none": "None",
+    "no_auth": {
+        "page_behind_login": "This page is only accessible if you are logged in",
+        "username": "John Doe",
+        "institution": "Example Institution",
+        "ve_content1": "Social Media",
+        "ve_content2": "Ethnicity",
+        "ve_experience1": "1x VE with Spanish university"
+    }
 }

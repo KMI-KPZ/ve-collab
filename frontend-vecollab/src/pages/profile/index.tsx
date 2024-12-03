@@ -268,13 +268,13 @@ function UserProfileNoAuthPreview() {
                 setFollows={() => {}}
                 followers={[]}
                 foreignUser={false}
-                username={'John Doe'}
+                username={t('common:no_auth.username')}
                 isNoAuthPreview={true}
             />
             <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
                 <ProfileHeader
-                    name={'John Doe'}
-                    institution={'Example Institution'}
+                    name={t('common:no_auth.username')}
+                    institution={t('common:no_auth.institution')}
                     profilePictureUrl={'random_user.jpg'}
                     foreignUser={true}
                     followers={[]}
@@ -293,13 +293,16 @@ function UserProfileNoAuthPreview() {
                                     'Methods and Task Formats',
                                     'Implementation',
                                 ],
-                                veContents: [''], // TODO translated example list
+                                veContents: [
+                                    t('common:no_auth.ve_content1'),
+                                    t('common:no_auth.ve_content2'),
+                                ],
                                 veGoals: [
                                     'Promotion of Communicative Competences',
                                     'Interdisciplinary Exchange',
                                     'International Cooperation',
                                 ],
-                                experience: [''], // TODO translated example list
+                                experience: [t('common:no_auth:ve_experience1')],
                                 interdisciplinaryExchange: true,
                                 preferredFormat: 'synchronous and asynchronous',
                             }}
@@ -345,7 +348,7 @@ function UserProfileNoAuthPreview() {
                 <div className={'w-1/4  ml-4'}>
                     <WhiteBox>
                         <PersonalData
-                            bio={'VE enthusiast'}
+                            bio={'VE Enthusiast'}
                             expertise={'Cultural Studies'}
                             birthday={'1988-01-01'}
                             languages={['English', 'German']}

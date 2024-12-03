@@ -353,5 +353,13 @@
     "move_up": "Nach oben",
     "move_down": "Nach unten",
     "city": "Stadt",
-    "none": "Keine"
+    "none": "Keine",
+    "no_auth": {
+        "page_behind_login": "Diese Seite ist nur für angemeldete Nutzer:innen zugänglich.",
+        "username": "Max Mustermann",
+        "institution": "Musterinstitution",
+        "ve_content1": "Soziale Medien",
+        "ve_content2": "Ethnische Fragestellungen",
+        "ve_experience1": "1x VE mit spanischer Universität"
+    }
 }
