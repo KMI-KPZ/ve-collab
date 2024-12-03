@@ -360,6 +360,9 @@
         "institution": "Example Institution",
         "ve_content1": "Social Media",
         "ve_content2": "Ethnicity",
-        "ve_experience1": "1x VE with Spanish university"
+        "ve_experience1": "1x VE with Spanish university",
+        "group_name1": "VE Foreign Languages",
+        "group_description1": "Get-together for VE in the foreign languages field",
+        "group_name2": "Climate Change"
     }
 }
