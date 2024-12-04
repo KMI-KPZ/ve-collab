@@ -1,22 +1,18 @@
-import { MdAdd, MdArrowDropDown, MdCheck, MdCheckBoxOutlineBlank, MdClose } from 'react-icons/md';
-import ButtonNewPlan from './ButtonNewPlan';
+import { MdArrowDropDown, MdClose } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
-import { Socket } from 'socket.io-client';
-import { GiCheckMark } from 'react-icons/gi';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
-import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 import { FaMedal } from 'react-icons/fa';
 import Dropdown from '../common/Dropdown';
 
 interface Props {
-    socket: Socket;
     filterBy: IfilterBy[];
     filterByCallback: ({ compare, id }: IfilterBy) => void;
+    isNoAuthPreview?: boolean;
 }
 
-export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props) {
+export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview = false }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
     const [search, setSearch] = useState<string>('');
@@ -26,6 +22,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
     const [currentAuthorFilter, setCurrentAuthorFilter] = useState<string>(t('plans_filter_all'));
 
     const handleClickShowGoodPracticeOnly = () => {
+        if (isNoAuthPreview) return;
+
         if (showGoodPracticeOnly) {
             filterByCallback({
                 compare: undefined,
@@ -42,6 +40,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
     };
 
     const handleSwitchAuthorChange = (value: string) => {
+        if (isNoAuthPreview) return;
+
         switch (value) {
             case 'all':
                 setCurrentAuthorFilter(t('plans_filter_all'));
@@ -84,7 +84,9 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
     return (
         <div className="mb-4 flex flex-wrap items-center gap-y-2">
             <div
-                className="flex p-2 rounded-full shadow border cursor-pointer"
+                className={`flex p-2 rounded-full shadow border ${
+                    isNoAuthPreview ? '' : 'cursor-pointer'
+                }`}
                 onClick={handleClickShowGoodPracticeOnly}
             >
                 <div className="relative w-[48px] flex items-center ">
@@ -125,6 +127,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
                         },
                     ]}
                     onSelect={(value) => {
+                        if (isNoAuthPreview) return;
+
                         // handleSelectOption(value, comment);
                         console.log({ value });
                         handleSwitchAuthorChange(value);
@@ -139,6 +143,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
                         </span>
                     }
                     ulClasses="!left-16 !right-auto"
+                    isNoAuthPreview={isNoAuthPreview}
                 />
             </div>
 
@@ -150,7 +155,10 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
                     name="search"
                     value={search}
                     autoComplete="off"
+                    disabled={isNoAuthPreview}
                     onChange={(event) => {
+                        if (isNoAuthPreview) return;
+
                         const value = (event.target as HTMLInputElement).value;
                         setSearch(value);
                         filterByCallback({
@@ -165,6 +173,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
                 />
                 <div
                     onClick={(e) => {
+                        if (isNoAuthPreview) return;
+
                         setSearch('');
                         filterByCallback({
                             compare: undefined,
@@ -172,7 +182,9 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, socket }: Props
                             value: null,
                         });
                     }}
-                    className="text-slate-600 inline relative -left-[22px] hover:cursor-pointer"
+                    className={`text-slate-600 inline relative -left-[22px] ${
+                        isNoAuthPreview ? '' : 'hover:cursor-pointer'
+                    }`}
                 >
                     <MdClose size={15} className={`${search.length ? 'inline' : 'invisible'}`} />
                 </div>

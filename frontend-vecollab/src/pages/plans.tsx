@@ -17,6 +17,7 @@ import Image from 'next/image';
 
 import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
+import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 
 export interface IfilterBy {
     /** compare function
@@ -147,11 +148,7 @@ export default function Plans({ socket }: Props) {
                 </div>
             </div>
 
-            <PlansBrowserFilter
-                socket={socket}
-                filterBy={filterBy}
-                filterByCallback={handleFilterBy}
-            />
+            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy} />
 
             {typeof error !== 'undefined' && (
                 <Alert type="error" message={'Error loading plans. See console for details.'} />
@@ -175,7 +172,139 @@ export default function Plans({ socket }: Props) {
 }
 
 function PlansNoAuthPreview() {
-    return <div>fasel blubber</div>;
+    const { t } = useTranslation('common');
+
+    const filterBy = [
+        {
+            compare: () => true,
+            id: 'author',
+            value: undefined,
+        },
+    ];
+    const sortBy: IsortBy = { key: 'last_modified', order: 'ASC' };
+    const examplePlans: PlanPreview[] = [
+        {
+            _id: '1',
+            name: 'Plan 1',
+            author: {
+                username: 'Author 1',
+                first_name: 'John',
+                last_name: 'Doe',
+                profile_pic: 'random_user.jpg',
+                institution: '',
+            },
+            read_access: ['Author 1'],
+            write_access: ['Author 1'],
+            creation_timestamp: '2023-01-01',
+            last_modified: '2023-01-01',
+            is_good_practise: true,
+            steps: [],
+            progress: {
+                name: 'completed' as ProgressState,
+                partners: 'completed' as ProgressState,
+                institutions: 'completed' as ProgressState,
+                lectures: 'completed' as ProgressState,
+                target_groups: 'completed' as ProgressState,
+                learning_goals: 'completed' as ProgressState,
+                learning_env: 'completed' as ProgressState,
+                methodical_approaches: 'completed' as ProgressState,
+                evaluation: 'completed' as ProgressState,
+                checklist: 'completed' as ProgressState,
+                stepsGenerally: 'completed' as ProgressState,
+                steps: [],
+            },
+        },
+        {
+            _id: '2',
+            name: 'Plan 1',
+            author: {
+                username: 'Author 1',
+                first_name: 'John',
+                last_name: 'Doe',
+                profile_pic: 'random_user.jpg',
+                institution: '',
+            },
+            read_access: ['Author 1'],
+            write_access: ['Author 1'],
+            creation_timestamp: '2023-01-01',
+            last_modified: '2023-01-01',
+            is_good_practise: true,
+            steps: [],
+            progress: {
+                name: 'completed' as ProgressState,
+                partners: 'completed' as ProgressState,
+                institutions: 'completed' as ProgressState,
+                lectures: 'completed' as ProgressState,
+                target_groups: 'completed' as ProgressState,
+                learning_goals: 'completed' as ProgressState,
+                learning_env: 'completed' as ProgressState,
+                methodical_approaches: 'not_started' as ProgressState,
+                evaluation: 'not_started' as ProgressState,
+                checklist: 'not_started' as ProgressState,
+                stepsGenerally: 'not_started' as ProgressState,
+                steps: [],
+            },
+        },
+    ];
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+
+            <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
+                <div>
+                    <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
+                    <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
+                </div>
+
+                <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
+                    <div className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center">
+                        <Image
+                            src={handsPuzzleImg}
+                            alt={t('find_ve_partners')}
+                            className="w-[96px] rounded-full"
+                        />
+                        <div className="font-bold text-center text-wrap xl:w-1/2">
+                            {t('find_ve_partners')}
+                        </div>
+                    </div>
+
+                    <ButtonNewPlan
+                        label={t('btn_new_va')}
+                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-default"
+                        isNoAuthPreview={true}
+                    >
+                        <div className="flex flex-wrap items-center justify-center ">
+                            <Image
+                                src={newFormImg}
+                                alt={t('btn_new_va')}
+                                className="w-[96px] rounded-full"
+                            />
+                            <div className="font-bold text-center text-wrap xl:w-1/2">
+                                {t('btn_new_va')}
+                            </div>
+                        </div>
+                    </ButtonNewPlan>
+                </div>
+            </div>
+
+            <PlansBrowserFilter
+                filterBy={filterBy}
+                filterByCallback={() => {}}
+                isNoAuthPreview={true}
+            />
+
+            <PlansBrowser
+                plans={examplePlans}
+                sortBy={sortBy}
+                filterBy={filterBy}
+                sortByCallback={() => {}}
+                refetchPlansCallback={async () => {}}
+                isNoAuthPreview={true}
+            />
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-slate-100/90 to-slate-100 pointer-events-none"></div>
+        </div>
+    );
 }
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {

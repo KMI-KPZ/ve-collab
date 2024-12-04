@@ -84,6 +84,8 @@
     "plans_table_author": "Autor*in",
     "plans_table_last_modified": "Geändert",
     "plans_table_created": "Erstellt",
+    "plans_title_all_steps_completed": "Alle Schritte als 'erledigt' markiert",
+    "plans_title_partial_steps_completed": "{{count}} von {{total}} Schritten als 'erledigt' markiert",
     "plans_no_good_practise_plan_shared": "Es wurde noch kein Good Practice Plan mit Dir geteilt.",
     "plans_no_plan_shared": "Es wurde noch kein Plan mit Dir geteilt.",
     "plans_no_good_practise_plan_created": "Du hast noch keinen Good Practice Plan erstellt.",

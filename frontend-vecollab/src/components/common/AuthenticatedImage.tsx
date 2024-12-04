@@ -50,7 +50,7 @@ export default function AuthenticatedImage({
                 }
             }
         })();
-    }, [session, status, imageId]);
+    }, [session, status, imageId, isNoAuthPreview]);
 
     return (
         <>
