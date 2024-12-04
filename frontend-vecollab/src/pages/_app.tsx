@@ -49,8 +49,8 @@ function Auth({
     if (status === 'loading') {
         return showLoader ? <LoadingAnimation /> : <></>;
     } else if (!session || session?.error === 'RefreshAccessTokenError') {
-        console.log('forced new signIn');
         if (autoForward === true) {
+            console.log('forced new signIn');
             signIn('keycloak');
         }
         if (wrapsPopupComponent) {
@@ -60,7 +60,7 @@ function Auth({
             <div className="relative min-h-screen">
                 {noAuthPreview}
                 <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-5 bg-white border border-gray-300 shadow-lg z-50">
-                    <p>{t("no_auth.page_behind_login")}</p>
+                    <p>{t('no_auth.page_behind_login')}</p>
                     <div className="flex mt-10">
                         <button
                             className={
