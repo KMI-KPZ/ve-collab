@@ -187,14 +187,14 @@ function PlansNoAuthPreview() {
             _id: '1',
             name: 'VE Leipzig - Kuala Lumpur',
             author: {
-                username: t("no_auth.username"),
-                first_name: t("no_auth.first_name"),
-                last_name: t("no_auth.last_name"),
+                username: t('no_auth.username'),
+                first_name: t('no_auth.first_name'),
+                last_name: t('no_auth.last_name'),
                 profile_pic: 'random_user.jpg',
                 institution: '',
             },
-            read_access: [t("no_auth.username")],
-            write_access: [t("no_auth.username")],
+            read_access: [t('no_auth.username')],
+            write_access: [t('no_auth.username')],
             creation_timestamp: new Date(Date.now() - 24 * 2525 * 1000).toISOString(),
             last_modified: new Date(Date.now() - 2000 * 1000).toISOString(),
             is_good_practise: true,
@@ -216,16 +216,16 @@ function PlansNoAuthPreview() {
         },
         {
             _id: '2',
-            name: t("no_auth.plan_name"),
+            name: t('no_auth.plan_name'),
             author: {
-                username: t("no_auth.username"),
-                first_name: t("no_auth.first_name"),
-                last_name: t("no_auth.last_name"),
+                username: t('no_auth.username'),
+                first_name: t('no_auth.first_name'),
+                last_name: t('no_auth.last_name'),
                 profile_pic: 'random_user.jpg',
                 institution: '',
             },
-            read_access: [t("no_auth.username")],
-            write_access: [t("no_auth.username")],
+            read_access: [t('no_auth.username')],
+            write_access: [t('no_auth.username')],
             creation_timestamp: new Date(Date.now() - 24 * 1620 * 1000).toISOString(), // yesterday
             last_modified: new Date(Date.now() - 3430 * 1000).toISOString(), // one hour age
             is_good_practise: false,
@@ -302,7 +302,7 @@ function PlansNoAuthPreview() {
                 refetchPlansCallback={async () => {}}
                 isNoAuthPreview={true}
             />
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-transparent via-slate-100/65 to-slate-100 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
         </div>
     );
 }
