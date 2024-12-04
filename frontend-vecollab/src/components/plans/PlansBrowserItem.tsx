@@ -338,21 +338,25 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     }
                 }}
             >
-                <div className="flex flex-wrap xl:flex-nowrap items-center">
-                    <div
-                        className="mr-2 py-1 font-bold whitespace-nowrap truncate"
-                        title={plan.name}
-                    >
-                        <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
-                            {plan.name}
-                        </Link>
+                <div className="flex items-center flex-wrap">
+                    <div className="flex order-1 truncate items-center">
+                        <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
+                            <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
+                                {plan.name}
+                            </Link>
+                        </div>
+                        {plan.is_good_practise && (
+                            <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
+                                <FaMedal title={t('plans_marked_as_good_practise')} />
+                            </div>
+                        )}
                     </div>
-                    {plan.is_good_practise && (
-                        <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
-                            <FaMedal title={t('plans_marked_as_good_practise')} />
+                    {plan.topics.length > 0 && (
+                        <div className="w-full order-2 xl:order-3 mr-2 py-1 text-gray-700 truncate">
+                            {plan.topics.join(' / ')}
                         </div>
                     )}
-                    <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="order-3 xl:order-2 flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <ViewButton />
                         {plan.write_access.includes(username) && (
                             <>
@@ -388,11 +392,19 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             </div>
 
             <div className="basis-1/6 hidden md:block">
-                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                <Timestamp
+                    timestamp={plan.last_modified}
+                    className="text-sm"
+                    dateFormat="dd. MMM yy"
+                />
             </div>
 
             <div className="basis-1/6 hidden md:block">
-                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
+                <Timestamp
+                    timestamp={plan.creation_timestamp}
+                    className="text-sm"
+                    dateFormat="dd. MMM yy"
+                />
             </div>
 
             <ShareDialog />
