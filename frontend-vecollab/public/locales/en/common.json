@@ -359,12 +359,15 @@
     "no_auth": {
         "page_behind_login": "This page is only accessible if you are logged in",
         "username": "John Doe",
+        "first_name": "John",
+        "last_name": "Doe",
         "institution": "Example Institution",
         "ve_content1": "Social Media",
         "ve_content2": "Ethnicity",
         "ve_experience1": "1x VE with Spanish university",
         "group_name1": "VE Foreign Languages",
         "group_description1": "Get-together for VE in the foreign languages field",
-        "group_name2": "Climate Change"
+        "group_name2": "Climate Change",
+        "plan_name": "Plan VE summer term 2025"
     }
 }

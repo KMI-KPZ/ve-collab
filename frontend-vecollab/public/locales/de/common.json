@@ -359,12 +359,15 @@
     "no_auth": {
         "page_behind_login": "Diese Seite ist nur für angemeldete Nutzer:innen zugänglich.",
         "username": "Max Mustermann",
+        "first_name": "Max",
+        "last_name": "Mustermann",
         "institution": "Musterinstitution",
         "ve_content1": "Soziale Medien",
         "ve_content2": "Ethnische Fragestellungen",
         "ve_experience1": "1x VE mit spanischer Universität",
         "group_name1": "VE Fremdsprachen",
         "group_description1": "Austausch und Treff für VE's im Fremdsprachenbereich",
-        "group_name2": "Klimawandel"
+        "group_name2": "Klimawandel",
+        "plan_name": "Planung VE Sommersemester 2025"
     }
 }
