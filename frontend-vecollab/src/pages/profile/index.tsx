@@ -257,7 +257,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
     );
 }
 
-function UserProfileNoAuthPreview() {
+export function UserProfileNoAuthPreview() {
     const { t } = useTranslation(['community', 'common']);
 
     return (

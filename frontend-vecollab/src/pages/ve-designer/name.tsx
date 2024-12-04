@@ -19,6 +19,7 @@ interface Props {
 }
 
 Name.auth = true;
+Name.autoForward = true;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);

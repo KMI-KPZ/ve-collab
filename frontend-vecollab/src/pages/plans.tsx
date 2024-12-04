@@ -2,7 +2,6 @@ import { useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
 import { PlansBrowserFilter } from '@/components/plans/PlansBrowserFilter';
@@ -38,8 +37,9 @@ interface Props {
     socket: Socket;
 }
 
-// authentication is required on this page
 Plans.auth = true;
+Plans.noAuthPreview = <PlansNoAuthPreview />;
+
 export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
@@ -172,6 +172,10 @@ export default function Plans({ socket }: Props) {
             )}
         </>
     );
+}
+
+function PlansNoAuthPreview() {
+    return <div>fasel blubber</div>;
 }
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {

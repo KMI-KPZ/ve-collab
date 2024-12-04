@@ -45,6 +45,7 @@ const areAllValuesEmpty = (lecture: LectureOld): boolean => {
 };
 
 Lectures.auth = true;
+Lectures.autoForward = true;
 export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);

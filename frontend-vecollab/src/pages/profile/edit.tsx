@@ -105,6 +105,7 @@ interface Props {
 }
 
 EditProfile.auth = true;
+EditProfile.autoForward = true;
 export default function EditProfile({ optionLists }: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
 

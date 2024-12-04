@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client';
-import UserProfile from '..';
+import UserProfile, { UserProfileNoAuthPreview } from '..';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
@@ -11,6 +11,8 @@ interface Props {
 }
 
 SelectedUserProfile.auth = true;
+SelectedUserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
+
 export default function SelectedUserProfile({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['community', 'common']);

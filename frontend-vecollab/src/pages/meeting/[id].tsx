@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import CustomHead from '@/components/metaData/CustomHead';
 
 Meeting.auth = true;
+Meeting.autoForward = true;
 export default function Meeting() {
     const router = useRouter();
     const id = router.query.id as string;
