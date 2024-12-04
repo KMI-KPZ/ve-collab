@@ -21,6 +21,8 @@ import Swiper_LoggedIn from './Swiper_LoggedIn';
 
 import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
+import badgeBird from '@/images/badges/bird_copper.png';
+import badgeOctopus from '@/images/badges/octopus_copper.png';
 
 interface Props {
     notificationEvents: Notification[];
@@ -118,6 +120,24 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             </div>
                             <div className="pl-4">
                                 <span>{profileInformation.follows.length}</span> {t('followers')}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 border-t pt-4">
+                            <H2 className="mb-4">{t('achievements')}</H2>
+                            <div className="flex flex-wrap gap-4">
+                                <Image
+                                    src={badgeBird}
+                                    alt={'badge images'}
+                                    title="VE Impacr ... Level XX"
+                                    className="w-[72px] rounded-full"
+                                />
+                                <Image
+                                    src={badgeOctopus}
+                                    alt={'badge images'}
+                                    title="Social Impact ... Level XX"
+                                    className="w-[72px] rounded-full"
+                                />
                             </div>
                         </div>
 
