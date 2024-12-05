@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import DialogUserList from './DialogUserList';
 import { useTranslation } from 'next-i18next';
+import { is } from 'date-fns/locale';
 
 interface Props {
     follows: string[];
@@ -14,15 +15,16 @@ interface Props {
     followers: string[];
     foreignUser: boolean;
     username: string;
+    isNoAuthPreview?: boolean;
 }
 
-ProfileBanner.auth = true;
 export default function ProfileBanner({
     follows,
     setFollows,
     followers,
     foreignUser,
     username,
+    isNoAuthPreview = false,
 }: Props) {
     const { data: session, status } = useSession();
     const { t } = useTranslation(['community', 'common']);
@@ -40,6 +42,8 @@ export default function ProfileBanner({
     ]);
 
     const handleOpenFollowingDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsFollowingDialogOpen(true);
         setLoading(true);
         fetchPOST('/profile_snippets', { usernames: follows }, session?.accessToken).then(
@@ -57,10 +61,14 @@ export default function ProfileBanner({
         );
     };
     const handleCloseFollowingDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsFollowingDialogOpen(false);
     };
 
     const handleOpenFollowerDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsFollowerDialogOpen(true);
         setLoading(true);
         fetchPOST('/profile_snippets', { usernames: followers }, session?.accessToken).then(
@@ -78,10 +86,14 @@ export default function ProfileBanner({
         );
     };
     const handleCloseFollowerDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsFollowerDialogOpen(false);
     };
 
     const unfollowUser = (username: string) => {
+        if (isNoAuthPreview) return;
+
         fetchDELETE(`/follow?user=${username}`, {}, session?.accessToken).then(() => {
             const removedUser = followingSnippets.filter(
                 (snippet) => snippet.preferredUsername !== username
@@ -95,7 +107,11 @@ export default function ProfileBanner({
         <>
             <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
                 <Image className={'z-10'} fill src={blueBackground} alt={t('background_picture')} />
-                <div className={'flex absolute bottom-5 right-14 divide-x z-20 cursor-pointer'}>
+                <div
+                    className={`flex absolute bottom-5 right-14 divide-x z-20 ${
+                        isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                    }`}
+                >
                     <div
                         className={'pr-6 text-lg text-white'}
                         onClick={(e) => {
@@ -118,32 +134,36 @@ export default function ProfileBanner({
                     </div>
                 </div>
             </div>
-            <Dialog
-                isOpen={isFollowingDialogOpen}
-                title={t('user_follows', { username: username })}
-                onClose={handleCloseFollowingDialog}
-            >
-                <DialogUserList
-                    loading={loading}
-                    userSnippets={followingSnippets}
-                    closeCallback={handleCloseFollowingDialog}
-                    trashOption={true}
-                    foreignUser={foreignUser}
-                    trashCallback={unfollowUser}
-                />
-            </Dialog>
-            <Dialog
-                isOpen={isFollowerDialogOpen}
-                title={t("users_that_follow", {username: username})}
-                onClose={handleCloseFollowerDialog}
-            >
-                <DialogUserList
-                    loading={loading}
-                    userSnippets={followerSnippets}
-                    closeCallback={handleCloseFollowerDialog}
-                    trashOption={false}
-                />
-            </Dialog>
+            {!isNoAuthPreview && (
+                <>
+                    <Dialog
+                        isOpen={isFollowingDialogOpen}
+                        title={t('user_follows', { username: username })}
+                        onClose={handleCloseFollowingDialog}
+                    >
+                        <DialogUserList
+                            loading={loading}
+                            userSnippets={followingSnippets}
+                            closeCallback={handleCloseFollowingDialog}
+                            trashOption={true}
+                            foreignUser={foreignUser}
+                            trashCallback={unfollowUser}
+                        />
+                    </Dialog>
+                    <Dialog
+                        isOpen={isFollowerDialogOpen}
+                        title={t('users_that_follow', { username: username })}
+                        onClose={handleCloseFollowerDialog}
+                    >
+                        <DialogUserList
+                            loading={loading}
+                            userSnippets={followerSnippets}
+                            closeCallback={handleCloseFollowerDialog}
+                            trashOption={false}
+                        />
+                    </Dialog>
+                </>
+            )}
         </>
     );
 }

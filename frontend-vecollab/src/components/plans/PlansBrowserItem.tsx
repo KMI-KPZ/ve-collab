@@ -27,9 +27,14 @@ import { HiOutlineCheckCircle } from 'react-icons/hi';
 interface Props {
     plan: PlanPreview;
     refetchPlansCallback: () => Promise<void>;
+    isNoAuthPreview?: boolean;
 }
 
-export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) {
+export default function PlansBrowserItem({
+    plan,
+    refetchPlansCallback,
+    isNoAuthPreview = false,
+}: Props) {
     const { data: session } = useSession();
     const router = useRouter();
     const { t } = useTranslation('common');
@@ -86,6 +91,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         });
     };
 
+    if (isNoAuthPreview) {
+        return <PlansBrowserItemNoAuthPreview {...plan} />;
+    }
     // ensures that we have the username in the next return ...
     if (!session || !username) return <></>;
 
@@ -229,7 +237,9 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
                     className="text-green-600"
                     title={
                         plan.read_access.length > 2
-                            ? t('plans_shared_with_x_users', { count: plan.read_access.length - 1 })
+                            ? t('plans_shared_with_x_users', {
+                                  count: plan.read_access.length - 1,
+                              })
                             : t('plans_shared_with_1_user')
                     }
                 />
@@ -314,13 +324,16 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
         <>
             <div className="basis-1/12 flex justify-center">
                 {isPlanProgressCompleted() ? (
-                    <span className="cursor-pointer" title='Alle Schritte als "erledigt" markiert'>
+                    <span className="cursor-pointer" title={t('plans_title_all_steps_completed')}>
                         <HiOutlineCheckCircle size={23} />
                     </span>
                 ) : (
                     <span
                         className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer"
-                        title={`${completedSteps} von ${stepsToProgress} Schritten als "erledigt" markiert`}
+                        title={t('plans_title_partial_steps_completed', {
+                            count: completedSteps,
+                            total: stepsToProgress,
+                        })}
                     >
                         {completedSteps} / {stepsToProgress}
                     </span>
@@ -422,6 +435,87 @@ export default function PlansBrowserItem({ plan, refetchPlansCallback }: Props) 
             )}
 
             <Alert state={alert} />
+        </>
+    );
+}
+
+function PlansBrowserItemNoAuthPreview(plan: PlanPreview) {
+    const { t } = useTranslation('common');
+
+    const stepsToProgress =
+        Object.keys(initialSideProgressBarStates).filter((a) => a !== 'steps').length +
+        plan.steps.length;
+
+    const completedSteps =
+        Object.keys(plan.progress).filter(
+            (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
+        ).length +
+        plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
+
+    const isPlanProgressCompleted = () => completedSteps == stepsToProgress;
+
+    const username = 'John Doe';
+    return (
+        <>
+            <div className="basis-1/12 flex justify-center">
+                {isPlanProgressCompleted() ? (
+                    <span title={t('plans_title_all_steps_completed')}>
+                        <HiOutlineCheckCircle size={23} />
+                    </span>
+                ) : (
+                    <span
+                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap"
+                        title={t('plans_title_partial_steps_completed', {
+                            count: completedSteps,
+                            total: stepsToProgress,
+                        })}
+                    >
+                        {completedSteps} / {stepsToProgress}
+                    </span>
+                )}
+            </div>
+
+            <div className="grow md:basis-5/12 font-normal text-base group truncate">
+                <div className="flex flex-wrap xl:flex-nowrap items-center">
+                    <div
+                        className="mr-2 py-1 font-bold whitespace-nowrap truncate"
+                        title={plan.name}
+                    >
+                        <div>{plan.name}</div>
+                    </div>
+                    {plan.is_good_practise && (
+                        <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
+                            <FaMedal title={t('plans_marked_as_good_practise')} />
+                        </div>
+                    )}
+                    <div className="flex text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </div>
+            </div>
+
+            <div className="basis-1/6 truncate">
+                {plan.author.username === username ? (
+                    <>
+                        {plan.author.first_name} {plan.author.last_name}
+                    </>
+                ) : (
+                    <span
+                        title={t('plans_shared_by', {
+                            name: `${plan.author.first_name} ${plan.author.last_name}`,
+                        })}
+                    >
+                        <MdShare className="inline m-1 text-slate-900" /> {plan.author.first_name}{' '}
+                        {plan.author.last_name}
+                    </span>
+                )}
+            </div>
+
+            <div className="basis-1/6 hidden md:block">
+                <Timestamp timestamp={plan.last_modified} className="text-sm" />
+            </div>
+
+            <div className="basis-1/6 hidden md:block">
+                <Timestamp timestamp={plan.creation_timestamp} className="text-sm" />
+            </div>
         </>
     );
 }

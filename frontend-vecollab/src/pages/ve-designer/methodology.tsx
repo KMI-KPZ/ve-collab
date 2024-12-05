@@ -31,6 +31,7 @@ interface Props {
 }
 
 Methodology.auth = true;
+Methodology.autoForward = true;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns

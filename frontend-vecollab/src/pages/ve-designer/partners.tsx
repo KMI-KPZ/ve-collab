@@ -40,6 +40,7 @@ interface Props {
 }
 
 Partners.auth = true;
+Partners.autoForward = true;
 export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();

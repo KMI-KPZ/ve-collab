@@ -14,6 +14,7 @@ interface Props {
 
 // Error page for the case that the user tries to access the fine planning without having set any steps
 NoStep.auth = true;
+NoStep.autoForward = true;
 export default function NoStep({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);

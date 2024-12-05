@@ -2,7 +2,6 @@ import { useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MdKeyboardDoubleArrowRight } from 'react-icons/md';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
 import { PlansBrowserFilter } from '@/components/plans/PlansBrowserFilter';
@@ -18,6 +17,7 @@ import Image from 'next/image';
 
 import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
+import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 
 export interface IfilterBy {
     /** compare function
@@ -38,8 +38,9 @@ interface Props {
     socket: Socket;
 }
 
-// authentication is required on this page
 Plans.auth = true;
+Plans.noAuthPreview = <PlansNoAuthPreview />;
+
 export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
@@ -147,11 +148,7 @@ export default function Plans({ socket }: Props) {
                 </div>
             </div>
 
-            <PlansBrowserFilter
-                socket={socket}
-                filterBy={filterBy}
-                filterByCallback={handleFilterBy}
-            />
+            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy} />
 
             {typeof error !== 'undefined' && (
                 <Alert type="error" message={'Error loading plans. See console for details.'} />
@@ -171,6 +168,142 @@ export default function Plans({ socket }: Props) {
                 />
             )}
         </>
+    );
+}
+
+function PlansNoAuthPreview() {
+    const { t } = useTranslation('common');
+
+    const filterBy = [
+        {
+            compare: () => true,
+            id: 'author',
+            value: undefined,
+        },
+    ];
+    const sortBy: IsortBy = { key: 'last_modified', order: 'ASC' };
+    const examplePlans: PlanPreview[] = [
+        {
+            _id: '1',
+            name: 'VE Leipzig - Kuala Lumpur',
+            author: {
+                username: t('no_auth.username'),
+                first_name: t('no_auth.first_name'),
+                last_name: t('no_auth.last_name'),
+                profile_pic: 'random_user.jpg',
+                institution: '',
+            },
+            read_access: [t('no_auth.username')],
+            write_access: [t('no_auth.username')],
+            creation_timestamp: new Date(Date.now() - 24 * 2525 * 1000).toISOString(),
+            last_modified: new Date(Date.now() - 2000 * 1000).toISOString(),
+            is_good_practise: true,
+            steps: [],
+            progress: {
+                name: 'completed' as ProgressState,
+                partners: 'completed' as ProgressState,
+                institutions: 'completed' as ProgressState,
+                lectures: 'completed' as ProgressState,
+                target_groups: 'completed' as ProgressState,
+                learning_goals: 'completed' as ProgressState,
+                learning_env: 'completed' as ProgressState,
+                methodical_approaches: 'completed' as ProgressState,
+                evaluation: 'completed' as ProgressState,
+                checklist: 'completed' as ProgressState,
+                stepsGenerally: 'completed' as ProgressState,
+                steps: [],
+            },
+        },
+        {
+            _id: '2',
+            name: t('no_auth.plan_name'),
+            author: {
+                username: t('no_auth.username'),
+                first_name: t('no_auth.first_name'),
+                last_name: t('no_auth.last_name'),
+                profile_pic: 'random_user.jpg',
+                institution: '',
+            },
+            read_access: [t('no_auth.username')],
+            write_access: [t('no_auth.username')],
+            creation_timestamp: new Date(Date.now() - 24 * 1620 * 1000).toISOString(), // yesterday
+            last_modified: new Date(Date.now() - 3430 * 1000).toISOString(), // one hour age
+            is_good_practise: false,
+            steps: [],
+            progress: {
+                name: 'completed' as ProgressState,
+                partners: 'completed' as ProgressState,
+                institutions: 'completed' as ProgressState,
+                lectures: 'completed' as ProgressState,
+                target_groups: 'completed' as ProgressState,
+                learning_goals: 'completed' as ProgressState,
+                learning_env: 'completed' as ProgressState,
+                methodical_approaches: 'not_started' as ProgressState,
+                evaluation: 'not_started' as ProgressState,
+                checklist: 'not_started' as ProgressState,
+                stepsGenerally: 'not_started' as ProgressState,
+                steps: [],
+            },
+        },
+    ];
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+
+            <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
+                <div>
+                    <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
+                    <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
+                </div>
+
+                <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
+                    <div className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center">
+                        <Image
+                            src={handsPuzzleImg}
+                            alt={t('find_ve_partners')}
+                            className="w-[96px] rounded-full"
+                        />
+                        <div className="font-bold text-center text-wrap xl:w-1/2">
+                            {t('find_ve_partners')}
+                        </div>
+                    </div>
+
+                    <ButtonNewPlan
+                        label={t('btn_new_va')}
+                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-default"
+                        isNoAuthPreview={true}
+                    >
+                        <div className="flex flex-wrap items-center justify-center ">
+                            <Image
+                                src={newFormImg}
+                                alt={t('btn_new_va')}
+                                className="w-[96px] rounded-full"
+                            />
+                            <div className="font-bold text-center text-wrap xl:w-1/2">
+                                {t('btn_new_va')}
+                            </div>
+                        </div>
+                    </ButtonNewPlan>
+                </div>
+            </div>
+
+            <PlansBrowserFilter
+                filterBy={filterBy}
+                filterByCallback={() => {}}
+                isNoAuthPreview={true}
+            />
+
+            <PlansBrowser
+                plans={examplePlans}
+                sortBy={sortBy}
+                filterBy={filterBy}
+                sortByCallback={() => {}}
+                refetchPlansCallback={async () => {}}
+                isNoAuthPreview={true}
+            />
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
+        </div>
     );
 }
 

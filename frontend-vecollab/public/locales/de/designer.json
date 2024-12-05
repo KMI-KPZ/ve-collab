@@ -101,7 +101,7 @@
         "title": "Zielgruppen & Sprachen",
         "subtitle": "An welche Zielgruppen richtet sich der VE?",
         "description": "Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VE optimal an die Lernenden anzupassen. Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.",
-        "tooltip": "Mehr zu Sprache(n) im VA findest du hier in den Selbstlernmaterialien …",
+        "tooltip": "Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …",
         "semester": "Semester",
         "semester_placeholder": "In welchem Semester sind die Studierenden? Mehrere durch Komma trennen",
         "language_title": "In welchen Sprachen findet der VE (hauptsächlich) statt?",
@@ -133,7 +133,7 @@
         "2-option8": "Förderung der Sprachkompetenz",
         "2-option9": "Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)",
         "3-title": "3. Zu welchem Thema / welchen Themen findet der VE statt?",
-        "3-subtitle": "Überlegt euch, welche inhaltlichen Themen ihr in eurem VA behandeln wollt. Diese können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.",
+        "3-subtitle": "Überlegt euch, welche inhaltlichen Themen ihr in eurem VE behandeln wollt. Diese können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.",
         "3-tooltip": "Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …",
         "3-placeholder": "Thema eingeben"
     },
@@ -156,7 +156,7 @@
     },
     "methodology": {
         "title": "Methodischer Ansatz",
-        "subtitle": "Welcher methodische Ansatz liegt eurem VA zugrunde?",
+        "subtitle": "Welcher methodische Ansatz liegt eurem VE zugrunde?",
         "description": "Falls keiner der Vorschläge eurem Ansatz entspricht, könnt ihr durch Schreiben im Feld auch individuelle Eingaben hinzufügen.",
         "tooltip": "Mehr zu Methodik findest du hier in den Selbstlernmaterialien",
         "placeholder": "Ansätze auswählen oder neue hinzufügen",

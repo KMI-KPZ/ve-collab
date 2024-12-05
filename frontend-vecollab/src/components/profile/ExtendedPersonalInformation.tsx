@@ -27,24 +27,26 @@ interface Props {
         educations: Education[];
         workExperience: WorkExperience[];
     };
+    isNoAuthPreview?: boolean;
 }
 
 export default function ExtendedPersonalInformation({
     veInfo,
     researchAndTeachingInfo,
     cvInfo,
+    isNoAuthPreview = false,
 }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
     return (
-        <Tabs>
-            <div tabid="ve_info" tabname={t("ve_info")}>
+        <Tabs isNoAuthPreview={isNoAuthPreview}>
+            <div tabid="ve_info" tabname={t('ve_info')}>
                 <VEInformation veInfo={veInfo} />
             </div>
-            <div tabid="teaching_research" tabname={t("research_and_teaching")}>
+            <div tabid="teaching_research" tabname={t('research_and_teaching')}>
                 <TeachingAndResearchInformation researchAndTeachingInfo={researchAndTeachingInfo} />
             </div>
-            <div tabid="cv" tabname={t("cv")}>
+            <div tabid="cv" tabname={t('cv')}>
                 <CVInformation cvInfo={cvInfo} />
             </div>
         </Tabs>

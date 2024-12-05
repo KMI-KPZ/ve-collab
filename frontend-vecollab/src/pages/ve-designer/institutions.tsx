@@ -50,6 +50,7 @@ interface Props {
 }
 
 Institutions.auth = true;
+Institutions.autoForward = true;
 export default function Institutions({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();

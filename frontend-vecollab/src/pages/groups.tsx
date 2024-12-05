@@ -23,6 +23,8 @@ import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 
 Groups.auth = true;
+Groups.noAuthPreview = <GroupsNoAuthPreview />;
+
 export default function Groups() {
     const { data: session, status } = useSession();
     const { t } = useTranslation(['community', 'common']);
@@ -575,6 +577,71 @@ export default function Groups() {
                 </Dialog>
             </div>
         </>
+    );
+}
+
+function GroupsNoAuthPreview() {
+    const { t } = useTranslation(['community', 'common']);
+    const exampleGroups = [
+        {
+            name: t("common:no_auth.group_name1"),
+            space_description: t("common:no_auth.group_description1"),
+        },
+        {
+            name: t("common:no_auth.group_name2"),
+        },
+        {
+            _id: '3',
+            name: 'Group 3',
+            space_description: 'Description of Group 3',
+        },
+    ];
+    return (
+        <div className="opacity-40">
+            <CustomHead pageTitle={t('groups')} pageSlug={'groups'} />
+            <div className="mt-12">
+                <WhiteBox>
+                    <VerticalTabs isNoAuthPreview={true}>
+                        <div tabid="my_groups" tabname={t('my_groups')}>
+                            <div className="min-h-[63vh]">
+                                <BoxHeadline title={t('you_are_member_of_groups')} />
+                                <div className="divide-y my-4">
+                                    {exampleGroups.map((group, index) => (
+                                        <div key={index} className="px-2 pt-5 pb-3 flex">
+                                            <div className="flex-none">
+                                                <AuthenticatedImage
+                                                    imageId={'team-collab_sm.jpg'}
+                                                    alt={t('group_picture')}
+                                                    width={60}
+                                                    height={60}
+                                                    className="rounded-full"
+                                                    isNoAuthPreview={true}
+                                                ></AuthenticatedImage>
+                                            </div>
+                                            <div>
+                                                <BoxHeadline title={group.name} />
+                                                <div className="mx-2 px-1 my-1 text-gray-600">
+                                                    {group.space_description
+                                                        ? group.space_description
+                                                        : t('no_description_available')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div tabid="find_new_groups" tabname={t('find_new_groups')}></div>
+                        <div tabid="all_groups" tabname={t('common:all')}></div>
+                        <div
+                            tabid="requests_invitations"
+                            tabname={t('my_requests_and_invitations')}
+                        ></div>
+                    </VerticalTabs>
+                </WhiteBox>
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white to-white pointer-events-none"></div>
+        </div>
     );
 }
 
