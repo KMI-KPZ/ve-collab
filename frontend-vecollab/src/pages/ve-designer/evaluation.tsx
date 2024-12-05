@@ -44,6 +44,7 @@ interface Props {
 }
 
 Evaluation.auth = true;
+Evaluation.autoForward = true;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();

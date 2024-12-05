@@ -15,6 +15,7 @@ interface Props {
 }
 
 Finished.auth = true;
+Finished.autoForward = true;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const { t } = useTranslation(['designer', 'common']);
 

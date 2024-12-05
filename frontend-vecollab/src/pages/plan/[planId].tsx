@@ -14,6 +14,7 @@ import { GetServerSidePropsContext } from 'next';
 import CustomHead from '@/components/metaData/CustomHead';
 
 Plan.auth = true;
+Plan.autoForward = true;
 export default function Plan() {
     const { data: session } = useSession();
     const { t } = useTranslation('common');

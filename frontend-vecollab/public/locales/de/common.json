@@ -84,6 +84,8 @@
     "plans_table_author": "Autor*in",
     "plans_table_last_modified": "Geändert",
     "plans_table_created": "Erstellt",
+    "plans_title_all_steps_completed": "Alle Schritte als 'erledigt' markiert",
+    "plans_title_partial_steps_completed": "{{count}} von {{total}} Schritten als 'erledigt' markiert",
     "plans_no_good_practise_plan_shared": "Es wurde noch kein Good Practice Plan mit Dir geteilt.",
     "plans_no_plan_shared": "Es wurde noch kein Plan mit Dir geteilt.",
     "plans_no_good_practise_plan_created": "Du hast noch keinen Good Practice Plan erstellt.",
@@ -353,5 +355,19 @@
     "move_up": "Nach oben",
     "move_down": "Nach unten",
     "city": "Stadt",
-    "none": "Keine"
+    "none": "Keine",
+    "no_auth": {
+        "page_behind_login": "Diese Seite ist nur für angemeldete Nutzer:innen zugänglich.",
+        "username": "Max Mustermann",
+        "first_name": "Max",
+        "last_name": "Mustermann",
+        "institution": "Musterinstitution",
+        "ve_content1": "Soziale Medien",
+        "ve_content2": "Ethnische Fragestellungen",
+        "ve_experience1": "1x VE mit spanischer Universität",
+        "group_name1": "VE Fremdsprachen",
+        "group_description1": "Austausch und Treff für VE's im Fremdsprachenbereich",
+        "group_name2": "Klimawandel",
+        "plan_name": "Planung VE Sommersemester 2025"
+    }
 }

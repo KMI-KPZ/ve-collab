@@ -11,6 +11,7 @@ import { useState } from 'react';
 import CustomHead from '@/components/metaData/CustomHead';
 
 Matching.auth = true;
+Matching.autoForward = true;
 export default function Matching() {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);

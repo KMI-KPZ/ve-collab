@@ -54,6 +54,7 @@ interface Props {
 }
 
 LearningGoals.auth = true;
+LearningGoals.autoForward = true;
 export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();

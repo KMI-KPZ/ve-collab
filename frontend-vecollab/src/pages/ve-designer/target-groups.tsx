@@ -67,6 +67,7 @@ const emptyTG: TargetGroupWithLanguageOptions = {
 };
 
 TargetGroups.auth = true;
+TargetGroups.autoForward = true;
 export default function TargetGroups({ socket, languageKeys }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);

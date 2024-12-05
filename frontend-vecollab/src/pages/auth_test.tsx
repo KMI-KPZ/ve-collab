@@ -9,6 +9,7 @@ interface Props {
 }
 
 AuthComponentTest.auth = true;
+AuthComponentTest.autoForward = true;
 export default function AuthComponentTest(props: Props) {
     const { data: session } = useSession();
 

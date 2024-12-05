@@ -49,6 +49,7 @@ interface Props {
 }
 
 PostProcess.auth = true;
+PostProcess.autoForward = true;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();

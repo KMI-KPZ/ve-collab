@@ -61,6 +61,7 @@ interface Props {
 }
 
 StepNames.auth = true;
+StepNames.autoForward = true;
 export default function StepNames({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
