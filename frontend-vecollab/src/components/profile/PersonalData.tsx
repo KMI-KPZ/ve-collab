@@ -5,14 +5,13 @@ import TagBox from './TagBox';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
-    name: string;
     bio: string;
     expertise: string;
     birthday: string;
     languages: string[];
 }
 
-export default function PersonalData({ bio, name, expertise, birthday, languages }: Props) {
+export default function PersonalData({ bio, expertise, birthday, languages }: Props) {
     const { t } = useTranslation(['community', 'common']);
     return (
         <>
@@ -21,7 +20,6 @@ export default function PersonalData({ bio, name, expertise, birthday, languages
                 <li className={'pb-4'}>
                     <div className={'text-sm my-1'}>{bio}</div>
                 </li>
-                <PersonalInformationItem attributeName={t('common:name')} attributeValue={name} />
                 <PersonalInformationItem
                     attributeName={t('expertise')}
                     attributeValue={t('expertise_options.' + expertise, {

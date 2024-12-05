@@ -11,6 +11,7 @@ interface Props {
     filterBy: IfilterBy[];
     sortByCallback: (key: keyof PlanPreview) => void;
     refetchPlansCallback: () => Promise<void>;
+    isNoAuthPreview?: boolean;
 }
 
 export function PlansBrowser({
@@ -19,10 +20,13 @@ export function PlansBrowser({
     filterBy,
     sortByCallback,
     refetchPlansCallback,
+    isNoAuthPreview = false,
 }: Props) {
     const { t } = useTranslation('common');
 
     const SortArrow = ({ by }: { by: keyof PlanPreview }) => {
+        if (isNoAuthPreview) return <></>;
+
         if (by != sortBy.key) return <></>;
 
         return (
@@ -42,7 +46,9 @@ export function PlansBrowser({
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
                     <div className="basis-1/12 text-center">{t('plans_table_progress')}</div>
                     <div
-                        className="grow md:basis-5/12 hover:underline hover:cursor-pointer group"
+                        className={`grow md:basis-5/12 group ${
+                            isNoAuthPreview ? '' : 'hover:underline hover:cursor-pointer'
+                        }`}
                         onClick={() => sortByCallback('name')}
                     >
                         {t('plans_table_name')}
@@ -50,14 +56,18 @@ export function PlansBrowser({
                     </div>
                     <div className="basis-1/6">{t('plans_table_author')}</div>
                     <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group hidden md:block"
+                        className={`basis-1/6 group hidden md:block ${
+                            isNoAuthPreview ? '' : 'hover:underline hover:cursor-pointer'
+                        }`}
                         onClick={() => sortByCallback('last_modified')}
                     >
                         {t('plans_table_last_modified')}
                         <SortArrow by="last_modified" />
                     </div>
                     <div
-                        className="basis-1/6 hover:underline hover:cursor-pointer group hidden md:block"
+                        className={`basis-1/6 group hidden md:block ${
+                            isNoAuthPreview ? '' : 'hover:underline hover:cursor-pointer'
+                        }`}
                         onClick={() => sortByCallback('creation_timestamp')}
                     >
                         {t('plans_table_created')}
@@ -80,12 +90,15 @@ export function PlansBrowser({
                         plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className="flex flex-row py-3 px-1 space-x-3 items-center border-b border-bg-gray-300 hover:bg-gray-100"
+                                className={`flex flex-row py-3 px-1 space-x-3 items-center border-b border-bg-gray-300 ${
+                                    isNoAuthPreview ? '' : 'hover:bg-gray-100'
+                                }`}
                             >
                                 <PlansBrowserItem
                                     key={index}
                                     plan={plan}
                                     refetchPlansCallback={refetchPlansCallback}
+                                    isNoAuthPreview={isNoAuthPreview}
                                 />
                             </div>
                         ))

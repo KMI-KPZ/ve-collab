@@ -13,6 +13,7 @@ interface Props {
 }
 
 Etherpad.auth = true;
+Etherpad.autoForward = true;
 export default function Etherpad({
     padID,
     error,

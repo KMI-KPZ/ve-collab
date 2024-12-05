@@ -49,6 +49,7 @@ interface Props {
 }
 
 PostProcess.auth = true;
+PostProcess.autoForward = true;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -350,6 +351,7 @@ export default function PostProcess({ socket }: Props) {
                                     href={
                                         'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'
                                     }
+                                    target='_blank'
                                 >
                                     CC-BY-NC-ND 4.0
                                 </Link>

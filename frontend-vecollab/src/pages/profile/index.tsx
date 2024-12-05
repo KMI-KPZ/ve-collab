@@ -30,6 +30,8 @@ interface Props {
 }
 
 UserProfile.auth = true;
+UserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
+
 export default function UserProfile({ socket }: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
 
@@ -238,11 +240,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>
                                 <PersonalData
-                                    name={
-                                        personalInformation.firstName +
-                                        ' ' +
-                                        personalInformation.lastName
-                                    }
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
                                     birthday={personalInformation.birthday}
@@ -257,6 +254,110 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 </>
             )}
         </>
+    );
+}
+
+export function UserProfileNoAuthPreview() {
+    const { t } = useTranslation(['community', 'common']);
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('common:profile')} pageSlug={'profile'} />
+            <ProfileBanner
+                follows={[]}
+                setFollows={() => {}}
+                followers={[]}
+                foreignUser={false}
+                username={t('common:no_auth.username')}
+                isNoAuthPreview={true}
+            />
+            <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
+                <ProfileHeader
+                    name={t('common:no_auth.username')}
+                    institution={t('common:no_auth.institution')}
+                    profilePictureUrl={'random_user.jpg'}
+                    foreignUser={true}
+                    followers={[]}
+                    veReady={true}
+                    isNoAuthPreview={true}
+                />
+            </div>
+            <div className={'mx-20 flex'}>
+                <div className={'w-3/4  mr-4'}>
+                    <WhiteBox>
+                        <ExtendedPersonalInformation
+                            isNoAuthPreview={true}
+                            veInfo={{
+                                veInterests: [
+                                    'Subject-specific Implementation Options',
+                                    'Methods and Task Formats',
+                                    'Implementation',
+                                ],
+                                veContents: [
+                                    t('common:no_auth.ve_content1'),
+                                    t('common:no_auth.ve_content2'),
+                                ],
+                                veGoals: [
+                                    'Promotion of Communicative Competences',
+                                    'Interdisciplinary Exchange',
+                                    'International Cooperation',
+                                ],
+                                experience: [t('common:no_auth:ve_experience1')],
+                                interdisciplinaryExchange: true,
+                                preferredFormat: 'synchronous and asynchronous',
+                            }}
+                            researchAndTeachingInfo={{
+                                researchTags: [''],
+                                courses: [
+                                    {
+                                        title: '',
+                                        academic_courses: '',
+                                        semester: '',
+                                    },
+                                ],
+                                lms: [''],
+                                tools: [''],
+                            }}
+                            cvInfo={{
+                                educations: [
+                                    {
+                                        institution: '',
+                                        degree: '',
+                                        department: '',
+                                        timestamp_from: '',
+                                        timestamp_to: '',
+                                        additional_info: '',
+                                    },
+                                ],
+                                workExperience: [
+                                    {
+                                        position: '',
+                                        institution: '',
+                                        department: '',
+                                        timestamp_from: '',
+                                        timestamp_to: '',
+                                        city: '',
+                                        country: '',
+                                        additional_info: '',
+                                    },
+                                ],
+                            }}
+                        />
+                    </WhiteBox>
+                </div>
+                <div className={'w-1/4  ml-4'}>
+                    <WhiteBox>
+                        <PersonalData
+                            bio={'VE Enthusiast'}
+                            expertise={'Cultural Studies'}
+                            birthday={'1988-01-01'}
+                            languages={['English', 'German']}
+                        />
+                    </WhiteBox>
+                </div>
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

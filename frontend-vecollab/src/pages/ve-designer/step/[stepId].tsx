@@ -112,6 +112,7 @@ interface Props {
 }
 
 FinePlanner.auth = true;
+FinePlanner.autoForward = true;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();

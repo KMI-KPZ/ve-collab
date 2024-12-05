@@ -30,6 +30,7 @@ interface Props {
 }
 
 Post.auth = true;
+Post.autoForward = true;
 export default function Post({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const router = useRouter();

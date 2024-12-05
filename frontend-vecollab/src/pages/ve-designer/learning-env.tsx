@@ -51,8 +51,9 @@ const emptyPysicalMobility: PhysicalMobility = {
     timestamp_to: '',
 };
 
-Methodology.auth = true;
-export default function Methodology({ socket }: Props): JSX.Element {
+LearningEnv.auth = true;
+LearningEnv.autoForward = true;
+export default function LearningEnv({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
     const prevpage = '/ve-designer/learning-goals';

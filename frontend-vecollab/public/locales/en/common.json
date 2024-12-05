@@ -84,6 +84,8 @@
     "plans_table_author": "Author",
     "plans_table_last_modified": "Last modified",
     "plans_table_created": "Created",
+    "plans_title_all_steps_completed": "All steps marked as 'completed'",
+    "plans_title_partial_steps_completed": "{{count}} of {{total}} steps marked as 'completed'",
     "plans_no_good_practise_plan_shared": "Nobody shared good practice examples with you yet.",
     "plans_no_plan_shared": "Nobody shared plans with you yet.",
     "plans_no_good_practise_plan_created": "You have not created any good practice plans yet.",
@@ -353,5 +355,19 @@
     "move_up": "Move up",
     "move_down": "Move down",
     "city": "City",
-    "none": "None"
+    "none": "None",
+    "no_auth": {
+        "page_behind_login": "This page is only accessible if you are logged in",
+        "username": "John Doe",
+        "first_name": "John",
+        "last_name": "Doe",
+        "institution": "Example Institution",
+        "ve_content1": "Social Media",
+        "ve_content2": "Ethnicity",
+        "ve_experience1": "1x VE with Spanish university",
+        "group_name1": "VE Foreign Languages",
+        "group_description1": "Get-together for VE in the foreign languages field",
+        "group_name2": "Climate Change",
+        "plan_name": "Plan VE summer term 2025"
+    }
 }
