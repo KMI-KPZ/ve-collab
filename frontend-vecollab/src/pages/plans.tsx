@@ -199,6 +199,7 @@ function PlansNoAuthPreview() {
             last_modified: new Date(Date.now() - 2000 * 1000).toISOString(),
             is_good_practise: true,
             steps: [],
+            topics: [],
             progress: {
                 name: 'completed' as ProgressState,
                 partners: 'completed' as ProgressState,
@@ -230,6 +231,7 @@ function PlansNoAuthPreview() {
             last_modified: new Date(Date.now() - 3430 * 1000).toISOString(), // one hour age
             is_good_practise: false,
             steps: [],
+            topics: [],
             progress: {
                 name: 'completed' as ProgressState,
                 partners: 'completed' as ProgressState,

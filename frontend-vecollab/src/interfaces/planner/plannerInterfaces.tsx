@@ -19,6 +19,7 @@ export interface PlanPreview {
     last_modified: string;
     progress: ISideProgressBarStates;
     is_good_practise: boolean;
+    topics: string[];
     steps: IFineStep[];
 }
 
