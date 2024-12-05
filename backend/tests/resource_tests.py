@@ -1057,28 +1057,14 @@ class PostResourceTest(BaseResourceTestCase):
                         "system": "email",
                     },
                     "achievements": {
-                        "social": [
-                            {"type": "create_posts", "progress": 0, "level": None},
-                            {"type": "create_comments", "progress": 0, "level": None},
-                            {"type": "give_likes", "progress": 0, "level": None},
-                            {"type": "posts_liked", "progress": 0, "level": None},
-                            {"type": "join_groups", "progress": 0, "level": None},
-                            {"type": "admin_groups", "progress": 0, "level": None},
-                        ],
-                        "ve": [
-                            {"type": "ve_plans", "progress": 0, "level": None},
-                            {
-                                "type": "good_practice_plans",
-                                "progress": 0,
-                                "level": None,
-                            },
-                            {"type": "unique_partners", "progress": 0, "level": None},
-                        ],
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
                         "tracking": {
                             "good_practice_plans": [],
                             "unique_partners": [],
                         },
                     },
+                    "chosen_achievement": None,
                 },
                 {
                     "username": CURRENT_USER.username,
@@ -1112,28 +1098,14 @@ class PostResourceTest(BaseResourceTestCase):
                         "system": "email",
                     },
                     "achievements": {
-                        "social": [
-                            {"type": "create_posts", "progress": 0, "level": None},
-                            {"type": "create_comments", "progress": 0, "level": None},
-                            {"type": "give_likes", "progress": 0, "level": None},
-                            {"type": "posts_liked", "progress": 0, "level": None},
-                            {"type": "join_groups", "progress": 0, "level": None},
-                            {"type": "admin_groups", "progress": 0, "level": None},
-                        ],
-                        "ve": [
-                            {"type": "ve_plans", "progress": 0, "level": None},
-                            {
-                                "type": "good_practice_plans",
-                                "progress": 0,
-                                "level": None,
-                            },
-                            {"type": "unique_partners", "progress": 0, "level": None},
-                        ],
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
                         "tracking": {
                             "good_practice_plans": [],
                             "unique_partners": [],
                         },
                     },
+                    "chosen_achievement": None,
                 },
             ]
         )
@@ -1343,7 +1315,7 @@ class PostResourceTest(BaseResourceTestCase):
         # check if post counted towards "create_posts" achievement of user
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][0]["progress"],
+            profile["achievements"]["social"]["progress"],
             1,
         )
 
@@ -1368,7 +1340,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(self.db.posts.find_one({"_id": post_id}))
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][0]["progress"],
+            profile["achievements"]["social"]["progress"],
             1,
         )
 
@@ -1438,10 +1410,10 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["likers"], new_post["likers"])
 
-        # since it was an update, the post should not count towards "create_posts" achievement
+        # since it was an update, the post should not count towards "social" achievement
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][0]["progress"],
+            profile["achievements"]["social"]["progress"],
             0,
         )
 
@@ -1691,28 +1663,20 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(post)
         self.assertIn(CURRENT_ADMIN.username, post["likers"])
 
-        # check if like counted towards "give_likes" achievement of user
+        # check if "give_likes" counted towards "social" achievement of user
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][2]["progress"],
+            profile["achievements"]["social"]["progress"],
             1,
-        )
-
-        # since this was the users own post, the like should not count towards
-        # "posts_liked" achievement
-        self.assertEqual(
-            profile["achievements"]["social"][3]["progress"],
-            0,
         )
 
         post_manager.like_post(self.post_id, CURRENT_USER.username)
 
-        # now check if like counted towards "posts_liked" achievement, because
-        # it was from a different user
+        # now check if "posts_liked" counted towards "social" achievement
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][3]["progress"],
-            1,
+            profile["achievements"]["social"]["progress"],
+            2,
         )
 
     def test_like_post_error_post_doesnt_exist(self):
@@ -1811,10 +1775,10 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIn(comment["text"], comment_text)
         self.assertIn(comment_id, comment_ids)
 
-        # check if comment counted towards "create_comments" achievement of user
+        # check if comment counted towards "social" achievement of user
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][1]["progress"],
+            profile["achievements"]["social"]["progress"],
             1,
         )
 
@@ -1832,7 +1796,7 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIsNotNone(self.db.posts.find_one({"_id": self.post_id}))
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][1]["progress"],
+            profile["achievements"]["social"]["progress"],
             1,
         )
 
@@ -1855,10 +1819,10 @@ class PostResourceTest(BaseResourceTestCase):
         )
 
         # since the post didnt exist, the comment should also not count towards
-        # "create_comments" achievement
+        # "social" achievement
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            profile["achievements"]["social"][1]["progress"],
+            profile["achievements"]["social"]["progress"],
             0,
         )
 
@@ -2784,28 +2748,14 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "push",
             },
             "achievements": {
-                "social": [
-                    {"type": "create_posts", "progress": 105, "level": "platinum"},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 1, "level": "bronze"},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
-            "chosen_achievement": {
-                "type": "create_posts",
-                "level": "platinum",
-            },
+            "chosen_achievement": None,
         }
 
     def test_get_profile(self):
@@ -3033,26 +2983,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
         )
-        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -3120,26 +3059,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
         )
-        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -3207,26 +3135,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             result["achievements"],
             {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
         )
-        self.assertEqual(result["chosen_achievement"], {"type": None, "level": None})
+        self.assertEqual(result["chosen_achievement"], None)
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3474,26 +3391,15 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
         )
-        self.assertEqual(profile["chosen_achievement"], {"type": None, "level": None})
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(
@@ -3599,7 +3505,7 @@ class ProfileResourceTest(BaseResourceTestCase):
         # will be ignored because they are auto-tracked
         profile_manager.update_profile_information(
             CURRENT_ADMIN.username,
-            {"achievements": [{"type": "join_groups", "progress": 100}]},
+            {"achievements": {"social": {"level": 1, "progress": 5, "next_level": 10}}},
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
@@ -3608,26 +3514,14 @@ class ProfileResourceTest(BaseResourceTestCase):
         )
 
         # try again choosing a new achievement, expecting that it will be set
-        # because user has reached the needed level
         profile_manager.update_profile_information(
             CURRENT_ADMIN.username,
-            {"chosen_achievement": {"type": "create_posts", "level": "platinum"}},
+            {"chosen_achievement": "ve"},
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["chosen_achievement"],
-            {"type": "create_posts", "level": "platinum"},
-        )
-
-        # try also setting a lower lewel of a received achievement, expecting that it will be set
-        profile_manager.update_profile_information(
-            CURRENT_ADMIN.username,
-            {"chosen_achievement": {"type": "create_posts", "level": "gold"}},
-        )
-        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
-        self.assertEqual(
-            result["chosen_achievement"],
-            {"type": "create_posts", "level": "gold"},
+            "ve",
         )
 
     def test_update_profile_information_upsert(self):
@@ -3682,32 +3576,7 @@ class ProfileResourceTest(BaseResourceTestCase):
             ValueError,
             profile_manager.update_profile_information,
             self.default_profile["username"],
-            {"chosen_achievement": {"type": "non_existing", "level": "bronze"}},
-        )
-        self.assertRaises(
-            ValueError,
-            profile_manager.update_profile_information,
-            self.default_profile["username"],
-            {"chosen_achievement": {"type": "create_posts", "level": "non_existing"}},
-        )
-
-    def test_update_profile_information_error_achievement_level_not_reached(self):
-        """
-        expect: ValueError is raised because the user has not reached the needed level
-        """
-
-        profile_manager = Profiles(self.db)
-        self.assertRaises(
-            ValueError,
-            profile_manager.update_profile_information,
-            self.default_profile["username"],
-            {"chosen_achievement": {"type": "create_comments", "level": "bronze"}},
-        )
-        self.assertRaises(
-            ValueError,
-            profile_manager.update_profile_information,
-            self.default_profile["username"],
-            {"chosen_achievement": {"type": "good_practice_plans", "level": "silver"}},
+            {"chosen_achievement": "not_existing"},
         )
 
     def test_get_profile_snippets(self):
@@ -3902,11 +3771,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile_manager = Profiles(self.db)
         profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts")
 
-        # expect the progress to be increased by 1
+        # expect the progress to be increased by 1 for "social" achievement
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["social"][0]["progress"],
-            self.default_profile["achievements"]["social"][0]["progress"] + 1,
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"] + 1,
         )
 
     def test_achievement_count_up_arbitrary_amount(self):
@@ -3917,11 +3786,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile_manager = Profiles(self.db)
         profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts", 5)
 
-        # expect the progress to be increased by 5
+        # expect the progress to be increased by 5 for "social" achievement
+        # when executing it 5 times
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["social"][0]["progress"],
-            self.default_profile["achievements"]["social"][0]["progress"] + 5,
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"] + 5,
         )
 
     def test_achievement_count_up_level_up(self):
@@ -3931,16 +3801,26 @@ class ProfileResourceTest(BaseResourceTestCase):
 
         profile_manager = Profiles(self.db)
 
-        # use unique_partners, default is 0 and level up to bronze is at 1
-        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "unique_partners")
+        # manually set "social" progress to 9
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$set": {"achievements.social.progress": 9}},
+        )
 
-        # expect the progress to be increased by 1 and level to be set to bronze
+        # count up
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "give_likes")
+
+        # expect the level to be upped, next_level increased exponentially and progress reset
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][2]["progress"],
-            self.default_profile["achievements"]["ve"][2]["progress"] + 1,
+            result["achievements"]["social"]["level"],
+            self.default_profile["achievements"]["social"]["level"] + 1,
         )
-        self.assertEqual(result["achievements"]["ve"][2]["level"], "bronze")
+        self.assertEqual(result["achievements"]["social"]["progress"], 0)
+        self.assertEqual(
+            result["achievements"]["social"]["next_level"],
+            self.default_profile["achievements"]["social"]["next_level"] * 2,
+        )
 
     def test_achievement_count_up_error_invalid_achievement(self):
         """
@@ -3985,8 +3865,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         # expect the progress to be increased by 1
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][1]["progress"],
-            self.default_profile["achievements"]["ve"][1]["progress"] + 1,
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"] + 1,
         )
 
         # expect the plan_id to be added to the tracking list
@@ -4000,11 +3880,11 @@ class ProfileResourceTest(BaseResourceTestCase):
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][1]["progress"],
-            self.default_profile["achievements"]["ve"][1]["progress"] + 1,
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"] + 1,
         )
 
-    def test_achievement_count_up_constraint_good_practice_plans_eroor_profile_doesnt_exist(
+    def test_achievement_count_up_constraint_good_practice_plans_error_profile_doesnt_exist(
         self,
     ):
         """
@@ -4036,8 +3916,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         # expect the progress to be increased by 2 (one for each partner, except the user self)
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][2]["progress"],
-            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"] + 2,
         )
 
         # expect the partners to be added to the tracking list
@@ -4045,14 +3925,14 @@ class ProfileResourceTest(BaseResourceTestCase):
             result["achievements"]["tracking"]["unique_partners"], ["test", "test2"]
         )
 
-        # using yn of the same partners again should not increase the progress any further
+        # using any of the same partners again should not increase the progress any further
         profile_manager.achievement_count_up_check_constraint_unique_partners(
             CURRENT_ADMIN.username, ["test"]
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][2]["progress"],
-            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"] + 2,
         )
 
         # empty partners list should not increase the progress
@@ -4061,8 +3941,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
-            result["achievements"]["ve"][2]["progress"],
-            self.default_profile["achievements"]["ve"][2]["progress"] + 2,
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"] + 2,
         )
 
     def test_achievement_count_up_constraint_unique_partners_error_profile_doesnt_exist(
@@ -4136,28 +4016,14 @@ class SpaceResourceTest(BaseResourceTestCase):
                     "system": "email",
                 },
                 "achievements": {
-                    "social": [
-                        {"type": "create_posts", "progress": 0, "level": None},
-                        {"type": "create_comments", "progress": 0, "level": None},
-                        {"type": "give_likes", "progress": 0, "level": None},
-                        {"type": "posts_liked", "progress": 0, "level": None},
-                        {"type": "join_groups", "progress": 0, "level": None},
-                        {"type": "admin_groups", "progress": 0, "level": None},
-                    ],
-                    "ve": [
-                        {"type": "ve_plans", "progress": 0, "level": None},
-                        {
-                            "type": "good_practice_plans",
-                            "progress": 0,
-                            "level": None,
-                        },
-                        {"type": "unique_partners", "progress": 0, "level": None},
-                    ],
+                    "social": {"level": 0, "progress": 0, "next_level": 10},
+                    "ve": {"level": 0, "progress": 0, "next_level": 10},
                     "tracking": {
                         "good_practice_plans": [],
                         "unique_partners": [],
                     },
                 },
+                "chosen_achievement": None,
             },
             {
                 "username": CURRENT_USER.username,
@@ -4191,28 +4057,14 @@ class SpaceResourceTest(BaseResourceTestCase):
                     "system": "email",
                 },
                 "achievements": {
-                    "social": [
-                        {"type": "create_posts", "progress": 0, "level": None},
-                        {"type": "create_comments", "progress": 0, "level": None},
-                        {"type": "give_likes", "progress": 0, "level": None},
-                        {"type": "posts_liked", "progress": 0, "level": None},
-                        {"type": "join_groups", "progress": 0, "level": None},
-                        {"type": "admin_groups", "progress": 0, "level": None},
-                    ],
-                    "ve": [
-                        {"type": "ve_plans", "progress": 0, "level": None},
-                        {
-                            "type": "good_practice_plans",
-                            "progress": 0,
-                            "level": None,
-                        },
-                        {"type": "unique_partners", "progress": 0, "level": None},
-                    ],
+                    "social": {"level": 0, "progress": 0, "next_level": 10},
+                    "ve": {"level": 0, "progress": 0, "next_level": 10},
                     "tracking": {
                         "good_practice_plans": [],
                         "unique_partners": [],
                     },
                 },
+                "chosen_achievement": None,
             },
         ]
         self.db.profiles.insert_many(self.default_profiles)
@@ -4674,25 +4526,17 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(response.status_code, 200)
 
         # check count towards achievements:
-        # admin user towards join_groups and admin_groups
-        # normal user towards join_groups
+        # admin user twice towards "social" (join_groups and admin_groups)
+        # normal user once towards "social" (join_groups)
         result_admin = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         result_user = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result_admin["achievements"]["social"][4]["progress"],
-            self.default_profiles[0]["achievements"]["social"][4]["progress"] + 1,
+            result_admin["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"] + 2,
         )
         self.assertEqual(
-            result_admin["achievements"]["social"][5]["progress"],
-            self.default_profiles[0]["achievements"]["social"][5]["progress"] + 1,
-        )
-        self.assertEqual(
-            result_user["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
-        )
-        self.assertEqual(
-            result_user["achievements"]["social"][5]["progress"],
-            self.default_profiles[1]["achievements"]["social"][5]["progress"],
+            result_user["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
         )
 
     def test_create_space_failure_invalid_attributes(self):
@@ -4717,22 +4561,22 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         self.assertRaises(ValueError, space_manager.create_space, new_space, "test")
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[0]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"],
         )
 
         # invisible has wrong type
         new_space["invisible"] = "test"
         self.assertRaises(TypeError, space_manager.create_space, new_space, "test")
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[0]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"],
         )
 
     def test_delete_space(self):
@@ -4792,11 +4636,11 @@ class SpaceResourceTest(BaseResourceTestCase):
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["members"])
 
-        # check that join counted towards achievements "join_groups"
+        # check that join counted towards achievements "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
         )
 
     def test_join_space_error_space_doesnt_exist(self):
@@ -4813,11 +4657,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_join_space_error_already_member(self):
@@ -4834,11 +4678,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_join_space_request(self):
@@ -4900,11 +4744,11 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
-        # check that the join counted towards achievement "admin_groups"
+        # check that the join counted towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][5]["progress"],
-            self.default_profiles[1]["achievements"]["social"][5]["progress"] + 1,
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
         )
 
     def test_add_space_admin_error_space_doesnt_exist(self):
@@ -4921,11 +4765,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "admin_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][5]["progress"],
-            self.default_profiles[1]["achievements"]["social"][5]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_add_space_admin_error_already_admin(self):
@@ -4941,11 +4785,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username,
         )
 
-        # check that the join didnt count towards achievement "admin_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][5]["progress"],
-            self.default_profiles[1]["achievements"]["social"][5]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_set_space_picture(self):
@@ -5064,11 +4908,11 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
-        # check that the join counted towards achievement "join_groups"
+        # check that the join counted towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
         )
 
     def test_accept_space_invite_error_user_not_invited(self):
@@ -5085,11 +4929,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_accept_space_invite_error_space_doesnt_exist(self):
@@ -5106,11 +4950,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_decline_space_invite(self):
@@ -5197,11 +5041,11 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
-        # check that the join counted towards achievement "join_groups"
+        # check that the join counted towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"] + 1,
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
         )
 
     def test_accept_join_request_error_space_doesnt_exist(self):
@@ -5218,11 +5062,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_accept_join_request_error_not_request_to_join(self):
@@ -5239,11 +5083,11 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
-        # check that the join didnt count towards achievement "join_groups"
+        # check that the join didnt count towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
-            result["achievements"]["social"][4]["progress"],
-            self.default_profiles[1]["achievements"]["social"][4]["progress"],
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_reject_join_request(self):

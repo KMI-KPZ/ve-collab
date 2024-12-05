@@ -54,89 +54,23 @@ class Profiles:
             "work_experience": list,
             "ve_window": list,
             "notification_settings": dict,
-            "achievements": list,
-            "chosen_achievement": dict,
+            "achievements": dict,
+            "chosen_achievement": (str, type(None)),
         }
 
-        self.ALLOWED_ACHIEVEMENT_TYPES = [
-            "create_posts",  # x posts created
-            "create_comments",  # x comments created
-            "give_likes",  # x posts and/or comments liked
-            "posts_liked",  # posts of user has received x likes (combined)
-            "join_groups",  # member of x groups
-            "admin_groups",  # admin of x groups
-            "ve_plans",  # x update operations done on VE plans
-            "good_practice_plans",  # x VE plans marked as good practise examples
-            "unique_partners",  # x unique partners across all VE plans
-        ]
-
-        self.ALLOWED_ACHIEVEMENT_LEVELS = [None, "bronze", "silver", "gold", "platinum"]
-
-        # None is the default state for easier count up handling
-        self.ACHIEVEMENT_PROGRESS = {
-            "create_posts": {
-                None: 0,
-                "bronze": 10,
-                "silver": 25,
-                "gold": 50,
-                "platinum": 100,
-            },
-            "create_comments": {
-                None: 0,
-                "bronze": 10,
-                "silver": 25,
-                "gold": 50,
-                "platinum": 100,
-            },
-            "give_likes": {
-                None: 0,
-                "bronze": 10,
-                "silver": 25,
-                "gold": 50,
-                "platinum": 100,
-            },
-            "posts_liked": {
-                None: 0,
-                "bronze": 10,
-                "silver": 25,
-                "gold": 50,
-                "platinum": 100,
-            },
-            "join_groups": {
-                None: 0,
-                "bronze": 2,
-                "silver": 5,
-                "gold": 10,
-                "platinum": 20,
-            },
-            "admin_groups": {
-                None: 0,
-                "bronze": 1,
-                "silver": 3,
-                "gold": 5,
-                "platinum": 10,
-            },
-            "ve_plans": {
-                None: 0,
-                "bronze": 10,
-                "silver": 100,
-                "gold": 500,
-                "platinum": 2000,
-            },
-            "good_practice_plans": {
-                None: 0,
-                "bronze": 1,
-                "silver": 3,
-                "gold": 5,
-                "platinum": 10,
-            },
-            "unique_partners": {
-                None: 0,
-                "bronze": 1,
-                "silver": 3,
-                "gold": 5,
-                "platinum": 10,
-            },
+        # TODO fine tune multipliers
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
+            "create_posts": 1,  # x posts created
+            "create_comments": 1,  # x comments created
+            "give_likes": 1,  # x posts and/or comments liked
+            "posts_liked": 1,  # posts of user has received x likes (combined)
+            "join_groups": 1,  # member of x groups
+            "admin_groups": 1,  # admin of x groups
+        }
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
+            "ve_plans": 1,  # x update operations done on VE plans
+            "good_practice_plans": 1,  # x VE plans marked as good practise examples
+            "unique_partners": 1,  # x unique partners across all VE plans
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
@@ -252,25 +186,14 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
-            "chosen_achievement": {"type": None, "level": None},
+            "chosen_achievement": None,
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -337,25 +260,14 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": [
-                    {"type": "create_posts", "progress": 0, "level": None},
-                    {"type": "create_comments", "progress": 0, "level": None},
-                    {"type": "give_likes", "progress": 0, "level": None},
-                    {"type": "posts_liked", "progress": 0, "level": None},
-                    {"type": "join_groups", "progress": 0, "level": None},
-                    {"type": "admin_groups", "progress": 0, "level": None},
-                ],
-                "ve": [
-                    {"type": "ve_plans", "progress": 0, "level": None},
-                    {"type": "good_practice_plans", "progress": 0, "level": None},
-                    {"type": "unique_partners", "progress": 0, "level": None},
-                ],
+                "social": {"level": 0, "progress": 0, "next_level": 10},
+                "ve": {"level": 0, "progress": 0, "next_level": 10},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
                 },
             },
-            "chosen_achievement": {"type": None, "level": None},
+            "chosen_achievement": None,
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -695,64 +607,10 @@ class Profiles:
             del updated_profile["achievements"]
 
         # if user has updated the chosen achievement, we need to check if it is valid,
-        # i.e. if he has reached the level he is trying to set
+        # i.e. either "social", "ve" or None
         if "chosen_achievement" in updated_profile:
-            # check type/level validity
-            if (
-                updated_profile["chosen_achievement"]["type"]
-                not in self.ALLOWED_ACHIEVEMENT_TYPES
-            ) or (
-                updated_profile["chosen_achievement"]["level"]
-                not in self.ALLOWED_ACHIEVEMENT_LEVELS
-            ):
-                raise ValueError("Invalid achievement type")
-
-            # filter out the relevant achievement
-            try:
-                profile = self.get_profile(username, projection={"achievements": True})
-            except ProfileDoesntExistException:
-                raise
-            achievements = profile["achievements"]
-            relevent_achievement = None
-            for group in achievements.values():
-                for a in group:
-                    if a["type"] == updated_profile["chosen_achievement"]["type"]:
-                        relevent_achievement = a
-                        break
-
-            # check if the user has reached the level (or a higher one) he is trying to set
-            if relevent_achievement["level"] == None:
-                if updated_profile["chosen_achievement"]["level"] in [
-                    "bronze",
-                    "silver",
-                    "gold",
-                    "platinum",
-                ]:
-                    raise ValueError(
-                        "User has not reached the level he is trying to set"
-                    )
-            elif relevent_achievement["level"] == "bronze":
-                if updated_profile["chosen_achievement"]["level"] in [
-                    "silver",
-                    "gold",
-                    "platinum",
-                ]:
-                    raise ValueError(
-                        "User has not reached the level he is trying to set"
-                    )
-            elif relevent_achievement["level"] == "silver":
-                if updated_profile["chosen_achievement"]["level"] in [
-                    "gold",
-                    "platinum",
-                ]:
-                    raise ValueError(
-                        "User has not reached the level he is trying to set"
-                    )
-            elif relevent_achievement["level"] == "gold":
-                if updated_profile["chosen_achievement"]["level"] in ["platinum"]:
-                    raise ValueError(
-                        "User has not reached the level he is trying to set"
-                    )
+            if updated_profile["chosen_achievement"] not in ["social", "ve", None]:
+                raise ValueError("Invalid chosen achievement")
 
         # all checks passed, update the profile
         result = self.db.profiles.find_one_and_update(
@@ -905,7 +763,7 @@ class Profiles:
     def achievement_count_up(
         self,
         username: str,
-        achievement_type: Literal[
+        reason: Literal[
             "create_posts",
             "create_comments",
             "give_likes",
@@ -919,17 +777,27 @@ class Profiles:
         amount: int = 1,
     ) -> None:
         """
-        Increase the progress of the given achievement type by 1.
-        If the user has reached the next level (as determined by `self.ACHIEVEMENT_PROGRESS`),
-        it will also be updated accordingly.
+        Increase the progress of the "social" or "ve" achievement depending on the `reason`.
+        The actual progress increase is determined by the progress multiplier
+        of the given `reason` (see `self.SOCIAL_ACHIEVEMENT_PROGRESS_MULTIPLIERS` and
+        `self.VE_ACHIEVEMENT_PROGRESS_MULTIPLIERS`).
+        If the user has reached the next level (as determined by the achievements `next_level`
+        attribute), it will also be updated accordingly and in thise case the `progress` reset
+        to 0. The next level requirement is subsequently doubled.
 
         Optionally, you can specify the `amount` by which the progress should be increased.
-        default is one.
+        I.e. an amount of 2 would act as if the achievement was issued twice, not simply
+        adding 2 to the progress, but also applying the `reason`'s progress multiplier.
+        Default amount is 1.
         """
 
         # sanity check
-        if achievement_type not in self.ALLOWED_ACHIEVEMENT_TYPES:
-            raise ValueError("Invalid achievement type")
+        if (
+            reason
+            not in self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS.keys()
+            | self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS.keys()
+        ):
+            raise ValueError("Invalid achievement reason")
 
         # get current achievement status of user
         profile = self.db.profiles.find_one(
@@ -940,37 +808,33 @@ class Profiles:
 
         achievements = profile["achievements"]
 
-        # find the relevant achievement
-        achievement = None
-        for group in achievements.values():
-            for a in group:
-                if a["type"] == achievement_type:
-                    achievement = a
-                    break
-            if achievement:
-                break
-
-        if not achievement:
-            raise ValueError("Achievement type not found in profile")
+        # determin by the reason if it is a social or ve achievement
+        achievement_type = None
+        if reason in self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS:
+            achievement_type = "social"
+        elif reason in self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS:
+            achievement_type = "ve"
 
         # count up the progress
-        achievement["progress"] += amount
+        achievements[achievement_type]["progress"] += (
+            int(amount * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS[reason])
+            if achievement_type == "social"
+            else int(amount * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS[reason])
+        )
 
-        # determine if the user has reached the next level and update it,
-        # but only if it is not already platinum
+        # determine if the user has reached the next level and update it
         # TODO send notification to user
         if (
-            achievement["progress"]
-            >= self.ACHIEVEMENT_PROGRESS[achievement_type][achievement["level"]]
+            achievements[achievement_type]["progress"]
+            >= achievements[achievement_type]["next_level"]
         ):
-            if achievement["level"] == None:
-                achievement["level"] = "bronze"
-            elif achievement["level"] == "bronze":
-                achievement["level"] = "silver"
-            elif achievement["level"] == "silver":
-                achievement["level"] = "gold"
-            elif achievement["level"] == "gold":
-                achievement["level"] = "platinum"
+            achievements[achievement_type]["level"] += 1
+            achievements[achievement_type]["progress"] = 0
+
+            # next level increases exponentially
+            achievements[achievement_type]["next_level"] = (
+                achievements[achievement_type]["next_level"] * 2
+            )
 
         # update the profile with the new achievement status
         self.db.profiles.update_one(
