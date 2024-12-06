@@ -8,14 +8,10 @@ import 'swiper/css/pagination';
 
 import vecollabNotebook from '@/images/frontpage/VeCollabNotebook.png';
 
-import screenshotLearningMaterial from '@/images/frontpage/screenshotLearningMaterial.jpg';
 import screenshotSocialNetwork from '@/images/frontpage/screenshotSocialNetwork.jpg';
 import screenshotVeDesigner from '@/images/frontpage/screenshotVeDesigner.jpg';
 import { useTranslation } from 'next-i18next';
-import ButtonLight from '../common/buttons/ButtongLight';
-import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import Link from 'next/link';
-import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     className?: string;
