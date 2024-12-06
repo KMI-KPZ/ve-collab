@@ -58,19 +58,18 @@ class Profiles:
             "chosen_achievement": (str, type(None)),
         }
 
-        # TODO fine tune multipliers
         self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
-            "create_posts": 1,  # x posts created
-            "create_comments": 1,  # x comments created
+            "create_posts": 5,  # x posts created
+            "create_comments": 2,  # x comments created
             "give_likes": 1,  # x posts and/or comments liked
-            "posts_liked": 1,  # posts of user has received x likes (combined)
-            "join_groups": 1,  # member of x groups
-            "admin_groups": 1,  # admin of x groups
+            "posts_liked": 4,  # posts of user has received x likes (combined)
+            "join_groups": 5,  # member of x groups
+            "admin_groups": 50,  # admin of x groups
         }
         self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
             "ve_plans": 1,  # x update operations done on VE plans
-            "good_practice_plans": 1,  # x VE plans marked as good practise examples
-            "unique_partners": 1,  # x unique partners across all VE plans
+            "good_practice_plans": 100,  # x VE plans marked as good practise examples
+            "unique_partners": 80,  # x unique partners across all VE plans
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:

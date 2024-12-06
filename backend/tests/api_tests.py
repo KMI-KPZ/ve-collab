@@ -16,8 +16,6 @@ from requests_toolbelt import MultipartEncoder
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 
-from resources.elasticsearch_integration import ElasticsearchConnector
-from resources.network.acl import ACL
 import global_vars
 from main import make_app
 from model import (
@@ -32,6 +30,9 @@ from model import (
     User,
     VEPlan,
 )
+from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.acl import ACL
+from resources.network.profile import Profiles
 import util
 
 # load environment variables
@@ -349,6 +350,13 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.db.global_acl.insert_many(
             [value.copy() for value in self.test_global_acl_rules.values()]
         )
+
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
 
     def base_permission_environments_tearDown(self) -> None:
         # cleanup test data
@@ -1572,7 +1580,7 @@ class PostHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
 
     def test_post_create_post_space(self):
@@ -1635,7 +1643,7 @@ class PostHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
 
     def test_post_create_post_space_with_file(self):
@@ -1733,7 +1741,7 @@ class PostHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
 
     def test_post_create_post_error_insufficient_permission(self):
@@ -2461,7 +2469,7 @@ class CommentHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_comments"],
         )
 
     def test_post_comment_error_missing_post_id(self):
@@ -2813,8 +2821,9 @@ class LikePostHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
         )
+        prev_achievement_progress_counter = profile["achievements"]["social"]["progress"]
 
         # switch to user mode to test the achievement "social"
         options.test_admin = False
@@ -2824,14 +2833,12 @@ class LikePostHandlerTest(BaseApiTestCase):
 
         self.base_checks("POST", "/like", True, 200, body=request)
 
-        # check that the like counted towards the achievement "social"
+        # check that the like of another person counted towards the achievement "social"
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
-                "progress"
-            ]
-            + 2,
+            prev_achievement_progress_counter
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["posts_liked"],
         )
 
     def test_post_like_error_no_post_id(self):
@@ -4970,7 +4977,8 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 2,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_create_space_invisible(self):
@@ -5000,7 +5008,8 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 2,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_create_space_joinable(self):
@@ -5030,7 +5039,8 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 2,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_create_space_invisible_and_joinable(self):
@@ -5063,7 +5073,8 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 2,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_create_space_error_no_name(self):
@@ -5156,7 +5167,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_USER.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_post_join_space_admin(self):
@@ -5191,7 +5202,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_post_join_space_join_request(self):
@@ -5329,7 +5340,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_USER.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_space_add_admin_space_admin(self):
@@ -5366,7 +5377,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_post_space_add_admin_error_no_user(self):
@@ -5907,7 +5918,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_USER.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_post_space_accept_invite_error_space_doesnt_exist(self):
@@ -6241,7 +6252,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_USER.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_post_space_accept_request_space_admin(self):
@@ -6285,7 +6296,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
                 "progress"
             ]
-            + 1,
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_post_space_accept_request_error_no_user(self):
@@ -8975,13 +8986,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state, plan)
 
         # check that the insert has counted towards achievement "ve"
-        # because "ve_plan"
+        # because "ve_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # one more plan as good practice to test achievement count up for "good_practise_plans"
         plan = VEPlan(name="new", is_good_practise=True).to_dict()
@@ -8996,17 +9008,19 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
 
         # check that the insert has counted towards achievement "ve"
-        # twice because "ve_plan" and "good_practise_plans"
+        # twice because "ve_plans" and "good_practice_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 3,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"],
         )
         self.assertIn(
             ObjectId(response["inserted_id"]),
             user["achievements"]["tracking"]["good_practice_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # one more plan with partners to test achievement count up for "unique_partners"
         plan = VEPlan(name="new", partners=["test", CURRENT_ADMIN.username]).to_dict()
@@ -9021,15 +9035,17 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
 
         # check that the insert has counted towards achievement "ve"
-        # twice because "ve_plan" and "unique_partners" 1x
+        # twice because "ve_plans" and "unique_partners" 1x
         # (test only, because CURRENT_ADMIN.username is already in the list)
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 5,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
         self.assertEqual(user["achievements"]["tracking"]["unique_partners"], ["test"])
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # supplying this partner again should not count towards the achievement
         plan = VEPlan(
@@ -9046,12 +9062,12 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
 
         # check that the insert has now not counted towards achievement "ve"
-        # only once more because "ve_plan"
+        # only once more because "ve_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 6,  # +5 from the previous insert
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
         self.assertEqual(user["achievements"]["tracking"]["unique_partners"], ["test"])
 
@@ -9113,7 +9129,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
     def test_post_update_plan(self):
@@ -9146,8 +9162,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # test one more time with setting the plan to a good practise example to trigger
         # the achievement count up for "good_practice_plans" once
@@ -9167,9 +9184,12 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 3,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
+
         self.assertIn(
             ObjectId(response["updated_id"]),
             user["achievements"]["tracking"]["good_practice_plans"],
@@ -9191,9 +9211,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 4,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
+
         self.assertEqual(
             user["achievements"]["tracking"]["good_practice_plans"],
             [ObjectId(response["updated_id"])],
@@ -9220,9 +9242,12 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 7,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
+
         self.assertEqual(
             user["achievements"]["tracking"]["unique_partners"], ["test", "test2"]
         )
@@ -9246,8 +9271,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 8,  # +7 from the previous update
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
     def test_post_upsert_plan(self):
@@ -9287,7 +9312,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 3,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
 
     def test_post_update_plan_error_invalid_query_param(self):
@@ -9408,8 +9435,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # again, but this time updating is_good_practice and triggering the achievement count up
         payload = {
@@ -9437,12 +9465,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 3,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
         self.assertIn(
             self.plan_id, user["achievements"]["tracking"]["good_practice_plans"]
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # doing the same update again should only count up the achievement once
         # because "ve_plans"
@@ -9465,12 +9495,13 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 4,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
         self.assertEqual(
             user["achievements"]["tracking"]["good_practice_plans"], [self.plan_id]
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # again with partners to test achievement count up for "unique_partners"
         payload = {
@@ -9497,9 +9528,14 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 7,
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
+        self.assertEqual(
+            user["achievements"]["tracking"]["unique_partners"], ["test", "test2"]
+        )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # doing the same update with any of those partner again should only
         # count up the achievement once because "ve_plans"
@@ -9522,9 +9558,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 8,  # +7 from the previous update
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # again with checklist dict attribute
         payload = {
@@ -9565,12 +9602,35 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         # check that the update has counted towards achievement "ve"
         # because "ve_plans"
-        # no a level up happened because progress reached >= 10, so
-        # level should get +1, next_level should be 30
+        # now multiple level ups happened because progress reached thresholds
+
+        # determine what level the user should be at (based on assumption that
+        # the first level is reached at 10 progress points, check at profile resource)
+        FIRST_LEVEL_THRESHOLD = 10
+
+        def compute_level(progress):
+            level = 0
+            threshold = FIRST_LEVEL_THRESHOLD
+            while progress >= threshold:
+                level += 1
+                threshold += threshold * 2
+            return level
+
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
-        self.assertEqual(user["achievements"]["ve"]["progress"], 10)
-        self.assertEqual(user["achievements"]["ve"]["level"], 1)
-        self.assertEqual(user["achievements"]["ve"]["next_level"], 30)
+        self.assertEqual(
+            user["achievements"]["ve"]["progress"],
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
+        )
+        self.assertEqual(
+            user["achievements"]["ve"]["level"],
+            compute_level(user["achievements"]["ve"]["progress"]),
+        )
+        next_threshold = FIRST_LEVEL_THRESHOLD
+        for i in range(1, user["achievements"]["ve"]["level"] + 1):
+            next_threshold += next_threshold * 2
+        self.assertEqual(user["achievements"]["ve"]["next_level"], next_threshold)
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # again, but this time upsert
         payload = {
@@ -9598,7 +9658,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # check that the update has counted towards achievement "ve"
         # because "ve_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
-        self.assertEqual(user["achievements"]["ve"]["progress"], 11)
+        self.assertEqual(
+            user["achievements"]["ve"]["progress"],
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
+        )
 
     def test_post_update_field_compound_attribute(self):
         """
@@ -9652,8 +9716,9 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # again, but this time upsert
         payload = {
@@ -9703,8 +9768,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 2,  # +2 because the first update also counted towards the achievements
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
     def test_post_update_field_error_missing_key(self):
@@ -10132,8 +10197,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 3,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"]
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
+        self.assertIn(
+            self.plan_id, user["achievements"]["tracking"]["good_practice_plans"]
+        )
+        self.assertIn("test", user["achievements"]["tracking"]["unique_partners"])
+        prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
 
         # doing an update to this plan again should only count up
         # once for "ve_plans", but not "good_practice_plans" and "unique_partners" again
@@ -10173,8 +10245,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
-            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 4,  # +3 from previous update
+            prev_achievement_progress_counter
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
         self.assertEqual(
             user["achievements"]["tracking"]["good_practice_plans"], [self.plan_id]
@@ -10329,7 +10401,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
     def test_post_put_evaluation_file_error_missing_key(self):
@@ -10491,7 +10563,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         self.assertEqual(
             user["achievements"]["ve"]["progress"],
             self.test_profiles[CURRENT_ADMIN.username]["achievements"]["ve"]["progress"]
-            + 1,
+            + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
     def test_post_put_literature_file_error_missing_key(self):

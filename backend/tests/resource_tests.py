@@ -130,6 +130,14 @@ class BaseResourceTestCase(TestCase):
         self.client = self.__class__._client
         self.db = self.__class__._db
 
+        # multiplier values for achievements
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+
     def tearDown(self) -> None:
         self.client = None
         super().tearDown()
@@ -1316,8 +1324,11 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            1,
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
 
         # add one more post with empty text that should not count towards achievement
         new_post = {
@@ -1341,7 +1352,7 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            1,
+            prev_achievement_progress_counter,
         )
 
     def test_insert_post_error_missing_attributes(self):
@@ -1667,8 +1678,11 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            1,
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
         )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
 
         post_manager.like_post(self.post_id, CURRENT_USER.username)
 
@@ -1676,7 +1690,8 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            2,
+            prev_achievement_progress_counter
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["posts_liked"],
         )
 
     def test_like_post_error_post_doesnt_exist(self):
@@ -1779,8 +1794,11 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            1,
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_comments"],
         )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
 
         # try another comment with empty text that should not count towards achievement
         comment = {
@@ -1797,7 +1815,7 @@ class PostResourceTest(BaseResourceTestCase):
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             profile["achievements"]["social"]["progress"],
-            1,
+            prev_achievement_progress_counter,
         )
 
     def test_add_comment_error_post_doesnt_exist(self):
@@ -2643,6 +2661,13 @@ class ProfileResourceTest(BaseResourceTestCase):
         )
         self.default_profile["follows"] = [CURRENT_USER.username]
         self.db.profiles.insert_one(self.default_profile)
+
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -3775,7 +3800,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profile["achievements"]["social"]["progress"] + 1,
+            self.default_profile["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
 
     def test_achievement_count_up_arbitrary_amount(self):
@@ -3791,7 +3817,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profile["achievements"]["social"]["progress"] + 5,
+            self.default_profile["achievements"]["social"]["progress"]
+            + 5 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
         )
 
     def test_achievement_count_up_level_up(self):
@@ -3801,27 +3828,36 @@ class ProfileResourceTest(BaseResourceTestCase):
 
         profile_manager = Profiles(self.db)
 
-        # manually set "social" progress to 9
-        self.db.profiles.update_one(
-            {"username": CURRENT_ADMIN.username},
-            {"$set": {"achievements.social.progress": 9}},
-        )
-
         # count up
-        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "give_likes")
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "admin_groups")
+
+        # determine what level the user should be at (based on assumption that
+        # the first level is reached at 10 progress points, check at profile resource)
+        FIRST_LEVEL_THRESHOLD = 10
+
+        def compute_level(progress):
+            level = 0
+            threshold = FIRST_LEVEL_THRESHOLD
+            while progress >= threshold:
+                level += 1
+                threshold += threshold * 2
+            return level
 
         # expect the level to be upped and next_level increased exponentially
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["social"]["level"],
-            self.default_profile["achievements"]["social"]["level"] + 1,
+            compute_level(result["achievements"]["social"]["progress"]),
         )
-        self.assertEqual(result["achievements"]["social"]["progress"], 10)
         self.assertEqual(
-            result["achievements"]["social"]["next_level"],
-            self.default_profile["achievements"]["social"]["next_level"]
-            + self.default_profile["achievements"]["social"]["next_level"] * 2,
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
+        next_threshold = FIRST_LEVEL_THRESHOLD
+        for i in range(1, result["achievements"]["social"]["level"] + 1):
+            next_threshold += next_threshold * 2
+        self.assertEqual(result["achievements"]["social"]["next_level"], next_threshold)
 
     def test_achievement_count_up_error_invalid_achievement(self):
         """
@@ -3863,11 +3899,12 @@ class ProfileResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username, plan_id
         )
 
-        # expect the progress to be increased by 1
+        # expect the progress to be increased
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["ve"]["progress"],
-            self.default_profile["achievements"]["ve"]["progress"] + 1,
+            self.default_profile["achievements"]["ve"]["progress"]
+            + self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"],
         )
 
         # expect the plan_id to be added to the tracking list
@@ -3882,7 +3919,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["ve"]["progress"],
-            self.default_profile["achievements"]["ve"]["progress"] + 1,
+            self.default_profile["achievements"]["ve"]["progress"]
+            + self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"],
         )
 
     def test_achievement_count_up_constraint_good_practice_plans_error_profile_doesnt_exist(
@@ -3914,11 +3952,12 @@ class ProfileResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username, partners
         )
 
-        # expect the progress to be increased by 2 (one for each partner, except the user self)
+        # expect the progress to be increased 2 times (one for each partner, except the user self)
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["ve"]["progress"],
-            self.default_profile["achievements"]["ve"]["progress"] + 2,
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
 
         # expect the partners to be added to the tracking list
@@ -3933,7 +3972,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["ve"]["progress"],
-            self.default_profile["achievements"]["ve"]["progress"] + 2,
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
 
         # empty partners list should not increase the progress
@@ -3943,7 +3983,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["ve"]["progress"],
-            self.default_profile["achievements"]["ve"]["progress"] + 2,
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
         )
 
     def test_achievement_count_up_constraint_unique_partners_error_profile_doesnt_exist(
@@ -4533,11 +4574,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         result_user = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
             result_admin["achievements"]["social"]["progress"],
-            self.default_profiles[0]["achievements"]["social"]["progress"] + 2,
+            self.default_profiles[0]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
         self.assertEqual(
             result_user["achievements"]["social"]["progress"],
-            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_create_space_failure_invalid_attributes(self):
@@ -4641,7 +4685,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_join_space_error_space_doesnt_exist(self):
@@ -4745,11 +4790,12 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
-        # check that the join counted towards achievement "social"
+        # check that the admin-set counted towards achievement "social"
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
         )
 
     def test_add_space_admin_error_space_doesnt_exist(self):
@@ -4913,7 +4959,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_accept_space_invite_error_user_not_invited(self):
@@ -5046,7 +5093,8 @@ class SpaceResourceTest(BaseResourceTestCase):
         result = self.db.profiles.find_one({"username": CURRENT_USER.username})
         self.assertEqual(
             result["achievements"]["social"]["progress"],
-            self.default_profiles[1]["achievements"]["social"]["progress"] + 1,
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
         )
 
     def test_accept_join_request_error_space_doesnt_exist(self):
