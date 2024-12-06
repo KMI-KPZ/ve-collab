@@ -121,7 +121,7 @@ export default function Frontpage() {
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75">
                 <div className="w-5/6 m-auto  p-6 lg:p-12 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg p-4">
                     <video width="320" height="240" controls className="w-full h-auto rounded-md">
-                        <source src="/videos/screencast-web.webm" type="video/webm" />
+                        <source src="/videos/ve-collab-promo.mp4" type="video/webm" />
                         {t('video_not_supported')}
                     </video>
                 </div>
@@ -140,7 +140,7 @@ export default function Frontpage() {
                         <Image
                             src={featureboxCompetence}
                             alt="workingdesk"
-                            className="h-[220px] w-auto m-auto hue-rotate-[68deg] saturate-[3.5]"
+                            className="h-[220px] w-auto m-auto hue-rotate-[68deg] saturate-[2.5]"
                         ></Image>
                     }
                 />
@@ -154,7 +154,7 @@ export default function Frontpage() {
                         <Image
                             src={featureboxInternationlization}
                             alt="workingdesk"
-                            className="h-[220px] w-auto m-auto hue-rotate-[68deg] saturate-[3.5]"
+                            className="h-[220px] w-auto m-auto hue-rotate-[68deg] saturate-[2.5]"
                         ></Image>
                     }
                 />
