@@ -9566,11 +9566,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # check that the update has counted towards achievement "ve"
         # because "ve_plans"
         # no a level up happened because progress reached >= 10, so
-        # level should get +1, next_level should be 20 and progress back to 0
+        # level should get +1, next_level should be 30
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
-        self.assertEqual(user["achievements"]["ve"]["progress"], 0)
+        self.assertEqual(user["achievements"]["ve"]["progress"], 10)
         self.assertEqual(user["achievements"]["ve"]["level"], 1)
-        self.assertEqual(user["achievements"]["ve"]["next_level"], 20)
+        self.assertEqual(user["achievements"]["ve"]["next_level"], 30)
 
         # again, but this time upsert
         payload = {
@@ -9598,7 +9598,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # check that the update has counted towards achievement "ve"
         # because "ve_plans"
         user = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
-        self.assertEqual(user["achievements"]["ve"]["progress"], 1)
+        self.assertEqual(user["achievements"]["ve"]["progress"], 11)
 
     def test_post_update_field_compound_attribute(self):
         """

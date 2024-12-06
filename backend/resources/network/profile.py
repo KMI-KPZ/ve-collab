@@ -823,16 +823,15 @@ class Profiles:
         )
 
         # determine if the user has reached the next level and update it
+        # with high multipliers and low next levels, it is possible to level up multiple times
+        # so we iterate the level up process
         # TODO send notification to user
-        if (
+        while (
             achievements[achievement_type]["progress"]
             >= achievements[achievement_type]["next_level"]
         ):
             achievements[achievement_type]["level"] += 1
-            achievements[achievement_type]["progress"] = 0
-
-            # next level increases exponentially
-            achievements[achievement_type]["next_level"] = (
+            achievements[achievement_type]["next_level"] += (
                 achievements[achievement_type]["next_level"] * 2
             )
 

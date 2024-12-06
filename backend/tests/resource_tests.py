@@ -3810,16 +3810,17 @@ class ProfileResourceTest(BaseResourceTestCase):
         # count up
         profile_manager.achievement_count_up(CURRENT_ADMIN.username, "give_likes")
 
-        # expect the level to be upped, next_level increased exponentially and progress reset
+        # expect the level to be upped and next_level increased exponentially
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["achievements"]["social"]["level"],
             self.default_profile["achievements"]["social"]["level"] + 1,
         )
-        self.assertEqual(result["achievements"]["social"]["progress"], 0)
+        self.assertEqual(result["achievements"]["social"]["progress"], 10)
         self.assertEqual(
             result["achievements"]["social"]["next_level"],
-            self.default_profile["achievements"]["social"]["next_level"] * 2,
+            self.default_profile["achievements"]["social"]["next_level"]
+            + self.default_profile["achievements"]["social"]["next_level"] * 2,
         )
 
     def test_achievement_count_up_error_invalid_achievement(self):
