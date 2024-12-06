@@ -332,6 +332,14 @@
     "orcid_link_relog_successful": "Re-Login successful. You will be forwarded to your original page. This should happen automatically within 5 seconds, if not, please click ",
     "homepage_banner": "Cooperative, digital and international teaching",
     "homepage_text": "VE-Collab supports educators with a variety of qualification offers in building their own competencies and provides assistance in the initiation, planning, and implementation of international and national virtual exchanges. By building a Community of Practice, we also promote active collegial (virtual) exchange.",
+    "frontpage": {
+        "slideshow": {},
+        "features": {
+            "title": "Features"
+        },
+        "institutional_values": {},
+        "teachers_values": {}
+    },
     "access_denied": "Access denied",
     "qualification": "Qualification",
     "designer_screenshot": "Screenshot of the VE-Designer",
@@ -369,5 +377,26 @@
         "group_description1": "Get-together for VE in the foreign languages field",
         "group_name2": "Climate Change",
         "plan_name": "Plan VE summer term 2025"
+    },
+    "about-ve-designer": {
+        "title": "VA-Planungstool \"VE-Designer\"",
+        "text": [
+            "Planungstool, das VA-Partner*innen Schritt für Schritt durch die Planung eines VA leitet ",
+            "zusätzliche Hilfestellungen zu fast allen Aspekten der Planung, u. a. durch Verweise auf die Selbstlernmaterialien ",
+            "Möglichkeit, erarbeitete und durchgeführte VA-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen",
+            "Möglichkeit, Inhalte veröffentlichter Good-Practice-Beispiele in die eigene Planung zu importieren",
+            "exklusiv für registrierte Nutzer*innen"
+        ]
+    },
+    "about-vcop": {
+        "title": "Virtual Community of Practice",
+        "text": [
+            "Profil erstellen, Gruppe beitreten (oder auch selbst eine gründen), Status posten, Interessantes teilen oder Fragen stellen…",
+            "Informiert bleiben durch Notifications",
+            "VA-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching",
+            "Möglichkeit, auch interdisziplinär Partner*innen zu finden ",
+            "Schaufenster für aktuelle und vergangene VA-Projekte",
+            "exklusiv für registrierte Nutzer*innen"
+        ]
     }
 }
