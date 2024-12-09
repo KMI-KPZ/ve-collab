@@ -10,15 +10,14 @@
 // ERROR404: '/404',
 // ETHERPAD: `/etherpad/${id}`,
 
-import { INode } from '@/interfaces/material/materialInterfaces';
-import { getChildrenOfNode, getMaterialNodesOfNodeByText } from '@/lib/backend';
-
 export const ROUTES = {
     HOME: '',
     SEARCH: '/search',
     PLANS: '/plans',
     MATCHING: '/matching',
     GROUPS: '/groups',
+    LEARNINGMATERIAL: '/learning-material',
+    PROFILE: '/profile',
 
     // VE-Designer
     /*    VEDESIGNER_STEP_ID: `/ve-designer/step/${id}`,*/
@@ -35,48 +34,6 @@ export const ROUTES = {
     VEDESIGNER_POSTPROCESS: '/ve-designer/post-process',
     VEDESIGNER_STEPS: '/ve-designer/steps',
     VEDESIGNER_TARGETGROUPS: '/ve-designer/target-groups',
-
-    // PROFILE
-    PROFILE: '/profile',
-
-    // LEARNINGMATERIAL
-    LEARNINGMATERIAL: '/learning-material',
 };
 
-export const ROUTES_DYNAMIC = {
-    // POST
-    /*    POST_ID: `/post/${postId}`,*/
-
-    // PLAN TODO maybe add
-    /*    PLAN_ID: `/plan/${planId}`,*/
-
-    // LEARNINGMATERIAL
-    LEARNINGMATERIAL_CLUSTER: `/learning-material/${cluster}`,
-    // LEARNINGMATERIAL_CLUSTER_NODE: `/learning-material/${cluster}/${node}`,
-    LEARNINGMATERIAL_CLUSTER_NODE_SLUG: `/learning-material/${cluster}/${node}/${slug}`,
-
-    // GROUP TODO maybe add
-    /*    GROUP_ID: `/group/${groupId}`,*/
-
-    // MATERIALPERMALINK TODO maybe add
-    // MATERIALPERMALINK_ID: `/materialPermalink/${materialId}`,
-
-    // PROFILE TODO maybe add
-    /*    PROFILE_USER_USERNAME: `/profile/user/${username}`,*/
-};
-
-// top bubbles=[cluster]
-// const cluster = await getTopLevelNodes();
-
-// kleineren bubbles = [nodes]
-/*const nodes: { [key: string]: INode[] } = {};
-
-await Promise.all(
-    cluster.map(async (bubble) => {
-        const nodesInBubble = await getChildrenOfNode(bubble.id);
-        nodes[bubble.text] = nodesInBubble;
-    })
-);*/
-
-// lections = [slug]
-/*const lectionsOfNode = await getMaterialNodesOfNodeByText(currentNode.text);*/
+// declare dynamic routes in sitemap
