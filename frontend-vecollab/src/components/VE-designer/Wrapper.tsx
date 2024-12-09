@@ -568,7 +568,9 @@ export default function Wrapper({
                                             <button
                                                 type="button"
                                                 title={t('common:back')}
-                                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                className={`px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange ${
+                                                    isNoAuthPreview ? 'cursor-default' : ''
+                                                }`}
                                                 onClick={() => {}}
                                             >
                                                 {prevPageBtnLabel || t('common:back')}
