@@ -1,5 +1,10 @@
-import { getChildrenOfNode, getTopLevelNodes, useIsGlobalAdmin } from '@/lib/backend';
-import { INode } from '@/interfaces/material/materialInterfaces';
+import {
+    getChildrenOfNode,
+    getMaterialNodesOfNodeByText,
+    getTopLevelNodes,
+    useIsGlobalAdmin,
+} from '@/lib/backend';
+import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { TbBulb, TbClipboardList } from 'react-icons/tb';
@@ -11,6 +16,7 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
+import * as cluster from 'node:cluster';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -46,6 +52,9 @@ const styleBubbleLeaf = `block absolute px-6 py-3 min-w-24 max-w-48 rounded-full
 
 interface Props {
     nodes: { [key: string]: INode[] };
+    cluster: any;
+    materials: any;
+    urls: any;
 }
 
 // Landing Page: no category (and therefore no learning-material is chosen)
@@ -53,6 +62,11 @@ export default function PageCategoryNotSelected(props: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
     const router = useRouter();
+
+    console.log('cluster', props.cluster);
+    console.log('nodes', props.nodes);
+    console.log('materials', props.materials);
+    console.log('urls', props.urls);
 
     const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
@@ -172,9 +186,39 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
         })
     );
 
+    const materials = await Promise.all(
+        Object.values(nodes).flatMap(async (nodeArray) =>
+            Promise.all(
+                nodeArray.map(async (node) => {
+                    const learning_page = await getMaterialNodesOfNodeByText(node.text);
+                    return {
+                        node_text: node.text,
+                        learning_page: learning_page,
+                        cluster_id: (node.parent % 10) + 1, // get last digit
+                    };
+                })
+            )
+        )
+    ).then((results) => results.flat());
+
+    const urls = await Promise.all(
+        materials.map((material: any) => {
+            let url = `${encodeURIComponent(material.cluster_id)}/${encodeURIComponent(
+                material.node_text
+            )}`;
+            const urls = material.learning_page.map(
+                (page: any) => `${url}/${encodeURIComponent(page.text)}`
+            );
+            return urls;
+        })
+    );
+
     return {
         props: {
+            materials,
+            cluster,
             nodes,
+            urls,
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
