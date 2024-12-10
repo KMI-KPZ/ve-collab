@@ -24,7 +24,7 @@ export const ROUTES = {
     VEDESIGNER_TARGETGROUPS: '/ve-designer/target-groups',
 };
 
-// declare dynamic routes in sitemap.ts
+// declare dynamic routes in sitemap.xml.ts
 
 // Not included (not public accessible, error pages, user-specific pages):
 
