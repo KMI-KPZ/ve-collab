@@ -370,6 +370,9 @@
         "group_name2": "Klimawandel",
         "plan_name": "Planung VE Sommersemester 2025",
         "partner1": "Partner*in 1",
-        "partner2": "Partner*in 2"
+        "partner2": "Partner*in 2",
+        "step1": "Kennenlernen",
+        "step2": "Arbeitsphase",
+        "step3": "Evaluation"
     }
 }

@@ -370,6 +370,9 @@
         "group_name2": "Climate Change",
         "plan_name": "Plan VE summer term 2025",
         "partner1": "Partner 1",
-        "partner2": "Partner 2"
+        "partner2": "Partner 2",
+        "step1": "Getting to Know",
+        "step2": "Working on Tasks",
+        "step3": "Evaluation"
     }
 }
