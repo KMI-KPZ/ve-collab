@@ -45,7 +45,7 @@ const areAllValuesEmpty = (lecture: LectureOld): boolean => {
 };
 
 Lectures.auth = true;
-Lectures.autoForward = true;
+Lectures.noAuthPreview = <LecturesNoAuthPreview />;
 export default function Lectures({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
@@ -238,6 +238,136 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function LecturesNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+
+    const prevpage = '/ve-designer/institutions';
+    const nextpage = '/ve-designer/target-groups';
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('lectures.title')} pageSlug={'ve-designer/lectures'} />
+            <Wrapper
+                socket={undefined}
+                title={t('lectures.title')}
+                subtitle={t('lectures.subtitle')}
+                stageInMenu="generally"
+                idOfProgress="lectures"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
+                    <div className="divide-y">
+                        <div className="pt-4 pb-2">
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="name" className="px-2 py-2">
+                                        {t('common:name')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <input
+                                        type="text"
+                                        placeholder={t('common:enter_name')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                        disabled
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="type" className="px-2 py-2">
+                                        {t('common:type')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <select
+                                        disabled
+                                        className="border border-gray-400 rounded-lg w-full px-1 py-2"
+                                    >
+                                        <option value={t('lectures.compulsory')}>
+                                            {t('lectures.compulsory')}
+                                        </option>
+                                        <option value={t('lectures.elective')}>
+                                            {t('lectures.elective')}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="format" className="px-2 py-2">
+                                        {t('lectures.format')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <select
+                                        disabled
+                                        placeholder="z.B. online, hybrid, präsenz"
+                                        className="border border-gray-400 rounded-lg w-full px-1 py-2"
+                                    >
+                                        <option value={t('lectures.face2face')}>
+                                            {t('lectures.face2face')}
+                                        </option>
+                                        <option value={t('lectures.online')}>
+                                            {t('lectures.online')}
+                                        </option>
+                                        <option value={t('lectures.hybrid')}>
+                                            {t('lectures.hybrid')}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/2 flex items-center">
+                                    <label htmlFor="participants" className="px-2 py-2">
+                                        {t('lectures.numbers_of_part')}
+                                    </label>
+                                </div>
+                                <div className="w-1/2">
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        disabled
+                                        placeholder={t('lectures.enter_numbers_of_part')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end items-center">
+                                <Image
+                                    className="mx-2 cursor-pointer m-2 "
+                                    src={trash}
+                                    width={20}
+                                    height={20}
+                                    alt="deleteStep"
+                                ></Image>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {}}
+                            disabled
+                        >
+                            <RxPlus size={24} />
+                        </button>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/90 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

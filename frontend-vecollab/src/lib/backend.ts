@@ -150,7 +150,10 @@ export function useGetAvailablePlans(accessToken: string): {
     };
 }
 
-export function useGetPlanById(planId: string): {
+export function useGetPlanById(
+    planId: string,
+    shouldFetch: boolean = true
+): {
     data: IPlan;
     isLoading: boolean;
     error: APIError;
@@ -158,13 +161,13 @@ export function useGetPlanById(planId: string): {
 } {
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        [`/planner/get?_id=${planId}`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token),
+        shouldFetch ? [`/planner/get?_id=${planId}`, session?.accessToken] : null,
+        ([url, token]) => GETfetcher(url, token, shouldFetch),
         swrConfig
     );
 
     return {
-        data: !data || isLoading || error ? {} : data.plan,
+        data: !shouldFetch ? {} : isLoading || error ? {} : data.plan,
         isLoading,
         error,
         mutate,

@@ -15,6 +15,7 @@ import { usePathname } from 'next/navigation';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { useTranslation } from 'next-i18next';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
+import { is } from 'date-fns/locale';
 
 interface Props {
     methods: UseFormReturn<any>;
@@ -22,7 +23,8 @@ interface Props {
     handleInvalidData: (data: any, continueLink: string) => void;
     stageInMenu: keyof IMainMenuItems;
     plan: IPlan;
-    progressOfPlan: ISideProgressBarStates|undefined;
+    progressOfPlan: ISideProgressBarStates | undefined;
+    isNoAuthPreview?: boolean;
 }
 
 export default function Sidebar({
@@ -31,7 +33,8 @@ export default function Sidebar({
     handleInvalidData,
     stageInMenu = 'generally',
     plan,
-    progressOfPlan
+    progressOfPlan,
+    isNoAuthPreview = false,
 }: Props): JSX.Element {
     const router = useRouter();
     const currentPath = usePathname();
@@ -53,6 +56,8 @@ export default function Sidebar({
     const [mainMenuData_, setMainMenuData_] = useState<IMainMenuItems>(mainMenuData);
 
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
         if (!plan?.steps) return;
 
         const userDefinedSteps = plan.steps.map((step) => {
@@ -66,13 +71,15 @@ export default function Sidebar({
 
         const defaultSteps = mainMenuData.steps.submenu || [];
 
-        setMainMenuData_(prev => {
-            const steps = {...prev.steps, ...{submenu: [...defaultSteps, ...userDefinedSteps]}}
-            return {...prev, ...{steps}}
-        })
-    }, [plan]);
+        setMainMenuData_((prev) => {
+            const steps = { ...prev.steps, ...{ submenu: [...defaultSteps, ...userDefinedSteps] } };
+            return { ...prev, ...{ steps } };
+        });
+    }, [plan, isNoAuthPreview]);
 
     const getProgressState = (id: string, parentId: string): any => {
+        if (isNoAuthPreview) return undefined;
+
         if (!progressOfPlan) return undefined;
 
         const progress =
@@ -84,6 +91,8 @@ export default function Sidebar({
     };
 
     const handleClick = (item: ISubmenuData, e: React.BaseSyntheticEvent<any> | undefined) => {
+        if (isNoAuthPreview) return;
+
         if (item.link == currentPath) return;
 
         methods.handleSubmit(
@@ -104,13 +113,14 @@ export default function Sidebar({
 
     const SubMenuItem = ({ item, parentId }: { item: ISubmenuData; parentId: string }) => {
         const isCurrentPage = currentPath == item.link;
-        const itemsProgress = getProgressState(item.id, parentId)
+        const itemsProgress = getProgressState(item.id, parentId);
 
         return (
             <button
                 type="button"
                 onClick={(e) => handleClick(item, e)}
                 className={`flex justify-between p-2 w-full`}
+                disabled={isNoAuthPreview}
             >
                 <p
                     className={`text-left text-sm font-konnect ${
@@ -139,8 +149,12 @@ export default function Sidebar({
         return (
             <>
                 <div
-                    className="flex bg-white p-2 w-full align-middle items-center cursor-pointer"
+                    className={`flex bg-white p-2 w-full align-middle items-center ${
+                        isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                    }`}
                     onClick={(e) => {
+                        if (isNoAuthPreview) return;
+
                         if (item.submenu.length > 0) {
                             setOpenSubmenu((prev) => {
                                 updateMenuState(item.id, !prev);
