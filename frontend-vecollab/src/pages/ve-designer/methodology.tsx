@@ -31,7 +31,7 @@ interface Props {
 }
 
 Methodology.auth = true;
-Methodology.autoForward = true;
+Methodology.noAuthPreview = <MethodologyNoAuthPreview />;
 export default function Methodology({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
@@ -147,6 +147,49 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function MethodologyNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+    const prevpage = '/ve-designer/learning-env';
+    const nextpage = '/ve-designer/evaluation';
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('methodology.title')} pageSlug={'ve-designer/methodology'} />
+            <Wrapper
+                socket={undefined}
+                title={t('methodology.title')}
+                subtitle={t('methodology.subtitle')}
+                description={t('methodology.description')}
+                tooltip={{
+                    text: t('methodology.tooltip'),
+                    link: '/learning-material/4/Methodenkoffer',
+                }}
+                stageInMenu="generally"
+                idOfProgress="methodical_approaches"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className="mt-4 flex flex-col justify-center ">
+                    <CreatableSelect
+                        isDisabled
+                        isClearable={true}
+                        isMulti
+                        closeMenuOnSelect={false}
+                        placeholder={t('methodology.placeholder')}
+                    />
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

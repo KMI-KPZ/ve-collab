@@ -58,7 +58,7 @@ interface Props {
 }
 
 Checklist.auth = true;
-Checklist.autoForward = true;
+Checklist.noAuthPreview = <ChecklistNoAuthPreview />;
 export default function Checklist({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
@@ -394,6 +394,99 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function ChecklistNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
+    const prevpage = '/ve-designer/evaluation';
+    const nextpage = '/ve-designer/steps';
+
+    const methods = useForm<FormValues>({});
+
+    const defaultCheckboxes = [
+        'time',
+        'topic',
+        'goals',
+        'media',
+        'technicalEquipment',
+        'institutionalRequirements',
+        'dataProtection',
+    ] as Array<keyof CheckListPartner>;
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('checklist.title')} pageSlug={'ve-designer/checklist'} />
+            <Wrapper
+                socket={undefined}
+                title={t('checklist.title')}
+                subtitle={t('checklist.subtitle')}
+                description={t('checklist.description')}
+                tooltip={{
+                    text: t('checklist.tooltip'),
+                    link: '/learning-material/1/Herausforderungen',
+                }}
+                stageInMenu="generally"
+                idOfProgress="checklist"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className="flex flex-wrap gap-4 mb-10">
+                    {Array(2)
+                        .fill(null)
+                        .map((_, index) => (
+                            <div
+                                key={index}
+                                className="min-w-80 flex basis-1/3 h-fit justify-center shadow rounded"
+                            >
+                                <div className="w-full px-4 py-8 flex flex-col">
+                                    <div className="flex justify-start items-center font-bold text-lg pb-4">
+                                        {index === 0
+                                            ? t('common:no_auth.partner1')
+                                            : t('common:no_auth.partner2')}
+                                    </div>
+                                    {defaultCheckboxes.map((v, i) => (
+                                        <div key={i} className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                                            <div className="grow">
+                                                <label className="w-fit pr-4 truncate font-konnect cursor-pointer py-2 flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        disabled
+                                                        className="border border-gray-500 rounded-lg w-4 h-4 p-3 mb-1 mr-4"
+                                                    />
+                                                    {t(`checklist.${v}_title`)}
+                                                </label>
+                                            </div>
+
+                                            <span
+                                                onClick={(e) => {}}
+                                                className="hidden items-center justify-center w-9 h-9 mx-2 text-ve-collab-blue rounded-full"
+                                            >
+                                                ?
+                                            </span>
+                                        </div>
+                                    ))}
+
+                                    <ButtonLight
+                                        classNameExtend="w-fit !rounded-full mx-auto mt-2"
+                                        title={t('checklist.add_userdefined_title')}
+                                        onClick={() => {}}
+                                        isNoAuthPreview
+                                    >
+                                        <MdAdd size={21} />
+                                    </ButtonLight>
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

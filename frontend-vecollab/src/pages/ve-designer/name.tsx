@@ -19,7 +19,7 @@ interface Props {
 }
 
 Name.auth = true;
-Name.autoForward = true;
+Name.noAuthPreview = <NameNoAuthPreview />;
 export default function Name({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
@@ -78,6 +78,45 @@ export default function Name({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function NameNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(NameFormSchema),
+    });
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('name.title')} pageSlug={'ve-designer/name'} />
+            <Wrapper
+                socket={undefined}
+                title={t('name.title')}
+                subtitle={t('name.subtitle')}
+                description={t('name.description')}
+                methods={methods}
+                stageInMenu="generally"
+                idOfProgress="name"
+                nextpage="/ve-designer/partners"
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                <div className="">
+                    <input
+                        type="text"
+                        placeholder={t('name.placeholder')}
+                        className="border border-gray-300 rounded-md p-2 w-1/2"
+                        autoComplete="off"
+                        autoFocus={true}
+                        disabled={true}
+                    />
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

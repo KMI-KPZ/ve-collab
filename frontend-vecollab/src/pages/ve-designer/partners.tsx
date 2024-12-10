@@ -40,7 +40,7 @@ interface Props {
 }
 
 Partners.auth = true;
-Partners.autoForward = true;
+Partners.noAuthPreview = <PartnersNoAuthPreview />;
 export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
@@ -417,6 +417,83 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function PartnersNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(PartnersFormSchema),
+    });
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('partners.title')} pageSlug={'ve-designer/partners'} />
+            <Wrapper
+                socket={undefined}
+                title={t('partners.title')}
+                subtitle={t('partners.subtitle')}
+                description={[t('partners.description-1'), t('partners.description-2')]}
+                tooltip={{
+                    text: t('partners.tooltip'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                stageInMenu="generally"
+                idOfProgress="partners"
+                methods={methods}
+                prevpage={'/ve-designer/name'}
+                nextpage={'/ve-designer/institutions'}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                <div>
+                    <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
+
+                    <div className="flex w-full mb-2 gap-x-3 lg:w-1/2 border border-gray-300 rounded-lg p-2">
+                        <input
+                            className="grow max-w-full"
+                            placeholder={t('common:search_users')}
+                            disabled
+                        />
+                        <button onClick={() => {}}>
+                            <RxMinus size={20} />
+                        </button>
+                    </div>
+
+                    <div className="mt-4">
+                        <button
+                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {}}
+                            disabled
+                        >
+                            <RxPlus size={25} />
+                        </button>
+                    </div>
+                    <div>
+                        <p className="text-xl text-slate-600 mb-2 mt-10">
+                            {t('partners.externpartners_title')}
+                        </p>
+                        <div className="my-2 w-full lg:w-1/2">
+                            <div className="flex"></div>
+                        </div>
+                        <div className="mt-4">
+                            <button
+                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {}}
+                                disabled
+                            >
+                                <RxPlus size={25} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

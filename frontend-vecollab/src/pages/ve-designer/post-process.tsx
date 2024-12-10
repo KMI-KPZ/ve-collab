@@ -49,7 +49,7 @@ interface Props {
 }
 
 PostProcess.auth = true;
-PostProcess.autoForward = true;
+PostProcess.noAuthPreview = <PostProcessNoAuthPreview />;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -643,6 +643,183 @@ export default function PostProcess({ socket }: Props) {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function PostProcessNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('post-process.title')} pageSlug={'ve-designer/post-process'} />
+            <Wrapper
+                socket={undefined}
+                title={t('post-process.title')}
+                subtitle={t('post-process.subtitle')}
+                methods={methods}
+                nextpage="/plans"
+                nextpageBtnLabel={t('post-process.submit')}
+                preventToLeave={false}
+                stageInMenu="post-process"
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className="py-6 divide-y">
+                    <div className="flex flex-col justify-between mb-3">
+                        <div>
+                            <p className="font-medium">{t('post-process.text_1')}</p>
+                            <p>{t('post-process.text_2')}</p>
+                            <p>
+                                ({t('post-process.license') + ' '}
+                                <Link
+                                    className="underline text-ve-collab-blue"
+                                    href={
+                                        'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'
+                                    }
+                                    aria-disabled
+                                >
+                                    CC-BY-NC-ND 4.0
+                                </Link>
+                                )
+                            </p>
+                        </div>
+
+                        <div className="flex w-40 mb-4">
+                            <label className="px-2 py-2">{t('common:yes')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                                checked
+                            />
+                            <label className="px-2 py-2">{t('common:no')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                            />
+                        </div>
+                    </div>
+
+                    <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
+                        <li className="mb-4 mt-2">
+                            <p>{t('post-process.access_on_plan')}</p>
+
+                            <div className="flex flex-col mb-4">
+                                <div>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="sharedReadOnly-false"
+                                            className="border border-gray-400 rounded-lg p-2 mr-2"
+                                            disabled
+                                        />
+                                        {t('post-process.read_and_import')}
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            className="border border-gray-400 rounded-lg p-2 mr-2"
+                                            disabled
+                                        />
+                                        {t('post-process.read_only')}
+                                    </label>
+                                </div>
+                            </div>
+                        </li>
+                        <li className="mb-4 mt-2">
+                            <p>{t('post-process.abstract_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.abstract_placeholder')}
+                                disabled
+                            />
+                        </li>
+
+                        <li className="mb-4">
+                            <p className="font-bold">{t('post-process.reflection')}</p>
+                            <p className="mb-1">{t('post-process.reflection_task_1')}</p>
+                            <p>{t('post-process.reflection_task_2')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.reflection_placeholder')}
+                                disabled
+                            />
+
+                            <>
+                                <label
+                                    className="inline-block cursor-default bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg"
+                                    htmlFor={'name'}
+                                >
+                                    {t('common:add_file')}
+                                </label>
+                                <input id={'name'} type="file" className="hidden" disabled />
+                            </>
+                        </li>
+                        <li className="mb-4">
+                            <p>
+                                {t('post-process.update_task_1')}
+                                <Link
+                                    className="underline text-ve-collab-blue"
+                                    href={{
+                                        pathname: '/ve-designer/step-names',
+                                    }}
+                                    target="_blank"
+                                    aria-disabled
+                                >
+                                    {t('common:here')}
+                                </Link>
+                                {t('post-process.update_task_2')}
+                            </p>
+                        </li>
+                        <li className="mb-4">
+                            <p>{t('post-process.ve_model_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-3 mt-2"
+                                rows={5}
+                                placeholder={t('post-process.ve_model_placeholder')}
+                                disabled
+                            />
+                        </li>
+                        <li className="mb-4">
+                            <p>{t('post-process.literature_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.literature_placeholder')}
+                                disabled
+                            />
+
+                            <>
+                                <>
+                                    <label
+                                        className="inline-block cursor-default bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg"
+                                        htmlFor={'name'}
+                                    >
+                                        {t('common:add_file_multiple')}
+                                    </label>
+                                    <input
+                                        id={'name'}
+                                        type="file"
+                                        disabled
+                                        className="hidden"
+                                        multiple
+                                    />
+                                </>
+                            </>
+                        </li>
+                    </ol>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 
