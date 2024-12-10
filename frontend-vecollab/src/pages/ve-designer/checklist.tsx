@@ -451,7 +451,7 @@ export function ChecklistNoAuthPreview() {
                                             : t('common:no_auth.partner2')}
                                     </div>
                                     {defaultCheckboxes.map((v, i) => (
-                                        <div className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                                        <div key={i} className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
                                             <div className="grow">
                                                 <label className="w-fit pr-4 truncate font-konnect cursor-pointer py-2 flex items-center">
                                                     <input

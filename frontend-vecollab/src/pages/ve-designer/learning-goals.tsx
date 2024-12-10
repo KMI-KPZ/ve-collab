@@ -424,7 +424,7 @@ export function LearningGoalsNoAuthPreview() {
                         {Array(2)
                             .fill(null)
                             .map((_, index) => (
-                                <div className="flex mx-2">
+                                <div key={index} className="flex mx-2">
                                     <div className="shadow rounded p-2 w-fit h-fit">
                                         <div className="flex flex-col">
                                             <div className="font-bold text-lg mb-4 text-center">

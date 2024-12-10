@@ -374,7 +374,7 @@ export function EvaluationNoAuthPreview() {
                     {Array(2)
                         .fill(null)
                         .map((_, index) => (
-                            <div className="flex mx-2">
+                            <div key={index} className="flex mx-2">
                                 <div className="rounded shadow px-3 py-4 h-fit w-fit">
                                     <div className="flex flex-col">
                                         <div className="font-bold text-lg mb-4 text-center">
