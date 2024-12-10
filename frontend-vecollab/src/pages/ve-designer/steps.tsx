@@ -575,7 +575,7 @@ export function StepNamesNoAuthPreview() {
                 {Array(3)
                     .fill(null)
                     .map((_, index) => (
-                        <div className="shadow rounded px-2 py-4 my-4">
+                        <div key={index} className="shadow rounded px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
