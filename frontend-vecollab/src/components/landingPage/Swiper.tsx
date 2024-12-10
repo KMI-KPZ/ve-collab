@@ -1,15 +1,17 @@
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y, Autoplay } from 'swiper/modules';
-import Image from 'next/image';
+import Image, { StaticImageData } from 'next/image';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-import img1 from '@/images/frontpageSwiper/1.jpg';
-import img2 from '@/images/frontpageSwiper/2.jpg';
-import img3 from '@/images/frontpageSwiper/3.jpg';
+import vecollabNotebook from '@/images/frontpage/VeCollabNotebook.png';
+
+import screenshotSocialNetwork from '@/images/frontpage/screenshotSocialNetwork.jpg';
+import screenshotVeDesigner from '@/images/frontpage/screenshotVeDesigner.jpg';
 import { useTranslation } from 'next-i18next';
+import Link from 'next/link';
 
 interface Props {
     className?: string;
@@ -17,6 +19,44 @@ interface Props {
 
 export default function Swiper({ className }: Props) {
     const { t } = useTranslation('common');
+
+    const SlideContent = ({
+        title,
+        text,
+        link,
+        linkText,
+        img,
+        imgAlt,
+    }: {
+        title: string;
+        text: string;
+        link: string;
+        linkText?: string;
+        img?: StaticImageData;
+        imgAlt?: string;
+    }) => (
+        <div className="flex flex-wrap-reverse mx-12 my-6 gap-x-12 gap-y-6 pb-6 items-center justify-center">
+            <div className="w-1/2 min-w-96">
+                <h1 className="mb-4 text-2xl md:text-3xl font-bold">{title}</h1>
+                <p className="">{text}</p>
+                <p className="text-right my-4">
+                    <Link
+                        href={link}
+                        className="px-4 py-2 rounded-md bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
+                    >
+                        {linkText || 'Mehr erfahren'}
+                    </Link>
+                </p>
+            </div>
+            {img && (
+                <Image
+                    src={img}
+                    alt={imgAlt ? t(imgAlt) : 'image'}
+                    className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
+                ></Image>
+            )}
+        </div>
+    );
 
     return (
         <SwiperJS
@@ -29,66 +69,63 @@ export default function Swiper({ className }: Props) {
             slidesPerView={1}
         >
             <SwiperSlide>
-                <div className="flex flex-wrap-reverse mx-12 my-2 gap-x-12 gap-y-6 pb-6 items-center justify-center">
-                    {/* drop-shadow-[0_0_8px_#00748f] */}
-                    <Image
-                        src={img1}
-                        alt={t('designer_screenshot')}
-                        className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
-                    ></Image>
-
-                    <div className="w-1/2 min-w-96">
-                        <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            VE-Designer
-                        </span>
-                        <ul className="list-disc ml-6">
-                            <li>{t('ve_designer_li_1')}</li>
-                            <li>{t('ve_designer_li_2')}</li>
-                        </ul>
-                    </div>
-                </div>
+                <SlideContent
+                    title="Wir machen Sie fit für Virtuelle Austausche/Virtual Exchanges"
+                    text="Wollen Sie Ihre Lehre kooperativer, digitaler und internationaler
+                            machen? VE-Collab bietet Ihnen vielfältige Qualifizierungsangebote und
+                            gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung
+                            internationaler und nationaler virtueller Austausche (engl. virtual
+                            exchanges)."
+                    link="/#features"
+                    img={vecollabNotebook}
+                />
             </SwiperSlide>
-            <SwiperSlide>
-                <div className="flex flex-wrap-reverse mx-12 my-2 gap-x-12 gap-y-6 pb-6 items-center justify-center">
-                    {/* drop-shadow-[0_0_8px_#00748f] */}
-                    <Image
-                        src={img2}
-                        alt={t('material_screenshot')}
-                        className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
-                    ></Image>
 
-                    <div className="w-1/2 min-w-96">
-                        <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            {t('materials')}
-                        </span>
-                        <ul className="list-disc ml-6">
-                            <li>{t('materials_li_1')}</li>
-                            <li>{t('materials_li_2')}</li>
-                            <li>{t('materials_li_3')}</li>
-                        </ul>
-                    </div>
-                </div>
+            <SwiperSlide>
+                <SlideContent
+                    title="Finden Sie geeignete Partner*innen und vernetzen Sie sich"
+                    text="Finden Sie in unserer virtual Community of Practice VA-Partner*innen,
+                            teilen Sie Good-Practice-Beispiele und vernetzen Sie sich international."
+                    link="/about-virtual-community-of-practice"
+                    img={screenshotSocialNetwork}
+                />
             </SwiperSlide>
-            <SwiperSlide>
-                <div className="flex flex-wrap-reverse mx-12 my-2 gap-x-12 gap-y-6 pb-6 items-center justify-center">
-                    {/* drop-shadow-[0_0_8px_#00748f] */}
-                    <Image
-                        src={img3}
-                        alt={t('community_screenshot')}
-                        className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
-                    ></Image>
 
-                    <div className="w-1/2 min-w-96">
-                        <span className="block mb-4 text-xl text-ve-collab-blue underline underline-offset-2">
-                            {t('virtual_community_of_practice')}
-                        </span>
-                        <ul className="list-disc ml-6">
-                            <li>{t('community_li_1')}</li>
-                            <li>{t('community_li_2')}</li>
-                            <li>{t('community_li_3')}</li>
-                        </ul>
-                    </div>
-                </div>
+            <SwiperSlide>
+                <SlideContent
+                    title="Wir helfen Ihnen Schritt für Schritt bei der Planung"
+                    text="Mit unserem “VE-Designer” ermöglichen wir Noviz*innen einen leichten
+                            Einstieg in die VE-Planung und Expert*innen eine individuell anpassbare
+                            Maske für die kollegiale Planung der gemeinsamen virtuellen Austausche."
+                    link="/about-ve-designer"
+                    img={screenshotVeDesigner}
+                />
+            </SwiperSlide>
+
+            <SwiperSlide>
+                <SlideContent
+                    title="Für Institutionen"
+                    text="VE sind ein niedrigschwelliges Angebot zur Steigerung der
+                            Internationalisierung der Lehre und der Digital Literacy von Lehrenden
+                            und Studierenden. VE-Collab bietet Ihnen eine Plattform, mit der Sie VE
+                            an Ihrer Hochschule bekannt machen können, Lehrende qualifizieren und VE
+                            langfristig unterstützen können. Bauen Sie Kompetenzen auf und Hürden ab
+                            - stärken Sie die Internationalisierung an Ihrer Institution."
+                    link="/#institutional-values"
+                />
+            </SwiperSlide>
+
+            <SwiperSlide>
+                <SlideContent
+                    title="Für Lehrende"
+                    text="Mit VE können Sie sich und ihre Studierenden international vernetzen und
+                            die Welt in Ihre Veranstaltungen holen. VE-Collab hilft Ihnen, sich
+                            anhand kurzer Lehreinheiten mit VE vertraut zu machen, wichtige
+                            Grundlagen für die Durchführung von VE zu erwerben, und unterstützt Sie
+                            bei Ihrer Lehrplanung. Nutzen Sie VE-Collab außerdem, um sich in einer
+                            weltweiten Community zu VE zu vernetzen und auszutauschen."
+                    link="/#teachers-values"
+                />
             </SwiperSlide>
         </SwiperJS>
     );

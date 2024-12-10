@@ -102,7 +102,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
 
                             <div className="">
                                 {profileInformation.profile.ve_ready ? (
-                                    <span className="text-green-500">
+                                    <span className="text-white bg-green-500 rounded-full shadow shadow-green-500 px-2 py-1 my-1">
                                         <MdCheck className="inline mr-1 mb-1" />
                                         {t('ve_ready_true')}
                                     </span>
@@ -125,7 +125,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             <div className="group/veWindow">
                                 <H2 className="inline">{t('ve_window')}</H2>
                                 <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/veWindow:visible">
-                                    <Link href={'/profle/edit'} className="">
+                                    <Link href={'/profile/edit'} className="">
                                         <MdEdit className="inline" /> {t('add_plan')}
                                     </Link>
                                 </span>
@@ -261,7 +261,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                 })}
                             </div>
                             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                                <Link href={`/plans`} onClick={(e) => e.preventDefault()}>
+                                <Link href={`/plans`}>
                                     {t('common:all')}{' '}
                                     <MdArrowRight size={24} className="inline mx-1" />
                                 </Link>

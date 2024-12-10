@@ -487,7 +487,7 @@ export default function TimelinePost({
                     <div className="my-5 ml-5 p-4 rounded bg-slate-100">
                         <div className="flex items-center">
                             <PostHeader
-                                author={post.repostAuthor as BackendPostAuthor}
+                                author={post.author as BackendPostAuthor}
                                 date={post.originalCreationDate as string}
                             />
                         </div>

@@ -106,7 +106,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                     </div>
                 </div>
                 <span className={`mx-2 ${showGoodPracticeOnly ? '' : 'text-gray-600'}   `}>
-                    {t('plans_filter_good_practice_only')}
+                    {t('plans_filter_good_practice_examples')}
                 </span>
             </div>
 

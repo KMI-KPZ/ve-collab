@@ -90,7 +90,7 @@ export function PlansBrowser({
                         plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className={`flex flex-row py-3 px-1 space-x-3 items-center border-b border-bg-gray-300 ${
+                                className={`flex flex-row min-h-[72px] p-1 space-x-3 items-center border-b border-bg-gray-300 ${
                                     isNoAuthPreview ? '' : 'hover:bg-gray-100'
                                 }`}
                             >
