@@ -54,7 +54,7 @@ interface Props {
 }
 
 LearningGoals.auth = true;
-LearningGoals.autoForward = true;
+LearningGoals.noAuthPreview = <LearningGoalsNoAuthPreview />;
 export default function LearningGoals({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
@@ -379,6 +379,142 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function LearningGoalsNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+
+    const prevpage = '/ve-designer/target-groups';
+    const nextpage = '/ve-designer/learning-env';
+
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(LearningGoalsFormSchema),
+        defaultValues: {
+            majorLearningGoals: [],
+            individualLearningGoals: [],
+            topics: [{ name: '' }],
+        },
+    });
+
+    return (
+        <div className='opacity-55'>
+            <CustomHead pageTitle={t('goals.title')} pageSlug={'ve-designer/learning-goals'} />
+            <Wrapper
+                socket={undefined}
+                title={t('goals.title')}
+                subtitle={t('goals.subtitle')}
+                description={t('goals.description')}
+                tooltip={{
+                    text: t('goals.tooltip'),
+                    link: '/learning-material/1/Potenziale',
+                }}
+                stageInMenu="generally"
+                idOfProgress="learning_goals"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div>
+                    <div className="flex flex-wrap">
+                        {Array(2)
+                            .fill(null)
+                            .map((_, index) => (
+                                <div className="flex mx-2">
+                                    <div className="shadow rounded p-2 w-fit h-fit">
+                                        <div className="flex flex-col">
+                                            <div className="font-bold text-lg mb-4 text-center">
+                                                {index === 0
+                                                    ? t('common:no_auth.partner1')
+                                                    : t('common:no_auth.partner2')}
+                                            </div>
+                                            <textarea
+                                                rows={3}
+                                                className="border border-gray-400 rounded-lg p-2 ml-2 w-96"
+                                                disabled
+                                                placeholder={t('goals.learningGoal_placeholder', {
+                                                    username:
+                                                        index === 0
+                                                            ? t('common:no_auth.partner1')
+                                                            : t('common:no_auth.partner2'),
+                                                })}
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+                <div className="mt-12">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('goals.2-title')}
+                    </div>
+                    <p className="mb-8">{t('goals.2-subtitle')}</p>
+
+                    <div className="w-full lg:w-1/2">
+                        <CreatableSelect
+                            onChange={() => {}}
+                            onBlur={() => {}}
+                            value={null}
+                            isDisabled
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder={t('goals.2-placeholder')}
+                        />
+                    </div>
+                </div>
+                <div className="mt-12">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('goals.3-title')}
+                    </div>
+                    <p className="mb-8">{t('goals.3-subtitle')}</p>
+
+                    <div className="w-full lg:w-1/2">
+                        <div className="flex flex-col ">
+                            <div className="mt-2 flex flex-col">
+                                <div className="flex">
+                                    <div className="grow mr-2">
+                                        <input
+                                            type="text"
+                                            placeholder={t('goals.3-placeholder')}
+                                            className="w-full border border-gray-300 rounded-lg p-2 "
+                                            disabled
+                                        />
+                                    </div>
+                                    <button type="button" onClick={() => {}}>
+                                        <RxMinus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="">
+                            <button
+                                className="p-2 m-2 bg-white rounded-full shadow"
+                                type="button"
+                                onClick={() => {}}
+                                disabled
+                            >
+                                <RxPlus size={25} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

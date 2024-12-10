@@ -368,6 +368,8 @@
         "group_name1": "VE Foreign Languages",
         "group_description1": "Get-together for VE in the foreign languages field",
         "group_name2": "Climate Change",
-        "plan_name": "Plan VE summer term 2025"
+        "plan_name": "Plan VE summer term 2025",
+        "partner1": "Partner 1",
+        "partner2": "Partner 2"
     }
 }
