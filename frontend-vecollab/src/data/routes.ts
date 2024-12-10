@@ -1,15 +1,3 @@
-// Not included (not public accessible, error pages, user-specific pages):
-
-// api/...
-// orcidAccountLinkCallback
-// LEARNINGMATERIAL_EDIT: '/learning-material/edit',
-// MEETING_ID: `/meeting/${id}`,
-// PLAN_PDF_PLANID: `/plan/pdf/${planId}`,
-// PROFILE_EDIT: '/profile/edit',
-// ERROR500: '/500',
-// ERROR404: '/404',
-// ETHERPAD: `/etherpad/${id}`,
-
 export const ROUTES = {
     HOME: '',
     SEARCH: '/search',
@@ -36,4 +24,16 @@ export const ROUTES = {
     VEDESIGNER_TARGETGROUPS: '/ve-designer/target-groups',
 };
 
-// declare dynamic routes in sitemap
+// declare dynamic routes in sitemap.ts
+
+// Not included (not public accessible, error pages, user-specific pages):
+
+// api/...
+// orcidAccountLinkCallback
+// LEARNINGMATERIAL_EDIT: '/learning-material/edit',
+// MEETING_ID: `/meeting/${id}`,
+// PLAN_PDF_PLANID: `/plan/pdf/${planId}`,
+// PROFILE_EDIT: '/profile/edit',
+// ERROR500: '/500',
+// ERROR404: '/404',
+// ETHERPAD: `/etherpad/${id}`,
