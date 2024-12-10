@@ -50,17 +50,12 @@ export default function AboutVeDesigner(): JSX.Element {
                         </div>
                     </div>
                 </div>
-
-                <video
-                    width="320"
-                    height="240"
-                    controls
-                    preload="none"
-                    className="w-full h-auto m-auto rounded-md"
-                >
-                    <source src="/videos/screencast-web.webm" type="video/webm" />
-                    {t('common:video_not_supported')}
-                </video>
+                <div className="w-full">
+                    <video width="100%" controls className="rounded-md">
+                        <source src="/videos/screencast-web.webm" type="video/webm" />
+                        {t('common:video_not_supported')}
+                    </video>
+                </div>
             </div>
         </>
     );
