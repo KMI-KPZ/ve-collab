@@ -61,6 +61,7 @@ interface Props {
 }
 
 StepNames.auth = true;
+StepNames.noAuthPreview = <StepNamesNoAuthPreview />;
 export default function StepNames({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
@@ -544,6 +545,135 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function StepNamesNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className='opacity-55'>
+            <CustomHead pageTitle={t('step-names.title')} pageSlug={'ve-designer/steps'} />
+            <Wrapper
+                socket={undefined}
+                title={t('step-names.title')}
+                subtitle={t('step-names.subtitle')}
+                description={t('step-names.description')}
+                tooltip={{
+                    text: t('step-names.tooltip_text'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                methods={methods}
+                nextpage={`/ve-designer/finish`}
+                stageInMenu="steps"
+                idOfProgress="stepsGenerally"
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                {Array(3)
+                    .fill(null)
+                    .map((_, index) => (
+                        <div key={index} className="shadow rounded px-2 py-4 my-4">
+                            <div className="flex justify-between items-center">
+                                <div className="ml-6">
+                                    <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
+                                        <div>
+                                            <label>{t('step-names.from')}</label>
+                                            <input
+                                                type="date"
+                                                disabled
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>{t('step-names.to')}</label>
+                                            <input
+                                                type="date"
+                                                disabled
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>{t('step-names.name')}</label>
+                                            <input
+                                                type="text"
+                                                value={t(`common:no_auth.step${index + 1}`)}
+                                                disabled
+                                                placeholder={t('step-names.name_placeholder')}
+                                                className="border border-gray-400 rounded-lg p-2 mx-2"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>{t('step-names.time')}</label>
+                                            <input
+                                                type="number"
+                                                disabled
+                                                placeholder={t('step-names.time_placeholder')}
+                                                className="border border-gray-400 rounded-lg py-2 pl-2 mx-2 w-11"
+                                            />
+                                            <label className="mr-4">h</label>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center mt-2">
+                                        <label>{t('step-names.learning_objectives')}</label>
+                                        <textarea
+                                            disabled
+                                            rows={1}
+                                            placeholder={t(
+                                                'step-names.learning_objectives_placeholder'
+                                            )}
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            onChange={(e) => {}}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex items-center mr-6">
+                                    <Image
+                                        className="mx-2"
+                                        src={iconUpAndDown}
+                                        width={20}
+                                        height={20}
+                                        alt="arrowUpAndDown"
+                                    ></Image>
+                                    <Image
+                                        className="mx-2 cursor-pointer"
+                                        onClick={() => {}}
+                                        src={trash}
+                                        width={20}
+                                        height={20}
+                                        alt="deleteStep"
+                                    ></Image>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                <div className="flex justify-center">
+                    <button
+                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        type="button"
+                        title={t('step-names.new_phase')}
+                        onClick={() => {}}
+                        disabled
+                    >
+                        <RxPlus size={25} />
+                    </button>
+
+                    <button
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        type="button"
+                        title={t('step-names.import_phases')}
+                        onClick={(e) => {}}
+                        disabled
+                    >
+                        {t('common:import')}
+                    </button>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

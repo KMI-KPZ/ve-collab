@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { RxDotFilled, RxDotsVertical } from 'react-icons/rx';
+import { RxDotFilled } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ interface Props {
     foreignUser: boolean;
     followers: string[];
     veReady: boolean;
+    isNoAuthPreview?: boolean;
 }
 
 ProfileHeader.auth = true;
@@ -27,6 +28,7 @@ export default function ProfileHeader({
     foreignUser,
     followers,
     veReady,
+    isNoAuthPreview = false,
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -36,9 +38,13 @@ export default function ProfileHeader({
 
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
     const handleOpenInvitationDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsInvitationDialogOpen(true);
     };
     const handleCloseInvitationDialog = () => {
+        if (isNoAuthPreview) return;
+
         setIsInvitationDialogOpen(false);
     };
 
@@ -50,6 +56,8 @@ export default function ProfileHeader({
         router.query.username !== undefined ? (router.query.username as string) : '';
 
     const followUser = () => {
+        if (isNoAuthPreview) return;
+
         fetchPOST(`/follow?user=${usernameOfProfileOwner}`, {}, session?.accessToken).then(() => {
             // probably a better solution is to control follower state from parent component and
             // manage re-render of follow button by state and not by forcing a refresh and new api requests
@@ -59,6 +67,8 @@ export default function ProfileHeader({
     };
 
     const unfollowUser = () => {
+        if (isNoAuthPreview) return;
+
         fetchDELETE(`/follow?user=${usernameOfProfileOwner}`, {}, session?.accessToken).then(() => {
             // probably a better solution is to control follower state from parent component and
             // manage re-render of follow button by state and not by forcing a refresh and new api requests
@@ -68,6 +78,8 @@ export default function ProfileHeader({
     };
 
     const sendVeInvitation = () => {
+        if (isNoAuthPreview) return;
+
         const payload = {
             message: veInvitationMessage,
             plan_id: chosenPlanId === '' ? null : chosenPlanId,
@@ -88,6 +100,7 @@ export default function ProfileHeader({
                     alt={t('profile_picture')}
                     width={180}
                     height={180}
+                    isNoAuthPreview={isNoAuthPreview}
                 />
             </div>
             <div className={'mr-auto'}>
@@ -100,7 +113,7 @@ export default function ProfileHeader({
                                         'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
                                     }
                                 >
-                                    <span>{t("edit_profile")}</span>
+                                    <span>{t('edit_profile')}</span>
                                 </button>
                             </Link>
                         </>
@@ -128,7 +141,7 @@ export default function ProfileHeader({
                                 className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)]"
                             />
                             <div className="flex items-center text-red-600">
-                                {t("ve_ready_false")}
+                                {t('ve_ready_false')}
                             </div>
                         </>
                     )}
@@ -139,109 +152,106 @@ export default function ProfileHeader({
                         {/* determine if current session user already follow the user behind the profile and render the follow button accordingly*/}
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button
-                                className={
-                                    'w-40 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg'
-                                }
+                                className={`w-40 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg ${
+                                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                                }`}
                                 onClick={unfollowUser}
                             >
                                 {' '}
-                                <span>{t("is_following")}</span>
+                                <span>{t('is_following')}</span>
                             </button>
                         ) : (
                             <button
-                                className={
-                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg'
-                                }
+                                className={`w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg ${
+                                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                                }`}
                                 onClick={followUser}
                             >
                                 {' '}
-                                <span>{t("follow")}</span>
+                                <span>{t('follow')}</span>
                             </button>
                         )}
                         <button
-                            className={
-                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                            }
+                            className={`w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl ${
+                                isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                            }`}
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleOpenInvitationDialog();
                             }}
                         >
                             {' '}
-                            <span>{t("ve_invitation")}</span>
+                            <span>{t('ve_invitation')}</span>
                         </button>
-                        {/* <button className={'h-12 ml-2'}>
-                            <span>
-                                <RxDotsVertical size={30} color={''} />
-                            </span>
-                        </button> */}
-                        <Dialog
-                            isOpen={isInvitationDialogOpen}
-                            title={t("invite_to_ve", {name: name})}
-                            onClose={handleCloseInvitationDialog}
-                        >
-                            <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
-                                <div>{t("ve_invitation_message")}</div>
-                                <textarea
-                                    className={
-                                        'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
-                                    }
-                                    rows={5}
-                                    placeholder={
-                                        t("ve_invitation_message_placeholder")
-                                    }
-                                    value={veInvitationMessage}
-                                    onChange={(e) => setVeInvitationMessage(e.target.value)}
-                                ></textarea>
-                                <div className="flex mb-2 mt-4">
-                                    <input
-                                        type="checkbox"
-                                        className="mr-2"
-                                        checked={appendPlanCheckboxChecked}
-                                        onChange={(e) =>
-                                            setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
+                        {!isNoAuthPreview && (
+                            <Dialog
+                                isOpen={isInvitationDialogOpen}
+                                title={t('invite_to_ve', { name: name })}
+                                onClose={handleCloseInvitationDialog}
+                            >
+                                <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
+                                    <div>{t('ve_invitation_message')}</div>
+                                    <textarea
+                                        className={
+                                            'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
                                         }
-                                    />
-                                    <p>{t("append_existing_plan")}</p>
-                                </div>
-                                {appendPlanCheckboxChecked && (
-                                    <>
-                                        <PublicPlansSelect
-                                            chosenPlanId={chosenPlanId}
-                                            setChosenPlanId={setChosenPlanId}
+                                        rows={5}
+                                        placeholder={t('ve_invitation_message_placeholder')}
+                                        value={veInvitationMessage}
+                                        onChange={(e) => setVeInvitationMessage(e.target.value)}
+                                    ></textarea>
+                                    <div className="flex mb-2 mt-4">
+                                        <input
+                                            type="checkbox"
+                                            className="mr-2"
+                                            checked={appendPlanCheckboxChecked}
+                                            onChange={(e) =>
+                                                setAppendPlanCheckboxChecked(
+                                                    !appendPlanCheckboxChecked
+                                                )
+                                            }
                                         />
-                                        <p className="my-2 text-gray-400">
-                                            {t("append_plan_disclaimer")}
-                                        </p>
-                                    </>
-                                )}
+                                        <p>{t('append_existing_plan')}</p>
+                                    </div>
+                                    {appendPlanCheckboxChecked && (
+                                        <>
+                                            <PublicPlansSelect
+                                                chosenPlanId={chosenPlanId}
+                                                setChosenPlanId={setChosenPlanId}
+                                            />
+                                            <p className="my-2 text-gray-400">
+                                                {t('append_plan_disclaimer')}
+                                            </p>
+                                        </>
+                                    )}
 
-                                <div className="flex absolute bottom-0 w-full">
-                                    <button
-                                        className={
-                                            'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                        }
-                                        onClick={handleCloseInvitationDialog}
-                                    >
-                                        <span>{t("common:cancel")}</span>
-                                    </button>
-                                    <button
-                                        className={
-                                            'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                        }
-                                        onClick={(e) => {
-                                            sendVeInvitation();
-                                            handleCloseInvitationDialog();
-                                        }}
-                                    >
-                                        <span>{t("common:send")}</span>
-                                    </button>
+                                    <div className="flex absolute bottom-0 w-full">
+                                        <button
+                                            className={
+                                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                            }
+                                            onClick={handleCloseInvitationDialog}
+                                        >
+                                            <span>{t('common:cancel')}</span>
+                                        </button>
+                                        <button
+                                            className={
+                                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                            }
+                                            onClick={(e) => {
+                                                sendVeInvitation();
+                                                handleCloseInvitationDialog();
+                                            }}
+                                        >
+                                            <span>{t('common:send')}</span>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        </Dialog>
+                            </Dialog>
+                        )}
                         {successPopupOpen && (
                             <Alert
-                                message={t("alert_ve_invitation_sent")}
+                                message={t('alert_ve_invitation_sent')}
                                 autoclose={2000}
                                 onClose={() => setSuccessPopupOpen(false)}
                             />

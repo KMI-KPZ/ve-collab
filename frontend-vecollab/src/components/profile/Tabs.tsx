@@ -3,6 +3,7 @@ import Tab from './Tab';
 
 interface TabsProps {
     children: JSX.Element[];
+    isNoAuthPreview?: boolean;
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -15,6 +16,8 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
     }
 
     onClickTabItem = (tab: string) => {
+        if (this.props.isNoAuthPreview) return;
+
         this.setState({ activeTab: tab });
     };
 
@@ -36,6 +39,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                                 tabid={child.props.tabid}
                                 tabname={child.props.tabname}
                                 onClick={onClickTabItem}
+                                isNoAuthPreview={this.props.isNoAuthPreview}
                             />
                         );
                     })}

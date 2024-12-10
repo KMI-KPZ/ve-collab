@@ -139,10 +139,6 @@ export default function PageCategoryNotSelected(props: Props) {
             <CustomHead pageTitle={t('materials')} pageSlug={`learning-material`} />
             <div className="flex justify-between pt-12 mb-4">
                 <div>
-                    {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}
-                    {/* <div className="w-fit py-3 px-4 mb-2 font-bold text-4xl text-slate-600 border-b-4 border-ve-collab-blue rounded-md bg-ve-collab-blue-light">
-                        Selbstlernmaterialien
-                    </div> */}
                     <div className="mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8">
                         {t('materials')}
                     </div>

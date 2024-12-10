@@ -31,6 +31,7 @@ from resources.network.space import (
 from resources.planner.ve_plan import VEPlanResource
 from handlers.network.timeline import BaseTimelineHandler
 import util
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -1140,6 +1141,7 @@ class RepostHandler(BaseHandler):
                 # reject if original post doesnt exist
                 try:
                     post = post_manager.get_post(http_body["post_id"])
+                    originalPost = copy.deepcopy(post)
                 except PostNotExistingException:
                     self.set_status(409)
                     self.write(
@@ -1187,6 +1189,10 @@ class RepostHandler(BaseHandler):
                 post["repostAuthor"] = self.current_user.username
                 post["originalCreationDate"] = post["creation_date"]
                 post["creation_date"] = datetime.utcnow()
+                if "isRepost" in originalPost and originalPost["isRepost"]:
+                    post["text"] = originalPost["repostText"]
+                    post["author"] = originalPost["repostAuthor"]
+
                 post["repostText"] = http_body["text"]
                 post["space"] = space_id
                 post["likers"] = []
