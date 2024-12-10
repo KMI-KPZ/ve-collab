@@ -37,12 +37,12 @@ export default function Swiper({ className }: Props) {
     }) => (
         <div className="flex flex-wrap-reverse mx-12 my-6 gap-x-12 gap-y-6 pb-6 items-center justify-center">
             <div className="w-1/2 min-w-96">
-                <h1 className="mb-4 text-xl font-bold">{title}</h1>
+                <h1 className="mb-4 text-2xl md:text-3xl font-bold">{title}</h1>
                 <p className="">{text}</p>
                 <p className="text-right my-4">
                     <Link
                         href={link}
-                        className='px-4 py-2 bg-white/15 hover:bg-white/25 rounded-md transition easy-in-out"'
+                        className="px-4 py-2 rounded-md bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
                     >
                         {linkText || 'Mehr erfahren'}
                     </Link>
