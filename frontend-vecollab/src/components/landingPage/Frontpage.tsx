@@ -76,7 +76,11 @@ export default function Frontpage() {
         image: React.ReactNode;
         className?: string;
     }) => (
-        <div className={`bg-white p-6 relative overflow-hidden ${className ? className : ''}`}>
+        <div
+            className={`bg-white p-6 relative overflow-hidden flex-1 min-w-[250px] ${
+                className ? className : ''
+            }`}
+        >
             {image}
 
             <span className="block mb-4 text-xl font-bold">{title}</span>
@@ -110,12 +114,12 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-full sm:w-5/6 mx-auto dm:my-10 max-w-screen-xl" id="features">
+            <div className="w-full sm:w-5/6 mx-auto md:my-10 max-w-screen-xl" id="features">
                 <H2 className="mb-8 font-bold !text-2xl md:!text-3xl text-center">
                     {t('frontpage.features.title')}
                 </H2>
 
-                <div className="mx-auto flex gap-x-12 lg:w-5/6 justify-center text-center">
+                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
                     <FeatureBox
                         title={t('frontpage.features.learning_material.title')}
                         text={t('frontpage.features.learning_material.text')}
@@ -136,7 +140,7 @@ export default function Frontpage() {
                             <Image
                                 src={featureboxDesigner}
                                 alt={t('frontpage.features.ve_designer.image_alt')}
-                                className="h-[220px] w-auto m-auto transition ease-in-out hue-rotate-[256deg] saturate-100 group-hover/box:saturate-200"
+                                className="h-[220px] w-auto m-auto transition ease-in-out hue-rotate-[86deg] saturate-100 group-hover/box:saturate-200"
                             ></Image>
                         }
                         link="/about-ve-designer"
@@ -179,7 +183,7 @@ export default function Frontpage() {
                                 <Image
                                     src={featureboxCompetence}
                                     alt={t('frontpage.institutional_values.value1.image_alt')}
-                                    className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
+                                    className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-200"
                                 ></Image>
                             }
                         />
@@ -191,7 +195,7 @@ export default function Frontpage() {
                                 <Image
                                     src={featureboxInternationlization}
                                     alt={t('frontpage.institutional_values.value2.image_alt')}
-                                    className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
+                                    className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-200"
                                 ></Image>
                             }
                         />
@@ -222,7 +226,7 @@ export default function Frontpage() {
                                 <Image
                                     src={featureboxSupport}
                                     alt={t('frontpage.teachers_values.value2.image_alt')}
-                                    className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
+                                    className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-200"
                                 ></Image>
                             }
                         />
