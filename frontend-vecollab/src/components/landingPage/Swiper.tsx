@@ -44,7 +44,7 @@ export default function Swiper({ className }: Props) {
                         href={link}
                         className="px-4 py-2 rounded-md text-white bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
                     >
-                        {linkText || 'Mehr erfahren'}
+                        {linkText || t("show_more")}
                     </Link>
                 </p>
             </div>
@@ -63,19 +63,15 @@ export default function Swiper({ className }: Props) {
             modules={[Navigation, Pagination, A11y, Autoplay]}
             navigation
             pagination={{ clickable: true }}
-            autoplay={{ delay: 5000 }}
+            autoplay={{ delay: 7500 }}
             loop
             spaceBetween={50}
             slidesPerView={1}
         >
             <SwiperSlide>
                 <SlideContent
-                    title="Wir machen Sie fit für Virtuelle Austausche/Virtual Exchanges"
-                    text="Wollen Sie Ihre Lehre kooperativer, digitaler und internationaler
-                            machen? VE-Collab bietet Ihnen vielfältige Qualifizierungsangebote und
-                            gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung
-                            internationaler und nationaler virtueller Austausche (engl. virtual
-                            exchanges)."
+                    title={t("frontpage.slideshow.slide1.title")}
+                    text={t("frontpage.slideshow.slide1.text")}
                     link="/#features"
                     img={vecollabNotebook}
                 />
@@ -83,9 +79,8 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title="Finden Sie geeignete Partner*innen und vernetzen Sie sich"
-                    text="Finden Sie in unserer virtual Community of Practice VA-Partner*innen,
-                            teilen Sie Good-Practice-Beispiele und vernetzen Sie sich international."
+                    title={t("frontpage.slideshow.slide2.title")}
+                    text={t("frontpage.slideshow.slide2.text")}
                     link="/about-virtual-community-of-practice"
                     img={screenshotSocialNetwork}
                 />
@@ -93,10 +88,8 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title="Wir helfen Ihnen Schritt für Schritt bei der Planung"
-                    text="Mit unserem “VE-Designer” ermöglichen wir Noviz*innen einen leichten
-                            Einstieg in die VE-Planung und Expert*innen eine individuell anpassbare
-                            Maske für die kollegiale Planung der gemeinsamen virtuellen Austausche."
+                    title={t("frontpage.slideshow.slide3.title")}
+                    text={t("frontpage.slideshow.slide3.text")}
                     link="/about-ve-designer"
                     img={screenshotVeDesigner}
                 />
@@ -104,26 +97,16 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title="Für Institutionen"
-                    text="VE sind ein niedrigschwelliges Angebot zur Steigerung der
-                            Internationalisierung der Lehre und der Digital Literacy von Lehrenden
-                            und Studierenden. VE-Collab bietet Ihnen eine Plattform, mit der Sie VE
-                            an Ihrer Hochschule bekannt machen können, Lehrende qualifizieren und VE
-                            langfristig unterstützen können. Bauen Sie Kompetenzen auf und Hürden ab
-                            - stärken Sie die Internationalisierung an Ihrer Institution."
+                    title={t("frontpage.slideshow.slide4.title")}
+                    text={t("frontpage.slideshow.slide4.text")}
                     link="/#institutional-values"
                 />
             </SwiperSlide>
 
             <SwiperSlide>
                 <SlideContent
-                    title="Für Lehrende"
-                    text="Mit VE können Sie sich und ihre Studierenden international vernetzen und
-                            die Welt in Ihre Veranstaltungen holen. VE-Collab hilft Ihnen, sich
-                            anhand kurzer Lehreinheiten mit VE vertraut zu machen, wichtige
-                            Grundlagen für die Durchführung von VE zu erwerben, und unterstützt Sie
-                            bei Ihrer Lehrplanung. Nutzen Sie VE-Collab außerdem, um sich in einer
-                            weltweiten Community zu VE zu vernetzen und auszutauschen."
+                    title={t("frontpage.slideshow.slide5.title")}
+                    text={t("frontpage.slideshow.slide5.text")}
                     link="/#teachers-values"
                 />
             </SwiperSlide>

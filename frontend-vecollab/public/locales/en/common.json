@@ -333,13 +333,81 @@
     "homepage_banner": "Cooperative, digital and international teaching",
     "homepage_text": "VE-Collab supports educators with a variety of qualification offers in building their own competencies and provides assistance in the initiation, planning, and implementation of international and national virtual exchanges. By building a Community of Practice, we also promote active collegial (virtual) exchange.",
     "frontpage": {
-        "slideshow": {},
-        "features": {
-            "title": "Features"
+        "slideshow": {
+            "slide1": {
+                "title": "We get you ready for virtual exchanges",
+                "text": "Do you want to make your teaching more cooperative, digital and international? VE-Collab offers you a wide range of qualification options and provides assistance with the initialization, planning and implementation of international and national virtual exchanges."
+            },
+            "slide2": {
+                "title": "Find suitable partners and network",
+                "text": "Find VA partners in our virtual Community of Practice, share good practice examples and network internationally."
+            },
+            "slide3": {
+                "title": "Step-by-step planning assistance",
+                "text": "Our “VE Designer” offers novices an easy introduction to VE planning and experts an individually customizable form for co-creative planning of joint virtual exchanges."
+            },
+            "slide4": {
+                "title": "Added value for institutions",
+                "text": "VEs are a low-threshold offer to increase the internationalization of teaching and the digital literacy of teachers and students. VE-Collab offers a platform which lets you spread the word about VE at your university, qualify teachers and support VE in the long term. Build skills and tackle obstacles - strengthen internationalization at your institution."
+            },
+            "slide5": {
+                "title": "Added value for teachers",
+                "text": "With VEs you and your students can network internationally and bring the world into your events. VE-Collab helps you to familiarize yourself with VE through short self-study units, to acquire important basics for carrying out VE, and supports you in your curriculum planning. You can also use VE-Collab to network and exchange information about VE in a global community."
+            }
         },
-        "institutional_values": {},
-        "teachers_values": {}
+        "logo_infai": "Logo of InfAI e.V.",
+        "logo_uni_leipzig": "Logo of the University of Leipzig",
+        "features": {
+            "title": "Features",
+            "learning_material": {
+                "title": "Learning materials",
+                "text": "Constantly growing offer of interactive training materials as OER",
+                "image_alt": "Learning at your desk"
+            },
+            "ve_designer": {
+                "title": "VE planning tool “VE-Designer”",
+                "text": "Step-by-step support for (joint) VE planning",
+                "image_alt": "Forms for planning"
+            },
+            "vcop": {
+                "title": "Virtual Community of Practice",
+                "text": "Find VE partners, share good practice examples, network (internationally).",
+                "image_alt": "Network of people"
+            }
+        },
+        "institutional_values": {
+            "title": "Added values for institutions",
+            "value1": {
+                "title": "Build skills - tackle obstacles",
+                "text": "Support your teachers and employees in initiating and carrying out virtual exchanges with VE-Collab's qualification and support features.",
+                "image_alt": "Jump over obstacle"
+            },
+            "value2": {
+                "title": "Strengthen internationalization and digital literacy",
+                "text": "Strengthen the internationalization of studies and the digital literacy of teachers and students through virtual exchanges by anchoring VE-Collab in your institution.",
+                "image_alt": "Globe with network"
+            }
+        },
+        "teachers_values": {
+            "title": "Added value for teachers",
+            "value1": {
+                "title": "Qualification",
+                "text": "Educate yourself flexibly with VE-Collab's self-study materials and take your own teaching to a new level.",
+                "image_alt": "Person with certificates"
+            },
+            "value2": {
+                "title": "Support",
+                "text": "Our VE-Designer supports you step-by-step in planning and organizing your virtual exchange; additionally, you can get more help in the community.",
+                "image_alt": "Person with checklist"
+            },
+            "value3": {
+                "title": "Networking",
+                "text": "VE-Collab lets you easily establish new (international) contacts for conducting virtual exchanges.",
+                "image_alt": "Network of people"
+            }
+        }
     },
+    "show_more": "Learn more",
     "access_denied": "Access denied",
     "qualification": "Qualification",
     "designer_screenshot": "Screenshot of the VE-Designer",
@@ -376,27 +444,34 @@
         "group_name1": "VE Foreign Languages",
         "group_description1": "Get-together for VE in the foreign languages field",
         "group_name2": "Climate Change",
-        "plan_name": "Plan VE summer term 2025"
+        "plan_name": "Plan VE summer term 2025",
+        "partner1": "Partner 1",
+        "partner2": "Partner 2",
+        "step1": "Getting to Know",
+        "step2": "Working on Tasks",
+        "step3": "Evaluation"
     },
     "about-ve-designer": {
-        "title": "VA-Planungstool \"VE-Designer\"",
+        "title": "VE planning tool \"VE-Designer\"",
         "text": [
-            "Planungstool, das VA-Partner*innen Schritt für Schritt durch die Planung eines VA leitet ",
-            "zusätzliche Hilfestellungen zu fast allen Aspekten der Planung, u. a. durch Verweise auf die Selbstlernmaterialien ",
-            "Möglichkeit, erarbeitete und durchgeführte VA-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen",
-            "Möglichkeit, Inhalte veröffentlichter Good-Practice-Beispiele in die eigene Planung zu importieren",
-            "exklusiv für registrierte Nutzer*innen"
-        ]
+            "Tool that guides VE partners step by step through the planning process of a VE",
+            "Additional assistance on almost all aspects of planning, e.g. by refernces to the learning material",
+            "Opportunity to share developed and implemented VE plans as good practice examples with the community",
+            "Possibility to importing content from other good practice examples into your own plans",
+            "exclusively available for registered users only"
+        ],
+        "image_alt": "Group of people"
     },
     "about-vcop": {
         "title": "Virtual Community of Practice",
         "text": [
-            "Profil erstellen, Gruppe beitreten (oder auch selbst eine gründen), Status posten, Interessantes teilen oder Fragen stellen…",
-            "Informiert bleiben durch Notifications",
-            "VA-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching",
-            "Möglichkeit, auch interdisziplinär Partner*innen zu finden ",
-            "Schaufenster für aktuelle und vergangene VA-Projekte",
-            "exklusiv für registrierte Nutzer*innen"
-        ]
+            "Create a profile, join groups (or start one yourself), post status updates, share interesting things or ask questions...",
+            "Stay informed through notifications",
+            "VE-specific profile information as a basis for the partner matching",
+            "Opportunity to find interdisciplinary partners",
+            "Personal vitrine for current and past VE projects",
+            "exclusively available for registered users only"
+        ],
+        "image_alt": "Group of people"
     }
 }

@@ -52,7 +52,7 @@ const emptyPysicalMobility: PhysicalMobility = {
 };
 
 LearningEnv.auth = true;
-LearningEnv.autoForward = true;
+LearningEnv.noAuthPreview = <LearningEnvNoAuthPreview />;
 export default function LearningEnv({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
@@ -345,6 +345,107 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function LearningEnvNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+    const prevpage = '/ve-designer/learning-goals';
+    const nextpage = '/ve-designer/methodology';
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('learningEnv.title')} pageSlug={'ve-designer/learning-env'} />
+            <Wrapper
+                socket={undefined}
+                title={t('learningEnv.title')}
+                subtitle={t('learningEnv.subtitle')}
+                description={t('learningEnv.description')}
+                tooltip={{
+                    text: t('learningEnv.tooltip'),
+                    link: '/learning-material/3/Digitale%20Medien',
+                }}
+                stageInMenu="generally"
+                idOfProgress="learning_env"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className="mt-4">
+                    <textarea
+                        rows={3}
+                        placeholder={t('learningEnv.placeholder')}
+                        className="border border-gray-300 rounded-lg p-2 w-full lg:w-1/2"
+                        disabled
+                    />
+                </div>
+                <div className="mt-4">
+                    <div
+                        className={
+                            'flex justify-between items-center text-slate-600 text-xl relative'
+                        }
+                    >
+                        {t('learningEnv.subtitle2')}
+                    </div>
+                    <p className="mb-8">{t('learningEnv.description2')}</p>
+                    <div className="w-full lg:w-1/2">
+                        <div className="flex items-center">
+                            <label htmlFor="courseFormat" className="mr-2">
+                                {t('learningEnv.format')}:
+                            </label>
+                            <select
+                                placeholder={`${t('common:choose')}...`}
+                                className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
+                                disabled
+                            >
+                                <option value={t('learningEnv.sync')}>
+                                    {t('learningEnv.sync')}
+                                </option>
+                                <option value={t('learningEnv.async')}>
+                                    {t('learningEnv.async')}
+                                </option>
+                                <option value={t('learningEnv.asyncAndSync')}>
+                                    {t('learningEnv.asyncAndSync')}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex w-full lg:w-2/3 items-center">
+                        {t('learningEnv.pysicalSupp')}
+                        <div className="flex w-40 justify-end gap-x-5">
+                            <div className="flex my-1">
+                                <div>
+                                    <label className="px-2 py-2">
+                                        {t('yes', { ns: 'common' })}
+                                    </label>
+                                </div>
+                                <div>
+                                    <input
+                                        type="radio"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        disabled
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex my-1">
+                                <div>
+                                    <label className="px-2 py-2">{t('common:no')}</label>
+                                </div>
+                                <div>
+                                    <input type="radio" disabled />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none"></div>
+        </div>
     );
 }
 
