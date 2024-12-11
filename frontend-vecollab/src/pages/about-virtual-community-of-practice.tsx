@@ -40,7 +40,7 @@ export default function AboutVCoP(): JSX.Element {
                         >
                             <Image
                                 src={teamCollabImg}
-                                alt="A group of People"
+                                alt={t('about-vcop.image_alt')}
                                 className="w-[200px] rounded-full"
                             />
                             <div className="pl-6 text-center">
