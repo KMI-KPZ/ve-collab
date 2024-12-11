@@ -69,12 +69,14 @@ export default function Frontpage() {
         title,
         text,
         image,
+        className,
     }: {
         title: string;
         text: string;
         image: React.ReactNode;
+        className?: string;
     }) => (
-        <div className={`w-1/3 bg-white p-6 relative overflow-hidden`}>
+        <div className={`bg-white p-6 relative overflow-hidden ${className ? className : ''}`}>
             {image}
 
             <span className="block mb-4 text-xl font-bold">{title}</span>
@@ -100,17 +102,17 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="features">
+            <div className="w-full sm:w-5/6 mx-auto dm:my-10 max-w-screen-xl" id="features">
                 <H2 className="mb-8 font-bold !text-2xl md:!text-3xl text-center">
                     {t('frontpage.features.title')}
                 </H2>
 
-                <div className="flex gap-x-12 justify-between text-center">
+                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
                     <FeatureBox
                         title="Selbstlernmaterialien"
                         text="Stetig wachsendes Angebot interaktiver Weiterbildungsmaterialien als OER"
                         link="/learning-material"
-                        className="w-1/3"
+                        className=""
                         image={
                             <Image
                                 src={featuresLearningsImg}
@@ -123,7 +125,7 @@ export default function Frontpage() {
                     <FeatureBox
                         title="VA-Planungstool “VE-Designer”"
                         text="Schritt für Schritt Unterstützung bei der (gemeinsamen) VA-Planung"
-                        className="w-1/3"
+                        className=""
                         image={
                             <Image
                                 src={featureboxDesigner}
@@ -138,7 +140,7 @@ export default function Frontpage() {
                         title="Virtual Community of Practice"
                         text="VA-Partner*innen finden, Good-Practice-Beispiele teilen, (international)
                         vernetzen"
-                        className="w-1/3"
+                        className=""
                         image={
                             <Image
                                 src={featureboxcommunity}
@@ -152,7 +154,7 @@ export default function Frontpage() {
             </div>
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
-                <div className="w-4/6 m-auto py-12 px-6 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg">
+                <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg">
                     <video width="320" height="240" controls className="w-full h-auto rounded-md">
                         <source src="/videos/ve-collab-promo.mp4" type="video/webm" />
                         {t('video_not_supported')}
@@ -165,12 +167,13 @@ export default function Frontpage() {
                     <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
                         Mehrwerte für Institutionen
                     </H2>
-                    <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center">
+                    <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">
                         <InfoBox
                             title="Kompetenzen aufbauen - Hürden abbauen"
                             text="Unterstützen Sie durch die Qualifikations- und Unterstützungsangebote von
                         VE-Collab ihre Lehrenden und Mitarbeitenden bei der Anbahnung und
                         Durchführung virtueller Austausche."
+                            className="flex-1 min-w-[250px]"
                             image={
                                 <Image
                                     src={featureboxCompetence}
@@ -185,6 +188,7 @@ export default function Frontpage() {
                             text="Stärken Sie die Internationalisierung des Studiums und die Digital Literacy
                         von Lehrenden und Studierenden durch virtuelle Austausche, indem Sie
                         VE-Collab in ihrer Institution verankern."
+                            className="flex-1 min-w-[250px]"
                             image={
                                 <Image
                                     src={featureboxInternationlization}
@@ -200,11 +204,12 @@ export default function Frontpage() {
                     <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
                         Mehrwerte für Lehrende
                     </H2>
-                    <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center">
+                    <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">
                         <InfoBox
                             title="Qualifikation"
                             text="Bilden Sie sich mit den Selbstlernmaterialien von VE-Collab flexibel weiter
                         und bringen Sie so Ihre eigene Lehre auf ein neues Level."
+                            className="flex-1 min-w-[250px]"
                             image={
                                 <Image
                                     src={featureboxQualification}
@@ -219,6 +224,7 @@ export default function Frontpage() {
                             text="Unser VE-Designer unterstützt Sie Schritt-für-Schritt in der Planung und
                         Organisation Ihres virtuellen Austauschs, zusätzliche Hilfe erhalten Sie in
                         der Community."
+                            className="flex-1 min-w-[250px]"
                             image={
                                 <Image
                                     src={featureboxSupport}
@@ -232,6 +238,7 @@ export default function Frontpage() {
                             title="Vernetzung"
                             text="Durch VE-Collab bauen Sie einfach und unkompliziert neue (internationale)
                         Kontakte für die Durchführung virtueller Austausche auf."
+                            className="flex-1 min-w-[250px]"
                             image={
                                 <Image
                                     src={featureboxNetworking}
