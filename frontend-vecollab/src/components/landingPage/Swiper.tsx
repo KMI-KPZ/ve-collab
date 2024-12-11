@@ -63,7 +63,7 @@ export default function Swiper({ className }: Props) {
             modules={[Navigation, Pagination, A11y, Autoplay]}
             navigation
             pagination={{ clickable: true }}
-            autoplay={{ delay: 5000 }}
+            autoplay={{ delay: 7500 }}
             loop
             spaceBetween={50}
             slidesPerView={1}
