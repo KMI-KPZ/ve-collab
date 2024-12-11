@@ -89,16 +89,20 @@ export default function Frontpage() {
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/95">
                 <div className="w-5/6 m-auto p-2 max-w-screen-xl flex justify-center items-center gap-x-8">
-                    <Image
-                        src={logoInfai}
-                        alt={t('frontpage.logo_infai')}
-                        className="h-[100px] w-auto"
-                    ></Image>
-                    <Image
-                        src={logoUniLeipzig}
-                        alt={t('frontpage.logo_uni_leipzig')}
-                        className="h-[85px] w-auto"
-                    ></Image>
+                    <Link href={'https://infai.org'} target="_blank">
+                        <Image
+                            src={logoInfai}
+                            alt={t('frontpage.logo_infai')}
+                            className="h-[100px] w-auto transition ease-in-out delay-150 hover:scale-105"
+                        ></Image>
+                    </Link>
+                    <Link href={'https://www.uni-leipzig.de/'} target="_blank">
+                        <Image
+                            src={logoUniLeipzig}
+                            alt={t('frontpage.logo_uni_leipzig')}
+                            className="h-[85px] w-auto transition ease-in-out delay-150 hover:scale-105"
+                        ></Image>
+                    </Link>
                 </div>
             </div>
 
