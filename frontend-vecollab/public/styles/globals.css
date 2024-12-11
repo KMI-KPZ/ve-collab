@@ -213,13 +213,9 @@ body {
     print-color-adjust: exact !important;
 }
 
-.swiper {
-    padding: 28px 0;
-}
-
 .swiper-button-next,
 .swiper-button-prev {
-    color: #cecece !important;
+    color: #2c2c2c !important;
     font-weight: bold;
     width: 50px !important;
     height: 50px !important;
@@ -233,11 +229,11 @@ body {
     visibility: hidden !important;
 }
 .swiper-pagination-bullet {
-    background: white !important;
+    background: #888888 !important;
     opacity: 0.75 !important;
     width: 12px !important;
     height: 12px !important;
 }
 .swiper-pagination-bullet.swiper-pagination-bullet-active {
-    background: #888888 !important;
+    background: #525252 !important;
 }
