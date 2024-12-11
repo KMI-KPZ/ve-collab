@@ -42,7 +42,7 @@ export default function Swiper({ className }: Props) {
                 <p className="text-right my-4">
                     <Link
                         href={link}
-                        className="px-4 py-2 rounded-md bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
+                        className="px-4 py-2 rounded-md text-white bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
                     >
                         {linkText || 'Mehr erfahren'}
                     </Link>
@@ -52,7 +52,7 @@ export default function Swiper({ className }: Props) {
                 <Image
                     src={img}
                     alt={imgAlt ? t(imgAlt) : 'image'}
-                    className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
+                    className="h-[220px] w-auto rounded-md"
                 ></Image>
             )}
         </div>
@@ -63,7 +63,7 @@ export default function Swiper({ className }: Props) {
             modules={[Navigation, Pagination, A11y, Autoplay]}
             navigation
             pagination={{ clickable: true }}
-            autoplay={{ delay: 5000 }}
+            // autoplay={{ delay: 5000 }}
             loop
             spaceBetween={50}
             slidesPerView={1}
