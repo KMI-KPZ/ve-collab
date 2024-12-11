@@ -1,20 +1,25 @@
 import { ROUTES } from '@/data/routes';
-import { getChildrenOfNode, getMaterialNodesOfNodeByText, getTopLevelNodes } from '@/lib/backend';
+import {
+    fetchTaxonomy,
+    getChildrenOfNode,
+    getMaterialNodesOfNodeByText,
+    getTopLevelNodes,
+} from '@/lib/backend';
 import { INode } from '@/interfaces/material/materialInterfaces';
 import { NextApiResponse } from 'next';
 
-async function getClusterLearningMaterial(): Promise<string[]> {
-    const clusters = await getTopLevelNodes();
+async function getClusterLearningMaterial(taxonomy?: INode[]): Promise<string[]> {
+    const clusters = await getTopLevelNodes(taxonomy);
     return clusters.map((_, index) => `/learning-material/${index + 1}`);
 }
 
-async function getClusterSlugLearningMaterial(): Promise<string[]> {
-    const cluster = await getTopLevelNodes();
+async function getClusterSlugLearningMaterial(taxonomy?: INode[]): Promise<string[]> {
+    const cluster = await getTopLevelNodes(taxonomy);
     const nodes: { [key: string]: INode[] } = {};
 
     await Promise.all(
         cluster.map(async (bubble) => {
-            nodes[bubble.text] = await getChildrenOfNode(bubble.id);
+            nodes[bubble.text] = await getChildrenOfNode(bubble.id, taxonomy);
         })
     );
 
@@ -22,7 +27,7 @@ async function getClusterSlugLearningMaterial(): Promise<string[]> {
         Object.values(nodes).flatMap(async (nodeArray) =>
             Promise.all(
                 nodeArray.map(async (node: any) => {
-                    const learning_page = await getMaterialNodesOfNodeByText(node.text);
+                    const learning_page = await getMaterialNodesOfNodeByText(node.text, taxonomy);
                     return {
                         node_text: node.text,
                         learning_page: learning_page,
@@ -73,10 +78,14 @@ function generateSiteMap(staticUrls: string[], dynamicRoutes: string[]) {
 export async function getServerSideProps({ res }: { res: NextApiResponse }) {
     // We make an API call to gather the URLs for our site
     const staticRoutes = Object.values(ROUTES);
-    const dynamicRoutes1 = await getClusterSlugLearningMaterial();
-    const dynamicRoutes2 = await getClusterLearningMaterial();
+
+    // fetch learning material taxonomy once and built dynamic routes from it
+    const taxonomy = await fetchTaxonomy();
+    const dynamicRoutes1 = await getClusterSlugLearningMaterial(taxonomy);
+    const dynamicRoutes2 = await getClusterLearningMaterial(taxonomy);
     const dynamicRoutes = [...dynamicRoutes1, ...dynamicRoutes2];
-    // We generate the XML sitemap with the posts data
+
+    // We generate the XML sitemap with the combined static and dynamic routes
     const sitemap = generateSiteMap(staticRoutes, dynamicRoutes);
 
     res.setHeader('Content-Type', 'application/xml');
