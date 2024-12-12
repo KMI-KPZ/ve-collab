@@ -824,7 +824,7 @@ class Profiles:
         # determine if the user has reached the next level and update it
         # with high multipliers and low next levels, it is possible to level up multiple times
         # so we iterate the level up process
-        # TODO send notification to user
+        leveled_up = False
         while (
             achievements[achievement_type]["progress"]
             >= achievements[achievement_type]["next_level"]
@@ -833,12 +833,38 @@ class Profiles:
             achievements[achievement_type]["next_level"] += (
                 achievements[achievement_type]["next_level"] * 2
             )
+            leveled_up = True
 
         # update the profile with the new achievement status
         self.db.profiles.update_one(
             {"username": username},
             {"$set": {"achievements": achievements}},
         )
+
+        # send a notification if the user has leveled up
+        if leveled_up:
+            # have to import here to avoid circular imports
+            from resources.notifications import NotificationResource
+            import tornado
+
+            async def _notification_send(username, achievement_type, achievements):
+                # since this will be run in a separate task, we need to acquire a new db connection
+                with util.get_mongodb() as db:
+                    notification_resources = NotificationResource(db)
+                    return await notification_resources.send_notification(
+                        username,
+                        "achievement_level_up",
+                        {
+                            "achievement_type": achievement_type,
+                            "level": achievements[achievement_type]["level"],
+                        },
+                    )
+
+            # create async task to avoid having to declare the function async
+            # everywhere
+            tornado.ioloop.IOLoop.current().add_callback(
+                _notification_send, username, achievement_type, achievements
+            )
 
     def achievement_count_up_check_constraint_good_practice(
         self, username: str, plan_id: str | ObjectId

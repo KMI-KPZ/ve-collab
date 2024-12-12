@@ -358,7 +358,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
                             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
                             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                            <H2>{t('common:notifications')}</H2>
+                            <H2>{t('common:notifications.title')}</H2>
 
                             <div className="flex  items-center ">
                                 <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">

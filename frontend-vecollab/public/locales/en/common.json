@@ -35,8 +35,19 @@
   "groups": "Groups",
   "chat": "Chat",
   "toggle_chat_window": "Toggle Chat",
-  "notifications": "Notifications",
-  "toggle_notification_window": "Toggle Notifications",
+  "notifications": {
+    "title": "Notifications",
+    "toggle_notification_window": "Toggle Notifications",
+    "achievement_level_up": {
+      "title": "Level up!",
+      "social": "Social",
+      "ve": "VE",
+      "text1": "Congratuluations, your ",
+      "text2": "-Achievement level has increased!",
+      "text3": "You are now ",
+      "level_x": "level {{level}}"
+    }
+  },
   "profile": "Profile",
   "profile_title": "Show my profile",
   "edit_profile_title": "Edit my profile",

@@ -163,7 +163,7 @@ export default function HeaderSection({
                             <button
                                 className="p-2 rounded-full hover:bg-ve-collab-blue-light"
                                 onClick={(e) => toggleNotifWindow()}
-                                title={t('toggle_notification_window')}
+                                title={t('notifications.toggle_notification_window')}
                             >
                                 <IoMdNotificationsOutline size={20} />
                             </button>

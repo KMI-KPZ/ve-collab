@@ -8199,6 +8199,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
     def tearDown(self) -> None:
         self.base_permission_environments_tearDown()
         self.db.plans.delete_many({})
+        self.db.notifications.delete_many({})
 
         # reset locks
         global_vars.plan_write_lock_map = {}
@@ -9631,6 +9632,20 @@ class VEPlanHandlerTest(BaseApiTestCase):
             next_threshold += next_threshold * 2
         self.assertEqual(user["achievements"]["ve"]["next_level"], next_threshold)
         prev_achievement_progress_counter = user["achievements"]["ve"]["progress"]
+
+        # expect that a notification has been dispatched to the user
+        notification = self.db.notifications.find_one(
+            {"type": "achievement_level_up", "to": CURRENT_ADMIN.username}
+        )
+        self.assertIsNotNone(notification)
+        self.assertIn("payload", notification)
+        self.assertEqual(
+            notification["payload"],
+            {
+                "achievement_type": "ve",
+                "level": compute_level(user["achievements"]["ve"]["progress"]),
+            },
+        )
 
         # again, but this time upsert
         payload = {

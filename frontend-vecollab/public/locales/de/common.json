@@ -35,8 +35,19 @@
   "groups": "Gruppen",
   "chat": "Chat",
   "toggle_chat_window": "Chatfenster ein-/ausblenden",
-  "notifications": "Benachrichtigungen",
-  "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
+    "achievement_level_up": {
+      "title": "Level up!",
+      "social": "Social",
+      "ve": "VE",
+      "text1": "Herzlichen Glückwunsch, dein ",
+      "text2": "-Achievement Level hat sich erhöht!",
+      "text3": "Du bist jetzt ",
+      "level_x": "Level {{level}}"
+    }
+  },
   "profile": "Profil",
   "profile_title": "eigenes Profil öffnen",
   "edit_profile_title": "eigenes Profil bearbeiten",
