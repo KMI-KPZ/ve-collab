@@ -133,9 +133,9 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             </div>
                             {profileInformation.profile.ve_window.length == 0 && <>-</>}
                             <ul className="list-disc ml-6">
-                                {profileInformation.profile.ve_window.map((plan: any) => {
+                                {profileInformation.profile.ve_window.map((plan: any, i) => {
                                     return (
-                                        <li key={plan.id}>
+                                        <li key={i}>
                                             <Link href={`/plan/${plan.plan_id}`}>
                                                 {plan.plan_name}
                                             </Link>
