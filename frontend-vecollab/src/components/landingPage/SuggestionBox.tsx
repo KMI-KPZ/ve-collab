@@ -4,7 +4,7 @@ import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
 import { useGetMatching, useGetUsers } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 
@@ -94,7 +94,7 @@ export default function SuggestionBox({ className }: Props) {
             // window.sessionStorage.setItem()
             // window.localStorage.setItem()
             setSuggestedUsers(suggestedUsers);
-        }, [users, session]);
+        }, [users]);
         console.log({ allUsers: users });
         console.log({ matchedUserSnippets });
 
@@ -159,10 +159,10 @@ export default function SuggestionBox({ className }: Props) {
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
         const modules = [
-            <SuggestedMaterials />,
-            <SuggestedUsers />,
-            <SuggestedGoodPracticePlans />,
-            <SuggestedGroups />,
+            <SuggestedMaterials key={0} />,
+            <SuggestedUsers key={1} />,
+            <SuggestedGoodPracticePlans key={2} />,
+            <SuggestedGroups key={3} />,
         ];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
