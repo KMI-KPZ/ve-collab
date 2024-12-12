@@ -8,8 +8,8 @@ import 'swiper/css/pagination';
 
 import vecollabNotebook from '@/images/frontpage/VeCollabNotebook.png';
 
-import screenshotSocialNetwork from '@/images/frontpage/screenshotSocialNetwork.jpg';
-import screenshotVeDesigner from '@/images/frontpage/screenshotVeDesigner.jpg';
+import screenshotSocialNetwork from '@/images/frontpage/screenshotMatching.png';
+import screenshotVeDesigner from '@/images/frontpage/screenshotVeDesigner.png';
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 
@@ -36,13 +36,13 @@ export default function Swiper({ className }: Props) {
         imgAlt?: string;
     }) => (
         <div className="flex flex-wrap-reverse mx-12 my-6 gap-x-12 gap-y-6 pb-6 items-center justify-center">
-            <div className="w-1/2 min-w-96">
+            <div className="w-1/2 min-w-96 text-center lg:text-left">
                 <h1 className="mb-4 text-2xl md:text-3xl font-bold">{title}</h1>
                 <p className="">{text}</p>
-                <p className="text-right my-4">
+                <p className="lg:text-right my-4">
                     <Link
                         href={link}
-                        className="px-4 py-2 rounded-md bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
+                        className="px-4 py-2 rounded-md text-white bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
                     >
                         {linkText || t("show_more")}
                     </Link>
@@ -52,7 +52,7 @@ export default function Swiper({ className }: Props) {
                 <Image
                     src={img}
                     alt={imgAlt ? t(imgAlt) : 'image'}
-                    className="h-[220px] w-auto outline outline-2 outline-offset-2 outline-ve-collab-blue rounded-md"
+                    className="h-[220px] w-auto rounded-md"
                 ></Image>
             )}
         </div>
