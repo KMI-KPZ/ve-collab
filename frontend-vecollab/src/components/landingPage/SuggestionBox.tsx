@@ -2,6 +2,11 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
+import { useGetMatching, useGetUsers } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { BackendUser } from '@/interfaces/api/apiInterfaces';
+import AuthenticatedImage from '../common/AuthenticatedImage';
 
 interface Props {
     className?: string;
@@ -10,6 +15,7 @@ interface Props {
 SuggestionBox.auth = true;
 export default function SuggestionBox({ className }: Props) {
     const { t } = useTranslation(['community', 'common']);
+    const { data: session } = useSession();
 
     const WrapperBox = ({ children }: { children: React.ReactNode }) => {
         return (
@@ -65,14 +71,76 @@ export default function SuggestionBox({ className }: Props) {
             </>
         );
     };
-    const SuggestedUser = () => {
+    const SuggestedUsers = () => {
+        const [suggestedUsers, setSuggestedUsers] = useState<BackendUser[]>([]);
+        const { data: users, isLoading } = useGetUsers(session!.accessToken);
+
+        const { data: matchedUserSnippets, isLoading: isLoadingMatching } = useGetMatching(
+            true,
+            session!.accessToken
+        );
+
+        // remove myself fgrom list
+        useEffect(() => {
+            if (!users) return;
+
+            const shuffled = [...Object.entries(users)].sort(() => 0.5 - Math.random());
+            const suggestedUsers = shuffled
+                .filter((entry) => entry[1].username !== session?.user.preferred_username)
+                .slice(0, 5)
+                .map((entry) => entry[1]);
+            console.log({ suggestedUser: suggestedUsers });
+
+            // window.sessionStorage.setItem()
+            // window.localStorage.setItem()
+            setSuggestedUsers(suggestedUsers);
+        }, [users, session]);
+        console.log({ allUsers: users });
+        console.log({ matchedUserSnippets });
+
+        const printUsername = (user: BackendUser) => {
+            if (user.first_name) {
+                return (
+                    <>
+                        {user.first_name} {user.last_name}
+                    </>
+                );
+            }
+            return <>{user.username.replaceAll('_', ' ')}</>;
+        };
+
+        if (!suggestedUsers) return <></>;
         return (
             <>
-                <H2>{t('suggested_user')}</H2>
+                <H2>{t('suggested_users')}</H2>
+                <ul>
+                    {suggestedUsers.map((user, i) => {
+                        // return <li>{user.username}</li>;
+                        return (
+                            <a
+                                key={i}
+                                className="flex m-2 items-center"
+                                href={`/profile/user/${user.username}`}
+                            >
+                                <AuthenticatedImage
+                                    imageId={user.profile_pic}
+                                    alt={t('profile_picture')}
+                                    width={50}
+                                    height={50}
+                                    className="rounded-full mr-2"
+                                ></AuthenticatedImage>
+                                <span className="font-bold text-slate-900 capitalize">
+                                    {printUsername(user)}
+                                </span>
+                            </a>
+                        );
+                    })}
+                </ul>
             </>
         );
     };
-    const SuggestedGPP = () => {
+
+    const SuggestedGoodPracticePlans = () => {
         return (
             <>
                 <H2>{t('suggested_gpp')}</H2>
@@ -80,8 +148,22 @@ export default function SuggestionBox({ className }: Props) {
         );
     };
 
+    const SuggestedGroups = () => {
+        return (
+            <>
+                <H2>{t('suggested_groups')}</H2>
+            </>
+        );
+    };
+
+    // if idx given enforces specific module
     const getModule = (idx?: number) => {
-        const modules = [<SuggestedMaterials />, <SuggestedUser />, <SuggestedGPP />];
+        const modules = [
+            <SuggestedMaterials />,
+            <SuggestedUsers />,
+            <SuggestedGoodPracticePlans />,
+            <SuggestedGroups />,
+        ];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
         );
