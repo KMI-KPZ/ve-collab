@@ -719,43 +719,43 @@ export async function fetchTaxonomy(): Promise<INode[]> {
     return data.taxonomy;
 }
 
-export async function getTopLevelNodes(): Promise<ITopLevelNode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getTopLevelNodes(tax?: INode[]): Promise<ITopLevelNode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === 0) as ITopLevelNode[];
 }
 
-export async function getNodeByText(nodeText: string): Promise<INode> {
-    const taxonomy = await fetchTaxonomy();
+export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<INode> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
 }
 
-export async function getChildrenOfNode(nodeId: number): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === nodeId);
 }
 
-export async function getChildrenOfNodeByText(nodeText: string): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getChildrenOfNodeByText(nodeText: string, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as INode[];
 }
 
-export async function getSiblingsOfNodeByText(nodeText: string): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getSiblingsOfNodeByText(nodeText: string, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const node = taxonomy.find((node: INode) => node.text === nodeText);
     return node ? taxonomy.filter((a: any) => a.parent === node.parent) : [];
 }
 
-export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IMaterialNode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getMaterialNodesOfNodeByText(nodeText: string, tax?: INode[]): Promise<IMaterialNode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
 }
 
 export async function getMaterialNodePath(
-    nodeId: number
+    nodeId: number, tax?: INode[]
 ): Promise<{ bubble: ITopLevelNode; category: INode; material: IMaterialNode }> {
-    const taxonomy = await fetchTaxonomy();
+    const taxonomy = tax || (await fetchTaxonomy());
     const materialNode = taxonomy.find((node: INode) => node.id === nodeId) as IMaterialNode;
     const categoryNode = taxonomy.find((node: INode) => node.id === materialNode.parent) as INode;
     const bubbleNode = taxonomy.find(
@@ -766,11 +766,11 @@ export async function getMaterialNodePath(
 }
 
 export async function getNodesOfNodeWithLections(
-    node: INode
+    node: INode, tax?: INode[]
 ): Promise<undefined | INodeWithLections[]> {
     if (!node) return [] as INodeWithLections[];
 
-    const taxonomy = await fetchTaxonomy();
+    const taxonomy = tax || (await fetchTaxonomy());
     const nodes = taxonomy.filter((n) => n.parent === node.id);
 
     return nodes.map((n) => {

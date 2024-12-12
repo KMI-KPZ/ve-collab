@@ -333,13 +333,81 @@
     "homepage_banner": "Lehre kooperativ, digital und international",
     "homepage_text": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch.",
     "frontpage": {
-        "slideshow": {},
-        "features": {
-            "title": "Features"
+        "slideshow": {
+            "slide1": {
+                "title": "Wir machen Sie fit für Virtuelle Austausche/Virtual Exchanges",
+                "text": "Wollen Sie Ihre Lehre kooperativer, digitaler und internationaler machen? VE-Collab bietet Ihnen vielfältige Qualifizierungsangebote und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (engl. virtual exchanges)."
+            },
+            "slide2": {
+                "title": "Finden Sie geeignete Partner*innen und vernetzen Sie sich",
+                "text": "Finden Sie in unserer virtual Community of Practice VA-Partner*innen, teilen Sie Good-Practice-Beispiele und vernetzen Sie sich international."
+            },
+            "slide3": {
+                "title": "Wir helfen Ihnen Schritt für Schritt bei der Planung",
+                "text": "Mit unserem “VE-Designer” ermöglichen wir Noviz*innen einen leichten Einstieg in die VE-Planung und Expert*innen eine individuell anpassbare Maske für die ko-kreative Planung der gemeinsamen virtuellen Austausche."
+            },
+            "slide4": {
+                "title": "Mehrwerte für Institutionen",
+                "text": "VEs sind ein niedrigschwelliges Angebot zur Steigerung der Internationalisierung der Lehre und der Digital Literacy von Lehrenden und Studierenden. VE-Collab bietet Ihnen eine Plattform, mit der Sie VE an Ihrer Hochschule bekannt machen können, Lehrende qualifizieren und VE langfristig unterstützen können. Bauen Sie Kompetenzen auf und Hürden ab - stärken Sie die Internationalisierung an Ihrer Institution."
+            },
+            "slide5": {
+                "title": "Mehrwerte für Lehrende",
+                "text": "Mit VE können Sie sich und ihre Studierenden international vernetzen und die Welt in Ihre Veranstaltungen holen. VE-Collab hilft Ihnen, sich anhand kurzer Lehreinheiten mit VE vertraut zu machen, wichtige Grundlagen für die Durchführung von VE zu erwerben, und unterstützt Sie bei Ihrer Lehrplanung. Nutzen Sie VE-Collab außerdem, um sich in einer weltweiten Community zu VE zu vernetzen und auszutauschen."
+            }
         },
-        "institutional_values": {},
-        "teachers_values": {}
+        "logo_infai": "Logo des InfAI e.V.",
+        "logo_uni_leipzig": "Logo der Universität Leipzig",
+        "features": {
+            "title": "Features",
+            "learning_material": {
+                "title": "Selbstlernmaterialien",
+                "text": "Stetig wachsendes Angebot interaktiver Weiterbildungsmaterialien als OER",
+                "image_alt": "Lernen am Schreibtisch"
+            },
+            "ve_designer": {
+                "title": "VE-Planungstool “VE-Designer”",
+                "text": "Schritt für Schritt Unterstützung bei der (gemeinsamen) VE-Planung",
+                "image_alt": "Formulare zum Planen"
+            },
+            "vcop": {
+                "title": "Virtual Community of Practice",
+                "text": "VE-Partner*innen finden, Good-Practice-Beispiele teilen, (international) vernetzen",
+                "image_alt": "Netzwerk von Personen"
+            }
+        },
+        "institutional_values": {
+            "title": "Mehrwerte für Institutionen",
+            "value1": {
+                "title": "Kompetenzen aufbauen - Hürden abbauen",
+                "text": "Unterstützen Sie durch die Qualifikations- und Unterstützungsangebote von VE-Collab ihre Lehrenden und Mitarbeitenden bei der Anbahnung und Durchführung virtueller Austausche.",
+                "image_alt": "Sprung über Hürden"
+            },
+            "value2": {
+                "title": "Internationalisierung und Digital Literacy stärken",
+                "text": "Stärken Sie die Internationalisierung des Studiums und die Digital Literacy von Lehrenden und Studierenden durch virtuelle Austausche, indem Sie VE-Collab in ihrer Institution verankern.",
+                "image_alt": "Globus mit Netzwerk"
+            }
+        },
+        "teachers_values": {
+            "title": "Mehrwerte für Lehrende",
+            "value1": {
+                "title": "Qualifikation",
+                "text": "Bilden Sie sich mit den Selbstlernmaterialien von VE-Collab flexibel weiter und bringen Sie so Ihre eigene Lehre auf ein neues Level.",
+                "image_alt": "Person mit Zertifikaten"
+            },
+            "value2": {
+                "title": "Unterstützung",
+                "text": "Unser VE-Designer unterstützt Sie Schritt-für-Schritt in der Planung und Organisation Ihres virtuellen Austauschs, zusätzliche Hilfe erhalten Sie in der Community.",
+                "image_alt": "Person mit Checkliste"
+            },
+            "value3": {
+                "title": "Vernetzung",
+                "text": "Durch VE-Collab bauen Sie einfach und unkompliziert neue (internationale) Kontakte für die Durchführung virtueller Austausche auf.",
+                "image_alt": "Netzwerk von Personen"
+            }
+        }
     },
+    "show_more": "Mehr erfahren",
     "access_denied": "Zugriff verweigert",
     "qualification": "Qualifikation",
     "designer_screenshot": "Screenshot des VE-Designers",
@@ -384,23 +452,24 @@
         "step3": "Evaluation"
     },
     "about-ve-designer": {
-        "title": "VA-Planungstool \"VE-Designer\"",
+        "title": "VE-Planungstool \"VE-Designer\"",
         "text": [
-            "Planungstool, das VA-Partner*innen Schritt für Schritt durch die Planung eines VA leitet ",
+            "Tool, das VE-Partner*innen Schritt für Schritt durch die Planung eines VE leitet",
             "zusätzliche Hilfestellungen zu fast allen Aspekten der Planung, u. a. durch Verweise auf die Selbstlernmaterialien ",
-            "Möglichkeit, erarbeitete und durchgeführte VA-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen",
+            "Möglichkeit, erarbeitete und durchgeführte VE-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen",
             "Möglichkeit, Inhalte veröffentlichter Good-Practice-Beispiele in die eigene Planung zu importieren",
             "exklusiv für registrierte Nutzer*innen"
-        ]
+        ],
+        "image_alt": "Gruppe von Personen"
     },
     "about-vcop": {
         "title": "Virtual Community of Practice",
         "text": [
-            "Profil erstellen, Gruppe beitreten (oder auch selbst eine gründen), Status posten, Interessantes teilen oder Fragen stellen…",
+            "Profil erstellen, Gruppen beitreten (oder auch selbst gründen), Status posten, Interessantes teilen oder Fragen stellen…",
             "Informiert bleiben durch Notifications",
-            "VA-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching",
+            "VE-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching",
             "Möglichkeit, auch interdisziplinär Partner*innen zu finden ",
-            "Schaufenster für aktuelle und vergangene VA-Projekte",
+            "persönliches Schaufenster für aktuelle und vergangene VE-Projekte",
             "exklusiv für registrierte Nutzer*innen"
         ]
     }

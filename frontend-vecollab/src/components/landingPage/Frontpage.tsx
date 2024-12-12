@@ -89,12 +89,20 @@ export default function Frontpage() {
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/95">
                 <div className="w-5/6 m-auto p-2 max-w-screen-xl flex justify-center items-center gap-x-8">
-                    <Image src={logoInfai} alt="Logo InfAI" className="h-[100px] w-auto"></Image>
-                    <Image
-                        src={logoUniLeipzig}
-                        alt="Logo Universität Leipzig"
-                        className="h-[85px] w-auto"
-                    ></Image>
+                    <Link href={'https://infai.org'} target="_blank">
+                        <Image
+                            src={logoInfai}
+                            alt={t('frontpage.logo_infai')}
+                            className="h-[100px] w-auto transition ease-in-out delay-150 hover:scale-105"
+                        ></Image>
+                    </Link>
+                    <Link href={'https://www.uni-leipzig.de/'} target="_blank">
+                        <Image
+                            src={logoUniLeipzig}
+                            alt={t('frontpage.logo_uni_leipzig')}
+                            className="h-[85px] w-auto transition ease-in-out delay-150 hover:scale-105"
+                        ></Image>
+                    </Link>
                 </div>
             </div>
 
@@ -109,25 +117,25 @@ export default function Frontpage() {
 
                     <div className="mx-auto flex gap-x-12 lg:w-5/6 justify-center text-center">
                         <FeatureBox
-                            title="Selbstlernmaterialien"
-                            text="Stetig wachsendes Angebot interaktiver Weiterbildungsmaterialien als OER"
+                            title={t('frontpage.features.learning_material.title')}
+                            text={t('frontpage.features.learning_material.text')}
                             link="/learning-material"
                             image={
                                 <Image
                                     src={featuresLearningsImg}
-                                    alt="workingdesk"
+                                    alt={t('frontpage.features.learning_material.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-100 group-hover/box:saturate-200"
                                 ></Image>
                             }
                         />
 
                         <FeatureBox
-                            title="VA-Planungstool “VE-Designer”"
-                            text="Schritt für Schritt Unterstützung bei der (gemeinsamen) VA-Planung"
+                            title={t('frontpage.features.ve_designer.title')}
+                            text={t('frontpage.features.ve_designer.text')}
                             image={
                                 <Image
                                     src={featureboxDesigner}
-                                    alt="frame of a planing tool"
+                                    alt={t('frontpage.features.ve_designer.image_alt')}
                                     className="h-[220px] w-auto m-auto transition ease-in-out hue-rotate-[256deg] saturate-100 group-hover/box:saturate-200"
                                 ></Image>
                             }
@@ -135,13 +143,12 @@ export default function Frontpage() {
                         />
 
                         <FeatureBox
-                            title="Virtual Community of Practice"
-                            text="VA-Partner*innen finden, Good-Practice-Beispiele teilen, (international)
-                        vernetzen"
+                            title={t('frontpage.features.vcop.title')}
+                            text={t('frontpage.features.vcop.text')}
                             image={
                                 <Image
                                     src={featureboxcommunity}
-                                    alt="network of people"
+                                    alt={t('frontpage.features.vcop.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-100 group-hover/box:saturate-200"
                                 ></Image>
                             }
@@ -163,32 +170,28 @@ export default function Frontpage() {
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white -mb-12">
                 <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="institutional-values">
                     <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
-                        Mehrwerte für Institutionen
+                        {t('frontpage.institutional_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center">
                         <InfoBox
-                            title="Kompetenzen aufbauen - Hürden abbauen"
-                            text="Unterstützen Sie durch die Qualifikations- und Unterstützungsangebote von
-                        VE-Collab ihre Lehrenden und Mitarbeitenden bei der Anbahnung und
-                        Durchführung virtueller Austausche."
+                            title={t('frontpage.institutional_values.value1.title')}
+                            text={t('frontpage.institutional_values.value1.text')}
                             image={
                                 <Image
                                     src={featureboxCompetence}
-                                    alt="workingdesk"
+                                    alt={t('frontpage.institutional_values.value1.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
                                 ></Image>
                             }
                         />
 
                         <InfoBox
-                            title="Internationalisierung und Digital Literacy stärken"
-                            text="Stärken Sie die Internationalisierung des Studiums und die Digital Literacy
-                        von Lehrenden und Studierenden durch virtuelle Austausche, indem Sie
-                        VE-Collab in ihrer Institution verankern."
+                            title={t('frontpage.institutional_values.value2.title')}
+                            text={t('frontpage.institutional_values.value2.text')}
                             image={
                                 <Image
                                     src={featureboxInternationlization}
-                                    alt="workingdesk"
+                                    alt={t('frontpage.institutional_values.value2.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
                                 ></Image>
                             }
@@ -198,44 +201,40 @@ export default function Frontpage() {
 
                 <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="teachers-values">
                     <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
-                        Mehrwerte für Lehrende
+                        {t('frontpage.teachers_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center">
                         <InfoBox
-                            title="Qualifikation"
-                            text="Bilden Sie sich mit den Selbstlernmaterialien von VE-Collab flexibel weiter
-                        und bringen Sie so Ihre eigene Lehre auf ein neues Level."
+                            title={t('frontpage.teachers_values.value1.title')}
+                            text={t('frontpage.teachers_values.value1.text')}
                             image={
                                 <Image
                                     src={featureboxQualification}
-                                    alt="workingdesk"
+                                    alt={t('frontpage.teachers_values.value1.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-200"
                                 ></Image>
                             }
                         />
 
                         <InfoBox
-                            title="Unterstützung"
-                            text="Unser VE-Designer unterstützt Sie Schritt-für-Schritt in der Planung und
-                        Organisation Ihres virtuellen Austauschs, zusätzliche Hilfe erhalten Sie in
-                        der Community."
+                            title={t('frontpage.teachers_values.value2.title')}
+                            text={t('frontpage.teachers_values.value2.text')}
                             image={
                                 <Image
                                     src={featureboxSupport}
-                                    alt="frame of a planing tool"
+                                    alt={t('frontpage.teachers_values.value2.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[256deg] saturate-200"
                                 ></Image>
                             }
                         />
 
                         <InfoBox
-                            title="Vernetzung"
-                            text="Durch VE-Collab bauen Sie einfach und unkompliziert neue (internationale)
-                        Kontakte für die Durchführung virtueller Austausche auf."
+                            title={t('frontpage.teachers_values.value3.title')}
+                            text={t('frontpage.teachers_values.value3.text')}
                             image={
                                 <Image
                                     src={featureboxNetworking}
-                                    alt="network of people"
+                                    alt={t('frontpage.teachers_values.value3.image_alt')}
                                     className="h-[220px] w-auto m-auto hue-rotate-[86deg] saturate-200"
                                 ></Image>
                             }
