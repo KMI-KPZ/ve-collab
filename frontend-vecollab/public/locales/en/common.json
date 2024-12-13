@@ -5,7 +5,7 @@
     "enter_jtsi": "Enter Jitsi room",
     "enter_name": "Enter name",
     "search_users": "Search for users...",
-    "search_users_no_hit": "No result? Use \"{{value}}\" anyway",
+    "search_users_no_hit": "No result? Use \"<bold>{{value}}</bold>\" anyway",
     "name": "Name",
     "first_name": "First name",
     "last_name": "Last name",

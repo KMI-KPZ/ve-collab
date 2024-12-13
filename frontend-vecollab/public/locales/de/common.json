@@ -5,7 +5,7 @@
     "enter_jtsi": "Jitsi Raum betreten",
     "enter_name": "Name eingeben",
     "search_users": "Suche nach Nutzer:innen...",
-    "search_users_no_hit": "kein Treffer? \"{{value}}\" trotzdem verwenden",
+    "search_users_no_hit": "kein Treffer? \"<bold>{{value}}</bold>\" trotzdem verwenden",
     "name": "Name",
     "first_name": "Vorname",
     "last_name": "Nachname",
