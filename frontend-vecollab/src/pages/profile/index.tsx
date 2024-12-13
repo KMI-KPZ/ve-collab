@@ -7,7 +7,7 @@ import ExtendedPersonalInformation from '@/components/profile/ExtendedPersonalIn
 import BoxHeadline from '@/components/common/BoxHeadline';
 import { useEffect, useState } from 'react';
 import { fetchGET } from '@/lib/backend';
-import { getSession, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import {
     Education,
@@ -20,7 +20,7 @@ import {
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { Socket } from 'socket.io-client';
-import { GetServerSideProps, GetServerSidePropsContext, GetStaticPropsContext } from 'next';
+import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
@@ -38,7 +38,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
 
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
-        username: '',
         firstName: '',
         lastName: '',
         bio: '',
@@ -110,6 +109,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
+    const [userExists, setUserExists] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -131,6 +131,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         // fetch profile information of the determined user
         fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then((data) => {
             setLoading(false);
+            setUserExists(true);
             if (data.profile) {
                 // if the minimum profile data such as first_name and last_name is not set,
                 // chances are high it is after the first register, therefore incentivize user
@@ -149,7 +150,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                     }
                 }
                 setPersonalInformation({
-                    username: data.profile.username,
                     firstName: data.profile.first_name,
                     lastName: data.profile.last_name,
                     bio: data.profile.bio,
@@ -192,7 +192,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
     }, [session, router]);
 
     if (loading) return <LoadingAnimation />;
-    if (!personalInformation.username) {
+    if (!userExists) {
         // return notFound();
         return (
             <div className="flex flex-col items-center justify-center font-bold">
