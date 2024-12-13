@@ -479,7 +479,6 @@ export function ChecklistNoAuthPreview() {
                                         className="w-fit !rounded-full mx-auto mt-2"
                                         title={t('checklist.add_userdefined_title')}
                                         onClick={() => {}}
-                                        isNoAuthPreview
                                     >
                                         <MdAdd size={21} />
                                     </ButtonLight>
