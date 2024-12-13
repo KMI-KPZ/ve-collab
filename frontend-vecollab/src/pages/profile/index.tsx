@@ -24,8 +24,7 @@ import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
-import { GiSadCrab } from 'react-icons/gi';
-import Link from 'next/link';
+import Custom404 from '../404';
 
 interface Props {
     socket: Socket;
@@ -131,8 +130,8 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         // fetch profile information of the determined user
         fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then((data) => {
             setLoading(false);
-            setUserExists(true);
             if (data.profile) {
+                setUserExists(true);
                 // if the minimum profile data such as first_name and last_name is not set,
                 // chances are high it is after the first register, therefore incentivize user
                 // to fill out his profile by sending him to the edit page
@@ -192,19 +191,8 @@ export default function UserProfile({ socket }: Props): JSX.Element {
     }, [session, router]);
 
     if (loading) return <LoadingAnimation />;
-    if (!userExists) {
-        // return notFound();
-        return (
-            <div className="flex flex-col items-center justify-center font-bold">
-                <div className="flex items-center">
-                    <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">User not found.</div>
-                </div>
-                <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-                    <Link href="/">Back to home</Link>
-                </button>
-            </div>
-        );
+    if (userExists === false) {
+        return <Custom404 />;
     }
 
     console.log({ personalInformation });
