@@ -67,6 +67,7 @@ const emptyTG: TargetGroupWithLanguageOptions = {
 };
 
 TargetGroups.auth = true;
+TargetGroups.noAuthPreview = <TargetGroupsNoAuthPreview />;
 export default function TargetGroups({ socket, languageKeys }: Props): JSX.Element {
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
@@ -371,6 +372,161 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 </div>
             </Wrapper>
         </>
+    );
+}
+
+export function TargetGroupsNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+    const prevpage = '/ve-designer/lectures';
+    const nextpage = '/ve-designer/learning-goals';
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('target.title')} pageSlug={'ve-designer/target-groups'} />
+            <Wrapper
+                socket={undefined}
+                title={t('target.title')}
+                subtitle={t('target.subtitle')}
+                description={t('target.description')}
+                tooltip={{
+                    text: t('target.tooltip'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                stageInMenu="generally"
+                idOfProgress="target_groups"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y">
+                        <div className="pt-4 pb-2">
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="name" className="px-2 py-2">
+                                        {t('common:name')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <input
+                                        type="text"
+                                        disabled
+                                        placeholder={t('common:enter_name')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="name" className="px-2 py-2">
+                                        {t('target.semester')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <input
+                                        type="text"
+                                        disabled
+                                        placeholder={t('target.semester_placeholder')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="experience" className="px-2 py-2">
+                                        {t('target.relevant_exp')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <textarea
+                                        rows={3}
+                                        disabled
+                                        placeholder={t('target.relevant_exp_placeholder')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="academic_course" className="px-2 py-2">
+                                        {t('target.degree')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <input
+                                        type="text"
+                                        disabled
+                                        placeholder={t('target.degree_placeholder')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/4 flex items-center">
+                                    <label htmlFor="languages" className="px-2 py-2">
+                                        {t('target.languages')}
+                                    </label>
+                                </div>
+                                <div className="w-3/4">
+                                    <CreatableSelect
+                                        onChange={() => {}}
+                                        onBlur={() => {}}
+                                        value={null}
+                                        isDisabled
+                                        isClearable={true}
+                                        isMulti
+                                        closeMenuOnSelect={false}
+                                        placeholder={t('target.languages_placeholder')}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end items-center">
+                                <Image
+                                    className="mx-2 cursor-pointer m-2 "
+                                    src={trash}
+                                    width={20}
+                                    height={20}
+                                    alt="deleteStep"
+                                ></Image>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-center">
+                        <button
+                            className="p-2 m-2 bg-white rounded-full shadow"
+                            type="button"
+                            onClick={() => {}}
+                            disabled
+                        >
+                            <RxPlus size={24} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="">
+                    <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                    <div className="mb-8">{t('target.language_description')}</div>
+                    <div className="mt-2 items-center">
+                        <CreatableSelect
+                            onChange={() => {}}
+                            onBlur={() => {}}
+                            value={null}
+                            isDisabled
+                            isClearable={true}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            placeholder={t('target.languages_placeholder')}
+                        />
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/50 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

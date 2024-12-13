@@ -44,6 +44,7 @@ interface Props {
 }
 
 Evaluation.auth = true;
+Evaluation.noAuthPreview = <EvaluationNoAuthPreview />;
 export default function Evaluation({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
@@ -337,6 +338,126 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 <div className="flex flex-wrap ">{renderEvaluationInfoBox()}</div>
             </Wrapper>
         </>
+    );
+}
+
+export function EvaluationNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+
+    const prevpage = '/ve-designer/methodology';
+    const nextpage = '/ve-designer/checklist';
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead pageTitle={t('evaluation.title')} pageSlug={'ve-designer/evaluation'} />
+            <Wrapper
+                socket={undefined}
+                title={t('evaluation.title')}
+                subtitle={t('evaluation.subtitle')}
+                description={t('evaluation.description')}
+                tooltip={{
+                    text: t('evaluation.tooltip'),
+                    link: '/learning-material/2/Evaluation',
+                }}
+                stageInMenu="generally"
+                idOfProgress="evaluation"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                <div className="flex flex-wrap">
+                    {Array(2)
+                        .fill(null)
+                        .map((_, index) => (
+                            <div key={index} className="flex mx-2">
+                                <div className="rounded shadow px-3 py-4 h-fit w-fit">
+                                    <div className="flex flex-col">
+                                        <div className="font-bold text-lg mb-4 text-center">
+                                            {index === 0
+                                                ? t('common:no_auth.partner1')
+                                                : t('common:no_auth.partner2')}
+                                        </div>
+                                        <div className="flex items-center">
+                                            <p className="">{t('evaluation.planned')}</p>
+                                            <div className="flex w-36 justify-end gap-x-3">
+                                                <div className="flex my-1">
+                                                    <div>
+                                                        <label className="px-2 py-2">
+                                                            {t('common:yes')}
+                                                        </label>
+                                                    </div>
+                                                    <div>
+                                                        <input
+                                                            type="radio"
+                                                            className="border border-gray-400 rounded-lg p-2"
+                                                            disabled
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="flex my-1">
+                                                    <div>
+                                                        <label className="px-2 py-2">
+                                                            {t('common:no')}
+                                                        </label>
+                                                    </div>
+                                                    <div>
+                                                        <input
+                                                            type="radio"
+                                                            className="border border-gray-400 rounded-lg p-2"
+                                                            disabled
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="mt-10 mb-1">{t('evaluation.howTo')}</p>
+                                        <div className="flex items-center justify-between my-1">
+                                            <div>
+                                                <p>{t('evaluation.before')}</p>
+                                            </div>
+                                            <textarea
+                                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                                disabled
+                                                rows={2}
+                                                placeholder={t('evaluation.beforePlaceholder')}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between my-1">
+                                            <div>
+                                                <p>{t('evaluation.while')}</p>
+                                            </div>
+                                            <textarea
+                                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                                disabled
+                                                rows={2}
+                                                placeholder={t('evaluation.whilePlaceholder')}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between my-1">
+                                            <div>
+                                                <p>{t('evaluation.after')}</p>
+                                            </div>
+                                            <textarea
+                                                className="border border-gray-400 rounded-lg p-2 ml-2 w-64"
+                                                disabled
+                                                placeholder={t('evaluation.afterPlaceholder')}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

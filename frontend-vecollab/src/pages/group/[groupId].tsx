@@ -25,6 +25,7 @@ interface Props {
 }
 
 Group.auth = true;
+Group.autoForward = true;
 export default function Group({ socket }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const { t } = useTranslation(['community', 'common']);

@@ -70,6 +70,7 @@ const getLastId = (treeData: NodeModel[]) => {
 };
 
 Edit.auth = true;
+Edit.autoForward = true;
 export default function Edit() {
     const { data: session } = useSession();
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);

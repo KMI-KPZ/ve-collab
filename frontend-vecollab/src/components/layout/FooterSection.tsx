@@ -12,10 +12,11 @@ export default function FooterSection() {
     const { t } = useTranslation('common');
 
     return (
-        // <footer className="pb-4 bg-footer-pattern shadow-inner">
         <footer
             className={`pb-4 z-0 shadow-inner ${
-                isFrontpage ? 'bg-white text-black' : 'bg-footer-pattern text-white'
+                isFrontpage
+                    ? 'bg-white text-black border-t border-gray-400/50 border-0.5'
+                    : 'bg-footer-pattern text-white'
             }`}
         >
             <div className="flex flex-wrap items-center max-w-screen-2xl md:w-8/12 mx-auto py-4 md:py-10">

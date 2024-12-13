@@ -15,6 +15,7 @@ import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 
 SearchResult.auth = true;
+SearchResult.autoForward = true;
 export default function SearchResult() {
     const { t } = useTranslation('common');
 

@@ -116,7 +116,7 @@
     "goals": {
         "title": "Learning objectives & topics",
         "subtitle": "1. Which subject-related learning objectives should be achieved in the VE?",
-        "description": "",
+        "description": "Briefly describe the subject-related learning objectives of the VE, i.e. the knowledge and skills you want to impart. The learning objective can also be multidisciplinary if you adress a certain topic from your subjects perspective (e.g. ESD).",
         "tooltip": "More about learning objectives can be found here in the self-learning materials...",
         "learningGoal_placeholder": "Describe the learning objectives for learners of {{username}}",
         "2-title": "2. What other higher-level learning objectives are being pursued?",

@@ -9,14 +9,26 @@ interface Props {
     width: number;
     height: number;
     className?: string;
+    isNoAuthPreview?: boolean;
 }
 
 AuthenticatedImage.auth = true;
-export default function AuthenticatedImage({ imageId, alt, width, height, className }: Props) {
+export default function AuthenticatedImage({
+    imageId,
+    alt,
+    width,
+    height,
+    className,
+    isNoAuthPreview,
+}: Props) {
     const { data: session, status } = useSession();
     const [image, setImage] = useState('');
 
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
+        if (status === 'loading' || !session) return;
+
         (async () => {
             if (imageId) {
                 //Get if url already exists in local storage
@@ -30,7 +42,7 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
                     // read the blob and create a data url from it that is readable by the Image component
                     const reader = new FileReader();
                     reader.readAsDataURL(response);
-                    reader.onerror = function() {}
+                    reader.onerror = function () {};
                     reader.onloadend = function () {
                         setImage(reader.result as string);
                         window.localStorage.setItem(imageId, reader.result as string);
@@ -38,14 +50,33 @@ export default function AuthenticatedImage({ imageId, alt, width, height, classN
                 }
             }
         })();
-    }, [session, imageId]);
+    }, [session, status, imageId, isNoAuthPreview]);
 
     return (
         <>
-            {image !== ''
-                ? (<Image src={image} alt={alt} width={width} height={height} className={className} />)
-                : imageId && (<div className={className} style={{height, width}}></div>)
-            }
+            {isNoAuthPreview ? (
+                <Image
+                    src={`/images/${imageId}`}
+                    alt={alt}
+                    width={width}
+                    height={height}
+                    className={className}
+                />
+            ) : (
+                <>
+                    {image !== '' ? (
+                        <Image
+                            src={image}
+                            alt={alt}
+                            width={width}
+                            height={height}
+                            className={className}
+                        />
+                    ) : (
+                        imageId && <div className={className} style={{ height, width }}></div>
+                    )}
+                </>
+            )}
         </>
     );
 }

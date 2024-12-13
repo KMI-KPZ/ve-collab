@@ -19,6 +19,7 @@ interface Props {
 }
 
 AdminDashboard.auth = true;
+AdminDashboard.autoForward = true;
 export default function AdminDashboard({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();

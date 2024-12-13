@@ -52,9 +52,6 @@ jobs:
       - name: Build React app
         run: npm run build
 
-      - name: Generate Sitemap
-        run: npm run sitemap
-
       - name: run Lighthouse CI
         run: |
           npm install -g @lhci/cli@0.14.x
