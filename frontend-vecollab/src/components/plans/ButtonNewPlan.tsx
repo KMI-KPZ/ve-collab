@@ -2,8 +2,8 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import router from 'next/router';
 import { Socket } from 'socket.io-client';
-import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import { getPlanLock } from '../VE-designer/PlanSocket';
+import Button from '../common/buttons/Button';
 
 interface Props {
     socket?: Socket;
@@ -43,12 +43,12 @@ export default function ButtonNewPlan({
         'py-2 px-4 rounded-lg text-white bg-ve-collab-orange hover:shadow-button-primary';
 
     return (
-        <ButtonPrimary
+        <Button
             label={label}
             onClick={createAndForwardNewPlanner}
             className={className ? className : defaulStyle}
         >
             {children}
-        </ButtonPrimary>
+        </Button>
     );
 }

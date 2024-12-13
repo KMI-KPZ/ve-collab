@@ -132,7 +132,7 @@ export default function Plans({ socket }: Props) {
                     <ButtonNewPlan
                         socket={socket}
                         label={t('btn_new_ve')}
-                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
+                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
                     >
                         <div className="flex flex-wrap items-center justify-center ">
                             <Image
@@ -273,7 +273,7 @@ function PlansNoAuthPreview() {
 
                     <ButtonNewPlan
                         label={t('btn_new_va')}
-                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-default"
+                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-default"
                         isNoAuthPreview={true}
                     >
                         <div className="flex flex-wrap items-center justify-center ">
