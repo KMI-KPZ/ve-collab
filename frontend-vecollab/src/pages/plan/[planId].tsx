@@ -54,7 +54,7 @@ export default function Plan() {
                                     <>
                                         {plan.write_access.includes(username) && (
                                             <ButtonLightBlue
-                                                classNameExtend="text-nowrap"
+                                                className="text-nowrap"
                                                 onClick={() =>
                                                     router.push({
                                                         pathname: '/ve-designer/name',
@@ -68,7 +68,7 @@ export default function Plan() {
                                     </>
                                 )}
                                 <ButtonLightBlue
-                                    classNameExtend="text-nowrap"
+                                    className="text-nowrap"
                                     onClick={() => {
                                         router.push({
                                             pathname: `/api/pdf-plan`,

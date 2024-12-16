@@ -141,7 +141,7 @@ export default function PlansBrowserItem({
                     <div className="flex ml-auto mr-2 gap-x-2">
                         {plan.write_access.includes(username) && (
                             <ButtonLightBlue
-                                classNameExtend="text-nowrap"
+                                className="text-nowrap"
                                 onClick={() =>
                                     router.push({
                                         pathname: '/ve-designer/name',
@@ -154,7 +154,7 @@ export default function PlansBrowserItem({
                         )}
 
                         <ButtonLightBlue
-                            classNameExtend="text-nowrap"
+                            className="text-nowrap"
                             onClick={() => {
                                 router.push({
                                     pathname: `/api/pdf-plan`,
@@ -352,7 +352,7 @@ export default function PlansBrowserItem({
                 }}
             >
                 <div className="flex items-center flex-wrap">
-                    <div className="flex order-1 truncate items-center">
+                    <div className="flex order-1 truncate xl:max-w-[60%] items-center">
                         <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
                             <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                                 {plan.name}
