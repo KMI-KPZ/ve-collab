@@ -1,6 +1,16 @@
 {
     "taxonomy": [
         {
+            "parent": 58,
+            "droppable": false,
+            "text": "KoKoN Methodenkoffer",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/12-methodenkoffer-kokon/"
+            },
+            "id": 59
+        },
+        {
             "parent": 33,
             "droppable": true,
             "text": "Interaktion & kollaboratives Arbeiten",
@@ -305,22 +315,22 @@
         {
             "parent": 11,
             "droppable": false,
+            "text": "Mehrwerte virtueller Austausche",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-potenziale-allgemeines/"
+            },
+            "id": 60
+        },
+        {
+            "parent": 11,
+            "droppable": false,
             "text": "Kompetenzmodelle",
             "data": {
                 "description": "",
                 "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/"
             },
             "id": 41
-        },
-        {
-            "parent": 11,
-            "droppable": false,
-            "text": "Blick in Literatur und Forschung",
-            "data": {
-                "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/elementor-849/"
-            },
-            "id": 42
         },
         {
             "parent": 11,
