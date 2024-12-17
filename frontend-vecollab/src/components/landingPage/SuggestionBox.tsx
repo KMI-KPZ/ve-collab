@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { getClusterRouteBySlug } from '@/pages/learning-material';
+import LocalStorage from '@/lib/storage';
 
 interface ISuggestedLection {
     id: number;
@@ -59,7 +60,7 @@ export default function SuggestionBox() {
         useEffect(() => {
             const ttl = 24 * 60 * 60 * 1000;
             if (lections.length) return;
-            const storedLections = Storage.getItem('suggested_lections');
+            const storedLections = LocalStorage.getItem('suggested_lections');
             if (storedLections) {
                 setLections(storedLections);
                 return;
@@ -68,7 +69,7 @@ export default function SuggestionBox() {
             getSuggestedLection()
                 .then((lections) => {
                     setLections(lections);
-                    Storage.addItem('suggested_lections', lections, ttl);
+                    LocalStorage.addItem('suggested_lections', lections, ttl);
                 })
                 .catch(console.error)
                 .finally(() => {
@@ -169,30 +170,9 @@ export default function SuggestionBox() {
         );
     };
 
-    const SuggestedGoodPracticePlans = () => {
-        return (
-            <>
-                <H2>{t('suggested_gpp')}</H2>
-            </>
-        );
-    };
-
-    const SuggestedGroups = () => {
-        return (
-            <>
-                <H2>{t('suggested_groups')}</H2>
-            </>
-        );
-    };
-
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
-        const modules = [
-            <SuggestedLections key={0} />,
-            <SuggestedUsers key={1} />,
-            <SuggestedGoodPracticePlans key={2} />,
-            <SuggestedGroups key={3} />,
-        ];
+        const modules = [<SuggestedLections key={0} />, <SuggestedUsers key={1} />];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
         );
@@ -201,38 +181,3 @@ export default function SuggestionBox() {
     // return <WrapperBox>{getModule(0)}</WrapperBox>;
     return <>{getModule(0)}</>;
 }
-
-type StorageItem = {
-    value: any;
-    expiry?: number;
-};
-
-const Storage = {
-    /**
-     *
-     * @param key string
-     * @param value any
-     * @param ttl number Time to live in milliseconds
-     */
-    addItem: (key: string, value: any, ttl?: number) => {
-        const item: StorageItem = {
-            value: value,
-        };
-        if (ttl) {
-            item.expiry = new Date().getTime() + ttl;
-        }
-        localStorage.setItem(key, JSON.stringify(item));
-    },
-    getItem: (key: string) => {
-        const itemStr = localStorage.getItem(key);
-        if (!itemStr) return null;
-
-        const item = JSON.parse(itemStr) as StorageItem;
-        if ('expiry' in item && new Date().getTime() > item.expiry!) {
-            localStorage.removeItem(key);
-            return null;
-        }
-
-        return item.value;
-    },
-};
