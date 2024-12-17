@@ -13,8 +13,7 @@ export default function VEHead() {
         'virtual exchange, collaboration, VE Collab, online learning, VE Designer, Selbstlernmaterialien'; // 5-10 keywords
 
     const description =
-        'VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch.';
-
+        'VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten und gibt Hilfestellungen bei der Planung und Durchführung virtueller Austausche.';
     return (
         <Head>
             <meta charSet="UTF-8" />
@@ -22,8 +21,8 @@ export default function VEHead() {
                 name="robots"
                 content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
             />
-            <title>{title}</title>
             {/* may overwrittten in <CustomHead />  */}
+            <title>{title}</title>
             <meta name="application-name" content="VE Collab" />
             <meta name="creator" content="VE Collab Team" />
             <meta name="publisher" content="VE Collab Team" />
