@@ -2,22 +2,25 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
-import { useGetMatching, useGetUsers } from '@/lib/backend';
+import { fetchTaxonomy, useGetMatching, useGetUsers } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
 import AuthenticatedImage from '../common/AuthenticatedImage';
+import { getClusterRouteBySlug } from '@/pages/learning-material';
 
-interface Props {
-    className?: string;
+interface ISuggestedLection {
+    id: number;
+    text: string;
+    path: string;
 }
 
 SuggestionBox.auth = true;
-export default function SuggestionBox({ className }: Props) {
+export default function SuggestionBox() {
     const { t } = useTranslation(['community', 'common']);
     const { data: session } = useSession();
 
-    const WrapperBox = ({ children }: { children: React.ReactNode }) => {
+    const Wrapper = ({ children }: { children: React.ReactNode }) => {
         return (
             <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
                 <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
@@ -27,48 +30,76 @@ export default function SuggestionBox({ className }: Props) {
         );
     };
 
-    const SuggestedMaterials = () => {
+    const SuggestedLections = () => {
+        const [lections, setLections] = useState<ISuggestedLection[]>([]);
+        const [loading, setLoading] = useState<boolean>(false);
+
+        const getSuggestedLection = async () => {
+            let allLections: ISuggestedLection[] = [];
+            const taxonomy = await fetchTaxonomy();
+
+            taxonomy.map((lection) => {
+                if (!Object.hasOwn(lection, 'data')) return;
+
+                const node = taxonomy.find((a) => a.id == lection.parent);
+                const cluster = taxonomy.find((a) => a.id == node!.parent);
+                allLections.push({
+                    id: lection.id,
+                    text: lection.text,
+                    path: `/learning-material/${getClusterRouteBySlug(cluster?.text!)}/${
+                        node?.text
+                    }/${lection.text}`,
+                });
+            });
+
+            const randomLections = allLections.sort(() => 0.5 - Math.random());
+            return randomLections.slice(0, 5);
+        };
+
+        useEffect(() => {
+            const ttl = 24 * 60 * 60 * 1000;
+            if (lections.length) return;
+            const storedLections = Storage.getItem('suggested_lections');
+            if (storedLections) {
+                setLections(storedLections);
+                return;
+            }
+            setLoading(true);
+            getSuggestedLection()
+                .then((lections) => {
+                    setLections(lections);
+                    Storage.addItem('suggested_lections', lections, ttl);
+                })
+                .catch(console.error)
+                .finally(() => {
+                    setLoading(false);
+                });
+        }, [lections]);
+
+        if (loading || !lections.length) return <></>;
+
         return (
-            <>
+            <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
+
                 <ul className="d1ivide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-2 *:text-ve-collab-blue">
-                    <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                        <Link
-                            href={
-                                '/learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch'
-                            }
-                        >
-                            Was ist ein virtueller Austausch
-                        </Link>
-                    </li>
-                    <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                        <Link
-                            href={
-                                '/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis'
-                            }
-                        >
-                            VE-Beispiele aus der Praxis
-                        </Link>
-                    </li>
-                    <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                        <Link href={'/learning-material/3/Tools'}>Tools</Link>
-                    </li>
-                    <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                        <Link
-                            href={
-                                '/learning-material/4/Interaktion%20und%20kollaboratives%20Arbeiten'
-                            }
-                        >
-                            Interaktion und kollaboratives Arbeiten
-                        </Link>
-                    </li>
+                    {lections.map((lection, index) => {
+                        return (
+                            <li
+                                key={index}
+                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
+                            >
+                                <Link href={`${lection.path}`}>{lection.text}</Link>
+                            </li>
+                        );
+                    })}
                 </ul>
                 <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                     <Link href={`/learning-material`} onClick={(e) => e.preventDefault()}>
                         {t('common:all')} <MdArrowRight size={24} className="inline mx-1" />
                     </Link>
                 </div>
-            </>
+            </Wrapper>
         );
     };
     const SuggestedUsers = () => {
@@ -91,8 +122,6 @@ export default function SuggestionBox({ className }: Props) {
                 .map((entry) => entry[1]);
             console.log({ suggestedUser: suggestedUsers });
 
-            // window.sessionStorage.setItem()
-            // window.localStorage.setItem()
             setSuggestedUsers(suggestedUsers);
         }, [users]);
         console.log({ allUsers: users });
@@ -159,7 +188,7 @@ export default function SuggestionBox({ className }: Props) {
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
         const modules = [
-            <SuggestedMaterials key={0} />,
+            <SuggestedLections key={0} />,
             <SuggestedUsers key={1} />,
             <SuggestedGoodPracticePlans key={2} />,
             <SuggestedGroups key={3} />,
@@ -169,5 +198,41 @@ export default function SuggestionBox({ className }: Props) {
         );
     };
 
-    return <WrapperBox>{getModule(0)}</WrapperBox>;
+    // return <WrapperBox>{getModule(0)}</WrapperBox>;
+    return <>{getModule(0)}</>;
 }
+
+type StorageItem = {
+    value: any;
+    expiry?: number;
+};
+
+const Storage = {
+    /**
+     *
+     * @param key string
+     * @param value any
+     * @param ttl number Time to live in milliseconds
+     */
+    addItem: (key: string, value: any, ttl?: number) => {
+        const item: StorageItem = {
+            value: value,
+        };
+        if (ttl) {
+            item.expiry = new Date().getTime() + ttl;
+        }
+        localStorage.setItem(key, JSON.stringify(item));
+    },
+    getItem: (key: string) => {
+        const itemStr = localStorage.getItem(key);
+        if (!itemStr) return null;
+
+        const item = JSON.parse(itemStr) as StorageItem;
+        if ('expiry' in item && new Date().getTime() > item.expiry!) {
+            localStorage.removeItem(key);
+            return null;
+        }
+
+        return item.value;
+    },
+};
