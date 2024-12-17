@@ -102,7 +102,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
         },
     });
 
-    const { fields, append, remove, move, replace, update } = useFieldArray({
+    const { fields, append, remove, move, replace } = useFieldArray({
         name: 'stepNames',
         control: methods.control,
     });
@@ -275,7 +275,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                     <div
                                         key={j}
                                         className="ml-10 hover:cursor-pointer flex"
-                                        onClick={(e) => toggleStepToImport(plan, step)}
+                                        onClick={() => toggleStepToImport(plan, step)}
                                         title={t('step-names.add_remove')}
                                     >
                                         <input
@@ -481,7 +481,11 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('step-names.title')} pageSlug={'ve-designer/steps'} />
+            <CustomHead
+                pageTitle={t('step-names.title')}
+                pageSlug={'ve-designer/steps'}
+                pageDescription={t('step-names.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('step-names.title')}
@@ -538,7 +542,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                         type="button"
                         title={t('step-names.import_phases')}
-                        onClick={(e) => openStepsImportDialog()}
+                        onClick={() => openStepsImportDialog()}
                     >
                         {t('common:import')}
                     </button>
@@ -553,8 +557,12 @@ export function StepNamesNoAuthPreview() {
     const methods = useForm<FormValues>({});
 
     return (
-        <div className='opacity-55'>
-            <CustomHead pageTitle={t('step-names.title')} pageSlug={'ve-designer/steps'} />
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('step-names.title')}
+                pageSlug={'ve-designer/steps'}
+                pageDescription={t('step-names.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('step-names.title')}
@@ -625,7 +633,7 @@ export function StepNamesNoAuthPreview() {
                                                 'step-names.learning_objectives_placeholder'
                                             )}
                                             className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
-                                            onChange={(e) => {}}
+                                            onChange={() => {}}
                                         />
                                     </div>
                                 </div>
@@ -665,7 +673,7 @@ export function StepNamesNoAuthPreview() {
                         className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                         type="button"
                         title={t('step-names.import_phases')}
-                        onClick={(e) => {}}
+                        onClick={() => {}}
                         disabled
                     >
                         {t('common:import')}

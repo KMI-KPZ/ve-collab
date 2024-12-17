@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import React, { useCallback } from 'react';
+import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Image from 'next/image';
@@ -332,7 +332,11 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
 
     return (
         <>
-            <CustomHead pageTitle={t('target.title')} pageSlug={'ve-designer/target-groups'} />
+            <CustomHead
+                pageTitle={t('target.title')}
+                pageSlug={'ve-designer/target-groups'}
+                pageDescription={t('target.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('target.title')}
@@ -384,7 +388,11 @@ export function TargetGroupsNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('target.title')} pageSlug={'ve-designer/target-groups'} />
+            <CustomHead
+                pageTitle={t('target.title')}
+                pageSlug={'ve-designer/target-groups'}
+                pageDescription={t('target.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('target.title')}

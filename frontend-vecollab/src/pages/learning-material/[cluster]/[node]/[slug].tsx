@@ -59,7 +59,7 @@ export default function LearningContentView(props: Props) {
         setFrameHeight('100%');
         setLoading(true);
 
-        const resizedWindow = (event: Event) => {
+        const resizedWindow = () => {
             setFrameHeight('100%');
             if (reqDebounce) clearTimeout(reqDebounce);
             reqDebounce = setTimeout(() => {
@@ -121,7 +121,6 @@ export default function LearningContentView(props: Props) {
                     </div>
                 }
                 onSelect={(value) => {
-                    console.log({ value });
                     router.push(
                         `/learning-material/${router.query.cluster}/${props.nodeSlug}/${value}`
                     );
@@ -139,11 +138,20 @@ export default function LearningContentView(props: Props) {
         </div>
     );
 
+    const slugUrl: string = `learning-material/${cluster}/${node}/${slug}`;
+    const translateAttribute = `learning_materials_descriptions.learning-material/${cluster}/${encodeURIComponent(
+        node
+    )}/${encodeURIComponent(slug)}`;
+    const getPageDescription: string =
+        t(translateAttribute) !== translateAttribute
+            ? t(translateAttribute)
+            : t('frontpage.description');
     return (
         <>
             <CustomHead
                 pageTitle={t('materials')}
-                pageSlug={`learning-material/${cluster}/${node}/${slug}`}
+                pageSlug={slugUrl}
+                pageDescription={getPageDescription}
             />
             <ContentWrapper
                 nodesOfCluster={props.nodesOfCluster}

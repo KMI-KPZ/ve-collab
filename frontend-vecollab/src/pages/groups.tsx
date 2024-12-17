@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
@@ -26,7 +26,7 @@ Groups.auth = true;
 Groups.noAuthPreview = <GroupsNoAuthPreview />;
 
 export default function Groups() {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
     const [searchInput, setSearchInput] = useState('');
@@ -137,7 +137,11 @@ export default function Groups() {
 
     return (
         <>
-            <CustomHead pageTitle={t('groups')} pageSlug={'groups'} />
+            <CustomHead
+                pageTitle={t('groups')}
+                pageSlug={'groups'}
+                pageDescription={t('groups_description')}
+            />
             <div className="mt-12">
                 <WhiteBox>
                     <VerticalTabs>
@@ -531,7 +535,7 @@ export default function Groups() {
                                 type="checkbox"
                                 className="mr-2"
                                 checked={newGroupInvisibleCheckboxChecked}
-                                onChange={(e) =>
+                                onChange={() =>
                                     setNewGroupInvisibleCheckboxChecked(
                                         !newGroupInvisibleCheckboxChecked
                                     )
@@ -544,7 +548,7 @@ export default function Groups() {
                                 type="checkbox"
                                 className="mr-2"
                                 checked={newGroupJoinableCheckboxChecked}
-                                onChange={(e) =>
+                                onChange={() =>
                                     setNewGroupJoinableCheckboxChecked(
                                         !newGroupJoinableCheckboxChecked
                                     )
@@ -565,7 +569,7 @@ export default function Groups() {
                                 className={
                                     'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
-                                onClick={(e) => {
+                                onClick={() => {
                                     createNewGroup();
                                     handleCloseNewDialog();
                                 }}
@@ -584,11 +588,11 @@ function GroupsNoAuthPreview() {
     const { t } = useTranslation(['community', 'common']);
     const exampleGroups = [
         {
-            name: t("common:no_auth.group_name1"),
-            space_description: t("common:no_auth.group_description1"),
+            name: t('common:no_auth.group_name1'),
+            space_description: t('common:no_auth.group_description1'),
         },
         {
-            name: t("common:no_auth.group_name2"),
+            name: t('common:no_auth.group_name2'),
         },
         {
             _id: '3',
@@ -598,7 +602,11 @@ function GroupsNoAuthPreview() {
     ];
     return (
         <div className="opacity-40">
-            <CustomHead pageTitle={t('groups')} pageSlug={'groups'} />
+            <CustomHead
+                pageTitle={t('groups')}
+                pageSlug={'groups'}
+                pageDescription={t('groups_description')}
+            />
             <div className="mt-12">
                 <WhiteBox>
                     <VerticalTabs isNoAuthPreview={true}>

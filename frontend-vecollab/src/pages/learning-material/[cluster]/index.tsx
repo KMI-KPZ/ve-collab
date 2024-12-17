@@ -21,9 +21,19 @@ export default function BubbleSelected(props: Props) {
     const cluster = router.query.cluster as string;
     const { t } = useTranslation('common');
 
+    const slugUrl: string = `learning-material/${cluster}`;
+    const translateAttribute = `learning_materials_descriptions.${slugUrl}`;
+    const getPageDescription: string =
+        t(translateAttribute) !== translateAttribute
+            ? t(translateAttribute)
+            : t('frontpage.description');
     return (
         <>
-            <CustomHead pageTitle={t('materials')} pageSlug={`learning-material/${cluster}`} />
+            <CustomHead
+                pageTitle={t('materials')}
+                pageSlug={slugUrl}
+                pageDescription={getPageDescription}
+            />
             <ContentWrapper
                 contentChildren={
                     <>

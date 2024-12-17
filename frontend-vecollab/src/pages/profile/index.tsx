@@ -105,7 +105,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
 
     const [foreignUser, setForeignUser] = useState(false);
 
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -182,7 +182,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                         description: elem.description,
                     }))
                 );
-                console.log(data.profile.ve_window);
             }
         });
     }, [session, router]);
@@ -193,7 +192,11 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 <LoadingAnimation />
             ) : (
                 <>
-                    <CustomHead pageTitle={t('common:profile')} pageSlug={'profile'} />
+                    <CustomHead
+                        pageTitle={t('common:profile')}
+                        pageSlug={'profile'}
+                        pageDescription={t('profile_description')}
+                    />
                     <ProfileBanner
                         follows={follows}
                         setFollows={setFollows}
@@ -262,7 +265,11 @@ export function UserProfileNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('common:profile')} pageSlug={'profile'} />
+            <CustomHead
+                pageTitle={t('common:profile')}
+                pageSlug={'profile'}
+                pageDescription={t('profile_description')}
+            />
             <ProfileBanner
                 follows={[]}
                 setFollows={() => {}}

@@ -29,6 +29,7 @@
     "choose_option": "Option auswählen...",
     "last_modified": "Zuletzt geändert",
     "materials": "Selbstlernmaterialien",
+    "materials_description": "VE-Collab bietet ein wachsendes Angebot interaktiver Selbstlernmaterialien zu Themen rund um virtuelle Austausche, z.B. Potenziale oder Herausforderungen.",
     "materials_welcome": "Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!",
     "materials_intro_text": "Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch. Sie konnten bereits Erfahrung mit VE sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.",
     "materials_only_german": "",
@@ -39,6 +40,7 @@
     "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
     "profile": "Profil",
     "profile_title": "eigenes Profil öffnen",
+    "profile_description": "Stelle persönliche Informationen zu dir, deinen VE-Interessen und -Erfahrungen für andere Personen in der Community zur Verfügung.",
     "edit_profile_title": "eigenes Profil bearbeiten",
     "login": "Login",
     "register": "Registrieren",
@@ -48,6 +50,7 @@
     "search": "Suche",
     "search_placeholder": "Suche Benutzer, Gruppe oder Beitrag ...",
     "search_title": "Suchen",
+    "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
     "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
     "search_no_results": "Keine Ergebnisse",
     "search_result_users": "Nutzer:innen",
@@ -66,8 +69,10 @@
     "create": "Erstellen",
     "btn_new_ve": "Neuen VE planen",
     "plans": "Pläne",
+    "plans_description": "Der VE-Designer von VE-Collab ist ein digitales Planungstool, das VE-Partner*innen Schritt für Schritt durch die Planung eines virtuellen Austauschs leitet.",
     "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
     "matching": "Partner Suche",
+    "matching_description": "Passend zu den eigenen Profilinformationen und weiteren einstellbaren Filtern werden dir Vorschläge für potenzielle VE-Partner*innen gemacht.",
     "matching_question": "Noch auf der Suche nach neuen Partner:innen für deinen nächsten VE?",
     "go_matching": "zum Matching",
     "find_ve_partners": "VE Partner:innen finden",
@@ -333,6 +338,7 @@
     "homepage_banner": "Lehre kooperativ, digital und international",
     "homepage_text": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten beim eigenen Kompetenzaufbau und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (eng. virtual exchanges). Durch den Aufbau einer Community of Practice fördern wir zudem den aktiven kollegialen (virtuellen) Austausch.",
     "frontpage": {
+        "description": "VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten und gibt Hilfestellungen bei der Planung und Durchführung virtueller Austausche.",
         "slideshow": {
             "slide1": {
                 "title": "Wir machen Sie fit für Virtuelle Austausche/Virtual Exchanges",
@@ -472,5 +478,26 @@
             "persönliches Schaufenster für aktuelle und vergangene VE-Projekte",
             "exklusiv für registrierte Nutzer*innen"
         ]
+    },
+    "learning_materials_descriptions": {
+        "learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch": "Ein grober Überblick und Einführungsvideo zum Lehrkonzept \"virtueller Austausch\" (VA, englisch \"Virtual Exchange\" - VE).",
+        "learning-material/1/Einf%C3%BChrung/Merkmale%20virtueller%20Austausche": "die charakteristischen Merkmale eines VE: digital, geographisch getrennt, Lernende arbeiten kollaborativ und werden von Lehrenden dabei unterstützt.",
+        "learning-material/1/Einf%C3%BChrung/Begriffsabgrenzung": "Viele Begriffe werden als Synonym für VEs verwendet, z.B. Telekollaboration, COIL, etc., aber andere, wie z.B. MOOC oder Online-Treffen sind andere Konzepte.",
+        "learning-material/1/Einf%C3%BChrung/Zusammenfassung": "Eine kurze Zusammenfassung über die vorhergehenden Kapitel zur Definition von VE, charakteristischen Merkmalen und einer Begriffsabgrenzung.",
+        "learning-material/1/Potenziale/Einstieg": "Ein interaktives Lehrmodul zu den Potenzialen von VE.",
+        "learning-material/1/Potenziale/Mehrwerte%20virtueller%20Austausche": "Ein interaktives Lehrmodul zu den Mehrwerten von VEs, z.B. fachlicher, sprachlicher, digitaler und kultureller Kompetenzaufbau und Internationalisierung.",
+        "learning-material/1/Potenziale/Kompetenzmodelle": "Ein interaktives  Lehrmodul zu Kompetenzmodellen, die VEs zugrunde liegen, z.B. 4K-Modell oder 21st Century Skills ",
+        "learning-material/1/Herausforderungen/Herausforderungen%20als%20Chance%20-%20Tipps%20und%20Tricks": "Ein interaktives Lehrmodul zu den größten Herausforderungen von VEs und wie diese zu lösen sind. Z.B. Kommunikation, Technik, Zeit oder Qualifizierung.",
+        "learning-material/2/Evaluation/Einstieg": "Ein interaktives Lehrmodul zur Fragestellung ob, warum und wie man einen VE evaluieren sollte.",
+        "learning-material/2/Evaluation/Ziele%2C%20Funktionen%2C%20Formen%20und%20Schwerpunkte": "Ein interaktives Lehrmodul zu Evaluationsformen (formativ oder summativ), Evaluationsschwerpunkten und Dimensionen der Evaluation von VEs.",
+        "learning-material/2/Evaluation/Evaluationsmethoden": "Ein interaktives Lehrmodul zur Vorstellung von formellen und informellen Evaluationsmethoden und wie eine passende Methode ausgewählt werden kann.",
+        "learning-material/2/Evaluation/Auswertung%20und%20Ergebnisse": "Ein interaktives Lehrmodeul zum Umgang mit Evaluationsdaten, deren Auswertung und dem richtigen Umgang mit Evaluationsergebnissen.",
+        "learning-material/3/Tools/Kontakt%20und%20Organisation": "Nützlich für Kontakt und Organisation sind Videokonferenztools wie Zoom, Jitsi, oder BigBlueButton und Management-Tools wie Zenkit, Leapchat, Nuudel, etc.",
+        "learning-material/3/Tools/Kollaboratives%20Arbeiten": "Zum kollaborativen Arbeiten in VEs eignen sich Whiteboards und Schreibtools wie Padlet, ConceptBoard, Notion, sowie Umfrage- und Disskussionstools.",
+        "learning-material/3/Tools/Interaktive%20Lernbausteine": "VEs können durch didaktische und spielerische Elemente bereichert werden. Dazu eignen sich Tools wie z.B. Quiz Academy, LearningApps, FlipGrid, etc.",
+        "learning-material/1": "Eine Sammlung interaktiver Lehrmodule zu generellen Themen rund um VEs - Einführung, Potenziale, Herausforderungen und Beispiele aus der Praxis.",
+        "learning-material/2": "Eine Sammlung interaktiver Lehrmodule zur konkreten Planung von VEs und der Evaluation.",
+        "learning-material/3": "Eine Sammlung interaktiver Lehrmodule zu nützlichen Tools für VEs, Datenschutzfragen, digitalen Medien und Open Educational Resources (OER).",
+        "learning-material/4": "Eine Sammlung interaktiver Lehrmodule zu kulturellen & sprachlichen Aspekten, Interaktion und Kollaboration und einem Methodenkoffer für digitale Lehre."
     }
 }

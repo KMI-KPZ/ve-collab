@@ -50,7 +50,11 @@ export default function Name({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('name.title')} pageSlug={'ve-designer/name'} />
+            <CustomHead
+                pageTitle={t('name.title')}
+                pageSlug={'ve-designer/name'}
+                pageDescription={t('name.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('name.title')}
@@ -90,7 +94,11 @@ export function NameNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('name.title')} pageSlug={'ve-designer/name'} />
+            <CustomHead
+                pageTitle={t('name.title')}
+                pageSlug={'ve-designer/name'}
+                pageDescription={t('name.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('name.title')}

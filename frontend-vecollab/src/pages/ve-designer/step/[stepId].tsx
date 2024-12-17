@@ -290,7 +290,11 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={currentFineStep.name} pageSlug={`ve-designer/step/${stepId}`} />
+            <CustomHead
+                pageTitle={currentFineStep.name}
+                pageSlug={`ve-designer/step/${stepId}`}
+                pageDescription={t('step-data.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('step-data.title', { name: currentFineStep.name })}
@@ -317,12 +321,16 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 export function FinePlannerNoAuthPreview() {
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
     const methods = useForm<IFineStepFrontend>({});
-    const [prevpage, setPrevpage] = useState<string>('/ve-designer/step/');
-    const [nextpage, setNextpage] = useState<string>('/ve-designer/step/');
+    const [prevpage] = useState<string>('/ve-designer/step/');
+    const [nextpage] = useState<string>('/ve-designer/step/');
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={'Phase'} pageSlug={`ve-designer/step`} />
+            <CustomHead
+                pageTitle={'Phase'}
+                pageSlug={`ve-designer/step`}
+                pageDescription={t('step-data.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('step-data.title', { name: '1' })}
