@@ -2,11 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import {
-    initialSideProgressBarStates,
-    ISideProgressBarStates,
-    ProgressState,
-} from '@/interfaces/ve-designer/sideProgressBar';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -288,7 +283,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         <div
                             key={i}
                             className="ml-10 hover:cursor-pointer flex"
-                            onClick={(e) => toggleImport(i, institution)}
+                            onClick={() => toggleImport(i, institution)}
                         >
                             <input
                                 type="checkbox"
@@ -305,7 +300,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                     <button
                         type="button"
                         className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
-                        onClick={(e) => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
+                        onClick={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
                     >
                         {t('common:cancel')}
                     </button>
@@ -317,7 +312,11 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('institutions.title')} pageSlug={'ve-designer/institutions'} />
+            <CustomHead
+                pageTitle={t('institutions.title')}
+                pageSlug={'ve-designer/institutions'}
+                pageDescription={t('institutions.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('institutions.title')}
@@ -347,7 +346,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                             className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                             type="button"
                             title={t('institutions.import_institutions')}
-                            onClick={(e) => openImportDialog()}
+                            onClick={() => openImportDialog()}
                         >
                             {t('common:import')}
                         </button>
@@ -407,7 +406,11 @@ export function InstitutionsNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('institutions.title')} pageSlug={'ve-designer/institutions'} />
+            <CustomHead
+                pageTitle={t('institutions.title')}
+                pageSlug={'ve-designer/institutions'}
+                pageDescription={t('institutions.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('institutions.title')}

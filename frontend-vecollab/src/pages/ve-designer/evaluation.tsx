@@ -317,7 +317,11 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('evaluation.title')} pageSlug={'ve-designer/evaluation'} />
+            <CustomHead
+                pageTitle={t('evaluation.title')}
+                pageSlug={'ve-designer/evaluation'}
+                pageDescription={t('evaluation.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('evaluation.title')}
@@ -351,7 +355,11 @@ export function EvaluationNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('evaluation.title')} pageSlug={'ve-designer/evaluation'} />
+            <CustomHead
+                pageTitle={t('evaluation.title')}
+                pageSlug={'ve-designer/evaluation'}
+                pageDescription={t('evaluation.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('evaluation.title')}

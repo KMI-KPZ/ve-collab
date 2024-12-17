@@ -326,7 +326,11 @@ export default function PostProcess({ socket }: Props) {
 
     return (
         <>
-            <CustomHead pageTitle={t('post-process.title')} pageSlug={'ve-designer/post-process'} />
+            <CustomHead
+                pageTitle={t('post-process.title')}
+                pageSlug={'ve-designer/post-process'}
+                pageDescription={t('post-process.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('post-process.title')}
@@ -351,7 +355,7 @@ export default function PostProcess({ socket }: Props) {
                                     href={
                                         'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'
                                     }
-                                    target='_blank'
+                                    target="_blank"
                                 >
                                     CC-BY-NC-ND 4.0
                                 </Link>
@@ -653,7 +657,11 @@ export function PostProcessNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('post-process.title')} pageSlug={'ve-designer/post-process'} />
+            <CustomHead
+                pageTitle={t('post-process.title')}
+                pageSlug={'ve-designer/post-process'}
+                pageDescription={t('post-process.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('post-process.title')}

@@ -74,8 +74,6 @@ export default function Plans({ socket }: Props) {
             });
         }
 
-        // console.log({ filterBy, sortedPlans });
-
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
 
@@ -106,7 +104,11 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+            <CustomHead
+                pageTitle={t('plans')}
+                pageSlug={'plans'}
+                pageDescription={t('plans_description')}
+            />
 
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
@@ -251,7 +253,11 @@ function PlansNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+            <CustomHead
+                pageTitle={t('plans')}
+                pageSlug={'plans'}
+                pageDescription={t('plans_description')}
+            />
 
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>

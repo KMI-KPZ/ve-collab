@@ -8,7 +8,6 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
-import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 
 interface Props {
     socket: Socket;
@@ -24,7 +23,11 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
 
     return (
         <>
-            <CustomHead pageTitle={t('finish.title')} pageSlug={'ve-designer/finish'} />
+            <CustomHead
+                pageTitle={t('finish.title')}
+                pageSlug={'ve-designer/finish'}
+                pageDescription={t('finish.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('finish.title')}
@@ -38,7 +41,7 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                     setPlanData(d);
                     return {};
                 }}
-                submitCallback={(d) => {}}
+                submitCallback={() => {}}
             >
                 {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
                 {feedbackFormURL && (
@@ -64,8 +67,12 @@ export function FinishedNoAuthPreview() {
     const { t } = useTranslation(['designer', 'common']);
 
     return (
-        <div className='opacity-55'>
-            <CustomHead pageTitle={t('finish.title')} pageSlug={'ve-designer/finish'} />
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('finish.title')}
+                pageSlug={'ve-designer/finish'}
+                pageDescription={t('finish.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('finish.title')}

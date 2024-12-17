@@ -76,7 +76,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         fields: fieldsExternalParties,
         append: appendExternalParties,
         remove: removeExternalParties,
-        update: updateExternalParties,
         replace: replaceExternalParties,
     } = useFieldArray({
         name: 'externalParties',
@@ -345,7 +344,11 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('partners.title')} pageSlug={'ve-designer/partners'} />
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('partners.title')}
@@ -434,7 +437,11 @@ export function PartnersNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('partners.title')} pageSlug={'ve-designer/partners'} />
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('partners.title')}

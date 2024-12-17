@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { Tooltip } from '@/components/common/Tooltip';
@@ -248,7 +248,11 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('learningEnv.title')} pageSlug={'ve-designer/learning-env'} />
+            <CustomHead
+                pageTitle={t('learningEnv.title')}
+                pageSlug={'ve-designer/learning-env'}
+                pageDescription={t('learningEnv.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('learningEnv.title')}
@@ -357,7 +361,11 @@ export function LearningEnvNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('learningEnv.title')} pageSlug={'ve-designer/learning-env'} />
+            <CustomHead
+                pageTitle={t('learningEnv.title')}
+                pageSlug={'ve-designer/learning-env'}
+                pageDescription={t('learningEnv.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('learningEnv.title')}

@@ -54,12 +54,14 @@
     },
     "name": {
         "title": "Project name",
+        "page_description": "Which methodological approach underlies VE? Task-based, problem-oriented, inquiry-based learning or game-based learning?",
         "subtitle": "What will the project be called?",
         "description": "Give your project a name.The name will appear in the VE-Display and in the project/Good Practice overview.",
         "placeholder": "Enter name"
     },
     "partners": {
         "title": "Project partners",
+        "page_description": "Add your partners and, if necessary, external participants to the VE. The VE designer asks for some information for each partner.",
         "subtitle": "Who is involved in the project?",
         "description-1": "List all individuals involved in the project by name here. If the individuals are already registered on VE-Collab, they can be found in the drop-down menu. Unregistered partners can be entered manually. Individual steps (e.g. learning objectives, assessment and evaluation) can then be answered for each participant separately.",
         "description-2": "If applicable, also list external participants (e.g. companies or other institutions) who are not directly involved in the planning and execution of the VE.",
@@ -69,6 +71,7 @@
     },
     "institutions": {
         "title": "Institutions",
+        "page_description": "The VE was successfully planned and can now be carried out. You can see a complete summary again.",
         "subtitle": "Which institutions are involved?",
         "description": "This field provides you with a better overview of the institutions involved as well as the relevant departments.",
         "educational_institution": "Educational institution",
@@ -87,6 +90,7 @@
     },
     "lectures": {
         "title": "Courses",
+        "page_description": "Create the courses in which the VE is to be implemented. Important information is name, type, format and number of participants.",
         "subtitle": "In which classes will the VE be implemented?",
         "compulsory": "Compulsory course",
         "elective": "Elective course",
@@ -99,6 +103,7 @@
     },
     "target": {
         "title": "Target groups & languages",
+        "page_description": "The rough planning enables the creation of phases and associated learning objectives that are completed in the VE (e.g. icebreaker, work phase, presentation).",
         "subtitle": "Which target groups is the VE designed for?",
         "description": "It is important to consider the target group in order to tailor the teaching/learning objectives and content of the VE to the learners. Asking about the participants' first languages and other languages can be important in identifying a lingua franca or establishing a multilingual setting.",
         "tooltip": "More about language(s) in VE can be found in the self-learning materials…",
@@ -115,6 +120,7 @@
     },
     "goals": {
         "title": "Learning objectives & topics",
+        "page_description": "Define concrete and overarching learning objectives for all teaching groups involved and formulate a topic on which the VE will take place.",
         "subtitle": "1. Which subject-related learning objectives should be achieved in the VE?",
         "description": "Briefly describe the subject-related learning objectives of the VE, i.e. the knowledge and skills you want to impart. The learning objective can also be multidisciplinary if you adress a certain topic from your subjects perspective (e.g. ESD).",
         "tooltip": "More about learning objectives can be found here in the self-learning materials...",
@@ -139,6 +145,7 @@
     },
     "learningEnv": {
         "title": "Digital learning environment",
+        "page_description": "Describe the VE's digital learning environment, specify the format (synchronous / asynchronous), and add optional physical meetings.",
         "subtitle": "In which digital learning environment does the VE take place?",
         "description": "Please specify which shared learning platform is available to your participants, e.g. a joint project page or shared padlet, or which individual platform each of the participating partners use. If applicable, also name the most important digital tools for your project, e.g. the video conferencing system or virtual environments you will be using.",
         "tooltip": "More about LMS can be found in the self-learning materials…",
@@ -156,6 +163,7 @@
     },
     "methodology": {
         "title": "Methodological approach",
+        "page_description": "Which methodological approach underlies VE? Task-based, problem-oriented, inquiry-based learning or game-based learning?",
         "subtitle": "What methodological approach is your VE based on?",
         "description": "If none of the suggestions match your approach, you can also add individual entries.",
         "tooltip": "More about teaching methods can be found here in the self-learning materials…",
@@ -167,6 +175,7 @@
     },
     "evaluation": {
         "title": "Assessment / Evaluation",
+        "page_description": "Plan how the VE will be evaluated before, during and/or after the VE and whether an assessment will be carried out in the participating institutions.",
         "subtitle": "How can the VE be assessed and evaluated during and/or after the VE?",
         "description": "At this point, reflect whether your VE is more process- or product-oriented. Note whether an evaluation (of processes or products) of the VE is planned on your part. Additionally, select appropriate formative and/or summative evaluation methods.",
         "tooltip": "More about evaluation can be found here in the self-learning materials…",
@@ -185,8 +194,9 @@
     },
     "checklist": {
         "title": "Checklist",
+        "page_description": "The checklist can be used to ensure that all aspects necessary for the success of the VE have been clarified, e.g. semester times, technology, etc.",
         "subtitle": "Have you thought of everything?",
-        "description": "Here are some important aspects you should clarify before starting with the content and didactic planning..",
+        "description": "Here are some important aspects you should clarify before starting with the content and didactic planning.",
         "tooltip": "More about the aspects of the checklist can be found here in the self-learning materials…",
         "time_title": "Time",
         "time_descr": [
@@ -212,6 +222,7 @@
         "new_userbox_placeholder": "Label ..."
     },
     "step-names" : {
+        "page_description": "The rough planning enables the creation of phases and associated learning objectives that are completed in the VE (e.g. icebreaker, work phase, presentation).",
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",
         "select_steps_to_import": "Select phases you wish to import from the Good-Practice plans",
         "by": "by",
@@ -235,6 +246,7 @@
         "unique_name": "Please choose a unique name for each stage"
     },
     "step-data": {
+        "page_description": "",
         "imported_from": "Imported from:",
         "plan_no_longer_available": "Plan no longer available",
         "fine_plan": "Detailed planning",
@@ -256,6 +268,7 @@
     },
     "post-process": {
         "title": "Post-processing",
+        "page_description": "Add your partners and, if necessary, external participants to the VE. The VE designer asks for some information for each partner.",
         "subtitle": "Return here after completing the VE.",
         "submit": "Submit & return to overview",
         "text_1": "Would you like to share your VE as a Good Practice example with the community?",
@@ -281,6 +294,7 @@
     },
     "finish": {
         "title": "Finished",
+        "page_description": "The VE was successfully planned and can now be carried out. You can see a complete summary again.",
         "subtitle": "Well done! You have successfully planned the VE.",
         "to_post_process": "to post-processing",
         "feedback_1": "We'd love to hear your thoughts on VE-Designer or the platform! Please share them ",

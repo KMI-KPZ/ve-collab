@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -204,7 +204,11 @@ export default function Lectures({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('lectures.title')} pageSlug={'ve-designer/lectures'} />
+            <CustomHead
+                pageTitle={t('lectures.title')}
+                pageSlug={'ve-designer/lectures'}
+                pageDescription={t('lectures.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('lectures.title')}
@@ -251,7 +255,11 @@ export function LecturesNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('lectures.title')} pageSlug={'ve-designer/lectures'} />
+            <CustomHead
+                pageTitle={t('lectures.title')}
+                pageSlug={'ve-designer/lectures'}
+                pageDescription={t('lectures.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('lectures.title')}
