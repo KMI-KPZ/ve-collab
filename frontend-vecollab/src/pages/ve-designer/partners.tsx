@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import AsyncSelect from 'react-select/async';
+import AsyncCreatableSelect from 'react-select/async-creatable';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -16,7 +16,7 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 import CustomHead from '@/components/metaData/CustomHead';
@@ -76,7 +76,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         fields: fieldsExternalParties,
         append: appendExternalParties,
         remove: removeExternalParties,
-        update: updateExternalParties,
         replace: replaceExternalParties,
     } = useFieldArray({
         name: 'externalParties',
@@ -286,7 +285,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 name={name}
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
-                    <AsyncSelect
+                    <AsyncCreatableSelect
                         className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
@@ -299,10 +298,15 @@ export default function Partners({ socket }: Props): JSX.Element {
                         placeholder={t('common:search_users')}
                         getOptionLabel={(option) => option.label}
                         autoFocus={true}
-                        loadingMessage={() => t('common:loading') + '...'}
-                        noOptionsMessage={() => t('common:nothing_found')}
-                        openMenuOnFocus={false}
-                        openMenuOnClick={false}
+                        formatCreateLabel={(inputValue) => (
+                            <span>
+                                <Trans
+                                    i18nKey="common:search_users_no_hit"
+                                    values={{ value: inputValue }}
+                                    components={{ bold: <strong /> }}
+                                />
+                            </span>
+                        )}
                         components={{
                             DropdownIndicator: null,
                         }}
@@ -340,7 +344,11 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('partners.title')} pageSlug={'ve-designer/partners'} />
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('partners.title')}
@@ -429,7 +437,11 @@ export function PartnersNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('partners.title')} pageSlug={'ve-designer/partners'} />
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('partners.title')}

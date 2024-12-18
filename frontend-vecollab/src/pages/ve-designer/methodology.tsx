@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -124,7 +124,11 @@ export default function Methodology({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('methodology.title')} pageSlug={'ve-designer/methodology'} />
+            <CustomHead
+                pageTitle={t('methodology.title')}
+                pageSlug={'ve-designer/methodology'}
+                pageDescription={t('methodology.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('methodology.title')}
@@ -159,7 +163,11 @@ export function MethodologyNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('methodology.title')} pageSlug={'ve-designer/methodology'} />
+            <CustomHead
+                pageTitle={t('methodology.title')}
+                pageSlug={'ve-designer/methodology'}
+                pageDescription={t('methodology.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('methodology.title')}

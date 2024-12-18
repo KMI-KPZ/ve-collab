@@ -74,8 +74,6 @@ export default function Plans({ socket }: Props) {
             });
         }
 
-        // console.log({ filterBy, sortedPlans });
-
         setSortedPlans([...sortedPlans]);
     }, [plans, isLoading, sortBy, filterBy]);
 
@@ -106,7 +104,11 @@ export default function Plans({ socket }: Props) {
 
     return (
         <>
-            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+            <CustomHead
+                pageTitle={t('plans')}
+                pageSlug={'plans'}
+                pageDescription={t('plans_description')}
+            />
 
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
@@ -132,7 +134,7 @@ export default function Plans({ socket }: Props) {
                     <ButtonNewPlan
                         socket={socket}
                         label={t('btn_new_ve')}
-                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
+                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
                     >
                         <div className="flex flex-wrap items-center justify-center ">
                             <Image
@@ -251,7 +253,11 @@ function PlansNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('plans')} pageSlug={'plans'} />
+            <CustomHead
+                pageTitle={t('plans')}
+                pageSlug={'plans'}
+                pageDescription={t('plans_description')}
+            />
 
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
@@ -273,7 +279,7 @@ function PlansNoAuthPreview() {
 
                     <ButtonNewPlan
                         label={t('btn_new_va')}
-                        className="w-1/2 bg-white border shadow rounded-full mx-4 cursor-default"
+                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-default"
                         isNoAuthPreview={true}
                     >
                         <div className="flex flex-wrap items-center justify-center ">

@@ -24,12 +24,14 @@ export interface BackendProfileSnippetsResponse {
 export interface BackendUser {
     user_id: string;
     username: string;
-    email: string;
+    first_name: string;
+    last_name: string;
     role: string;
     followers: string[];
     follows: string[];
     spaces: string[];
     profile: BackendProfile;
+    profile_pic: string;
 }
 
 export interface BackendProfile {
@@ -124,8 +126,8 @@ export interface BackendGroupACLEntry {
 }
 
 export interface BackendUserACLEntry {
-    role: string,
-    create_space: boolean,
+    role: string;
+    create_space: boolean;
 }
 
 export interface BackendPostAuthor {

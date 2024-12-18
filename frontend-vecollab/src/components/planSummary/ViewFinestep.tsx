@@ -95,7 +95,7 @@ export default function ViewFinestep({
                         <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity ease-in-out">
                             <ButtonLight
                                 onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                classNameExtend="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                                className="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
                             >
                                 {t('show_all')}
                                 <MdKeyboardDoubleArrowDown className="inline ml-2" />
@@ -119,7 +119,7 @@ export default function ViewFinestep({
                             {typeof handleImportStep !== 'undefined' && canExport == true && (
                                 <div className="ml-auto">
                                     <ButtonLight
-                                        classNameExtend="print:hidden"
+                                        className="print:hidden"
                                         title={t('plan_summary_btn_export_title')}
                                         onClick={() => {
                                             handleImportStep(fineStep);
@@ -248,7 +248,7 @@ export default function ViewFinestep({
                             <div className="flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    classNameExtend="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                                    className="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline ml-2" />

@@ -24,7 +24,7 @@ export default function Home({ notificationEvents, toggleNotifWindow }: Props): 
 
     return (
         <>
-            <CustomHead />
+            <CustomHead pageDescription={t('frontpage.description')} />
             <div className="">
                 <div>
                     <BackgroundAnimation className="-z-10" enable={true} />

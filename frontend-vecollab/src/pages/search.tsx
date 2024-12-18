@@ -102,7 +102,11 @@ export default function SearchResult() {
 
     return (
         <>
-            <CustomHead pageTitle={t('search')} pageSlug={'search'} />
+            <CustomHead
+                pageTitle={t('search')}
+                pageSlug={'search'}
+                pageDescription={t('search_description')}
+            />
             <Wrapper>
                 {/* TODO Filter by category?! */}
                 {/* <div className="flex flex-rows mr-4 divide-x divide-slate-900">

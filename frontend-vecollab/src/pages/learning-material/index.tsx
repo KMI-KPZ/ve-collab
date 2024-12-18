@@ -4,7 +4,7 @@ import {
     getTopLevelNodes,
     useIsGlobalAdmin,
 } from '@/lib/backend';
-import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
+import { INode } from '@/interfaces/material/materialInterfaces';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { TbBulb, TbClipboardList } from 'react-icons/tb';
@@ -16,7 +16,6 @@ import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
-import * as cluster from 'node:cluster';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -32,6 +31,13 @@ export const getClusterSlugByRouteQuery = (nr: number) => {
     return cluster ? ClusterRouteMapping[cluster].slug : undefined;
 };
 
+export const getClusterRouteBySlug = (slug: string) => {
+    const cluster = Object.keys(ClusterRouteMapping).find(
+        (a) => ClusterRouteMapping[a].slug == slug
+    );
+    return cluster ? ClusterRouteMapping[cluster].route : undefined;
+};
+
 const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element } = {
     [ClusterRouteMapping.topBubble.slug]: (attr) => <TbBulb {...attr} />,
     [ClusterRouteMapping.leftBubble.slug]: (attr) => <TbClipboardList {...attr} />,
@@ -39,7 +45,7 @@ const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element
     [ClusterRouteMapping.bottomBubble.slug]: (attr) => <GiPuzzle {...attr} />,
 };
 
-export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || ((attr: any) => <></>);
+export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || (() => <></>);
 
 const styleBubbleWrapper = 'relative w-48 max-xl:mx-auto max-xl:my-24';
 const styleBubbleMain = `group block relative h-48 w-48 z-10 rounded-full
@@ -62,11 +68,6 @@ export default function PageCategoryNotSelected(props: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
     const router = useRouter();
-
-    console.log('cluster', props.cluster);
-    console.log('nodes', props.nodes);
-    console.log('materials', props.materials);
-    console.log('urls', props.urls);
 
     const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
@@ -136,7 +137,11 @@ export default function PageCategoryNotSelected(props: Props) {
 
     return (
         <>
-            <CustomHead pageTitle={t('materials')} pageSlug={`learning-material`} />
+            <CustomHead
+                pageTitle={t('materials')}
+                pageSlug={`learning-material`}
+                pageDescription={t('materials_description')}
+            />
             <div className="flex justify-between pt-12 mb-4">
                 <div>
                     <div className="mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8">
@@ -177,8 +182,7 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
 
     await Promise.all(
         cluster.map(async (bubble) => {
-            const nodesInBubble = await getChildrenOfNode(bubble.id);
-            nodes[bubble.text] = nodesInBubble;
+            nodes[bubble.text] = await getChildrenOfNode(bubble.id);
         })
     );
 
@@ -202,10 +206,9 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
             let url = `${encodeURIComponent(material.cluster_id)}/${encodeURIComponent(
                 material.node_text
             )}`;
-            const urls = material.learning_page.map(
+            return material.learning_page.map(
                 (page: any) => `${url}/${encodeURIComponent(page.text)}`
             );
-            return urls;
         })
     );
 

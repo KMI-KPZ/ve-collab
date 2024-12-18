@@ -274,7 +274,11 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('goals.title')} pageSlug={'ve-designer/learning-goals'} />
+            <CustomHead
+                pageTitle={t('goals.title')}
+                pageSlug={'ve-designer/learning-goals'}
+                pageDescription={t('goals.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('goals.title')}
@@ -399,8 +403,12 @@ export function LearningGoalsNoAuthPreview() {
     });
 
     return (
-        <div className='opacity-55'>
-            <CustomHead pageTitle={t('goals.title')} pageSlug={'ve-designer/learning-goals'} />
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('goals.title')}
+                pageSlug={'ve-designer/learning-goals'}
+                pageDescription={t('goals.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('goals.title')}

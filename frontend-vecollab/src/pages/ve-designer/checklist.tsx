@@ -170,7 +170,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                     </div>
 
                     <span
-                        onClick={(e) => toggleShowDescr(`${value}${userIdx}`)}
+                        onClick={() => toggleShowDescr(`${value}${userIdx}`)}
                         className="hidden items-center justify-center w-9 h-9 mx-2 text-ve-collab-blue rounded-full hover:bg-ve-collab-blue-light group-hover:inline-flex cursor-pointer"
                     >
                         ?
@@ -221,7 +221,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                 )}
                                 checked={value}
                                 className="border border-gray-500 rounded-lg w-4 h-4 p-3 mb-1 mr-4"
-                                onChange={(e) => {
+                                onChange={() => {
                                     updateUserChecklist(userIdx, {
                                         ...usersChecklist[userIdx],
                                         ...{
@@ -302,7 +302,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                 ...{
                                     userDefinedAspects: usersChecklist[
                                         userIdx
-                                    ].userDefinedAspects.filter((a, i) => i !== index),
+                                    ].userDefinedAspects.filter((_, i) => i !== index),
                                 },
                             });
                         }}
@@ -336,7 +336,11 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     return (
         <>
-            <CustomHead pageTitle={t('checklist.title')} pageSlug={'ve-designer/checklist'} />
+            <CustomHead
+                pageTitle={t('checklist.title')}
+                pageSlug={'ve-designer/checklist'}
+                pageDescription={t('checklist.page_description')}
+            />
             <Wrapper
                 socket={socket}
                 title={t('checklist.title')}
@@ -369,7 +373,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                 {renderUserDefinedCheckBoxes(index)}
 
                                 <ButtonLight
-                                    classNameExtend="w-fit !rounded-full mx-auto mt-2"
+                                    className="w-fit !rounded-full mx-auto mt-2"
                                     title={t('checklist.add_userdefined_title')}
                                     onClick={() => {
                                         updateUserChecklist(index, {
@@ -417,7 +421,11 @@ export function ChecklistNoAuthPreview() {
 
     return (
         <div className="opacity-55">
-            <CustomHead pageTitle={t('checklist.title')} pageSlug={'ve-designer/checklist'} />
+            <CustomHead
+                pageTitle={t('checklist.title')}
+                pageSlug={'ve-designer/checklist'}
+                pageDescription={t('checklist.page_description')}
+            />
             <Wrapper
                 socket={undefined}
                 title={t('checklist.title')}
@@ -451,7 +459,10 @@ export function ChecklistNoAuthPreview() {
                                             : t('common:no_auth.partner2')}
                                     </div>
                                     {defaultCheckboxes.map((v, i) => (
-                                        <div key={i} className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                                        <div
+                                            key={i}
+                                            className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2"
+                                        >
                                             <div className="grow">
                                                 <label className="w-fit pr-4 truncate font-konnect cursor-pointer py-2 flex items-center">
                                                     <input
@@ -464,7 +475,7 @@ export function ChecklistNoAuthPreview() {
                                             </div>
 
                                             <span
-                                                onClick={(e) => {}}
+                                                onClick={() => {}}
                                                 className="hidden items-center justify-center w-9 h-9 mx-2 text-ve-collab-blue rounded-full"
                                             >
                                                 ?
@@ -473,10 +484,9 @@ export function ChecklistNoAuthPreview() {
                                     ))}
 
                                     <ButtonLight
-                                        classNameExtend="w-fit !rounded-full mx-auto mt-2"
+                                        className="w-fit !rounded-full mx-auto mt-2"
                                         title={t('checklist.add_userdefined_title')}
                                         onClick={() => {}}
-                                        isNoAuthPreview
                                     >
                                         <MdAdd size={21} />
                                     </ButtonLight>

@@ -33,7 +33,11 @@ export default function Matching() {
 
     return (
         <>
-            <CustomHead pageTitle={t('matching')} pageSlug={'matching'} />
+            <CustomHead
+                pageTitle={t('matching')}
+                pageSlug={'matching'}
+                pageDescription={t('matching_description')}
+            />
             <div className="gap-y-6 w-full p-12 items-center flex flex-col justify-content">
                 <div>
                     <h1 className="text-center font-bold text-4xl mb-2">{t('matching')}</h1>

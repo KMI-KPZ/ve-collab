@@ -76,12 +76,7 @@ export default function Edit() {
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const { t } = useTranslation('common');
 
-    const {
-        data: isUserAdmin,
-        isLoading,
-        error,
-        mutate,
-    } = useGetCheckAdminUser(session!.accessToken);
+    const { data: isUserAdmin, isLoading } = useGetCheckAdminUser(session!.accessToken);
 
     const [treeData, setTreeData] = useState<NodeModel<CustomData>[]>([
         {
@@ -163,7 +158,7 @@ export default function Edit() {
     };
 
     const handleDrop = (newTree: any) => setTreeData(newTree);
-    const [open, setOpen] = useState<boolean>(false);
+    const [_, setOpen] = useState<boolean>(false);
 
     const handleDelete = (id: NodeModel['id']) => {
         const deleteIds = [id, ...getDescendants(treeData, id).map((node) => node.id)];
@@ -293,7 +288,7 @@ export default function Edit() {
                                                     </button>
                                                     <button
                                                         className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                                        onClick={(e) =>
+                                                        onClick={() =>
                                                             handleSubmit({
                                                                 parent: 0,
                                                                 droppable: true,
@@ -316,7 +311,7 @@ export default function Edit() {
                                                 </div>
                                                 <button
                                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                                    onClick={(e) => {
+                                                    onClick={() => {
                                                         triggerMBRSync();
                                                     }}
                                                 >
@@ -412,7 +407,7 @@ export default function Edit() {
                                 className={
                                     'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
-                                onClick={(e) => {
+                                onClick={() => {
                                     handleCreateNewMaterial();
                                     handleCloseMaterialDialog();
                                 }}

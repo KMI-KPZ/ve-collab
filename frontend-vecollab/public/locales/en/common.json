@@ -5,7 +5,7 @@
     "enter_jtsi": "Enter Jitsi room",
     "enter_name": "Enter name",
     "search_users": "Search for users...",
-    "search_users_no_hit": "No result? Use \"{{value}}\" anyway",
+    "search_users_no_hit": "No result? Use \"<bold>{{value}}</bold>\" anyway",
     "name": "Name",
     "first_name": "First name",
     "last_name": "Last name",
@@ -29,6 +29,7 @@
     "choose_option": "Choose an option...",
     "last_modified": "Last modified",
     "materials": "Learning Material",
+    "materials_description": "VE-Collab offers a growing range of interactive self-learning materials on topics related to virtual exchanges, e.g. potentials or challenges.",
     "materials_welcome": "Welcome to the constantly growing collection of learning material of VE-Collab!",
     "materials_intro_text": "You are interested in virtual exchanges but have little or no prior knowledge on the topic? The learning materials will help you dive into the subject and support you step by step on your way to your first virtual exchange. Have you already gained experience with virtual exchanges? Here you can deepen your knowledge in the relevant topics, reflect on your previous experiences, and get inspired by current links and articles for your own practice and research.",
     "materials_only_german": "Unfortunately the learning material is only available in German at the moment. You can try to use your browsers translation tool.",
@@ -39,6 +40,7 @@
     "toggle_notification_window": "Toggle Notifications",
     "profile": "Profile",
     "profile_title": "Show my profile",
+    "profile_description": "Make personal information about yourself, your VE interests and experiences available to others in the community.",
     "edit_profile_title": "Edit my profile",
     "login": "Login",
     "register": "Register",
@@ -46,8 +48,9 @@
     "redirect": "Redirected...",
     "profile_pic": "Profile picture",
     "search": "Search",
-    "search_placeholder": "Search...",
+    "search_placeholder": "Search User, Group oder Post ...",
     "search_title": "Search",
+    "search_description": "Search for content on VE-Collab, such as people, groups, posts, learning materials or plans",
     "search_instructions": "Search for users, groups, plans, etc.",
     "search_no_results": "No results found",
     "search_result_users": "Users",
@@ -66,8 +69,10 @@
     "create": "Create",
     "btn_new_ve": "Start a new VE",
     "plans": "Plans",
+    "plans_description": "VE-Collab’s VE Designer is a digital planning tool that guides VE partners step by step through planning a virtual exchange.",
     "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
     "matching": "Partner Matching",
+    "matching_description": "Based on your own profile information and other adjustable filters, you will be given suggestions for potential VE partners.",
     "matching_question": "Still looking for new partners for your next VE?",
     "go_matching": "Go to the matching",
     "find_ve_partners": "Find VE partners",
@@ -333,6 +338,7 @@
     "homepage_banner": "Cooperative, digital and international teaching",
     "homepage_text": "VE-Collab supports educators with a variety of qualification offers in building their own competencies and provides assistance in the initiation, planning, and implementation of international and national virtual exchanges. By building a Community of Practice, we also promote active collegial (virtual) exchange.",
     "frontpage": {
+        "description": "VE-Collab supports teachers with a wide range of qualification offers and provides assistance in planning and implementing virtual exchanges.",
         "slideshow": {
             "slide1": {
                 "title": "We get you ready for virtual exchanges",
@@ -340,7 +346,7 @@
             },
             "slide2": {
                 "title": "Find suitable partners and network",
-                "text": "Find VA partners in our virtual Community of Practice, share good practice examples and network internationally."
+                "text": "Find VE partners in our virtual Community of Practice, share good practice examples and network internationally."
             },
             "slide3": {
                 "title": "Step-by-step planning assistance",
@@ -473,5 +479,26 @@
             "exclusively available for registered users only"
         ],
         "image_alt": "Group of people"
+    },
+    "learning_materials_descriptions": {
+        "learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch": "A rough overview and introductory video of the “virtual exchange” (VA) teaching concept.",
+        "learning-material/1/Einf%C3%BChrung/Merkmale%20virtueller%20Austausche": "the characteristic features of a VE: digital, geographically separated, learners work collaboratively and are supported by teachers.",
+        "learning-material/1/Einf%C3%BChrung/Begriffsabgrenzung": "Many terms are used synonymously with VEs, e.g. telecollaboration, COIL, etc., but others, such as MOOC or online meetings are different concepts.",
+        "learning-material/1/Einf%C3%BChrung/Zusammenfassung": "A short summary of the previous chapters on the definition of VE, characteristic features and a definition of terms.",
+        "learning-material/1/Potenziale/Einstieg": "An interactive teaching module on the potential of VE.",
+        "learning-material/1/Potenziale/Mehrwerte%20virtueller%20Austausche": "An interactive teaching module on the added value of VEs, e.g. technical, linguistic, digital and cultural competence building and internationalization.",
+        "learning-material/1/Potenziale/Kompetenzmodelle": "An interactive teaching module on competency models that underlie VEs, e.g. 4K model or 21st Century Skills ",
+        "learning-material/1/Herausforderungen/Herausforderungen%20als%20Chance%20-%20Tipps%20und%20Tricks": "An interactive teaching module on the biggest challenges of VEs and how to solve them. ",
+        "learning-material/2/Evaluation/Einstieg": "An interactive teaching module asking whether, why and how you should evaluate a VE.",
+        "learning-material/2/Evaluation/Ziele%2C%20Funktionen%2C%20Formen%20und%20Schwerpunkte": "An interactive teaching module on forms of evaluation (formative or summative), evaluation priorities and dimensions of the evaluation of VEs.",
+        "learning-material/2/Evaluation/Evaluationsmethoden": "An interactive teaching module to introduce formal and informal evaluation methods and how to choose a suitable method.",
+        "learning-material/2/Evaluation/Auswertung%20und%20Ergebnisse": "An interactive teaching module for dealing with evaluation data, its evaluation and the correct handling of evaluation results.",
+        "learning-material/3/Tools/Kontakt%20und%20Organisation": "Video conferencing tools such as Zoom, Jitsi, or BigBlueButton and management tools such as Zenkit, Leapchat, Nuudel, etc. are useful for contact and organization.",
+        "learning-material/3/Tools/Kollaboratives%20Arbeiten": "Whiteboards and writing tools such as Padlet, ConceptBoard, Notion, as well as survey and discussion tools are suitable for collaborative work in VEs.",
+        "learning-material/3/Tools/Interaktive%20Lernbausteine": "VEs can be enriched with didactic and playful elements. ",
+        "learning-material/1": "A collection of interactive teaching modules on general topics related to VEs - introduction, potential, challenges and practical examples.",
+        "learning-material/2": "A collection of interactive teaching modules for concrete planning of VEs and evaluation.",
+        "learning-material/3": "A collection of interactive teaching modules on useful tools for VEs, data protection issues, digital media and Open Educational Resources (OER).",
+        "learning-material/4": "A collection of interactive teaching modules on cultural & linguistic aspects, interaction and collaboration and a method kit for digital teaching."
     }
 }
