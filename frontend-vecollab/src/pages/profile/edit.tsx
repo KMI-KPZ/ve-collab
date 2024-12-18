@@ -26,6 +26,7 @@ import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticPropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -104,6 +105,7 @@ interface Props {
 }
 
 EditProfile.auth = true;
+EditProfile.autoForward = true;
 export default function EditProfile({ optionLists }: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
 
@@ -289,6 +291,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
     return (
         <>
+            <CustomHead pageTitle={t('common:edit_profile_title')} pageSlug={'profile/edit'} />
             <div className={'flex justify-center'}>
                 <WhiteBox>
                     <div className={'w-[60rem]'}>
@@ -389,7 +392,7 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
     // prepare select dropdown options
     const optionLists = {
         veInterestsKeys: [
-            'Best Practise Examples',
+            'Good Practice Examples',
             'Evaluation',
             'Subject-specific Implementation Options',
             'Research',

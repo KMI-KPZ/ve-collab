@@ -12,7 +12,6 @@ import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
-import veCollabLogo from '@/images/veCollabLogo.png';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
@@ -123,17 +122,14 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                         <H2>{t('recommended_materials')}</H2>
                         <p className="mb-1">{t('recommended_materials_text')}</p>
                         {/* disclaimer message if language is set to non-german */}
-            {router.locale !== 'de' && (
-                <div className="text-gray-500 text-sm">{t('common:materials_only_german')}</div>
-            )}
+                        {router.locale !== 'de' && (
+                            <div className="text-gray-500 text-sm">
+                                {t('common:materials_only_german')}
+                            </div>
+                        )}
                         <div className="relative w-32 mx-auto mt-[3.5rem]">
-                            <div className="w-32 h-32 z-10 relative rounded-full bg-footer-pattern bg-center bg-cover drop-shadow-lg opacity-85 flex justify-center items-center transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110">
-                                <Image
-                                    src={veCollabLogo}
-                                    alt="VE-Collab Logo"
-                                    width={75}
-                                    className="hover:scale-110 drop-shadow-[0_0_8px_#fff]"
-                                ></Image>
+                            <div className="w-32 h-32 z-10 relative text-white font-bold rounded-full bg-footer-pattern bg-center bg-cover drop-shadow-lg opacity-85 flex justify-center items-center">
+                                VE Collab
                             </div>
 
                             <Link
@@ -155,7 +151,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                             </Link>
 
                             <Link
-                                href={'/learning-material//3/Tools'}
+                                href={'/learning-material/3/Tools'}
                                 className={`${learningLeafStyle} bottom-[1rem] -left-[5.5rem]`}
                             >
                                 Tools

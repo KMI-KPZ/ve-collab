@@ -4,7 +4,8 @@ import { getSession, signIn } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     padID: string | null | undefined;
@@ -12,12 +13,14 @@ interface Props {
 }
 
 Etherpad.auth = true;
+Etherpad.autoForward = true;
 export default function Etherpad({
     padID,
     error,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const router = useRouter();
     const { t } = useTranslation('common');
+    const id = router.query.id as string;
 
     useEffect(() => {
         if (!router.isReady) {
@@ -30,6 +33,7 @@ export default function Etherpad({
 
     return (
         <>
+            <CustomHead pageTitle={'Etherpad'} pageSlug={`etherpad/${id}`} />
             {error === null ? (
                 <iframe
                     src={`${process.env.NEXT_PUBLIC_ETHERPAD_BASE_URL}/p/${padID}`}

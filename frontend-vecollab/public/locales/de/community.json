@@ -1,4 +1,5 @@
 {
+    "groups_description": "Die Virtual Community of Practice (VCOP) von VE-Collab dient dem (internationalen) Austausch und der Vernetzung zum Thema virtueller Austausche (VE).",
     "my_groups": "Meine Gruppen",
     "you_are_member_of_groups": "Du bist Mitglied in diesen Gruppen",
     "group_picture": "Gruppenbild",
@@ -236,7 +237,7 @@
     "attend_matching": "Ich nehme am Matching teil",
     "exclude_matching": "vom Matching ausschließen",
     "ve_interests_options": {
-        "Best Practise Examples": "Best-Practice Beispiele",
+        "Good Practice Examples": "Good-Practice Beispiele",
         "Evaluation": "Evaluation",
         "Subject-specific Implementation Options": "Fachspezifische Umsetzungsmöglichkeiten",
         "Research": "Forschung",

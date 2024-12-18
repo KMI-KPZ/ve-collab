@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import React, { useCallback, useState } from 'react';
 import { RxMinus, RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import AsyncSelect from 'react-select/async';
+import AsyncCreatableSelect from 'react-select/async-creatable';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import {
     BackendProfileSnippetsResponse,
@@ -15,10 +15,11 @@ import { EvaluationPerPartner } from '@/pages/ve-designer/evaluation';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
-import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface FormValues {
     partners: Partner[];
@@ -39,10 +40,11 @@ interface Props {
 }
 
 Partners.auth = true;
+Partners.noAuthPreview = <PartnersNoAuthPreview />;
 export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
-    const { t } = useTranslation(['designer', 'common'])
+    const { t } = useTranslation(['designer', 'common']);
 
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
@@ -74,7 +76,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         fields: fieldsExternalParties,
         append: appendExternalParties,
         remove: removeExternalParties,
-        update: updateExternalParties,
         replace: replaceExternalParties,
     } = useFieldArray({
         name: 'externalParties',
@@ -131,8 +132,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                     replacePartners(partners);
                 }
             }
-            partners.push({ value: '', label: '' })
-            appendPartners(partners)
+            partners.push({ value: '', label: '' });
+            appendPartners(partners);
 
             return {
                 partners: partners,
@@ -144,10 +145,10 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const extPartners = data.externalParties
-            .filter((value) => value.externalParty.trim() != "")
-            .map((element) => element.externalParty)
+            .filter((value) => value.externalParty.trim() != '')
+            .map((element) => element.externalParty);
         const partners: string[] = data.partners
-            .filter((partner) => partner.value.trim() != "")
+            .filter((partner) => partner.value.trim() != '')
             .map((partner) => partner.value);
 
         let updateFormalConditions: CheckListPartner[] = [];
@@ -174,7 +175,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                         // evaluation: false,
                         institutionalRequirements: false,
                         dataProtection: false,
-                        userDefinedAspects: []
+                        userDefinedAspects: [],
                     };
                 }
             });
@@ -284,33 +285,35 @@ export default function Partners({ socket }: Props): JSX.Element {
                 name={name}
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
-                    <AsyncSelect
+                    <AsyncCreatableSelect
                         className="grow max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadUsers}
                         onChange={(target, type) => {
-                            onChange(type.action == 'clear'
-                                ? {label: "", value: ""}
-                                : target
-                            )
+                            onChange(type.action == 'clear' ? { label: '', value: '' } : target);
                         }}
                         onBlur={onBlur}
-                        value={value.value == "" ? null : value}
-                        placeholder={t("common:search_users")}
+                        value={value.value == '' ? null : value}
+                        placeholder={t('common:search_users')}
                         getOptionLabel={(option) => option.label}
                         autoFocus={true}
-                        loadingMessage={() => t('common:loading') + "..."}
-                        noOptionsMessage={() => t('common:nothing_found')}
-                        openMenuOnFocus={false}
-                        openMenuOnClick={false}
+                        formatCreateLabel={(inputValue) => (
+                            <span>
+                                <Trans
+                                    i18nKey="common:search_users_no_hit"
+                                    values={{ value: inputValue }}
+                                    components={{ bold: <strong /> }}
+                                />
+                            </span>
+                        )}
                         components={{
                             DropdownIndicator: null,
                         }}
                     />
                 )}
             />
-        )
+        );
     }
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
@@ -319,7 +322,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 <div className="flex">
                     <input
                         type="text"
-                        placeholder={t("common:enter_name")}
+                        placeholder={t('common:enter_name')}
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`)}
                     />
@@ -329,7 +332,10 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
-                        {t(methods.formState.errors?.externalParties?.[index]?.externalParty?.message!)}
+                        {t(
+                            methods.formState.errors?.externalParties?.[index]?.externalParty
+                                ?.message!
+                        )}
                     </p>
                 )}
             </div>
@@ -337,92 +343,176 @@ export default function Partners({ socket }: Props): JSX.Element {
     };
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('partners.title')}
-            subtitle={t('partners.subtitle')}
-            description={[
-                t('partners.description-1'),
-                t('partners.description-2'),
-            ]}
-            tooltip={{
-                text: t('partners.tooltip'),
-                link: '/learning-material/2/VA-Planung',
-            }}
-            stageInMenu='generally'
-            idOfProgress="partners"
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div>
-                <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
-                {fieldsPartners.map((partner, index) => {
-                    return (
-                        <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                            {partner.value == planAuthor ? (
-                                <div className="p-2">{partner.label}</div>
-                            ) : (
-                                <>
-                                    {createSelect(
-                                        methods.control,
-                                        `partners.${index}`,
-                                        index
-                                    )}
-                                    <button onClick={() => handleDeletePartners(index)}>
-                                        <RxMinus size={20} />
-                                    </button>
-                                </>
-                            )}
-                            {methods.formState.errors?.partners?.[index]?.value?.message && (
-                                <p className="text-red-600 pt-2">
-                                    {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
-                                </p>
-                            )}
-                        </div>
-                    );
-                })}
-                <div className="mt-4">
-                    <button
-                        className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
-                        type="button"
-                        onClick={() => {
-                            appendPartners({ label: '', value: '' });
-                        }}
-                    >
-                        <RxPlus size={25} />
-                    </button>
-                </div>
+        <>
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
+            <Wrapper
+                socket={socket}
+                title={t('partners.title')}
+                subtitle={t('partners.subtitle')}
+                description={[t('partners.description-1'), t('partners.description-2')]}
+                tooltip={{
+                    text: t('partners.tooltip'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                stageInMenu="generally"
+                idOfProgress="partners"
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
                 <div>
-                    <p className="text-xl text-slate-600 mb-2 mt-10">{t('partners.externpartners_title')}</p>
-                    {renderExternalPartiesInputs()}
+                    <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
+                    {fieldsPartners.map((partner, index) => {
+                        return (
+                            <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                                {partner.value == planAuthor ? (
+                                    <div className="p-2">{partner.label}</div>
+                                ) : (
+                                    <>
+                                        {createSelect(methods.control, `partners.${index}`, index)}
+                                        <button onClick={() => handleDeletePartners(index)}>
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </>
+                                )}
+                                {methods.formState.errors?.partners?.[index]?.value?.message && (
+                                    <p className="text-red-600 pt-2">
+                                        {t(
+                                            methods.formState.errors?.partners?.[index]?.value
+                                                ?.message!
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })}
                     <div className="mt-4">
                         <button
                             className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {
-                                appendExternalParties({
-                                    externalParty: '',
-                                });
+                                appendPartners({ label: '', value: '' });
                             }}
                         >
                             <RxPlus size={25} />
                         </button>
                     </div>
+                    <div>
+                        <p className="text-xl text-slate-600 mb-2 mt-10">
+                            {t('partners.externpartners_title')}
+                        </p>
+                        {renderExternalPartiesInputs()}
+                        <div className="mt-4">
+                            <button
+                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    appendExternalParties({
+                                        externalParty: '',
+                                    });
+                                }}
+                            >
+                                <RxPlus size={25} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </Wrapper>
+            </Wrapper>
+        </>
+    );
+}
+
+export function PartnersNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+    const methods = useForm<FormValues>({
+        mode: 'onChange',
+        resolver: zodResolver(PartnersFormSchema),
+    });
+
+    return (
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('partners.title')}
+                pageSlug={'ve-designer/partners'}
+                pageDescription={t('partners.page_description')}
+            />
+            <Wrapper
+                socket={undefined}
+                title={t('partners.title')}
+                subtitle={t('partners.subtitle')}
+                description={[t('partners.description-1'), t('partners.description-2')]}
+                tooltip={{
+                    text: t('partners.tooltip'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                stageInMenu="generally"
+                idOfProgress="partners"
+                methods={methods}
+                prevpage={'/ve-designer/name'}
+                nextpage={'/ve-designer/institutions'}
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview={true}
+            >
+                <div>
+                    <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
+
+                    <div className="flex w-full mb-2 gap-x-3 lg:w-1/2 border border-gray-300 rounded-lg p-2">
+                        <input
+                            className="grow max-w-full"
+                            placeholder={t('common:search_users')}
+                            disabled
+                        />
+                        <button onClick={() => {}}>
+                            <RxMinus size={20} />
+                        </button>
+                    </div>
+
+                    <div className="mt-4">
+                        <button
+                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {}}
+                            disabled
+                        >
+                            <RxPlus size={25} />
+                        </button>
+                    </div>
+                    <div>
+                        <p className="text-xl text-slate-600 mb-2 mt-10">
+                            {t('partners.externpartners_title')}
+                        </p>
+                        <div className="my-2 w-full lg:w-1/2">
+                            <div className="flex"></div>
+                        </div>
+                        <div className="mt-4">
+                            <button
+                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {}}
+                                disabled
+                            >
+                                <RxPlus size={25} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+        </div>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', [
-                'common', 'designer'
-            ])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
         },
-    }
+    };
 }

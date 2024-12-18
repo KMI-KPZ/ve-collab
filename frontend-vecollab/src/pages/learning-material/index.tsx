@@ -1,4 +1,9 @@
-import { getChildrenOfNode, getTopLevelNodes, useIsGlobalAdmin } from '@/lib/backend';
+import {
+    getChildrenOfNode,
+    getMaterialNodesOfNodeByText,
+    getTopLevelNodes,
+    useIsGlobalAdmin,
+} from '@/lib/backend';
 import { INode } from '@/interfaces/material/materialInterfaces';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -9,6 +14,8 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
+import CustomHead from '@/components/metaData/CustomHead';
+import React from 'react';
 
 export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
     topBubble: { route: 1, slug: 'top-bubble' },
@@ -24,6 +31,13 @@ export const getClusterSlugByRouteQuery = (nr: number) => {
     return cluster ? ClusterRouteMapping[cluster].slug : undefined;
 };
 
+export const getClusterRouteBySlug = (slug: string) => {
+    const cluster = Object.keys(ClusterRouteMapping).find(
+        (a) => ClusterRouteMapping[a].slug == slug
+    );
+    return cluster ? ClusterRouteMapping[cluster].route : undefined;
+};
+
 const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element } = {
     [ClusterRouteMapping.topBubble.slug]: (attr) => <TbBulb {...attr} />,
     [ClusterRouteMapping.leftBubble.slug]: (attr) => <TbClipboardList {...attr} />,
@@ -31,7 +45,7 @@ const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element
     [ClusterRouteMapping.bottomBubble.slug]: (attr) => <GiPuzzle {...attr} />,
 };
 
-export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || ((attr: any) => <></>);
+export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || (() => <></>);
 
 const styleBubbleWrapper = 'relative w-48 max-xl:mx-auto max-xl:my-24';
 const styleBubbleMain = `group block relative h-48 w-48 z-10 rounded-full
@@ -44,6 +58,9 @@ const styleBubbleLeaf = `block absolute px-6 py-3 min-w-24 max-w-48 rounded-full
 
 interface Props {
     nodes: { [key: string]: INode[] };
+    cluster: any;
+    materials: any;
+    urls: any;
 }
 
 // Landing Page: no category (and therefore no learning-material is chosen)
@@ -69,13 +86,16 @@ export default function PageCategoryNotSelected(props: Props) {
                     })}
                 </Link>
                 {nodes.map((style, i) => (
-                    <Link
-                        key={i}
-                        href={`/learning-material/${querySlug}/${props.nodes[slug][i].text}`}
-                        className={`${styleBubbleLeaf} ${style}`}
-                    >
-                        {props.nodes[slug][i].text}
-                    </Link>
+                    <div key={i}>
+                        {props.nodes[slug][i]?.text && (
+                            <Link
+                                href={`/learning-material/${querySlug}/${props.nodes[slug][i]?.text}`}
+                                className={`${styleBubbleLeaf} ${style}`}
+                            >
+                                {props.nodes[slug][i]?.text}
+                            </Link>
+                        )}
+                    </div>
                 ))}
             </div>
         );
@@ -83,7 +103,7 @@ export default function PageCategoryNotSelected(props: Props) {
 
     const Bubbles = () => (
         <>
-            {/* TOP BUBBLE */}
+            {/* 1 BUBBLE */}
             {Bubble(1, 'xl:left-[37%] xl:-translate-x-1/1', [
                 '-top-[1.5rem] -left-[5rem]', //einfuehrung
                 'top-[.5rem] -right-[6.5rem]', // potenziale
@@ -91,13 +111,13 @@ export default function PageCategoryNotSelected(props: Props) {
                 '-bottom-[.5rem] -left-[10rem]', // beispiele aus der praxis
             ])}
 
-            {/* LEFT BUBBLE */}
+            {/* 2 BUBBLE */}
             {Bubble(2, 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
-                '-top-[1.5rem] -left-[5rem]', // va-planung
+                '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
             ])}
 
-            {/* RIGHT BUBBLE */}
+            {/* 3 BUBBLE */}
             {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
                 '-top-[2.5rem] -left-[5rem]', // digitale medien
                 '-bottom-[3.5rem] -right-[7rem]', // datenschutz
@@ -105,7 +125,7 @@ export default function PageCategoryNotSelected(props: Props) {
                 'top-0 -right-[4rem]', // oer
             ])}
 
-            {/* BOTTOM BUBBLE */}
+            {/* 4 BUBBLE */}
             {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
                 '-bottom-[.5rem] -left-[10.5rem]', // interaktion
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
@@ -117,12 +137,13 @@ export default function PageCategoryNotSelected(props: Props) {
 
     return (
         <>
+            <CustomHead
+                pageTitle={t('materials')}
+                pageSlug={`learning-material`}
+                pageDescription={t('materials_description')}
+            />
             <div className="flex justify-between pt-12 mb-4">
                 <div>
-                    {/* <div className={'font-bold text-4xl mb-2'}>Selbstlernmaterialien</div> */}
-                    {/* <div className="w-fit py-3 px-4 mb-2 font-bold text-4xl text-slate-600 border-b-4 border-ve-collab-blue rounded-md bg-ve-collab-blue-light">
-                        Selbstlernmaterialien
-                    </div> */}
                     <div className="mb-3 text-4xl font-bold underline decoration-ve-collab-blue decoration-4 underline-offset-8">
                         {t('materials')}
                     </div>
@@ -161,14 +182,42 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
 
     await Promise.all(
         cluster.map(async (bubble) => {
-            const nodesInBubble = await getChildrenOfNode(bubble.id);
-            nodes[bubble.text] = nodesInBubble;
+            nodes[bubble.text] = await getChildrenOfNode(bubble.id);
+        })
+    );
+
+    const materials = await Promise.all(
+        Object.values(nodes).flatMap(async (nodeArray) =>
+            Promise.all(
+                nodeArray.map(async (node) => {
+                    const learning_page = await getMaterialNodesOfNodeByText(node.text);
+                    return {
+                        node_text: node.text,
+                        learning_page: learning_page,
+                        cluster_id: (node.parent % 10) + 1, // get last digit
+                    };
+                })
+            )
+        )
+    ).then((results) => results.flat());
+
+    const urls = await Promise.all(
+        materials.map((material: any) => {
+            let url = `${encodeURIComponent(material.cluster_id)}/${encodeURIComponent(
+                material.node_text
+            )}`;
+            return material.learning_page.map(
+                (page: any) => `${url}/${encodeURIComponent(page.text)}`
+            );
         })
     );
 
     return {
         props: {
+            materials,
+            cluster,
             nodes,
+            urls,
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };

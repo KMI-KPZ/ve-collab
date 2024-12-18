@@ -18,6 +18,8 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Alert from '@/components/common/dialogs/Alert';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import CustomHead from '@/components/metaData/CustomHead';
+import { useTranslation } from 'next-i18next';
 
 export type Metadata = {
     name: string;
@@ -68,16 +70,13 @@ const getLastId = (treeData: NodeModel[]) => {
 };
 
 Edit.auth = true;
+Edit.autoForward = true;
 export default function Edit() {
     const { data: session } = useSession();
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+    const { t } = useTranslation('common');
 
-    const {
-        data: isUserAdmin,
-        isLoading,
-        error,
-        mutate,
-    } = useGetCheckAdminUser(session!.accessToken);
+    const { data: isUserAdmin, isLoading } = useGetCheckAdminUser(session!.accessToken);
 
     const [treeData, setTreeData] = useState<NodeModel<CustomData>[]>([
         {
@@ -159,7 +158,7 @@ export default function Edit() {
     };
 
     const handleDrop = (newTree: any) => setTreeData(newTree);
-    const [open, setOpen] = useState<boolean>(false);
+    const [_, setOpen] = useState<boolean>(false);
 
     const handleDelete = (id: NodeModel['id']) => {
         const deleteIds = [id, ...getDescendants(treeData, id).map((node) => node.id)];
@@ -250,6 +249,7 @@ export default function Edit() {
 
     return (
         <>
+            <CustomHead pageTitle={t('edit')} pageSlug={`learning-material/edit`} />
             <div className="flex justify-center">
                 <WhiteBox>
                     <div className="w-[60vw] h-[70vh] overflow-y-auto content-scrollbar">
@@ -288,7 +288,7 @@ export default function Edit() {
                                                     </button>
                                                     <button
                                                         className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
-                                                        onClick={(e) =>
+                                                        onClick={() =>
                                                             handleSubmit({
                                                                 parent: 0,
                                                                 droppable: true,
@@ -311,7 +311,7 @@ export default function Edit() {
                                                 </div>
                                                 <button
                                                     className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
-                                                    onClick={(e) => {
+                                                    onClick={() => {
                                                         triggerMBRSync();
                                                     }}
                                                 >
@@ -407,7 +407,7 @@ export default function Edit() {
                                 className={
                                     'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
-                                onClick={(e) => {
+                                onClick={() => {
                                     handleCreateNewMaterial();
                                     handleCloseMaterialDialog();
                                 }}

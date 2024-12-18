@@ -21,6 +21,7 @@ import Swiper_LoggedIn from './Swiper_LoggedIn';
 
 import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
+import SuggestionBox from './SuggestionBox';
 import badgeBird from '@/images/badges/bird_copper.png';
 import badgeOctopus from '@/images/badges/octopus_copper.png';
 
@@ -104,7 +105,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
 
                             <div className="">
                                 {profileInformation.profile.ve_ready ? (
-                                    <span className="text-green-500">
+                                    <span className="text-white bg-green-500 rounded-full shadow shadow-green-500 px-2 py-1 my-1">
                                         <MdCheck className="inline mr-1 mb-1" />
                                         {t('ve_ready_true')}
                                     </span>
@@ -145,16 +146,16 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                             <div className="group/veWindow">
                                 <H2 className="inline">{t('ve_window')}</H2>
                                 <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/veWindow:visible">
-                                    <Link href={'/profle/edit'} className="">
+                                    <Link href={'/profile/edit'} className="">
                                         <MdEdit className="inline" /> {t('add_plan')}
                                     </Link>
                                 </span>
                             </div>
                             {profileInformation.profile.ve_window.length == 0 && <>-</>}
                             <ul className="list-disc ml-6">
-                                {profileInformation.profile.ve_window.map((plan: any) => {
+                                {profileInformation.profile.ve_window.map((plan: any, i) => {
                                     return (
-                                        <li key={plan.id}>
+                                        <li key={i}>
                                             <Link href={`/plan/${plan.plan_id}`}>
                                                 {plan.plan_name}
                                             </Link>
@@ -281,7 +282,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                 })}
                             </div>
                             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                                <Link href={`/plans`} onClick={(e) => e.preventDefault()}>
+                                <Link href={`/plans`}>
                                     {t('common:all')}{' '}
                                     <MdArrowRight size={24} className="inline mx-1" />
                                 </Link>
@@ -317,7 +318,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     </ButtonNewPlan> */}
 
                     <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 w-fit -ml-[8px] xl:-ml-[24px] pt-[11px]">
+                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
@@ -325,7 +326,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <ButtonNewPlan
                             socket={socket}
                             label={t('common:btn_new_ve')}
-                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2"
+                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none"
                         >
                             <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                                 <Image
@@ -388,48 +389,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         </div>
                     )}
 
-                    <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
-                        <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
-                        <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                        <H2>{t('suggested_materials')}</H2>
-                        <ul className="d1ivide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-2 *:text-ve-collab-blue">
-                            <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                                <Link
-                                    href={
-                                        '/learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch'
-                                    }
-                                >
-                                    Was ist ein virtueller Austausch
-                                </Link>
-                            </li>
-                            <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                                <Link
-                                    href={
-                                        '/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis'
-                                    }
-                                >
-                                    VE-Beispiele aus der Praxis
-                                </Link>
-                            </li>
-                            <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                                <Link href={'/learning-material/3/Tools'}>Tools</Link>
-                            </li>
-                            <li className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out">
-                                <Link
-                                    href={
-                                        '/learning-material/4/Interaktion%20und%20kollaboratives%20Arbeiten'
-                                    }
-                                >
-                                    Interaktion und kollaboratives Arbeiten
-                                </Link>
-                            </li>
-                        </ul>
-                        <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                            <Link href={`/learning-material`} onClick={(e) => e.preventDefault()}>
-                                {t('common:all')} <MdArrowRight size={24} className="inline mx-1" />
-                            </Link>
-                        </div>
-                    </div>
+                    <SuggestionBox />
                 </div>
             </div>
         </>

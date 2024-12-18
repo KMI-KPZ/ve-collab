@@ -12,8 +12,10 @@ import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 SearchResult.auth = true;
+SearchResult.autoForward = true;
 export default function SearchResult() {
     const { t } = useTranslation('common');
 
@@ -99,9 +101,15 @@ export default function SearchResult() {
     }
 
     return (
-        <Wrapper>
-            {/* TODO Filter by category?! */}
-            {/* <div className="flex flex-rows mr-4 divide-x divide-slate-900">
+        <>
+            <CustomHead
+                pageTitle={t('search')}
+                pageSlug={'search'}
+                pageDescription={t('search_description')}
+            />
+            <Wrapper>
+                {/* TODO Filter by category?! */}
+                {/* <div className="flex flex-rows mr-4 divide-x divide-slate-900">
                 <div className="px-2">
                     <a href={`/search?search=${router.query.search}`} className="hover:underline text-ve-collab-blue underline">Alle</a>
                 </div>
@@ -116,132 +124,133 @@ export default function SearchResult() {
                 </div>
             </div> */}
 
-            <div>
-                {data.users.length > 0 && (
-                    <>
-                        <div className="font-bold text-xl text-slate-900">
-                            {t('search_result_users')} ({data.users.length})
-                        </div>
-                        <div className="flex flex-wrap m-2">
-                            {data.users.map((user, i) => {
-                                return (
-                                    <a
-                                        key={i}
-                                        className="flex m-2 items-center"
-                                        href={`/profile/user/${user.username}`}
-                                    >
-                                        <AuthenticatedImage
-                                            imageId={user.profile_pic}
-                                            alt={t('profile_picture')}
-                                            width={50}
-                                            height={50}
-                                            className="rounded-full mr-2"
-                                        ></AuthenticatedImage>
-                                        <span className="font-bold text-slate-900">
-                                            {user.first_name} {user.last_name}
-                                        </span>
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </>
-                )}
-
-                {data.spaces.length > 0 && (
-                    <>
-                        <div className="font-bold text-xl text-slate-900">
-                            {t('search_result_groups')} ({data.spaces.length})
-                        </div>
-                        <div className="flex m-2">
-                            {data.spaces.map((space, i) => {
-                                return (
-                                    <a
-                                        key={i}
-                                        className="flex m-2 items-center"
-                                        href={`/group/${space._id}`}
-                                    >
-                                        <AuthenticatedImage
-                                            imageId={space.space_pic}
-                                            alt={t('group_picture')}
-                                            width={60}
-                                            height={60}
-                                            className="rounded-full mr-2"
-                                        ></AuthenticatedImage>
-                                        <span className="font-bold text-slate-900">
-                                            {space.name}
-                                        </span>
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </>
-                )}
-
-                {data.posts.length > 0 && (
-                    <>
-                        <div className="font-bold text-xl text-slate-900">
-                            {t('search_result_posts')} ({data.posts.length})
-                        </div>
-                        <div className="m-2">
-                            {data.posts.map((post, i) => {
-                                if (i > postsPagination) return;
-                                if (i == postsPagination) {
+                <div>
+                    {data.users.length > 0 && (
+                        <>
+                            <div className="font-bold text-xl text-slate-900">
+                                {t('search_result_users')} ({data.users.length})
+                            </div>
+                            <div className="flex flex-wrap m-2">
+                                {data.users.map((user, i) => {
                                     return (
-                                        <ButtonSecondary
+                                        <a
                                             key={i}
-                                            label={t('search_result_show_more_posts')}
-                                            onClick={() => setPostsPagination((x) => x + 10)}
-                                        />
+                                            className="flex m-2 items-center"
+                                            href={`/profile/user/${user.username}`}
+                                        >
+                                            <AuthenticatedImage
+                                                imageId={user.profile_pic}
+                                                alt={t('profile_picture')}
+                                                width={50}
+                                                height={50}
+                                                className="rounded-full mr-2"
+                                            ></AuthenticatedImage>
+                                            <span className="font-bold text-slate-900">
+                                                {user.first_name} {user.last_name}
+                                            </span>
+                                        </a>
                                     );
-                                }
-                                return (
-                                    <div
-                                        key={i}
-                                        className="p-4 mb-4 bg-white rounded shadow hover:cursor-pointer hover:bg-slate-50"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            router.push(`/post/${post._id}`);
-                                        }}
-                                    >
-                                        {/* TODO use <TimelinePost /> !  */}
-                                        <div className="flex flex-col mb-2">
-                                            {/* <PostHeader author={post.author} date={post.creation_date} /> */}
+                                })}
+                            </div>
+                        </>
+                    )}
 
-                                            {/* <span className="font-bold text-slate-900">{post.author as unknown as string}</span> */}
-                                            <a
-                                                href={`/post/${post._id}`}
-                                                className="hover:cursor-pointer hover:underline font-bold text-slate-900"
-                                            >
-                                                {post.author as unknown as string}
-                                            </a>
+                    {data.spaces.length > 0 && (
+                        <>
+                            <div className="font-bold text-xl text-slate-900">
+                                {t('search_result_groups')} ({data.spaces.length})
+                            </div>
+                            <div className="flex m-2">
+                                {data.spaces.map((space, i) => {
+                                    return (
+                                        <a
+                                            key={i}
+                                            className="flex m-2 items-center"
+                                            href={`/group/${space._id}`}
+                                        >
+                                            <AuthenticatedImage
+                                                imageId={space.space_pic}
+                                                alt={t('group_picture')}
+                                                width={60}
+                                                height={60}
+                                                className="rounded-full mr-2"
+                                            ></AuthenticatedImage>
+                                            <span className="font-bold text-slate-900">
+                                                {space.name}
+                                            </span>
+                                        </a>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
 
-                                            <Timestamp
-                                                relative={true}
-                                                timestamp={post.creation_date}
-                                                showTitle={true}
-                                                className="text-xs text-gray-500"
+                    {data.posts.length > 0 && (
+                        <>
+                            <div className="font-bold text-xl text-slate-900">
+                                {t('search_result_posts')} ({data.posts.length})
+                            </div>
+                            <div className="m-2">
+                                {data.posts.map((post, i) => {
+                                    if (i > postsPagination) return;
+                                    if (i == postsPagination) {
+                                        return (
+                                            <ButtonSecondary
+                                                key={i}
+                                                label={t('search_result_show_more_posts')}
+                                                onClick={() => setPostsPagination((x) => x + 10)}
                                             />
-                                        </div>
+                                        );
+                                    }
+                                    return (
                                         <div
-                                            className="max-h-20 text-ellipsis overflow-hidden"
-                                            style={{
-                                                WebkitLineClamp: 3,
-                                                display: '-webkit-box',
-                                                WebkitBoxOrient: 'vertical',
+                                            key={i}
+                                            className="p-4 mb-4 bg-white rounded shadow hover:cursor-pointer hover:bg-slate-50"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                router.push(`/post/${post._id}`);
                                             }}
                                         >
-                                            <TimelinePostText text={post.text as string} />
-                                        </div>
-                                        {/* <span className="">...</span>
+                                            {/* TODO use <TimelinePost /> !  */}
+                                            <div className="flex flex-col mb-2">
+                                                {/* <PostHeader author={post.author} date={post.creation_date} /> */}
+
+                                                {/* <span className="font-bold text-slate-900">{post.author as unknown as string}</span> */}
+                                                <a
+                                                    href={`/post/${post._id}`}
+                                                    className="hover:cursor-pointer hover:underline font-bold text-slate-900"
+                                                >
+                                                    {post.author as unknown as string}
+                                                </a>
+
+                                                <Timestamp
+                                                    relative={true}
+                                                    timestamp={post.creation_date}
+                                                    showTitle={true}
+                                                    className="text-xs text-gray-500"
+                                                />
+                                            </div>
+                                            <div
+                                                className="max-h-20 text-ellipsis overflow-hidden"
+                                                style={{
+                                                    WebkitLineClamp: 3,
+                                                    display: '-webkit-box',
+                                                    WebkitBoxOrient: 'vertical',
+                                                }}
+                                            >
+                                                <TimelinePostText text={post.text as string} />
+                                            </div>
+                                            {/* <span className="">...</span>
                                         <a href={`/post/${post._id}`} className="hover:cursor-pointer hover:underline group-hover/post:underline mt-2">Zum Beitrag</a>*/}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </>
-                )}
-            </div>
-        </Wrapper>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+                </div>
+            </Wrapper>
+        </>
     );
 }
 

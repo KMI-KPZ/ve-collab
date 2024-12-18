@@ -14,7 +14,12 @@ import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
 import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
-import { IMaterialNode, INode, INodeWithLections, ITopLevelNode } from '@/interfaces/material/materialInterfaces';
+import {
+    IMaterialNode,
+    INode,
+    INodeWithLections,
+    ITopLevelNode,
+} from '@/interfaces/material/materialInterfaces';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -25,9 +30,9 @@ let BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 const swrConfig = {
     revalidateOnFocus: false,
-}
+};
 
-interface APIErrorResponse{
+interface APIErrorResponse {
     success: boolean;
     reason: string;
     [x: string]: any;
@@ -39,23 +44,33 @@ class APIError extends Error {
         super(message);
         this.apiResponse = apiResponse;
     }
-
 }
 
 // SWR fetcher for get requests
-const GETfetcher = (relativeUrl: string, accessToken?: string) =>
+const GETfetcher = (relativeUrl: string, accessToken?: string, autoResignin: boolean = true) =>
     fetch(BACKEND_BASE_URL + relativeUrl, {
         headers: { Authorization: 'Bearer ' + accessToken },
     }).then(async (res) => {
-        if (res.status > 299) {
+        if (res.status === 401 && autoResignin) {
+            console.log('forced new signIn by api call');
+            return signIn('keycloak');
+        } else if (res.status > 299) {
             throw new APIError('Error from Backend', await res.json());
         }
         return res.json();
     });
 
-const POSTfetcher = (relativeUrl: string, data?: Record<string, any>, accessToken?: string) =>
+const POSTfetcher = (
+    relativeUrl: string,
+    data?: Record<string, any>,
+    accessToken?: string,
+    autoResignin: boolean = true
+) =>
     fetchPOST(relativeUrl, data, accessToken).then((res) => {
-        if (res.status > 299) {
+        if (res.status === 401 && autoResignin) {
+            console.log('forced new signIn by api call');
+            signIn('keycloak');
+        } else if (res.status > 299) {
             throw new APIError('Error from Backend', res);
         }
         return res;
@@ -72,7 +87,10 @@ export function useIsGlobalAdmin(accessToken: string): boolean {
     return data?.is_admin || false;
 }
 
-export function useGetProfileSnippets(usernames: string[], accessToken: string): {
+export function useGetProfileSnippets(
+    usernames: string[],
+    accessToken: string
+): {
     data: BackendUserSnippet[];
     isLoading: boolean;
     error: any;
@@ -80,7 +98,7 @@ export function useGetProfileSnippets(usernames: string[], accessToken: string):
 } {
     const { data, error, isLoading, mutate } = useSWR(
         usernames ? ['/profile_snippets', accessToken] : null,
-        ([url, token]) => POSTfetcher(url, { usernames: usernames ? usernames : "" }, token),
+        ([url, token]) => POSTfetcher(url, { usernames: usernames ? usernames : '' }, token),
         swrConfig
     );
 
@@ -112,6 +130,26 @@ export function useGetOwnProfile(accessToken: string): {
     };
 }
 
+export function useGetUsers(accessToken?: string): {
+    data: BackendUser[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        accessToken ? [`/users/list`, accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error || data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetAvailablePlans(accessToken: string): {
     data: IPlan[];
     isLoading: boolean;
@@ -132,7 +170,10 @@ export function useGetAvailablePlans(accessToken: string): {
     };
 }
 
-export function useGetPlanById(planId: string): {
+export function useGetPlanById(
+    planId: string,
+    shouldFetch: boolean = true
+): {
     data: IPlan;
     isLoading: boolean;
     error: APIError;
@@ -140,13 +181,13 @@ export function useGetPlanById(planId: string): {
 } {
     const { data: session } = useSession();
     const { data, error, isLoading, mutate } = useSWR(
-        [`/planner/get?_id=${planId}`, session?.accessToken],
-        ([url, token]) => GETfetcher(url, token),
+        shouldFetch ? [`/planner/get?_id=${planId}`, session?.accessToken] : null,
+        ([url, token]) => GETfetcher(url, token, shouldFetch),
         swrConfig
     );
 
     return {
-        data: !data || isLoading || error ? {} : data.plan,
+        data: !shouldFetch ? {} : isLoading || error ? {} : data.plan,
         isLoading,
         error,
         mutate,
@@ -195,10 +236,7 @@ export function useGetAllPlans(accessToken: string): {
     );
 
     return {
-        data:
-            isLoading || error
-                ? []
-                : data.plans,
+        data: isLoading || error ? [] : data.plans,
         isLoading,
         error,
         mutate,
@@ -457,9 +495,7 @@ export function useGetMyGroupACLEntry(
     };
 }
 
-export function useGetMyACL(
-    accessToken: string
-): {
+export function useGetMyACL(accessToken: string): {
     data: BackendUserACLEntry;
     isLoading: boolean;
     error: any;
@@ -485,7 +521,7 @@ export function useGetTimeline(
     group?: string,
     user?: string,
     adminDashboard?: boolean
- ): {
+): {
     data: BackendPost[];
     isLoading: boolean;
     error: any;
@@ -498,14 +534,14 @@ export function useGetTimeline(
         endpointUrl += `/user/${user}`;
     } else if (adminDashboard) {
         // empty, adminDashboard requests to bare /timeline
+    } else {
+        endpointUrl += `/you`;
     }
-    else {
-        endpointUrl += `/you`
-    }
-    endpointUrl += `?to=${toDate}&limit=${limit}`
+    endpointUrl += `?to=${toDate}&limit=${limit}`;
 
-    const { data, error, isLoading, mutate } = useSWR([endpointUrl, accessToken], ([url, token]) =>
-        GETfetcher(url, token),
+    const { data, error, isLoading, mutate } = useSWR(
+        [endpointUrl, accessToken],
+        ([url, token]) => GETfetcher(url, token),
         Object.assign({}, swrConfig, { revalidateOnFocus: true })
     );
 
@@ -564,16 +600,20 @@ export function useGetPost(
     };
 }
 
-export function useGetSearchResults(search: string, filterBy?: string[]): {
-    data: {posts: BackendPost[], spaces: BackendGroup[], users: BackendProfile[]};
+export function useGetSearchResults(
+    search: string,
+    filterBy?: string[]
+): {
+    data: { posts: BackendPost[]; spaces: BackendGroup[]; users: BackendProfile[] };
     isLoading: boolean;
     error: APIError;
     mutate: KeyedMutator<any>;
 } {
     const { data: session } = useSession();
-    const defaultFilter = ['posts', 'users', 'spaces']
-    filterBy = (filterBy && filterBy.every(f => defaultFilter.includes(f))) ? filterBy : defaultFilter
-    const filter = filterBy.reduce((acc,cur) => `${acc}${cur}=true&`, '')
+    const defaultFilter = ['posts', 'users', 'spaces'];
+    filterBy =
+        filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
+    const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
     const { data, error, isLoading, mutate } = useSWR(
         [`/search?query=${search}&${filter}`, session?.accessToken],
         ([url, token]) => GETfetcher(url, token),
@@ -695,47 +735,47 @@ export async function fetchImage(relativeUrl: string, accessToken?: string): Pro
 }
 
 export async function fetchTaxonomy(): Promise<INode[]> {
-    const data = await GETfetcher('/material_taxonomy');
+    const data = await GETfetcher('/material_taxonomy', '', false);
     return data.taxonomy;
 }
 
-export async function getTopLevelNodes(): Promise<ITopLevelNode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getTopLevelNodes(tax?: INode[]): Promise<ITopLevelNode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === 0) as ITopLevelNode[];
 }
 
-export async function getNodeByText(nodeText: string): Promise<INode> {
-    const taxonomy = await fetchTaxonomy();
+export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<INode> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
 }
 
-export async function getChildrenOfNode(nodeId: number): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === nodeId);
 }
 
-export async function getChildrenOfNodeByText(nodeText: string): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getChildrenOfNodeByText(nodeText: string, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as INode[];
 }
 
-export async function getSiblingsOfNodeByText(nodeText: string): Promise<INode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getSiblingsOfNodeByText(nodeText: string, tax?: INode[]): Promise<INode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const node = taxonomy.find((node: INode) => node.text === nodeText);
     return node ? taxonomy.filter((a: any) => a.parent === node.parent) : [];
 }
 
-export async function getMaterialNodesOfNodeByText(nodeText: string): Promise<IMaterialNode[]> {
-    const taxonomy = await fetchTaxonomy();
+export async function getMaterialNodesOfNodeByText(nodeText: string, tax?: INode[]): Promise<IMaterialNode[]> {
+    const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
 }
 
 export async function getMaterialNodePath(
-    nodeId: number
+    nodeId: number, tax?: INode[]
 ): Promise<{ bubble: ITopLevelNode; category: INode; material: IMaterialNode }> {
-    const taxonomy = await fetchTaxonomy();
+    const taxonomy = tax || (await fetchTaxonomy());
     const materialNode = taxonomy.find((node: INode) => node.id === nodeId) as IMaterialNode;
     const categoryNode = taxonomy.find((node: INode) => node.id === materialNode.parent) as INode;
     const bubbleNode = taxonomy.find(
@@ -745,15 +785,16 @@ export async function getMaterialNodePath(
     return { bubble: bubbleNode, category: categoryNode, material: materialNode };
 }
 
-export async function getNodesOfNodeWithLections(node: INode): Promise<undefined|INodeWithLections[]> {
+export async function getNodesOfNodeWithLections(
+    node: INode, tax?: INode[]
+): Promise<undefined | INodeWithLections[]> {
+    if (!node) return [] as INodeWithLections[];
 
-    if (!node) return [] as INodeWithLections[]
+    const taxonomy = tax || (await fetchTaxonomy());
+    const nodes = taxonomy.filter((n) => n.parent === node.id);
 
-    const taxonomy = await fetchTaxonomy();
-    const nodes = taxonomy.filter(n => n.parent === node.id);
-
-    return nodes.map(n => {
-        const lections = taxonomy.filter(m => m.parent == n.id)
-        return {...n, lections}
-    }) as INodeWithLections[]
+    return nodes.map((n) => {
+        const lections = taxonomy.filter((m) => m.parent == n.id);
+        return { ...n, lections };
+    }) as INodeWithLections[];
 }

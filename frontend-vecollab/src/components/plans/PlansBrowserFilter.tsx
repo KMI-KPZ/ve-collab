@@ -1,162 +1,193 @@
-import { MdAdd, MdCheck, MdCheckBoxOutlineBlank, MdClose } from 'react-icons/md';
-import ButtonNewPlan from './ButtonNewPlan';
+import { MdArrowDropDown, MdClose } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import { IfilterBy } from '@/pages/plans';
-import { Socket } from 'socket.io-client';
-import { GiCheckMark } from 'react-icons/gi';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
-import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
+import { FaMedal } from 'react-icons/fa';
+import Dropdown from '../common/Dropdown';
 
 interface Props {
-    socket: Socket;
     filterBy: IfilterBy[];
     filterByCallback: ({ compare, id }: IfilterBy) => void;
+    isNoAuthPreview?: boolean;
 }
 
-export function PlansBrowserFilter({
-    filterBy,
-    filterByCallback,
-    socket,
-}: Props) {
+export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview = false }: Props) {
     const { data: session } = useSession();
-    const { t } = useTranslation('common')
-    const [search, setSearch] = useState<string>("")
-    const isGoodPractice = filterBy.some(f => f.id == "isGoodPractice" && f.value == true)
+    const { t } = useTranslation('common');
+    const [search, setSearch] = useState<string>('');
+    const showGoodPracticeOnly = filterBy.some((f) => f.id == 'isGoodPractice' && f.value == true);
+
+    // filterBy.find((f) => f.id == 'author' && f.value === undefined)
+    const [currentAuthorFilter, setCurrentAuthorFilter] = useState<string>(t('plans_filter_all'));
+
+    const handleClickShowGoodPracticeOnly = () => {
+        if (isNoAuthPreview) return;
+
+        if (showGoodPracticeOnly) {
+            filterByCallback({
+                compare: undefined,
+                id: 'isGoodPractice',
+                value: undefined,
+            });
+        } else {
+            filterByCallback({
+                compare: (plan) => plan.is_good_practise === true,
+                id: 'isGoodPractice',
+                value: true,
+            });
+        }
+    };
+
+    const handleSwitchAuthorChange = (value: string) => {
+        if (isNoAuthPreview) return;
+
+        switch (value) {
+            case 'all':
+                setCurrentAuthorFilter(t('plans_filter_all'));
+                filterByCallback({
+                    compare: () => true,
+                    id: 'author',
+                    value: undefined,
+                });
+
+                break;
+
+            case 'my':
+                setCurrentAuthorFilter(t('plans_filter_my'));
+                filterByCallback({
+                    compare: (plan) => plan.author.username == session?.user.preferred_username,
+                    id: 'author',
+                    value: 'me',
+                });
+                break;
+
+            case 'shared':
+                setCurrentAuthorFilter(t('plans_filter_shared'));
+                filterByCallback({
+                    compare: (plan) => {
+                        return (
+                            plan.read_access.includes(session?.user.preferred_username as string) &&
+                            plan.author.username != session?.user.preferred_username
+                        );
+                    },
+                    id: 'author',
+                    value: 'other',
+                });
+                break;
+
+            default:
+                break;
+        }
+    };
 
     return (
         <div className="mb-4 flex flex-wrap items-center gap-y-2">
-            <div className="flex flex-rows items-center mr-4 divide-x divide-slate-900">
-                <div className="px-2">
-                    <button
-                        className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'author' && f.value === undefined)
-                                ? 'text-ve-collab-blue underline'
-                                : ''
+            <div
+                className={`flex p-2 rounded-full shadow border ${
+                    isNoAuthPreview ? '' : 'cursor-pointer'
+                }`}
+                onClick={handleClickShowGoodPracticeOnly}
+            >
+                <div className="relative w-[48px] flex items-center ">
+                    <div
+                        className={`absolute w-[48px] h-[16px] left-0 rounded-md ${
+                            showGoodPracticeOnly ? 'bg-green-800' : 'bg-gray-500'
                         }`}
-                        onClick={() =>
-                            filterByCallback({
-                                compare: () => true,
-                                id: 'author',
-                                value: undefined
-                            })
-                        }
-                    >
-                        {t("plans_filter_all")}
-                    </button>
-                </div>
-                <div className="px-2">
-                    <button
-                        className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'author' && f.value == 'me')
-                                ? 'text-ve-collab-blue underline'
-                                : ''
+                    ></div>
+                    <div
+                        className={`absolute  bg-white rounded-full p-1 border ${
+                            showGoodPracticeOnly
+                                ? 'right-0 text-ve-collab-blue border-ve-collab-blue'
+                                : 'left-0 text-slate-500 border-slate-500'
                         }`}
-                        onClick={() =>
-                            filterByCallback({
-                                compare: (plan) => plan.author.username == session?.user.preferred_username,
-                                id: 'author',
-                                value: 'me'
-                            })
-                        }
                     >
-                        {t("plans_filter_my")}
-                    </button>
+                        <FaMedal />
+                    </div>
                 </div>
-                <div className="px-2">
-                    <button
-                        className={`hover:underline ${
-                            filterBy.find((f) => f.id == 'author' && f.value == 'other')
-                                ? 'text-ve-collab-blue underline'
-                                : ''
-                        }`}
-                        onClick={() =>
-                            filterByCallback({
-                                compare: (plan) => {
-                                    return plan.read_access.includes(session?.user.preferred_username as string)
-                                        && plan.author.username != session?.user.preferred_username
-                                },
-                                id: 'author',
-                                value: 'other'
-                            })
-                        }
-                    >
-                        {t("plans_filter_shared")}
-                    </button>
-                </div>
+                <span className={`mx-2 ${showGoodPracticeOnly ? '' : 'text-gray-600'}   `}>
+                    {t('plans_filter_good_practice_examples')}
+                </span>
             </div>
 
-            <div className='flex items-center'>
+            <div className="mx-4">
+                <Dropdown
+                    options={[
+                        {
+                            value: 'all',
+                            label: t('plans_filter_all'),
+                        },
+                        {
+                            value: 'my',
+                            label: t('plans_filter_my'),
+                        },
+                        {
+                            value: 'shared',
+                            label: t('plans_filter_shared'),
+                        },
+                    ]}
+                    onSelect={(value) => {
+                        if (isNoAuthPreview) return;
+
+                        // handleSelectOption(value, comment);
+                        console.log({ value });
+                        handleSwitchAuthorChange(value);
+                    }}
+                    icon={
+                        <span className="flex  items-center">
+                            {t('plans_table_author')}:{' '}
+                            <span className="mx-2 text-ve-collab-blue underline">
+                                {currentAuthorFilter}
+                            </span>{' '}
+                            <MdArrowDropDown />
+                        </span>
+                    }
+                    ulClasses="!left-16 !right-auto"
+                    isNoAuthPreview={isNoAuthPreview}
+                />
+            </div>
+
+            <div className="flex items-center">
                 <input
                     className={'border border-[#cccccc] rounded-l px-2 py-1'}
                     type="text"
-                    placeholder={t("plans_filter_title_placeholder")}
+                    placeholder={t('plans_filter_title_placeholder')}
                     name="search"
                     value={search}
                     autoComplete="off"
+                    disabled={isNoAuthPreview}
                     onChange={(event) => {
-                        const value = (event.target as HTMLInputElement).value
-                        setSearch(value)
+                        if (isNoAuthPreview) return;
+
+                        const value = (event.target as HTMLInputElement).value;
+                        setSearch(value);
                         filterByCallback({
                             compare: (plan) => {
-                                if (!plan.name) return false
-                                return plan.name
-                                    .toLocaleLowerCase()
-                                    .includes(value.toLowerCase());
+                                if (!plan.name) return false;
+                                return plan.name.toLocaleLowerCase().includes(value.toLowerCase());
                             },
                             id: 'searchByName',
-                            value: value
+                            value: value,
                         });
                     }}
                 />
-                <div onClick={e => {
-                    setSearch("")
-                    filterByCallback({
-                        compare: undefined,
-                        id: 'searchByName',
-                        value: null
-                    });
-                }} className='text-slate-600 inline relative -left-[22px] hover:cursor-pointer'>
-                    <MdClose size={15} className={`${search.length ? "inline" : "invisible"}`} />
-                </div>
-            </div>
+                <div
+                    onClick={(e) => {
+                        if (isNoAuthPreview) return;
 
-            <ButtonLightBlue
-                onClick={() => {
-                    if (isGoodPractice) {
+                        setSearch('');
                         filterByCallback({
                             compare: undefined,
-                            id: 'isGoodPractice',
-                            value: undefined
-                        })
-                    } else {
-                        filterByCallback({
-                            compare: (plan) => plan.is_good_practise === true,
-                            id: 'isGoodPractice',
-                            value: true
-                        })
-
-                    }
-                }}
-            >
-                <>
-                    {isGoodPractice
-                        ? (<MdCheck className='inline mr-1 mb-1' />)
-                        : (<MdCheckBoxOutlineBlank className='inline mr-1 mb-1' />)
-                    }
-                    {t("plans_filter_good_practice_examples")}
-                </>
-            </ButtonLightBlue>
-
-            <div className="ml-auto">
-                <ButtonNewPlan
-                    socket={socket}
-                    label={
-                        <>
-                            <MdAdd className="inline" /> {t("plans_btn_new_plan")}
-                        </>
-                    }
-                />
+                            id: 'searchByName',
+                            value: null,
+                        });
+                    }}
+                    className={`text-slate-600 inline relative -left-[22px] ${
+                        isNoAuthPreview ? '' : 'hover:cursor-pointer'
+                    }`}
+                >
+                    <MdClose size={15} className={`${search.length ? 'inline' : 'invisible'}`} />
+                </div>
             </div>
         </div>
     );

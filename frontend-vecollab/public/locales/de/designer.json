@@ -54,12 +54,14 @@
     },
     "name": {
         "title": "Projektname",
+        "page_description": "Der VE-Plan benötigt einen aussagekräftigen Namen, unter dem er überall in der Plattform auftaucht.",
         "subtitle": "Wie soll das Projekt heißen?",
         "description": "Gebt eurem Projekt einen Namen. Unter diesem Namen erscheint euer Projekt im VE-Schaufenster und in der Projekt-/Good-Practice-Übersicht.",
         "placeholder": "Name eingeben"
     },
     "partners": {
         "title": "Projektpartner:innen",
+        "page_description": "Füge deine Partner*innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner*in ab.",
         "subtitle": "Wer ist am Projekt beteiligt?",
         "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
         "description-2": "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.",
@@ -69,6 +71,7 @@
     },
     "institutions": {
         "title": "Institutionen",
+        "page_description": "Erfasse alle am VE teilnehmenden Institutionen mit deren Name, Art der Bildungseinrichtung, dem Fachbereich und Land.",
         "subtitle": "In welchen Institutionen soll der VE umgesetzt werden?",
         "description": "Dieses Feld gibt euch einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche.",
         "educational_institution": "Bildungseinrichtung",
@@ -87,6 +90,7 @@
     },
     "lectures": {
         "title": "Lehrveranstaltungen",
+        "page_description": "Lege die Lehrveranstaltungen an, in denen der VE implementiert werden soll. Wichtige Information sind Name, Art, Format und Anzahl der Teilnehmenden.",
         "subtitle": "Im Rahmen welcher Lehrveranstaltungen soll der VE umgesetzt werden?",
         "compulsory": "Pflichtveranstaltung",
         "elective": "Wahlveranstaltung",
@@ -99,9 +103,10 @@
     },
     "target": {
         "title": "Zielgruppen & Sprachen",
+        "page_description": "Notiere Informationen über die Zielgruppen des VE, wie z.B. deren Semester, Studiengang, Sprachen und VE-relevante Erfahrungen.",
         "subtitle": "An welche Zielgruppen richtet sich der VE?",
         "description": "Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VE optimal an die Lernenden anzupassen. Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.",
-        "tooltip": "Mehr zu Sprache(n) im VA findest du hier in den Selbstlernmaterialien …",
+        "tooltip": "Mehr zu Sprache(n) im VE findest du hier in den Selbstlernmaterialien …",
         "semester": "Semester",
         "semester_placeholder": "In welchem Semester sind die Studierenden? Mehrere durch Komma trennen",
         "language_title": "In welchen Sprachen findet der VE (hauptsächlich) statt?",
@@ -115,6 +120,7 @@
     },
     "goals": {
         "title": "Lernziele & Themen",
+        "page_description": "Lege konkrete und übergeordnete Lernziele für alle beteiligten Lehrendengruppen fest und formuliere ein Thema, zu dem der VE stattfindet.",
         "subtitle": "1. Welche fachlichen Lernziele sollen im VE erreicht werden?",
         "description": "Beschreibt hier kurz die fachlichen Lernziele für den VE, also welches fachliche Wissen und welche Fertigkeiten ihr vermitteln wollt. Die Lernziele können auch überfachlich bzw. fächerübergreifend sein, wenn ihr aus eurem Fach heraus auf ein bestimmtes Thema blickt (z. B. BNE).",
         "tooltip": "Mehr zu Lernzielen findest du hier in den Selbstlernmaterialien …",
@@ -133,12 +139,13 @@
         "2-option8": "Förderung der Sprachkompetenz",
         "2-option9": "Förderung fachlicher Kompetenzen (Wissen, Fertigkeiten)",
         "3-title": "3. Zu welchem Thema / welchen Themen findet der VE statt?",
-        "3-subtitle": "Überlegt euch, welche inhaltlichen Themen ihr in eurem VA behandeln wollt. Diese können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.",
+        "3-subtitle": "Überlegt euch, welche inhaltlichen Themen ihr in eurem VE behandeln wollt. Diese können fachspezifisch oder fächerübergreifend sein und / oder den Fokus auf eine bestimmte Kompetenz (z. B. interkulturelle Kommunikation) richten.",
         "3-tooltip": "Inspiration zu fachbezogenen Themen verschiedener Disziplinen findest du hier in den Selbstlernmaterialien …",
         "3-placeholder": "Thema eingeben"
     },
     "learningEnv": {
         "title": "Digital Lernumgebung",
+        "page_description": "Beschreibe die digitale Lernumgebung des VE, lege das Format fest (synchron / asynchron) und füge optionale physische Treffen hinzu.",
         "subtitle": "In welcher digitalen Lernumgebung findet der VE statt?",
         "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
         "tooltip": "Mehr zu LMS findest du hier in den Selbstlernmaterialien …",
@@ -156,7 +163,8 @@
     },
     "methodology": {
         "title": "Methodischer Ansatz",
-        "subtitle": "Welcher methodische Ansatz liegt eurem VA zugrunde?",
+        "page_description": "Welcher methodische Ansatz liegt dem VE zugrunde? Aufgabenbasiertes, problemorientiertes, forschendes Lernen oder Game-Based Learning?",
+        "subtitle": "Welcher methodische Ansatz liegt eurem VE zugrunde?",
         "description": "Falls keiner der Vorschläge eurem Ansatz entspricht, könnt ihr durch Schreiben im Feld auch individuelle Eingaben hinzufügen.",
         "tooltip": "Mehr zu Methodik findest du hier in den Selbstlernmaterialien",
         "placeholder": "Ansätze auswählen oder neue hinzufügen",
@@ -167,6 +175,7 @@
     },
     "evaluation": {
         "title": "Bewertung / Evaluation",
+        "page_description": "Plan how the VE will be evaluated before, during and/or after the VE and whether an assessment will be carried out in the participating institutions.",
         "subtitle": "Wie kann der VE während der Durchführung und/oder abschließend bewertet und evaluiert werden?",
         "description": "Reflektiert an dieser Stelle, ob euer VE eher prozess- oder produktorientiert ausgerichtet ist. Tragt jeweils ein, ob auf eurer Seite eine Bewertung (von Prozessen oder Produkten) des VE vorgesehen ist. Wählt darüber hinaus passende formative und/oder summative Evaluationsmethoden.",
         "tooltip": "Mehr zu Evaluation findest du hier in den Selbstlernmaterialien.",
@@ -185,6 +194,7 @@
     },
     "checklist": {
         "title": "Checkliste",
+        "page_description": "Über die Checkliste lässt sich sicherstellen, dass alle für den Erfolg des VE notwendigen Aspekt abgeklärt wurden, z.B. Semesterzeiten, Technik, etc. .",
         "subtitle": "An alles gedacht?",
         "description": "Hier noch einige wichtige Aspekte, die ihr geklärt haben solltet, bevor es mit der inhaltlichen und didaktischen Planung losgeht.",
         "tooltip": "Mehr zu den Aspekten der Checkliste findest du hier in den Selbstlernmaterialien",
@@ -212,6 +222,7 @@
         "new_userbox_placeholder": "Bezeichnung ..."
     },
     "step-names" : {
+        "page_description": "Die Grobplanung ermöglicht das Anlegen von Phasen und zugehörigen Lernzielen, die im VE durchlaufen werden (z.B. Icebreaker, Arbeitsphase, Präsentation).",
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",
         "select_steps_to_import": "Wähle Phasen, die du aus den Good-Practice Plänen importieren möchtest",
         "by": "von",
@@ -235,6 +246,7 @@
         "unique_name": "Bitte wählen Sie für jede Etappe einen einzigartigen Namen"
     },
     "step-data": {
+        "page_description": "",
         "imported_from": "Importiert aus:",
         "plan_no_longer_available": "Plan nicht mehr verfügbar",
         "fine_plan": "Feinplanung",
@@ -256,6 +268,7 @@
     },
     "post-process": {
         "title": "Nachbearbeitung",
+        "page_description": "Füge deine Partner*innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner*in ab.",
         "subtitle": "Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt.",
         "submit": "Absenden & Schließen",
         "text_1": "Möchtest du euren VE als Good Practice der Community zur Verfügung stellen?",
@@ -281,6 +294,7 @@
     },
     "finish": {
         "title": "Fertig",
+        "page_description": "Der VE wurde erfolgreich geplant und kann nun durchgeführt werden. Man sieht nochmal eine komplette Zusammenfassung.",
         "subtitle": "Herzlichen Glückwunsch, du hast den VE erfolgreich geplant!",
         "to_post_process": "Zur Nachbearbeitung",
         "feedback_1": "Du hast Feedback zum VE-Designer oder zur Plattform? Lass es uns ",
