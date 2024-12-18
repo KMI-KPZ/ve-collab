@@ -371,6 +371,8 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "is_good_practise_planned": True,
+                        "is_good_practise_ro": True,
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
@@ -603,6 +605,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "is_good_practise_planned": True,
                         "is_good_practise_ro": True,
                         "abstract": "test",
                         "underlying_ve_model": "test",

@@ -258,9 +258,11 @@
         "title": "Nachbearbeitung",
         "subtitle": "Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt.",
         "submit": "Absenden & Schließen",
-        "text_1": "Möchtest du euren VE als Good Practice der Community zur Verfügung stellen?",
+        "text_1": "Plant ihr, euren VE der Community als Good Practice Beispiel zur Verfügung stellen?",
         "text_2": "Jeder kann die Planung finden, anschauen und als Inspiration für eigene VEs nutzen.",
         "license": "Lizenz",
+        "disclaimer_not_yet_good_practice1": "Durch Auswählen von 'Ja' wird eure Planung <bold><underline>noch nicht</underline></bold> als Good-Practice-Beispiel veröffentlicht.",
+        "disclaimer_not_yet_good_practice2": "Dies könnt ihr separat ganz unten tun, wenn ihr sicher seid, dass ihr vollständig fertig seid.",
         "access_on_plan": "Zugriffsberechtigung auf diesen Plan",
         "read_and_import": "Lesen und Importieren",
         "read_and_import_tooltip": "Ich stelle der Community meinen Plan teilweise lizenzfrei zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung finden, anschauen und Teile (z. B. Lernaktivitäten) daraus in eigene VE-Pläne importieren.<1/>Die herunterladbare Gesamtübersicht meines Plans steht unter der folgenden Lizenz: CC-BY-NC-ND 4.0",
@@ -277,7 +279,10 @@
         "ve_model_task": "Basierte der VE auf einem bekannten VE-Modell? Wenn ja, auf welchem? (Diese Information hilft uns bei der zukünftigen Verbesserung von VE-Collab)",
         "ve_model_placeholder": "Beschreibe das zugrundeliegende VE-Modell",
         "literature_task": "Gib hier Literaturangaben z. B. zu relevanten Veröffentlichungen an oder lade Artikel hoch, die du der Community zur Verfügung stellen möchtest. Achte dabei auf mögliche Copyright-Beschränkungen.",
-        "literature_placeholder": "relevante Literaturangaben"
+        "literature_placeholder": "relevante Literaturangaben",
+        "publish_now": "Diese Planung als Good-Practice-Beispiel veröffentlichen?",
+        "disclaimer_now_good_practice1": "Sobald ihr sicher seid, dass eure Planung vollständig ist, wählt 'Ja' aus, um sie mit der Community zu teilen.",
+        "disclaimer_now_good_practice2": "Ihr könnt diese Entscheidung jederzeit rückgängig machen, indem ihr wieder 'Nein' auswählt."
     },
     "finish": {
         "title": "Fertig",
