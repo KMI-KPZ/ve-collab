@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
-import { fetchTaxonomy, useGetMatching, useGetUsers } from '@/lib/backend';
+import { fetchGET, fetchTaxonomy } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { BackendUser } from '@/interfaces/api/apiInterfaces';
+import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { getClusterRouteBySlug } from '@/pages/learning-material';
 import LocalStorage from '@/lib/storage';
@@ -33,7 +33,6 @@ export default function SuggestionBox() {
 
     const SuggestedLections = () => {
         const [lections, setLections] = useState<ISuggestedLection[]>([]);
-        const [loading, setLoading] = useState<boolean>(false);
 
         const getSuggestedLection = async () => {
             let allLections: ISuggestedLection[] = [];
@@ -65,25 +64,21 @@ export default function SuggestionBox() {
                 setLections(storedLections);
                 return;
             }
-            setLoading(true);
             getSuggestedLection()
                 .then((lections) => {
                     setLections(lections);
                     LocalStorage.addItem('suggested_lections', lections, ttl);
                 })
-                .catch(console.error)
-                .finally(() => {
-                    setLoading(false);
-                });
+                .catch(console.error);
         }, [lections]);
 
-        if (loading || !lections.length) return <></>;
+        if (!lections.length) return <></>;
 
         return (
             <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
 
-                <ul className="d1ivide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-2 *:text-ve-collab-blue">
+                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
                     {lections.map((lection, index) => {
                         return (
                             <li
@@ -103,32 +98,46 @@ export default function SuggestionBox() {
             </Wrapper>
         );
     };
+
     const SuggestedUsers = () => {
-        const [suggestedUsers, setSuggestedUsers] = useState<BackendUser[]>([]);
-        const { data: users, isLoading } = useGetUsers(session!.accessToken);
+        const [suggestedUsers, setSuggestedUsers] = useState<BackendUserSnippet[]>([]);
 
-        const { data: matchedUserSnippets, isLoading: isLoadingMatching } = useGetMatching(
-            true,
-            session!.accessToken
-        );
-
-        // remove myself fgrom list
-        useEffect(() => {
-            if (!users) return;
+        const getUsers = async () => {
+            let users: BackendUserSnippet[] = [];
+            users = await fetchGET('/matching', session?.accessToken);
+            if (!Object.keys(users).length) {
+                users = await fetchGET('/users/list', session?.accessToken);
+            }
+            if (!users) return [];
 
             const shuffled = [...Object.entries(users)].sort(() => 0.5 - Math.random());
             const suggestedUsers = shuffled
                 .filter((entry) => entry[1].username !== session?.user.preferred_username)
                 .slice(0, 5)
                 .map((entry) => entry[1]);
-            console.log({ suggestedUser: suggestedUsers });
 
-            setSuggestedUsers(suggestedUsers);
-        }, [users]);
-        console.log({ allUsers: users });
-        console.log({ matchedUserSnippets });
+            return suggestedUsers;
+        };
 
-        const printUsername = (user: BackendUser) => {
+        useEffect(() => {
+            const ttl = 24 * 60 * 60 * 1000;
+            if (suggestedUsers.length) return;
+
+            const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');
+            if (cachedSuggestedUsers) {
+                setSuggestedUsers(cachedSuggestedUsers);
+                return;
+            }
+
+            getUsers()
+                .then((users) => {
+                    setSuggestedUsers(users);
+                    LocalStorage.addItem('suggested_users', users, ttl);
+                })
+                .catch(console.error);
+        }, [suggestedUsers]);
+
+        const printUsername = (user: BackendUserSnippet) => {
             if (user.first_name) {
                 return (
                     <>
@@ -140,33 +149,43 @@ export default function SuggestionBox() {
         };
 
         if (!suggestedUsers) return <></>;
+
         return (
-            <>
+            <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                <ul>
+                {process.env.NODE_ENV}
+                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
-                        // return <li>{user.username}</li>;
                         return (
-                            <a
+                            <li
                                 key={i}
-                                className="flex m-2 items-center"
-                                href={`/profile/user/${user.username}`}
+                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
                             >
-                                <AuthenticatedImage
-                                    imageId={user.profile_pic}
-                                    alt={t('profile_picture')}
-                                    width={50}
-                                    height={50}
-                                    className="rounded-full mr-2"
-                                ></AuthenticatedImage>
-                                <span className="font-bold text-slate-900 capitalize">
-                                    {printUsername(user)}
-                                </span>
-                            </a>
+                                <Link
+                                    className="flex items-center truncate"
+                                    href={`/profile/user/${user.username}`}
+                                >
+                                    <AuthenticatedImage
+                                        imageId={user.profile_pic}
+                                        alt={t('profile_picture')}
+                                        width={50}
+                                        height={50}
+                                        className="rounded-full mr-2"
+                                    ></AuthenticatedImage>
+                                    <span className="text-slate-900 capitalize truncate">
+                                        {printUsername(user)}
+                                    </span>
+                                </Link>
+                            </li>
                         );
                     })}
                 </ul>
-            </>
+                <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
+                    <Link href={`/matching`} onClick={(e) => e.preventDefault()}>
+                        {t('common:more')} <MdArrowRight size={24} className="inline mx-1" />
+                    </Link>
+                </div>
+            </Wrapper>
         );
     };
 
@@ -178,6 +197,5 @@ export default function SuggestionBox() {
         );
     };
 
-    // return <WrapperBox>{getModule(0)}</WrapperBox>;
-    return <>{getModule(0)}</>;
+    return <>{getModule()}</>;
 }

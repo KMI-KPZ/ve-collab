@@ -130,14 +130,14 @@ export function useGetOwnProfile(accessToken: string): {
     };
 }
 
-export function useGetUsers(accessToken: string): {
+export function useGetUsers(accessToken?: string): {
     data: BackendUser[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
     const { data, error, isLoading, mutate } = useSWR(
-        ['/users/list', accessToken],
+        accessToken ? [`/users/list`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
