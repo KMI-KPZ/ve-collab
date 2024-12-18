@@ -893,6 +893,10 @@ class UserHandler(BaseHandler):
     """
     User management
     """
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
 
     @auth_needed
     async def get(self, slug):
@@ -970,6 +974,8 @@ class UserHandler(BaseHandler):
                         user["username"],
                         projection={
                             "_id": False,
+                            "first_name": True,
+                            "last_name": True,
                             "role": True,
                             "follows": True,
                             "profile_pic": True,
@@ -977,6 +983,8 @@ class UserHandler(BaseHandler):
                     )
                     user_info = {
                         "id": user["id"],
+                        "first_name": profile_obj["first_name"],
+                        "last_name": profile_obj["last_name"],
                         "username": user["username"],
                         "email": user["email"],
                         "role": profile_obj["role"],

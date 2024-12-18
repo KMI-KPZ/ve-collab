@@ -24,6 +24,7 @@ import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import Custom404 from '../404';
 
 interface Props {
     socket: Socket;
@@ -107,6 +108,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
 
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
+    const [userExists, setUserExists] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -128,7 +130,8 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         // fetch profile information of the determined user
         fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then((data) => {
             setLoading(false);
-            if (data) {
+            if (data.profile) {
+                setUserExists(true);
                 // if the minimum profile data such as first_name and last_name is not set,
                 // chances are high it is after the first register, therefore incentivize user
                 // to fill out his profile by sending him to the edit page
@@ -185,6 +188,13 @@ export default function UserProfile({ socket }: Props): JSX.Element {
             }
         });
     }, [session, router]);
+
+    if (loading) return <LoadingAnimation />;
+    if (userExists === false) {
+        return <Custom404 />;
+    }
+
+    console.log({ personalInformation });
 
     return (
         <>

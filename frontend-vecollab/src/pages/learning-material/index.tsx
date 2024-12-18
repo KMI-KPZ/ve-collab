@@ -31,6 +31,13 @@ export const getClusterSlugByRouteQuery = (nr: number) => {
     return cluster ? ClusterRouteMapping[cluster].slug : undefined;
 };
 
+export const getClusterRouteBySlug = (slug: string) => {
+    const cluster = Object.keys(ClusterRouteMapping).find(
+        (a) => ClusterRouteMapping[a].slug == slug
+    );
+    return cluster ? ClusterRouteMapping[cluster].route : undefined;
+};
+
 const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element } = {
     [ClusterRouteMapping.topBubble.slug]: (attr) => <TbBulb {...attr} />,
     [ClusterRouteMapping.leftBubble.slug]: (attr) => <TbClipboardList {...attr} />,

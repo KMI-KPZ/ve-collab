@@ -130,6 +130,26 @@ export function useGetOwnProfile(accessToken: string): {
     };
 }
 
+export function useGetUsers(accessToken?: string): {
+    data: BackendUser[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        accessToken ? [`/users/list`, accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error || data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetAvailablePlans(accessToken: string): {
     data: IPlan[];
     isLoading: boolean;
