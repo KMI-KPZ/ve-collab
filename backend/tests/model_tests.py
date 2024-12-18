@@ -1738,6 +1738,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.checklist, [])
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.is_good_practise, False)
+        self.assertEqual(plan.is_good_practise_planned, False)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertIsNone(plan.abstract)
         self.assertIsNone(plan.underlying_ve_model)
@@ -1830,6 +1831,7 @@ class VEPlanModelTest(TestCase):
             ],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_planned=True,
             is_good_practise_ro=True,
             abstract="test",
             underlying_ve_model="test",
@@ -1881,6 +1883,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, True)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -1922,6 +1925,7 @@ class VEPlanModelTest(TestCase):
             checklist=[],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_planned=True,
             is_good_practise_ro=False,
             abstract="test",
             underlying_ve_model="test",
@@ -1967,6 +1971,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2090,6 +2095,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
         self.assertIn("is_good_practise", plan_dict)
+        self.assertIn("is_good_practise_planned", plan_dict)
         self.assertIn("is_good_practise_ro", plan_dict)
         self.assertIn("abstract", plan_dict)
         self.assertIn("underlying_ve_model", plan_dict)
@@ -2127,6 +2133,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
         self.assertEqual(plan_dict["is_good_practise"], False)
+        self.assertEqual(plan_dict["is_good_practise_planned"], False)
         self.assertEqual(plan_dict["is_good_practise_ro"], False)
         self.assertIsNone(plan_dict["abstract"])
         self.assertIsNone(plan_dict["underlying_ve_model"])
@@ -2254,6 +2261,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -2307,6 +2315,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2404,6 +2413,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -2464,6 +2474,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2519,6 +2530,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
@@ -2578,6 +2590,7 @@ class VEPlanModelTest(TestCase):
             ],
             "steps": [],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
@@ -2684,6 +2697,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["is_good_practise"] = None
 
+        plan_dict["is_good_practise_planned"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["is_good_practise_planned"] = None
+
         plan_dict["is_good_practise_ro"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["is_good_practise_ro"] = None
@@ -2752,6 +2769,7 @@ class VEPlanModelTest(TestCase):
                 self.create_step("test").to_dict(),
             ],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,

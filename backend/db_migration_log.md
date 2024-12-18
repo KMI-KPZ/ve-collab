@@ -218,3 +218,16 @@ target_groups_semester
 
 #### letzte Änderung
 11.11.24 14:30
+
+---
+
+#### Kurzfassung
+db.plan.is_good_practise_planned neu
+#### branch
+post-process-rework
+
+#### Beschreibung
+- Attribut `is_good_practise_planned` ist neu in jedem Plan, Datentyp `boolean` oder `null`
+
+#### letzte Änderung
+18.12.24 09:30
