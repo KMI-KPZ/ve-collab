@@ -919,6 +919,32 @@ export function PostProcessNoAuthPreview() {
                             </>
                         </li>
                     </ol>
+                    <div className={`flex flex-col justify-between mt-4 pt-6`}>
+                        <div>
+                            <p className="font-medium">{t('post-process.publish_now')}</p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice1')}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice2')}
+                            </p>
+                        </div>
+                        <div className="flex w-40 mb-4">
+                            <label className="px-2 py-2">{t('common:yes')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                                checked
+                            />
+                            <label className="px-2 py-2">{t('common:no')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                            />
+                        </div>
+                    </div>
                 </div>
             </Wrapper>
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
