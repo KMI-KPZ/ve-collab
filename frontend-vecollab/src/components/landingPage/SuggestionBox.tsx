@@ -104,8 +104,11 @@ export default function SuggestionBox() {
 
         const getUsers = async () => {
             let users: BackendUserSnippet[] = [];
-            users = await fetchGET('/matching', session?.accessToken);
-            if (!Object.keys(users).length) {
+            const matching = await fetchGET('/matching', session?.accessToken);
+
+            if (matching.success) {
+                users = matching.matching_hits;
+            } else {
                 users = await fetchGET('/users/list', session?.accessToken);
             }
             if (!users) return [];
@@ -125,6 +128,8 @@ export default function SuggestionBox() {
 
             const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');
             if (cachedSuggestedUsers) {
+                console.log({ cachedSuggestedUsers });
+
                 setSuggestedUsers(cachedSuggestedUsers);
                 return;
             }
@@ -153,7 +158,6 @@ export default function SuggestionBox() {
         return (
             <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                {process.env.NODE_ENV}
                 <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
                         return (
