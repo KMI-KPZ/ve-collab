@@ -7,9 +7,11 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 import vecollabNotebook from '@/images/frontpage/VeCollabNotebook.png';
-
 import screenshotSocialNetwork from '@/images/frontpage/screenshotMatching.png';
 import screenshotVeDesigner from '@/images/frontpage/screenshotVeDesigner.png';
+import vecollabInstitutions from '@/images/frontpage/VeCollabInstitutions.jpg';
+import vecollabTeachers from '@/images/frontpage/VeCollabTeachers.jpg';
+
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 
@@ -44,7 +46,7 @@ export default function Swiper({ className }: Props) {
                         href={link}
                         className="px-4 py-2 rounded-md text-white bg-ve-collab-orange hover:shadow-button-primary transition easy-in-out"
                     >
-                        {linkText || t("show_more")}
+                        {linkText || t('show_more')}
                     </Link>
                 </p>
             </div>
@@ -70,8 +72,8 @@ export default function Swiper({ className }: Props) {
         >
             <SwiperSlide>
                 <SlideContent
-                    title={t("frontpage.slideshow.slide1.title")}
-                    text={t("frontpage.slideshow.slide1.text")}
+                    title={t('frontpage.slideshow.slide1.title')}
+                    text={t('frontpage.slideshow.slide1.text')}
                     link="/#features"
                     img={vecollabNotebook}
                 />
@@ -79,8 +81,8 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title={t("frontpage.slideshow.slide2.title")}
-                    text={t("frontpage.slideshow.slide2.text")}
+                    title={t('frontpage.slideshow.slide2.title')}
+                    text={t('frontpage.slideshow.slide2.text')}
                     link="/about-virtual-community-of-practice"
                     img={screenshotSocialNetwork}
                 />
@@ -88,8 +90,8 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title={t("frontpage.slideshow.slide3.title")}
-                    text={t("frontpage.slideshow.slide3.text")}
+                    title={t('frontpage.slideshow.slide3.title')}
+                    text={t('frontpage.slideshow.slide3.text')}
                     link="/about-ve-designer"
                     img={screenshotVeDesigner}
                 />
@@ -97,17 +99,19 @@ export default function Swiper({ className }: Props) {
 
             <SwiperSlide>
                 <SlideContent
-                    title={t("frontpage.slideshow.slide4.title")}
-                    text={t("frontpage.slideshow.slide4.text")}
+                    title={t('frontpage.slideshow.slide4.title')}
+                    text={t('frontpage.slideshow.slide4.text')}
                     link="/#institutional-values"
+                    img={vecollabInstitutions}
                 />
             </SwiperSlide>
 
             <SwiperSlide>
                 <SlideContent
-                    title={t("frontpage.slideshow.slide5.title")}
-                    text={t("frontpage.slideshow.slide5.text")}
+                    title={t('frontpage.slideshow.slide5.title')}
+                    text={t('frontpage.slideshow.slide5.text')}
                     link="/#teachers-values"
+                    img={vecollabTeachers}
                 />
             </SwiperSlide>
         </SwiperJS>
