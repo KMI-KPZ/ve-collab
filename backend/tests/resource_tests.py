@@ -525,11 +525,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
-        self.assertEqual(acl_entry["post"], False)
-        self.assertEqual(acl_entry["comment"], False)
-        self.assertEqual(acl_entry["read_wiki"], False)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
         self.assertEqual(acl_entry["write_wiki"], False)
-        self.assertEqual(acl_entry["read_files"], False)
+        self.assertEqual(acl_entry["read_files"], True)
         self.assertEqual(acl_entry["write_files"], False)
 
     def test_insert_admin(self):
