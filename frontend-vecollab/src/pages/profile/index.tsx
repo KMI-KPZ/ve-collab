@@ -194,8 +194,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         return <Custom404 />;
     }
 
-    console.log({ personalInformation });
-
     return (
         <>
             {loading ? (

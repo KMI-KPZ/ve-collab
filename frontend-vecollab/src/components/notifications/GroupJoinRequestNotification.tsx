@@ -74,7 +74,7 @@ export default function GroupJoinRequestNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
-                    <p className='mb-1 underline decoration-ve-collab-blue'>Gruppen-Einladung</p>
+                    <p className="mb-1 underline decoration-ve-collab-blue">Gruppen-Einladung</p>
                     <p>
                         <b>{requestedUser?.name}</b> möchte deiner Gruppe{' '}
                         <b>{notification.payload.space_name}</b> beitreten.
@@ -87,7 +87,6 @@ export default function GroupJoinRequestNotification({
                 {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
-                            console.log('hi');
                         }}
                     >
                         <RxDotsVertical size={25} />
@@ -115,7 +114,8 @@ export default function GroupJoinRequestNotification({
                             beitreten.
                         </p>
                         <p className="my-4">
-                            Du kannst die Anfrage sofort beantworten, oder später in den Einstellungen der{' '}
+                            Du kannst die Anfrage sofort beantworten, oder später in den
+                            Einstellungen der{' '}
                             <Link href={`/group/${notification.payload.space_id}`}>
                                 {/* TODO direct link to correct tab in space settings*/}
                                 <b>Gruppe</b>

@@ -267,7 +267,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
         await fetchGET('/orcid', session?.accessToken).then((data) => {
             let profile = data.suggested_profile;
-            console.log(profile);
             setPersonalInformation({
                 firstName: profile.first_name,
                 lastName: profile.last_name,

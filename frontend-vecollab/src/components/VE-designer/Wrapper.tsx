@@ -227,7 +227,6 @@ export default function Wrapper({
                 setProgressOfPlan(plan.progress);
                 if (progress) setProgressOfCurrent(progress);
             }
-            // console.log({plan});
 
             // fix: do not remove loader if we'll change the route
             setTimeout(() => {
@@ -279,7 +278,6 @@ export default function Wrapper({
                 session?.accessToken
             );
             if (res.success === false) {
-                console.log({ res });
                 setAlert({
                     message: t('alert_error_save'),
                     type: 'error',

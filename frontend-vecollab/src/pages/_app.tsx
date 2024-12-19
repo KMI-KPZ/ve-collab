@@ -50,7 +50,6 @@ function Auth({
         return showLoader ? <LoadingAnimation /> : <></>;
     } else if (!session || session?.error === 'RefreshAccessTokenError') {
         if (autoForward === true) {
-            console.log('forced new signIn');
             signIn('keycloak');
         }
         if (wrapsPopupComponent) {
@@ -126,7 +125,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                 (notification) => notification._id === value._id
             );
             if (alreadyExisting === undefined) {
-                // console.log('new notification:', {value});
                 setNotificationEvents([value, ...notificationEvents]);
             }
         }
@@ -135,8 +133,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
             // nextjs always sends 2 requests in dev mode, prevent any message from appearing twice
             const alreadyExisting = messageEvents.find((message) => message._id === value._id);
             if (alreadyExisting === undefined) {
-                console.log('new message:');
-                console.log(value);
                 setMessageEvents([...messageEvents, value]);
                 setMessageEventsHeaderBar((prev) => [...prev, value]);
             }

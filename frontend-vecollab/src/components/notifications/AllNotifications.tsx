@@ -22,8 +22,6 @@ export default function AllNotifications({ socket }: Props) {
         mutate,
     } = useGetNotifications(session!.accessToken);
 
-    console.log(notifications);
-
     // TODO probably dont need socket and also not the remove callback here, refactor component structure
     // or create a new one
 

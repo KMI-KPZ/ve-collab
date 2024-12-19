@@ -68,7 +68,6 @@ export default function Timeline({
     );
 
     const { data: allGroups } = useGetAllGroups(session!.accessToken);
-    // console.log({allGroups});
 
     const { data: pinnedPosts, mutate: mutatePinnedPosts } = useGetPinnedPosts(
         session!.accessToken,
@@ -83,7 +82,6 @@ export default function Timeline({
         setFetchCount((prev) => ++prev);
         setAllPosts((prev) => {
             const allPosts = [...prev, ...newFetchedPosts];
-            // console.log({newFetchedPosts, allPosts});
             setPostsByDate(groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')));
             setIsLoadingTimeline(false);
             return allPosts;

@@ -87,7 +87,6 @@ export default function ProfileHeader({
         };
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
-            console.log(response);
             setSuccessPopupOpen(true);
         });
     };
