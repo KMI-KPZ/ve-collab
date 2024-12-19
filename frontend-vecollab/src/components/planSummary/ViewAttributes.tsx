@@ -258,13 +258,11 @@ export default function ViewAttributes({
                                             <li className="flex">
                                                 <div className="w-1/3">
                                                     <Caption4>
-                                                        {t('plan_summary_target_groups_age')}
+                                                        {t('plan_summary_target_groups_semester')}
                                                     </Caption4>
                                                 </div>
                                                 <div className="w-2/3">
-                                                    {showDataOrEmptySign(studyGroup.age_min)}
-                                                    {' - '}
-                                                    {showDataOrEmptySign(studyGroup.age_max)}
+                                                    {showDataOrEmptySign(studyGroup.semester)}
                                                 </div>
                                             </li>
                                             <li className="flex">
@@ -452,9 +450,7 @@ export default function ViewAttributes({
                                                     {t('plan_summary_evaluation_dot')}
                                                 </Caption4>
                                             </div>
-                                            <div className="w-3/5">
-                                            
-                                            </div>
+                                            <div className="w-3/5"></div>
                                         </li>
                                         <li className="flex">
                                             <div className="w-2/5 pl-4">
@@ -463,7 +459,7 @@ export default function ViewAttributes({
                                                 </Caption4>
                                             </div>
                                             <div className="w-3/5">
-                                            {showDataOrEmptySign(evaluation.evaluation_before)}
+                                                {showDataOrEmptySign(evaluation.evaluation_before)}
                                             </div>
                                         </li>
                                         <li className="flex">
@@ -473,7 +469,7 @@ export default function ViewAttributes({
                                                 </Caption4>
                                             </div>
                                             <div className="w-3/5">
-                                            {showDataOrEmptySign(evaluation.evaluation_while)}
+                                                {showDataOrEmptySign(evaluation.evaluation_while)}
                                             </div>
                                         </li>
                                         <li className="flex">
@@ -483,7 +479,7 @@ export default function ViewAttributes({
                                                 </Caption4>
                                             </div>
                                             <div className="w-3/5">
-                                            {showDataOrEmptySign(evaluation.evaluation_after)}
+                                                {showDataOrEmptySign(evaluation.evaluation_after)}
                                             </div>
                                         </li>
                                     </ul>
@@ -495,7 +491,7 @@ export default function ViewAttributes({
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline mx-2" />
@@ -509,7 +505,7 @@ export default function ViewAttributes({
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
                                 >
                                     {t('show_all')}
                                     <MdKeyboardDoubleArrowDown className="inline mx-2" />

@@ -19,6 +19,7 @@ export interface PlanPreview {
     last_modified: string;
     progress: ISideProgressBarStates;
     is_good_practise: boolean;
+    topics: string[];
     steps: IFineStep[];
 }
 
@@ -50,6 +51,7 @@ export interface IPlan {
     realization: string | null;
     steps: IFineStep[];
     is_good_practise: boolean;
+    is_good_practise_planned: boolean;
     is_good_practise_ro: boolean;
     underlying_ve_model: string | null;
     reflection: string | null;

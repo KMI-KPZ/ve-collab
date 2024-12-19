@@ -2,71 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
 .wp-block-image img {
-  @apply max-w-full mt-2;
+    @apply max-w-full mt-2;
 }
 .wp-block-image.aligncenter {
-  @apply text-center;
+    @apply text-center;
 }
 .wp-block-image.alignfull img,
 .wp-block-image.alignwide img {
-  @apply w-full;
+    @apply w-full;
 }
 .wp-block-image .alignleft,
 .wp-block-image .alignright,
 .wp-block-image .aligncenter,
 .wp-block-image.is-resized {
-  @apply table ml-0 mr-0;
+    @apply table ml-0 mr-0;
 }
 .wp-block-image .alignleft > figcaption,
 .wp-block-image .alignright > figcaption,
 .wp-block-image .aligncenter > figcaption,
 .wp-block-image.is-resized > figcaption {
-  @apply table-caption;
+    @apply table-caption;
 
-  caption-side: bottom;
+    caption-side: bottom;
 }
 
 .wp-block-image .alignleft {
-  @apply float-left mr-4;
+    @apply float-left mr-4;
 }
 .wp-block-image .alignright {
-  @apply float-right ml-4;
+    @apply float-right ml-4;
 }
 .wp-block-image .aligncenter {
-  @apply m-auto;
+    @apply m-auto;
 }
 
 .wp-block-button a,
 .wp-block-file a.wp-block-file__button {
-  @apply bg-blue-500 text-white no-underline py-2 px-4;
+    @apply bg-blue-500 text-white no-underline py-2 px-4;
 }
 
 .wp-block-button a:hover,
 .wp-block-file a.wp-block-file__button:hover {
-  @apply bg-blue-400 cursor-pointer;
+    @apply bg-blue-400 cursor-pointer;
 }
 
 .wp-block-file a:first-of-type {
-  @apply mr-4;
+    @apply mr-4;
 }
 
 .wp-block-cover {
-  @apply flex flex-wrap justify-center items-center bg-cover bg-center overflow-hidden;
+    @apply flex flex-wrap justify-center items-center bg-cover bg-center overflow-hidden;
 
-  min-height: 430px;
+    min-height: 430px;
 }
 
 .wp-block-verse {
-  @apply font-sans;
+    @apply font-sans;
 }
 
 .wp-block-media-text {
-  @apply grid grid-cols-2 gap-4;
+    @apply grid grid-cols-2 gap-4;
 }
 
 iframe {
-  @apply w-full h-auto mt-2 aspect-video;
+    @apply w-full h-auto mt-2 aspect-video;
 }
 
 @layer base {
@@ -74,139 +80,160 @@ iframe {
         font-family: Konnect;
         font-weight: 900;
         font-style: normal;
-        src: url(./fonts/KonnectBlack.otf) format("opentype");
+        src: url(./fonts/KonnectBlack.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 900;
         font-style: Italic;
-        src: url(./fonts/KonnectBlackItalic.otf) format("opentype");
+        src: url(./fonts/KonnectBlackItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 700;
         font-style: normal;
-        src: url(./fonts/KonnectBold.otf) format("opentype");
+        src: url(./fonts/KonnectBold.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 700;
         font-style: italic;
-        src: url(./fonts/KonnectBoldItalic.otf) format("opentype");
+        src: url(./fonts/KonnectBoldItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 600;
         font-style: normal;
-        src: url(./fonts/KonnectSemiBold.otf) format("opentype");
+        src: url(./fonts/KonnectSemiBold.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 600;
         font-style: italic;
-        src: url(./fonts/KonnectSemiBoldItalic.otf) format("opentype");
+        src: url(./fonts/KonnectSemiBoldItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 500;
         font-style: normal;
-        src: url(./fonts/KonnectMedium.otf) format("opentype");
+        src: url(./fonts/KonnectMedium.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 500;
         font-style: italic;
-        src: url(./fonts/KonnectMediumItalic.otf) format("opentype");
+        src: url(./fonts/KonnectMediumItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 400;
         font-style: Italic;
-        src: url(./fonts/KonnectItalic.otf) format("opentype");
+        src: url(./fonts/KonnectItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 400;
         font-style: normal;
-        src: url(./fonts/KonnectRegular.otf) format("opentype");
+        src: url(./fonts/KonnectRegular.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 300;
         font-style: normal;
-        src: url(./fonts/KonnectLight.otf) format("opentype");
+        src: url(./fonts/KonnectLight.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 300;
         font-style: italic;
-        src: url(./fonts/KonnectLightItalic.otf) format("opentype");
+        src: url(./fonts/KonnectLightItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 200;
         font-style: normal;
-        src: url(./fonts/KonnectThin.otf) format("opentype");
+        src: url(./fonts/KonnectThin.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 200;
         font-style: italic;
-        src: url(./fonts/KonnectThinItalic.otf) format("opentype");
+        src: url(./fonts/KonnectThinItalic.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 100;
         font-style: normal;
-        src: url(./fonts/KonnectHairline.otf) format("opentype");
+        src: url(./fonts/KonnectHairline.otf) format('opentype');
     }
     @font-face {
         font-family: Konnect;
         font-weight: 100;
         font-style: Italic;
-        src: url(./fonts/KonnectHairlineItalic.otf) format("opentype");
+        src: url(./fonts/KonnectHairlineItalic.otf) format('opentype');
     }
 }
 
 @layer base {
-  body {
-    @apply bg-gray-200;
-  }
+    body {
+        @apply bg-gray-200;
+    }
 }
 
 @layer utilities {
     /* Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar {
-      display: none;
+        display: none;
     }
 
     .no-scrollbar {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
     }
 }
 
-.content-scrollbar::-webkit-scrollbar-track
-{
-  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-  border-radius: 10px;
-  
+.content-scrollbar::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
 }
 
-.content-scrollbar::-webkit-scrollbar
-{
-  width: 7px;
-  background-color: bg-gray-200;
+.content-scrollbar::-webkit-scrollbar {
+    width: 7px;
+    background-color: bg-gray-200;
 }
 
-.content-scrollbar::-webkit-scrollbar-thumb
-{
-  border-radius: 10px;
-  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-  @apply bg-ve-collab-blue;
+.content-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    @apply bg-ve-collab-blue;
 }
 
-body{
-  -webkit-print-color-adjust:exact !important;
-  print-color-adjust:exact !important;
+body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #2c2c2c !important;
+    font-weight: bold;
+    width: 50px !important;
+    height: 50px !important;
+    @apply bg-white/15  p-4 rounded-full hover:bg-white/25 -translate-y-8;
+}
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 22px !important;
+}
+.swiper-button-disabled {
+    visibility: hidden !important;
+}
+.swiper-pagination-bullet {
+    background: #888888 !important;
+    opacity: 0.75 !important;
+    width: 12px !important;
+    height: 12px !important;
+}
+.swiper-pagination-bullet.swiper-pagination-bullet-active {
+    background: #525252 !important;
 }

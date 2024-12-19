@@ -3,10 +3,16 @@ from typing import Dict, List
 
 from bson import ObjectId
 from bson.errors import InvalidId
+import logging
 from pymongo.database import Database
 
 from exceptions import NotificationDoesntExistError
+import global_vars
+from resources.network.chat import Chat
+from resources.network.profile import Profiles
 import util
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationResource:
@@ -22,6 +28,42 @@ class NotificationResource:
     def __init__(self, db: Database) -> None:
         self.db = db
 
+        self.allowed_notification_types = [
+            "new_messages",
+            "space_join_request",
+            "space_invitation",
+            "ve_invitation",
+            "ve_invitation_reply",
+            "reminder_evaluation",
+            "reminder_good_practise_examples",
+            "reminder_icebreaker",
+        ]
+
+        # mapping of notification types to the profile settings
+        # that have to be obeyed
+        self.notification_type_setting_mapper = {
+            "new_messages": "messages",
+            "space_join_request": "group_invite",
+            "space_invitation": "group_invite",
+            "ve_invitation": "ve_invite",
+            "ve_invitation_reply": "ve_invite",
+            "reminder_evaluation": "system",
+            "reminder_good_practise_examples": "system",
+            "reminder_icebreaker": "system",
+        }
+
+        # mapping of notification types to the email templates
+        self.notification_type_template_mapper = {
+            "new_messages": "new_messages.html",
+            "space_join_request": "space_join_request.html",
+            "space_invitation": "space_invitation.html",
+            "ve_invitation": "ve_invitation.html",
+            "ve_invitation_reply": "ve_invitation_reply.html",
+            "reminder_evaluation": "reminder_evaluation.html",
+            "reminder_good_practise_examples": "reminder_good_practise_examples.html",
+            "reminder_icebreaker": "reminder_icebreaker.html",
+        }
+
     async def send_notification(
         self, recipient: str, notification_type: str, payload: Dict
     ) -> None:
@@ -30,10 +72,15 @@ class NotificationResource:
         by specifying the `notification_type` and the `payload` that
         represents the body of the notification.
 
-        Both type and payload can be an arbitrary str, respectively an arbitrary dict,
-        as long as the recipient is able the understand the content and react
-        accordingly. The notification feature itself does not enforce any format or content.
+        These notifications obey the rules the recipient user has set in their profile,
+        i.e. if they want to receive notifications of this type via email and push, push only
+        or not at all.
 
+        Payload can be an arbitrary Dict, as long as the recipient is able to
+        understand the content and react accordingly. The notification feature
+        itself does not enforce any format or content.
+
+        If the user has complied to push notifications:
         If the recipient user is currently "online" (i.e. has an open and authenticated
         socket connection) the notification is dispatched immediately via the socketio event
         "notification". Otherwise the notification is held back until the user is online
@@ -41,9 +88,51 @@ class NotificationResource:
         will be sent (see `handlers.socket_io.authenticate` for further information).
 
         Notifications are expected to be acknowledged by the recipients, otherwise
-        they will always be re-sent. See details in
+        they will always be re-sent (only applicable to push-notifications). See details in
         `handlers.socket_io.acknowledge_notification` on how to send appropriate
         acknowledgements to notifications.
+
+        Email notifications are sent instantly, if the user has complied to receive them.
+
+        Returns nothing.
+
+        Raises `ValueError` if the `notification_type` is not allowed.
+        """
+
+        # check if the notification type is allowed
+        if notification_type not in self.allowed_notification_types:
+            raise ValueError(
+                "Notification type '{}' is not allowed.Allowed types are: {}".format(
+                    notification_type, self.allowed_notification_types
+                )
+            )
+
+        # determin user settings for notifications
+        profile_manager = Profiles(self.db)
+        notification_setting = profile_manager.get_notification_setting(
+            recipient, self.notification_type_setting_mapper[notification_type]
+        )
+
+        # user doesn't want to receive any notifications of this type
+        if notification_setting == "none":
+            return
+        # user wants to receive notifications of this type via push only
+        elif notification_setting == "push":
+            await self._notify_push(recipient, notification_type, payload)
+        # user wants to receive notifications of this type via email and push
+        elif notification_setting == "email":
+            await self._notify_push(recipient, notification_type, payload)
+            try:
+                self._notify_email(recipient, notification_type, payload, None)
+            except Exception as e:
+                raise e
+
+    async def _notify_push(
+        self, recipient: str, notification_type: str, payload: Dict
+    ) -> None:
+        """
+        helper function to dispatch a notification to the user given as `recipient` (username)
+        via the internal platform push notification system.
         """
 
         notification_payload = {
@@ -76,6 +165,106 @@ class NotificationResource:
         # the receive_state will be changed to "acknowledged" by the
         # responsible event handler
         self.db.notifications.insert_one(notification_payload)
+
+    def _notify_email(
+        self,
+        recipient: str,
+        notification_type: str,
+        payload: Dict,
+        email_subject: str | None,
+    ) -> None:
+        """
+        helper function to dispatch a notification to the user given as `recipient` (username)
+        via email
+        """
+
+        user_id = global_vars.keycloak_admin.get_user_id(recipient)
+        recipient_email = global_vars.keycloak_admin.get_user(user_id)["email"]
+
+        util.send_email(
+            recipient,
+            recipient_email,
+            email_subject,
+            self.notification_type_template_mapper[notification_type],
+            payload,
+        )
+
+    async def bulk_send_notifications(
+        self, notification_type: str, payload: Dict, email_subject: str
+    ) -> None:
+        """
+        Dispatch a notification to ALL(!) users,
+        by specifying the `notification_type` and the `payload` that
+        represents the body of the notification.
+
+        These notifications obey the rules the recipient user has set in their profile,
+        i.e. if they want to receive notifications of this type via email and push, push only
+        or not at all.
+
+        Payload can be an arbitrary dict, as long as the recipient is able to
+        understand the content and react accordingly. The notification feature
+        itself does not enforce any format or content.
+
+        Optionally, an `email_subject` can be specified, which will be used as the
+        subject of the email notification. If `None` is passed, a generic default will
+        be used.
+
+        If the user has complied to push notifications:
+        If the recipient user is currently "online" (i.e. has an open and authenticated
+        socket connection) the notification is dispatched immediately via the socketio event
+        "notification". Otherwise the notification is held back until the user is online
+        the next time, when all notifications that appeared while he/she was offline
+        will be sent (see `handlers.socket_io.authenticate` for further information).
+
+        Notifications are expected to be acknowledged by the recipients, otherwise
+        they will always be re-sent. See details in
+        `handlers.socket_io.acknowledge_notification` on how to send appropriate
+        acknowledgements to notifications.
+
+        Email notifications are sent instantly, if the user has complied to receive them.
+
+        Returns nothing.
+
+        Raises `ValueError` if the `notification_type` is not allowed.
+        """
+
+        # check if the notification type is allowed
+        if notification_type not in self.allowed_notification_types:
+            raise ValueError(
+                "Notification type '{}' is not allowed.Allowed types are: {}".format(
+                    notification_type, self.allowed_notification_types
+                )
+            )
+
+        # grab users and their notification settings
+        all_users_notification_settings = Profiles(self.db).get_all_profiles(
+            projection={"username": True, "notification_settings": True}
+        )
+
+        # determine relevant notification settings for the notification type
+        notification_setting = self.notification_type_setting_mapper[notification_type]
+
+        # dispatch the notification to each user, respecting their notification settings
+        for recipient in all_users_notification_settings:
+            # no notifications at all
+            if recipient["notification_settings"][notification_setting] == "none":
+                return
+            # push only
+            elif recipient["notification_settings"][notification_setting] == "push":
+                await self._notify_push(
+                    recipient["username"], notification_type, payload
+                )
+            # email and push
+            elif recipient["notification_settings"][notification_setting] == "email":
+                await self._notify_push(
+                    recipient["username"], notification_type, payload
+                )
+                try:
+                    self._notify_email(
+                        recipient["username"], notification_type, payload, email_subject
+                    )
+                except Exception as e:
+                    logger.error(e)
 
     def acknowledge_notification(self, notification_id: str | ObjectId) -> None:
         """
@@ -167,3 +356,68 @@ class NotificationResource:
             return notification["to"]
         else:
             raise NotificationDoesntExistError()
+
+
+async def periodic_notification_dispatch(
+    periodic_notification_type: str, payload: Dict, email_subject: str
+) -> None:
+    with util.get_mongodb() as db:
+        notification_resource = NotificationResource(db)
+
+        # dispatch the notification to all users
+        await notification_resource.bulk_send_notifications(
+            periodic_notification_type, payload, email_subject
+        )
+
+
+def new_message_mail_notification_dispatch() -> None:
+    """
+    determine all users that have received new messages within the last 24 hours
+    that they haven't read yet, and send them an email notification about it
+    (if user has complied to email notifications).
+    """
+
+    with util.get_mongodb() as db:
+        chat_manager = Chat(db)
+
+        # list of unread rooms and messages within the last 24 hours
+        rooms_with_unread_msg = chat_manager.get_rooms_with_unacknowledged_messages()
+        from pprint import pprint
+
+        # for each user, count the number of unread messages and rooms with unread messages
+        username_to_unread_msg_count = {}
+        for room in rooms_with_unread_msg:
+            for message in room["messages"]:
+                for send_state in message["send_states"]:
+                    if send_state["send_state"] != "acknowledged":
+                        if send_state["username"] in username_to_unread_msg_count:
+                            username_to_unread_msg_count[send_state["username"]][
+                                "messages"
+                            ] += 1
+                            username_to_unread_msg_count[send_state["username"]][
+                                "rooms"
+                            ].add(room["_id"])
+                        else:
+                            username_to_unread_msg_count[send_state["username"]] = {
+                                "messages": 1,
+                                "rooms": set([room["_id"]]),
+                            }
+
+        # send email notifications to users
+        notification_resounce = NotificationResource(db)
+        profile_manager = Profiles(db)
+        for username, unread_count in username_to_unread_msg_count.items():
+            # skip the user if he/she doesn't want to receive email notifications
+            if (
+                profile_manager.get_notification_setting(username, "messages")
+                != "email"
+            ):
+                continue
+
+            email_payload = {
+                "unread_messages_amount": unread_count["messages"],
+                "unread_rooms_amount": len(unread_count["rooms"]),
+            }
+            notification_resounce._notify_email(
+                username, "new_messages", email_payload, "neue Nachricht(en)"
+            )

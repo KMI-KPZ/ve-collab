@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
-import {
-    GridEntry,
-    GridEntry2Col,
-    showDataOrEmptySign,
-} from './PlanSummary';
+import { GridEntry, GridEntry2Col, showDataOrEmptySign } from './PlanSummary';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
-import {
-    MdKeyboardDoubleArrowDown,
-    MdKeyboardDoubleArrowUp,
-} from 'react-icons/md';
+import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from 'react-icons/md';
 import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
@@ -113,7 +106,7 @@ export default function ViewAttributes({ plan, openAllBoxes, isSingleView }: Pro
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline ml-2" />
@@ -131,7 +124,7 @@ export default function ViewAttributes({ plan, openAllBoxes, isSingleView }: Pro
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-                                    classNameExtend="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
                                 >
                                     {t('show_all')}
                                     <MdKeyboardDoubleArrowDown className="inline ml-2" />

@@ -179,7 +179,55 @@ db.plan.evaluation.evaluation_before neu
 feedback_tweaks
 
 #### Beschreibung
-- Attribt `evaluation_before` ist neu in jeder `Evaluation` von einem Plan, Datentyp `str` oder `null`
+- Attribut `evaluation_before` ist neu in jeder `Evaluation` von einem Plan, Datentyp `str` oder `null`
 
 #### letzte Änderung
 21.10.24 14:30
+
+---
+
+#### Kurzfassung
+db.profiles.notification_settings neu
+
+#### branch
+periodic_notifications
+
+#### Beschreibung
+- Attribt `notification_settings` ist neu in jedem profile. Datentype `dict`
+- Struktur:
+    {
+        "messages": "none|push|email",
+        "ve_invite": "none|push|email",
+        "group_invite": "none|push|email",
+        "system": "none|push|email",
+    }
+
+#### letzte Änderung
+25.10.24 14:00
+
+---
+
+#### Kurzfassung
+db.plan.target_groups.age_min + age_max --> data.plan.target_groups.semester
+
+#### branch
+target_groups_semester
+
+#### Beschreibung
+- Attribute `age_min` und `age_max` von den `target_groups` von einem Plan werden entfernt, stattdessen neues Attribut `semester`, Datentyp `str` oder `null`
+
+#### letzte Änderung
+11.11.24 14:30
+
+---
+
+#### Kurzfassung
+db.plan.is_good_practise_planned neu
+#### branch
+post-process-rework
+
+#### Beschreibung
+- Attribut `is_good_practise_planned` ist neu in jedem Plan, Datentyp `boolean` oder `null`
+
+#### letzte Änderung
+18.12.24 09:30

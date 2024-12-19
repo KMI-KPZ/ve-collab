@@ -20,13 +20,22 @@ import {
 import Timeline from '@/components/network/Timeline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { Socket } from 'socket.io-client';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
+import Custom404 from '../404';
 
 interface Props {
     socket: Socket;
 }
 
 UserProfile.auth = true;
+UserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
+
 export default function UserProfile({ socket }: Props): JSX.Element {
+    const { t } = useTranslation(['community', 'common']);
+
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
         firstName: '',
         lastName: '',
@@ -97,8 +106,9 @@ export default function UserProfile({ socket }: Props): JSX.Element {
 
     const [foreignUser, setForeignUser] = useState(false);
 
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
+    const [userExists, setUserExists] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -120,7 +130,8 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         // fetch profile information of the determined user
         fetchGET(`/profileinformation?username=${username}`, session?.accessToken).then((data) => {
             setLoading(false);
-            if (data) {
+            if (data.profile) {
+                setUserExists(true);
                 // if the minimum profile data such as first_name and last_name is not set,
                 // chances are high it is after the first register, therefore incentivize user
                 // to fill out his profile by sending him to the edit page
@@ -174,10 +185,16 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                         description: elem.description,
                     }))
                 );
-                console.log(data.profile.ve_window);
             }
         });
     }, [session, router]);
+
+    if (loading) return <LoadingAnimation />;
+    if (userExists === false) {
+        return <Custom404 />;
+    }
+
+    console.log({ personalInformation });
 
     return (
         <>
@@ -185,6 +202,11 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                 <LoadingAnimation />
             ) : (
                 <>
+                    <CustomHead
+                        pageTitle={t('common:profile')}
+                        pageSlug={'profile'}
+                        pageDescription={t('profile_description')}
+                    />
                     <ProfileBanner
                         follows={follows}
                         setFollows={setFollows}
@@ -231,11 +253,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                         <div className={'w-1/4  ml-4'}>
                             <WhiteBox>
                                 <PersonalData
-                                    name={
-                                        personalInformation.firstName +
-                                        ' ' +
-                                        personalInformation.lastName
-                                    }
                                     bio={personalInformation.bio}
                                     expertise={personalInformation.expertise}
                                     birthday={personalInformation.birthday}
@@ -251,4 +268,120 @@ export default function UserProfile({ socket }: Props): JSX.Element {
             )}
         </>
     );
+}
+
+export function UserProfileNoAuthPreview() {
+    const { t } = useTranslation(['community', 'common']);
+
+    return (
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('common:profile')}
+                pageSlug={'profile'}
+                pageDescription={t('profile_description')}
+            />
+            <ProfileBanner
+                follows={[]}
+                setFollows={() => {}}
+                followers={[]}
+                foreignUser={false}
+                username={t('common:no_auth.username')}
+                isNoAuthPreview={true}
+            />
+            <div className={'mx-20 mb-2 px-5 relative -mt-16 z-10'}>
+                <ProfileHeader
+                    name={t('common:no_auth.username')}
+                    institution={t('common:no_auth.institution')}
+                    profilePictureUrl={'random_user.jpg'}
+                    foreignUser={true}
+                    followers={[]}
+                    veReady={true}
+                    isNoAuthPreview={true}
+                />
+            </div>
+            <div className={'mx-20 flex'}>
+                <div className={'w-3/4  mr-4'}>
+                    <WhiteBox>
+                        <ExtendedPersonalInformation
+                            isNoAuthPreview={true}
+                            veInfo={{
+                                veInterests: [
+                                    'Subject-specific Implementation Options',
+                                    'Methods and Task Formats',
+                                    'Implementation',
+                                ],
+                                veContents: [
+                                    t('common:no_auth.ve_content1'),
+                                    t('common:no_auth.ve_content2'),
+                                ],
+                                veGoals: [
+                                    'Promotion of Communicative Competences',
+                                    'Interdisciplinary Exchange',
+                                    'International Cooperation',
+                                ],
+                                experience: [t('common:no_auth:ve_experience1')],
+                                interdisciplinaryExchange: true,
+                                preferredFormat: 'synchronous and asynchronous',
+                            }}
+                            researchAndTeachingInfo={{
+                                researchTags: [''],
+                                courses: [
+                                    {
+                                        title: '',
+                                        academic_courses: '',
+                                        semester: '',
+                                    },
+                                ],
+                                lms: [''],
+                                tools: [''],
+                            }}
+                            cvInfo={{
+                                educations: [
+                                    {
+                                        institution: '',
+                                        degree: '',
+                                        department: '',
+                                        timestamp_from: '',
+                                        timestamp_to: '',
+                                        additional_info: '',
+                                    },
+                                ],
+                                workExperience: [
+                                    {
+                                        position: '',
+                                        institution: '',
+                                        department: '',
+                                        timestamp_from: '',
+                                        timestamp_to: '',
+                                        city: '',
+                                        country: '',
+                                        additional_info: '',
+                                    },
+                                ],
+                            }}
+                        />
+                    </WhiteBox>
+                </div>
+                <div className={'w-1/4  ml-4'}>
+                    <WhiteBox>
+                        <PersonalData
+                            bio={'VE Enthusiast'}
+                            expertise={'Cultural Studies'}
+                            birthday={'1988-01-01'}
+                            languages={['English', 'German']}
+                        />
+                    </WhiteBox>
+                </div>
+            </div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
+    );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+        },
+    };
 }

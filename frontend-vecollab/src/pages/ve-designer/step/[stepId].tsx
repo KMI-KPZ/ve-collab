@@ -2,9 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Stage from '@/components/VE-designer/FinePlanner/Stage';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import {
-    ISubmenuData,
-} from '@/interfaces/ve-designer/sideProgressBar';
+import { ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
@@ -18,6 +16,10 @@ import { FineStepFormSchema } from '../../../zod-schemas/finestepSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import WhiteBox from '@/components/common/WhiteBox';
 import { GiSadCrab } from 'react-icons/gi';
+import CustomHead from '@/components/metaData/CustomHead';
+import imageTrashcan from '@/images/icons/ve-designer/trash.png';
+import Image from 'next/image';
+import { RxMinus, RxPlus } from 'react-icons/rx';
 
 export interface ITask {
     task_formulation: string;
@@ -113,6 +115,7 @@ interface Props {
 }
 
 FinePlanner.auth = true;
+FinePlanner.noAuthPreview = <FinePlannerNoAuthPreview />;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
@@ -135,7 +138,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
     const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
-    const [loadingStep, setLoadingStep] = useState<boolean>(true)
+    const [loadingStep, setLoadingStep] = useState<boolean>(true);
 
     const setPlanerData = useCallback(
         (plan: IPlan) => {
@@ -143,13 +146,13 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 // TODO ???
                 return {};
             }
-            if (stepId == "1") {
+            if (stepId == '1') {
                 return router.push({
                     pathname: `/ve-designer/step/${plan.steps[0]._id}`,
                     query: {
                         plannerId: router.query.plannerId,
                     },
-                })
+                });
             }
             let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
@@ -177,12 +180,11 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 setCurrentFineStep(fineStepCopyTransformedTools);
                 setSideMenuStepsData(generateSideMenuStepsData(plan.steps));
             }
-            setLoadingStep(false)
-
+            setLoadingStep(false);
 
             return { ...fineStepCopyTransformedTools };
         },
-        [stepId]
+        [stepId, router]
     );
 
     useEffect(() => {
@@ -235,7 +237,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 plan_id: router.query.plannerId,
                 field_name: 'steps',
                 value: [...updateStepsData],
-            }
+            },
         ];
     };
 
@@ -275,35 +277,280 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             <WhiteBox>
                 <div className="flex items-center">
                     <GiSadCrab size={60} className="m-4" />
-                    <div className="text-xl text-slate-900">{ t('common:plans_alert_step_doesnt_exist')}</div>
+                    <div className="text-xl text-slate-900">
+                        {t('common:plans_alert_step_doesnt_exist')}
+                    </div>
                     <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
                         <Link href="/plans">{t('back_to_overview')}</Link>
                     </button>
                 </div>
             </WhiteBox>
-        )
+        );
     }
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('step-data.title', { name: currentFineStep.name })}
-            description={description}
-            tooltip={{
-                text: t('step-data.tooltip_text'),
-                link: '/learning-material/2/VA-Planung',
-            }}
-            methods={methods}
-            prevpage={prevpage}
-            nextpage={nextpage}
-            stageInMenu="steps"
-            idOfProgress={currentFineStep._id!}
-            // idOfProgress={encodeURI(currentFineStep.name as string)}
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <Stage fineStep={currentFineStep} />
-        </Wrapper>
+        <>
+            <CustomHead
+                pageTitle={currentFineStep.name}
+                pageSlug={`ve-designer/step/${stepId}`}
+                pageDescription={t('step-data.page_description')}
+            />
+            <Wrapper
+                socket={socket}
+                title={t('step-data.title', { name: currentFineStep.name })}
+                description={description}
+                tooltip={{
+                    text: t('step-data.tooltip_text'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                stageInMenu="steps"
+                idOfProgress={currentFineStep._id!}
+                // idOfProgress={encodeURI(currentFineStep.name as string)}
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <Stage fineStep={currentFineStep} />
+            </Wrapper>
+        </>
+    );
+}
+
+export function FinePlannerNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+    const methods = useForm<IFineStepFrontend>({});
+    const [prevpage] = useState<string>('/ve-designer/step/');
+    const [nextpage] = useState<string>('/ve-designer/step/');
+
+    return (
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={'Phase'}
+                pageSlug={`ve-designer/step`}
+                pageDescription={t('step-data.page_description')}
+            />
+            <Wrapper
+                socket={undefined}
+                title={t('step-data.title', { name: '1' })}
+                description={
+                    <>
+                        <p className="text-xl text-slate-600">{t('step-data.fine_plan')}</p>
+                        <p className="mb-8">{t('step-data.description')}</p>
+                    </>
+                }
+                tooltip={{
+                    text: t('step-data.tooltip_text'),
+                    link: '/learning-material/2/VA-Planung',
+                }}
+                methods={methods}
+                prevpage={prevpage}
+                nextpage={nextpage}
+                stageInMenu="steps"
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <StageNoAuthPreview />
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/55 to-white pointer-events-none"></div>
+        </div>
+    );
+}
+
+export function StageNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']); // designer is default ns
+    return (
+        <>
+            <div>
+                <div className="flex">
+                    <div className="font-bold mx-2">{t('step-data.time_frame')}</div>
+                    <div className="mx-2">
+                        {''} - {''}
+                    </div>
+                </div>
+            </div>
+            <div className="mt-4 flex">
+                <div className="w-1/6 flex items-center">
+                    <label htmlFor="learning_goal" className="px-2 py-2">
+                        {t('step-data.learning_activities')}
+                    </label>
+                </div>
+                <div className="w-5/6">
+                    <textarea
+                        disabled
+                        rows={2}
+                        placeholder={t('step-data.learning_activities_placeholder')}
+                        className="border border-gray-400 rounded-lg w-full p-2"
+                    />
+                </div>
+            </div>
+            <div className="mt-4 flex justify-center">
+                <p>{t('step-data.detail_activities')}</p>
+                <div className="flex">
+                    <div className="flex">
+                        <div>
+                            <label className="px-2 py-2">{t('common:yes')}</label>
+                        </div>
+                        <div>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                                checked
+                            />
+                        </div>
+                    </div>
+                    <div className="flex">
+                        <div>
+                            <label className="px-2 py-2">{t('common:no')}</label>
+                        </div>
+                        <div>
+                            <input type="radio" disabled />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-4 flex">
+                <div className="flex flex-col w-full">
+                    <div className="relative">
+                        <div
+                            className={
+                                'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'
+                            }
+                        >
+                            <div className="mt-2 flex">
+                                <div className="w-1/6 flex items-center">
+                                    <label htmlFor="task_formulation" className="px-2 py-2">
+                                        {t('step-data.task')}
+                                    </label>
+                                </div>
+                                <div className="w-5/6">
+                                    <input
+                                        disabled
+                                        placeholder=""
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/6 flex items-center">
+                                    <label htmlFor="work_mode" className="px-2 py-2">
+                                        {t('step-data.work_mode')}
+                                    </label>
+                                </div>
+                                <div className="w-5/6">
+                                    <input
+                                        disabled
+                                        placeholder=""
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/6 flex items-center">
+                                    <label htmlFor="notes" className="px-2 py-2">
+                                        {t('step-data.notes')}
+                                    </label>
+                                </div>
+                                <div className="w-5/6">
+                                    <textarea
+                                        rows={3}
+                                        disabled
+                                        placeholder={t('common:optional')}
+                                        className="border border-gray-400 rounded-lg w-full p-2"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex">
+                                <div className="w-1/6 flex items-center">
+                                    <label htmlFor="tools" className="px-2 py-2">
+                                        {t('step-data.tools')}
+                                    </label>
+                                </div>
+                                <div className="w-5/6 flex flex-col gap-2">
+                                    <div className="flex gap-5">
+                                        <input
+                                            type="text"
+                                            disabled
+                                            placeholder={t('step-data.tools_placeholder')}
+                                            className="w-full border border-gray-400 rounded-lg p-2"
+                                        />
+                                        <button type="button" onClick={() => {}} disabled>
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex">
+                                <div className="w-1/6" />
+                                <div className="w-5/6 mt-3 flex items-center justify-center">
+                                    <button type="button" onClick={() => {}} disabled>
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex">
+                                <div className="w-1/6 flex items-center">
+                                    <label htmlFor="materials" className="px-2 py-2">
+                                        {t('step-data.materials')}
+                                    </label>
+                                </div>
+                                <div className="w-5/6 flex flex-col gap-2">
+                                    <div className="flex gap-5">
+                                        <input
+                                            type="text"
+                                            disabled
+                                            placeholder={t('step-data.materials_placeholder')}
+                                            className="w-full border border-gray-400 rounded-lg p-2"
+                                        />
+                                        <button
+                                            type="button"
+                                            className=""
+                                            onClick={() => {}}
+                                            disabled
+                                        >
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex">
+                                <div className="w-1/6" />
+                                <div className="w-5/6 mt-3 flex items-center justify-center">
+                                    <button type="button" onClick={() => {}} disabled>
+                                        <RxPlus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="absolute left-10 bottom-7">
+                            <button type="button" onClick={() => {}} disabled>
+                                <Image
+                                    src={imageTrashcan}
+                                    width={20}
+                                    height={20}
+                                    alt="trashcan"
+                                ></Image>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="w-full flex items-center justify-center">
+                        <button
+                            type="button"
+                            className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
+                            onClick={() => {}}
+                            disabled
+                        >
+                            {t('step-data.add_learning_activity')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 }
 

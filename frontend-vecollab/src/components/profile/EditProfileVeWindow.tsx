@@ -11,6 +11,7 @@ import { useGetPublicPlansOfCurrentUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Select from 'react-select';
 import LoadingAnimation from '../common/LoadingAnimation';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     items: VEWindowItem[];
@@ -29,6 +30,7 @@ export default function EditProfileVeWindow({
     importOrcidProfile,
 }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
 
     const {
         data: myPublicPlans,
@@ -90,9 +92,9 @@ export default function EditProfileVeWindow({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={'VE-Schaufenster'} />
+                <EditProfileHeadline name={t("ve_window")} />
                 <div className="mb-2 text-sm">
-                    Stelle deine bereits geplanten VEs in deinem Profil aus
+                    {t('ve_window_question')}
                 </div>
                 {isLoading ? (
                     <LoadingAnimation />
@@ -111,7 +113,7 @@ export default function EditProfileVeWindow({
                                         <div className="mt-2 flex">
                                             <div className={'flex items-center w-1/3'}>
                                                 <label htmlFor={'plan'} className="px-2 py-2">
-                                                    Plan wählen
+                                                    {t("choose_plan")}
                                                 </label>
                                             </div>
                                             <Select
@@ -133,28 +135,28 @@ export default function EditProfileVeWindow({
                                                           }
                                                         : null
                                                 }
-                                                placeholder={'Plan auswählen...'}
+                                                placeholder={t("common:choose_option")}
                                             />
                                         </div>
                                         <EditProfileItemRow
-                                            label={'Titel'}
+                                            label={t("common:title")}
                                             value={item.title}
                                             onChange={(e) => {
                                                 modifyTitle(index, e.target.value);
                                             }}
                                             labelElementWidth="w-1/3"
                                             inputElemenWidth="w-2/3"
-                                            placeholder="optional, anderer Titel im Schaufenster"
+                                            placeholder={t("ve_window_title_placeholder")}
                                         />
                                         <EditProfileItemRow
-                                            label={'Beschreibung'}
+                                            label={t("description")}
                                             value={item.description}
                                             onChange={(e) => {
                                                 modifyDescription(index, e.target.value);
                                             }}
                                             labelElementWidth="w-1/3"
                                             inputElemenWidth="w-2/3"
-                                            placeholder="optional, andere Beschreibung im Schaufenster"
+                                            placeholder={t("ve_window_description_placeholder")}
                                         />
                                     </SlateBox>
                                 </div>

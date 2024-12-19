@@ -14,8 +14,9 @@ interface Props {
     submitCallback: (data: any) => void;
     handleUnsavedData: (data: any, continueLink: string) => void;
     handleInvalidData: (data: any, continueLink: string) => void;
-    socket: Socket;
+    socket?: Socket;
     plan: IPlan;
+    isNoAuthPreview?: boolean;
 }
 
 export default function Header({
@@ -25,76 +26,146 @@ export default function Header({
     handleUnsavedData,
     handleInvalidData,
     socket,
+    isNoAuthPreview = false,
 }: Props) {
     const router = useRouter();
     const { t } = useTranslation('common');
 
+    if (isNoAuthPreview) {
+        return (
+            <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
+                <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
+                    <span className="text-ve-collab-orange">VE</span>
+                    <span className="text-ve-collab-blue ml-2">Designer</span>
+                    {plan && plan.name && (
+                        <span className="ml-4 text-2xl truncate before:content-['•'] before:mr-2">
+                            {plan.name}
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-between w-full lg:w-fit">
+                    <div className="flex items-center">
+                        <button
+                            type="submit"
+                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
+                            title={t('open_collaborative_pad')}
+                            disabled
+                        >
+                            <MdEditSquare className="inline" /> Pad
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue"
+                            title={t('enter_jtsi')}
+                            disabled
+                        >
+                            <MdMeetingRoom className="inline" /> Video
+                        </button>
+                    </div>
+
+                    <div>
+                        <button
+                            className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-default"
+                            onClick={() => {}}
+                        >
+                            {t('exit')}
+                        </button>
+
+                        <button
+                            className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-default"
+                            onClick={() => {}}
+                        >
+                            {t('save')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
-            <div className="grow text-4xl font-bold flex flex-nowrap items-center text-slate-400 truncate w-full lg:w-1/2">
+            <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
                 <span className="text-ve-collab-orange">VE</span>
                 <span className="text-ve-collab-blue ml-2">Designer</span>
-                {plan && plan.name && <span className="ml-4 text-2xl before:content-['•'] before:mr-2">{plan.name}</span>}
+                {plan && plan.name && (
+                    <span className="ml-4 text-2xl truncate before:content-['•'] before:mr-2">
+                        {plan.name}
+                    </span>
+                )}
+                {plan.is_good_practise && (
+                    <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue">
+                        <FaMedal title={t('plans_marked_as_good_practise')} size={18} />
+                    </span>
+                )}
             </div>
 
             <div className="flex items-center justify-between w-full lg:w-fit">
-                <div className='flex items-center'>
-                    {plan.is_good_practise && (
-                        <span className='mx-2 text-ve-collab-blue'>
-                            <FaMedal title={t('plans_marked_as_good_practise')} size={20} />
-                        </span>
-                    )}
-                    <Link href={`/etherpad/${router.query.plannerId}`} target="_blank" className="mx-2">
-                    <button
-                        type="submit"
-                        className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
-                        title={t('open_collaborative_pad')}
+                <div className="flex items-center">
+                    <Link
+                        href={`/etherpad/${router.query.plannerId}`}
+                        target="_blank"
+                        className="mx-2"
                     >
-                        <MdEditSquare className="inline" /> Pad
-                    </button>
-                </Link>
-                <Link href={`/meeting/${router.query.plannerId}`} target="_blank" className="mx-2">
-                    <button
-                        type="submit"
-                        className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                        title={t('enter_jtsi')}
+                        <button
+                            type="submit"
+                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
+                            title={t('open_collaborative_pad')}
+                        >
+                            <MdEditSquare className="inline" /> Pad
+                        </button>
+                    </Link>
+                    <Link
+                        href={`/meeting/${router.query.plannerId}`}
+                        target="_blank"
+                        className="mx-2"
                     >
-                        <MdMeetingRoom className="inline" /> Video
+                        <button
+                            type="submit"
+                            className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            title={t('enter_jtsi')}
+                        >
+                            <MdMeetingRoom className="inline" /> Video
+                        </button>
+                    </Link>
+                </div>
+
+                <div>
+                    <button
+                        className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                        onClick={async (e) => {
+                            if (Object.keys(methods.formState.dirtyFields).length > 0) {
+                                handleUnsavedData(null, '/plans');
+                            } else {
+                                await dropPlanLock(socket!, router.query.plannerId);
+                                await router.push({
+                                    pathname: '/plans',
+                                    query: {},
+                                });
+                            }
+                        }}
+                    >
+                        {t('exit')}
                     </button>
-                </Link></div>
 
-                <div><button
-                    className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
-                    onClick={async (e) => {
-                        if (Object.keys(methods.formState.dirtyFields).length > 0) {
-                            handleUnsavedData(null, '/plans');
-                        } else {
-                            await dropPlanLock(socket, router.query.plannerId);
-                            await router.push({
-                                pathname: '/plans',
-                                query: {},
-                            });
-                        }
-                    }}
-                >
-                    {t("exit")}
-                </button>
-
-                <button
-                    className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
-                    onClick={methods.handleSubmit(
-                        // valid form
-                        async (data: any) => {
-                            await submitCallback(data);
-                        },
-                        // invalid form
-                        async (data: any) => {
-                            handleInvalidData(data, '');
-                        }
-                    )}
-                >
-                    {t("save")}
-                </button></div>
+                    <button
+                        className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        onClick={methods.handleSubmit(
+                            // valid form
+                            async (data: any) => {
+                                await submitCallback(data);
+                            },
+                            // invalid form
+                            async (data: any) => {
+                                handleInvalidData(data, '');
+                            }
+                        )}
+                    >
+                        {t('save')}
+                    </button>
+                </div>
             </div>
         </div>
     );

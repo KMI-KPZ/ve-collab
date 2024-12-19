@@ -27,7 +27,7 @@ class Chat:
             "message": str,
             "sender": str,
             "creation_date": datetime.datetime,
-            "send_states": dict,
+            "send_states": list,
         }
 
     def get_or_create_room_id(self, members: List[str], name: str = None) -> ObjectId:
@@ -91,8 +91,10 @@ class Chat:
                 ]
             )
         )
-    
-    def check_is_user_chatroom_member(self, room_id: str | ObjectId, username: str) -> bool:
+
+    def check_is_user_chatroom_member(
+        self, room_id: str | ObjectId, username: str
+    ) -> bool:
         """
         Returns True if the user given by its `username` is a member of the chatroom
         (identified by the `room_id`), or False otherwise.
@@ -109,7 +111,7 @@ class Chat:
 
         if not room:
             raise RoomDoesntExistError()
-        
+
         return username in room["members"]
 
     def get_all_messages_of_room(self, room_id: str | ObjectId) -> List[Dict]:
@@ -195,7 +197,7 @@ class Chat:
             raise UserNotMemberError()
 
         # send states of the message for each recipient
-        send_states = {}
+        send_states = []
 
         # i really don't know why, but top level import crashes the socketio server...
         from handlers.socket_io import emit_event, get_sid_of_user, recipient_online
@@ -216,14 +218,19 @@ class Chat:
                     },
                     room=get_sid_of_user(recipient),
                 )
-                send_states[recipient] = "sent"
+                send_state = "sent"
             else:
                 # recipient is offline, message will be stored as "pending"
-                send_states[recipient] = "pending"
+                send_state = "pending"
 
-        # the sender obviously gets the state "acknowledged" already
-        # because he sent the message
-        send_states[sender] = "acknowledged"
+            # the sender obviously gets the state "acknowledged" already
+            # because he sent the message, the others as per their online state
+            if recipient == sender:
+                send_states.append(
+                    {"username": recipient, "send_state": "acknowledged"}
+                )
+            else:
+                send_states.append({"username": recipient, "send_state": send_state})
 
         # store message and corresponding send states in the room
         message = {
@@ -269,14 +276,17 @@ class Chat:
             {
                 "_id": room_id,
                 "messages._id": message_id,
+                "messages.send_states.username": acknowledging_user,
             },
             {
                 "$set": {
-                    "messages.$.send_states.{}".format(
-                        acknowledging_user
-                    ): "acknowledged"
+                    "messages.$[message].send_states.$[state].send_state": "acknowledged"
                 }
             },
+            array_filters=[
+                {"message._id": message_id},
+                {"state.username": acknowledging_user},
+            ],
         )
 
         if result.modified_count != 1:
@@ -302,8 +312,11 @@ class Chat:
                             "members": username,
                             "messages": {
                                 "$elemMatch": {
-                                    "send_states.{}".format(username): {
-                                        "$ne": "acknowledged"
+                                    "send_states": {
+                                        "$elemMatch": {
+                                            "username": username,
+                                            "send_state": {"$ne": "acknowledged"},
+                                        }
                                     }
                                 }
                             },
@@ -318,9 +331,96 @@ class Chat:
                                     "input": "$messages",
                                     "as": "message",
                                     "cond": {
-                                        "$ne": [
-                                            "$$message.send_states.{}".format(username),
-                                            "acknowledged",
+                                        "$gt": [
+                                            {
+                                                "$size": {
+                                                    "$filter": {
+                                                        "input": "$$message.send_states",
+                                                        "as": "state",
+                                                        "cond": {
+                                                            "$and": [
+                                                                {
+                                                                    "$eq": [
+                                                                        "$$state.username",
+                                                                        username,
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "$ne": [
+                                                                        "$$state.send_state",
+                                                                        "acknowledged",
+                                                                    ]
+                                                                },
+                                                            ]
+                                                        },
+                                                    }
+                                                }
+                                            },
+                                            0,
+                                        ]
+                                    },
+                                }
+                            },
+                            "members": True,
+                            "name": True,
+                        }
+                    },
+                ]
+            )
+        )
+
+    def get_rooms_with_unacknowledged_messages(self) -> List[Dict]:
+        """
+        Retrieve a list of rooms and messages that have unacknowledged messages
+        within the past 24 hours.
+        """
+
+        return list(
+            self.db.chatrooms.aggregate(
+                [
+                    # find rooms that have at max 24h old messages in it that are not yet acknowledged
+                    {
+                        "$match": {
+                            "messages": {
+                                "$elemMatch": {
+                                    "creation_date": {
+                                        "$gte": datetime.datetime.utcnow()
+                                        - datetime.timedelta(days=1)
+                                    },
+                                    "send_states": {
+                                        "$elemMatch": {
+                                            "send_state": {"$ne": "acknowledged"},
+                                        }
+                                    },
+                                }
+                            },
+                        }
+                    },
+                    # only return the messages that are not yet acknowledged
+                    # for easier dispatching of the events and less data queried
+                    {
+                        "$project": {
+                            "messages": {
+                                "$filter": {
+                                    "input": "$messages",
+                                    "as": "message",
+                                    "cond": {
+                                        "$gt": [
+                                            {
+                                                "$size": {
+                                                    "$filter": {
+                                                        "input": "$$message.send_states",
+                                                        "as": "state",
+                                                        "cond": {
+                                                            "$ne": [
+                                                                "$$state.send_state",
+                                                                "acknowledged",
+                                                            ]
+                                                        },
+                                                    }
+                                                }
+                                            },
+                                            0,
                                         ]
                                     },
                                 }
@@ -355,6 +455,9 @@ class Chat:
 
         self.db.chatrooms.update_many(
             {"_id": {"$in": room_ids}},
-            {"$set": {"messages.$[elem].send_states.{}".format(username): "sent"}},
-            array_filters=[{"elem._id": {"$in": message_ids}}],
+            {"$set": {"messages.$[message].send_states.$[state].send_state": "sent"}},
+            array_filters=[
+                {"message._id": {"$in": message_ids}},
+                {"state.username": username},
+            ],
         )

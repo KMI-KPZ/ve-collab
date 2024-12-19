@@ -9,12 +9,14 @@ import {
     VEInformation as IVEInformation, // name collision avoidance with VEInformation component
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
+import { useTranslation } from 'next-i18next';
 
 // have to declare "tabname" as a valid attribute for div tags, otherwise typescript is bothered
 declare module 'react' {
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
         // extends React's HTMLAttributes
         tabname?: string;
+        tabid?: string;
     }
 }
 
@@ -25,22 +27,26 @@ interface Props {
         educations: Education[];
         workExperience: WorkExperience[];
     };
+    isNoAuthPreview?: boolean;
 }
 
 export default function ExtendedPersonalInformation({
     veInfo,
     researchAndTeachingInfo,
     cvInfo,
+    isNoAuthPreview = false,
 }: Props) {
+    const { t } = useTranslation(['community', 'common']);
+
     return (
-        <Tabs>
-            <div tabname="VE-Infos">
+        <Tabs isNoAuthPreview={isNoAuthPreview}>
+            <div tabid="ve_info" tabname={t('ve_info')}>
                 <VEInformation veInfo={veInfo} />
             </div>
-            <div tabname="Lehre & Forschung">
+            <div tabid="teaching_research" tabname={t('research_and_teaching')}>
                 <TeachingAndResearchInformation researchAndTeachingInfo={researchAndTeachingInfo} />
             </div>
-            <div tabname="CV">
+            <div tabid="cv" tabname={t('cv')}>
                 <CVInformation cvInfo={cvInfo} />
             </div>
         </Tabs>

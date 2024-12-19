@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title|default("VE-Collab Notification") }}</title>
+</head>
+
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4; padding-bottom: 10px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td class="header" style="color: #fff; text-align: center; padding: 10px 0;">
+                            <img height="60" src="{{ logo_cid }}" alt="">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content" style="padding: 20px; background-color: #fff; margin: 20px;">
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <!--[if gte mso 9]>
+                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:100%; height:100%;">
+                            <v:fill type="tile" src="https://ve-collab.org/images/footer/KAVAQ_Footer.png" color="#7bceeb"/>
+                        </v:rect>
+                        <![endif]-->
+                        <td background="https://ve-collab.org/images/footer/KAVAQ_Footer.png" valign="top" align="left"
+                            style="background: url('https://ve-collab.org/images/footer/KAVAQ_Footer.png') no-repeat; background-size: cover;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td align="center">
+                                        <table class="responsive-container" width="100%" cellpadding="0" cellspacing="0"
+                                            border="0" style="width: 100%;">
+                                            <tr>
+                                                <td class="image-container"
+                                                    style="text-align: center; padding-top: 16px; vertical-align: middle;">
+                                                    <table align="center" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="padding-right: 8px;">
+                                                                <img alt="" loading="lazy" width="194" height="120"
+                                                                    decoding="async" src="{{ bmbf_cid }}">
+                                                            </td>
+                                                            <td>
+                                                                <img alt="" loading="lazy" width="94" height="100"
+                                                                    decoding="async" src="{{ eu_cid }}">
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; color: white; padding: 0px 16px 16px;">
+                                                    <p>Dieses Forschungs- und Entwicklungsprojekt wird im Rahmen der
+                                                        Maßnahme „Initiative Nationale Bildungsplattform”
+                                                        (Förderkennzeichen 16INB2032A/B) vom Bundesministerium für
+                                                        Bildung und Forschung (BMBF) gefördert und vom Projektträger
+                                                        VDI-VDE IT betreut. Die Verantwortung für den Inhalt dieser
+                                                        Veröffentlichung liegt bei den Autor:innen.</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; color: white; padding: 0 16px;">
+                                                    <hr style="border: 0; border-top: 1px solid white; margin: 16px 0;">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="text-align: center; color: white; padding-bottom: 16px;">
+                                                    <table align="center" role="presentation" style="margin: 0 auto;">
+                                                        <tr>
+                                                            <td style="padding: 0 8px;">
+                                                                <p style="margin: 0; color: white;">© 2024 VE-Collab</p>
+                                                            </td>
+                                                            <td style="padding: 0 8px;">
+                                                                <p style="margin: 0;"><a target="_blank"
+                                                                        href="https://infai.org/das-institut/impressum/"
+                                                                        style="color: white;">Impressum</a></p>
+                                                            </td>
+                                                            <td style="padding: 0 8px;">
+                                                                <p style="margin: 0;"><a target="_blank"
+                                                                        href="https://infai.org/datenschutzerklaerung-2/"
+                                                                        style="color: white;">Datenschutzerklärung</a>
+                                                                </p>
+                                                            </td>
+                                                            <td style="padding: 0 8px;">
+                                                                <p style="margin: 0;"><a
+                                                                        href="mailto:schlecht@infai.org,elisa.mueller@uni-leipzig.de"
+                                                                        style="color: white;">Kontaktiere uns</a></p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!--[if gte mso 9]>
+                                </v:textbox>
+                            </v:rect>
+                            <![endif]-->
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

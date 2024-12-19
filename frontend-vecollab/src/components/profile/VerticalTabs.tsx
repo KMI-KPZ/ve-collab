@@ -3,6 +3,7 @@ import VerticalTab from './VerticalTab';
 
 interface TabsProps {
     children: JSX.Element[];
+    isNoAuthPreview?: boolean;
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -10,11 +11,13 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         super(props);
 
         this.state = {
-            activeTab: this.props.children[0].props.tabname,
+            activeTab: this.props.children[0].props.tabid,
         };
     }
 
     onClickTabItem = (tab: string) => {
+        if (this.props.isNoAuthPreview) return;
+
         this.setState({ activeTab: tab });
     };
 
@@ -34,8 +37,10 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                                 <VerticalTab
                                     activeTab={activeTab}
                                     key={child.props.tabname}
+                                    tabid={child.props.tabid}
                                     tabname={child.props.tabname}
                                     onClick={onClickTabItem}
+                                    isNoAuthPreview={this.props.isNoAuthPreview}
                                 />
                             );
                         })}
@@ -44,7 +49,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                 <div className={'w-3/4 mx-14'}>
                     {/* tab content wrapper*/}
                     {children.map((child) => {
-                        if (child.props.tabname !== activeTab) return undefined;
+                        if (child.props.tabid !== activeTab) return undefined;
                         return child.props.children;
                     })}
                 </div>

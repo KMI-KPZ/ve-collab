@@ -10,12 +10,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Socket } from 'socket.io-client';
+import { GetStaticPropsContext } from 'next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     socket: Socket;
 }
 
 AdminDashboard.auth = true;
+AdminDashboard.autoForward = true;
 export default function AdminDashboard({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
@@ -63,76 +67,97 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
     }
 
     return (
-        <WhiteBox>
-            <VerticalTabs>
-                <div tabname="Posts">
-                    <div className="h-screen overflow-y-auto">
-                        <Timeline socket={socket} userIsAdmin={true} adminDashboard={true} />
+        <>
+            <CustomHead pageTitle={'admin'} pageSlug={'admin'} />
+            <WhiteBox>
+                <VerticalTabs>
+                    <div tabid="posts" tabname="Posts">
+                        <div className="h-screen overflow-y-auto">
+                            <Timeline socket={socket} userIsAdmin={true} adminDashboard={true} />
+                        </div>
                     </div>
-                </div>
-                <div tabname="VE-Pläne">
-                    <div className="h-screen overflow-y-auto">
-                        {isLoading && <LoadingAnimation />}
-                        <ul className="divide-y">
-                            {plans
-                            .sort((a, b) => {return (new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())})
-                            .map((plan) => (
-                                <li className="py-2" key={plan._id}>
-                                    <div className="flex">
-                                        <div className="mx-2">
-                                            <Link
-                                                href={`/plan/${plan._id}`}
-                                                target="_blank"
-                                                className="text-xl font-bold leading-tight text-gray-800"
-                                            >
-                                                {plan.name}
-                                            </Link>
-                                            <Link
-                                                href={`/profile?username=${plan.author}`}
-                                                target="_blank"
-                                            >
-                                                <div className="text-md text-gray-500">
-                                                    {userProfileSnippets?.find(
-                                                        (snippet) =>
-                                                            snippet.username === plan.author.username
-                                                    )?.first_name +
-                                                        ' ' +
-                                                        userProfileSnippets?.find(
-                                                            (snippet) =>
-                                                                snippet.username === plan.author.username
-                                                        )?.last_name}
+                    <div tabid="plans" tabname="VE-Pläne">
+                        <div className="h-screen overflow-y-auto">
+                            {isLoading && <LoadingAnimation />}
+                            <ul className="divide-y">
+                                {plans
+                                    .sort((a, b) => {
+                                        return (
+                                            new Date(b.last_modified).getTime() -
+                                            new Date(a.last_modified).getTime()
+                                        );
+                                    })
+                                    .map((plan) => (
+                                        <li className="py-2" key={plan._id}>
+                                            <div className="flex">
+                                                <div className="mx-2">
+                                                    <Link
+                                                        href={`/plan/${plan._id}`}
+                                                        target="_blank"
+                                                        className="text-xl font-bold leading-tight text-gray-800"
+                                                    >
+                                                        {plan.name}
+                                                    </Link>
+                                                    <Link
+                                                        href={`/profile?username=${plan.author}`}
+                                                        target="_blank"
+                                                    >
+                                                        <div className="text-md text-gray-500">
+                                                            {userProfileSnippets?.find(
+                                                                (snippet) =>
+                                                                    snippet.username ===
+                                                                    plan.author.username
+                                                            )?.first_name +
+                                                                ' ' +
+                                                                userProfileSnippets?.find(
+                                                                    (snippet) =>
+                                                                        snippet.username ===
+                                                                        plan.author.username
+                                                                )?.last_name}
+                                                        </div>
+                                                        <div className="text-md text-gray-500">
+                                                            {plan.author.first_name}{' '}
+                                                            {plan.author.last_name}
+                                                        </div>
+                                                    </Link>
                                                 </div>
-                                                <div className="text-md text-gray-500">
-                                                    {plan.author.first_name} {plan.author.last_name}
-                                                </div>
-                                            </Link>
-                                        </div>
-                                        <div className="mx-2 flex items-end">
-                                            <div>
-                                                <div className="flex">
-                                                    <p className="text-md text-gray-500 mx-2">
-                                                        Erstellt:
-                                                    </p>
-                                                    <Timestamp
-                                                        timestamp={plan.creation_timestamp}
-                                                    />
-                                                </div>
-                                                <div className="flex">
-                                                    <p className="text-md text-gray-500 mx-2">
-                                                        Zuletzt bearbeitet:
-                                                    </p>
+                                                <div className="mx-2 flex items-end">
+                                                    <div>
+                                                        <div className="flex">
+                                                            <p className="text-md text-gray-500 mx-2">
+                                                                Erstellt:
+                                                            </p>
+                                                            <Timestamp
+                                                                timestamp={plan.creation_timestamp}
+                                                            />
+                                                        </div>
+                                                        <div className="flex">
+                                                            <p className="text-md text-gray-500 mx-2">
+                                                                Zuletzt bearbeitet:
+                                                            </p>
 
-                                                    <Timestamp timestamp={plan.last_modified} />
+                                                            <Timestamp
+                                                                timestamp={plan.last_modified}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                                        </li>
+                                    ))}
+                            </ul>
+                        </div>
                     </div>
-                </div>
-            </VerticalTabs>
-        </WhiteBox>
+                </VerticalTabs>
+            </WhiteBox>
+        </>
     );
+}
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+    return {
+        props: {
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+        },
+    };
 }

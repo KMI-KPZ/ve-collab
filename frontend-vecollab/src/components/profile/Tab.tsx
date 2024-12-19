@@ -2,37 +2,43 @@ import { Component } from 'react';
 
 interface TabProps {
     activeTab: string;
+    tabid: string;
     tabname: string;
     children?: JSX.Element | JSX.Element[];
-    onClick(tabname?: string): void;
+    onClick(tabid?: string): void;
+    isNoAuthPreview?: boolean;
 }
 
 class Tab extends Component<TabProps, {}> {
     onClick = () => {
-        const { tabname, onClick } = this.props;
-        onClick(tabname);
+        const { tabid, onClick } = this.props;
+        onClick(tabid);
     };
 
     render(): JSX.Element {
         const {
             onClick,
-            props: { activeTab, tabname },
+            props: { activeTab, tabid, tabname, isNoAuthPreview },
         } = this;
 
-        return activeTab == tabname ? (
+        return activeTab == tabid ? (
             <button
-                className={
-                    'px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900 bg-ve-collab-orange-light'
-                }
+                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 bg-ve-collab-orange-light ${
+                    isNoAuthPreview
+                        ? 'cursor-default'
+                        : 'cursor-pointer hover:border-ve-collab-orange'
+                }`}
                 onClick={onClick}
             >
                 {tabname}
             </button>
         ) : (
             <button
-                className={
-                    'px-3 mx-1 py-2 rounded-xl border border-white hover:border-ve-collab-orange font-bold text-slate-900'
-                }
+                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 ${
+                    isNoAuthPreview
+                        ? 'cursor-default'
+                        : 'cursor-pointer hover:border-ve-collab-orange'
+                }`}
                 onClick={onClick}
             >
                 {tabname}

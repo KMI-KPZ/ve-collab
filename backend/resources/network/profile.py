@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 from bson import ObjectId
 
 import gridfs
@@ -53,6 +53,7 @@ class Profiles:
             "educations": list,
             "work_experience": list,
             "ve_window": list,
+            "notification_settings": dict,
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
@@ -142,6 +143,12 @@ class Profiles:
             "educations": [],
             "work_experience": [],
             "ve_window": [],
+            "notification_settings": {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -201,6 +208,12 @@ class Profiles:
             "educations": [],
             "work_experience": [],
             "ve_window": [],
+            "notification_settings": {
+                "messages": "email",
+                "ve_invite": "email",
+                "group_invite": "email",
+                "system": "email",
+            },
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -597,7 +610,7 @@ class Profiles:
         # refactor the institutions: only keep the name of the chosen institution as
         # "institution" and discard "institutions" and "chosen_institution_id"
         for profile in profiles:
-            profile["institution"] = "" # default empty string
+            profile["institution"] = ""  # default empty string
             for institution in profile["institutions"]:
                 if institution["_id"] == profile["chosen_institution_id"]:
                     profile["institution"] = institution["name"]
@@ -644,3 +657,38 @@ class Profiles:
             {"ve_window.plan_id": plan_id},
             {"$pull": {"ve_window": {"plan_id": plan_id}}},
         )
+
+    def get_notification_setting(
+        self,
+        username: str,
+        setting: Literal["messages", "ve_invite", "group_invite", "system"],
+    ) -> str:
+        """
+        Returns the notification setting for the given user and the specified setting.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+
+        try:
+            result = self.get_profile(
+                username, projection={"notification_settings": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        return result["notification_settings"][setting]
+
+    def get_all_notification_settings(self, username) -> Dict:
+        """
+        Returns all notification settings for the given user.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+        try:
+            result = self.get_profile(
+                username, projection={"notification_settings": True}
+            )
+        except ProfileDoesntExistException:
+            raise
+
+        return result["notification_settings"]

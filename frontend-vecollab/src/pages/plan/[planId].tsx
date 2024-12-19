@@ -10,14 +10,18 @@ import { PlanSummary } from '@/components/planSummary/PlanSummary';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { GetServerSidePropsContext } from 'next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 Plan.auth = true;
+Plan.autoForward = true;
 export default function Plan() {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
     const router = useRouter();
-    const { data: plan, isLoading } = useGetPlanById(router.query.planId as string);
+    const planId = router.query.planId as string;
+    const { data: plan, isLoading } = useGetPlanById(planId);
 
     const username = session?.user.preferred_username;
 
@@ -41,6 +45,7 @@ export default function Plan() {
                 <LoadingAnimation />
             ) : (
                 <>
+                    <CustomHead pageTitle={`${plan?.name}`} pageSlug={`plan/${planId}`} />
                     <div className="mb-6 mt-12">
                         <div className={'flex justify-between font-bold mb-2'}>
                             <h1 className="text-3xl font-bold text-slate-650">{plan.name}</h1>
@@ -49,7 +54,7 @@ export default function Plan() {
                                     <>
                                         {plan.write_access.includes(username) && (
                                             <ButtonLightBlue
-                                                classNameExtend="text-nowrap"
+                                                className="text-nowrap"
                                                 onClick={() =>
                                                     router.push({
                                                         pathname: '/ve-designer/name',
@@ -63,7 +68,7 @@ export default function Plan() {
                                     </>
                                 )}
                                 <ButtonLightBlue
-                                    classNameExtend="text-nowrap"
+                                    className="text-nowrap"
                                     onClick={() => {
                                         router.push({
                                             pathname: `/api/pdf-plan`,
@@ -85,7 +90,7 @@ export default function Plan() {
                         </div>
                     </div>
                     <div className="flex w-full">
-                        <PlanSummary plan={plan} openAllBoxes={false} isSingleView={true} />
+                        <PlanSummary plan={plan} openAllBoxes={true} isSingleView={true} />
                     </div>
                 </>
             )}
@@ -93,7 +98,7 @@ export default function Plan() {
     );
 }
 
-export async function getServerSideProps({ locale }: { locale: any }) {
+export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
             ...(await serverSideTranslations(locale ?? 'en', ['common'])),

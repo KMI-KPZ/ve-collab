@@ -1,5 +1,12 @@
-import { PlanPreview } from "../planner/plannerInterfaces";
-import { Course, Education, Institution, VEWindowItem, WorkExperience } from "../profile/profileInterfaces";
+import { PlanPreview } from '../planner/plannerInterfaces';
+import {
+    Course,
+    Education,
+    Institution,
+    NotificationSettings,
+    VEWindowItem,
+    WorkExperience,
+} from '../profile/profileInterfaces';
 
 export interface BackendUserSnippet {
     username: string;
@@ -17,12 +24,14 @@ export interface BackendProfileSnippetsResponse {
 export interface BackendUser {
     user_id: string;
     username: string;
-    email: string;
+    first_name: string;
+    last_name: string;
     role: string;
     followers: string[];
     follows: string[];
     spaces: string[];
     profile: BackendProfile;
+    profile_pic: string;
 }
 
 export interface BackendProfile {
@@ -53,8 +62,8 @@ export interface BackendProfile {
     ve_ready: boolean;
     ve_window: VEWindowItem[];
     work_experience: WorkExperience[];
+    notification_settings: NotificationSettings;
 }
-
 
 export interface BackendSearchResponse {
     status: number;
@@ -77,14 +86,19 @@ export interface BackendChatMessage {
     recipients?: string[];
     message: string;
     creation_date: string;
-    send_states: Record<string, string>;
+    send_states: [
+        {
+            username: string;
+            send_state: 'sent' | 'pending' | 'acknowledged';
+        }
+    ];
 }
 
 export interface BackendFileSnippet {
-    author: string,
-    file_id: string,
-    file_name: string,
-    manually_uploaded: boolean,
+    author: string;
+    file_id: string;
+    file_name: string;
+    manually_uploaded: boolean;
 }
 
 export interface BackendGroup {
@@ -102,13 +116,18 @@ export interface BackendGroup {
 }
 
 export interface BackendGroupACLEntry {
-    username: string,
-    group: string,
-    read_timeline: boolean,
-    comment: boolean,
-    post: boolean,
-    read_files: boolean,
-    write_files: boolean,
+    username: string;
+    group: string;
+    read_timeline: boolean;
+    comment: boolean;
+    post: boolean;
+    read_files: boolean;
+    write_files: boolean;
+}
+
+export interface BackendUserACLEntry {
+    role: string;
+    create_space: boolean;
 }
 
 export interface BackendPostAuthor {
@@ -122,7 +141,7 @@ export interface BackendPostComment {
     _id: string;
     author: BackendPostAuthor;
     creation_date: string;
-    pinned: boolean
+    pinned: boolean;
     text: string;
 }
 

@@ -12,17 +12,21 @@ import EditEducationInformation from '@/components/profile/EditEducationInformat
 import EditWorkExperienceInformation from '@/components/profile/EditWorkExperienceInformation';
 import {
     Education,
+    NotificationSettings,
+    OptionLists,
     PersonalInformation,
     ResearchAndTeachingInformation,
     VEInformation,
     VEWindowItem,
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
-import EditVisibilitySettings from '@/components/profile/EditVisibilitySettings';
+import EditSettings from '@/components/profile/EditSettings';
 import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
-import { DropdownList } from '@/interfaces/dropdowns';
 import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next';
+import { useTranslation } from 'next-i18next';
+import CustomHead from '@/components/metaData/CustomHead';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -89,13 +93,22 @@ const defaultVeWindowItems: VEWindowItem[] = [
     },
 ];
 
+const defaultNotificationSettings: NotificationSettings = {
+    messages: 'email',
+    ve_invite: 'email',
+    group_invite: 'email',
+    system: 'email',
+};
+
 interface Props {
-    dropdowns: DropdownList;
-    languageKeys: string[];
+    optionLists: OptionLists;
 }
 
 EditProfile.auth = true;
-export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Element {
+EditProfile.autoForward = true;
+export default function EditProfile({ optionLists }: Props): JSX.Element {
+    const { t } = useTranslation(['community', 'common']);
+
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>(
         defaultPersonalInformation
     );
@@ -108,6 +121,9 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
     const [workExperience, setWorkExperience] = useState<WorkExperience[]>(defaultWorkExperience);
 
     const [veWindowItems, setVeWindowItems] = useState<VEWindowItem[]>(defaultVeWindowItems);
+    const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(
+        defaultNotificationSettings
+    );
 
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(false);
@@ -129,6 +145,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
         if (educations !== defaultEducations) return;
         if (workExperience !== defaultWorkExperience) return;
         if (veWindowItems !== defaultVeWindowItems) return;
+        if (notificationSettings !== defaultNotificationSettings) return;
 
         setPersonalInformation({
             firstName: userInfo.profile.first_name,
@@ -166,6 +183,12 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                 description: elem.description,
             }))
         );
+        setNotificationSettings({
+            messages: userInfo.profile.notification_settings.messages,
+            ve_invite: userInfo.profile.notification_settings.ve_invite,
+            group_invite: userInfo.profile.notification_settings.group_invite,
+            system: userInfo.profile.notification_settings.system,
+        });
     }, [
         session,
         isLoading,
@@ -178,6 +201,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
         educations,
         workExperience,
         veWindowItems,
+        notificationSettings,
     ]);
 
     /*
@@ -216,6 +240,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                     description: elem.description,
                 })),
                 excluded_from_matching: excludedFromMatching,
+                notification_settings: notificationSettings,
             },
             session?.accessToken
         );
@@ -266,6 +291,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
 
     return (
         <>
+            <CustomHead pageTitle={t('common:edit_profile_title')} pageSlug={'profile/edit'} />
             <div className={'flex justify-center'}>
                 <WhiteBox>
                     <div className={'w-[60rem]'}>
@@ -273,18 +299,17 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                             <LoadingAnimation />
                         ) : (
                             <VerticalTabs>
-                                <div tabname="Stammdaten">
+                                <div tabid="Stammdaten" tabname={t('general')}>
                                     <EditPersonalInformation
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
-                                        dropdowns={dropdowns}
-                                        languageKeys={languageKeys}
+                                        optionLists={optionLists}
                                     />
                                 </div>
-                                <div tabname="VE-Info">
+                                <div tabid="VE-Info" tabname={t('ve_info')}>
                                     <EditVEInfo
                                         veInformation={veInformation}
                                         setVeInformation={setVeInformation}
@@ -293,10 +318,10 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
-                                        dropdowns={dropdowns}
+                                        optionLists={optionLists}
                                     />
                                 </div>
-                                <div tabname="Lehre & Forschung">
+                                <div tabid="Lehre & Forschung" tabname={t('research_and_teaching')}>
                                     <EditResearchAndTeachingInformation
                                         researchAndTeachingInformation={
                                             researchandTeachingInformation
@@ -309,7 +334,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Ausbildung">
+                                <div tabid="Ausbildung" tabname={t('education')}>
                                     <EditEducationInformation
                                         educations={educations}
                                         setEducations={setEducations}
@@ -318,7 +343,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Berufserfahrung">
+                                <div tabid="Berufserfahrung" tabname={t('work_experience')}>
                                     <EditWorkExperienceInformation
                                         workExperience={workExperience}
                                         setWorkExperience={setWorkExperience}
@@ -327,7 +352,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="VE-Schaufenster">
+                                <div tabid="VE-Schaufenster" tabname={t('ve_window')}>
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -336,13 +361,15 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabname="Sichtbarkeiten">
-                                    <EditVisibilitySettings
+                                <div tabid="Einstellungen" tabname={t('settings')}>
+                                    <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                         excludedFromMatching={excludedFromMatching}
                                         setExcludedFromMatching={setExcludedFromMatching}
+                                        notificationSettings={notificationSettings}
+                                        setNotificationSettings={setNotificationSettings}
                                     />
                                 </div>
                             </VerticalTabs>
@@ -351,7 +378,7 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
                 </WhiteBox>
                 {successPopupOpen && (
                     <Alert
-                        message="Gespeichert"
+                        message={t('saved')}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}
                     />
@@ -361,197 +388,175 @@ export default function EditProfile({ dropdowns, languageKeys }: Props): JSX.Ele
     );
 }
 
-export async function getStaticProps({ locale }: { locale: any }) {
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
     // prepare select dropdown options
     const optionLists = {
-        veInterests: [
-            'Best Practice-Beispiele',
+        veInterestsKeys: [
+            'Good Practice Examples',
             'Evaluation',
-            'Fachspezifische Umsetzungsmöglichkeiten',
-            'Forschung',
-            'Fördermöglichkeiten',
-            'Implementierung',
-            'Methoden und Aufgabenformate',
-            'Netzwerke',
-            'Theoretische Grundlagen und Ansätze',
-            '(digitale) Tools',
+            'Subject-specific Implementation Options',
+            'Research',
+            'Funding Opportunities',
+            'Implementation',
+            'Methods and Task Formats',
+            'Networks',
+            'Theoretical Foundations and Approaches',
+            '(Digital) Tools',
         ],
-        veGoals: [
-            'Förderung globalen Lernens',
-            'Förderung kommunikativer Kompetenzen',
-            'Förderung fachlicher Kompetenzen',
-            'Förderung (fremd)sprachlicher Kompetenzen',
-            'Interdisziplinärer Austausch',
-            'Internationale Zusammenarbeit',
+        veGoalsKeys: [
+            'Promotion of Global Learning',
+            'Promotion of Communicative Competences',
+            'Promotion of Subject-specific Competences',
+            'Promotion of (Foreign) Language Competences',
+            'Interdisciplinary Exchange',
+            'International Cooperation',
         ],
-        preferredFormat: ['synchron', 'asynchron', 'synchron und asynchron'],
-        expertise: [
-            'Agrar- und Forstwissenschaft',
-            'Allgemeine Naturwissenschaft',
-            'Amerikanistik',
-            'Anglistik',
-            'Archäologie',
-            'Architektur, Bauingenieur- und Vermessungswesen',
-            'Außereuropäische Sprachen und Literaturen',
-            'Bildungswissenschaften',
-            'Biologie',
-            'Biotechnologie',
-            'Buch- und Bibliothekswesen',
-            'Chemie',
-            'Deutsch als Fremd- und Zweitsprache',
-            'Elektrotechnik, Elektronik, Nachrichtentechnik',
-            'Energietechnik',
-            'Ernährungs- und Haushaltswissenschaft',
-            'Ethnologie',
-            'Fachdidaktik Englisch',
-            'Fachdidaktik romanische Sprachen',
-            'Gartenbau',
-            'Geographie',
-            'Geowissenschaften',
-            'Germanistik',
-            'Geschichte',
-            'Gesundheitswissenschaften',
-            'Indogermanistik',
-            'Ingenieurwissenschaften',
-            'Informatik',
-            'Informationswissenschaft',
-            'Klassische Philologie, Mittellateinische und Neugriechische Philologie',
-            'Kommunikationsdesign',
-            'Kulturwissenschaften',
-            'Kunstwissenschaften und Kunstgeschichte',
-            'Literaturwissenschaft',
-            'Maschinenbau',
-            'Mathematik',
-            'Medien- und Kommunikationswissenschaften',
-            'Medizin',
-            'Militärwissenschaft',
-            'Museologie',
-            'Musikwissenschaft',
-            'Natur- und Umweltschutz',
-            'Niederlandistik',
-            'Pädagogik',
-            'Pharmazie',
-            'Philosophie',
-            'Physik',
-            'Politologie',
-            'Psychologie',
-            'Rechtswissenschaft',
-            'Romanistik',
-            'Skandinavistik',
-            'Slavistik',
-            'Soziologie, empirische Sozialforschung, soziale Arbeit',
-            'Sportwissenschaft',
-            'Sprachwissenschaft',
-            'Sprechwissenschaft',
-            'Technik',
-            'Theologie und Religionswissenschaften',
-            'Übersetzen und Dolmetschen (Translationswissenschaft)',
-            'Werkstoffwissenschaften und Fertigungstechnik',
-            'Wirtschaftsingenieurwesen',
-            'Wirtschaftswissenschaften (BWL und VWL)',
+        preferredFormatKeys: ['synchronous', 'asynchronous', 'synchronous and asynchronous'],
+        expertiseKeys: [
+            'Agricultural and Forestry Sciences',
+            'General Natural Sciences',
+            'American Studies',
+            'English Studies',
+            'Archaeology',
+            'Architecture, Civil Engineering and Surveying',
+            'Non-European Languages and Literatures',
+            'Educational Sciences',
+            'Biology',
+            'Biotechnology',
+            'Book and Library Science',
+            'Chemistry',
+            'German as a Foreign and Second Language',
+            'Electrical Engineering, Electronics, Communications Engineering',
+            'Energy Engineering',
+            'Nutritional and Household Sciences',
+            'Ethnology',
+            'Subject-specific English Didactics',
+            'Subject-specific Romance Languages Didactics',
+            'Horticulture',
+            'Geography',
+            'Earth Sciences',
+            'German Studies',
+            'History',
+            'Health Sciences',
+            'Indo-Germanic Studies',
+            'Engineering',
+            'Computer Science',
+            'Information Science',
+            'Classical Philology, Medieval Latin and Modern Greek Philology',
+            'Communication Design',
+            'Cultural Studies',
+            'Art History and Art History',
+            'Literary Studies',
+            'Mechanical Engineering',
+            'Mathematics',
+            'Media and Communication Sciences',
+            'Medicine',
+            'Military Science',
+            'Museology',
+            'Musicology',
+            'Nature and Environmental Protection',
+            'Dutch Studies',
+            'Pedagogy',
+            'Pharmacy',
+            'Philosophy',
+            'Physics',
+            'Political Science',
+            'Psychology',
+            'Law',
+            'Romance Studies',
+            'Scandinavian Studies',
+            'Slavic Studies',
+            'Sociology, Empirical Social Research, Social Work',
+            'Sports Science',
+            'Linguistics',
+            'Speech Science',
+            'Technology',
+            'Theology and Religious Studies',
+            'Translation and Interpreting (Translation Studies)',
+            'Materials Science and Manufacturing Engineering',
+            'Industrial Engineering',
+            'Economics (Business Administration and Economics)',
+        ],
+        languageKeys: [
+            'Afrikaans',
+            'Albanian',
+            'Arabic',
+            'Armenian',
+            'Basque',
+            'Bengali',
+            'Bulgarian',
+            'Catalan',
+            'Cambodian',
+            'Chinese (Mandarin)',
+            'Croatian',
+            'Czech',
+            'Danish',
+            'Dutch',
+            'English',
+            'Estonian',
+            'Fiji',
+            'Finnish',
+            'French',
+            'Georgian',
+            'German',
+            'Greek',
+            'Gujarati',
+            'Hebrew',
+            'Hindi',
+            'Hungarian',
+            'Icelandic',
+            'Indonesian',
+            'Irish',
+            'Italian',
+            'Japanese',
+            'Javanese',
+            'Korean',
+            'Latin',
+            'Latvian',
+            'Lithuanian',
+            'Macedonian',
+            'Malay',
+            'Malayalam',
+            'Maltese',
+            'Maori',
+            'Marathi',
+            'Mongolian',
+            'Nepali',
+            'Norwegian',
+            'Persian',
+            'Polish',
+            'Portuguese',
+            'Punjabi',
+            'Quechua',
+            'Romanian',
+            'Russian',
+            'Samoan',
+            'Serbian',
+            'Slovak',
+            'Slovenian',
+            'Spanish',
+            'Swahili',
+            'Swedish',
+            'Tamil',
+            'Tatar',
+            'Telugu',
+            'Thai',
+            'Tibetan',
+            'Tonga',
+            'Turkish',
+            'Ukrainian',
+            'Urdu',
+            'Uzbek',
+            'Vietnamese',
+            'Welsh',
+            'Xhosa',
         ],
     };
-
-    // generate value/label options to directly pass them to the react-select components
-    const dropdowns = {
-        veInterests: optionLists.veInterests.map((elem) => ({
-            value: elem,
-            label: elem,
-        })),
-        veGoals: optionLists.veGoals.map((elem) => ({
-            value: elem,
-            label: elem,
-        })),
-        preferredFormat: optionLists.preferredFormat.map((elem) => ({
-            value: elem,
-            label: elem,
-        })),
-        expertise: optionLists.expertise.map((elem) => ({
-            value: elem,
-            label: elem,
-        })),
-    };
-
-    const languageKeys = [
-        'Afrikaans',
-        'Albanian',
-        'Arabic',
-        'Armenian',
-        'Basque',
-        'Bengali',
-        'Bulgarian',
-        'Catalan',
-        'Cambodian',
-        'Chinese (Mandarin)',
-        'Croatian',
-        'Czech',
-        'Danish',
-        'Dutch',
-        'English',
-        'Estonian',
-        'Fiji',
-        'Finnish',
-        'French',
-        'Georgian',
-        'German',
-        'Greek',
-        'Gujarati',
-        'Hebrew',
-        'Hindi',
-        'Hungarian',
-        'Icelandic',
-        'Indonesian',
-        'Irish',
-        'Italian',
-        'Japanese',
-        'Javanese',
-        'Korean',
-        'Latin',
-        'Latvian',
-        'Lithuanian',
-        'Macedonian',
-        'Malay',
-        'Malayalam',
-        'Maltese',
-        'Maori',
-        'Marathi',
-        'Mongolian',
-        'Nepali',
-        'Norwegian',
-        'Persian',
-        'Polish',
-        'Portuguese',
-        'Punjabi',
-        'Quechua',
-        'Romanian',
-        'Russian',
-        'Samoan',
-        'Serbian',
-        'Slovak',
-        'Slovenian',
-        'Spanish',
-        'Swahili',
-        'Swedish',
-        'Tamil',
-        'Tatar',
-        'Telugu',
-        'Thai',
-        'Tibetan',
-        'Tonga',
-        'Turkish',
-        'Ukrainian',
-        'Urdu',
-        'Uzbek',
-        'Vietnamese',
-        'Welsh',
-        'Xhosa',
-    ];
 
     return {
         props: {
-            dropdowns,
-            languageKeys,
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'designer'])),
+            optionLists,
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

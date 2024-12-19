@@ -1,10 +1,18 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText, getNodeByText } from '@/lib/backend';
+import {
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+    getNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { getClusterSlugByRouteQuery } from '../..';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import CustomHead from '@/components/metaData/CustomHead';
+import React from 'react';
+import { useTranslation } from 'next-i18next';
 
 interface Props {
     nodesOfCluster: INode[];
@@ -16,43 +24,55 @@ interface Props {
 // coming from landing page: category has been chosen, depending on categories, previews to the posts are shown on the left
 export default function PageCategorySelected(props: Props) {
     const router = useRouter();
+    const cluster = router.query.cluster as string;
+    const node = router.query.node as string;
+    const { t } = useTranslation('common');
 
     return (
-        <ContentWrapper
-            nodesOfCluster={props.nodesOfCluster}
-            contentChildren={
-                <div className='mt-10 p-10 text-center '>
-                    {props.lectionsOfNode.length > 0
-                    ? (
-                        <>
-                            <LoadingAnimation />
-                            <p className='mt-8'>
-                                Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies nicht funktioniert, klicken Sie bitte{' '}
-                                <a
-                                    className="underline text-ve-collab-blue"
-                                    href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
-                                >
-                                    hier
-                                </a>
-                            </p>
-                        </>
-                    ) : (
-                        <div className='italic'>Leider gibt es noch keine Inhalte für dieses Modul</div>
-                    )}
-                </div>
-            }
-        />
+        <>
+            <CustomHead
+                pageTitle={t('materials')}
+                pageSlug={`learning-material/${cluster}/${node}`}
+            />
+            <ContentWrapper
+                nodesOfCluster={props.nodesOfCluster}
+                contentChildren={
+                    <div className="mt-10 p-10 text-center ">
+                        {props.lectionsOfNode.length > 0 ? (
+                            <>
+                                <LoadingAnimation />
+                                <p className="mt-8">
+                                    Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies
+                                    nicht funktioniert, klicken Sie bitte{' '}
+                                    <a
+                                        className="underline text-ve-collab-blue"
+                                        href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
+                                    >
+                                        hier
+                                    </a>
+                                </p>
+                            </>
+                        ) : (
+                            <div className="italic">
+                                Leider gibt es noch keine Inhalte für dieses Modul
+                            </div>
+                        )}
+                    </div>
+                }
+            />
+        </>
     );
 }
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
     const currentNode = await getNodeByText(params?.node as string);
 
     if (!clusterSlug || !currentNode) {
-        return { notFound: true }
+        return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
     const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
@@ -61,10 +81,11 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (lectionsOfNode.length > 0) {
         return {
             redirect: {
-              destination: `/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
-              permanent: false,
+                destination: `/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
+                permanent: false,
+                ...(await serverSideTranslations(locale ?? 'en', ['common'])),
             },
-        }
+        };
     }
 
     return {
@@ -73,6 +94,7 @@ export const getServerSideProps: GetServerSideProps = async ({
             lectionsOfNode,
             clusterSlug,
             nodeSlug: currentNode.text,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };

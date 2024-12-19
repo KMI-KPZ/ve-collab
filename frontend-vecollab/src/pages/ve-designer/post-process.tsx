@@ -16,6 +16,7 @@ import { PostProcessSchema } from '../../zod-schemas/postProcessSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tooltip } from '@/components/common/Tooltip';
 import { FaRegQuestionCircle } from 'react-icons/fa';
+import CustomHead from '@/components/metaData/CustomHead';
 
 export interface EvaluationFile {
     file: File;
@@ -33,6 +34,7 @@ export interface LiteratureFile {
 
 interface FormValues {
     share: boolean;
+    sharePlanned: boolean;
     sharedReadOnly: boolean;
     abstract: string;
     veModel: string;
@@ -48,6 +50,7 @@ interface Props {
 }
 
 PostProcess.auth = true;
+PostProcess.noAuthPreview = <PostProcessNoAuthPreview />;
 export default function PostProcess({ socket }: Props) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -61,6 +64,7 @@ export default function PostProcess({ socket }: Props) {
         mode: 'onChange',
         resolver: zodResolver(PostProcessSchema),
         defaultValues: {
+            sharePlanned: false,
             share: false,
         },
     });
@@ -84,8 +88,13 @@ export default function PostProcess({ socket }: Props) {
             if (plan.is_good_practise !== null) {
                 methods.setValue('share', plan.is_good_practise);
             }
-            const is_good_practise_ro = typeof plan.is_good_practise_ro !== 'undefined'
-                ? plan.is_good_practise_ro : false
+            const is_good_practice_planned =
+                typeof plan.is_good_practise_planned !== 'undefined'
+                    ? plan.is_good_practise_planned
+                    : false;
+            methods.setValue('sharePlanned', is_good_practice_planned);
+            const is_good_practise_ro =
+                typeof plan.is_good_practise_ro !== 'undefined' ? plan.is_good_practise_ro : false;
             methods.setValue('sharedReadOnly', is_good_practise_ro);
             methods.setValue('abstract', plan.abstract as string);
             methods.setValue('veModel', plan.underlying_ve_model as string);
@@ -115,6 +124,7 @@ export default function PostProcess({ socket }: Props) {
             return {
                 abstract: plan.abstract,
                 share: plan.is_good_practise,
+                sharePlanned: is_good_practice_planned,
                 sharedReadOnly: is_good_practise_ro,
                 veModel: plan.underlying_ve_model,
                 reflection: plan.reflection,
@@ -146,11 +156,20 @@ export default function PostProcess({ socket }: Props) {
             }
         }
 
+        // if the user (re)set the sharePlanned to false, then also set share to false,
+        // since the field will be disabled
+        const is_good_practise = data.sharePlanned ? data.share : false;
+
         return [
             {
                 plan_id: router.query.plannerId,
                 field_name: 'is_good_practise',
-                value: data.share,
+                value: is_good_practise,
+            },
+            {
+                plan_id: router.query.plannerId,
+                field_name: 'is_good_practise_planned',
+                value: data.sharePlanned,
             },
             {
                 plan_id: router.query.plannerId,
@@ -235,7 +254,11 @@ export default function PostProcess({ socket }: Props) {
                     render={({ field: { ref, name, onBlur, onChange } }) => (
                         <>
                             <label
-                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                className={`inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg ${
+                                    methods.watch('sharePlanned') === true
+                                        ? 'hover:bg-opacity-60'
+                                        : ''
+                                }`}
                                 htmlFor={name}
                             >
                                 {t('common:add_file')}
@@ -257,6 +280,7 @@ export default function PostProcess({ socket }: Props) {
                                     });
                                 }}
                                 className="hidden"
+                                disabled={methods.watch('sharePlanned') === false}
                             />
                         </>
                     )}
@@ -275,7 +299,11 @@ export default function PostProcess({ socket }: Props) {
                     render={({ field: { ref, name, onBlur, value } }) => (
                         <>
                             <label
-                                className="inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg hover:bg-opacity-60"
+                                className={`inline-block cursor-pointer bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg ${
+                                    methods.watch('sharePlanned') === true
+                                        ? 'hover:bg-opacity-60'
+                                        : ''
+                                }`}
                                 htmlFor={name}
                             >
                                 {t('common:add_file_multiple')}
@@ -313,6 +341,7 @@ export default function PostProcess({ socket }: Props) {
                                         });
                                 }}
                                 className="hidden"
+                                disabled={methods.watch('sharePlanned') === false}
                                 multiple
                             />
                         </>
@@ -323,62 +352,90 @@ export default function PostProcess({ socket }: Props) {
     }
 
     return (
-        <Wrapper
-            socket={socket}
-            title={t('post-process.title')}
-            subtitle={t('post-process.subtitle')}
-            methods={methods}
-            nextpage="/plans"
-            nextpageBtnLabel={t('post-process.submit')}
-            preventToLeave={false}
-            stageInMenu="post-process"
-            planerDataCallback={setPlanerData}
-            submitCallback={onSubmit}
-        >
-            <div className="py-6 divide-y">
-                <div className="flex flex-col justify-between mb-3">
-                    <div>
-                        <p className="font-medium">{t('post-process.text_1')}</p>
-                        <p>{t('post-process.text_2')}</p>
-                        <p>
-                            ({t('post-process.license') + ' '}
-                            <Link
-                                className="underline text-ve-collab-blue"
-                                href={'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'}
-                            >
-                                CC-BY-NC-ND 4.0
-                            </Link>
-                            )
-                        </p>
+        <>
+            <CustomHead
+                pageTitle={t('post-process.title')}
+                pageSlug={'ve-designer/post-process'}
+                pageDescription={t('post-process.page_description')}
+            />
+            <Wrapper
+                socket={socket}
+                title={t('post-process.title')}
+                subtitle={t('post-process.subtitle')}
+                methods={methods}
+                nextpage="/plans"
+                nextpageBtnLabel={t('post-process.submit')}
+                preventToLeave={false}
+                stageInMenu="post-process"
+                planerDataCallback={setPlanerData}
+                submitCallback={onSubmit}
+            >
+                <div className="py-6 divide-y">
+                    <div className="flex flex-col justify-between mb-3">
+                        <div>
+                            <p className="font-medium">{t('post-process.text_1')}</p>
+                            <p>{t('post-process.text_2')}</p>
+                            <p>
+                                ({t('post-process.license') + ' '}
+                                <Link
+                                    className="underline text-ve-collab-blue"
+                                    href={
+                                        'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'
+                                    }
+                                    target="_blank"
+                                >
+                                    CC-BY-NC-ND 4.0
+                                </Link>
+                                )
+                            </p>
+                            <p className="mt-2 text-sm text-gray-600">
+                                <Trans
+                                    i18nKey="designer:post-process.disclaimer_not_yet_good_practice1"
+                                    components={{ bold: <strong />, underline: <u /> }}
+                                />
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_not_yet_good_practice2')}
+                            </p>
+                        </div>
+                        <Controller
+                            control={methods.control}
+                            name={'sharePlanned'}
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <div className="flex w-40 mb-4">
+                                    <label className="px-2 py-2">{t('common:yes')}</label>
+                                    <input
+                                        type="radio"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        onBlur={onBlur} // notify when input is touched
+                                        onChange={() => {
+                                            onChange(true);
+                                        }} // send value to hook form
+                                        checked={value === true}
+                                    />
+                                    <label className="px-2 py-2">{t('common:no')}</label>
+                                    <input
+                                        type="radio"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        onBlur={onBlur} // notify when input is touched
+                                        onChange={() => {
+                                            onChange(false);
+                                            methods.setValue('share', false); // side effect, if i revoke the intention to share (sharePlanned), then automatically set share to false, since the field will be disabled
+                                        }} // send value to hook form
+                                        checked={value === false}
+                                    />
+                                </div>
+                            )}
+                        />
                     </div>
-                    <Controller
-                        control={methods.control}
-                        name={'share'}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <div className="flex w-40 mb-4">
-                                <label className="px-2 py-2">{t('common:yes')}</label>
-                                <input
-                                    type="radio"
-                                    className="border border-gray-400 rounded-lg p-2"
-                                    onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(true)} // send value to hook form
-                                    checked={value === true}
-                                />
-                                <label className="px-2 py-2">{t('common:no')}</label>
-                                <input
-                                    type="radio"
-                                    className="border border-gray-400 rounded-lg p-2"
-                                    onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(false)} // send value to hook form
-                                    checked={value === false}
-                                />
-                            </div>
-                        )}
-                    />
-                </div>
 
-                {methods.watch('share') == true && (
-                    <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
+                    <ol
+                        className={`mt-4 mb-3 pt-6 px-6 list-decimal list-outside marker:font-bold ${
+                            methods.watch('sharePlanned') === true
+                                ? ''
+                                : 'opacity-20 [&_*]:cursor-not-allowed'
+                        }`}
+                    >
                         <li className="mb-4 mt-2">
                             <p>{t('post-process.access_on_plan')}</p>
                             <Controller
@@ -390,17 +447,26 @@ export default function PostProcess({ socket }: Props) {
                                             <label>
                                                 <input
                                                     type="radio"
-                                                    name='sharedReadOnly-false'
+                                                    name="sharedReadOnly-false"
                                                     className="border border-gray-400 rounded-lg p-2 mr-2"
                                                     onBlur={onBlur} // notify when input is touched
                                                     onChange={() => onChange(false)} // send value to hook form
                                                     checked={value === false}
+                                                    disabled={
+                                                        methods.watch('sharePlanned') === false
+                                                    }
                                                 />
                                                 {t('post-process.read_and_import')}
-                                                <Tooltip tooltipsText={
-                                                    <Trans i18nKey="post-process.read_and_import_tooltip" ns='designer' components={{ 1: <br /> }} />
-                                                }>
-                                                    <FaRegQuestionCircle className='inline m-1 text-ve-collab-blue' />
+                                                <Tooltip
+                                                    tooltipsText={
+                                                        <Trans
+                                                            i18nKey="post-process.read_and_import_tooltip"
+                                                            ns="designer"
+                                                            components={{ 1: <br /> }}
+                                                        />
+                                                    }
+                                                >
+                                                    <FaRegQuestionCircle className="inline m-1 text-ve-collab-blue" />
                                                 </Tooltip>
                                             </label>
                                         </div>
@@ -412,19 +478,27 @@ export default function PostProcess({ socket }: Props) {
                                                     onBlur={onBlur} // notify when input is touched
                                                     onChange={() => onChange(true)} // send value to hook form
                                                     checked={value === true}
+                                                    disabled={
+                                                        methods.watch('sharePlanned') === false
+                                                    }
                                                 />
-                                                 {t('post-process.read_only')}
-                                                <Tooltip tooltipsText={
-                                                    <Trans i18nKey="post-process.read_only_tooltip" ns='designer' components={{ 1: <br /> }} />
-                                                }>
-                                                    <FaRegQuestionCircle className='inline m-1  text-ve-collab-blue' />
+                                                {t('post-process.read_only')}
+                                                <Tooltip
+                                                    tooltipsText={
+                                                        <Trans
+                                                            i18nKey="post-process.read_only_tooltip"
+                                                            ns="designer"
+                                                            components={{ 1: <br /> }}
+                                                        />
+                                                    }
+                                                >
+                                                    <FaRegQuestionCircle className="inline m-1  text-ve-collab-blue" />
                                                 </Tooltip>
                                             </label>
                                         </div>
                                     </div>
                                 )}
                             />
-
                         </li>
                         <li className="mb-4 mt-2">
                             <p>{t('post-process.abstract_task')}</p>
@@ -432,6 +506,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
                                 placeholder={t('post-process.abstract_placeholder')}
+                                disabled={methods.watch('sharePlanned') === false}
                                 {...methods.register('abstract')}
                             />
                         </li>
@@ -448,6 +523,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
                                 placeholder={t('post-process.reflection_placeholder')}
+                                disabled={methods.watch('sharePlanned') === false}
                                 {...methods.register('reflection')}
                             />
                             {methods.formState.errors?.reflection && (
@@ -489,7 +565,12 @@ export default function PostProcess({ socket }: Props) {
                                                 setChangedEvFile(true);
                                                 methods.setValue('evaluationFile', undefined);
                                             }}
-                                            className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                            disabled={methods.watch('sharePlanned') === false}
+                                            className={`ml-2 p-2 rounded-full ${
+                                                methods.watch('sharePlanned') === true
+                                                    ? 'hover:bg-ve-collab-blue-light'
+                                                    : ''
+                                            }`}
                                             title="Datei Entfernen"
                                         >
                                             <IoMdClose />
@@ -532,6 +613,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="border border-gray-400 rounded-lg w-full p-3 mt-2"
                                 rows={5}
                                 placeholder={t('post-process.ve_model_placeholder')}
+                                disabled={methods.watch('sharePlanned') === false}
                                 {...methods.register('veModel')}
                             />
                         </li>
@@ -546,6 +628,7 @@ export default function PostProcess({ socket }: Props) {
                                 className="border border-gray-400 rounded-lg w-full p-4 my-4"
                                 rows={5}
                                 placeholder={t('post-process.literature_placeholder')}
+                                disabled={methods.watch('sharePlanned') === false}
                                 {...methods.register('literature')}
                             />
                             {methods.formState.errors?.literature && (
@@ -585,7 +668,14 @@ export default function PostProcess({ socket }: Props) {
                                                             ]);
                                                             rmLitFile(index);
                                                         }}
-                                                        className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                                        disabled={
+                                                            methods.watch('sharePlanned') === false
+                                                        }
+                                                        className={`ml-2 p-2 rounded-full ${
+                                                            methods.watch('sharePlanned') === true
+                                                                ? 'hover:bg-ve-collab-blue-light'
+                                                                : ''
+                                                        }`}
                                                         title={t('common:delete_file')}
                                                     >
                                                         <IoMdClose />
@@ -614,9 +704,259 @@ export default function PostProcess({ socket }: Props) {
                             {literatureFileSelector()}
                         </li>
                     </ol>
-                )}
-            </div>
-        </Wrapper>
+                    <div
+                        className={`flex flex-col justify-between mt-4 pt-6 ${
+                            methods.watch('sharePlanned') === true
+                                ? ''
+                                : 'opacity-50 [&_*]:cursor-not-allowed'
+                        }`}
+                    >
+                        <div>
+                            <p className="font-medium">{t('post-process.publish_now')}</p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice1')}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice2')}
+                            </p>
+                        </div>
+                        <Controller
+                            control={methods.control}
+                            name={'share'}
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <div className="flex w-40 mb-4">
+                                    <label className="px-2 py-2">{t('common:yes')}</label>
+                                    <input
+                                        type="radio"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        onBlur={onBlur} // notify when input is touched
+                                        onChange={() => onChange(true)} // send value to hook form
+                                        disabled={methods.watch('sharePlanned') === false}
+                                        checked={value === true}
+                                    />
+                                    <label className="px-2 py-2">{t('common:no')}</label>
+                                    <input
+                                        type="radio"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        onBlur={onBlur} // notify when input is touched
+                                        onChange={() => onChange(false)} // send value to hook form
+                                        disabled={methods.watch('sharePlanned') === false}
+                                        checked={value === false}
+                                    />
+                                </div>
+                            )}
+                        />
+                    </div>
+                </div>
+            </Wrapper>
+        </>
+    );
+}
+
+export function PostProcessNoAuthPreview() {
+    const { t } = useTranslation(['designer', 'common']);
+
+    const methods = useForm<FormValues>({});
+
+    return (
+        <div className="opacity-55">
+            <CustomHead
+                pageTitle={t('post-process.title')}
+                pageSlug={'ve-designer/post-process'}
+                pageDescription={t('post-process.page_description')}
+            />
+            <Wrapper
+                socket={undefined}
+                title={t('post-process.title')}
+                subtitle={t('post-process.subtitle')}
+                methods={methods}
+                nextpage="/plans"
+                nextpageBtnLabel={t('post-process.submit')}
+                preventToLeave={false}
+                stageInMenu="post-process"
+                planerDataCallback={() => ({})}
+                submitCallback={() => {}}
+                isNoAuthPreview
+            >
+                <div className="py-6 divide-y">
+                    <div className="flex flex-col justify-between mb-3">
+                        <div>
+                            <p className="font-medium">{t('post-process.text_1')}</p>
+                            <p>{t('post-process.text_2')}</p>
+                            <p>
+                                ({t('post-process.license') + ' '}
+                                <Link
+                                    className="underline text-ve-collab-blue"
+                                    href={
+                                        'https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de'
+                                    }
+                                    aria-disabled
+                                >
+                                    CC-BY-NC-ND 4.0
+                                </Link>
+                                )
+                            </p>
+                        </div>
+
+                        <div className="flex w-40 mb-4">
+                            <label className="px-2 py-2">{t('common:yes')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                                checked
+                            />
+                            <label className="px-2 py-2">{t('common:no')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                            />
+                        </div>
+                    </div>
+
+                    <ol className="mt-4 pt-6 px-6 list-decimal list-outside marker:font-bold">
+                        <li className="mb-4 mt-2">
+                            <p>{t('post-process.access_on_plan')}</p>
+
+                            <div className="flex flex-col mb-4">
+                                <div>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            name="sharedReadOnly-false"
+                                            className="border border-gray-400 rounded-lg p-2 mr-2"
+                                            disabled
+                                        />
+                                        {t('post-process.read_and_import')}
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            className="border border-gray-400 rounded-lg p-2 mr-2"
+                                            disabled
+                                        />
+                                        {t('post-process.read_only')}
+                                    </label>
+                                </div>
+                            </div>
+                        </li>
+                        <li className="mb-4 mt-2">
+                            <p>{t('post-process.abstract_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.abstract_placeholder')}
+                                disabled
+                            />
+                        </li>
+
+                        <li className="mb-4">
+                            <p className="font-bold">{t('post-process.reflection')}</p>
+                            <p className="mb-1">{t('post-process.reflection_task_1')}</p>
+                            <p>{t('post-process.reflection_task_2')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.reflection_placeholder')}
+                                disabled
+                            />
+
+                            <>
+                                <label
+                                    className="inline-block cursor-default bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg"
+                                    htmlFor={'name'}
+                                >
+                                    {t('common:add_file')}
+                                </label>
+                                <input id={'name'} type="file" className="hidden" disabled />
+                            </>
+                        </li>
+                        <li className="mb-4">
+                            <p>
+                                {t('post-process.update_task_1')}
+                                <Link
+                                    className="underline text-ve-collab-blue"
+                                    href={{
+                                        pathname: '/ve-designer/step-names',
+                                    }}
+                                    target="_blank"
+                                    aria-disabled
+                                >
+                                    {t('common:here')}
+                                </Link>
+                                {t('post-process.update_task_2')}
+                            </p>
+                        </li>
+                        <li className="mb-4">
+                            <p>{t('post-process.ve_model_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-3 mt-2"
+                                rows={5}
+                                placeholder={t('post-process.ve_model_placeholder')}
+                                disabled
+                            />
+                        </li>
+                        <li className="mb-4">
+                            <p>{t('post-process.literature_task')}</p>
+                            <textarea
+                                className="border border-gray-400 rounded-lg w-full p-4 my-4"
+                                rows={5}
+                                placeholder={t('post-process.literature_placeholder')}
+                                disabled
+                            />
+
+                            <>
+                                <>
+                                    <label
+                                        className="inline-block cursor-default bg-ve-collab-blue text-white px-4 py-2 my-2 rounded-md shadow-lg"
+                                        htmlFor={'name'}
+                                    >
+                                        {t('common:add_file_multiple')}
+                                    </label>
+                                    <input
+                                        id={'name'}
+                                        type="file"
+                                        disabled
+                                        className="hidden"
+                                        multiple
+                                    />
+                                </>
+                            </>
+                        </li>
+                    </ol>
+                    <div className={`flex flex-col justify-between mt-4 pt-6`}>
+                        <div>
+                            <p className="font-medium">{t('post-process.publish_now')}</p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice1')}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                {t('post-process.disclaimer_now_good_practice2')}
+                            </p>
+                        </div>
+                        <div className="flex w-40 mb-4">
+                            <label className="px-2 py-2">{t('common:yes')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                                checked
+                            />
+                            <label className="px-2 py-2">{t('common:no')}</label>
+                            <input
+                                type="radio"
+                                className="border border-gray-400 rounded-lg p-2"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Wrapper>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+        </div>
     );
 }
 

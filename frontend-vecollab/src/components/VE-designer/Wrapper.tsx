@@ -53,7 +53,8 @@ interface Props {
                   value: any;
               }[]
           >;
-    socket: Socket;
+    socket?: Socket;
+    isNoAuthPreview?: boolean;
 }
 
 export default function Wrapper({
@@ -73,6 +74,7 @@ export default function Wrapper({
     planerDataCallback,
     submitCallback,
     socket,
+    isNoAuthPreview = false,
 }: Props): JSX.Element {
     const router = useRouter();
     const { data: session } = useSession();
@@ -104,10 +106,12 @@ export default function Wrapper({
         isLoading,
         error,
         mutate: mutateGetPlanById,
-    } = useGetPlanById(router.query.plannerId as string);
+    } = useGetPlanById(router.query.plannerId as string, !isNoAuthPreview);
 
     // detect window close or a click outside of planer
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
         if (!router.isReady) return;
         let clickedOutside: boolean = false;
 
@@ -120,7 +124,7 @@ export default function Wrapper({
 
             if (clickedOutside) {
                 if (Object.keys(methods.formState.dirtyFields).length == 0) {
-                    dropPlanLock(socket, router.query.plannerId as string);
+                    dropPlanLock(socket!, router.query.plannerId as string);
                 } else {
                     setPopUp({ isOpen: true, continueLink: nextlink.replace(/\?.*/, '') });
                     router.events.emit('routeChangeError');
@@ -141,10 +145,12 @@ export default function Wrapper({
             window.removeEventListener('beforeunload', handleWindowClose);
             router.events.off('routeChangeStart', handleBrowseAway);
         };
-    }, [wrapperRef, methods, socket, router, preventToLeave]);
+    }, [wrapperRef, methods, socket, router, preventToLeave, isNoAuthPreview]);
 
     // check access rights or locked plan
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
         if (isLoading || !session || error) return;
 
         if (!router.query.plannerId) {
@@ -152,7 +158,7 @@ export default function Wrapper({
             return;
         }
 
-        getPlanLock(socket, router.query.plannerId).catch((response) => {
+        getPlanLock(socket!, router.query.plannerId).catch((response) => {
             if (response.reason === 'plan_locked') {
                 // const data = await
                 fetchPOST(
@@ -187,10 +193,12 @@ export default function Wrapper({
                 onClose: () => setAlert({ open: false }),
             });
         }
-    }, [plan, isLoading, error, socket, router, session, t]);
+    }, [plan, isLoading, error, socket, router, session, t, isNoAuthPreview]);
 
     // call data callback and rest form defaults for correct form valdation (form.isDirty)
     useEffect(() => {
+        if (isNoAuthPreview) return;
+
         if (!plan || isLoading || error) return;
 
         let willRouteChange: boolean = false;
@@ -233,10 +241,22 @@ export default function Wrapper({
         return () => {
             router.events.off('routeChangeStart', handleRouteChange);
         };
-    }, [router, plan, isLoading, error, planerDataCallback, stageInMenu, idOfProgress, methods]);
+    }, [
+        router,
+        plan,
+        isLoading,
+        error,
+        planerDataCallback,
+        stageInMenu,
+        idOfProgress,
+        methods,
+        isNoAuthPreview,
+    ]);
 
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
+        if (isNoAuthPreview) return;
+
         setLoading(true);
         const fields = (await submitCallback(data)) as {
             plan_id: string;
@@ -281,10 +301,12 @@ export default function Wrapper({
 
     // handler after we clicked "Weiter" in unsaved/invalid data PopUp
     const handlePopupContinue = async () => {
+        if (isNoAuthPreview) return;
+
         if (popUp.continueLink && popUp.continueLink != '') {
             if (!popUp.continueLink.startsWith('/ve-designer')) {
                 // release plan if we leave designer
-                await dropPlanLock(socket, router.query.plannerId);
+                await dropPlanLock(socket!, router.query.plannerId);
                 // update all plans SWR to update /plans list
                 await router.push({
                     pathname: popUp.continueLink,
@@ -305,6 +327,8 @@ export default function Wrapper({
     };
 
     const handleClickToggleProgress = () => {
+        if (isNoAuthPreview) return;
+
         // let progress = ProgressState.notStarted
         // if (progressOfCurrent == ProgressState.notStarted)
         //     progress = ProgressState.completed
@@ -319,6 +343,8 @@ export default function Wrapper({
     };
 
     const setProgress = (progress: ProgressState) => {
+        if (isNoAuthPreview) return;
+
         if (!idOfProgress) return;
 
         if (stageInMenu == 'steps' && idOfProgress != 'stepsGenerally') {
@@ -350,9 +376,7 @@ export default function Wrapper({
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = plan.steps.find((a) =>
-                currentPath.endsWith(a._id!)
-            );
+            const currentStep = plan.steps.find((a) => currentPath.endsWith(a._id!));
 
             subMenuItem = currentStep
                 ? {
@@ -391,14 +415,20 @@ export default function Wrapper({
             <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
                 {typeof idOfProgress !== 'undefined' && (
                     <span
-                        className="group px-4 py-2 flex items-center text-slate-700 hover:cursor-pointer hover:text-slate-900"
+                        className={`group px-4 py-2 flex items-center text-slate-700 ${
+                            isNoAuthPreview ? '' : 'hover:cursor-pointer hover:text-slate-900'
+                        }`}
                         onClick={(e) => handleClickToggleProgress()}
                     >
                         {t('step_done_question')}
 
                         <span
                             title={t('toggle_state_hover')}
-                            className="ml-1 transition ease-in-out group-hover:scale-110"
+                            className={`ml-1 ${
+                                isNoAuthPreview
+                                    ? ''
+                                    : 'transition ease-in-out group-hover:scale-110'
+                            }`}
                         >
                             {progressOfCurrent == ProgressState.notStarted && (
                                 <MdOutlineCircle className="inline mb-1" size={22} />
@@ -414,12 +444,15 @@ export default function Wrapper({
                 <button
                     type="button"
                     title={t('save_and_continue')}
-                    className={`px-4 py-2 shadow text-white
-                        ${typeof idOfProgress !== 'undefined' ? 'rounded-r-full' : 'rounded-full'}
-                        bg-ve-collab-orange hover:bg-ve-collab-orange`}
+                    className={`px-4 py-2 shadow text-white bg-ve-collab-orange ${
+                        typeof idOfProgress !== 'undefined' ? 'rounded-r-full' : 'rounded-full'
+                    } ${isNoAuthPreview ? 'cursor-default' : ''}`}
+                    disabled={isNoAuthPreview}
                     onClick={methods.handleSubmit(
                         // valid
                         async (data: any) => {
+                            if (isNoAuthPreview) return;
+
                             await handleSubmit(data);
                             await router.push({
                                 pathname: nextpage,
@@ -430,6 +463,8 @@ export default function Wrapper({
                         },
                         // invalid
                         async () => {
+                            if (isNoAuthPreview) return;
+
                             setPopUp({
                                 isOpen: true,
                                 type: 'invalid',
@@ -464,6 +499,94 @@ export default function Wrapper({
                     <BackToStart />
                 </div>
             </WrapperBox>
+        );
+    }
+
+    if (isNoAuthPreview) {
+        return (
+            <WhiteBox>
+                <div className="flex flex-col">
+                    <Alert state={alert} />
+                    <Header
+                        socket={socket}
+                        methods={methods}
+                        plan={plan}
+                        submitCallback={() => {}}
+                        handleUnsavedData={() => {}}
+                        handleInvalidData={() => {}}
+                        isNoAuthPreview={isNoAuthPreview}
+                    />
+
+                    <div className="flex flex-row divide-x gap-1">
+                        <Sidebar
+                            methods={methods}
+                            submitCallback={async () => {}}
+                            handleInvalidData={() => {}}
+                            stageInMenu={stageInMenu}
+                            plan={plan}
+                            progressOfPlan={progressOfPlan}
+                            isNoAuthPreview={isNoAuthPreview}
+                        />
+
+                        <form
+                            className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
+                            onSubmit={() => {}}
+                        >
+                            <Breadcrumb />
+
+                            <div className={'flex justify-between items-start mt-2 mb-2'}>
+                                <h2 className="font-bold text-2xl">{title}</h2>
+                            </div>
+                            {typeof subtitle !== 'undefined' && (
+                                <p className="text-xl text-slate-600">{subtitle}</p>
+                            )}
+                            {typeof description !== 'undefined' && (
+                                <>
+                                    {typeof description === 'string' && (
+                                        <p className="mb-8">{description}</p>
+                                    )}
+                                    {Array.isArray(description) && (
+                                        <div className="mb-8">
+                                            {description.map((description, index) => (
+                                                <p key={index} className="mb-2">
+                                                    {description}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {React.isValidElement(description) && <>{description}</>}
+                                </>
+                            )}
+
+                            {children}
+
+                            {(typeof prevpage !== 'undefined' ||
+                                typeof nextpage !== 'undefined') && (
+                                <div className="my-8 border-t py-3 flex justify-between">
+                                    <div>
+                                        {typeof prevpage !== 'undefined' && (
+                                            <button
+                                                type="button"
+                                                title={t('common:back')}
+                                                className={`px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange ${
+                                                    isNoAuthPreview ? 'cursor-default' : ''
+                                                }`}
+                                                onClick={() => {}}
+                                            >
+                                                {prevPageBtnLabel || t('common:back')}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex tex-center">
+                                        <SaveAndNextBtn />
+                                    </div>
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </div>
+            </WhiteBox>
         );
     }
 
@@ -554,7 +677,7 @@ export default function Wrapper({
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
                                     {typeof tooltip !== 'undefined' && (
-                                        <Tooltip tooltipsText={tooltip.text} position='left'>
+                                        <Tooltip tooltipsText={tooltip.text} position="left">
                                             <Link
                                                 target="_blank"
                                                 href={tooltip.link}

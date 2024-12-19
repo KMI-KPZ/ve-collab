@@ -673,8 +673,7 @@ class TargetGroupModelTest(TestCase):
 
         target_group = TargetGroup()
         self.assertEqual(target_group.name, None)
-        self.assertEqual(target_group.age_min, None)
-        self.assertEqual(target_group.age_max, None)
+        self.assertEqual(target_group.semester, None)
         self.assertEqual(target_group.experience, None)
         self.assertEqual(target_group.academic_course, None)
         self.assertEqual(target_group.languages, [])
@@ -689,16 +688,14 @@ class TargetGroupModelTest(TestCase):
         target_group = TargetGroup(
             _id=_id,
             name="test",
-            age_min=30,
-            age_max=40,
+            semester="test",
             experience="test",
             academic_course="test",
             languages=["test"],
         )
 
         self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.semester, "test")
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.languages, ["test"])
@@ -708,15 +705,13 @@ class TargetGroupModelTest(TestCase):
 
         target_group = TargetGroup(
             name="test",
-            age_min=30,
-            age_max=40,
+            semester="test",
             experience="test",
             academic_course="test",
             languages=["test"],
         )
         self.assertEqual(target_group.name, "test")
-        self.assertEqual(target_group.age_min, 30)
-        self.assertEqual(target_group.age_max, 40)
+        self.assertEqual(target_group.semester, "test")
         self.assertEqual(target_group.experience, "test")
         self.assertEqual(target_group.academic_course, "test")
         self.assertEqual(target_group.languages, ["test"])
@@ -734,34 +729,30 @@ class TargetGroupModelTest(TestCase):
         self.assertIsInstance(target_group_dict, dict)
         self.assertIn("_id", target_group_dict)
         self.assertIn("name", target_group_dict)
-        self.assertIn("age_min", target_group_dict)
-        self.assertIn("age_max", target_group_dict)
+        self.assertIn("semester", target_group_dict)
         self.assertIn("experience", target_group_dict)
         self.assertIn("academic_course", target_group_dict)
         self.assertIn("languages", target_group_dict)
         self.assertIsInstance(target_group_dict["_id"], ObjectId)
         self.assertEqual(target_group_dict["name"], None)
-        self.assertEqual(target_group_dict["age_min"], None)
-        self.assertEqual(target_group_dict["age_max"], None)
+        self.assertEqual(target_group_dict["semester"], None)
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
         self.assertEqual(target_group_dict["languages"], [])
 
-        target_group = TargetGroup(age_min=10, age_max=20, languages=["test"])
+        target_group = TargetGroup(semester="test", languages=["test"])
         target_group_dict = target_group.to_dict()
 
         self.assertIsInstance(target_group_dict, dict)
         self.assertIn("_id", target_group_dict)
         self.assertIn("name", target_group_dict)
-        self.assertIn("age_min", target_group_dict)
-        self.assertIn("age_max", target_group_dict)
+        self.assertIn("semester", target_group_dict)
         self.assertIn("experience", target_group_dict)
         self.assertIn("academic_course", target_group_dict)
         self.assertIn("languages", target_group_dict)
         self.assertIsInstance(target_group_dict["_id"], ObjectId)
         self.assertEqual(target_group_dict["name"], None)
-        self.assertEqual(target_group_dict["age_min"], "10")
-        self.assertEqual(target_group_dict["age_max"], "20")
+        self.assertEqual(target_group_dict["semester"], "test")
         self.assertEqual(target_group_dict["experience"], None)
         self.assertEqual(target_group_dict["academic_course"], None)
         self.assertEqual(target_group_dict["languages"], ["test"])
@@ -775,8 +766,7 @@ class TargetGroupModelTest(TestCase):
         target_group_dict = {
             "_id": _id,
             "name": "test",
-            "age_min": 10,
-            "age_max": 20,
+            "semester": "test",
             "experience": "test",
             "academic_course": "test",
             "languages": ["test"],
@@ -787,8 +777,7 @@ class TargetGroupModelTest(TestCase):
         self.assertIsInstance(target_group, TargetGroup)
         self.assertEqual(target_group._id, _id)
         self.assertEqual(target_group.name, target_group_dict["name"])
-        self.assertEqual(target_group.age_min, target_group_dict["age_min"])
-        self.assertEqual(target_group.age_max, target_group_dict["age_max"])
+        self.assertEqual(target_group.semester, target_group_dict["semester"])
         self.assertEqual(target_group.experience, target_group_dict["experience"])
         self.assertEqual(
             target_group.academic_course, target_group_dict["academic_course"]
@@ -799,8 +788,7 @@ class TargetGroupModelTest(TestCase):
         target_group_dict = {
             "_id": _id,
             "name": "test",
-            "age_min": "10",
-            "age_max": "20",
+            "semester": "test",
             "experience": "test",
             "academic_course": "test",
             "languages": ["test"],
@@ -811,8 +799,7 @@ class TargetGroupModelTest(TestCase):
         self.assertIsInstance(target_group, TargetGroup)
         self.assertEqual(target_group._id, _id)
         self.assertEqual(target_group.name, target_group_dict["name"])
-        self.assertEqual(target_group.age_min, 10)
-        self.assertEqual(target_group.age_max, 20)
+        self.assertEqual(target_group.semester, "test")
         self.assertEqual(target_group.experience, target_group_dict["experience"])
         self.assertEqual(
             target_group.academic_course, target_group_dict["academic_course"]
@@ -822,8 +809,7 @@ class TargetGroupModelTest(TestCase):
         # test again without supplying a _id
         target_group_dict = {
             "name": "test",
-            "age_min": 10,
-            "age_max": 20,
+            "semester": "test",
             "experience": "test",
             "academic_course": "test",
             "languages": ["test"],
@@ -834,8 +820,7 @@ class TargetGroupModelTest(TestCase):
         self.assertIsInstance(target_group, TargetGroup)
         self.assertIsInstance(target_group._id, ObjectId)
         self.assertEqual(target_group.name, target_group_dict["name"])
-        self.assertEqual(target_group.age_min, target_group_dict["age_min"])
-        self.assertEqual(target_group.age_max, target_group_dict["age_max"])
+        self.assertEqual(target_group.semester, target_group_dict["semester"])
         self.assertEqual(target_group.experience, target_group_dict["experience"])
         self.assertEqual(
             target_group.academic_course, target_group_dict["academic_course"]
@@ -860,8 +845,7 @@ class TargetGroupModelTest(TestCase):
         target_group_dict = {
             "_id": ObjectId(),
             "name": "test",
-            "age_min": 10,
-            "age_max": 20,
+            "semester": "test",
             "experience": "test",
             "academic_course": "test",
         }
@@ -876,8 +860,7 @@ class TargetGroupModelTest(TestCase):
         target_group_dict = {
             "_id": ObjectId(),
             "name": "test",
-            "age_min": 10,
-            "age_max": 20,
+            "semester": "test",
             "experience": "test",
             "academic_course": "test",
             "languages": ["test"],
@@ -892,13 +875,9 @@ class TargetGroupModelTest(TestCase):
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
         target_group_dict["name"] = "test"
 
-        target_group_dict["age_min"] = list()
+        target_group_dict["semester"] = list()
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
-        target_group_dict["age_min"] = 0
-
-        target_group_dict["age_max"] = list()
-        self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
-        target_group_dict["age_max"] = 99
+        target_group_dict["semester"] = "test"
 
         target_group_dict["experience"] = 1
         self.assertRaises(TypeError, TargetGroup.from_dict, target_group_dict)
@@ -1662,8 +1641,7 @@ class VEPlanModelTest(TestCase):
         """
         return TargetGroup(
             name=name,
-            age_min=30,
-            age_max=40,
+            semester="test",
             experience="test",
             academic_course="test",
             languages=["test"],
@@ -1760,6 +1738,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.checklist, [])
         self.assertEqual(plan.steps, [])
         self.assertEqual(plan.is_good_practise, False)
+        self.assertEqual(plan.is_good_practise_planned, False)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertIsNone(plan.abstract)
         self.assertIsNone(plan.underlying_ve_model)
@@ -1852,6 +1831,7 @@ class VEPlanModelTest(TestCase):
             ],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_planned=True,
             is_good_practise_ro=True,
             abstract="test",
             underlying_ve_model="test",
@@ -1903,6 +1883,7 @@ class VEPlanModelTest(TestCase):
         )
         self.assertEqual(plan.steps, steps)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, True)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -1944,6 +1925,7 @@ class VEPlanModelTest(TestCase):
             checklist=[],
             steps=steps,
             is_good_practise=True,
+            is_good_practise_planned=True,
             is_good_practise_ro=False,
             abstract="test",
             underlying_ve_model="test",
@@ -1989,6 +1971,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.steps, steps)
         self.assertIsInstance(plan.steps[0]._id, ObjectId)
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2112,6 +2095,7 @@ class VEPlanModelTest(TestCase):
         self.assertIn("workload", plan_dict)
         self.assertIn("steps", plan_dict)
         self.assertIn("is_good_practise", plan_dict)
+        self.assertIn("is_good_practise_planned", plan_dict)
         self.assertIn("is_good_practise_ro", plan_dict)
         self.assertIn("abstract", plan_dict)
         self.assertIn("underlying_ve_model", plan_dict)
@@ -2149,6 +2133,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan_dict["duration"], None)
         self.assertEqual(plan_dict["steps"], [step.to_dict()])
         self.assertEqual(plan_dict["is_good_practise"], False)
+        self.assertEqual(plan_dict["is_good_practise_planned"], False)
         self.assertEqual(plan_dict["is_good_practise_ro"], False)
         self.assertIsNone(plan_dict["abstract"])
         self.assertIsNone(plan_dict["underlying_ve_model"])
@@ -2223,8 +2208,7 @@ class VEPlanModelTest(TestCase):
                 {
                     "_id": target_group._id,
                     "name": target_group.name,
-                    "age_min": target_group.age_min,
-                    "age_max": target_group.age_max,
+                    "semester": target_group.semester,
                     "experience": target_group.experience,
                     "academic_course": target_group.academic_course,
                     "languages": target_group.languages,
@@ -2277,6 +2261,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -2330,6 +2315,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan._id, _id)
         self.assertEqual(plan.steps, [step])
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2377,8 +2363,7 @@ class VEPlanModelTest(TestCase):
             "target_groups": [
                 {
                     "name": target_group.name,
-                    "age_min": target_group.age_min,
-                    "age_max": target_group.age_max,
+                    "semester": target_group.semester,
                     "experience": target_group.experience,
                     "academic_course": target_group.academic_course,
                     "languages": target_group.languages,
@@ -2428,6 +2413,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -2488,6 +2474,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.workload, 10)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.is_good_practise, True)
+        self.assertEqual(plan.is_good_practise_planned, True)
         self.assertEqual(plan.is_good_practise_ro, False)
         self.assertEqual(plan.abstract, "test")
         self.assertEqual(plan.underlying_ve_model, "test")
@@ -2543,6 +2530,7 @@ class VEPlanModelTest(TestCase):
                 }
             ],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
@@ -2602,6 +2590,7 @@ class VEPlanModelTest(TestCase):
             ],
             "steps": [],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,
@@ -2708,6 +2697,10 @@ class VEPlanModelTest(TestCase):
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["is_good_practise"] = None
 
+        plan_dict["is_good_practise_planned"] = "test"
+        self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
+        plan_dict["is_good_practise_planned"] = None
+
         plan_dict["is_good_practise_ro"] = "test"
         self.assertRaises(TypeError, VEPlan.from_dict, plan_dict)
         plan_dict["is_good_practise_ro"] = None
@@ -2776,6 +2769,7 @@ class VEPlanModelTest(TestCase):
                 self.create_step("test").to_dict(),
             ],
             "is_good_practise": None,
+            "is_good_practise_planned": None,
             "is_good_practise_ro": None,
             "abstract": None,
             "underlying_ve_model": None,

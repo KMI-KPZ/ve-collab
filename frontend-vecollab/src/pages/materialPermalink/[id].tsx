@@ -1,8 +1,11 @@
 import { getMaterialNodePath } from '@/lib/backend';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+import CustomHead from '@/components/metaData/CustomHead';
 
 interface Props {
     uri: string;
@@ -17,6 +20,8 @@ interface Props {
 // but for now thats sufficient since only the material nodes are in MeinBildungsraum Metadata anyway
 export default function MaterialPermalink(props: Props) {
     const router = useRouter();
+    const id = router.query.id as string;
+    const { t } = useTranslation('common');
 
     useEffect(() => {
         if (router.isReady) {
@@ -26,10 +31,11 @@ export default function MaterialPermalink(props: Props) {
 
     return (
         <div>
-            <h1>Sie werden weitergeleitet!</h1>
+            <CustomHead pageTitle={t('redirect')} pageSlug={`materialPermalink/${id}`} />
+            <h1>{t('you_are_redirected')}</h1>
             <p>
-                Falls dies nicht innerhalb von 3 Sekunden automatisch passiert, klicken Sie bitte{' '}
-                <Link href={props.uri}>hier</Link>
+                {t('after_3_seconds_redirect_click')}
+                <Link href={props.uri}>{t('here')}</Link>
             </p>
         </div>
     );
@@ -37,15 +43,22 @@ export default function MaterialPermalink(props: Props) {
 
 export const getServerSideProps: GetServerSideProps = async ({
     params,
+    locale,
 }: GetServerSidePropsContext) => {
     const path = await getMaterialNodePath(Number.parseInt(params?.id as string));
 
     const uri =
-        '/learning-material/' + path.bubble.text + '/' + path.category.text + '/' + path.material.text;
+        '/learning-material/' +
+        path.bubble.text +
+        '/' +
+        path.category.text +
+        '/' +
+        path.material.text;
 
     return {
         props: {
             uri,
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 };

@@ -314,8 +314,7 @@ class VEPlanHandler(BaseHandler):
                         "target_groups": [
                             {
                                 "name": "test",
-                                "age_min": 30,
-                                "age_max": 40,
+                                "semester": "test",
                                 "experience": "test",
                                 "academic_course": "test",
                                 "languages": ["test"],
@@ -372,6 +371,8 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "is_good_practise_planned": True,
+                        "is_good_practise_ro": True,
                         "abstract": "test",
                         "underlying_ve_model": "test",
                         "reflection": "test",
@@ -547,8 +548,7 @@ class VEPlanHandler(BaseHandler):
                         "target_groups": [
                             {
                                 "name": "test",
-                                "age_min": 30,
-                                "age_max": 40,
+                                "semester": "test",
                                 "experience": "test",
                                 "academic_course": "test",
                                 "languages": ["test"],
@@ -605,6 +605,7 @@ class VEPlanHandler(BaseHandler):
                             }
                         ],
                         "is_good_practise": True,
+                        "is_good_practise_planned": True,
                         "is_good_practise_ro": True,
                         "abstract": "test",
                         "underlying_ve_model": "test",
