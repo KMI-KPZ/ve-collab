@@ -9,6 +9,8 @@ import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import { getBadge } from '../landingPage/UserInfoBox';
+import { profileImgBadgeOutlineColors } from '../network/UserProfileImage';
 
 interface Props {
     name: string;
@@ -17,6 +19,7 @@ interface Props {
     foreignUser: boolean;
     followers: string[];
     veReady: boolean;
+    chosen_achievement?: null | { type: 'social' | 've' | ''; level: number };
     isNoAuthPreview?: boolean;
 }
 
@@ -28,6 +31,7 @@ export default function ProfileHeader({
     foreignUser,
     followers,
     veReady,
+    chosen_achievement,
     isNoAuthPreview = false,
 }: Props) {
     const router = useRouter();
@@ -92,9 +96,23 @@ export default function ProfileHeader({
         });
     };
 
+    const achievementOutlineCss = chosen_achievement?.level
+        ? `outline outline-3 outline-[${
+              profileImgBadgeOutlineColors[chosen_achievement?.level - 1]
+          }]`
+        : '';
+
     return (
         <div className={'flex'}>
-            <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
+            <div
+                className={`flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl w-[168px] h-[168px] ${achievementOutlineCss}
+                `}
+            >
+                {chosen_achievement?.type && (
+                    <span className="absolute -ml-[20px] -mt-[20px]">
+                        {getBadge(chosen_achievement.type, chosen_achievement.level)}
+                    </span>
+                )}
                 <AuthenticatedImage
                     imageId={profilePictureUrl}
                     alt={t('profile_picture')}

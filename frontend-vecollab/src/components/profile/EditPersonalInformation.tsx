@@ -19,6 +19,11 @@ import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { useTranslation } from 'next-i18next';
+import { Badges, getBadge, hasAnyAchievement } from '../landingPage/UserInfoBox';
+import Button from '../common/buttons/Button';
+import { MdCheck } from 'react-icons/md';
+import ButtonLight from '../common/buttons/ButtongLight';
+import { profileImgBadgeOutlineColors } from '../network/UserProfileImage';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -39,6 +44,12 @@ export default function EditPersonalInformation({
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
+
+    const achievementOutlineCss = personalInformation.chosen_achievement?.level
+        ? `outline outline-3 outline-offset-4 outline-[${
+              profileImgBadgeOutlineColors[personalInformation.chosen_achievement?.level - 1]
+          }]`
+        : '';
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -158,6 +169,8 @@ export default function EditPersonalInformation({
             chosen_institution_id: newChosenInstitutionId,
         });
     };
+
+    // const Achievements = <Badges achievements={personalInformation.achievements} />;
 
     return (
         <form onSubmit={updateProfileData}>
@@ -492,58 +505,129 @@ export default function EditPersonalInformation({
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t('profile_picture')} />
-                <div>
-                    <div className="w-fit">
-                        <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
-                            <AuthenticatedImage
-                                imageId={personalInformation.profilePicId as string}
-                                alt={t('profile_picture')}
-                                width={180}
-                                height={180}
-                            />
-                        </div>
-                        <div className="flex justify-center">
-                            <button
-                                className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleOpenProfilePicDialog();
-                                }}
+                <div className="flex space-x-4">
+                    <div>
+                        <EditProfileHeadline name={t('profile_picture')} />
+                        <div className="w-fit">
+                            <div
+                                className={`my-4 rounded-full overflow-hidden w-fit border-black border mt-[20px] ml-[10px] ${achievementOutlineCss}`}
                             >
-                                {t('common:edit')}
-                            </button>
-                        </div>
-                    </div>
-                    <Dialog
-                        isOpen={isProfilePicDialogOpen}
-                        title={t('upload_profile_picture')}
-                        onClose={handleCloseProfilePicDialog}
-                    >
-                        <div className="my-2 mx-2">{t('upload_profile_picture_description')}</div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="my-2"
-                            onChange={onSelectProfilePicFile}
-                            onClick={(e) => {
-                                e.currentTarget.value = '';
-                            }}
-                        />
-                        {profilePicFile !== '' ? (
-                            <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
-                                <AvatarEditor
-                                    sourceImg={profilePicFile}
-                                    onFinishUpload={(blob) => {
-                                        uploadProfileImage(blob);
-                                        handleCloseProfilePicDialog();
-                                    }}
+                                <AuthenticatedImage
+                                    imageId={personalInformation.profilePicId as string}
+                                    alt={t('profile_picture')}
+                                    width={180}
+                                    height={180}
                                 />
+                                {personalInformation.chosen_achievement?.type && (
+                                    <span className="absolute -mt-[178px] -ml-[12px]">
+                                        {getBadge(
+                                            personalInformation.chosen_achievement?.type,
+                                            personalInformation.chosen_achievement?.level
+                                        )}
+                                    </span>
+                                )}
                             </div>
-                        ) : (
-                            <></>
-                        )}
-                    </Dialog>
+                            <div className="flex justify-center">
+                                <button
+                                    className={
+                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                    }
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleOpenProfilePicDialog();
+                                    }}
+                                >
+                                    {t('common:edit')}
+                                </button>
+                            </div>
+                        </div>
+
+                        <Dialog
+                            isOpen={isProfilePicDialogOpen}
+                            title={t('upload_profile_picture')}
+                            onClose={handleCloseProfilePicDialog}
+                        >
+                            <div className="my-2 mx-2">
+                                {t('upload_profile_picture_description')}
+                            </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="my-2"
+                                onChange={onSelectProfilePicFile}
+                                onClick={(e) => {
+                                    e.currentTarget.value = '';
+                                }}
+                            />
+                            {profilePicFile !== '' ? (
+                                <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
+                                    <AvatarEditor
+                                        sourceImg={profilePicFile}
+                                        onFinishUpload={(blob) => {
+                                            uploadProfileImage(blob);
+                                            handleCloseProfilePicDialog();
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <></>
+                            )}
+                        </Dialog>
+                    </div>
+                    {hasAnyAchievement(personalInformation.achievements) && (
+                        <div>
+                            <EditProfileHeadline name={t('decoration_badge')} />
+                            <p>Choose an achievement as badge to decorate your profile image</p>
+                            <ul className="flex gap-2 items-center">
+                                {Badges({ achievements: personalInformation.achievements }).map(
+                                    (item, index) => {
+                                        return (
+                                            <li key={index}>
+                                                <Button
+                                                    className="flex items-center"
+                                                    onClick={() => {
+                                                        setPersonalInformation({
+                                                            ...personalInformation,
+                                                            chosen_achievement: {
+                                                                type: item.type,
+                                                                level: item.level,
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {item.badge}
+                                                    {personalInformation.chosen_achievement?.type ==
+                                                        item.type && (
+                                                        <MdCheck
+                                                            size={22}
+                                                            className="text-green-600 m-2"
+                                                        />
+                                                    )}
+                                                </Button>
+                                            </li>
+                                        );
+                                    }
+                                )}
+                                <li>
+                                    <ButtonLight
+                                        className="!rounded-full flex items-center"
+                                        onClick={() => {
+                                            setPersonalInformation({
+                                                ...personalInformation,
+                                                chosen_achievement: { type: '', level: 0 },
+                                            });
+                                        }}
+                                    >
+                                        Keines
+                                        {(personalInformation.chosen_achievement == null ||
+                                            personalInformation.chosen_achievement.type == '') && (
+                                            <MdCheck size={22} className="text-green-600 mx-2" />
+                                        )}
+                                    </ButtonLight>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </EditProfileVerticalSpacer>
         </form>

@@ -55,7 +55,7 @@ class Profiles:
             "ve_window": list,
             "notification_settings": dict,
             "achievements": dict,
-            "chosen_achievement": (str, type(None)),
+            "chosen_achievement": (dict, type(None)),
         }
 
         self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
@@ -559,7 +559,7 @@ class Profiles:
             # if dict supplies one, we need the actual image
             if profile_pic is None:
                 raise TypeError(
-                    """if profile_pic is supplied in the dict, 
+                    """if profile_pic is supplied in the dict,
                     provide an actual image as bytes!"""
                 )
 
@@ -608,8 +608,13 @@ class Profiles:
         # if user has updated the chosen achievement, we need to check if it is valid,
         # i.e. either "social", "ve" or None
         if "chosen_achievement" in updated_profile:
-            if updated_profile["chosen_achievement"] not in ["social", "ve", None]:
+            if updated_profile["chosen_achievement"]["type"] not in ["social", "ve", "", None]:
                 raise ValueError("Invalid chosen achievement")
+
+            # TODO test if given achievement level is earned!!!
+
+            if updated_profile["chosen_achievement"]["type"] == "":
+                updated_profile["chosen_achievement"] = None
 
         # all checks passed, update the profile
         result = self.db.profiles.find_one_and_update(

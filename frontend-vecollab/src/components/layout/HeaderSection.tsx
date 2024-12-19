@@ -12,6 +12,7 @@ import Dropdown from '../common/Dropdown';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
 import { useTranslation } from 'next-i18next';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     notificationEvents: Notification[];
@@ -185,12 +186,15 @@ export default function HeaderSection({
                             <div className="flex items-center font-normal">
                                 <Dropdown
                                     options={[
-                                        Object.assign({}, isGlobalAdmin
-                                            ? {
-                                                value: "admin",
-                                                label: "Admin Dashboard",
-                                                liClasses: "text-red-600 border-b"
-                                            } : null
+                                        Object.assign(
+                                            {},
+                                            isGlobalAdmin
+                                                ? {
+                                                      value: 'admin',
+                                                      label: 'Admin Dashboard',
+                                                      liClasses: 'text-red-600 border-b',
+                                                  }
+                                                : null
                                         ),
                                         {
                                             value: 'profile',
@@ -209,17 +213,12 @@ export default function HeaderSection({
                                     ].filter((a) => 'value' in a)}
                                     icon={
                                         <div className="flex items-center">
-                                            <AuthenticatedImage
-                                                imageId={
-                                                    userProfile
-                                                        ? userProfile?.profile?.profile_pic
-                                                        : 'default_profile_pic.jpg'
+                                            <UserProfileImage
+                                                profile_pic={userProfile?.profile?.profile_pic}
+                                                chosen_achievement={
+                                                    userProfile?.profile?.chosen_achievement
                                                 }
-                                                alt={t('profile_pic')}
-                                                width={30}
-                                                height={30}
-                                                className="rounded-full mr-3"
-                                            ></AuthenticatedImage>
+                                            />
                                             <div
                                                 title={`${userProfile?.profile?.first_name} ${userProfile?.profile?.last_name}`}
                                                 className="max-w-[96px] truncate font-semibold"
@@ -264,6 +263,67 @@ export default function HeaderSection({
     };
 
     const MenuMobile = () => {
+        return (
+            <>
+                {/* TODO may put most important items here?!?
+                    <li>
+                        <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
+                    </li> */}
+                <li>
+                    <button
+                        className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
+                        onClick={(e) => toggleChatWindow()}
+                        title="Chat Fenster öffnen"
+                    >
+                        <MdOutlineMessage size={20} />
+                    </button>
+                    {messageEventCount > 0 && (
+                        <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
+                            {messageEventCount}
+                        </span>
+                    )}
+                </li>
+                <li>
+                    <button
+                        className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                        onClick={(e) => toggleNotifWindow()}
+                        title="Notifications Fenster öffnen"
+                    >
+                        <IoMdNotificationsOutline size={20} />
+                    </button>
+                    {notificationEvents.length > 0 && (
+                        <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
+                            {notificationEvents.length}
+                        </span>
+                    )}
+                </li>
+                <li>
+                    <Link href={'/profile'}>
+                        <UserProfileImage
+                            profile_pic={userProfile?.profile?.profile_pic}
+                            chosen_achievement={userProfile?.profile?.chosen_achievement}
+                            width={30}
+                            height={30}
+                            className="mx-3"
+                        />
+                    </Link>
+                </li>
+                <li>
+                    <Dropdown
+                        options={[
+                            <div onClick={() => hideSandwichMenu()} key={0}>
+                                <SandwichMenuMobile />
+                            </div>,
+                        ]}
+                        icon={<MdMenu size={25} />}
+                        ulClasses="min-w-[15rem]"
+                    />
+                </li>
+            </>
+        );
+    };
+
+    const SandwichMenuMobile = () => {
         return (
             <>
                 <li>
@@ -489,64 +549,7 @@ export default function HeaderSection({
                 </div>
 
                 <ul className="md:hidden flex flex-1 items-center justify-end">
-                    {/* TODO may put most important items here?!?
-                    <li>
-                        <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
-                    </li> */}
-                    <li>
-                            <button
-                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
-                                onClick={(e) => toggleChatWindow()}
-                                title="Chat Fenster öffnen"
-                            >
-                                <MdOutlineMessage size={20} />
-                            </button>
-                            {messageEventCount > 0 && (
-                                <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
-                                    {messageEventCount}
-                                </span>
-                            )}
-                        </li>
-                        <li>
-                            <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
-                                onClick={(e) => toggleNotifWindow()}
-                                title="Notifications Fenster öffnen"
-                            >
-                                <IoMdNotificationsOutline size={20} />
-                            </button>
-                            {notificationEvents.length > 0 && (
-                                <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
-                                    {notificationEvents.length}
-                                </span>
-                            )}
-                        </li>
-                    <li>
-                        <Link href={"/profile"}>
-                                            <AuthenticatedImage
-                                                imageId={
-                                                    userProfile
-                                                        ? userProfile?.profile?.profile_pic
-                                                        : 'default_profile_pic.jpg'
-                                                }
-                                                alt={'Benutzerbild'}
-                                                width={30}
-                                                height={30}
-                                                className="rounded-full mx-3"
-                                            ></AuthenticatedImage>
-                                        </Link>
-                    </li>
-                    <li>
-                        <Dropdown
-                            options={[
-                                <div onClick={() => hideSandwichMenu()} key={0}>
-                                    <MenuMobile />
-                                </div>,
-                            ]}
-                            icon={<MdMenu size={25} />}
-                            ulClasses="min-w-[15rem]"
-                        />
-                    </li>
+                    <MenuMobile />
                 </ul>
 
                 <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center font-semibold space-x-0 xl:space-x-6">

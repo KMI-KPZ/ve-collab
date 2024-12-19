@@ -39,6 +39,7 @@ import ButtonNewPlan from '../plans/ButtonNewPlan';
 import { Socket } from 'socket.io-client';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+import UserProfileImage from './UserProfileImage';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -477,17 +478,10 @@ export default function TimelinePostForm({
 
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
-                        <AuthenticatedImage
-                            imageId={
-                                userProfileSnippet
-                                    ? userProfileSnippet?.profile?.profile_pic
-                                    : 'default_profile_pic.jpg'
-                            }
-                            alt={t('profile_picture')}
-                            width={40}
-                            height={40}
-                            className="rounded-full mr-3 mt-5 self-start"
-                        ></AuthenticatedImage>
+                        <UserProfileImage
+                            profile_pic={userProfileSnippet?.profile?.profile_pic}
+                            chosen_achievement={userProfileSnippet?.profile?.chosen_achievement}
+                        />
                     )}
 
                     <div className="w-full">

@@ -157,6 +157,8 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                     languages: data.profile.languages,
                     institutions: data.profile.institutions,
                     chosen_institution_id: data.profile.chosen_institution_id,
+                    achievements: data.profile.achievements,
+                    chosen_achievement: data.profile.chosen_achievement,
                 });
                 setFollowers(data.followers);
                 setFollows(data.follows);
@@ -194,8 +196,6 @@ export default function UserProfile({ socket }: Props): JSX.Element {
         return <Custom404 />;
     }
 
-    console.log({ personalInformation });
-
     return (
         <>
             {loading ? (
@@ -231,6 +231,7 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                             profilePictureUrl={profilePictureUrl}
                             foreignUser={foreignUser}
                             followers={followers}
+                            chosen_achievement={personalInformation.chosen_achievement}
                             veReady={veReady}
                         />
                     </div>

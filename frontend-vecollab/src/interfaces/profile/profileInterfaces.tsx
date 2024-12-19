@@ -1,3 +1,5 @@
+import { Achievement, Achievements } from '../api/apiInterfaces';
+
 export interface PersonalInformation {
     firstName: string;
     lastName: string;
@@ -8,6 +10,8 @@ export interface PersonalInformation {
     languages: string[];
     institutions: Institution[];
     chosen_institution_id: string;
+    achievements?: Achievements;
+    chosen_achievement?: null | { type: 'social' | 've' | ''; level: number };
 }
 
 export interface Institution {

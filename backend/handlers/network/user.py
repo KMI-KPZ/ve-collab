@@ -114,23 +114,12 @@ class ProfileInformationHandler(BaseHandler):
                             "system": "email|push",
                         },
                         "achievements" : {
-                            "social": [
-                                {"type": "create_posts", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "create_comments", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "give_likes", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "posts_liked", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "join_groups", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "admin_groups", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                            ],
-                            "ve": [
-                                {"type": "ve_plans", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "good_practice_plans", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                                {"type": "unique_partners", "progress": 0, "level": "null|'bronze'|'silver'|'gold'|'platinum'"},
-                            ],
+                            "social": { level: <number>, progress: <number>, next_level: <number> },
+                            "ve": { level: <number>, progress: <number>, next_level: <number> },
                         },
                         "chosen_achievement": {
                             "type": "<string>",           --> one of achievement types above
-                            "level": "null|'bronze'|'silver'|'gold'|'platinum'"
+                            "level": "<number>"
                         }
                     },
                     "spaces": [<string1>, <string2>, ...],
@@ -294,7 +283,7 @@ class ProfileInformationHandler(BaseHandler):
                     },
                     "chosen_achievement": {
                         "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                        "level": "null|'bronze'|'silver'|'gold'|'platinum'"
+                        "level": "<number>"
                     },
                     "profile_pic": {
                         "payload": "<base64_encoded_image>",
@@ -422,7 +411,7 @@ class BulkProfileSnippets(BaseHandler):
                         "institution": "<string>",
                         "chosen_achievement": {
                             "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                            "level": "null|bronze|silver|gold|platinum"
+                            "level": <number>
                         }
                     }
                  ]
