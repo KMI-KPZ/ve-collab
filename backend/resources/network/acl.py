@@ -240,14 +240,14 @@ class _SpaceACL:
     def insert_default(self, username: str, space_id: str | ObjectId) -> dict:
         """
         insert the standard rule for the given user, returning the inserted rule.
-        standard is read timeline only:
+        standard is:
             "join_space": False,
-            "post": False,
+            "post": True,
             "read_timeline": True,
-            "comment": False,
-            "read_wiki": False,
+            "comment": True,
+            "read_wiki": True,
             "write_wiki": False,
-            "read_files": False,
+            "read_files": True,
             "write_files": False
         :param space: the space for which the rules should apply
         :param username: name of the user to insert
@@ -261,11 +261,11 @@ class _SpaceACL:
             "space": space_id,
             "join_space": False,
             "read_timeline": True,
-            "post": False,
-            "comment": False,
-            "read_wiki": False,
+            "post": True,
+            "comment": True,
+            "read_wiki": True,
             "write_wiki": False,
-            "read_files": False,
+            "read_files": True,
             "write_files": False,
         }
         self.db.space_acl.update_one(  # use update + upsert so this function can also be used to restore to default
