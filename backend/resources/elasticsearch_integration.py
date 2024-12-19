@@ -40,6 +40,9 @@ class ElasticsearchConnector:
         # ObjectIds also get returned as str representation
         elif isinstance(doc, ObjectId):
             result_str = str(doc)
+        # ints get returned as str representation
+        elif isinstance(doc, int):
+            result_str = str(doc)
         # lists get flattened, if values are str, they remain str,
         # dicts or nested lists get flattened recursively
         elif isinstance(doc, list):

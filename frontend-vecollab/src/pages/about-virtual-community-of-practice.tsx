@@ -55,7 +55,7 @@ export default function AboutVCoP(): JSX.Element {
                 </div>
                 <div className="w-full">
                     <video width="100%" controls className="rounded-md">
-                        <source src="/videos/screencast-web.webm" type="video/webm" />
+                        <source src="/videos/placeholder.mp4" type="video/mp4" />
                         {t('common:video_not_supported')}
                     </video>
                 </div>
