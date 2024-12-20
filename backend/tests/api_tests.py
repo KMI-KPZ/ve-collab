@@ -237,7 +237,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                         "unique_partners": [],
                     },
                 },
-                "chosen_achievement": "social",
+                "chosen_achievement": {"type": "social", "level": 1},
             },
             CURRENT_USER.username: {
                 "username": CURRENT_USER.username,
@@ -285,7 +285,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                         "unique_partners": [],
                     },
                 },
-                "chosen_achievement": None,
+                "chosen_achievement": {"type": "", "level": 0},
             },
         }
 

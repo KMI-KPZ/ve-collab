@@ -611,10 +611,17 @@ class Profiles:
             if updated_profile["chosen_achievement"]["type"] not in ["social", "ve", "", None]:
                 raise ValueError("Invalid chosen achievement")
 
-            # TODO test if given achievement level is earned!!!
-
             if updated_profile["chosen_achievement"]["type"] == "":
                 updated_profile["chosen_achievement"] = None
+            else:
+                try:
+                    profile = self.get_profile(username, projection={"achievements": True})
+                except ProfileDoesntExistException:
+                    raise
+
+                user_achievements = profile["achievements"]
+                if updated_profile["chosen_achievement"]["level"] > user_achievements[updated_profile["chosen_achievement"]["type"]]["level"]:
+                        raise ValueError("User has not reached the achievement level he is trying to set")
 
         # all checks passed, update the profile
         result = self.db.profiles.find_one_and_update(

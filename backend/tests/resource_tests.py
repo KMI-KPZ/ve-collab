@@ -1072,7 +1072,7 @@ class PostResourceTest(BaseResourceTestCase):
                             "unique_partners": [],
                         },
                     },
-                    "chosen_achievement": None,
+                    "chosen_achievement": {"type": "", "level": 0},
                 },
                 {
                     "username": CURRENT_USER.username,
@@ -1113,7 +1113,7 @@ class PostResourceTest(BaseResourceTestCase):
                             "unique_partners": [],
                         },
                     },
-                    "chosen_achievement": None,
+                    "chosen_achievement": {"type": "", "level": 0},
                 },
             ]
         )
@@ -2780,7 +2780,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                     "unique_partners": [],
                 },
             },
-            "chosen_achievement": None,
+            "chosen_achievement": {"type": "", "level": 0},
         }
 
     def test_get_profile(self):
@@ -3541,12 +3541,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         # try again choosing a new achievement, expecting that it will be set
         profile_manager.update_profile_information(
             CURRENT_ADMIN.username,
-            {"chosen_achievement": "ve"},
+            {"chosen_achievement": {"type": "ve", "level": 0}},
         )
         result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
         self.assertEqual(
             result["chosen_achievement"],
-            "ve",
+            {"type": "ve", "level": 0},
         )
 
     def test_update_profile_information_upsert(self):
@@ -3591,6 +3591,20 @@ class ProfileResourceTest(BaseResourceTestCase):
             {"bio": 123},
         )
 
+    def test_update_profile_information_error_not_earned_achievement(self):
+        """
+        expect: ValueError is raised because the achievement level is not yet earned
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "social", "level": 1}},
+        )
+
+
     def test_update_profile_information_error_invalid_achievement(self):
         """
         expect: ValueError is raised because the achievement type or level is invalid
@@ -3601,7 +3615,7 @@ class ProfileResourceTest(BaseResourceTestCase):
             ValueError,
             profile_manager.update_profile_information,
             self.default_profile["username"],
-            {"chosen_achievement": "not_existing"},
+            {"chosen_achievement": {"type": "not_existing", "level": 0}},
         )
 
     def test_get_profile_snippets(self):
@@ -4065,7 +4079,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                         "unique_partners": [],
                     },
                 },
-                "chosen_achievement": None,
+                "chosen_achievement": {"type": "", "level": 0},
             },
             {
                 "username": CURRENT_USER.username,
@@ -4106,7 +4120,7 @@ class SpaceResourceTest(BaseResourceTestCase):
                         "unique_partners": [],
                     },
                 },
-                "chosen_achievement": None,
+                "chosen_achievement": {"type": "", "level": 0},
             },
         ]
         self.db.profiles.insert_many(self.default_profiles)
