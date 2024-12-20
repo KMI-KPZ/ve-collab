@@ -237,6 +237,14 @@
     "matching_exclusion_question": "If you exclude yourself from the matching, other users won't have the chance to find you as a VE-partner using the matching feature!",
     "attend_matching": "I participate in the matching",
     "exclude_matching": "exclude me from the matching",
+    "school_type_options": {
+        "university": "University/College",
+        "university_applied": "University of Applied Sciences",
+        "professional_school": "Professional School/Trade School",
+        "school_primary": "School (Primary)",
+        "school_secondary": "School (Secondary)",
+        "other": "Other"
+    },
     "ve_interests_options": {
         "Good Practice Examples": "Good Practice Examples",
         "Evaluation": "Evaluation",
