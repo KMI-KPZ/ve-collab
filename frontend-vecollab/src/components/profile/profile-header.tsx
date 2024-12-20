@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { RxDotFilled } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
@@ -102,11 +102,17 @@ export default function ProfileHeader({
           }]`
         : '';
 
+    // we have to set style property here, because otherwise dynamic outline color is not applied
+    const style: CSSProperties = chosen_achievement?.level
+        ? { outlineColor: profileImgBadgeOutlineColors[chosen_achievement.level - 1] }
+        : {};
+
     return (
         <div className={'flex'}>
             <div
                 className={`flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl w-[168px] h-[168px] ${achievementOutlineCss}
                 `}
+                style={style}
             >
                 {chosen_achievement?.type && (
                     <span className="absolute -ml-[20px] -mt-[20px]">

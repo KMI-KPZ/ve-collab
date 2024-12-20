@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import H2 from '../common/H2';
 import { useSession } from 'next-auth/react';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { Achievements, BackendUser } from '@/interfaces/api/apiInterfaces';
 import Image from 'next/image';
@@ -19,14 +19,21 @@ UserInfoBox.auth = true;
 export default function UserInfoBox({ profileInformation }: Props) {
     const { t } = useTranslation(['community', 'common']);
     const { data: session } = useSession();
-
     const { data: myGroups } = useGetMyGroups(session!.accessToken);
 
-    const achievementOutlineCss = profileInformation.profile.chosen_achievement?.level
+    const chosenAchievement = profileInformation.profile.chosen_achievement;
+    const achievementOutlineCss = chosenAchievement?.level
         ? `outline outline-3 outline-[${
-              profileImgBadgeOutlineColors[profileInformation.profile.chosen_achievement?.level - 1]
+              profileImgBadgeOutlineColors[chosenAchievement?.level - 1]
           }]`
         : '';
+
+    // we have to set style property here, because otherwise dynamic outline color is not applied
+    const style: CSSProperties = chosenAchievement?.level
+        ? {
+              outlineColor: profileImgBadgeOutlineColors[chosenAchievement.level - 1],
+          }
+        : {};
 
     return (
         <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4">
@@ -34,7 +41,13 @@ export default function UserInfoBox({ profileInformation }: Props) {
                 <div className="-mt-[52px] -ml-[32px] flex relative">
                     <div
                         className={`w-[180px] bg-white rounded-full overflow-hidden border-4 border-white shadow ${achievementOutlineCss}`}
+                        style={style}
                     >
+                        {chosenAchievement?.type && (
+                            <span className="absolute -ml-[15px] -mt-[15px]">
+                                {getBadge(chosenAchievement.type, chosenAchievement.level)}
+                            </span>
+                        )}
                         <AuthenticatedImage
                             imageId={profileInformation.profile.profile_pic}
                             alt={t('profile_pic')}
@@ -162,6 +175,7 @@ interface iBadgeElem {
 }
 
 export const getBadge = (type: 'social' | 've', level: number): JSX.Element => {
+    const { t } = useTranslation(['community']);
     if (level > levelStrings.length) {
         return <></>;
     }
@@ -174,11 +188,12 @@ export const getBadge = (type: 'social' | 've', level: number): JSX.Element => {
     //         }
     //     />
     // );
+    const title: string = t(`${type}_badge_${level}`);
     return (
         <Image
-            src={`/images/badges/${type}_${levelStrings[level]}.png`}
+            src={`/images/badges/${type}_${levelStrings[level - 1]}.png`}
             alt={'badge images'}
-            title={`${type} achievement badge from level "${levelStrings[level]}"`}
+            title={title}
             className="w-[72px] rounded-full"
             width={72}
             height={50}
@@ -210,7 +225,7 @@ export const Badges = ({ achievements }: { achievements?: Achievements }): iBadg
                     <span key={`${type}-${i}`}>
                         {getBadge(
                             type,
-                            i
+                            i + 1
                             // Object.values(levelStrings2)[i] as keyof typeof levelStrings2
                         )}
                     </span>

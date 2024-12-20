@@ -1,9 +1,7 @@
-import { BackendPostAuthor, ChosenAchievement } from '@/interfaces/api/apiInterfaces';
+import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
 import AuthenticatedImage from '../common/AuthenticatedImage';
-import Link from 'next/link';
-import Timestamp from '@/components/common/Timestamp';
 import { useTranslation } from 'react-i18next';
-import Image from 'next/image';
+import { CSSProperties } from 'react';
 
 interface Props {
     profile_pic?: string;
@@ -13,7 +11,7 @@ interface Props {
     className?: string;
 }
 
-export const profileImgBadgeOutlineColors = ['#d6773b', '#5bb0b9', '#ea921a', '#8f8f8f'];
+export const profileImgBadgeOutlineColors = ['#d6773b', '#5bb0b9', '#f9f125', '#8f8f8f'];
 
 export default function UserProfileImage({
     profile_pic = 'default_profile_pic.jpg',
@@ -25,8 +23,13 @@ export default function UserProfileImage({
     const { t } = useTranslation(['community', 'common']);
 
     const achievementOutlineCss = `outline outline-2 outline-[${
-        profileImgBadgeOutlineColors[chosen_achievement?.level ? chosen_achievement?.level - 1 : 0]
+        profileImgBadgeOutlineColors[chosen_achievement?.level ? chosen_achievement.level - 1 : 0]
     }] outline-offset-2`;
+
+    // we have to set style property here, because otherwise dynamic outline color is not applied
+    const style: CSSProperties = chosen_achievement?.level
+        ? { outlineColor: profileImgBadgeOutlineColors[chosen_achievement.level - 1] }
+        : {};
 
     return (
         <AuthenticatedImage
@@ -37,6 +40,7 @@ export default function UserProfileImage({
             className={`rounded-full mr-3 ${
                 chosen_achievement?.type && achievementOutlineCss
             } ${className}`}
+            style={style}
         ></AuthenticatedImage>
     );
 }

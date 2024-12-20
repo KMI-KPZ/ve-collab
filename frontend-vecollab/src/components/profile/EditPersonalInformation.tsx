@@ -577,7 +577,7 @@ export default function EditPersonalInformation({
                     {hasAnyAchievement(personalInformation.achievements) && (
                         <div>
                             <EditProfileHeadline name={t('decoration_badge')} />
-                            <p>Choose an achievement as badge to decorate your profile image</p>
+                            <p>{t('decoration_badge_descr')}</p>
                             <ul className="flex gap-2 items-center">
                                 {Badges({ achievements: personalInformation.achievements }).map(
                                     (item, index) => {
