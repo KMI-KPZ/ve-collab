@@ -9,7 +9,7 @@ import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
-import { getBadge } from '../landingPage/UserInfoBox';
+import { Badge } from '../landingPage/UserInfoBox';
 import { profileImgBadgeOutlineColors } from '../network/UserProfileImage';
 
 interface Props {
@@ -116,7 +116,7 @@ export default function ProfileHeader({
             >
                 {chosen_achievement?.type && (
                     <span className="absolute -ml-[20px] -mt-[20px]">
-                        {getBadge(chosen_achievement.type, chosen_achievement.level)}
+                        <Badge type={chosen_achievement.type} level={chosen_achievement.level} />
                     </span>
                 )}
                 <AuthenticatedImage

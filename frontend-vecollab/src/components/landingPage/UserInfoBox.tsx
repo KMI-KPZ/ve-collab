@@ -45,7 +45,10 @@ export default function UserInfoBox({ profileInformation }: Props) {
                     >
                         {chosenAchievement?.type && (
                             <span className="absolute -ml-[15px] -mt-[15px]">
-                                {getBadge(chosenAchievement.type, chosenAchievement.level)}
+                                <Badge
+                                    type={chosenAchievement.type}
+                                    level={chosenAchievement.level}
+                                />
                             </span>
                         )}
                         <AuthenticatedImage
@@ -174,7 +177,7 @@ interface iBadgeElem {
     badge: JSX.Element;
 }
 
-export const getBadge = (type: 'social' | 've', level: number): JSX.Element => {
+export const Badge = ({ type, level }: { type: 'social' | 've'; level: number }): JSX.Element => {
     const { t } = useTranslation(['community']);
     if (level > levelStrings.length) {
         return <></>;
@@ -223,11 +226,7 @@ export const Badges = ({ achievements }: { achievements?: Achievements }): iBadg
                 level: achievements[type].level,
                 badge: (
                     <span key={`${type}-${i}`}>
-                        {getBadge(
-                            type,
-                            i + 1
-                            // Object.values(levelStrings2)[i] as keyof typeof levelStrings2
-                        )}
+                        <Badge type={type} level={i + 1} />
                     </span>
                 ),
             });

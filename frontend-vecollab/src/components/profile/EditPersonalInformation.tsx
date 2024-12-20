@@ -19,7 +19,7 @@ import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { useTranslation } from 'next-i18next';
-import { Badges, getBadge, hasAnyAchievement } from '../landingPage/UserInfoBox';
+import { Badges, Badge, hasAnyAchievement } from '../landingPage/UserInfoBox';
 import Button from '../common/buttons/Button';
 import { MdCheck } from 'react-icons/md';
 import ButtonLight from '../common/buttons/ButtongLight';
@@ -520,10 +520,10 @@ export default function EditPersonalInformation({
                                 />
                                 {personalInformation.chosen_achievement?.type && (
                                     <span className="absolute -mt-[178px] -ml-[12px]">
-                                        {getBadge(
-                                            personalInformation.chosen_achievement?.type,
-                                            personalInformation.chosen_achievement?.level
-                                        )}
+                                        <Badge
+                                            type={personalInformation.chosen_achievement?.type}
+                                            level={personalInformation.chosen_achievement?.level}
+                                        />
                                     </span>
                                 )}
                             </div>
