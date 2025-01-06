@@ -69,7 +69,7 @@ function generateSiteMap(staticUrls: string[], dynamicRoutes: string[]) {
     };
 
     return `<?xml version="1.0" encoding="UTF-8"?>
-        <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"  xmlns:xhtml="https://www.w3.org/1999/xhtml">
+        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"  xmlns:xhtml="http://www.w3.org/1999/xhtml">
             ${generateSitemapEntries(staticUrls)}
             ${generateSitemapEntries(dynamicRoutes)}
         </urlset>`;
