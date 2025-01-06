@@ -1,6 +1,3 @@
-# *
 User-agent: *
-Allow: /
-
-# Sitemaps
+Disallow:
 Sitemap: https://ve-collab.org/sitemap.xml
