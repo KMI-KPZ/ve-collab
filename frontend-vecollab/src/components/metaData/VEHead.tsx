@@ -21,7 +21,7 @@ export default function VEHead() {
                 name="robots"
                 content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
             />
-            {/* may overwrittten in <CustomHead />  */}
+            {/* may be overwritten in <CustomHead />  */}
             <title>{title}</title>
             <meta name="application-name" content="VE Collab" />
             <meta name="creator" content="VE Collab Team" />
