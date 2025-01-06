@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent, CSSProperties } from 'react';
 import {
     Institution,
     OptionLists,
@@ -19,11 +19,10 @@ import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { useTranslation } from 'next-i18next';
-import { Badges, Badge, hasAnyAchievement } from '../landingPage/UserInfoBox';
 import Button from '../common/buttons/Button';
 import { MdCheck } from 'react-icons/md';
 import ButtonLight from '../common/buttons/ButtongLight';
-import { profileImgBadgeOutlineColors } from '../network/UserProfileImage';
+import { Badge, badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -45,11 +44,11 @@ export default function EditPersonalInformation({
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
-    const achievementOutlineCss = personalInformation.chosen_achievement?.level
-        ? `outline outline-3 outline-offset-4 outline-[${
-              profileImgBadgeOutlineColors[personalInformation.chosen_achievement?.level - 1]
-          }]`
-        : '';
+    const achievementStyle: CSSProperties = personalInformation.chosen_achievement?.level
+        ? {
+              background: badgeOutlineColors[personalInformation.chosen_achievement.level - 1],
+          }
+        : {};
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -510,22 +509,24 @@ export default function EditPersonalInformation({
                         <EditProfileHeadline name={t('profile_picture')} />
                         <div className="w-fit">
                             <div
-                                className={`my-4 rounded-full overflow-hidden w-fit border-black border mt-[20px] ml-[10px] ${achievementOutlineCss}`}
+                                className={`my-4 rounded-full overflow-hidden w-fit p-[3px] -m-[3px] mt-[20px] ml-[10px]`}
+                                style={achievementStyle}
                             >
-                                <AuthenticatedImage
-                                    imageId={personalInformation.profilePicId as string}
-                                    alt={t('profile_picture')}
-                                    width={180}
-                                    height={180}
-                                />
                                 {personalInformation.chosen_achievement?.type && (
-                                    <span className="absolute -mt-[178px] -ml-[12px]">
+                                    <span className="absolute -ml-[15px] -mt-[15px]">
                                         <Badge
                                             type={personalInformation.chosen_achievement?.type}
                                             level={personalInformation.chosen_achievement?.level}
                                         />
                                     </span>
                                 )}
+                                <AuthenticatedImage
+                                    imageId={personalInformation.profilePicId as string}
+                                    alt={t('profile_picture')}
+                                    width={180}
+                                    height={180}
+                                    className="rounded-full border-2 border-white"
+                                />
                             </div>
                             <div className="flex justify-center">
                                 <button
@@ -578,13 +579,13 @@ export default function EditPersonalInformation({
                         <div>
                             <EditProfileHeadline name={t('decoration_badge')} />
                             <p>{t('decoration_badge_descr')}</p>
-                            <ul className="flex gap-2 items-center">
-                                {Badges({ achievements: personalInformation.achievements }).map(
+                            <ul className="flex flex-wrap gap-4 items-center">
+                                {getBadges({ achievements: personalInformation.achievements }).map(
                                     (item, index) => {
                                         return (
                                             <li key={index}>
                                                 <Button
-                                                    className="flex items-center"
+                                                    className={`flex items-center justify-center relative`}
                                                     onClick={() => {
                                                         setPersonalInformation({
                                                             ...personalInformation,
@@ -597,12 +598,14 @@ export default function EditPersonalInformation({
                                                 >
                                                     {item.badge}
                                                     {personalInformation.chosen_achievement?.type ==
-                                                        item.type && (
-                                                        <MdCheck
-                                                            size={22}
-                                                            className="text-green-600 m-2"
-                                                        />
-                                                    )}
+                                                        item.type &&
+                                                        personalInformation.chosen_achievement
+                                                            ?.level == item.level && (
+                                                            <MdCheck
+                                                                size={26}
+                                                                className="text-green-600 m-2 bg-white/75 rounded-full absolute"
+                                                            />
+                                                        )}
                                                 </Button>
                                             </li>
                                         );
@@ -610,7 +613,7 @@ export default function EditPersonalInformation({
                                 )}
                                 <li>
                                     <ButtonLight
-                                        className="!rounded-full flex items-center"
+                                        className="!rounded-full flex gap-2 items-center ml-4"
                                         onClick={() => {
                                             setPersonalInformation({
                                                 ...personalInformation,

@@ -9,8 +9,7 @@ import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
-import { Badge } from '../landingPage/UserInfoBox';
-import { profileImgBadgeOutlineColors } from '../network/UserProfileImage';
+import { Badge, badgeOutlineColors } from '../landingPage/Badge';
 
 interface Props {
     name: string;
@@ -96,26 +95,22 @@ export default function ProfileHeader({
         });
     };
 
-    const achievementOutlineCss = chosen_achievement?.level
-        ? `outline outline-3 outline-[${
-              profileImgBadgeOutlineColors[chosen_achievement?.level - 1]
-          }]`
-        : '';
-
     // we have to set style property here, because otherwise dynamic outline color is not applied
-    const style: CSSProperties = chosen_achievement?.level
-        ? { outlineColor: profileImgBadgeOutlineColors[chosen_achievement.level - 1] }
+    const achievementStyle: CSSProperties = chosen_achievement?.level
+        ? {
+              background: badgeOutlineColors[chosen_achievement.level - 1],
+          }
         : {};
 
     return (
         <div className={'flex'}>
             <div
-                className={`flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl w-[168px] h-[168px] ${achievementOutlineCss}
+                className={`flex-none mr-8 rounded-full overflow-hidden shadow w-[168px] h-[168px] p-[4px] -m-[4px]
                 `}
-                style={style}
+                style={achievementStyle}
             >
                 {chosen_achievement?.type && (
-                    <span className="absolute -ml-[20px] -mt-[20px]">
+                    <span className="absolute -ml-[15px] -mt-[15px]">
                         <Badge type={chosen_achievement.type} level={chosen_achievement.level} />
                     </span>
                 )}
@@ -125,6 +120,7 @@ export default function ProfileHeader({
                     width={180}
                     height={180}
                     isNoAuthPreview={isNoAuthPreview}
+                    className="rounded-full border-4 border-white"
                 />
             </div>
             <div className={'mr-auto'}>
