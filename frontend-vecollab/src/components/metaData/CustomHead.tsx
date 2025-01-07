@@ -24,24 +24,32 @@ export default function CustomHead({ pageTitle, pageDescription, pageSlug }: Pro
         <Head>
             <title>{pageTitleTemplate}</title>
 
-            <link rel="canonical" href={url} />
-            <link rel="alternate" href={urlAlternateEnglish} hrefLang="en-US" />
-            <link rel="alternate" href={urlAlternateGerman} hrefLang="de-DE" />
+            <link rel="canonical" href={url} key="canonical" />
+            <link rel="alternate" href={urlAlternateEnglish} hrefLang="en-US" key="alternateEN" />
+            <link rel="alternate" href={urlAlternateGerman} hrefLang="de-DE" key="alternateDE" />
 
             {pageDescription && (
                 <>
-                    <meta name="description" content={pageDescription} />
-                    <meta name="twitter:description" content={pageDescription} />
-                    <meta property="og:description" content={pageDescription} />
+                    <meta name="description" content={pageDescription} key="description" />
+                    <meta
+                        name="twitter:description"
+                        content={pageDescription}
+                        key="twitter:description"
+                    />
+                    <meta
+                        property="og:description"
+                        content={pageDescription}
+                        key="og:description"
+                    />
                 </>
             )}
 
-            <meta name="twitter:title" content={pageTitleTemplate} />
-            <meta property="og:site_name" content={pageTitleTemplate} />
-            <meta property="og:title" content={pageTitleTemplate} />
-
-            <meta property="og:locale" content={language} />
-            <meta name="language" content={language} />
+            <meta name="twitter:title" content={pageTitleTemplate} key="twitter:title" />
+            <meta property="og:site_name" content={pageTitleTemplate} key="og:site_name" />
+            <meta property="og:title" content={pageTitleTemplate} key="og:title" />
+            <meta property="og:url" content={url} key="og:url" />
+            <meta property="og:locale" content={language} key="og:locale" />
+            <meta name="language" content={language} key="language" />
         </Head>
     );
 }
