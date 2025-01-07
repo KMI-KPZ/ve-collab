@@ -246,7 +246,11 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                             </WhiteBox>
                             <BoxHeadline title="Timeline" />
                             {foreignUser ? (
-                                <Timeline socket={socket} user={router.query.username as string} />
+                                <Timeline
+                                    socket={socket}
+                                    user={router.query.username as string}
+                                    hideForm={true}
+                                />
                             ) : (
                                 <Timeline socket={socket} />
                             )}
