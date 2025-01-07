@@ -128,8 +128,6 @@ export default function SuggestionBox() {
 
             const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');
             if (cachedSuggestedUsers) {
-                console.log({ cachedSuggestedUsers });
-
                 setSuggestedUsers(cachedSuggestedUsers);
                 return;
             }
@@ -158,7 +156,7 @@ export default function SuggestionBox() {
         return (
             <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                <ul className="divide-y *:px-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
                         return (
                             <li
@@ -166,7 +164,7 @@ export default function SuggestionBox() {
                                 className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
                             >
                                 <Link
-                                    className="flex items-center truncate"
+                                    className="flex items-center truncate p-2"
                                     href={`/profile/user/${user.username}`}
                                 >
                                     <UserProfileImage
@@ -184,7 +182,7 @@ export default function SuggestionBox() {
                     })}
                 </ul>
                 <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                    <Link href={`/matching`} onClick={(e) => e.preventDefault()}>
+                    <Link href={`/matching`}>
                         {t('common:more')} <MdArrowRight size={24} className="inline mx-1" />
                     </Link>
                 </div>
