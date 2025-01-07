@@ -114,12 +114,14 @@ export default function EditProfileVeWindow({
                                             </div>
                                             <Select
                                                 className="w-2/3"
-                                                options={myPublicPlans.map((plan) => {
-                                                    return {
-                                                        label: plan.name,
-                                                        value: plan._id,
-                                                    };
-                                                })}
+                                                options={myPublicPlans
+                                                    .map((plan) => {
+                                                        return {
+                                                            label: plan.name,
+                                                            value: plan._id,
+                                                        };
+                                                    })
+                                                    .sort((a, b) => a.label.localeCompare(b.label))}
                                                 onChange={(e) =>
                                                     modifyChosenPlan(index, e!.value, e!.label)
                                                 }

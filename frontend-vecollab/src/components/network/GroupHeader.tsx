@@ -653,7 +653,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         user,
                                                                     value: user,
                                                                 };
-                                                            })}
+                                                            })
+                                                            .sort((a, b) =>
+                                                                a.label.localeCompare(b.label)
+                                                            )}
                                                         onChange={(e) =>
                                                             setChosenPermissionUser(e!)
                                                         }

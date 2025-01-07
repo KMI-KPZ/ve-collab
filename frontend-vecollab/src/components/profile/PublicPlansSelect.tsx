@@ -30,18 +30,18 @@ export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Pro
             session?.accessToken
         ).then((data) => {
             setLoading(false);
-            setMyPublicPlans(
-                data.plans.map((plan: any) => ({
+            const plans = data.plans
+                .map((plan: any) => ({
                     _id: plan._id,
                     name: plan.name,
                 }))
-            );
+                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+            setMyPublicPlans(plans);
             // default select the first plan, otherwise it would be visible in the select, but value still null
-            if(data.plans.length > 0){
-                setChosenPlanId(data.plans[0]._id)
+            if (plans.length > 0) {
+                setChosenPlanId(plans[0]._id);
             }
         });
-
     }, [session, setChosenPlanId]);
     return (
         <>
