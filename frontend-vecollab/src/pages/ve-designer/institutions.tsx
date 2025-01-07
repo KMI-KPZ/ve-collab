@@ -266,10 +266,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
         if (!importDialog.institutions.length) {
             return (
                 <div>
-                    <p>{t('institutions.no_inst_in_profile')}</p>
+                    <p className="mb-3">{t('institutions.no_inst_in_profile')}</p>
                     <Link href={'/profile/edit'} target="_blank">
                         <span className="border border-white bg-black/75 text-white rounded-lg px-3 py-1">
-                            {t('edit_profile')}
+                            {t('common:edit_profile')}
                         </span>
                     </Link>
                 </div>
