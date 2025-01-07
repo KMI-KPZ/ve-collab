@@ -142,7 +142,7 @@ export default function ProfileHeader({
                 <div className={'mt-11 font-bold text-4xl text-slate-900'}>{name}</div>
                 <div className={'text-gray-500'}>{institution}</div>
             </div>
-            <div className={'flex items-end mb-12'}>
+            <div className={'flex items-end mb-8'}>
                 <div className="flex mx-16 h-12 items-center">
                     {veReady ? (
                         <>
