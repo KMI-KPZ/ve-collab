@@ -1,16 +1,16 @@
 import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from bson.objectid import ObjectId
-import gridfs
-from pymongo.database import Database
-
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
+import gridfs
+from pymongo.database import Database
 
+from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
 import util
 
@@ -145,6 +145,12 @@ class Posts:
 
         result = self.db.posts.insert_one(post)
 
+        # the post is viable for the achievement "create_posts", when the
+        # text ist not empty
+        if post["text"] and post["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(post["author"], "create_posts")
+
         return result.inserted_id
 
     def update_post_text(self, post_id: str | ObjectId, text: str) -> ObjectId:
@@ -230,6 +236,18 @@ class Posts:
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
 
+        # count towards the achievement "give_likes" for the liking user,
+        # since all previous checks have succeeded
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "give_likes")
+
+        # count towards the achievement "posts_liked" of the post auther,
+        # since all previous checks have succeeded, but only if the
+        # liker is different than the author (liking own post doesnt count)
+        post = self.get_post(post_id, projection={"author": True})
+        if post["author"] != username:
+            profile_manager.achievement_count_up(post["author"], "posts_liked")
+
     def unlike_post(self, post_id: str | ObjectId, username: str) -> None:
         """
         remove the users like on the post given by its id
@@ -276,6 +294,12 @@ class Posts:
         # we know that there was no post with the given post_id
         if update_result.matched_count != 1:
             raise PostNotExistingException()
+
+        # the comment is viable for the achievement "create_comments", when the
+        # text ist not empty
+        if comment["text"] and comment["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(comment["author"], "create_comments")
 
         return comment["_id"]
 

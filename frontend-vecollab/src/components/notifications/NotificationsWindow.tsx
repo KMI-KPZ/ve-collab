@@ -10,6 +10,7 @@ import Tabs from '@/components/profile/Tabs';
 import { Notification } from '@/interfaces/socketio';
 import ReminderNotification from './ReminderNotification';
 import { useTranslation } from 'next-i18next';
+import AchievementLevelUpNotification from './AchievementLevelUpNotification';
 
 interface Props {
     socket: Socket;
@@ -58,7 +59,7 @@ export default function NotificationsWindow({
 
             <div className="h-[60vh] min-h-[16rem] overflow-y-auto content-scrollbar text-sm">
                 <Tabs>
-                    <div tabid='new' tabname={t('new')}>
+                    <div tabid="new" tabname={t('new')}>
                         <ul className="-mt-4 divide-y">
                             {notificationEvents.map((notification, index) => (
                                 <div key={index}>
@@ -98,6 +99,15 @@ export default function NotificationsWindow({
                                             removeNotificationCallback={removeNotificationFromList}
                                         />
                                     )}
+                                    {notification.type === 'achievement_level_up' && (
+                                        <AchievementLevelUpNotification
+                                            notification={notification}
+                                            acknowledgeNotificationCallback={
+                                                acknowledgeNotification
+                                            }
+                                            removeNotificationCallback={removeNotificationFromList}
+                                        />
+                                    )}
                                     {[
                                         'reminder_evaluation',
                                         'reminder_good_practise_examples',
@@ -115,7 +125,7 @@ export default function NotificationsWindow({
                             ))}
                         </ul>
                     </div>
-                    <div tabid='all' tabname={t('all')}>
+                    <div tabid="all" tabname={t('all')}>
                         <div className="-mt-4">
                             <AllNotifications socket={socket} />
                         </div>

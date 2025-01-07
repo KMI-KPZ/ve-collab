@@ -2,13 +2,15 @@ import Link from 'next/link';
 import { RxDotFilled } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import { useRouter } from 'next/router';
 import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import { Badge, badgeOutlineColors } from '../landingPage/Badge';
+import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     name: string;
@@ -17,6 +19,7 @@ interface Props {
     foreignUser: boolean;
     followers: string[];
     veReady: boolean;
+    chosen_achievement?: null | ChosenAchievement;
     isNoAuthPreview?: boolean;
 }
 
@@ -28,6 +31,7 @@ export default function ProfileHeader({
     foreignUser,
     followers,
     veReady,
+    chosen_achievement,
     isNoAuthPreview = false,
 }: Props) {
     const router = useRouter();
@@ -91,15 +95,32 @@ export default function ProfileHeader({
         });
     };
 
+    // we have to set style property here, because otherwise dynamic outline color is not applied
+    const achievementStyle: CSSProperties = chosen_achievement?.level
+        ? {
+              background: badgeOutlineColors[chosen_achievement.level - 1],
+          }
+        : {};
+
     return (
         <div className={'flex'}>
-            <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
+            <div
+                className={`flex-none mr-8 rounded-full overflow-hidden shadow w-[168px] h-[168px] p-[4px] -m-[4px]
+                `}
+                style={achievementStyle}
+            >
+                {chosen_achievement?.type && (
+                    <span className="absolute -ml-[15px] -mt-[15px]">
+                        <Badge type={chosen_achievement.type} level={chosen_achievement.level} />
+                    </span>
+                )}
                 <AuthenticatedImage
                     imageId={profilePictureUrl}
                     alt={t('profile_picture')}
                     width={180}
                     height={180}
                     isNoAuthPreview={isNoAuthPreview}
+                    className="rounded-full border-4 border-white"
                 />
             </div>
             <div className={'mr-auto'}>
@@ -121,7 +142,7 @@ export default function ProfileHeader({
                 <div className={'mt-11 font-bold text-4xl text-slate-900'}>{name}</div>
                 <div className={'text-gray-500'}>{institution}</div>
             </div>
-            <div className={'flex items-end mb-12'}>
+            <div className={'flex items-end mb-8'}>
                 <div className="flex mx-16 h-12 items-center">
                     {veReady ? (
                         <>

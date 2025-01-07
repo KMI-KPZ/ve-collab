@@ -1,5 +1,4 @@
 import { AuthenticatedFile } from '@/components/common/AuthenticatedFile';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
@@ -19,6 +18,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import UserProfileImage from '@/components/network/UserProfileImage';
 
 interface Props {
     socket: Socket;
@@ -116,6 +116,7 @@ export default function Group({ socket }: Props): JSX.Element {
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
+                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
             }
@@ -213,17 +214,20 @@ export default function Group({ socket }: Props): JSX.Element {
                             onClick={() => router.push(`/profile/user/${admin}`)}
                         >
                             <div className="flex justify-center">
-                                <AuthenticatedImage
-                                    imageId={
+                                <UserProfileImage
+                                    profile_pic={
                                         memberSnippets.find(
                                             (snippet) => snippet.preferredUsername === admin
                                         )!.profilePicUrl
                                     }
-                                    alt={t('profile_picture')}
+                                    chosen_achievement={
+                                        memberSnippets.find(
+                                            (snippet) => snippet.preferredUsername === admin
+                                        )!.chosen_achievement
+                                    }
                                     width={100}
                                     height={100}
-                                    className="rounded-full"
-                                ></AuthenticatedImage>
+                                />
                             </div>
                             <BoxHeadline
                                 title={
@@ -247,17 +251,20 @@ export default function Group({ socket }: Props): JSX.Element {
                                 onClick={() => router.push(`/profile/user/${member}`)}
                             >
                                 <div className="flex justify-center">
-                                    <AuthenticatedImage
-                                        imageId={
+                                    <UserProfileImage
+                                        profile_pic={
                                             memberSnippets.find(
                                                 (snippet) => snippet.preferredUsername === member
                                             )!.profilePicUrl
                                         }
-                                        alt={t('profile_picture')}
+                                        chosen_achievement={
+                                            memberSnippets.find(
+                                                (snippet) => snippet.preferredUsername === member
+                                            )!.chosen_achievement
+                                        }
                                         width={100}
                                         height={100}
-                                        className="rounded-full"
-                                    ></AuthenticatedImage>
+                                    />
                                 </div>
                                 <BoxHeadline
                                     title={

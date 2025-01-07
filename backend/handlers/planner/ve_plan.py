@@ -1986,6 +1986,19 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
+        # count towards the achievements "ve_plans" and 
+        # conditionally count towards the "good_practice_plans" and 
+        # "unique_partners" achievements (obeying their constraints)
+        profile_manager = Profiles(db)
+        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            self.current_user.username, plan.partners
+        )
+        if plan.is_good_practise:
+            profile_manager.achievement_count_up_check_constraint_good_practice(
+                self.current_user.username, plan._id
+            )
+
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
     def update_full_plan(
@@ -2050,6 +2063,19 @@ class VEPlanHandler(BaseHandler):
                 er.initiate_etherpad_for_plan(_id)
             except Exception:
                 logger.warn("etherpad is possibly down")
+
+        # count towards the achievement "ve_plans" since update was successfull
+        # conditionally count towards the "good_practice_plans" and 
+        # "unique_partners" achievements (obeying their constraints)
+        profile_manager = Profiles(db)
+        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            self.current_user.username, plan.partners
+        )
+        if plan.is_good_practise:
+            profile_manager.achievement_count_up_check_constraint_good_practice(
+                self.current_user.username, plan._id
+            )
 
         self.serialize_and_write({"success": True, "updated_id": _id})
 
@@ -2163,6 +2189,20 @@ class VEPlanHandler(BaseHandler):
                 except Exception:
                     logger.warn("etherpad is possibly down")
 
+            # count towards the achievement "ve_plans" since update was successfull
+            # conditionally count towards the "good_practice_plans" and 
+            # "unique_partners" achievements (obeying their constraints)
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+            if field_name == "is_good_practise" and field_value is True:
+                profile_manager.achievement_count_up_check_constraint_good_practice(
+                    self.current_user.username, plan_id
+                )
+            if field_name == "partners":
+                profile_manager.achievement_count_up_check_constraint_unique_partners(
+                    self.current_user.username, field_value
+                )
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def bulk_update_fields_in_plan(self, db: Database, update_instructions: List[Dict]):
@@ -2185,6 +2225,7 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
+        profile_manager = Profiles(db)
         errors = []
 
         for update_instruction in update_instructions:
@@ -2210,6 +2251,20 @@ class VEPlanHandler(BaseHandler):
                     )
                     # after a successful update, extend the lock expiry
                     self._extend_lock(plan_id)
+
+                    # conditionally count towards the "good_practice_plans" and 
+                    # "unique_partners" achievements (obeying their constraints)
+                    if (
+                        update_instruction["field_name"] == "is_good_practise"
+                        and update_instruction["value"] is True
+                    ):
+                        profile_manager.achievement_count_up_check_constraint_good_practice(
+                            self.current_user.username, plan_id
+                        )
+                    if update_instruction["field_name"] == "partners":
+                        profile_manager.achievement_count_up_check_constraint_unique_partners(
+                            self.current_user.username, update_instruction["value"]
+                        )
                 else:
                     error_reason = PLAN_LOCKED
                     error_status_code = 403
@@ -2257,6 +2312,9 @@ class VEPlanHandler(BaseHandler):
                 {"success": False, "reason": "operation_errors", "errors": errors}
             )
         else:
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
             self.serialize_and_write({"success": True})
 
     def append_step_to_plan(
@@ -2340,6 +2398,10 @@ class VEPlanHandler(BaseHandler):
         if error_reason:
             self.write({"success": False, "reason": error_reason})
         else:
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
+
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def put_evaluation_file(
@@ -2399,6 +2461,10 @@ class VEPlanHandler(BaseHandler):
                 self.set_status(403)
                 self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                 return
+
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
@@ -2467,6 +2533,10 @@ class VEPlanHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": MAXIMUM_FILES_EXCEEDED})
                 return
+
+            # count towards the achievement "ve_plans" since update was successfull
+            profile_manager = Profiles(db)
+            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
 
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})

@@ -13,6 +13,7 @@ import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import UserProfileImage from '@/components/network/UserProfileImage';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -138,13 +139,12 @@ export default function SearchResult() {
                                             className="flex m-2 items-center"
                                             href={`/profile/user/${user.username}`}
                                         >
-                                            <AuthenticatedImage
-                                                imageId={user.profile_pic}
-                                                alt={t('profile_picture')}
+                                            <UserProfileImage
+                                                profile_pic={user.profile_pic}
+                                                chosen_achievement={user.chosen_achievement}
                                                 width={50}
                                                 height={50}
-                                                className="rounded-full mr-2"
-                                            ></AuthenticatedImage>
+                                            />
                                             <span className="font-bold text-slate-900">
                                                 {user.first_name} {user.last_name}
                                             </span>
