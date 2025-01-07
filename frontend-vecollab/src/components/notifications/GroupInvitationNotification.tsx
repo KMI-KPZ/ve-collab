@@ -74,7 +74,7 @@ export default function GroupInvitationNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
-                    <p className='mb-1 underline decoration-ve-collab-blue'>Gruppen-Einladung</p>
+                    <p className="mb-1 underline decoration-ve-collab-blue">Gruppen-Einladung</p>
 
                     <p>
                         Du wurdest von <b>{invitedFromUser?.name}</b> in die Gruppe{' '}
@@ -88,7 +88,6 @@ export default function GroupInvitationNotification({
                 {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
-                            console.log('hi');
                         }}
                     >
                         <RxDotsVertical size={25} />

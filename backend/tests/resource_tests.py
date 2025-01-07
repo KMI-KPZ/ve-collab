@@ -533,11 +533,11 @@ class SpaceACLResourceTest(BaseResourceTestCase):
         self.assertEqual(acl_entry["space"], self.space_id)
         self.assertEqual(acl_entry["join_space"], False)
         self.assertEqual(acl_entry["read_timeline"], True)
-        self.assertEqual(acl_entry["post"], False)
-        self.assertEqual(acl_entry["comment"], False)
-        self.assertEqual(acl_entry["read_wiki"], False)
+        self.assertEqual(acl_entry["post"], True)
+        self.assertEqual(acl_entry["comment"], True)
+        self.assertEqual(acl_entry["read_wiki"], True)
         self.assertEqual(acl_entry["write_wiki"], False)
-        self.assertEqual(acl_entry["read_files"], False)
+        self.assertEqual(acl_entry["read_files"], True)
         self.assertEqual(acl_entry["write_files"], False)
 
     def test_insert_admin(self):
@@ -5850,6 +5850,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": False,
+            "is_good_practise_planned": False,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -5997,6 +5998,10 @@ class PlanResourceTest(BaseResourceTestCase):
                     plan.is_good_practise, self.default_plan["is_good_practise"]
                 )
                 self.assertEqual(
+                    plan.is_good_practise_planned,
+                    self.default_plan["is_good_practise_planned"],
+                )
+                self.assertEqual(
                     plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
                 )
                 self.assertEqual(plan.abstract, self.default_plan["abstract"])
@@ -6084,6 +6089,10 @@ class PlanResourceTest(BaseResourceTestCase):
                 )
                 self.assertEqual(
                     plan.is_good_practise, self.default_plan["is_good_practise"]
+                )
+                self.assertEqual(
+                    plan.is_good_practise_planned,
+                    self.default_plan["is_good_practise_planned"],
                 )
                 self.assertEqual(
                     plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
@@ -6245,6 +6254,9 @@ class PlanResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(plan.is_good_practise, self.default_plan["is_good_practise"])
         self.assertEqual(
+            plan.is_good_practise_planned, self.default_plan["is_good_practise_planned"]
+        )
+        self.assertEqual(
             plan.is_good_practise_ro, self.default_plan["is_good_practise_ro"]
         )
         self.assertEqual(plan.abstract, self.default_plan["abstract"])
@@ -6305,6 +6317,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "is_good_practise_planned": True,
                 "is_good_practise_ro": False,
                 "abstract": "test",
                 "underlying_ve_model": "test",
@@ -6362,6 +6375,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": True,
+                "is_good_practise_planned": True,
                 "is_good_practise_ro": False,
                 "abstract": "test",
                 "underlying_ve_model": "test",
@@ -6419,6 +6433,7 @@ class PlanResourceTest(BaseResourceTestCase):
                 "workload": self.step.workload,
                 "steps": [self.step.to_dict()],
                 "is_good_practise": False,
+                "is_good_practise_planned": False,
                 "is_good_practise_ro": False,
                 "abstract": "test",
                 "underlying_ve_model": "test",
@@ -6517,6 +6532,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -6591,6 +6607,7 @@ class PlanResourceTest(BaseResourceTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -6793,6 +6810,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.planner.update_field(self.plan_id, "is_good_practise", False)
+        self.planner.update_field(self.plan_id, "is_good_practise_planned", True)
         self.planner.update_field(self.plan_id, "is_good_practise_ro", True)
         self.planner.update_field(self.plan_id, "abstract", "updated_abstract")
         self.planner.update_field(self.plan_id, "underlying_ve_model", "updated_model")
@@ -6835,6 +6853,7 @@ class PlanResourceTest(BaseResourceTestCase):
             [{"username": "test_user", "technology": True, "exam_regulations": True}],
         )
         self.assertEqual(db_state["is_good_practise"], False)
+        self.assertEqual(db_state["is_good_practise_planned"], True)
         self.assertEqual(db_state["is_good_practise_ro"], True)
         self.assertEqual(db_state["abstract"], "updated_abstract")
         self.assertEqual(db_state["underlying_ve_model"], "updated_model")

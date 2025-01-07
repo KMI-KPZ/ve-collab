@@ -130,7 +130,6 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                         if (isNoAuthPreview) return;
 
                         // handleSelectOption(value, comment);
-                        console.log({ value });
                         handleSwitchAuthorChange(value);
                     }}
                     icon={

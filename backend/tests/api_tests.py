@@ -7746,6 +7746,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             "workload": 10,
             "steps": [],
             "is_good_practise": True,
+            "is_good_practise_planned": True,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -8366,6 +8367,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "workload": self.step.workload,
             "steps": [self.step.to_dict()],
             "is_good_practise": False,
+            "is_good_practise_planned": False,
             "is_good_practise_ro": False,
             "abstract": "test",
             "underlying_ve_model": "test",
@@ -8551,6 +8553,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             response_plan["is_good_practise"], default_plan.is_good_practise
         )
         self.assertEqual(
+            response_plan["is_good_practise_planned"],
+            default_plan.is_good_practise_planned,
+        )
+        self.assertEqual(
             response_plan["is_good_practise_ro"], default_plan.is_good_practise_ro
         )
         self.assertEqual(response_plan["abstract"], default_plan.abstract)
@@ -8670,6 +8676,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response_plan["is_good_practise"], good_practise_plan.is_good_practise
+        )
+        self.assertEqual(
+            response_plan["is_good_practise_planned"],
+            good_practise_plan.is_good_practise_planned,
         )
         self.assertEqual(
             response_plan["is_good_practise_ro"], good_practise_plan.is_good_practise_ro
@@ -8855,6 +8865,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(
             response_plan["is_good_practise"], default_plan.is_good_practise
+        )
+        self.assertEqual(
+            response_plan["is_good_practise_planned"],
+            default_plan.is_good_practise_planned,
         )
         self.assertEqual(
             response_plan["is_good_practise_ro"], default_plan.is_good_practise_ro

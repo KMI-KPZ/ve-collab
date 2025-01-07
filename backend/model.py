@@ -1414,6 +1414,7 @@ class VEPlan:
         "checklist": list,
         "steps": list,
         "is_good_practise": (bool, type(None)),
+        "is_good_practise_planned": (bool, type(None)),
         "is_good_practise_ro": (bool, type(None)),
         "abstract": (str, type(None)),
         "underlying_ve_model": (str, type(None)),
@@ -1451,6 +1452,7 @@ class VEPlan:
         checklist: list = [],
         steps: List[Step] = [],
         is_good_practise: bool = None,
+        is_good_practise_planned: bool = None,
         is_good_practise_ro: bool = None,
         abstract: str = None,
         underlying_ve_model: str = None,
@@ -1515,6 +1517,9 @@ class VEPlan:
         if not is_good_practise:
             is_good_practise = False
         self.is_good_practise = is_good_practise
+        if not is_good_practise_planned:
+            is_good_practise_planned = False
+        self.is_good_practise_planned = is_good_practise_planned
         if not is_good_practise_ro:
             is_good_practise_ro = False
         self.is_good_practise_ro = is_good_practise_ro
@@ -1687,6 +1692,7 @@ class VEPlan:
             "workload": self.workload,
             "steps": [step.to_dict() for step in self.steps],
             "is_good_practise": self.is_good_practise,
+            "is_good_practise_planned": self.is_good_practise_planned,
             "is_good_practise_ro": self.is_good_practise_ro,
             "abstract": self.abstract,
             "underlying_ve_model": self.underlying_ve_model,
@@ -1861,6 +1867,7 @@ class VEPlan:
                     }
                 ],
                 "is_good_practise": True,
+                "is_good_practise_planned": True,
                 "is_good_practise_ro": True,
                 "abstract": None,
                 "underlying_ve_model": None,

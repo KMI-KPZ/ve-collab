@@ -157,6 +157,7 @@
     "multiple_new_notifications": "Du hast {{count}} neue Benachrichtigungen",
     "details": "Details",
     "suggested_materials": "Vorgeschlagene Module",
+    "suggested_users": "Kennst du diese Nutzer?",
     "general": "Stammdaten",
     "settings": "Einstellungen",
     "saved": "Gespeichert",
@@ -247,6 +248,14 @@
     "matching_exclusion_question": "Wenn du dich vim Matching ausschließt, gibt es keine Chance für andere Personen dich im Rahmen der VE-Partner:innensuche zu finden!",
     "attend_matching": "Ich nehme am Matching teil",
     "exclude_matching": "vom Matching ausschließen",
+    "school_type_options": {
+        "university": "Hochschule/Universität/College",
+        "university_applied": "Fachhochschule",
+        "professional_school": "Berufsschule",
+        "school_primary": "Schule - Primarbereich",
+        "school_secondary": "Schule - Sekundarbereich",
+        "other": "Sonstige"
+    },
     "ve_interests_options": {
         "Good Practice Examples": "Good-Practice Beispiele",
         "Evaluation": "Evaluation",

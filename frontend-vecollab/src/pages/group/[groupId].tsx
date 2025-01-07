@@ -54,7 +54,6 @@ export default function Group({ socket }: Props): JSX.Element {
         error,
         mutate,
     } = useGetGroup(session!.accessToken, groupId as string);
-    console.log({ group });
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -63,7 +62,6 @@ export default function Group({ socket }: Props): JSX.Element {
         session!.accessToken,
         groupId as string
     );
-    console.log({ groupACLEntry });
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -100,7 +98,6 @@ export default function Group({ socket }: Props): JSX.Element {
         );
 
         const responseJson = await response.json();
-        console.log(responseJson);
 
         mutate();
         setUploadFile(undefined);

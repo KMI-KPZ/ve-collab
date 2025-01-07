@@ -52,8 +52,6 @@ export default function EditProfileVeWindow({
     };
 
     const modifyChosenPlan = (index: number, value: string, name: string) => {
-        console.log(value);
-        console.log(name);
         let newItems = [...items];
         newItems[index].plan = {
             _id: value,
@@ -92,10 +90,8 @@ export default function EditProfileVeWindow({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t("ve_window")} />
-                <div className="mb-2 text-sm">
-                    {t('ve_window_question')}
-                </div>
+                <EditProfileHeadline name={t('ve_window')} />
+                <div className="mb-2 text-sm">{t('ve_window_question')}</div>
                 {isLoading ? (
                     <LoadingAnimation />
                 ) : (
@@ -113,7 +109,7 @@ export default function EditProfileVeWindow({
                                         <div className="mt-2 flex">
                                             <div className={'flex items-center w-1/3'}>
                                                 <label htmlFor={'plan'} className="px-2 py-2">
-                                                    {t("choose_plan")}
+                                                    {t('choose_plan')}
                                                 </label>
                                             </div>
                                             <Select
@@ -135,28 +131,28 @@ export default function EditProfileVeWindow({
                                                           }
                                                         : null
                                                 }
-                                                placeholder={t("common:choose_option")}
+                                                placeholder={t('common:choose_option')}
                                             />
                                         </div>
                                         <EditProfileItemRow
-                                            label={t("common:title")}
+                                            label={t('common:title')}
                                             value={item.title}
                                             onChange={(e) => {
                                                 modifyTitle(index, e.target.value);
                                             }}
                                             labelElementWidth="w-1/3"
                                             inputElemenWidth="w-2/3"
-                                            placeholder={t("ve_window_title_placeholder")}
+                                            placeholder={t('ve_window_title_placeholder')}
                                         />
                                         <EditProfileItemRow
-                                            label={t("description")}
+                                            label={t('description')}
                                             value={item.description}
                                             onChange={(e) => {
                                                 modifyDescription(index, e.target.value);
                                             }}
                                             labelElementWidth="w-1/3"
                                             inputElemenWidth="w-2/3"
-                                            placeholder={t("ve_window_description_placeholder")}
+                                            placeholder={t('ve_window_description_placeholder')}
                                         />
                                     </SlateBox>
                                 </div>

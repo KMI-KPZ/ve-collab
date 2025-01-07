@@ -30,7 +30,7 @@ export default function FooterSection() {
             </div>
             <hr className="w-8/12 mx-auto mb-4 border-gray-400/50 border-0.5" />
             <div className="flex flex-wrap justify-center">
-                <p className="mx-2">© 2024 VE-Collab</p>
+                <p className="mx-2">© {new Date().getFullYear()} VE-Collab</p>
                 <p className="mx-2">
                     <Link target="_blank" href="https://infai.org/das-institut/impressum/">
                         {t('imprint')}

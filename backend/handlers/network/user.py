@@ -154,7 +154,6 @@ class ProfileInformationHandler(BaseHandler):
         user_information_response = {
             "user_id": keycloak_info["id"],
             "username": username,
-            "email": keycloak_info["email"],
         }
 
         with util.get_mongodb() as db:
@@ -942,6 +941,7 @@ class UserHandler(BaseHandler):
     """
     User management
     """
+
     def options(self, slug):
         # no body
         self.set_status(200)
@@ -987,7 +987,6 @@ class UserHandler(BaseHandler):
             user_information_response = {
                 "id": keycloak_info["id"],
                 "username": username,
-                "email": keycloak_info["email"],
             }
 
             with util.get_mongodb() as db:
@@ -1035,7 +1034,6 @@ class UserHandler(BaseHandler):
                         "first_name": profile_obj["first_name"],
                         "last_name": profile_obj["last_name"],
                         "username": user["username"],
-                        "email": user["email"],
                         "role": profile_obj["role"],
                         "follows": profile_obj["follows"],
                         "followers": profile_manager.get_followers(user["username"]),

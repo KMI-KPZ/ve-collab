@@ -245,8 +245,6 @@ export default function Edit() {
         setSuccessPopupOpen(true);
     }
 
-    console.log(treeData);
-
     return (
         <>
             <CustomHead pageTitle={t('edit')} pageSlug={`learning-material/edit`} />

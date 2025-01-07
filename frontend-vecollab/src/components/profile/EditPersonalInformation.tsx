@@ -77,7 +77,7 @@ export default function EditPersonalInformation({
     const [newInstitution, setNewInstitution] = useState<Institution>({
         _id: '',
         name: '',
-        school_type: '',
+        school_type: 'Hochschule/Universität/College',
         department: '',
         country: '',
     });
@@ -220,67 +220,90 @@ export default function EditPersonalInformation({
                             </div>
                         </div>
                     </div>
-                    <EditProfilePlusMinusButtons
-                        plusCallback={(e) => {
-                            e.preventDefault();
-                            handleOpenNewInstitutionDialog();
-                        }}
-                    />
+                    {personalInformation.institutions.length > 0 && (
+                        <EditProfilePlusMinusButtons
+                            plusCallback={(e) => {
+                                e.preventDefault();
+                                handleOpenNewInstitutionDialog();
+                            }}
+                        />
+                    )}
                 </div>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                     {institutionsLoading ? (
                         <LoadingAnimation />
                     ) : (
                         <>
-                            {personalInformation.institutions.map((institution, index) => (
-                                <div
-                                    key={index}
-                                    className={
-                                        'rounded-xl border p-2 relative ' +
-                                        (personalInformation.chosen_institution_id ===
-                                        institution._id
-                                            ? 'border-slate-900 cursor-default'
-                                            : 'border-[#cccccc] cursor-pointer')
-                                    }
-                                    title={
-                                        personalInformation.chosen_institution_id ===
-                                        institution._id
-                                            ? t('current_institution')
-                                            : t('choose_as_current_institution')
-                                    }
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setPersonalInformation({
-                                            ...personalInformation,
-                                            chosen_institution_id: institution._id,
-                                        });
-                                    }}
-                                >
+                            {personalInformation.institutions.length === 0 ? (
+                                <div className="w-fit">
                                     <button
-                                        className="absolute top-2 right-2"
+                                        className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                        type="button"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            setAskDeletion(true);
-                                            e.stopPropagation();
+                                            handleOpenNewInstitutionDialog();
                                         }}
                                     >
-                                        <RxTrash />
+                                        {t('common:new')}
                                     </button>
-                                    {askDeletion && (
-                                        <ConfirmDialog
-                                            message={t('confirm_delete_institution')}
-                                            callback={(proceed) => {
-                                                if (proceed) deleteInstitution(index);
-                                                setAskDeletion(false);
-                                            }}
-                                        />
-                                    )}
-                                    <div className="font-bold">{institution.name}</div>
-                                    <div>{institution.department}</div>
-                                    <div className="text-gray-600">{institution.school_type}</div>
-                                    <div className="text-gray-600">{institution.country}</div>
                                 </div>
-                            ))}
+                            ) : (
+                                <>
+                                    {personalInformation.institutions.map((institution, index) => (
+                                        <div
+                                            key={index}
+                                            className={
+                                                'rounded-xl border p-2 relative ' +
+                                                (personalInformation.chosen_institution_id ===
+                                                institution._id
+                                                    ? 'border-slate-900 cursor-default'
+                                                    : 'border-[#cccccc] cursor-pointer')
+                                            }
+                                            title={
+                                                personalInformation.chosen_institution_id ===
+                                                institution._id
+                                                    ? t('current_institution')
+                                                    : t('choose_as_current_institution')
+                                            }
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setPersonalInformation({
+                                                    ...personalInformation,
+                                                    chosen_institution_id: institution._id,
+                                                });
+                                            }}
+                                        >
+                                            <button
+                                                className="absolute top-2 right-2"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setAskDeletion(true);
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                <RxTrash />
+                                            </button>
+                                            {askDeletion && (
+                                                <ConfirmDialog
+                                                    message={t('confirm_delete_institution')}
+                                                    callback={(proceed) => {
+                                                        if (proceed) deleteInstitution(index);
+                                                        setAskDeletion(false);
+                                                    }}
+                                                />
+                                            )}
+                                            <div className="font-bold">{institution.name}</div>
+                                            <div>{institution.department}</div>
+                                            <div className="text-gray-600">
+                                                {institution.school_type}
+                                            </div>
+                                            <div className="text-gray-600">
+                                                {institution.country}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
+                            )}
                         </>
                     )}
                 </div>
@@ -289,7 +312,7 @@ export default function EditPersonalInformation({
                     title={t('create_new_institution')}
                     onClose={handleCloseNewInstitutionDialog}
                 >
-                    <div className="h-[19rem] relative">
+                    <div className="h-[19rem] w-[32rem] relative">
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="name" className="px-2 py-2">
@@ -348,22 +371,25 @@ export default function EditPersonalInformation({
                                             school_type: e.target.value,
                                         })
                                     }
+                                    defaultValue="Hochschule/Universität/College"
                                 >
                                     <option value="Hochschule/Universität/College">
-                                        Hochschule/Universität/College
+                                        {t('school_type_options.university')}
                                     </option>
                                     <option value="Fachhochschule/University of Applied Sciences">
-                                        Fachhochschule/University of Applied Sciences
+                                        {t('school_type_options.university_applied')}
                                     </option>
-                                    <option value="Berufsschule">Berufsschule</option>
+                                    <option value="Berufsschule">
+                                        {t('school_type_options.professional_school')}
+                                    </option>
                                     <option value="Schule – Primärbereich">
-                                        Schule – Primärbereich
+                                        {t('school_type_options.school_primary')}
                                     </option>
                                     <option value="Schule – Sekundarbereich">
-                                        Schule – Sekundarbereich
+                                        {t('school_type_options.school_secondary')}
                                     </option>
 
-                                    <option value="Sonstige">Sonstige</option>
+                                    <option value="Sonstige">{t('school_type_options.other')}</option>
                                 </select>
                             </div>
                         </div>
