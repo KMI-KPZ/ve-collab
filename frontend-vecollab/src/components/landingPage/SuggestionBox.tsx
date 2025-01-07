@@ -6,9 +6,9 @@ import { fetchGET, fetchTaxonomy } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import AuthenticatedImage from '../common/AuthenticatedImage';
 import { getClusterRouteBySlug } from '@/pages/learning-material';
 import LocalStorage from '@/lib/storage';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface ISuggestedLection {
     id: number;
@@ -150,7 +150,7 @@ export default function SuggestionBox() {
                     </>
                 );
             }
-            return <>{user.username.replaceAll('_', ' ')}</>;
+            return <>{user.username?.replaceAll('_', ' ')}</>;
         };
 
         if (!suggestedUsers) return <></>;
@@ -169,13 +169,12 @@ export default function SuggestionBox() {
                                     className="flex items-center truncate"
                                     href={`/profile/user/${user.username}`}
                                 >
-                                    <AuthenticatedImage
-                                        imageId={user.profile_pic}
-                                        alt={t('profile_picture')}
-                                        width={50}
+                                    <UserProfileImage
+                                        profile_pic={user.profile_pic}
+                                        chosen_achievement={user.chosen_achievement}
                                         height={50}
-                                        className="rounded-full mr-2"
-                                    ></AuthenticatedImage>
+                                        width={50}
+                                    />
                                     <span className="text-slate-900 capitalize truncate">
                                         {printUsername(user)}
                                     </span>

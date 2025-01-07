@@ -26,7 +26,7 @@ export default function UserProfileImage({
         : {};
 
     return (
-        <span className="rounded-full p-[2px] -m-[2px] mr-3" style={style}>
+        <span className="inline-block rounded-full p-[2px] -m-[2px] mr-3" style={style}>
             <AuthenticatedImage
                 imageId={profile_pic}
                 alt={t('profile_picture')}

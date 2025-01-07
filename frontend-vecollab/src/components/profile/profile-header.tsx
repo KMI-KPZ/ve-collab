@@ -10,6 +10,7 @@ import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
 import { Badge, badgeOutlineColors } from '../landingPage/Badge';
+import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
 
 interface Props {
     name: string;
@@ -18,7 +19,7 @@ interface Props {
     foreignUser: boolean;
     followers: string[];
     veReady: boolean;
-    chosen_achievement?: null | { type: 'social' | 've' | ''; level: number };
+    chosen_achievement?: null | ChosenAchievement;
     isNoAuthPreview?: boolean;
 }
 

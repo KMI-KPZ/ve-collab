@@ -54,6 +54,7 @@ export default function ProfileBanner({
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
+                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
                 setLoading(false);
@@ -79,6 +80,7 @@ export default function ProfileBanner({
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
+                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
                 setLoading(false);

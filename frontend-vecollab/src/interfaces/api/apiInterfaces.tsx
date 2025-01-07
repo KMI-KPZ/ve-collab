@@ -14,6 +14,7 @@ export interface BackendUserSnippet {
     last_name: string;
     profile_pic: string;
     institution: string;
+    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface BackendProfileSnippetsResponse {
@@ -32,6 +33,7 @@ export interface BackendUser {
     spaces: string[];
     profile: BackendProfile;
     profile_pic: string;
+    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface BackendProfile {

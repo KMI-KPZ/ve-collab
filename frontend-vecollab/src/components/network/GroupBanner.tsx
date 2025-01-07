@@ -7,10 +7,10 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST, useGetGroup } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../common/LoadingAnimation';
-import AuthenticatedImage from '../common/AuthenticatedImage';
 import BoxHeadline from '../common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
+import UserProfileImage from './UserProfileImage';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -48,6 +48,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
+                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
                 setLoading(false);
@@ -119,7 +120,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                             {memberSnippets.map((snippet, index) => (
                                 <li key={index} className="flex py-2">
                                     <div
-                                        className="flex cursor-pointer"
+                                        className="flex cursor-pointer items-center"
                                         onClick={(e) => {
                                             e.preventDefault();
                                             router.push(
@@ -129,13 +130,12 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                         }}
                                     >
                                         <div>
-                                            <AuthenticatedImage
-                                                imageId={snippet.profilePicUrl}
-                                                alt={t('profile_picture')}
+                                            <UserProfileImage
+                                                profile_pic={snippet.profilePicUrl}
+                                                chosen_achievement={snippet.chosen_achievement}
                                                 width={60}
                                                 height={60}
-                                                className="rounded-full"
-                                            ></AuthenticatedImage>
+                                            />
                                         </div>
                                         <div>
                                             <BoxHeadline title={snippet.name} />
