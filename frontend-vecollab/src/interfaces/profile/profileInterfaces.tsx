@@ -11,7 +11,7 @@ export interface PersonalInformation {
     institutions: Institution[];
     chosen_institution_id: string;
     achievements?: Achievements;
-    chosen_achievement?: null | { type: 'social' | 've' | ''; level: number };
+    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface Institution {

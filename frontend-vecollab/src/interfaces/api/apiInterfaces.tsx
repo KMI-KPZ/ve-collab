@@ -189,6 +189,6 @@ export interface Achievement {
 }
 
 export interface ChosenAchievement {
-    type: 'social' | 've';
+    type: 'social' | 've' | '';
     level: number;
 }
