@@ -381,6 +381,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label>{t('step-names.time')}</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
                                                     { valueAsNumber: true }
