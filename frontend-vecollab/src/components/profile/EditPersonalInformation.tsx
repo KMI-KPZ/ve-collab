@@ -377,7 +377,9 @@ export default function EditPersonalInformation({
                                         {t('school_type_options.school_secondary')}
                                     </option>
 
-                                    <option value="Sonstige">{t('school_type_options.other')}</option>
+                                    <option value="Sonstige">
+                                        {t('school_type_options.other')}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -442,10 +444,12 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('expertise')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.expertiseKeys.map((expertise) => ({
-                        label: t('expertise_options.' + expertise, { defaultValue: expertise }),
-                        value: expertise,
-                    }))}
+                    options={optionLists.expertiseKeys
+                        .map((expertise) => ({
+                            label: t('expertise_options.' + expertise, { defaultValue: expertise }),
+                            value: expertise,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
                     onChange={(e) =>
                         setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
@@ -484,10 +488,12 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('languages')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.languageKeys.map((language) => ({
-                        label: t('common:languages.' + language, { defaultValue: language }),
-                        value: language,
-                    }))}
+                    options={optionLists.languageKeys
+                        .map((language) => ({
+                            label: t('common:languages.' + language, { defaultValue: language }),
+                            value: language,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
                     onChange={(e) =>
                         setPersonalInformation({
                             ...personalInformation,
