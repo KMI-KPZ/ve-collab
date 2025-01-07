@@ -33,7 +33,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
             <div className="group">
                 <div className="-mt-[52px] -ml-[32px] flex relative">
                     <div
-                        className={`w-[180px] bg-white rounded-full overflow-hidden shadow p-[4px] -m-[4px]`}
+                        className={`shrink-0 w-[180px] bg-white rounded-full overflow-hidden shadow p-[4px] -m-[4px]`}
                         style={achievementStyle}
                     >
                         {chosenAchievement?.type && (
@@ -55,12 +55,14 @@ export default function UserInfoBox({ profileInformation }: Props) {
 
                     <div
                         className={
-                            'font-bold text-xl text-slate-900 self-end -ml-[28px] mb-4 truncate bg-white px-2 py-1 rounded-full'
+                            'font-bold text-xl text-slate-900 self-end -ml-[28px] mb-4 text-right'
                         }
                     >
-                        {profileInformation.profile.first_name}
-                        &nbsp;
-                        {profileInformation.profile.last_name}
+                        <span className="bg-white rounded-full box-decoration-clone px-2 py-1">
+                            {profileInformation.profile.first_name}
+                            &nbsp;
+                            {profileInformation.profile.last_name}
+                        </span>
                     </div>
 
                     <Link
