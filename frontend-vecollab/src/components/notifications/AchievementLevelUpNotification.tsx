@@ -24,6 +24,7 @@ export default function AchievementLevelUpNotification({
                     className="px-2 cursor-pointer"
                     onClick={(e) => {
                         acknowledgeNotificationCallback(notification._id);
+                        removeNotificationCallback(notification._id);
                         router.push('/profile/edit');
                     }}
                 >
