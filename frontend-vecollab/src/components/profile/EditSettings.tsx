@@ -39,7 +39,7 @@ export default function EditVisibilitySettings({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t('common:notifications')} />
+                <EditProfileHeadline name={t('common:notifications.title')} />
                 <div className="my-4 border border-slate-300 rounded-xl overflow-hidden">
                     <table className="table-auto w-full border-collapse">
                         <thead>

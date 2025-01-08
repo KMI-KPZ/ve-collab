@@ -157,6 +157,8 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
             languages: userInfo.profile.languages,
             institutions: userInfo.profile.institutions,
             chosen_institution_id: userInfo.profile.chosen_institution_id,
+            achievements: userInfo.profile.achievements,
+            chosen_achievement: userInfo.profile.chosen_achievement,
         });
         setVeReady(userInfo.profile.ve_ready);
         setExcludedFromMatching(userInfo.profile.excluded_from_matching);
@@ -241,6 +243,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 })),
                 excluded_from_matching: excludedFromMatching,
                 notification_settings: notificationSettings,
+                chosen_achievement: personalInformation.chosen_achievement,
             },
             session?.accessToken
         );
@@ -267,7 +270,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
         await fetchGET('/orcid', session?.accessToken).then((data) => {
             let profile = data.suggested_profile;
-            console.log(profile);
             setPersonalInformation({
                 firstName: profile.first_name,
                 lastName: profile.last_name,
@@ -277,6 +279,8 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 languages: personalInformation.languages,
                 institutions: personalInformation.institutions,
                 chosen_institution_id: personalInformation.chosen_institution_id,
+                achievements: personalInformation.achievements,
+                chosen_achievement: personalInformation.chosen_achievement,
             });
             setResearchAndTeachingInformation({
                 researchTags: profile.research_tags,

@@ -100,7 +100,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             onChange={onChange}
                             onBlur={onBlur}
                             value={value}
-                            options={options}
+                            options={options.sort((a, b) => a.label.localeCompare(b.label))}
                             isClearable={true}
                             isMulti
                             closeMenuOnSelect={false}

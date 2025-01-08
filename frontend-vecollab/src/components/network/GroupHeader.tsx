@@ -170,7 +170,6 @@ export default function GroupHeader({ userIsAdmin }: Props) {
     const leaveGroup = () => {
         fetchDELETE(`/spaceadministration/leave?id=${group._id}`, {}, session!.accessToken).then(
             (response) => {
-                console.log(response);
                 // TODO error handling
             }
         );
@@ -205,7 +204,6 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
-                    console.log(data);
                     callback(
                         data.users.map((user) => ({
                             label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
@@ -270,7 +268,6 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                 { usernames: [...group.requests, ...group.invites, ...group.members] },
                 session?.accessToken
             ).then((data) => {
-                console.log('ran snippets query');
                 setProfileSnippets(
                     data.user_snippets.map((snippet: any) => ({
                         name: snippet.first_name + ' ' + snippet.last_name,
@@ -291,7 +288,6 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                 `/space_acl/get?space=${group._id}&username=${chosenPermissionUser.value}`,
                 session?.accessToken
             ).then((data) => {
-                console.log(data);
                 setCurrentPermissions(data.acl_entry);
                 setPermissionsLoading(false);
             });
@@ -657,7 +653,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                         user,
                                                                     value: user,
                                                                 };
-                                                            })}
+                                                            })
+                                                            .sort((a, b) =>
+                                                                a.label.localeCompare(b.label)
+                                                            )}
                                                         onChange={(e) =>
                                                             setChosenPermissionUser(e!)
                                                         }

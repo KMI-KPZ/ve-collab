@@ -14,6 +14,7 @@ export interface BackendUserSnippet {
     last_name: string;
     profile_pic: string;
     institution: string;
+    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface BackendProfileSnippetsResponse {
@@ -32,13 +33,16 @@ export interface BackendUser {
     spaces: string[];
     profile: BackendProfile;
     profile_pic: string;
+    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface BackendProfile {
+    achievements: Achievements;
     address: string;
     bio: string;
     birthday: string;
     chosen_institution_id: string;
+    chosen_achievement: null | ChosenAchievement;
     courses: Course[];
     educations: Education[];
     excluded_from_matching: boolean;
@@ -135,6 +139,7 @@ export interface BackendPostAuthor {
     profile_pic: string;
     first_name: string;
     last_name: string;
+    chosen_achievement: null | ChosenAchievement;
 }
 
 export interface BackendPostComment {
@@ -170,4 +175,20 @@ export interface BackendPost {
     originalCreationDate?: string;
     repostAuthor?: BackendPostAuthor;
     repostText?: string;
+}
+
+export interface Achievements {
+    social: Achievement;
+    ve: Achievement;
+}
+
+export interface Achievement {
+    level: number;
+    progress: number;
+    next_level: number;
+}
+
+export interface ChosenAchievement {
+    type: 'social' | 've' | '';
+    level: number;
 }

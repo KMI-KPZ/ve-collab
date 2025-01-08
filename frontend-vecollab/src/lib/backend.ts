@@ -766,14 +766,18 @@ export async function getSiblingsOfNodeByText(nodeText: string, tax?: INode[]): 
     return node ? taxonomy.filter((a: any) => a.parent === node.parent) : [];
 }
 
-export async function getMaterialNodesOfNodeByText(nodeText: string, tax?: INode[]): Promise<IMaterialNode[]> {
+export async function getMaterialNodesOfNodeByText(
+    nodeText: string,
+    tax?: INode[]
+): Promise<IMaterialNode[]> {
     const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
 }
 
 export async function getMaterialNodePath(
-    nodeId: number, tax?: INode[]
+    nodeId: number,
+    tax?: INode[]
 ): Promise<{ bubble: ITopLevelNode; category: INode; material: IMaterialNode }> {
     const taxonomy = tax || (await fetchTaxonomy());
     const materialNode = taxonomy.find((node: INode) => node.id === nodeId) as IMaterialNode;
@@ -786,7 +790,8 @@ export async function getMaterialNodePath(
 }
 
 export async function getNodesOfNodeWithLections(
-    node: INode, tax?: INode[]
+    node: INode,
+    tax?: INode[]
 ): Promise<undefined | INodeWithLections[]> {
     if (!node) return [] as INodeWithLections[];
 

@@ -64,8 +64,6 @@ export default function VeInvitationReplyNotification({
         });
     }, [notification, session]);
 
-    console.log(notification);
-
     return (
         <>
             <li className="flex py-4 items-center rounded-md hover:bg-slate-50">
@@ -76,7 +74,7 @@ export default function VeInvitationReplyNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
-                    <p className='mb-1 underline decoration-ve-collab-blue'>VE-Einladung</p>
+                    <p className="mb-1 underline decoration-ve-collab-blue">VE-Einladung</p>
                     <p>
                         <b>{invitedUser?.name}</b> hat deine VE-Einladung{' '}
                         <b>{notification.payload.accepted === true ? 'akzeptiert' : 'abgelehnt'}</b>
@@ -89,7 +87,6 @@ export default function VeInvitationReplyNotification({
                 {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
-                            console.log('hi');
                         }}
                     >
                         <RxDotsVertical size={25} />
@@ -192,7 +189,13 @@ export default function VeInvitationReplyNotification({
                     </div>
                 </div>
             </Dialog>
-            {successPopupOpen && <Alert message='Schreibrechte gesetzt' autoclose={2000} onClose={() => setSuccessPopupOpen(false)} />}
+            {successPopupOpen && (
+                <Alert
+                    message="Schreibrechte gesetzt"
+                    autoclose={2000}
+                    onClose={() => setSuccessPopupOpen(false)}
+                />
+            )}
         </>
     );
 }

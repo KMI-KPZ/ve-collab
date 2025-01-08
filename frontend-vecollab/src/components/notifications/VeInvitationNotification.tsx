@@ -75,7 +75,7 @@ export default function VeInvitationNotification({
                         handleOpenNotificationsDialog();
                     }}
                 >
-                    <p className='mb-1 underline decoration-ve-collab-blue'>VE-Einladung</p>
+                    <p className="mb-1 underline decoration-ve-collab-blue">VE-Einladung</p>
                     <p>
                         Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen:{' '}
                         <b>{invitedVePlan?.name}</b>
@@ -88,7 +88,6 @@ export default function VeInvitationNotification({
                 {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
-                            console.log('hi');
                         }}
                     >
                         <RxDotsVertical size={25} />

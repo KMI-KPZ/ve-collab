@@ -20,6 +20,7 @@ from exceptions import (
     UserNotMemberError,
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.profile import Profiles
 from model import Space
 import util
 
@@ -302,6 +303,20 @@ class Spaces:
         # finally, create it
         result = self.db.spaces.insert_one(space)
 
+        # for each admin, count towards the achievement "join_groups" and
+        # "admin_groups"
+        for admin in space["admins"]:
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(admin, "join_groups")
+            profile_manager.achievement_count_up(admin, "admin_groups")
+
+        # for regular members, count towards the achievement "join_groups"
+        # but only if they are not already an admin --> otherwise they would
+        # count twice
+        for member in space["members"]:
+            if member not in space["admins"]:
+                profile_manager.achievement_count_up(member, "join_groups")
+
         # replicate the insert to elasticsearch
         ElasticsearchConnector().on_insert(
             result.inserted_id, space, elasticsearch_collection
@@ -383,6 +398,10 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyMemberError()
+        
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
 
     def join_space_request(self, space_id: str | ObjectId, username: str) -> None:
         """
@@ -428,6 +447,10 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyAdminError()
+        
+        # since all checks have passed, count towards the achievement "admin_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "admin_groups")
 
     def set_space_picture(
         self, space_id: str | ObjectId, filename: str, picture: bytes, content_type: str
@@ -536,6 +559,10 @@ class Spaces:
             },
         )
 
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
+
     def _remove_user_from_invite_list(
         self, space_id: str | ObjectId, username: str
     ) -> None:
@@ -601,6 +628,10 @@ class Spaces:
             {"_id": space_id},
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
+
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
 
     def _remove_user_from_requests_list(
         self, space_id: str | ObjectId, username: str

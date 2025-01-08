@@ -53,8 +53,6 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         session!.accessToken
     );
 
-    // console.log({plan});
-
     useEffect(() => {
         if (!partnerUserSnippets?.length) return;
 
@@ -117,7 +115,6 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         if (res.success === true) {
             setExportStep2Plan((prev) => ({ ...prev, isOpen: false }));
         } else {
-            console.log({ res });
             setAlert({
                 message: t('plan_summary_error_save'),
                 type: 'error',

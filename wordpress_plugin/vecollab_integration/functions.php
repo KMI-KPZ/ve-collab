@@ -1,7 +1,7 @@
 <?php
 
 /*
-* send the height of the document to the parent window
+* send the height of the document to the parent window 
 * used to make the iframe full size in the parent when embedded
 */
 function send_doc_height() {
@@ -21,7 +21,7 @@ function send_doc_height() {
                     value: height
                 }, "*");
             }
-
+			
 			function handleDocHeightRequest(event) {
 				if (event.data.type == "docHeightRequest") {
 					sendDocHeight(event)
@@ -29,7 +29,7 @@ function send_doc_height() {
 			}
 			window.addEventListener("message", handleDocHeightRequest);
 			// window.addEventListener("load", docLoaded);
-			// window.addEventListener("resize", resizedDoc);
+			// window.addEventListener("resize", resizedDoc);	
         </script>';
 }
 add_action( 'wp_footer', 'send_doc_height' );
@@ -68,6 +68,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
             <div class="btnWrapper">
                 <button
                     type="submit"
+					id="submitBtn"
                     class="orangeBtn"
                 >
                     Speichern
@@ -88,6 +89,17 @@ function vecollab_inject_response_form($atts = [], $content = null)
                 <ul id="other_answers_list"></ul>
             </div>
         </form>
+		<div class="toast">
+            <div class="toast-content">
+                <i class="check">✔</i>
+                <div class="message">
+                    <span class="text text-1">Gespeichert</span>
+                    <span class="text text-2">Deine Eingabe wurde gespeichert</span>
+                </div>
+            </div>
+            <i class="close">✘</i>
+            <div class="progress"></div>
+		</div>
         <script>
             function getCookie(name) {
                 const nameEQ = name + "=";
@@ -96,21 +108,53 @@ function vecollab_inject_response_form($atts = [], $content = null)
                         const value = cookie.substring(nameEQ.length);
                         return decodeURIComponent(value); // returns first found cookie
                     }
-
+            
                 }
                 return null;
             }
 
+            // save popup
+			const button = document.querySelector("#submitBtn");
+            toast = document.querySelector(".toast");
+            closeIcon = document.querySelector(".close");
+            progress = document.querySelector(".progress");
+
+            let timer1, timer2;
+
+            button.addEventListener("click", () => {
+                toast.classList.add("active");
+                progress.classList.add("active");
+
+                timer1 = setTimeout(() => {
+                    toast.classList.remove("active");
+                }, 5000); //1s = 1000 milliseconds
+
+                timer2 = setTimeout(() => {
+                    progress.classList.remove("active");
+                }, 5300);
+            });
+
+            closeIcon.addEventListener("click", () => {
+                toast.classList.remove("active");
+
+                setTimeout(() => {
+                    progress.classList.remove("active");
+                }, 300);
+
+                clearTimeout(timer1);
+                clearTimeout(timer2);
+            });
+
             jQuery(document).ready(function($){
                 $("#form_' . $shortcode_atts['id'] . '").submit(function(e){
                     e.preventDefault();
-
+                    
                     // save the given answer in a cookie
                     let text = document.getElementById("' . $shortcode_atts['id'] . '").value;
                     let d = new Date();
                     d.setTime(d.getTime() + (365*24*60*60*1000));
                     let expires = "expires="+ d.toUTCString();
-                    document.cookie = "' . $shortcode_atts['id'] . '" + "=" + text + "; " + expires + "; SameSite=None; Secure";
+                    document.cookie = "' . $shortcode_atts['id'] . '" + "=" + text + "; " + expires + "; Path=/; SameSite=None; Secure";
 
                     // send the answer to the server for storage
                     $.ajax({
@@ -156,8 +200,7 @@ function vecollab_inject_response_form($atts = [], $content = null)
                         }
                     });
                 });
-
-            });
+            });    
         </script>
     ';
 
@@ -199,7 +242,7 @@ add_action( 'admin_post_vecollab_response_form', 'vecollab_response_form_handler
 */
 function vecollab_get_random_responses(){
     $id = sanitize_text_field($_POST['id']);
-
+    
     global $wpdb;
     $table_name = $wpdb->prefix . 'vecollab_responses';
 
@@ -242,7 +285,7 @@ function vecollab_inject_my_response($atts = [], $content = null){
 
     if($shortcode_atts['show_others_responses'] === "true"){
         $admin_ajax_url = esc_url( admin_url('admin-ajax.php') );
-        $html .=
+        $html .= 
             '<button
                 type="button"
                 class="orangeBtn"

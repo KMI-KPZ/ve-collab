@@ -6,6 +6,7 @@ import VeInvitationReplyNotification from './VeInvitationReplyNotification';
 import GroupInvitationNotification from './GroupInvitationNotification';
 import GroupJoinRequestNotification from './GroupJoinRequestNotification';
 import ReminderNotification from './ReminderNotification';
+import AchievementLevelUpNotification from './AchievementLevelUpNotification';
 
 interface Props {
     socket: Socket;
@@ -21,8 +22,6 @@ export default function AllNotifications({ socket }: Props) {
         error,
         mutate,
     } = useGetNotifications(session!.accessToken);
-
-    console.log(notifications);
 
     // TODO probably dont need socket and also not the remove callback here, refactor component structure
     // or create a new one
@@ -71,6 +70,17 @@ export default function AllNotifications({ socket }: Props) {
                             )}
                             {notification.type === 'space_join_request' && (
                                 <GroupJoinRequestNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'achievement_level_up' && (
+                                <AchievementLevelUpNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string

@@ -84,7 +84,6 @@ export default function ReminderNotification({
                 {/* <div className="flex ml-auto px-2 items-center justify-center">
                     <button
                         onClick={(e) => {
-                            console.log('hi');
                         }}
                     >
                         <RxDotsVertical size={25} />

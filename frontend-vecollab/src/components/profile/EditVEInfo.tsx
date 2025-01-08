@@ -187,10 +187,12 @@ export default function EditVEInfo({
                     >
                         <CreatableSelect
                             className="w-full mb-1"
-                            options={optionLists.veInterestsKeys.map((key) => ({
-                                label: t('ve_interests_options.' + key, { defaultValue: key }),
-                                value: key,
-                            }))}
+                            options={optionLists.veInterestsKeys
+                                .map((key) => ({
+                                    label: t('ve_interests_options.' + key, { defaultValue: key }),
+                                    value: key,
+                                }))
+                                .sort((a, b) => a.label.localeCompare(b.label))}
                             onChange={(e) => modifyVeInterests(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
                             value={
@@ -251,10 +253,12 @@ export default function EditVEInfo({
                     >
                         <CreatableSelect
                             className="w-full mb-1"
-                            options={optionLists.veGoalsKeys.map((key) => ({
-                                label: t('ve_goals_options.' + key, { defaultValue: key }),
-                                value: key,
-                            }))}
+                            options={optionLists.veGoalsKeys
+                                .map((key) => ({
+                                    label: t('ve_goals_options.' + key, { defaultValue: key }),
+                                    value: key,
+                                }))
+                                .sort((a, b) => a.label.localeCompare(b.label))}
                             onChange={(e) => modifyVeGoals(index, e!.value)}
                             // if value is not null, placeholder wont show, even though value inside the object is ''
                             value={

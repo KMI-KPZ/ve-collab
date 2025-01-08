@@ -1,4 +1,3 @@
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { useGetMatching } from '@/lib/backend';
@@ -9,6 +8,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import CustomHead from '@/components/metaData/CustomHead';
+import UserProfileImage from '@/components/network/UserProfileImage';
 
 Matching.auth = true;
 Matching.autoForward = true;
@@ -63,21 +63,18 @@ export default function Matching() {
                                             {index + 1}
                                         </div>
                                         <div
-                                            className="flex cursor-pointer"
+                                            className="flex cursor-pointer items-center"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 router.push(`/profile/user/${snippet.username}`);
                                             }}
                                         >
-                                            <div>
-                                                <AuthenticatedImage
-                                                    imageId={snippet.profile_pic}
-                                                    alt={t('profile_picture')}
-                                                    width={60}
-                                                    height={60}
-                                                    className="rounded-full"
-                                                ></AuthenticatedImage>
-                                            </div>
+                                            <UserProfileImage
+                                                profile_pic={snippet.profile_pic}
+                                                chosen_achievement={snippet.chosen_achievement}
+                                                width={60}
+                                                height={60}
+                                            />
                                             <div>
                                                 <BoxHeadline
                                                     title={
