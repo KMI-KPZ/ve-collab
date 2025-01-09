@@ -11,7 +11,6 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -22,7 +21,8 @@ import { useTranslation } from 'next-i18next';
 import Button from '../common/buttons/Button';
 import { MdCheck } from 'react-icons/md';
 import ButtonLight from '../common/buttons/ButtongLight';
-import { Badge, badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
+import { badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -540,24 +540,13 @@ export default function EditPersonalInformation({
                     <div>
                         <EditProfileHeadline name={t('profile_picture')} />
                         <div className="w-fit">
-                            <div
-                                className={`my-4 rounded-full overflow-hidden w-fit p-[3px] -m-[3px] mt-[20px] ml-[10px]`}
-                                style={achievementStyle}
-                            >
-                                {personalInformation.chosen_achievement?.type && (
-                                    <span className="absolute -ml-[15px] -mt-[15px]">
-                                        <Badge
-                                            type={personalInformation.chosen_achievement?.type}
-                                            level={personalInformation.chosen_achievement?.level}
-                                        />
-                                    </span>
-                                )}
-                                <AuthenticatedImage
-                                    imageId={personalInformation.profilePicId as string}
-                                    alt={t('profile_picture')}
-                                    width={180}
+                            <div className="w-fit my-4 mt-[20px] ml-[15px]">
+                                <UserProfileImage
+                                    type="big"
+                                    chosen_achievement={personalInformation.chosen_achievement}
                                     height={180}
-                                    className="rounded-full border-2 border-white"
+                                    width={180}
+                                    profile_pic={personalInformation.profilePicId as string}
                                 />
                             </div>
                             <div className="flex justify-center">
