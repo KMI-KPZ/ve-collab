@@ -30,7 +30,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
 
     return (
         <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4">
-            <div className="group">
+            <div className="group @container">
                 <div className="-mt-[52px] -ml-[32px] flex relative">
                     <div
                         className={`shrink-0 w-[180px] bg-white rounded-full overflow-hidden shadow p-[4px] -m-[4px]`}
@@ -53,24 +53,24 @@ export default function UserInfoBox({ profileInformation }: Props) {
                         />
                     </div>
 
-                    <div
-                        className={
-                            'font-bold text-xl text-slate-900 self-end -ml-[28px] mb-4 text-right'
-                        }
-                    >
-                        <span className="bg-white rounded-full box-decoration-clone px-2 py-1">
-                            {profileInformation.profile.first_name}
-                            &nbsp;
-                            {profileInformation.profile.last_name}
-                        </span>
-                    </div>
-
                     <Link
                         href={'/profile/edit'}
                         className="absolute top-[60px] right-0 invisible group-hover:visible italic text-slate-600 text-xs"
                     >
                         <MdEdit className="inline" /> {t('common:edit')}
                     </Link>
+                </div>
+
+                <div
+                    className={
+                        'relative font-bold text-xl text-slate-900 self-end @[230px]:-mt-[24px] my-2 text-right break-words'
+                    }
+                >
+                    <span className="bg-white rounded-full box-decoration-clone px-2 py-1">
+                        {profileInformation.profile.first_name}
+                        &nbsp;
+                        {profileInformation.profile.last_name}
+                    </span>
                 </div>
 
                 <div className="mb-2 mt-6">{profileInformation.profile.bio}</div>
