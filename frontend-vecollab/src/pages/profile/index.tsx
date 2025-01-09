@@ -28,12 +28,13 @@ import Custom404 from '../404';
 
 interface Props {
     socket: Socket;
+    openOrCreateChatWith: (users: string[]) => void;
 }
 
 UserProfile.auth = true;
 UserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
 
-export default function UserProfile({ socket }: Props): JSX.Element {
+export default function UserProfile({ socket, openOrCreateChatWith }: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
 
     const [personalInformation, setPersonalInformation] = useState<PersonalInformation>({
@@ -233,6 +234,12 @@ export default function UserProfile({ socket }: Props): JSX.Element {
                             followers={followers}
                             chosen_achievement={personalInformation.chosen_achievement}
                             veReady={veReady}
+                            openOrCreateChatWith={() => {
+                                openOrCreateChatWith([
+                                    session!.user.preferred_username!,
+                                    router.query.username as string,
+                                ]);
+                            }}
                         />
                     </div>
                     <div className={'mx-20 flex'}>
@@ -302,6 +309,7 @@ export function UserProfileNoAuthPreview() {
                     followers={[]}
                     veReady={true}
                     isNoAuthPreview={true}
+                    openOrCreateChatWith={() => {}}
                 />
             </div>
             <div className={'mx-20 flex'}>
