@@ -185,8 +185,8 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -259,8 +259,8 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
