@@ -2773,8 +2773,8 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "push",
             },
             "achievements": {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -3008,8 +3008,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -3084,8 +3084,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -3160,8 +3160,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             result["achievements"],
             {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -3416,8 +3416,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertEqual(
             profile["achievements"],
             {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -3846,8 +3846,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile_manager.achievement_count_up(CURRENT_ADMIN.username, "admin_groups")
 
         # determine what level the user should be at (based on assumption that
-        # the first level is reached at 10 progress points, check at profile resource)
-        FIRST_LEVEL_THRESHOLD = 10
+        # the first level is reached at 20 progress points, check at profile resource)
+        FIRST_LEVEL_THRESHOLD = 20
 
         def compute_level(progress):
             level = 0

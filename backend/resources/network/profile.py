@@ -185,8 +185,8 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -259,8 +259,8 @@ class Profiles:
                 "system": "email",
             },
             "achievements": {
-                "social": {"level": 0, "progress": 0, "next_level": 10},
-                "ve": {"level": 0, "progress": 0, "next_level": 10},
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
                 "tracking": {
                     "good_practice_plans": [],
                     "unique_partners": [],
@@ -607,7 +607,10 @@ class Profiles:
 
         # if user has updated the chosen achievement, we need to check if it is valid,
         # i.e. either "social", "ve" or None
-        if "chosen_achievement" in updated_profile:
+        if (
+            "chosen_achievement" in updated_profile
+            and updated_profile["chosen_achievement"] is not None
+        ):
             if updated_profile["chosen_achievement"]["type"] not in ["social", "ve", "", None]:
                 raise ValueError("Invalid chosen achievement")
 
