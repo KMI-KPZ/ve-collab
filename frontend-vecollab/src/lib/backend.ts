@@ -131,7 +131,7 @@ export function useGetOwnProfile(accessToken: string): {
 }
 
 export function useGetUsers(accessToken?: string): {
-    data: BackendUser[];
+    data: { [username: string]: BackendUserSnippet };
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
