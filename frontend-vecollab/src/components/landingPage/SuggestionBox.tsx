@@ -16,6 +16,8 @@ interface ISuggestedLection {
     path: string;
 }
 
+const ttl = 24 * 60 * 60 * 1000;
+
 SuggestionBox.auth = true;
 export default function SuggestionBox() {
     const { t } = useTranslation(['community', 'common']);
@@ -57,7 +59,6 @@ export default function SuggestionBox() {
         };
 
         useEffect(() => {
-            const ttl = 24 * 60 * 60 * 1000;
             if (lections.length) return;
             const storedLections = LocalStorage.getItem('suggested_lections');
             if (storedLections) {
@@ -123,7 +124,6 @@ export default function SuggestionBox() {
         };
 
         useEffect(() => {
-            const ttl = 24 * 60 * 60 * 1000;
             if (suggestedUsers.length) return;
 
             const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');

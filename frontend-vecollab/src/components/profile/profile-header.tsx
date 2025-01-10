@@ -4,13 +4,15 @@ import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { CSSProperties, useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
-import { Badge, badgeOutlineColors } from '../landingPage/Badge';
+import { badgeOutlineColors } from '../landingPage/Badge';
 import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
+import UserProfileImage from '../network/UserProfileImage';
+import { IoIosSend } from 'react-icons/io';
+import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
     name: string;
@@ -21,6 +23,7 @@ interface Props {
     veReady: boolean;
     chosen_achievement?: null | ChosenAchievement;
     isNoAuthPreview?: boolean;
+    openOrCreateChatWith: () => void;
 }
 
 ProfileHeader.auth = true;
@@ -33,6 +36,7 @@ export default function ProfileHeader({
     veReady,
     chosen_achievement,
     isNoAuthPreview = false,
+    openOrCreateChatWith,
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -104,23 +108,13 @@ export default function ProfileHeader({
 
     return (
         <div className={'flex'}>
-            <div
-                className={`flex-none mr-8 rounded-full overflow-hidden shadow w-[168px] h-[168px] p-[4px] -m-[4px]
-                `}
-                style={achievementStyle}
-            >
-                {chosen_achievement?.type && (
-                    <span className="absolute -ml-[15px] -mt-[15px]">
-                        <Badge type={chosen_achievement.type} level={chosen_achievement.level} />
-                    </span>
-                )}
-                <AuthenticatedImage
-                    imageId={profilePictureUrl}
-                    alt={t('profile_picture')}
-                    width={180}
-                    height={180}
-                    isNoAuthPreview={isNoAuthPreview}
-                    className="rounded-full border-4 border-white"
+            <div className="flex-none mr-8">
+                <UserProfileImage
+                    type="big"
+                    chosen_achievement={chosen_achievement}
+                    height={168}
+                    width={168}
+                    profile_pic={profilePictureUrl}
                 />
             </div>
             <div className={'mr-auto'}>
@@ -169,6 +163,15 @@ export default function ProfileHeader({
                 {/* we only render follow and message buttons if it is not our own profile*/}
                 {foreignUser && (
                     <>
+                        <ButtonLight
+                            className="!rounded-full mx-2 h-12"
+                            title={t('send_chat_message_to_user')}
+                            onClick={() => {
+                                openOrCreateChatWith();
+                            }}
+                        >
+                            <IoIosSend />
+                        </ButtonLight>
                         {/* determine if current session user already follow the user behind the profile and render the follow button accordingly*/}
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button

@@ -230,8 +230,8 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "system": "push",
                 },
                 "achievements": {
-                    "social": {"level": 3, "progress": 105, "next_level": 160},
-                    "ve": {"level": 0, "progress": 1, "next_level": 10},
+                    "social": {"level": 3, "progress": 185, "next_level": 540},
+                    "ve": {"level": 0, "progress": 0, "next_level": 40},
                     "tracking": {
                         "good_practice_plans": [],
                         "unique_partners": [],
@@ -278,8 +278,8 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                     "system": "push",
                 },
                 "achievements": {
-                    "social": {"level": 0, "progress": 0, "next_level": 10},
-                    "ve": {"level": 0, "progress": 0, "next_level": 10},
+                    "social": {"level": 0, "progress": 0, "next_level": 20},
+                    "ve": {"level": 0, "progress": 0, "next_level": 40},
                     "tracking": {
                         "good_practice_plans": [],
                         "unique_partners": [],
@@ -2823,7 +2823,9 @@ class LikePostHandlerTest(BaseApiTestCase):
             ]
             + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
         )
-        prev_achievement_progress_counter = profile["achievements"]["social"]["progress"]
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
 
         # switch to user mode to test the achievement "social"
         options.test_admin = False
@@ -9620,8 +9622,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # now multiple level ups happened because progress reached thresholds
 
         # determine what level the user should be at (based on assumption that
-        # the first level is reached at 10 progress points, check at profile resource)
-        FIRST_LEVEL_THRESHOLD = 10
+        # the first level is reached at 40 progress points, check at profile resource)
+        FIRST_LEVEL_THRESHOLD = 40
 
         def compute_level(progress):
             level = 0
@@ -9637,9 +9639,10 @@ class VEPlanHandlerTest(BaseApiTestCase):
             prev_achievement_progress_counter
             + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
+        expected_level = compute_level(user["achievements"]["ve"]["progress"])
         self.assertEqual(
             user["achievements"]["ve"]["level"],
-            compute_level(user["achievements"]["ve"]["progress"]),
+            expected_level,
         )
         next_threshold = FIRST_LEVEL_THRESHOLD
         for i in range(1, user["achievements"]["ve"]["level"] + 1):
@@ -9649,7 +9652,11 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         # expect that a notification has been dispatched to the user
         notification = self.db.notifications.find_one(
-            {"type": "achievement_level_up", "to": CURRENT_ADMIN.username}
+            {
+                "type": "achievement_level_up",
+                "to": CURRENT_ADMIN.username,
+                "payload.level": expected_level,
+            }
         )
         self.assertIsNotNone(notification)
         self.assertIn("payload", notification)
@@ -9657,7 +9664,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
             notification["payload"],
             {
                 "achievement_type": "ve",
-                "level": compute_level(user["achievements"]["ve"]["progress"]),
+                "level": expected_level,
             },
         )
 

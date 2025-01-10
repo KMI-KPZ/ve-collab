@@ -2,12 +2,13 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import H2 from '../common/H2';
 import { useSession } from 'next-auth/react';
-import React, { CSSProperties } from 'react';
+import React from 'react';
 import AuthenticatedImage from '../common/AuthenticatedImage';
-import { Achievements, BackendUser } from '@/interfaces/api/apiInterfaces';
+import { BackendUser } from '@/interfaces/api/apiInterfaces';
 import { MdCheck, MdEdit } from 'react-icons/md';
 import { useGetMyGroups } from '@/lib/backend';
-import { Badge, badgeOutlineColors, getBadges, hasAnyAchievement } from './Badge';
+import { getBadges, hasAnyAchievement } from './Badge';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     profileInformation: BackendUser;
@@ -19,50 +20,18 @@ export default function UserInfoBox({ profileInformation }: Props) {
     const { data: session } = useSession();
     const { data: myGroups } = useGetMyGroups(session!.accessToken);
 
-    const chosenAchievement = profileInformation.profile.chosen_achievement;
-
-    // we have to set style property here, because otherwise dynamic outline color is not applied
-    const achievementStyle: CSSProperties = chosenAchievement?.level
-        ? {
-              background: badgeOutlineColors[chosenAchievement.level - 1],
-          }
-        : {};
-
     return (
         <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4">
-            <div className="group">
+            <div className="group @container">
                 <div className="-mt-[52px] -ml-[32px] flex relative">
-                    <div
-                        className={`shrink-0 w-[180px] bg-white rounded-full overflow-hidden shadow p-[4px] -m-[4px]`}
-                        style={achievementStyle}
-                    >
-                        {chosenAchievement?.type && (
-                            <span className="absolute -ml-[15px] -mt-[15px]">
-                                <Badge
-                                    type={chosenAchievement.type}
-                                    level={chosenAchievement.level}
-                                />
-                            </span>
-                        )}
-                        <AuthenticatedImage
-                            imageId={profileInformation.profile.profile_pic}
-                            alt={t('profile_pic')}
-                            width={180}
+                    <div className="flex-none w-[180px]">
+                        <UserProfileImage
+                            type="big"
+                            chosen_achievement={profileInformation.profile.chosen_achievement}
                             height={180}
-                            className="rounded-full border-4 border-white"
+                            width={180}
+                            profile_pic={profileInformation.profile.profile_pic}
                         />
-                    </div>
-
-                    <div
-                        className={
-                            'font-bold text-xl text-slate-900 self-end -ml-[28px] mb-4 text-right'
-                        }
-                    >
-                        <span className="bg-white rounded-full box-decoration-clone px-2 py-1">
-                            {profileInformation.profile.first_name}
-                            &nbsp;
-                            {profileInformation.profile.last_name}
-                        </span>
                     </div>
 
                     <Link
@@ -71,6 +40,18 @@ export default function UserInfoBox({ profileInformation }: Props) {
                     >
                         <MdEdit className="inline" /> {t('common:edit')}
                     </Link>
+                </div>
+
+                <div
+                    className={
+                        'relative font-bold text-xl text-slate-900 self-end @[230px]:-mt-[24px] my-2 text-right break-words'
+                    }
+                >
+                    <span className="bg-white rounded-full box-decoration-clone px-2 py-1">
+                        {profileInformation.profile.first_name}
+                        &nbsp;
+                        {profileInformation.profile.last_name}
+                    </span>
                 </div>
 
                 <div className="mb-2 mt-6">{profileInformation.profile.bio}</div>

@@ -11,6 +11,7 @@ interface Props {
     className?: string;
     style?: CSSProperties;
     isNoAuthPreview?: boolean;
+    onLoad?: () => void;
 }
 
 AuthenticatedImage.auth = true;
@@ -22,6 +23,7 @@ export default function AuthenticatedImage({
     className,
     style,
     isNoAuthPreview,
+    onLoad = () => {},
 }: Props) {
     const { data: session, status } = useSession();
     const [image, setImage] = useState('');
@@ -75,6 +77,7 @@ export default function AuthenticatedImage({
                             height={height}
                             className={className}
                             style={style}
+                            onLoad={onLoad}
                         />
                     ) : (
                         imageId && <div className={className} style={{ height, width }}></div>
