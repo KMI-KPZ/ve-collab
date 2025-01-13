@@ -7,16 +7,20 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 interface Props {
     socket: Socket;
+    openOrCreateChatWith: (users: string[]) => void;
 }
 
 NoSelectedUserProfile.auth = true;
 NoSelectedUserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
-export default function NoSelectedUserProfile({ socket }: Props): JSX.Element {
+export default function NoSelectedUserProfile({
+    socket,
+    openOrCreateChatWith,
+}: Props): JSX.Element {
     const { t } = useTranslation(['community', 'common']);
     return (
         <>
             <CustomHead pageTitle={t('common:profile')} pageSlug={`profile/user`} />
-            <UserProfile socket={socket} />
+            <UserProfile socket={socket} openOrCreateChatWith={openOrCreateChatWith} />
         </>
     );
 }

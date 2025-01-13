@@ -3,17 +3,16 @@ import { useSession } from 'next-auth/react';
 import Timeline from '@/components/network/Timeline';
 import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
 import { useTranslation } from 'next-i18next';
-import { MdArrowRight, MdCheck, MdEdit } from 'react-icons/md';
+import { MdArrowRight } from 'react-icons/md';
 import Button from '@/components/common/buttons/Button';
 import Image from 'next/image';
 import { SocketContext } from '@/pages/_app';
 import H1 from '../common/H1';
-import { useGetAvailablePlans, useGetMyGroups, useGetOwnProfile } from '@/lib/backend';
+import { useGetAvailablePlans, useGetOwnProfile } from '@/lib/backend';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import Link from 'next/link';
 import H2 from '../common/H2';
 import { Notification } from '@/interfaces/socketio';
-import AuthenticatedImage from '../common/AuthenticatedImage';
 import { FaMedal } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import Timestamp from '../common/Timestamp';
@@ -22,6 +21,7 @@ import Swiper_LoggedIn from './Swiper_LoggedIn';
 import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
 import SuggestionBox from './SuggestionBox';
+import UserInfoBox from './UserInfoBox';
 
 interface Props {
     notificationEvents: Notification[];
@@ -43,8 +43,6 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
     const { data: profileInformation, isLoading: isLoadingProfile } = useGetOwnProfile(
         session!.accessToken
     );
-
-    const { data: myGroups } = useGetMyGroups(session!.accessToken);
 
     useEffect(() => {
         if (!plans.length || !session) return;
@@ -69,115 +67,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
         <>
             <div className="flex flex-wrap">
                 <div className="order-1 hidden sm:flex w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center px-6 mt-[28px]">
-                    <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4">
-                        <div className="group">
-                            <div className="-mt-[52px] -ml-[32px] flex relative">
-                                <div className="w-[180px] bg-white rounded-full overflow-hidden border-4 border-white shadow">
-                                    <AuthenticatedImage
-                                        imageId={profileInformation.profile.profile_pic}
-                                        alt={'Profilbild'}
-                                        width={180}
-                                        height={180}
-                                    />
-                                </div>
-
-                                <div
-                                    className={
-                                        'font-bold text-xl text-slate-900 self-end -ml-[28px] mb-4 truncate bg-white px-2 py-1 rounded-full'
-                                    }
-                                >
-                                    {profileInformation.profile.first_name}
-                                    &nbsp;
-                                    {profileInformation.profile.last_name}
-                                </div>
-
-                                <Link
-                                    href={'/profile/edit'}
-                                    className="absolute -bottom-5 right-0 invisible group-hover:visible"
-                                >
-                                    <MdEdit className="inline" /> {t('common:edit')}
-                                </Link>
-                            </div>
-
-                            <div className="my-2">{profileInformation.profile.bio}</div>
-
-                            <div className="">
-                                {profileInformation.profile.ve_ready ? (
-                                    <span className="text-white bg-green-500 rounded-full shadow shadow-green-500 px-2 py-1 my-1">
-                                        <MdCheck className="inline mr-1 mb-1" />
-                                        {t('ve_ready_true')}
-                                    </span>
-                                ) : (
-                                    <span className="text-red-600">{t('ve_ready_false')}</span>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className={'flex divide-x'}>
-                            <div className="pr-4">
-                                <span>{profileInformation.followers.length}</span> {t('following')}
-                            </div>
-                            <div className="pl-4">
-                                <span>{profileInformation.follows.length}</span> {t('followers')}
-                            </div>
-                        </div>
-
-                        <div className="mt-4 border-t pt-4">
-                            <div className="group/veWindow">
-                                <H2 className="inline">{t('ve_window')}</H2>
-                                <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/veWindow:visible">
-                                    <Link href={'/profile/edit'} className="">
-                                        <MdEdit className="inline" /> {t('add_plan')}
-                                    </Link>
-                                </span>
-                            </div>
-                            {profileInformation.profile.ve_window.length == 0 && <>-</>}
-                            <ul className="list-disc ml-6">
-                                {profileInformation.profile.ve_window.map((plan: any, i) => {
-                                    return (
-                                        <li key={i}>
-                                            <Link href={`/plan/${plan.plan_id}`}>
-                                                {plan.plan_name}
-                                            </Link>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </div>
-
-                        <div className="mt-4 mb-4">
-                            <div className="group/groups mb-4">
-                                <H2 className="inline">{t('groups')}</H2>
-                                <span className="italic text-slate-600 text-xs ml-2 invisible group-hover/groups:visible">
-                                    <Link href={'/groups'}>
-                                        <MdEdit className="inline" /> {t('search_create')}
-                                    </Link>
-                                </span>
-                            </div>
-                            {myGroups.length == 0 && <>-</>}
-                            <ul className="flex flex-wrap gap-4 justify-center">
-                                {myGroups.map((group) => (
-                                    <li key={group._id} className="max-w-1/2">
-                                        <Link
-                                            href={`/group/${group._id}`}
-                                            className="flex flex-col"
-                                        >
-                                            <AuthenticatedImage
-                                                imageId={group.space_pic}
-                                                alt={t('group_picture')}
-                                                width={60}
-                                                height={60}
-                                                className="rounded-full mx-auto my-1"
-                                            ></AuthenticatedImage>
-                                            <span className="truncate text-nowrap">
-                                                {group.name}
-                                            </span>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
+                    <UserInfoBox profileInformation={profileInformation} />
                 </div>
 
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 ">
@@ -339,7 +229,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
                             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
                             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                            <H2>{t('common:notifications')}</H2>
+                            <H2>{t('common:notifications.title')}</H2>
 
                             <div className="flex  items-center ">
                                 <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">

@@ -36,8 +36,19 @@
     "groups": "Gruppen",
     "chat": "Chat",
     "toggle_chat_window": "Chatfenster ein-/ausblenden",
-    "notifications": "Benachrichtigungen",
-    "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
+    "notifications": {
+        "title": "Benachrichtigungen",
+        "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
+        "achievement_level_up": {
+            "title": "Level up!",
+            "social": "Social",
+            "ve": "VE",
+            "text1": "Herzlichen Glückwunsch, dein ",
+            "text2": "-Achievement Level hat sich erhöht!",
+            "text3": "Du bist jetzt ",
+            "level_x": "Level {{level}}"
+        }
+    },
     "profile": "Profil",
     "profile_title": "eigenes Profil öffnen",
     "profile_description": "Stelle persönliche Informationen zu dir, deinen VE-Interessen und -Erfahrungen für andere Personen in der Community zur Verfügung.",
@@ -58,6 +69,7 @@
     "search_result_posts": "Beiträge",
     "search_result_show_more_posts": "weitere Beiträge anzeigen",
     "chats": "Chats",
+    "no_rooms_yet": "Es ist noch kein Chat vorhanden",
     "type_message_placeholder": "Nachricht eingeben...",
     "no_messages_yet": "Noch keine Nachrichten",
     "create_new_chat_title": "Neuen Chat erstellen",

@@ -1,0 +1,9 @@
+Hallo {recipient_name},
+
+Herzlichen Glückwunsch, dein {achievement_type}-Level hat sich erhöht!
+Du bist jetzt Level {level}!
+
+Unter {edit_profile_link} kannst du dir jetzt einen neuen Profilrahmen auswählen, um deinen Erfolg zu präsentieren!
+
+Viele Grüße!
+Dein VE-Collab Team

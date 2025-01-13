@@ -241,10 +241,15 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                                     onBlur={onBlur}
                                     value={value}
                                     options={
-                                        languageKeys.map((language) => ({
-                                            value: language,
-                                            label: t('common:languages.' + language),
-                                        })) as { value: string; label: string }[]
+                                        languageKeys
+                                            .map((language) => ({
+                                                value: language,
+                                                label: t('common:languages.' + language),
+                                            }))
+                                            .sort((a, b) => a.label.localeCompare(b.label)) as {
+                                            value: string;
+                                            label: string;
+                                        }[]
                                     }
                                     isClearable={true}
                                     isMulti
@@ -304,10 +309,15 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                             onBlur={onBlur}
                             value={value}
                             options={
-                                languageKeys.map((language) => ({
-                                    value: language,
-                                    label: t('common:languages.' + language),
-                                })) as { value: string; label: string }[]
+                                languageKeys
+                                    .map((language) => ({
+                                        value: language,
+                                        label: t('common:languages.' + language),
+                                    }))
+                                    .sort((a, b) => a.label.localeCompare(b.label)) as {
+                                    value: string;
+                                    label: string;
+                                }[]
                             }
                             isClearable={true}
                             isMulti

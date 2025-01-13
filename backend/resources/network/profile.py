@@ -54,6 +54,22 @@ class Profiles:
             "work_experience": list,
             "ve_window": list,
             "notification_settings": dict,
+            "achievements": dict,
+            "chosen_achievement": (dict, type(None)),
+        }
+
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
+            "create_posts": 5,  # x posts created
+            "create_comments": 2,  # x comments created
+            "give_likes": 1,  # x posts and/or comments liked
+            "posts_liked": 4,  # posts of user has received x likes (combined)
+            "join_groups": 5,  # member of x groups
+            "admin_groups": 50,  # admin of x groups
+        }
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {
+            "ve_plans": 1,  # x update operations done on VE plans
+            "good_practice_plans": 100,  # x VE plans marked as good practise examples
+            "unique_partners": 80,  # x unique partners across all VE plans
         }
 
     def get_profile(self, username: str, projection: dict = None) -> Optional[Dict]:
@@ -71,6 +87,11 @@ class Profiles:
         )
         if not result:
             raise ProfileDoesntExistException()
+
+        # hide the achievement tracking from the frontend
+        if "achievements" in result and "tracking" in result["achievements"]:
+            del result["achievements"]["tracking"]
+
         return result
 
     def get_all_profiles(self, projection: dict = None) -> List[Dict]:
@@ -79,7 +100,14 @@ class Profiles:
         reduce response to the necessary fields (increases performance)
         """
 
-        return list(self.db.profiles.find(projection=projection))
+        profiles = list(self.db.profiles.find(projection=projection))
+
+        # hide the achievement tracking from the frontend
+        for profile in profiles:
+            if "achievements" in profile and "tracking" in profile["achievements"]:
+                del profile["achievements"]["tracking"]
+
+        return profiles
 
     def get_bulk_profiles(
         self, usernames: List[str], projection: dict = None
@@ -91,11 +119,18 @@ class Profiles:
         can differ.
         """
 
-        return list(
+        profiles = list(
             self.db.profiles.find(
                 {"username": {"$in": usernames}}, projection=projection
             )
         )
+
+        # hide the achievement tracking from the frontend
+        for profile in profiles:
+            if "achievements" in profile and "tracking" in profile["achievements"]:
+                del profile["achievements"]["tracking"]
+
+        return profiles
 
     def insert_default_profile(
         self,
@@ -149,6 +184,15 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
+            "achievements": {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+            "chosen_achievement": None,
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -214,6 +258,15 @@ class Profiles:
                 "group_invite": "email",
                 "system": "email",
             },
+            "achievements": {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+            "chosen_achievement": None,
         }
         result = self.db.profiles.insert_one(profile)
 
@@ -506,7 +559,7 @@ class Profiles:
             # if dict supplies one, we need the actual image
             if profile_pic is None:
                 raise TypeError(
-                    """if profile_pic is supplied in the dict, 
+                    """if profile_pic is supplied in the dict,
                     provide an actual image as bytes!"""
                 )
 
@@ -547,6 +600,33 @@ class Profiles:
                 updated_profile["chosen_institution_id"]
             )
 
+        # achievements cannot be modified here obviously (they are auto-updated)
+        # so we remove them from the update dict
+        if "achievements" in updated_profile:
+            del updated_profile["achievements"]
+
+        # if user has updated the chosen achievement, we need to check if it is valid,
+        # i.e. either "social", "ve" or None
+        if (
+            "chosen_achievement" in updated_profile
+            and updated_profile["chosen_achievement"] is not None
+        ):
+            if updated_profile["chosen_achievement"]["type"] not in ["social", "ve", "", None]:
+                raise ValueError("Invalid chosen achievement")
+
+            if updated_profile["chosen_achievement"]["type"] == "":
+                updated_profile["chosen_achievement"] = None
+            else:
+                try:
+                    profile = self.get_profile(username, projection={"achievements": True})
+                except ProfileDoesntExistException:
+                    raise
+
+                user_achievements = profile["achievements"]
+                if updated_profile["chosen_achievement"]["level"] > user_achievements[updated_profile["chosen_achievement"]["type"]]["level"]:
+                        raise ValueError("User has not reached the achievement level he is trying to set")
+
+        # all checks passed, update the profile
         result = self.db.profiles.find_one_and_update(
             {"username": username},
             {
@@ -570,9 +650,9 @@ class Profiles:
 
     def get_profile_snippets(self, usernames: List[str]) -> List[Dict]:
         """
-        request the profile snippet (i.e. username, first_name, last_name, institution
-        and profile_pic) for every given username in `usernames` and return them as
-        a Dict.
+        request the profile snippet (i.e. username, first_name, last_name, institution,
+        profile_pic and chosen_achievement) for every given username in `usernames`
+        and return them as a Dict.
         The `institution` field is somewhat special, as it is the name of the currently chosen
         institution of the user instead of all institutions that he has supplied. The user's
         currently chosen institution is determined by the `chosen_institution_id`. If the user
@@ -604,6 +684,7 @@ class Profiles:
                 "institutions": True,
                 "chosen_institution_id": True,
                 "profile_pic": True,
+                "chosen_achievement": True,
             },
         )
 
@@ -692,3 +773,202 @@ class Profiles:
             raise
 
         return result["notification_settings"]
+
+    def achievement_count_up(
+        self,
+        username: str,
+        reason: Literal[
+            "create_posts",
+            "create_comments",
+            "give_likes",
+            "posts_liked",
+            "join_groups",
+            "admin_groups",
+            "ve_plans",
+            "good_practice_plans",
+            "unique_partners",
+        ],
+        amount: int = 1,
+    ) -> None:
+        """
+        Increase the progress of the "social" or "ve" achievement depending on the `reason`.
+        The actual progress increase is determined by the progress multiplier
+        of the given `reason` (see `self.SOCIAL_ACHIEVEMENT_PROGRESS_MULTIPLIERS` and
+        `self.VE_ACHIEVEMENT_PROGRESS_MULTIPLIERS`).
+        If the user has reached the next level (as determined by the achievements `next_level`
+        attribute), it will also be updated accordingly and in thise case the `progress` reset
+        to 0. The next level requirement is subsequently doubled.
+
+        Optionally, you can specify the `amount` by which the progress should be increased.
+        I.e. an amount of 2 would act as if the achievement was issued twice, not simply
+        adding 2 to the progress, but also applying the `reason`'s progress multiplier.
+        Default amount is 1.
+        """
+
+        # sanity check
+        if (
+            reason
+            not in self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS.keys()
+            | self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS.keys()
+        ):
+            raise ValueError("Invalid achievement reason")
+
+        # get current achievement status of user
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
+        achievements = profile["achievements"]
+
+        # determin by the reason if it is a social or ve achievement
+        achievement_type = None
+        if reason in self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS:
+            achievement_type = "social"
+        elif reason in self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS:
+            achievement_type = "ve"
+
+        # count up the progress
+        achievements[achievement_type]["progress"] += (
+            int(amount * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS[reason])
+            if achievement_type == "social"
+            else int(amount * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS[reason])
+        )
+
+        # determine if the user has reached the next level and update it
+        # with high multipliers and low next levels, it is possible to level up multiple times
+        # so we iterate the level up process
+        leveled_up = False
+        while (
+            achievements[achievement_type]["progress"]
+            >= achievements[achievement_type]["next_level"]
+        ):
+            achievements[achievement_type]["level"] += 1
+            achievements[achievement_type]["next_level"] += (
+                achievements[achievement_type]["next_level"] * 2
+            )
+            leveled_up = True
+
+        # update the profile with the new achievement status
+        self.db.profiles.update_one(
+            {"username": username},
+            {"$set": {"achievements": achievements}},
+        )
+
+        # send a notification if the user has leveled up
+        if leveled_up:
+            # have to import here to avoid circular imports
+            from resources.notifications import NotificationResource
+            import tornado
+
+            async def _notification_send(username, achievement_type, achievements):
+                # since this will be run in a separate task, we need to acquire a new db connection
+                with util.get_mongodb() as db:
+                    notification_resources = NotificationResource(db)
+                    return await notification_resources.send_notification(
+                        username,
+                        "achievement_level_up",
+                        {
+                            "achievement_type": achievement_type,
+                            "level": achievements[achievement_type]["level"],
+                        },
+                    )
+
+            # create async task to avoid having to declare the function async
+            # everywhere
+            tornado.ioloop.IOLoop.current().add_callback(
+                _notification_send, username, achievement_type, achievements
+            )
+
+    def achievement_count_up_check_constraint_good_practice(
+        self, username: str, plan_id: str | ObjectId
+    ):
+        """
+        check if the `plan_id` in question is accountable for the achievement
+        "good_practice_plans" (i.e. it has not been marked as good practice before) and
+        if so, count up the achievement. Otherwise do nothing.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+
+        # ensure valid ObjectId
+        plan_id = util.parse_object_id(plan_id)
+
+        # get current achievement status of user
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
+        if plan_id not in profile["achievements"]["tracking"]["good_practice_plans"]:
+            # count up the achievement
+            self.achievement_count_up(username, "good_practice_plans")
+
+            # update the tracking list that this plan does not count again anymore
+            self.db.profiles.update_one(
+                {"username": username},
+                {"$addToSet": {"achievements.tracking.good_practice_plans": plan_id}},
+            )
+
+    def achievement_count_up_check_constraint_unique_partners(
+        self, username: str, partners: List[str]
+    ):
+        """
+        check if any of the users in the `partners` list is a new unique partner
+        for the user and if so, count up the achievement "unique_partners"
+        for each one. Otherwise do nothing.
+
+        The user himself is not counted as a partner, so he is removed from the list
+        if he is in there.
+
+        Raises `ProfileDoesntExistException`, if no profile for the given username is found.
+        """
+
+        # nothing to do if there are no partners to check
+        if not partners:
+            return
+
+        # remove the user himself from the list, if he is in there
+        if username in partners:
+            partners.remove(username)
+
+        # if the list is empty now, there is nothing to do again
+        if not partners:
+            return
+
+        # get current achievement status of user
+        profile = self.db.profiles.find_one(
+            {"username": username}, projection={"achievements": True}
+        )
+        if not profile:
+            raise ProfileDoesntExistException()
+
+        # determine which users are new unique partners, if any
+        new_unique_partners = [
+            partner
+            for partner in partners
+            if partner not in profile["achievements"]["tracking"]["unique_partners"]
+        ]
+
+        # there is nothing to do if there are no new unique partners
+        if not new_unique_partners:
+            return
+
+        # count up the achievement for each new unique partner
+        self.achievement_count_up(
+            username, "unique_partners", amount=len(new_unique_partners)
+        )
+
+        # update the tracking list that these partners do not count again anymore
+        self.db.profiles.update_one(
+            {"username": username},
+            {
+                "$addToSet": {
+                    "achievements.tracking.unique_partners": {
+                        "$each": new_unique_partners
+                    }
+                }
+            },
+        )

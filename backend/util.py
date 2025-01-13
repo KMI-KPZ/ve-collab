@@ -350,6 +350,17 @@ def _append_msg_text(
                 unread_messages_amount=payload["unread_messages_amount"],
                 unread_rooms_amount=payload["unread_rooms_amount"],
             )
+    elif template == "achievement_level_up.html":
+        with open("assets/email_templates/achievement_level_up.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                achievement_type=(
+                    "Social" if payload["achievement_type"] == "social" else "VE"
+                ),
+                level=payload["level"],
+                edit_profile_link="https://ve-collab.org/profile/edit",
+            )
     else:
         raise ValueError("Invalid template name: {}".format(template))
 

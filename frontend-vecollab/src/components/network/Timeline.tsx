@@ -23,6 +23,7 @@ interface Props {
     user?: string | undefined;
     adminDashboard?: boolean;
     socket: Socket;
+    hideForm?: boolean;
 }
 
 Timeline.auth = true;
@@ -33,6 +34,7 @@ export default function Timeline({
     user,
     adminDashboard,
     socket,
+    hideForm = false,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
@@ -234,7 +236,7 @@ export default function Timeline({
                 </>
             )}
 
-            {(!groupACL || groupACL.post) && (
+            {!hideForm && (!groupACL || groupACL.post) ? (
                 <div className={'p-4 my-8 bg-white rounded shadow '}>
                     <TimelinePostForm
                         group={group}
@@ -244,6 +246,8 @@ export default function Timeline({
                         socket={socket}
                     />
                 </div>
+            ) : (
+                <div className="h-6"></div>
             )}
 
             {Object.keys(postsByDate).map((date, i) => {

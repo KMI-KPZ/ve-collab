@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent, CSSProperties } from 'react';
 import {
     Institution,
     OptionLists,
@@ -11,7 +11,6 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -19,6 +18,11 @@ import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { useTranslation } from 'next-i18next';
+import Button from '../common/buttons/Button';
+import { MdCheck } from 'react-icons/md';
+import ButtonLight from '../common/buttons/ButtongLight';
+import { badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -39,6 +43,12 @@ export default function EditPersonalInformation({
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
+
+    const achievementStyle: CSSProperties = personalInformation.chosen_achievement?.level
+        ? {
+              background: badgeOutlineColors[personalInformation.chosen_achievement.level - 1],
+          }
+        : {};
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -158,6 +168,8 @@ export default function EditPersonalInformation({
             chosen_institution_id: newChosenInstitutionId,
         });
     };
+
+    // const Achievements = <Badges achievements={personalInformation.achievements} />;
 
     return (
         <form onSubmit={updateProfileData}>
@@ -377,7 +389,9 @@ export default function EditPersonalInformation({
                                         {t('school_type_options.school_secondary')}
                                     </option>
 
-                                    <option value="Sonstige">{t('school_type_options.other')}</option>
+                                    <option value="Sonstige">
+                                        {t('school_type_options.other')}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -442,10 +456,12 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('expertise')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.expertiseKeys.map((expertise) => ({
-                        label: t('expertise_options.' + expertise, { defaultValue: expertise }),
-                        value: expertise,
-                    }))}
+                    options={optionLists.expertiseKeys
+                        .map((expertise) => ({
+                            label: t('expertise_options.' + expertise, { defaultValue: expertise }),
+                            value: expertise,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
                     onChange={(e) =>
                         setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
@@ -484,10 +500,12 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('languages')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.languageKeys.map((language) => ({
-                        label: t('common:languages.' + language, { defaultValue: language }),
-                        value: language,
-                    }))}
+                    options={optionLists.languageKeys
+                        .map((language) => ({
+                            label: t('common:languages.' + language, { defaultValue: language }),
+                            value: language,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
                     onChange={(e) =>
                         setPersonalInformation({
                             ...personalInformation,
@@ -518,58 +536,122 @@ export default function EditPersonalInformation({
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t('profile_picture')} />
-                <div>
-                    <div className="w-fit">
-                        <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
-                            <AuthenticatedImage
-                                imageId={personalInformation.profilePicId as string}
-                                alt={t('profile_picture')}
-                                width={180}
-                                height={180}
-                            />
-                        </div>
-                        <div className="flex justify-center">
-                            <button
-                                className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleOpenProfilePicDialog();
-                                }}
-                            >
-                                {t('common:edit')}
-                            </button>
-                        </div>
-                    </div>
-                    <Dialog
-                        isOpen={isProfilePicDialogOpen}
-                        title={t('upload_profile_picture')}
-                        onClose={handleCloseProfilePicDialog}
-                    >
-                        <div className="my-2 mx-2">{t('upload_profile_picture_description')}</div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="my-2"
-                            onChange={onSelectProfilePicFile}
-                            onClick={(e) => {
-                                e.currentTarget.value = '';
-                            }}
-                        />
-                        {profilePicFile !== '' ? (
-                            <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
-                                <AvatarEditor
-                                    sourceImg={profilePicFile}
-                                    onFinishUpload={(blob) => {
-                                        uploadProfileImage(blob);
-                                        handleCloseProfilePicDialog();
-                                    }}
+                <div className="flex space-x-4">
+                    <div>
+                        <EditProfileHeadline name={t('profile_picture')} />
+                        <div className="w-fit">
+                            <div className="w-fit my-4 mt-[20px] ml-[15px]">
+                                <UserProfileImage
+                                    type="big"
+                                    chosen_achievement={personalInformation.chosen_achievement}
+                                    height={180}
+                                    width={180}
+                                    profile_pic={personalInformation.profilePicId as string}
                                 />
                             </div>
-                        ) : (
-                            <></>
-                        )}
-                    </Dialog>
+                            <div className="flex justify-center">
+                                <button
+                                    className={
+                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                    }
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleOpenProfilePicDialog();
+                                    }}
+                                >
+                                    {t('common:edit')}
+                                </button>
+                            </div>
+                        </div>
+
+                        <Dialog
+                            isOpen={isProfilePicDialogOpen}
+                            title={t('upload_profile_picture')}
+                            onClose={handleCloseProfilePicDialog}
+                        >
+                            <div className="my-2 mx-2">
+                                {t('upload_profile_picture_description')}
+                            </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="my-2"
+                                onChange={onSelectProfilePicFile}
+                                onClick={(e) => {
+                                    e.currentTarget.value = '';
+                                }}
+                            />
+                            {profilePicFile !== '' ? (
+                                <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
+                                    <AvatarEditor
+                                        sourceImg={profilePicFile}
+                                        onFinishUpload={(blob) => {
+                                            uploadProfileImage(blob);
+                                            handleCloseProfilePicDialog();
+                                        }}
+                                    />
+                                </div>
+                            ) : (
+                                <></>
+                            )}
+                        </Dialog>
+                    </div>
+                    {hasAnyAchievement(personalInformation.achievements) && (
+                        <div>
+                            <EditProfileHeadline name={t('decoration_badge')} />
+                            <p>{t('decoration_badge_descr')}</p>
+                            <ul className="flex flex-wrap gap-4 items-center">
+                                {getBadges({ achievements: personalInformation.achievements }).map(
+                                    (item, index) => {
+                                        return (
+                                            <li key={index}>
+                                                <Button
+                                                    className={`flex items-center justify-center relative`}
+                                                    onClick={() => {
+                                                        setPersonalInformation({
+                                                            ...personalInformation,
+                                                            chosen_achievement: {
+                                                                type: item.type,
+                                                                level: item.level,
+                                                            },
+                                                        });
+                                                    }}
+                                                >
+                                                    {item.badge}
+                                                    {personalInformation.chosen_achievement?.type ==
+                                                        item.type &&
+                                                        personalInformation.chosen_achievement
+                                                            ?.level == item.level && (
+                                                            <MdCheck
+                                                                size={26}
+                                                                className="text-green-600 m-2 bg-white/75 rounded-full absolute"
+                                                            />
+                                                        )}
+                                                </Button>
+                                            </li>
+                                        );
+                                    }
+                                )}
+                                <li>
+                                    <ButtonLight
+                                        className="!rounded-full flex gap-2 items-center ml-4"
+                                        onClick={() => {
+                                            setPersonalInformation({
+                                                ...personalInformation,
+                                                chosen_achievement: { type: '', level: 0 },
+                                            });
+                                        }}
+                                    >
+                                        Keines
+                                        {(personalInformation.chosen_achievement == null ||
+                                            personalInformation.chosen_achievement.type == '') && (
+                                            <MdCheck size={22} className="text-green-600 mx-2" />
+                                        )}
+                                    </ButtonLight>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </EditProfileVerticalSpacer>
         </form>

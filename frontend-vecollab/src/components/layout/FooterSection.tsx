@@ -1,5 +1,5 @@
 import React from 'react';
-import bmbfLogo from '@/images/footer/bmbf_logo.svg';
+import bmbfLogo from '@/images/footer/bmbf_logo.png';
 import euFundingLogo from '@/images/footer/eu_funding.png';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -20,8 +20,8 @@ export default function FooterSection() {
             }`}
         >
             <div className="flex flex-wrap items-center max-w-screen-2xl md:w-8/12 mx-auto py-4 md:py-10">
-                <div className="flex-none">
-                    <Image src={bmbfLogo} height={120} alt="BMBF Logo"></Image>
+                <div className="flex-none mx-2">
+                    <Image src={bmbfLogo} height={100} alt="BMBF Logo" className='sm:-mt-12'></Image>
                 </div>
                 <div className="flex-none">
                     <Image src={euFundingLogo} height={100} alt="NextGenerationEU Logo"></Image>
@@ -30,7 +30,7 @@ export default function FooterSection() {
             </div>
             <hr className="w-8/12 mx-auto mb-4 border-gray-400/50 border-0.5" />
             <div className="flex flex-wrap justify-center">
-                <p className="mx-2">© 2024 VE-Collab</p>
+                <p className="mx-2">© {new Date().getFullYear()} VE-Collab</p>
                 <p className="mx-2">
                     <Link target="_blank" href="https://infai.org/das-institut/impressum/">
                         {t('imprint')}

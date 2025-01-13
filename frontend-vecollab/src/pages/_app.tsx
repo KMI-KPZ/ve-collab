@@ -91,6 +91,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
     const [chatOpen, setChatOpen] = useState<boolean>(false);
     const [notifOpen, setNotifOpen] = useState<boolean>(false);
+    const [openOrCreateChatWith, setOpenOrCreateChatWith] = useState<string[]>([]);
 
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
@@ -150,6 +151,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     const toggleChatWindow = () => {
         setNotifOpen(false);
         setChatOpen(!chatOpen);
+        setOpenOrCreateChatWith([]);
     };
 
     const toggleNotifWindow = () => {
@@ -186,6 +188,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                 }
                                                 open={chatOpen}
                                                 toggleChatWindow={toggleChatWindow}
+                                                prop_openOrCreateChatWith={openOrCreateChatWith}
                                             />
                                             <NotificationsWindow
                                                 socket={socket}
@@ -217,6 +220,11 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                     setMessageEventsHeaderBar
                                                 }
                                                 toggleNotifWindow={toggleNotifWindow}
+                                                toggleChatWindow={toggleChatWindow}
+                                                openOrCreateChatWith={(users: string[]) => {
+                                                    setChatOpen(true);
+                                                    setOpenOrCreateChatWith(users);
+                                                }}
                                             />
                                         </Auth>
                                     ) : (

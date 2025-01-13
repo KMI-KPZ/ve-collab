@@ -2,13 +2,17 @@ import Link from 'next/link';
 import { RxDotFilled } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { CSSProperties, useState } from 'react';
 import { useRouter } from 'next/router';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import { badgeOutlineColors } from '../landingPage/Badge';
+import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
+import UserProfileImage from '../network/UserProfileImage';
+import { IoIosSend } from 'react-icons/io';
+import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
     name: string;
@@ -17,7 +21,9 @@ interface Props {
     foreignUser: boolean;
     followers: string[];
     veReady: boolean;
+    chosen_achievement?: null | ChosenAchievement;
     isNoAuthPreview?: boolean;
+    openOrCreateChatWith: () => void;
 }
 
 ProfileHeader.auth = true;
@@ -28,7 +34,9 @@ export default function ProfileHeader({
     foreignUser,
     followers,
     veReady,
+    chosen_achievement,
     isNoAuthPreview = false,
+    openOrCreateChatWith,
 }: Props) {
     const router = useRouter();
     const { data: session, status } = useSession();
@@ -91,15 +99,22 @@ export default function ProfileHeader({
         });
     };
 
+    // we have to set style property here, because otherwise dynamic outline color is not applied
+    const achievementStyle: CSSProperties = chosen_achievement?.level
+        ? {
+              background: badgeOutlineColors[chosen_achievement.level - 1],
+          }
+        : {};
+
     return (
         <div className={'flex'}>
-            <div className={'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl'}>
-                <AuthenticatedImage
-                    imageId={profilePictureUrl}
-                    alt={t('profile_picture')}
-                    width={180}
-                    height={180}
-                    isNoAuthPreview={isNoAuthPreview}
+            <div className="flex-none mr-8">
+                <UserProfileImage
+                    type="big"
+                    chosen_achievement={chosen_achievement}
+                    height={168}
+                    width={168}
+                    profile_pic={profilePictureUrl}
                 />
             </div>
             <div className={'mr-auto'}>
@@ -121,7 +136,7 @@ export default function ProfileHeader({
                 <div className={'mt-11 font-bold text-4xl text-slate-900'}>{name}</div>
                 <div className={'text-gray-500'}>{institution}</div>
             </div>
-            <div className={'flex items-end mb-12'}>
+            <div className={'flex items-end mb-8'}>
                 <div className="flex mx-16 h-12 items-center">
                     {veReady ? (
                         <>
@@ -148,6 +163,15 @@ export default function ProfileHeader({
                 {/* we only render follow and message buttons if it is not our own profile*/}
                 {foreignUser && (
                     <>
+                        <ButtonLight
+                            className="!rounded-full mx-2 h-12"
+                            title={t('send_chat_message_to_user')}
+                            onClick={() => {
+                                openOrCreateChatWith();
+                            }}
+                        >
+                            <IoIosSend />
+                        </ButtonLight>
                         {/* determine if current session user already follow the user behind the profile and render the follow button accordingly*/}
                         {followers.includes(session?.user.preferred_username as string) ? (
                             <button
