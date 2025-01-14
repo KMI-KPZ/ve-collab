@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import json
 import logging
 
@@ -187,7 +187,7 @@ class PostHandler(BaseTimelineHandler):
         # no _id field means a new post is made
         if _id is None:
             author = self.current_user.username
-            creation_date = datetime.utcnow()
+            creation_date = datetime.datetime.now()
             text = self.get_body_argument("text")  # http_body['text']
             wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
             tags = self.get_body_argument("tags", [])  # http_body['tags']
@@ -673,7 +673,7 @@ class CommentHandler(BaseHandler):
             # create and store the comment
             comment = {
                 "author": self.current_user.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.datetime.now(),
                 "text": http_body["text"],
                 "pinned": False,
             }
@@ -1188,7 +1188,7 @@ class RepostHandler(BaseHandler):
                 post["isRepost"] = True
                 post["repostAuthor"] = self.current_user.username
                 post["originalCreationDate"] = post["creation_date"]
-                post["creation_date"] = datetime.utcnow()
+                post["creation_date"] = datetime.datetime.now()
                 if "isRepost" in originalPost and originalPost["isRepost"]:
                     post["text"] = originalPost["repostText"]
                     post["author"] = originalPost["repostAuthor"]
