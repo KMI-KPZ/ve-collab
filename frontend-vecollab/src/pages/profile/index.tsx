@@ -251,7 +251,7 @@ export default function UserProfile({ socket, openOrCreateChatWith }: Props): JS
                                     cvInfo={{ educations, workExperience }}
                                 />
                             </WhiteBox>
-                            <BoxHeadline title="Timeline" />
+                            <BoxHeadline title={t('community:posts')} />
                             {foreignUser ? (
                                 <Timeline
                                     socket={socket}
