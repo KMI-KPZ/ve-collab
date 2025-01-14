@@ -7780,7 +7780,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[0],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "space_post_admin",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7791,7 +7791,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.utcnow(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -7802,7 +7802,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[1],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "normal_post_admin",
                 "space": None,
                 "pinned": False,
@@ -7816,7 +7816,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[2],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "space_post_user",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7830,7 +7830,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[3],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "normal_post_user",
                 "space": None,
                 "pinned": False,
@@ -7903,8 +7903,8 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/timeline?from={}&to={}".format(
-                (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+                (datetime.now() - timedelta(hours=2)).isoformat(),
+                (datetime.now() - timedelta(hours=1)).isoformat(),
             ),
             True,
             200,
@@ -7960,7 +7960,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow() + timedelta(days=1),
+                "creation_date": datetime.now() + timedelta(days=1),
                 "text": "pinned_space_post_admin",
                 "space": self.test_space_id,
                 "pinned": True,
@@ -8157,7 +8157,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # query for new posts in the last 30 minutes
         # plenty of time, since setup happens right before the test
-        timestamp = (datetime.utcnow() - timedelta(minutes=30)).isoformat()
+        timestamp = (datetime.now() - timedelta(minutes=30)).isoformat()
 
         response = self.base_checks(
             "GET", "/updates?from={}".format(timestamp), True, 200
@@ -8179,7 +8179,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "$set": {
                     "creation_date": (
-                        datetime.utcnow() - timedelta(days=10)
+                        datetime.now() - timedelta(days=10)
                     ).isoformat()
                 }
             },
