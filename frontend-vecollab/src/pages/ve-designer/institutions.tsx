@@ -108,7 +108,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('common:name')}
+                            {t('designer:institutions:institution')}
                         </label>
                     </div>
                     <div className="w-2/3">
@@ -442,7 +442,7 @@ export function InstitutionsNoAuthPreview() {
                             <div className="mt-2 flex">
                                 <div className="w-1/3 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('common:name')}
+                                        {t('designer:institutions:institution')}
                                     </label>
                                 </div>
                                 <div className="w-2/3">

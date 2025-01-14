@@ -59,7 +59,7 @@
     "promote_admin_warning": "Warning: This action cannot be undone!",
     "promote": "Promote",
     "dashboard": "Dashboard",
-    "following": "following",
+    "following": "Following",
     "followers": "Followers",
     "user_follows": "{{username}} follows:",
     "users_that_follow": "Users that follow {{username}}",

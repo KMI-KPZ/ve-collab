@@ -27,20 +27,6 @@ export interface PhysicalMobility {
     timestamp_to: string;
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return (
-//         formValues.learningEnv === '' &&
-//         formValues.courseFormat === '' &&
-//         formValues.physicalMobilities.every((mobility) => {
-//             return (
-//                 mobility.location === '' &&
-//                 mobility.timestamp_from === '' &&
-//                 mobility.timestamp_to === ''
-//             );
-//         })
-//     );
-// };
-
 interface Props {
     socket: Socket;
 }
@@ -325,7 +311,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                         </div>
                     </div>
                     <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                        {t('learningEnv.pysicalSupp')}
+                        {t('learningEnv.physicalMeetings')}
                         <div className="flex w-40 justify-end gap-x-5">
                             {radioBooleanInput(methods.control, `usePhysicalMobility`)}
                         </div>
@@ -423,8 +409,8 @@ export function LearningEnvNoAuthPreview() {
                             </select>
                         </div>
                     </div>
-                    <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                        {t('learningEnv.pysicalSupp')}
+                    <div className="flex w-full lg:w-2/3 items-center mt-6">
+                        {t('learningEnv.physicalMeetings')}
                         <div className="flex w-40 justify-end gap-x-5">
                             <div className="flex my-1">
                                 <div>

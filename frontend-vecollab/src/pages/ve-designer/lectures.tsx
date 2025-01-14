@@ -102,7 +102,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('common:name')}
+                            {t('designer:lectures:lecture')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -279,7 +279,7 @@ export function LecturesNoAuthPreview() {
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('common:name')}
+                                        {t('designer:lectures:lecture')}
                                     </label>
                                 </div>
                                 <div className="w-3/4">
