@@ -23,6 +23,10 @@ import { MdCheck } from 'react-icons/md';
 import ButtonLight from '../common/buttons/ButtongLight';
 import { badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
 import UserProfileImage from '../network/UserProfileImage';
+import cat from '@/images/defaultProfilPictures/cat.jpg';
+import dog from '@/images/defaultProfilPictures/dog.jpg';
+import fox from '@/images/defaultProfilPictures/fox.jpg';
+import Image from 'next/image';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -111,7 +115,7 @@ export default function EditPersonalInformation({
         reader.onloadend = function () {
             // transform base64 payload via base64 data uri and stripping the
             // pre-information
-            var base64dataUri = reader.result as string;
+            const base64dataUri = reader.result as string;
             const profilePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
 
             // send to backend and update state with returned _id to be able
@@ -142,7 +146,7 @@ export default function EditPersonalInformation({
                 institutions: [...personalInformation.institutions, newInstitution],
             },
             session?.accessToken
-        ).then((data) => {
+        ).then(() => {
             fetchGET('/profileinformation', session?.accessToken).then((data) => {
                 setPersonalInformation({
                     ...personalInformation,
@@ -571,6 +575,20 @@ export default function EditPersonalInformation({
                         >
                             <div className="my-2 mx-2">
                                 {t('upload_profile_picture_description')}
+                            </div>
+                            <div className="flex space-x-4">
+                                {[cat, dog, fox].map((pic, index) => (
+                                    <Image
+                                        key={index}
+                                        src={pic}
+                                        alt={`default profil picture of option ${index + 1}`}
+                                        className="cursor-pointer"
+                                        height={80}
+                                        onClick={() => {
+                                            setProfilePicFile(pic.src);
+                                        }}
+                                    />
+                                ))}
                             </div>
                             <input
                                 type="file"

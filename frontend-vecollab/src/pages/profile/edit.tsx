@@ -125,12 +125,12 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
         defaultNotificationSettings
     );
 
-    const { data: session, status } = useSession();
-    const [loading, setLoading] = useState(false);
+    const { data: session } = useSession();
+    const [loading] = useState(false);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
-    const { data: userInfo, isLoading, error, mutate } = useGetOwnProfile(session!.accessToken);
+    const { data: userInfo, isLoading, mutate } = useGetOwnProfile(session!.accessToken);
 
     useEffect(() => {
         if (isLoading) return;
@@ -250,7 +250,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
         setSuccessPopupOpen(true);
 
         // trigger a re-fetch of the user's profile data to reflect the changes
-        mutate();
+        await mutate();
 
         // if excludedFromMatching has changed from the previously saved state,
         // reload the page to reflect the changes to the parent (LayoutSection.tsx)
