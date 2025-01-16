@@ -1,5 +1,5 @@
 import LoadingAnimation from '@/components/common/LoadingAnimation';
-import { useGetMatching, useGetSearchResults } from '@/lib/backend';
+import { useGetMatching } from '@/lib/backend';
 import { GetStaticPropsContext } from 'next';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
@@ -7,7 +7,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useEffect, useState } from 'react';
 import CustomHead from '@/components/metaData/CustomHead';
 import UserProfileImage from '@/components/network/UserProfileImage';
-import { BackendProfile } from '@/interfaces/api/apiInterfaces';
+import { BackendMatchingUser } from '@/interfaces/api/apiInterfaces';
 import printUsername from '@/components/common/Username';
 import Link from 'next/link';
 import ButtonLight from '@/components/common/buttons/ButtongLight';
@@ -15,6 +15,10 @@ import { IoIosSend } from 'react-icons/io';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import { GiStarsStack } from 'react-icons/gi';
 import VEInvitationDialog from '@/components/profile/VEInvitationDialog';
+import { expertiseKeys } from './profile/edit';
+import CreatableSelect from 'react-select/creatable';
+import { languageKeys } from '@/data/languages';
+import { MdFilterListAlt } from 'react-icons/md';
 
 interface Props {
     isNoAuthPreview?: boolean;
@@ -27,60 +31,46 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
-    const [loading, setLoading] = useState<boolean>(true);
-    const [result, setResult] = useState<BackendProfile[]>([]);
+    const [result, setResult] = useState<BackendMatchingUser[]>([]);
     const [showMatchingOnly, setShowMatchingOnly] = useState<boolean>(false);
-    const [triggerMatching, setTriggerMatching] = useState<boolean>(false);
     const [invitationDialog, setInvitationDialog] = useState<{
         isOpen: boolean;
-        username?: BackendProfile;
+        username?: BackendMatchingUser;
     }>({
         isOpen: false,
     });
 
-    const { data: searchedUsers, isLoading: loadingSearchUsers } = useGetSearchResults('', [
-        'users',
-    ]);
-    // const { data: allUsers, isLoading: loadingAllUsers } = useGetUsers(session!.accessToken);
+    const [viewFilterArea, setViewFilterArea] = useState<boolean>(false);
+
+    const [filter, setFilter] = useState<{
+        expertise: string[];
+        languages: string[];
+    }>({
+        expertise: [],
+        languages: [],
+    });
 
     const {
         data: matchedUserSnippets,
         isLoading: isLoadingMatching,
         error,
-        mutate,
-    } = useGetMatching(triggerMatching, session!.accessToken);
+        mutate: reloadUserSnippets,
+    } = useGetMatching(true, filter.languages, filter, session!.accessToken);
 
     useEffect(() => {
-        if (loading === false) return;
-        let newResult = null;
+        // console.log({ matchedUserSnippets, isLoadingMatching });
+        if (isLoadingMatching) return;
 
-        if (showMatchingOnly === true) {
-            if (!matchedUserSnippets.length) {
-                setTriggerMatching(true);
-            } else {
-                newResult = matchedUserSnippets.map((user) => user as unknown as BackendProfile);
-            }
-        } else {
-            if (searchedUsers.users?.length) {
-                newResult = searchedUsers.users
-                    .map((user) => user)
-                    .filter((user) => user.username !== session!.user.preferred_username);
-            }
-        }
-        if (newResult !== null) {
-            console.log({ newResult });
-
-            setResult(newResult);
-            setLoading(false);
-        }
-    }, [session, searchedUsers, matchedUserSnippets, showMatchingOnly, loading]);
+        const newResult = matchedUserSnippets.map((user) => user as unknown as BackendMatchingUser);
+        setResult(newResult);
+    }, [isLoadingMatching, matchedUserSnippets]);
 
     const handleClickShowMatchingOnly = () => {
-        setLoading(true);
+        reloadUserSnippets();
         setShowMatchingOnly(!showMatchingOnly);
     };
 
-    const handleOpenInvitationDialog = (username: BackendProfile) => {
+    const handleOpenInvitationDialog = (username: BackendMatchingUser) => {
         if (isNoAuthPreview) return;
 
         setInvitationDialog({
@@ -94,6 +84,163 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
         setInvitationDialog({
             isOpen: false,
         });
+    };
+
+    const updateFilter = (key: 'expertise' | 'languages', value: string[]) => {
+        if (value.length) {
+            setFilter((prev) => ({ ...prev, [key]: value }));
+        } else {
+            setFilter((prev) => ({ ...prev, [key]: [] }));
+        }
+    };
+
+    const FilterArea = () => (
+        <div className="w-1/4 flex flex-col space-y-4">
+            <div className="">
+                <span className="p-2 font-bold">
+                    {t('common:plan_summary_institutions_department')}
+                </span>
+                <CreatableSelect
+                    className="w-full"
+                    classNames={{
+                        placeholder: () => 'truncate',
+                    }}
+                    isMulti={true}
+                    options={expertiseKeys
+                        .map((expertise) => ({
+                            label: t('expertise_options.' + expertise, {
+                                defaultValue: expertise,
+                            }),
+                            value: expertise,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
+                    onChange={(e) => {
+                        updateFilter(
+                            'expertise',
+                            e!.map((option) => option.value)
+                        );
+                    }}
+                    value={
+                        filter.expertise
+                            ? filter.expertise.map((expertise) => ({
+                                  label: t('expertise_options.' + expertise, {
+                                      defaultValue: expertise,
+                                  }),
+                                  value: expertise,
+                              }))
+                            : []
+                    }
+                    placeholder={t('expertise_placeholder')}
+                    formatCreateLabel={(inputValue) => (
+                        <span>
+                            {t('expertise_select_no_matching_result1')} <b>{inputValue}</b>{' '}
+                            {t('expertise_select_no_matching_result2')}
+                        </span>
+                    )}
+                />
+            </div>
+
+            <div>
+                <span className="p-2 font-bold">{t('common:language')}</span>
+                <CreatableSelect
+                    className="w-full"
+                    classNames={{
+                        placeholder: () => 'truncate',
+                    }}
+                    options={languageKeys
+                        .map((language) => ({
+                            label: t('common:languages.' + language, {
+                                defaultValue: language,
+                            }),
+                            value: language,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label))}
+                    onChange={(e) => {
+                        updateFilter(
+                            'languages',
+                            e!.map((option) => option.value)
+                        );
+                    }}
+                    value={
+                        filter.languages
+                            ? filter.languages.map((language) => ({
+                                  label: t('common:languages.' + language, {
+                                      defaultValue: language,
+                                  }),
+                                  value: language,
+                              }))
+                            : []
+                    }
+                    placeholder={t('languages_placeholder')}
+                    isMulti={true}
+                    isClearable={true}
+                    closeMenuOnSelect={false}
+                    formatCreateLabel={(inputValue) => (
+                        <span>
+                            {t('languages_no_matching_result1')}
+                            <b>{inputValue}</b> {t('languages_no_matching_result2')}
+                        </span>
+                    )}
+                />
+            </div>
+        </div>
+    );
+
+    const UserlistItem = ({ user }: { user: BackendMatchingUser }) => {
+        return (
+            <>
+                <div className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate flex flex-nowrap items-center">
+                    {user.ve_ready ? (
+                        <span
+                            title={t('ve_ready_true')}
+                            className="w-3 h-3 m-2 rounded-full bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]"
+                        ></span>
+                    ) : (
+                        <span
+                            title={t('ve_ready_false')}
+                            className="w-3 h-3 m-2 rounded-full bg-red-600 drop-shadow-[0_0_3px_rgba(239,68,68,1)]"
+                        ></span>
+                    )}
+
+                    <div className="m-2">
+                        <UserProfileImage
+                            profile_pic={user.profile_pic}
+                            chosen_achievement={user.chosen_achievement}
+                        />
+                    </div>
+                    <Link href={`/profile/user/${user.username}`} className="py-2 w-full">
+                        {printUsername(user)}
+                        <span className="mx-2 italic text-gray-500">
+                            (Score: {user.score.toFixed(2)})
+                        </span>
+                    </Link>
+                </div>
+
+                <div className="flex gap-x-2 opacity-0 group-hover/item:opacity-100 transition-opacity pr-4">
+                    <ButtonLight
+                        className="!rounded-full"
+                        title={t('send_chat_message_to_user')}
+                        onClick={() => {
+                            openOrCreateChatWith([
+                                session?.user.preferred_username!,
+                                user.username,
+                            ]);
+                        }}
+                    >
+                        <IoIosSend />
+                    </ButtonLight>
+                    {user.ve_ready && (
+                        <ButtonPrimary
+                            onClick={() => {
+                                handleOpenInvitationDialog(user);
+                            }}
+                        >
+                            {t('ve_invitation')}
+                        </ButtonPrimary>
+                    )}
+                </div>
+            </>
+        );
     };
 
     return (
@@ -112,6 +259,17 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
             </div>
 
             <div className="mb-4 flex flex-wrap items-center gap-y-2">
+                <div>
+                    <ButtonLight
+                        className={`flex items-center !bg-transparent !rounded-full mx-2 ${
+                            viewFilterArea ? '' : 'text-gray-400'
+                        } `}
+                        onClick={() => setViewFilterArea(!viewFilterArea)}
+                    >
+                        <MdFilterListAlt /> {t('filter')}
+                    </ButtonLight>
+                </div>
+
                 <div
                     className={`flex p-2 rounded-full shadow border ${
                         isNoAuthPreview ? '' : 'cursor-pointer'
@@ -138,84 +296,36 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                         </div>
                     </div>
                     <span className={`mx-2 ${showMatchingOnly ? '' : 'text-gray-600'}   `}>
-                        {t('matching_show_matching_only')}
+                        {t('show_matching_only')}
                     </span>
                 </div>
             </div>
 
-            {loading ? (
-                <div className="m-12">
-                    <LoadingAnimation size="small" /> {t('loading_users')}
-                </div>
-            ) : (
-                <div className="mb-12 rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-800">
-                    <div>
+            <div className="flex bg-white rounded-lg shadow border-1 border-gray-800 py-6 px-4 space-x-4">
+                {viewFilterArea === true && <FilterArea />}
+                {isLoadingMatching ? (
+                    <div className="m-12">
+                        <LoadingAnimation size="small" /> {t('loading_users')}
+                    </div>
+                ) : (
+                    <div className="overflow-scroll md:overflow-auto w-full text-left divide-y">
                         {result.length === 0 ? (
                             <>{t('no_user_found')}</>
                         ) : (
                             result.map((user, i) => (
                                 <div
                                     key={i}
-                                    className={`group/item flex flex-row min-h-[72px] p-1 space-x-3 items-center border-b border-bg-gray-600 ${
+                                    className={`group/item flex flex-row min-h-[72px] p-1 space-x-3 items-center ${
                                         isNoAuthPreview ? '' : 'hover:bg-gray-50'
                                     }`}
                                 >
-                                    <div className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate flex flex-nowrap items-center">
-                                        {user.ve_ready ? (
-                                            <span
-                                                title={t('ve_ready_true')}
-                                                className="w-3 h-3 m-2 rounded-full bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]"
-                                            ></span>
-                                        ) : (
-                                            <span
-                                                title={t('ve_ready_false')}
-                                                className="w-3 h-3 m-2 rounded-full bg-red-600 drop-shadow-[0_0_3px_rgba(239,68,68,1)]"
-                                            ></span>
-                                        )}
-
-                                        <div className="m-2">
-                                            <UserProfileImage
-                                                profile_pic={user.profile_pic}
-                                                chosen_achievement={user.chosen_achievement}
-                                            />
-                                        </div>
-                                        <Link
-                                            href={`/profile/user/${user.username}`}
-                                            className="py-2 w-full"
-                                        >
-                                            {printUsername(user)}
-                                        </Link>
-                                    </div>
-
-                                    <div className="flex gap-x-2 opacity-0 group-hover/item:opacity-100 transition-opacity pr-4">
-                                        <ButtonLight
-                                            className="!rounded-full"
-                                            title={t('send_chat_message_to_user')}
-                                            onClick={() => {
-                                                openOrCreateChatWith([
-                                                    session?.user.preferred_username!,
-                                                    user.username,
-                                                ]);
-                                            }}
-                                        >
-                                            <IoIosSend />
-                                        </ButtonLight>
-                                        {user.ve_ready && (
-                                            <ButtonPrimary
-                                                onClick={() => {
-                                                    handleOpenInvitationDialog(user);
-                                                }}
-                                            >
-                                                {t('ve_invitation')}
-                                            </ButtonPrimary>
-                                        )}
-                                    </div>
+                                    <UserlistItem user={user} />
                                 </div>
                             ))
                         )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {!isNoAuthPreview && (
                 <VEInvitationDialog

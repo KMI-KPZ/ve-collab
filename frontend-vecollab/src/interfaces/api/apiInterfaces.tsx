@@ -77,6 +77,17 @@ export interface BackendSearchResponse {
     posts: any[];
 }
 
+export interface BackendMatchingUser {
+    username: string;
+    first_name: string;
+    last_name: string;
+    profile_pic: string;
+    institution: string;
+    ve_ready: boolean;
+    chosen_achievement?: null | ChosenAchievement;
+    score: number;
+}
+
 export interface BackendChatroomSnippet {
     _id: string;
     members: string[];

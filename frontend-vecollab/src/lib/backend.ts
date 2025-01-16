@@ -245,6 +245,8 @@ export function useGetAllPlans(accessToken: string): {
 
 export function useGetMatching(
     shouldFetch: boolean,
+    languages: string[],
+    filter: { [key: string]: string[] },
     accessToken: string
 ): {
     data: BackendUserSnippet[];
@@ -252,8 +254,12 @@ export function useGetMatching(
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const url_prep_filter = Object.keys(filter).length
+        ? Object.keys(filter).map((f) => `${f}=${filter[f].length ? filter[f].join(',') : ''}&`)
+        : [];
+
     const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch ? ['/matching', accessToken] : null,
+        shouldFetch ? [`/matching?${url_prep_filter.join('')}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
