@@ -148,13 +148,20 @@ class ElasticsearchConnector:
         )
 
     def search_profile_match(
-        self, profile: dict, size: Optional[int] = 10, offset: Optional[int] = 0
+        self,
+        profile: dict,
+        query_expertise: Optional[str],
+        query_lang: Optional[str],
+        size: Optional[int] = 10,
+        offset: Optional[int] = 0
     ) -> list[dict]:
         """
         Search for a matching partner to `profile` in Elasticsearch.
 
         `profile` is a dictionary containing the profile information of the user
 
+        `query_expertise` set must query of expertises
+        `query_lang` set must query of languages
         `size` is the number of results to return, default 10
         `offset` is the number of results to skip (used for pagination), default 0
         """
@@ -174,94 +181,122 @@ class ElasticsearchConnector:
             if isinstance(value, (dict, list)):
                 profile[key] = self._dict_or_list_values_to_str(value)
 
+        should_query = [
+            {
+                "match": {
+                    "bio": {"query": profile["bio"], "fuzziness": "AUTO"},
+                }
+            },
+            {
+                "match": {
+                    "experience": {
+                        "query": profile["experience"],
+                        "fuzziness": "AUTO",
+                    },
+                }
+            },
+            {
+                "match": {
+                    "expertise": {
+                        "query": profile["expertise"],
+                        "fuzziness": "AUTO",
+                        "boost": 1.5,
+                    },
+                }
+            },
+            {
+                "match": {
+                    "languages": {
+                        "query": profile["languages"],
+                        "fuzziness": "AUTO",
+                    },
+                }
+            },
+            {
+                "match": {
+                    "ve_interests": {
+                        "query": profile["ve_interests"],
+                        "fuzziness": "AUTO",
+                        "boost": 2,
+                    },
+                }
+            },
+            {
+                "match": {
+                    "ve_goals": {
+                        "query": profile["ve_goals"],
+                        "fuzziness": "AUTO",
+                        "boost": 2,
+                    },
+                }
+            },
+            {
+                "match": {
+                    "preferred_format": {
+                        "query": profile["preferred_format"],
+                        "fuzziness": "AUTO",
+                    },
+                }
+            },
+            {
+                "match": {
+                    "research_tags": {
+                        "query": profile["research_tags"],
+                        "fuzziness": "AUTO",
+                    },
+                }
+            },
+            {
+                "match": {
+                    "courses": {
+                        "query": json.dumps(profile["courses"]),
+                        "fuzziness": "AUTO",
+                    },
+                }
+            },
+        ]
+
+        must_query = []
+
+        if query_expertise and query_expertise != "":
+            must_query.append({
+                "match": {
+                    "expertise": {
+                        "query": query_expertise,
+                        "fuzziness": "AUTO"
+                    }
+                }
+            })
+
+        if query_lang and query_lang != "":
+            must_query.append({
+                "match": {
+                    "languages": {
+                        "query": query_lang,
+                        "fuzziness": "AUTO"
+                    }
+                }
+            })
+
+        if not must_query:
+            must_query = []
+
         query = {
-            "size": size,
             "from": offset,
+            "size": size,
             "query": {
                 "bool": {
                     # exclude the user itself from the search results
                     "must_not": [
-                        {"match": {"username": {"query": profile["username"]}}},
+                        {"match": {"username": profile["username"]}}
                     ],
                     "filter": [
                         {"match": {"excluded_from_matching": False}},
                     ],
-                    "should": [
-                        {
-                            "match": {
-                                "bio": {"query": profile["bio"], "fuzziness": "AUTO"},
-                            }
-                        },
-                        {
-                            "match": {
-                                "experience": {
-                                    "query": profile["experience"],
-                                    "fuzziness": "AUTO",
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "expertise": {
-                                    "query": profile["expertise"],
-                                    "fuzziness": "AUTO",
-                                    "boost": 1.5,
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "languages": {
-                                    "query": profile["languages"],
-                                    "fuzziness": "AUTO",
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "ve_interests": {
-                                    "query": profile["ve_interests"],
-                                    "fuzziness": "AUTO",
-                                    "boost": 2,
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "ve_goals": {
-                                    "query": profile["ve_goals"],
-                                    "fuzziness": "AUTO",
-                                    "boost": 2,
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "preferred_format": {
-                                    "query": profile["preferred_format"],
-                                    "fuzziness": "AUTO",
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "research_tags": {
-                                    "query": profile["research_tags"],
-                                    "fuzziness": "AUTO",
-                                },
-                            }
-                        },
-                        {
-                            "match": {
-                                "courses": {
-                                    "query": json.dumps(profile["courses"]),
-                                    "fuzziness": "AUTO",
-                                },
-                            }
-                        },
-                    ],
-                    "minimum_should_match": 0,
-                },
+                    "must": must_query,
+                    "should": should_query,
+                    "minimum_should_match": 0
+                }
             },
         }
 

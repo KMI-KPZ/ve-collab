@@ -55,7 +55,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
         isLoading: isLoadingMatching,
         error,
         mutate: reloadUserSnippets,
-    } = useGetMatching(true, filter.languages, filter, session!.accessToken);
+    } = useGetMatching(true, filter, 15, 0, session!.accessToken);
 
     useEffect(() => {
         // console.log({ matchedUserSnippets, isLoadingMatching });

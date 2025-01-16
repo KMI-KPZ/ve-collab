@@ -1143,6 +1143,8 @@ class MatchingHandler(BaseHandler):
                  "reason": "no_logged_in_user"}
         """
 
+        query_lang = self.get_argument("languages", None)
+        query_expertise = self.get_argument("expertise", None)
         size = self.get_argument("size", None)
         offset = self.get_argument("offset", None)
 
@@ -1153,7 +1155,11 @@ class MatchingHandler(BaseHandler):
             )
 
             matching_users = ElasticsearchConnector().search_profile_match(
-                current_user_profile, size, offset
+                current_user_profile,
+                query_expertise,
+                query_lang,
+                size,
+                offset
             )
 
             # get profile snippets of matched users and add the score to the snippet
