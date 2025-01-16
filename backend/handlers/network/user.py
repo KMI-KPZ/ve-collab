@@ -1109,6 +1109,43 @@ class MatchingExclusionHandler(BaseHandler):
 class MatchingHandler(BaseHandler):
     @auth_needed
     def get(self):
+        """
+        GET /matching
+
+            trigger the matching algorithm to find matching users
+            based on the profile information of the current user.
+
+            query params:
+                `size`: optional, number of hits to return, default is 10
+                `offset`: optional, offset to start from (used for pagination), default is 0
+
+            returns:
+                200 OK
+                {"success": True,
+                 "matching_hits": [
+                    {
+                        "username": "<string>",
+                        "first_name": "<string>",
+                        "last_name": "<string>",
+                        "institution": "<string>",
+                        "profile_pic": "<string>",
+                        "chosen_achievement": {
+                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
+                            "level": <number>
+                        },
+                        "score": <float>
+                    },
+                    ...
+                 ]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+        """
+
+        size = self.get_argument("size", None)
+        offset = self.get_argument("offset", None)
+
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
             current_user_profile = profile_manager.ensure_profile_exists(
@@ -1116,7 +1153,7 @@ class MatchingHandler(BaseHandler):
             )
 
             matching_users = ElasticsearchConnector().search_profile_match(
-                current_user_profile
+                current_user_profile, size, offset
             )
 
             # get profile snippets of matched users and add the score to the snippet
