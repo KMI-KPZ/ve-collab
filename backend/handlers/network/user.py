@@ -1133,6 +1133,7 @@ class MatchingHandler(BaseHandler):
                             "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
                             "level": <number>
                         },
+                        "ve_ready": "<boolean>",
                         "score": <float>
                     },
                     ...
