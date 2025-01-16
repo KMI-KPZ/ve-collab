@@ -61,12 +61,15 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
         // console.log({ matchedUserSnippets, isLoadingMatching });
         if (isLoadingMatching) return;
 
-        const newResult = matchedUserSnippets.map((user) => user as unknown as BackendMatchingUser);
+        let newResult = matchedUserSnippets.map((user) => user as unknown as BackendMatchingUser);
+        if (showMatchingOnly) {
+            newResult = newResult.filter((user) => user.score > 0)
+        }
         setResult(newResult);
-    }, [isLoadingMatching, matchedUserSnippets]);
+    }, [isLoadingMatching, matchedUserSnippets, showMatchingOnly]);
 
     const handleClickShowMatchingOnly = () => {
-        reloadUserSnippets();
+        // reloadUserSnippets();
         setShowMatchingOnly(!showMatchingOnly);
     };
 
