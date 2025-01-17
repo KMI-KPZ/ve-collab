@@ -139,7 +139,7 @@
     "plans_alert_copy_unexpected_error": "An unexpected error occured while copying the plan",
     "plans_alert_open_insufficient_permission": "You do not have permissions to open this plan",
     "plans_alert_open_unexpected_error": "An unexpected error occured while opening the plan",
-    "plans_marked_as_good_practise": "Plan is marked as 'good practice example'",
+    "plans_marked_as_good_practise": "Plan is publicised as 'good practice example'",
     "plans_alert_step_doesnt_exist": "Step does not exist",
     "plans_shared_by": "Plan shared by {{name}}",
     "plans_confirm_delete": "Delete plan?",

@@ -140,7 +140,7 @@
     "plans_alert_open_insufficient_permission": "Du hast keine Berechtigung, um diesen Plan zu öffnen",
     "plans_alert_open_unexpected_error": "ein unerwarteter Fehler ist aufgetreten",
     "plans_alert_step_doesnt_exist": "Diese Etappe existiert nicht",
-    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' markiert",
+    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' veröfentlicht",
     "plans_shared_by": "Plan geteilt von {{name}}",
     "plans_confirm_delete": "Plan löschen?",
     "max_5_mb": "max. 5 MB erlaubt",
