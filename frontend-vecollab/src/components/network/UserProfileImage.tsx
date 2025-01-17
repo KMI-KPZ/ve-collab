@@ -32,7 +32,7 @@ export default function UserProfileImage({
         return (
             <div className="relative">
                 {chosen_achievement?.type && (
-                    <span className="absolute -left-[15px] -top-[15px]">
+                    <span className="absolute -left-[15px] -top-[7px]">
                         <Badge type={chosen_achievement.type} level={chosen_achievement.level} />
                     </span>
                 )}
