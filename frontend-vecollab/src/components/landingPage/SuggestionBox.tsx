@@ -156,20 +156,16 @@ export default function SuggestionBox() {
         return (
             <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                <ul className="divide-y *:px-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                <ul className="*:px-2 *:rounded-full *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
                         return (
-                            <li
-                                key={i}
-                                className="@container hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
-                            >
+                            <li key={i} className="@container">
                                 <Link
                                     className="flex items-center justify-center flex-wrap @[230px]:flex-nowrap @[230px]:justify-start truncate p-2"
                                     href={`/profile/user/${user.username}`}
                                 >
-                                    <span className='shrink-0'>
+                                    <span className="shrink-0">
                                         <UserProfileImage
-
                                             profile_pic={user.profile_pic}
                                             chosen_achievement={user.chosen_achievement}
                                             height={40}
