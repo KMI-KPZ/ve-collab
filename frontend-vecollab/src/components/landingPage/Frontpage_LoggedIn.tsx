@@ -62,59 +62,20 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
         setSortedPlans(sortedPlans.slice(0, 5));
     }, [plans, session]);
 
-    const VeDesignerButtonsSM = () => (
-        <div className="flex sm:hidden mb-6 pb-6 flex-row items-center border-b-2 border-b-ve-collab-orange">
-            <div className="text-2xl text-center">
-                <span className="text-ve-collab-orange">VE</span>{' '}
-                <span className="text-ve-collab-blue">Designer</span>
-            </div>
-
-            <ButtonNewPlan socket={socket} label={t('common:btn_new_ve')} className="bg-none !p-0">
+    const VeDesignerButtons = () => (
+        <>
+            <ButtonNewPlan socket={socket} label={t('common:btn_new_ve')} className="bg-none !px-2">
                 <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                     <Image src={newFormImg} alt={'form_image'} className="w-[96px] rounded-full" />
-                    <div className="text-center text-wrap xl:w-1/2">{t('common:btn_new_ve')}</div>
+                    <div className="text-center text-wrap xl:w-1/2 font-bold">
+                        {t('common:btn_new_ve')}
+                    </div>
                 </div>
             </ButtonNewPlan>
 
             <Link
                 href={'/matching'}
-                className="px-2 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-            >
-                <Image
-                    src={handsPuzzleImg}
-                    alt={t('puzzle_image')}
-                    className="w-[96px] rounded-full"
-                />
-                <div className="text-center text-wrap xl:w-1/2">{t('find_ve_partners')}</div>
-            </Link>
-        </div>
-    );
-
-    const VeDesignerButtons = () => (
-        <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-            <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
-                <span className="text-ve-collab-orange">VE</span>{' '}
-                <span className="text-ve-collab-blue">Designer</span>
-            </div>
-
-            <ButtonNewPlan
-                socket={socket}
-                label={t('common:btn_new_ve')}
-                className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none font-bold"
-            >
-                <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
-                    <Image
-                        src={newFormImg}
-                        alt={t('form_image')}
-                        className="w-[96px] rounded-full"
-                    />
-                    <div className="text-center text-wrap xl:w-1/2">{t('common:btn_new_ve')}</div>
-                </div>
-            </ButtonNewPlan>
-
-            <Link
-                href={'/matching'}
-                className="px-2 mb-6 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
+                className="!px-2 py-4 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
             >
                 <Image
                     src={handsPuzzleImg}
@@ -125,6 +86,57 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     {t('find_ve_partners')}
                 </div>
             </Link>
+        </>
+    );
+
+    const VeFeedWidget = () => (
+        <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
+            <div className="flex justify-between items-center">
+                <H1>{t('ve_feed')}</H1>
+                {/* <p>Letzte Aktivitäten </p> */}
+                {/* <ButtonLight link="/plans" className="!rounded-full">
+                                    {t('common:all')} {t('common:plans')}
+                                </ButtonLight> */}
+            </div>
+            <div>
+                {sortedPlans.map((plan) => {
+                    return (
+                        <div
+                            key={plan._id}
+                            className="flex flex-col px-1 py-3 border-b border-bg-gray-300 bg-white/50 hover:bg-gray-100/50"
+                        >
+                            <Timestamp
+                                timestamp={plan.last_modified}
+                                className="text-sm text-slate-650 italic"
+                            />
+                            <div className="flex flex-row items-center">
+                                <div className="grow flex items-center truncate ">
+                                    <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
+                                        <Link href={`/plan/${plan._id}`}>{plan.name}</Link>
+                                    </div>
+                                    {plan.is_good_practise && (
+                                        <div className="mx-2 text-ve-collab-blue">
+                                            <FaMedal
+                                                title={t('common:plans_marked_as_good_practise')}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="">
+                                    {plan.author.first_name} {plan.author.last_name}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
+                <ButtonLight link="/plans" className="!rounded-full">
+                    {t('common:all')} {t('common:plans')}
+                    <MdArrowRight size={24} className="inline mx-1" />
+                </ButtonLight>
+            </div>
         </div>
     );
 
@@ -174,63 +186,27 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
                     <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md">
-                        <VeDesignerButtonsSM />
-
-                        <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
-                            <div className="flex justify-between items-center">
-                                <H1>{t('ve_feed')}</H1>
-                                {/* <ButtonLight link="/plans" className="!rounded-full">
-                                    {t('common:all')} {t('common:plans')}
-                                </ButtonLight> */}
-                            </div>
-                            <div>
-                                {sortedPlans.map((plan) => {
-                                    return (
-                                        <div
-                                            key={plan._id}
-                                            className="flex flex-col px-1 py-3 border-b border-bg-gray-300 bg-white/50 hover:bg-gray-100/50"
-                                        >
-                                            <Timestamp
-                                                timestamp={plan.last_modified}
-                                                className="text-sm text-slate-650 italic"
-                                            />
-                                            <div className="flex flex-row items-center">
-                                                <div className="grow flex items-center truncate ">
-                                                    <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
-                                                        <Link href={`/plan/${plan._id}`}>
-                                                            {plan.name}
-                                                        </Link>
-                                                    </div>
-                                                    {plan.is_good_practise && (
-                                                        <div className="mx-2 text-ve-collab-blue">
-                                                            <FaMedal
-                                                                title={t(
-                                                                    'common:plans_marked_as_good_practise'
-                                                                )}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="">
-                                                    {plan.author.first_name} {plan.author.last_name}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                                <ButtonLight link="/plans" className="!rounded-full">
-                                    {t('common:all')} {t('common:plans')}
-                                    <MdArrowRight size={24} className="inline mx-1" />
-                                </ButtonLight>
-                                {/* <Link href={`/plans`}>
-                                    {t('common:all')}{' '}
-                                    <MdArrowRight size={24} className="inline mx-1" />
-                                </Link> */}
-                            </div>
+                        <div className="text-2xl text-left">
+                            <span className="text-ve-collab-orange">VE</span>{' '}
+                            <span className="text-ve-collab-blue">Designer</span>
                         </div>
+                        <div className="flex sm:hidden flex-row items-center mb-6 pb-2 border-b-2 border-b-ve-collab-orange">
+                            <VeDesignerButtons />
+
+                            <Link
+                                href={'/plans'}
+                                className="flex flex-wrap items-center justify-center"
+                            >
+                                <span className="self-center text-ve-collab-blue rounded-full p-2 my-2 mx-4 border border-ve-collab-blue">
+                                    <FaMedal size={18} className="" />
+                                </span>
+                                <span className="text-center text-wrap xl:w-2/3 font-bold">
+                                    {t('common:show_good_practice_plans')}
+                                </span>
+                            </Link>
+                        </div>
+
+                        <VeFeedWidget />
 
                         <div>
                             <H1 className="mt-6">{t('posts')}</H1>
@@ -242,9 +218,44 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                 </div>
 
                 <div className="order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    <VeDesignerButtons />
+                    <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md">
+                        <div className="text-2xl">
+                            <span className="text-ve-collab-orange">VE</span>{' '}
+                            <span className="text-ve-collab-blue">Designer</span>
+                        </div>
+                        <div className="flex flex-col divide-y-2 divide-2 divide-ve-collab-orange px-2">
+                            <VeDesignerButtons />
+
+                            <div className="p-4">
+                                <Link
+                                    href={'/plans'}
+                                    className="flex flex-wrap items-center justify-center"
+                                >
+                                    <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2 my-2 mb-4 mx-4 border border-ve-collab-blue">
+                                        <FaMedal size={18} className="" />
+                                    </span>
+                                    <span className="text-center text-wrap xl:w-2/3 font-bold">
+                                        {t('common:show_good_practice_plans')}
+                                    </span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
 
                     {notificationEvents.length > 0 && <NotificationWidget />}
+
+                    {/* <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
+                        <div className="flex">
+                            <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2  border border-ve-collab-blue">
+                                <FaMedal size={18} />
+                            </span>
+                            <H2>{t('common:good_practice_plans')}</H2>
+                        </div>
+
+                        <div>Gesamt: 123</div>
+
+                        <div>Zuletzt: 12.03.2025</div>
+                    </div> */}
 
                     <SuggestionBox />
                 </div>
