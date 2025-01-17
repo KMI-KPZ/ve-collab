@@ -22,6 +22,7 @@ import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
 import newFormImg from '@/images/newForm_sm.jpg';
 import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
+import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
     notificationEvents: Notification[];
@@ -61,6 +62,105 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
         setSortedPlans(sortedPlans.slice(0, 5));
     }, [plans, session]);
 
+    const VeDesignerButtonsSM = () => (
+        <div className="flex sm:hidden mb-6 pb-6 flex-row items-center border-b-2 border-b-ve-collab-orange">
+            <div className="text-2xl text-center">
+                <span className="text-ve-collab-orange">VE</span>{' '}
+                <span className="text-ve-collab-blue">Designer</span>
+            </div>
+
+            <ButtonNewPlan socket={socket} label={t('common:btn_new_ve')} className="bg-none !p-0">
+                <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
+                    <Image src={newFormImg} alt={'form_image'} className="w-[96px] rounded-full" />
+                    <div className="text-center text-wrap xl:w-1/2">{t('common:btn_new_ve')}</div>
+                </div>
+            </ButtonNewPlan>
+
+            <Link
+                href={'/matching'}
+                className="px-2 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
+            >
+                <Image
+                    src={handsPuzzleImg}
+                    alt={t('puzzle_image')}
+                    className="w-[96px] rounded-full"
+                />
+                <div className="text-center text-wrap xl:w-1/2">{t('find_ve_partners')}</div>
+            </Link>
+        </div>
+    );
+
+    const VeDesignerButtons = () => (
+        <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
+            <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
+                <span className="text-ve-collab-orange">VE</span>{' '}
+                <span className="text-ve-collab-blue">Designer</span>
+            </div>
+
+            <ButtonNewPlan
+                socket={socket}
+                label={t('common:btn_new_ve')}
+                className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none font-bold"
+            >
+                <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
+                    <Image
+                        src={newFormImg}
+                        alt={t('form_image')}
+                        className="w-[96px] rounded-full"
+                    />
+                    <div className="text-center text-wrap xl:w-1/2">{t('common:btn_new_ve')}</div>
+                </div>
+            </ButtonNewPlan>
+
+            <Link
+                href={'/matching'}
+                className="px-2 mb-6 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
+            >
+                <Image
+                    src={handsPuzzleImg}
+                    alt={t('puzzle_image')}
+                    className="w-[96px] rounded-full"
+                />
+                <div className="text-center text-wrap xl:w-1/2 font-bold">
+                    {t('find_ve_partners')}
+                </div>
+            </Link>
+        </div>
+    );
+
+    const NotificationWidget = () => (
+        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
+            <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
+            <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
+            <H2>{t('common:notifications.title')}</H2>
+
+            <div className="flex  items-center ">
+                <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">
+                    <IoMdNotificationsOutline size={30} className="" />
+                </span>
+                {notificationEvents.length == 1 ? (
+                    <span>{t('one_new_notification')}</span>
+                ) : (
+                    <span>
+                        {t('multiple_new_notifications', {
+                            count: notificationEvents.length,
+                        })}
+                    </span>
+                )}
+            </div>
+            <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
+                <Button
+                    onClick={() => {
+                        window.scrollTo(0, 0);
+                        toggleNotifWindow();
+                    }}
+                >
+                    {t('details')} <MdArrowRight size={24} className="inline mx-1" />
+                </Button>
+            </div>
+        </div>
+    );
+
     if (isLoadingProfile) return <></>;
 
     return (
@@ -74,46 +174,15 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
                     <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md">
-                        <div className="flex sm:hidden mb-6 pb-6 flex-row items-center border-b-2 border-b-ve-collab-orange">
-                            <div className="text-2xl text-center">
-                                <span className="text-ve-collab-orange">VE</span>{' '}
-                                <span className="text-ve-collab-blue">Designer</span>
-                            </div>
-
-                            <ButtonNewPlan
-                                socket={socket}
-                                label={t('common:btn_new_ve')}
-                                className="bg-none !p-0"
-                            >
-                                <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
-                                    <Image
-                                        src={newFormImg}
-                                        alt={'form_image'}
-                                        className="w-[96px] rounded-full"
-                                    />
-                                    <div className="text-center text-wrap xl:w-1/2">
-                                        {t('common:btn_new_ve')}
-                                    </div>
-                                </div>
-                            </ButtonNewPlan>
-
-                            <Link
-                                href={'/matching'}
-                                className="px-2 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-                            >
-                                <Image
-                                    src={handsPuzzleImg}
-                                    alt={t('puzzle_image')}
-                                    className="w-[96px] rounded-full"
-                                />
-                                <div className="text-center text-wrap xl:w-1/2">
-                                    {t('find_ve_partners')}
-                                </div>
-                            </Link>
-                        </div>
+                        <VeDesignerButtonsSM />
 
                         <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
-                            <H1 className="">{t('ve_feed')}</H1>
+                            <div className="flex justify-between items-center">
+                                <H1>{t('ve_feed')}</H1>
+                                {/* <ButtonLight link="/plans" className="!rounded-full">
+                                    {t('common:all')} {t('common:plans')}
+                                </ButtonLight> */}
+                            </div>
                             <div>
                                 {sortedPlans.map((plan) => {
                                     return (
@@ -136,7 +205,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                                         <div className="mx-2 text-ve-collab-blue">
                                                             <FaMedal
                                                                 title={t(
-                                                                    'plans_marked_as_good_practise'
+                                                                    'common:plans_marked_as_good_practise'
                                                                 )}
                                                             />
                                                         </div>
@@ -152,10 +221,14 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                 })}
                             </div>
                             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                                <Link href={`/plans`}>
+                                <ButtonLight link="/plans" className="!rounded-full">
+                                    {t('common:all')} {t('common:plans')}
+                                    <MdArrowRight size={24} className="inline mx-1" />
+                                </ButtonLight>
+                                {/* <Link href={`/plans`}>
                                     {t('common:all')}{' '}
                                     <MdArrowRight size={24} className="inline mx-1" />
-                                </Link>
+                                </Link> */}
                             </div>
                         </div>
 
@@ -169,95 +242,9 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                 </div>
 
                 <div className="order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    {/* <ButtonNewPlan socket={socket} label={t('btn_new_va')} className="bg-none mb-6">
-                        <div className="rotate-12 w-fit m-auto px-6 py-2 flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105">
-                            <Image
-                                src={newFormImg}
-                                alt="Bild eines Formulars"
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="text-center">
-                                <div className="text-2xl mb-6">
-                                    <span className="text-ve-collab-orange">VE</span>{' '}
-                                    <span className="text-ve-collab-blue">Designer</span>
-                                </div>
+                    <VeDesignerButtons />
 
-                                {t('btn_new_va')}
-                            </div>
-                        </div>
-                    </ButtonNewPlan> */}
-
-                    <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="text-2xl -mt-[62px] h-[62px] rounded-t-md bg-white px-4 -ml-[8px] xl:-ml-[24px] -mr-[8px] xl:-mr-[24px] pt-[11px]">
-                            <span className="text-ve-collab-orange">VE</span>{' '}
-                            <span className="text-ve-collab-blue">Designer</span>
-                        </div>
-
-                        <ButtonNewPlan
-                            socket={socket}
-                            label={t('common:btn_new_ve')}
-                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none font-bold"
-                        >
-                            <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
-                                <Image
-                                    src={newFormImg}
-                                    alt={t('form_image')}
-                                    className="w-[96px] rounded-full"
-                                />
-                                <div className="text-center text-wrap xl:w-1/2">
-                                    {t('common:btn_new_ve')}
-                                </div>
-                            </div>
-                        </ButtonNewPlan>
-
-                        <Link
-                            href={'/matching'}
-                            className="px-2 mb-6 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-                        >
-                            <Image
-                                src={handsPuzzleImg}
-                                alt={t('puzzle_image')}
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="text-center text-wrap xl:w-1/2 font-bold">
-                                {t('find_ve_partners')}
-                            </div>
-                        </Link>
-                    </div>
-
-                    {notificationEvents.length > 0 && (
-                        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
-                            <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
-                            <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-                            <H2>{t('common:notifications.title')}</H2>
-
-                            <div className="flex  items-center ">
-                                <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">
-                                    <IoMdNotificationsOutline size={30} className="" />
-                                </span>
-                                {notificationEvents.length == 1 ? (
-                                    <span>{t('one_new_notification')}</span>
-                                ) : (
-                                    <span>
-                                        {t('multiple_new_notifications', {
-                                            count: notificationEvents.length,
-                                        })}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                                <Button
-                                    onClick={() => {
-                                        window.scrollTo(0, 0);
-                                        toggleNotifWindow();
-                                    }}
-                                >
-                                    {t('details')}{' '}
-                                    <MdArrowRight size={24} className="inline mx-1" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    {notificationEvents.length > 0 && <NotificationWidget />}
 
                     <SuggestionBox />
                 </div>
