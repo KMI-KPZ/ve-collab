@@ -42,6 +42,7 @@
     "description": "Description",
     "description_placeholder": "briefly describe your group",
     "visibility": "Visibility",
+    "group_visibility_tooltip": "<bold>invisible:</bold> group will only visible for group-members<br/><bold>private:</bold> users can only join by request",
     "requests": "Requests",
     "no_requests": "currently no requests",
     "invitations": "Invitations",
