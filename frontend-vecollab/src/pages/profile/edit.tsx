@@ -382,6 +382,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 </WhiteBox>
                 {successPopupOpen && (
                     <Alert
+                        type='success'
                         message={t('saved')}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}
