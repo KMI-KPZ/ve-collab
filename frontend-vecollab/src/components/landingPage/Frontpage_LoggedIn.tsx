@@ -196,7 +196,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                         <ButtonNewPlan
                             socket={socket}
                             label={t('common:btn_new_ve')}
-                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none"
+                            className="bg-none mb-6 border-b-2 border-b-ve-collab-orange !px-2 -mt-[16px] !rounded-none font-bold"
                         >
                             <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                                 <Image
@@ -219,7 +219,7 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                                 alt={t('puzzle_image')}
                                 className="w-[96px] rounded-full"
                             />
-                            <div className="text-center text-wrap xl:w-1/2">
+                            <div className="text-center text-wrap xl:w-1/2 font-bold">
                                 {t('find_ve_partners')}
                             </div>
                         </Link>
