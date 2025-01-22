@@ -32,7 +32,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
     const { t } = useTranslation(['community', 'common']);
 
     const [result, setResult] = useState<BackendMatchingUser[]>([]);
-    const [showMatchingOnly, setShowMatchingOnly] = useState<boolean>(false);
+    const [veReadyOnly, setVeReadyOnly] = useState<boolean>(true);
     const [invitationDialog, setInvitationDialog] = useState<{
         isOpen: boolean;
         username?: BackendMatchingUser;
@@ -62,15 +62,15 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
         if (isLoadingMatching) return;
 
         let newResult = matchedUserSnippets.map((user) => user as unknown as BackendMatchingUser);
-        if (showMatchingOnly) {
-            newResult = newResult.filter((user) => user.score > 0)
+        if (veReadyOnly) {
+            newResult = newResult.filter((user) => user.ve_ready);
         }
         setResult(newResult);
-    }, [isLoadingMatching, matchedUserSnippets, showMatchingOnly]);
+    }, [isLoadingMatching, matchedUserSnippets, veReadyOnly]);
 
-    const handleClickShowMatchingOnly = () => {
+    const handleClickShowVeReadyOnly = () => {
         // reloadUserSnippets();
-        setShowMatchingOnly(!showMatchingOnly);
+        setVeReadyOnly(!veReadyOnly);
     };
 
     const handleOpenInvitationDialog = (username: BackendMatchingUser) => {
@@ -213,9 +213,9 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                     </div>
                     <Link href={`/profile/user/${user.username}`} className="py-2 w-full">
                         {printUsername(user)}
-                        <span className="mx-2 italic text-gray-500">
+                        {/* <span className="mx-2 italic text-gray-500">
                             (Score: {user.score.toFixed(2)})
-                        </span>
+                        </span> */}
                     </Link>
                 </div>
 
@@ -257,14 +257,14 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
             <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('matching')}</div>
-                    {/* <div className={'text-gray-500 text-xl'}>{t('matching_instructions')}</div> */}
+                    <div className={'text-gray-500 text-xl'}>{t('matching_instructions')}</div>
                 </div>
             </div>
 
             <div className="mb-4 flex flex-wrap items-center gap-y-2">
                 <div>
                     <ButtonLight
-                        className={`flex items-center !bg-transparent !rounded-full mx-2 ${
+                        className={`flex items-center !bg-gray-100 !rounded-full mx-2 ${
                             viewFilterArea ? '' : 'text-gray-400'
                         } `}
                         onClick={() => setViewFilterArea(!viewFilterArea)}
@@ -274,32 +274,28 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 </div>
 
                 <div
+                    title={t('filter_show_ve_ready_only_title')}
                     className={`flex p-2 rounded-full shadow border ${
                         isNoAuthPreview ? '' : 'cursor-pointer'
                     }`}
-                    onClick={handleClickShowMatchingOnly}
+                    onClick={handleClickShowVeReadyOnly}
                 >
-                    <div className="relative w-[48px] flex items-center ">
+                    <div className="relative w-[32px] flex items-center ">
                         <div
-                            className={`absolute w-[48px] h-[16px] left-0 rounded-md ${
-                                showMatchingOnly ? 'bg-green-800' : 'bg-gray-500'
+                            className={`absolute w-[32px] h-[14px] left-0 rounded-md ${
+                                veReadyOnly ? 'bg-green-800' : 'bg-gray-500'
                             }`}
                         ></div>
                         <div
-                            className={`absolute  bg-white rounded-full p-1 border ${
-                                showMatchingOnly
-                                    ? 'right-0 text-ve-collab-blue border-ve-collab-blue'
-                                    : 'left-0 text-slate-500 border-slate-500'
+                            className={`absolute rounded-full h-[20px] w-[20px] ${
+                                veReadyOnly
+                                    ? 'right-0 bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]'
+                                    : 'left-0 bg-gray-200'
                             }`}
-                        >
-                            <GiStarsStack
-                                color=""
-                                className={showMatchingOnly ? 'text-orange-300' : 'text-gray-400'}
-                            />
-                        </div>
+                        ></div>
                     </div>
-                    <span className={`mx-2 ${showMatchingOnly ? '' : 'text-gray-600'}   `}>
-                        {t('show_matching_only')}
+                    <span className={`mx-2 ${veReadyOnly ? '' : 'text-gray-600'}   `}>
+                        {t('filter_show_ve_ready_only')}
                     </span>
                 </div>
             </div>
@@ -308,7 +304,8 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 {viewFilterArea === true && <FilterArea />}
                 {isLoadingMatching ? (
                     <div className="m-12">
-                        <LoadingAnimation size="small" /> {t('loading_users')}
+                        <LoadingAnimation size="small" />
+                        {/* {t('loading_users')} */}
                     </div>
                 ) : (
                     <div className="overflow-scroll md:overflow-auto w-full text-left divide-y">
