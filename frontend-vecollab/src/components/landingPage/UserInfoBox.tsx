@@ -56,16 +56,19 @@ export default function UserInfoBox({ profileInformation }: Props) {
 
                 <div className="mb-2 mt-6">{profileInformation.profile.bio}</div>
 
-                <div className="">
-                    {profileInformation.profile.ve_ready ? (
-                        <span className="text-white bg-green-500 rounded-full shadow shadow-green-500 px-2 py-1 my-1">
-                            <MdCheck className="inline mr-1 mb-1" />
-                            {t('ve_ready_true')}
+                {profileInformation.profile.ve_ready ? (
+                    <div className="pl-10">
+                        <span className="w-fit -ml-10 bg-green-500 rounded-full shadow shadow-green-500 p-1 mr-2 text-white text-center">
+                            <MdCheck className="inline-block mb-1 mx-1" />
                         </span>
-                    ) : (
-                        <span className="text-red-600">{t('ve_ready_false')}</span>
-                    )}
-                </div>
+                        {t('ve_ready_true')}
+                    </div>
+                ) : (
+                    <div className="text-red-600">
+                        <span className="inline-block w-[10px] h-[10px] rounded-full bg-red-600 shadow shadow-red-600 mr-2"></span>
+                        {t('ve_ready_false')}
+                    </div>
+                )}
             </div>
 
             <div className={'flex divide-x'}>
