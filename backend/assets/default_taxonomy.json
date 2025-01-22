@@ -1,6 +1,12 @@
 {
     "taxonomy": [
         {
+            "parent": 32,
+            "droppable": true,
+            "text": "Digitale Medien",
+            "id": 62
+        },
+        {
             "parent": 58,
             "droppable": false,
             "text": "KoKoN Methodenkoffer",
@@ -13,7 +19,7 @@
         {
             "parent": 33,
             "droppable": true,
-            "text": "Interaktion & kollaboratives Arbeiten",
+            "text": "Game-based Learning",
             "id": 17
         },
         {
@@ -149,12 +155,6 @@
         {
             "parent": 32,
             "droppable": true,
-            "text": "Digitale Medien",
-            "id": 18
-        },
-        {
-            "parent": 32,
-            "droppable": true,
             "text": "Datenschutz und Urheberrecht",
             "id": 16
         },
@@ -256,6 +256,16 @@
                 "url": "https://soserve.rz.uni-leipzig.de:10001/6-1-beispiele-aus-der-praxis/"
             },
             "id": 47
+        },
+        {
+            "parent": 12,
+            "droppable": false,
+            "text": "Good-Practice-Beispiele in VE-Collab",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/6-5-beispiele-aus-der-praxis-gpb/"
+            },
+            "id": 61
         },
         {
             "parent": 8,

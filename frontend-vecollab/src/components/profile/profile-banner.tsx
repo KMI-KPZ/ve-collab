@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import DialogUserList from './DialogUserList';
 import { useTranslation } from 'next-i18next';
-import { is } from 'date-fns/locale';
 
 interface Props {
     follows: string[];
@@ -26,7 +25,7 @@ export default function ProfileBanner({
     username,
     isNoAuthPreview = false,
 }: Props) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
     const [loading, setLoading] = useState(false);
@@ -122,7 +121,7 @@ export default function ProfileBanner({
                         }}
                     >
                         <div className={'font-bold'}>{follows.length}</div>
-                        <div>{t('following')}</div>
+                        <div>{t('community:following')}</div>
                     </div>
                     <div
                         className={'pl-6 text-lg text-white'}
@@ -132,7 +131,7 @@ export default function ProfileBanner({
                         }}
                     >
                         <div className={'font-bold'}>{followers.length}</div>
-                        <div>{t('followers')}</div>
+                        <div>{t('community:followers')}</div>
                     </div>
                 </div>
             </div>

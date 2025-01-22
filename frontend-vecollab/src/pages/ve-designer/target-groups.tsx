@@ -41,19 +41,6 @@ interface FormValues {
     languages: Language[];
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
-//     formValues.languages.every((languageObject) => languageObject.language === '') &&
-//     formValues.targetGroups.every((targetGroup) => {
-//         return (
-//             targetGroup.name === '' &&
-//             targetGroup.age_min === 0 &&
-//             targetGroup.age_max === 0 &&
-//             targetGroup.experience === '' &&
-//             targetGroup.academic_course === '' &&
-//             targetGroup.languages === ''
-//         );
-//     });
-
 interface Props {
     socket: Socket;
     languageKeys: string[];
@@ -151,14 +138,14 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('common:name')}
+                            {t('designer:target:target_group')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.name`)}
-                            placeholder={t('common:enter_name')}
+                            placeholder={t('designer:target:target_group_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -269,19 +256,6 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                                         </p>
                                     )
                             )}
-                        {/*}
-                        <input
-                            type="text"
-                            {...methods.register(`targetGroups.${index}.languages`)}
-                            placeholder={t('target.languages_placeholder')}
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {t(
-                                methods.formState.errors?.targetGroups?.[index]?.languages?.message!
-                            )}
-                        </p>
-                        */}
                     </div>
                 </div>
                 <div className="flex justify-end items-center">
@@ -428,14 +402,14 @@ export function TargetGroupsNoAuthPreview() {
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('common:name')}
+                                        {t('designer:target:target_group')}
                                     </label>
                                 </div>
                                 <div className="w-3/4">
                                     <input
                                         type="text"
                                         disabled
-                                        placeholder={t('common:enter_name')}
+                                        placeholder={t('designer:target:target_group_placeholder')}
                                         className="border border-gray-400 rounded-lg w-full p-2"
                                     />
                                 </div>

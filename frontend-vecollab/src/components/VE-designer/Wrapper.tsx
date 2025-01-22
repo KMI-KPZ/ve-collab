@@ -617,6 +617,7 @@ export default function Wrapper({
                                 const res = await handleSubmit(data);
                                 if (res) {
                                     setAlert({
+                                        type: 'success',
                                         message: t('alert_saved'),
                                         autoclose: 2000,
                                         onClose: () => setAlert({ open: false }),

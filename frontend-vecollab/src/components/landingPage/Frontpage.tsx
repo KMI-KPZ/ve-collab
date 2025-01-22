@@ -50,9 +50,9 @@ export default function Frontpage() {
 
             {image}
 
-            <span className="block mb-4 text-xl font-bold">{title}</span>
+            <span className="block mb-4 text-xl font-bold break-words">{title}</span>
 
-            <p className="mb-[56px]">{text}</p>
+            <p className="mb-[56px] break-words">{text}</p>
 
             {link && (
                 <Link
@@ -114,12 +114,12 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-full sm:w-5/6 mx-auto md:my-10 max-w-screen-xl" id="features">
+            <div className="w-full lg:w-5/6 mx-auto md:my-10 max-w-screen-xl" id="features">
                 <H2 className="mb-8 font-bold !text-2xl md:!text-3xl text-center">
                     {t('frontpage.features.title')}
                 </H2>
 
-                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
+                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-6 lg:gap-12">
                     <FeatureBox
                         title={t('frontpage.features.learning_material.title')}
                         text={t('frontpage.features.learning_material.text')}

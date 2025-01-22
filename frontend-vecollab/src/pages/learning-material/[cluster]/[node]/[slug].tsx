@@ -1,6 +1,10 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
+import {
+    fetchTaxonomy,
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
@@ -234,11 +238,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
+    const taxonomy = await fetchTaxonomy();
+
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
     if (!clusterSlug) return { notFound: true };
 
-    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
-    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string);
+    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);
+    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string, taxonomy);
     const currentNode = lectionsOfNode.find((node) => node.text === params?.slug);
     if (!currentNode) return { notFound: true };
 

@@ -1,6 +1,6 @@
 import { useGetAvailablePlans } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
@@ -15,9 +15,10 @@ import CustomHead from '@/components/metaData/CustomHead';
 import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
 import Image from 'next/image';
 
-import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
-import newFormImg from '@/images/newForm_sm.jpg';
+import btnNewVe from '@/images/btn_new_ve.svg';
+import btnSearchUser from '@/images/btn_search_user.svg';
 import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
+import { useRouter } from 'next/router';
 
 export interface IfilterBy {
     /** compare function
@@ -43,6 +44,8 @@ Plans.noAuthPreview = <PlansNoAuthPreview />;
 
 export default function Plans({ socket }: Props) {
     const { data: session } = useSession();
+    const router = useRouter();
+
     const { t } = useTranslation('common');
     const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
     const [filterBy, setFilterBy] = useState<IfilterBy[]>([
@@ -55,6 +58,20 @@ export default function Plans({ socket }: Props) {
     const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
+
+    // may initial only show GP plans
+    useEffect(() => {
+        if (router.query.isGP && router.query.isGP === 'true') {
+            setFilterBy((prev) => [
+                ...prev,
+                {
+                    id: 'isGoodPractice',
+                    compare: (plan) => plan.is_good_practise === true,
+                    value: true,
+                },
+            ]);
+        }
+    }, [router.query]);
 
     useEffect(() => {
         if (isLoading || !plans.length) return;
@@ -110,43 +127,38 @@ export default function Plans({ socket }: Props) {
                 pageDescription={t('plans_description')}
             />
 
-            <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
+            <div className="@conttainer flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
                 </div>
 
                 <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
-                    <Link
-                        href={'/matching'}
-                        className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-                    >
-                        <Image
-                            src={handsPuzzleImg}
-                            alt={t('find_ve_partners')}
-                            className="w-[96px] rounded-full"
-                        />
-                        <div className="font-bold text-center text-wrap xl:w-1/2">
-                            {t('find_ve_partners')}
-                        </div>
-                    </Link>
-
                     <ButtonNewPlan
                         socket={socket}
-                        label={t('btn_new_ve')}
-                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
+                        label={t('common:btn_new_ve')}
+                        className="min-h-[50px] bg-none !px-4 !py-2 !rounded-full cursor-pointer shadow border bg-white hover:bg-gray-50"
                     >
-                        <div className="flex flex-wrap items-center justify-center ">
-                            <Image
-                                src={newFormImg}
-                                alt={t('btn_new_ve')}
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="font-bold text-center text-wrap xl:w-1/2">
-                                {t('btn_new_ve')}
-                            </div>
+                        <div className="flex items-center justify-center text-wrap font-bold">
+                            <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
+                            {t('common:btn_new_ve')}
                         </div>
                     </ButtonNewPlan>
+
+                    <div className="px-2">
+                        <Link
+                            href={'/matching'}
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow border hover:bg-gray-50"
+                        >
+                            <Image
+                                src={btnSearchUser}
+                                alt={'form_image'}
+                                width={32}
+                                className="mr-2"
+                            />
+                            {t('find_ve_partners')}
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -266,33 +278,31 @@ function PlansNoAuthPreview() {
                 </div>
 
                 <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
-                    <div className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center">
-                        <Image
-                            src={handsPuzzleImg}
-                            alt={t('find_ve_partners')}
-                            className="w-[96px] rounded-full"
-                        />
-                        <div className="font-bold text-center text-wrap xl:w-1/2">
-                            {t('find_ve_partners')}
-                        </div>
-                    </div>
-
                     <ButtonNewPlan
-                        label={t('btn_new_va')}
-                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-default"
                         isNoAuthPreview={true}
+                        label={t('common:btn_new_ve')}
+                        className="min-h-[50px] bg-none !px-4 !py-2 !rounded-full cursor-pointer shadow border bg-white hover:bg-gray-50"
                     >
-                        <div className="flex flex-wrap items-center justify-center ">
-                            <Image
-                                src={newFormImg}
-                                alt={t('btn_new_va')}
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="font-bold text-center text-wrap xl:w-1/2">
-                                {t('btn_new_va')}
-                            </div>
+                        <div className="flex items-center justify-center text-wrap font-bold">
+                            <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
+                            {t('common:btn_new_ve')}
                         </div>
                     </ButtonNewPlan>
+
+                    <div className="px-2">
+                        <Link
+                            href={'/matching'}
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow border hover:bg-gray-50"
+                        >
+                            <Image
+                                src={btnSearchUser}
+                                alt={'form_image'}
+                                width={32}
+                                className="mr-2"
+                            />
+                            {t('find_ve_partners')}
+                        </Link>
+                    </div>
                 </div>
             </div>
 

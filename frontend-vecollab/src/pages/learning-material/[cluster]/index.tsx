@@ -1,6 +1,6 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
+import { fetchTaxonomy, getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
 import { INodeWithLections } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -109,8 +109,9 @@ export const getServerSideProps: GetServerSideProps = async ({
         return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
-    const currentCluster = await getNodeByText(clusterSlug);
-    const nodesWithLectionsOfCluster = await getNodesOfNodeWithLections(currentCluster);
+    const taxonomy = await fetchTaxonomy();
+    const currentCluster = await getNodeByText(clusterSlug, taxonomy);
+    const nodesWithLectionsOfCluster = await getNodesOfNodeWithLections(currentCluster, taxonomy);
 
     return {
         props: {
