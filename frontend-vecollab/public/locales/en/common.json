@@ -58,6 +58,7 @@
     "logout": "Logout",
     "redirect": "Redirected...",
     "profile_pic": "Profile picture",
+    "home": "Home",
     "search": "Search",
     "search_placeholder": "Search User, Group oder Post ...",
     "search_title": "Search",
@@ -426,6 +427,7 @@
             }
         }
     },
+    "dashboard_description": "Your start page on the VE-Collab platform shows an overview of activities and important news from the network.",
     "show_more": "Learn more",
     "access_denied": "Access denied",
     "qualification": "Qualification",

@@ -58,6 +58,7 @@
     "logout": "Abmelden",
     "redirect": "Weiterleitung...",
     "profile_pic": "Profilbild",
+    "home": "Home",
     "search": "Suche",
     "search_placeholder": "Suche Benutzer, Gruppe oder Beitrag ...",
     "search_title": "Suchen",
@@ -426,6 +427,7 @@
             }
         }
     },
+    "dashboard_description": "Deine Startseite der VE-Collab Plattform zeigt eine Übersicht von Aktivitäten und wichtigen Neuigkeiten des Netzwerkes.",
     "show_more": "Mehr erfahren",
     "access_denied": "Zugriff verweigert",
     "qualification": "Qualifikation",

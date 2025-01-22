@@ -69,7 +69,7 @@ export default function HeaderSection({
     const handleSelectOption = async (value: string) => {
         switch (value) {
             case 'logout':
-                await signOut();
+                await signOut({ callbackUrl: '/' });
                 router.push('/');
                 break;
             case 'profile':
@@ -122,13 +122,22 @@ export default function HeaderSection({
                         </Link>
                     </li>
                 )} */}
-                <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
-                    <Link href="/learning-material" className="px-2 py-1">
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li className={isActivePath('/home') ? activeClass : inactiveClass}>
+                            <Link href="/home" className="px-2 py-1">
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="px-2 py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li className={isActivePath('/group') ? activeClass : inactiveClass}>
                             <Link href="/groups" className="px-2 py-1">
                                 {t('groups')}
@@ -174,7 +183,7 @@ export default function HeaderSection({
                                 </span>
                             )}
                         </li>
-                        <li className="lg:hidden px-2">
+                        <li className="lg:hidden p-2 rounded-full hover:bg-ve-collab-blue-light">
                             <Link href={'/search'}>
                                 <MdSearch size={20} />
                             </Link>
@@ -237,9 +246,18 @@ export default function HeaderSection({
                     </>
                 ) : (
                     <>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="px-2 py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
                                 {t('login')}
@@ -247,7 +265,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
                                 {t('register')}
@@ -463,7 +481,10 @@ export default function HeaderSection({
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => signOut()} className={sandwichItemClass}>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                className={sandwichItemClass}
+                            >
                                 {t('logout')}
                             </button>
                         </li>
@@ -472,7 +493,7 @@ export default function HeaderSection({
                     <>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('login')}
@@ -480,7 +501,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('register')}
@@ -519,10 +540,10 @@ export default function HeaderSection({
     };
 
     return (
-        <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
-            <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
+        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-40">
+            <nav className="flex flex-nowrap items-center mx-auto max-w-screen-2xl">
                 <div className="flex items-center ">
-                    <Link href="/">
+                    <Link href="/" className="shrink-0">
                         <Image
                             src={veCollabLogo}
                             alt="Ve Collab Logo"
@@ -532,13 +553,11 @@ export default function HeaderSection({
                     </Link>
                     {!router.query.search && (
                         <form
-                            className="mx-4 md:mx-1 xl:mx-10 items-stretch hidden lg:flex"
+                            className="mx-4 md:mx-6 xl:mx-10 items-stretch hidden lg:flex"
                             onSubmit={(e) => handleSearchSubmit(e)}
                         >
                             <input
-                                className={
-                                    'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
-                                }
+                                className={'w-3/4 border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
                                 placeholder={t('search_placeholder')}
                                 name="search"
@@ -562,7 +581,7 @@ export default function HeaderSection({
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center font-semibold space-x-0 xl:space-x-6">
+                <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center space-x-0 xl:space-x-6">
                     <Menu />
                 </ul>
             </nav>
