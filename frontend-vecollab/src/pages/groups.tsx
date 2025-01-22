@@ -19,8 +19,10 @@ import { useState } from 'react';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import { Tooltip } from '@/components/common/Tooltip';
+import { FaRegQuestionCircle } from 'react-icons/fa';
 
 Groups.auth = true;
 Groups.noAuthPreview = <GroupsNoAuthPreview />;
@@ -65,6 +67,13 @@ export default function Groups() {
 
     const handleCloseNewDialog = () => {
         setIsNewDialogOpen(false);
+    };
+
+    const handleOpenNewDialog = () => {
+        setNewInput('');
+        setNewGroupInvisibleCheckboxChecked(false);
+        setNewGroupJoinableCheckboxChecked(false);
+        setIsNewDialogOpen(true);
     };
 
     const createNewGroup = () => {
@@ -301,7 +310,7 @@ export default function Groups() {
                                             className={
                                                 'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                             }
-                                            onClick={() => setIsNewDialogOpen(true)}
+                                            onClick={() => handleOpenNewDialog()}
                                         >
                                             <span>{t('create_new_group')}</span>
                                         </button>
@@ -400,7 +409,7 @@ export default function Groups() {
                                             className={
                                                 'h-10 bg-ve-collab-orange text-white px-4 mx-2 my-2 rounded-lg shadow-xl'
                                             }
-                                            onClick={() => setIsNewDialogOpen(true)}
+                                            onClick={() => handleOpenNewDialog()}
                                         >
                                             <span>{t('create_new_group')}</span>
                                         </button>
@@ -530,33 +539,53 @@ export default function Groups() {
                             value={newInput}
                             onChange={(e) => setNewInput(e.target.value)}
                         />
-                        <div className="flex my-2">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={newGroupInvisibleCheckboxChecked}
-                                onChange={() =>
-                                    setNewGroupInvisibleCheckboxChecked(
-                                        !newGroupInvisibleCheckboxChecked
-                                    )
+                        <div className="mt-2">
+                            <span className="font-bold">{t('visibility')}:</span>
+                            <Tooltip
+                                className="mx-2 top-0.5"
+                                position="right"
+                                tooltipsText={
+                                    <Trans
+                                        i18nKey="group_visibility_tooltip"
+                                        ns="community"
+                                        components={{ br: <br />, bold: <strong /> }}
+                                    />
                                 }
-                            />
-                            <p>{t('invisible')}</p>
+                            >
+                                <FaRegQuestionCircle className="inline m-1 text-ve-collab-blue" />
+                            </Tooltip>
                         </div>
                         <div className="flex my-2">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={newGroupJoinableCheckboxChecked}
-                                onChange={() =>
-                                    setNewGroupJoinableCheckboxChecked(
-                                        !newGroupJoinableCheckboxChecked
-                                    )
-                                }
-                            />
-                            <p>{t('private')}</p>
+                            <label className="cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-2"
+                                    checked={newGroupInvisibleCheckboxChecked}
+                                    onChange={() =>
+                                        setNewGroupInvisibleCheckboxChecked(
+                                            !newGroupInvisibleCheckboxChecked
+                                        )
+                                    }
+                                />
+                                {t('invisible')}
+                            </label>
                         </div>
-                        <div className="flex w-full">
+                        <div className="flex my-2">
+                            <label className="cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mr-2"
+                                    checked={newGroupJoinableCheckboxChecked}
+                                    onChange={() =>
+                                        setNewGroupJoinableCheckboxChecked(
+                                            !newGroupJoinableCheckboxChecked
+                                        )
+                                    }
+                                />
+                                {t('private')}
+                            </label>
+                        </div>
+                        <div className="flex w-full mt-4">
                             <button
                                 className={
                                     'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'

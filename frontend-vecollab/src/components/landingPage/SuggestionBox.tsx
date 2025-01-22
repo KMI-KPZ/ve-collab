@@ -79,12 +79,12 @@ export default function SuggestionBox() {
             <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
 
-                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                <ul className="*:px-4 *:py-2 *:my-3 *:text-ve-collab-blue">
                     {lections.map((lection, index) => {
                         return (
                             <li
                                 key={index}
-                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
+                                className="hover:text-ve-collab-orange transition ease-in-out"
                             >
                                 <Link href={`${lection.path}`}>{lection.text}</Link>
                             </li>
@@ -156,24 +156,23 @@ export default function SuggestionBox() {
         return (
             <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                <ul className="divide-y *:px-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                <ul className="*:px-2 *:rounded-full *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
                         return (
-                            <li
-                                key={i}
-                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
-                            >
+                            <li key={i} className="@container">
                                 <Link
-                                    className="flex items-center truncate p-2"
+                                    className="flex items-center justify-center flex-wrap @[230px]:flex-nowrap @[230px]:justify-start truncate p-2"
                                     href={`/profile/user/${user.username}`}
                                 >
-                                    <UserProfileImage
-                                        profile_pic={user.profile_pic}
-                                        chosen_achievement={user.chosen_achievement}
-                                        height={50}
-                                        width={50}
-                                    />
-                                    <span className="text-slate-900 capitalize truncate">
+                                    <span className="shrink-0">
+                                        <UserProfileImage
+                                            profile_pic={user.profile_pic}
+                                            chosen_achievement={user.chosen_achievement}
+                                            height={40}
+                                            width={40}
+                                        />
+                                    </span>
+                                    <span className="text-slate-900 capitalize truncate inline-block w-full @[230px]:w-fit text-center @[230px]:text-start">
                                         {printUsername(user)}
                                     </span>
                                 </Link>

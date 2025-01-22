@@ -42,6 +42,7 @@
     "description": "Beschreibung",
     "description_placeholder": "Beschreibe deine Gruppe in wenigen Worten",
     "visibility": "Sichtbarkeit",
+    "group_visibility_tooltip": "<bold>unsichtbar:</bold> die Gruppe wird nur für Gruppen-Mitglieder sichtbar sein<br/><bold>privat:</bold> Benutzer können nur auf Anfrage beitreten",
     "requests": "Anfragen",
     "no_requests": "aktuell keine Anfragen vorhanden",
     "invitations": "Einladungen",

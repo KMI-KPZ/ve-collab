@@ -1,4 +1,4 @@
- {
+{
     "messages": {
         "maxlength5000": "Das Feld darf nicht mehr als 5000 Buchstaben enthalten.",
         "maxlength1000": "Das Feld darf nicht mehr als 1000 Buchstaben enthalten.",
@@ -18,7 +18,7 @@
         "atleast_one_field": "Es muss mindestens ein Eintrag vorhanden sein",
         "valid_date": "Bitte ein gültiges Datum eingeben",
         "realistic_date": "Bitte ein realistisches Datum eingeben",
-        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
+        "max_5_mb": "Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
         "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.",
         "file_count_max": "Max. 4 Dateien erlaubt"
     },
@@ -39,7 +39,7 @@
         "general": "Allgemein",
         "phases": "Projektplanung",
         "summary": "Abschluss",
-        "post_processing": "Nachbearbeitung",
+        "post_processing_menu": "Nachbearbeitung",
         "general_outline": "Grobplanung",
         "project_name": "Projektname",
         "partners": "Partner:innen",
@@ -50,7 +50,8 @@
         "learning_env": "Lernumgebung",
         "methods": "Methodik",
         "evaluation": "Bewertung & Evaluation",
-        "checklist": "Checkliste"
+        "checklist": "Checkliste",
+        "post_processing": "Reflexion & Veröffentlichung"
     },
     "name": {
         "title": "Projektname",
@@ -204,8 +205,8 @@
         "tooltip": "Mehr zu den Aspekten der Checkliste findest du hier in den Selbstlernmaterialien",
         "time_title": "Zeit",
         "time_descr": [
-                "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
-                "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind."
+            "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
+            "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind."
         ],
         "topic_title": "Themen",
         "topic_descr": "Überprüft, ob das Thema / die Themen des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar ist / sind.",
@@ -225,7 +226,7 @@
         "add_userdefined_title": "Benutzerdefinierten Aspekt hinzufügen",
         "new_userbox_placeholder": "Bezeichnung ..."
     },
-    "step-names" : {
+    "step-names": {
         "page_description": "Die Grobplanung ermöglicht das Anlegen von Phasen und zugehörigen Lernzielen, die im VE durchlaufen werden (z.B. Icebreaker, Arbeitsphase, Präsentation).",
         "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",
         "select_steps_to_import": "Wähle Phasen, die du aus den Good-Practice Plänen importieren möchtest",

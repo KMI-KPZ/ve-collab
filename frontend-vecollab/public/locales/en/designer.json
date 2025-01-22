@@ -18,7 +18,7 @@
         "atleast_one_field": "There must be at least one entry",
         "valid_date": "Please enter a valid date",
         "realistic_date": "Please enter a realistic date",
-        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file.",
+        "max_5_mb": "Max. 5 MB allowed. Please select a smaller file.",
         "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age.",
         "file_count_max": "Max. 4 files allowed"
     },
@@ -39,7 +39,7 @@
         "general": "General Information",
         "phases": "Project plan",
         "summary": "Completion",
-        "post_processing": "Post Processing",
+        "post_processing_menu": "Post Processing",
         "general_outline": "General outline",
         "project_name": "Project name",
         "partners": "Partners",
@@ -50,7 +50,8 @@
         "learning_env": "Learning environment",
         "methods": "Teaching Methods",
         "evaluation": "Assessment & Evaluation",
-        "checklist": "Checklist"
+        "checklist": "Checklist",
+        "post_processing": "Reflection & Publishing"
     },
     "name": {
         "title": "Project name",
@@ -225,7 +226,7 @@
         "add_userdefined_title": "Add user-defined aspect",
         "new_userbox_placeholder": "Label ..."
     },
-    "step-names" : {
+    "step-names": {
         "page_description": "The rough planning enables the creation of phases and associated learning objectives that are completed in the VE (e.g. icebreaker, work phase, presentation).",
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",
         "select_steps_to_import": "Select phases you wish to import from the Good-Practice plans",
