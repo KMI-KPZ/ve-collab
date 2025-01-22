@@ -2,17 +2,15 @@ import Link from 'next/link';
 import { RxDotFilled } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { CSSProperties, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Dialog from './Dialog';
-import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
-import { badgeOutlineColors } from '../landingPage/Badge';
 import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
 import UserProfileImage from '../network/UserProfileImage';
 import { IoIosSend } from 'react-icons/io';
 import ButtonLight from '../common/buttons/ButtongLight';
+import VEInvitationDialog from './VEInvitationDialog';
 
 interface Props {
     name: string;
@@ -56,10 +54,6 @@ export default function ProfileHeader({
         setIsInvitationDialogOpen(false);
     };
 
-    const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
-    const [chosenPlanId, setChosenPlanId] = useState('');
-    const [veInvitationMessage, setVeInvitationMessage] = useState('');
-
     const usernameOfProfileOwner =
         router.query.username !== undefined ? (router.query.username as string) : '';
 
@@ -84,27 +78,6 @@ export default function ProfileHeader({
             router.reload();
         });
     };
-
-    const sendVeInvitation = () => {
-        if (isNoAuthPreview) return;
-
-        const payload = {
-            message: veInvitationMessage,
-            plan_id: chosenPlanId === '' ? null : chosenPlanId,
-            username: usernameOfProfileOwner,
-        };
-
-        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
-            setSuccessPopupOpen(true);
-        });
-    };
-
-    // we have to set style property here, because otherwise dynamic outline color is not applied
-    const achievementStyle: CSSProperties = chosen_achievement?.level
-        ? {
-              background: badgeOutlineColors[chosen_achievement.level - 1],
-          }
-        : {};
 
     return (
         <div className={'flex'}>
@@ -207,70 +180,12 @@ export default function ProfileHeader({
                             <span>{t('ve_invitation')}</span>
                         </button>
                         {!isNoAuthPreview && (
-                            <Dialog
+                            <VEInvitationDialog
+                                userid={usernameOfProfileOwner}
+                                username={name}
                                 isOpen={isInvitationDialogOpen}
-                                title={t('invite_to_ve', { name: name })}
-                                onClose={handleCloseInvitationDialog}
-                            >
-                                <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
-                                    <div>{t('ve_invitation_message')}</div>
-                                    <textarea
-                                        className={
-                                            'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
-                                        }
-                                        rows={5}
-                                        placeholder={t('ve_invitation_message_placeholder')}
-                                        value={veInvitationMessage}
-                                        onChange={(e) => setVeInvitationMessage(e.target.value)}
-                                    ></textarea>
-                                    <div className="flex mb-2 mt-4">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            checked={appendPlanCheckboxChecked}
-                                            onChange={(e) =>
-                                                setAppendPlanCheckboxChecked(
-                                                    !appendPlanCheckboxChecked
-                                                )
-                                            }
-                                        />
-                                        <p>{t('append_existing_plan')}</p>
-                                    </div>
-                                    {appendPlanCheckboxChecked && (
-                                        <>
-                                            <PublicPlansSelect
-                                                chosenPlanId={chosenPlanId}
-                                                setChosenPlanId={setChosenPlanId}
-                                            />
-                                            <p className="my-2 text-gray-400">
-                                                {t('append_plan_disclaimer')}
-                                            </p>
-                                        </>
-                                    )}
-
-                                    <div className="flex absolute bottom-0 w-full">
-                                        <button
-                                            className={
-                                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                            }
-                                            onClick={handleCloseInvitationDialog}
-                                        >
-                                            <span>{t('common:cancel')}</span>
-                                        </button>
-                                        <button
-                                            className={
-                                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                            }
-                                            onClick={(e) => {
-                                                sendVeInvitation();
-                                                handleCloseInvitationDialog();
-                                            }}
-                                        >
-                                            <span>{t('common:send')}</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </Dialog>
+                                callbackDone={handleCloseInvitationDialog}
+                            />
                         )}
                         {successPopupOpen && (
                             <Alert

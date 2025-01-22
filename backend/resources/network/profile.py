@@ -685,6 +685,7 @@ class Profiles:
                 "chosen_institution_id": True,
                 "profile_pic": True,
                 "chosen_achievement": True,
+                "ve_ready": True
             },
         )
 

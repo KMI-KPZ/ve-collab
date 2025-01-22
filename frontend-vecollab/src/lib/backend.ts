@@ -131,7 +131,7 @@ export function useGetOwnProfile(accessToken: string): {
 }
 
 export function useGetUsers(accessToken?: string): {
-    data: BackendUser[];
+    data: { [username: string]: BackendUserSnippet };
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -245,6 +245,9 @@ export function useGetAllPlans(accessToken: string): {
 
 export function useGetMatching(
     shouldFetch: boolean,
+    filter: { [key: string]: string[] },
+    size: number = 10,
+    offset: number = 0,
     accessToken: string
 ): {
     data: BackendUserSnippet[];
@@ -252,8 +255,12 @@ export function useGetMatching(
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const url_prep_filter = Object.keys(filter).length
+        ? Object.keys(filter).map((f) => `&${f}=${filter[f].length ? filter[f].join(',') : ''}`)
+        : [];
+
     const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch ? ['/matching', accessToken] : null,
+        shouldFetch ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );

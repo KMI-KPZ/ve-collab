@@ -3652,6 +3652,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
                 "chosen_achievement": self.default_profile["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
@@ -3663,6 +3664,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "institution": "",
                 "profile_pic": profile1["profile_pic"],
                 "chosen_achievement": profile1["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
@@ -3688,6 +3690,7 @@ class ProfileResourceTest(BaseResourceTestCase):
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
                 "chosen_achievement": self.default_profile["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
