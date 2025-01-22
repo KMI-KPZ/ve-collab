@@ -79,12 +79,12 @@ export default function SuggestionBox() {
             <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
 
-                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                <ul className="*:px-4 *:py-2 *:my-3 *:text-ve-collab-blue">
                     {lections.map((lection, index) => {
                         return (
                             <li
                                 key={index}
-                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
+                                className="hover:text-ve-collab-orange transition ease-in-out"
                             >
                                 <Link href={`${lection.path}`}>{lection.text}</Link>
                             </li>
