@@ -18,8 +18,9 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import Timestamp from '../common/Timestamp';
 import Swiper_LoggedIn from './Swiper_LoggedIn';
 
-import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
-import newFormImg from '@/images/newForm_sm.jpg';
+import btnNewVe from '@/images/btn_new_ve.svg';
+import btnSearchUser from '@/images/btn_search_user.svg';
+import btnGPPlans from '@/images/btn_gp_plans.svg';
 import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
@@ -64,28 +65,38 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
 
     const VeDesignerButtons = () => (
         <>
-            <ButtonNewPlan socket={socket} label={t('common:btn_new_ve')} className="bg-none !px-2">
-                <div className="flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
-                    <Image src={newFormImg} alt={'form_image'} className="w-[96px] rounded-full" />
-                    <div className="text-center text-wrap xl:w-1/2 font-bold">
+            <ButtonNewPlan
+                socket={socket}
+                label={t('common:btn_new_ve')}
+                className="bg-none w-full !px-0 !py-4"
+            >
+                <div className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
+                    <div className="w-1/3 shrink-0 flex items-center justify-center">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                            <Image src={btnNewVe} alt={'form_image'} className="h-[36px]" />
+                        </span>
+                    </div>
+                    <div className="w-full @[230px]:w-2/3 text-center text-wrap font-bold">
                         {t('common:btn_new_ve')}
                     </div>
                 </div>
             </ButtonNewPlan>
 
-            <Link
-                href={'/matching'}
-                className="!px-2 py-4 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-            >
-                <Image
-                    src={handsPuzzleImg}
-                    alt={t('puzzle_image')}
-                    className="w-[96px] rounded-full"
-                />
-                <div className="text-center text-wrap xl:w-1/2 font-bold">
-                    {t('find_ve_partners')}
-                </div>
-            </Link>
+            <div className="py-4">
+                <Link
+                    href={'/matching'}
+                    className=" flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
+                >
+                    <div className="w-1/3 shrink-0 flex items-center justify-center">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                            <Image src={btnSearchUser} alt={'form_image'} className="h-[32px]" />
+                        </span>
+                    </div>
+                    <div className="w-full @[230px]:w-2/3 text-center text-wrap font-bold">
+                        {t('find_ve_partners')}
+                    </div>
+                </Link>
+            </div>
         </>
     );
 
@@ -217,26 +228,32 @@ export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWind
                     </div>
                 </div>
 
-                <div className="order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md">
-                        <div className="text-2xl">
+                <div className="@container order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
+                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md">
+                        <div className="text-2xl mx-2 mt-1">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
                         <div className="flex flex-col divide-y-2 divide-2 divide-ve-collab-orange px-2">
                             <VeDesignerButtons />
 
-                            <div className="p-4">
+                            <div className="py-4">
                                 <Link
-                                    href={'/plans'}
-                                    className="flex flex-wrap items-center justify-center"
+                                    href={'/plans?isGP=true'}
+                                    className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center transition ease-in-out hover:scale-105"
                                 >
-                                    <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2 my-2 mb-4 mx-4 border border-ve-collab-blue">
-                                        <FaMedal size={18} className="" />
-                                    </span>
-                                    <span className="text-center text-wrap xl:w-2/3 font-bold">
+                                    <div className="w-1/3 shrink-0 flex items-center justify-center">
+                                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                                            <Image
+                                                src={btnGPPlans}
+                                                alt={'form_image'}
+                                                className="h-[42px]"
+                                            />
+                                        </span>
+                                    </div>
+                                    <div className="w-full @[230px]:w-2/3 text-center text-wrap font-bold">
                                         {t('common:show_good_practice_plans')}
-                                    </span>
+                                    </div>
                                 </Link>
                             </div>
                         </div>
