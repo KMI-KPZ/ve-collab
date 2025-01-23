@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -9,10 +9,10 @@ import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { MdArrowDropDown, MdHome, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../common/Dropdown';
-import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
 import { useTranslation } from 'next-i18next';
 import UserProfileImage from '../network/UserProfileImage';
+import useDynamicPlaceholder from '../common/useDynamicPlaceholder';
 
 interface Props {
     notificationEvents: Notification[];
@@ -44,6 +44,9 @@ export default function HeaderSection({
 
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
     const { data: userProfile } = useGetOwnProfile(session ? session.accessToken : '');
+
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    useDynamicPlaceholder(searchInputRef);
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -215,12 +218,14 @@ export default function HeaderSection({
                                     ].filter((a) => 'value' in a)}
                                     icon={
                                         <div className="flex items-center">
-                                            <UserProfileImage
-                                                profile_pic={userProfile?.profile?.profile_pic}
-                                                chosen_achievement={
-                                                    userProfile?.profile?.chosen_achievement
-                                                }
-                                            />
+                                            <span className="shrink-0">
+                                                <UserProfileImage
+                                                    profile_pic={userProfile?.profile?.profile_pic}
+                                                    chosen_achievement={
+                                                        userProfile?.profile?.chosen_achievement
+                                                    }
+                                                />
+                                            </span>
                                             <div
                                                 title={`${userProfile?.profile?.first_name} ${userProfile?.profile?.last_name}`}
                                                 className="max-w-[96px] truncate font-semibold"
@@ -228,7 +233,7 @@ export default function HeaderSection({
                                                 {userProfile?.profile?.first_name}{' '}
                                                 {userProfile?.profile?.last_name}
                                             </div>
-                                            <MdArrowDropDown />
+                                            <MdArrowDropDown className="shrink-0" />
                                         </div>
                                     }
                                     ulClasses="min-w-[10rem]"
@@ -583,11 +588,13 @@ export default function HeaderSection({
                                 className={'w-3/4 border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
                                 placeholder={t('search_placeholder')}
+                                data-placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
                                 defaultValue={
                                     router.query.search ? (router.query.search as string) : ''
                                 }
+                                ref={searchInputRef}
                             />
                             <button
                                 type="submit"

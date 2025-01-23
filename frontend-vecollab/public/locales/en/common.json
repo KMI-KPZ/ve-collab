@@ -60,7 +60,7 @@
     "profile_pic": "Profile picture",
     "home": "Home",
     "search": "Search",
-    "search_placeholder": "Search User, Group oder Post ...",
+    "search_placeholder": "Search User...;Search Group...;Search Post...",
     "search_title": "Search",
     "search_description": "Search for content on VE-Collab, such as people, groups, posts, learning materials or plans",
     "search_instructions": "Search for users, groups, plans, etc.",
