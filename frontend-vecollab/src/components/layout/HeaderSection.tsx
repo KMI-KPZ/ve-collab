@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
-import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
+import { MdArrowDropDown, MdHome, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../common/Dropdown';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
@@ -115,13 +115,6 @@ export default function HeaderSection({
     const Menu = () => {
         return (
             <>
-                {/* {isGlobalAdmin && (
-                    <li className={isActivePath('/admin') ? activeClass : inactiveClass}>
-                        <Link href="/admin" className="px-2 py-1">
-                            <span className="text-red-500">Admin</span>
-                        </Link>
-                    </li>
-                )} */}
                 {session ? (
                     <>
                         <li className={isActivePath('/home') ? activeClass : inactiveClass}>
@@ -288,12 +281,18 @@ export default function HeaderSection({
     const MenuMobile = () => {
         return (
             <>
-                {/* TODO may put most important items here?!?
-                    <li>
-                        <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
-                    </li> */}
                 {session && (
                     <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={`block p-2 rounded-full hover:bg-ve-collab-blue-light ${
+                                    isActivePath('/home') ? 'bg-gray-100' : ''
+                                }`}
+                            >
+                                <MdHome size={19} />
+                            </Link>
+                        </li>
                         <li>
                             <button
                                 className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
@@ -354,20 +353,32 @@ export default function HeaderSection({
     const SandwichMenuMobile = () => {
         return (
             <>
-                <li>
-                    <Link
-                        href="/learning-material"
-                        className={
-                            isActivePath('/learning-material')
-                                ? sandwichActiveItemClass
-                                : sandwichItemClass
-                        }
-                    >
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={
+                                    isActivePath('/home')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <Link
                                 href="/groups"
@@ -492,6 +503,18 @@ export default function HeaderSection({
                 ) : (
                     <>
                         <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
+                        <li>
                             <button
                                 onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
@@ -577,11 +600,11 @@ export default function HeaderSection({
                     )}
                 </div>
 
-                <ul className="md:hidden flex flex-1 items-center justify-end">
+                <ul className="min-[876px]:hidden flex flex-1 items-center justify-end">
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center space-x-0 xl:space-x-6">
+                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-0 xl:space-x-6 font-semibold">
                     <Menu />
                 </ul>
             </nav>
