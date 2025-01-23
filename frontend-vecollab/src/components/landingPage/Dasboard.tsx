@@ -30,8 +30,8 @@ interface Props {
     toggleNotifWindow(value?: boolean): void;
 }
 
-Frontpage_LoggedIn.auth = true;
-export default function Frontpage_LoggedIn({ notificationEvents, toggleNotifWindow }: Props) {
+Dashboard.auth = true;
+export default function Dashboard({ notificationEvents, toggleNotifWindow }: Props) {
     const socket = useContext(SocketContext);
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);

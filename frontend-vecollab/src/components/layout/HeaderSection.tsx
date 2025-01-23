@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
-import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
+import { MdArrowDropDown, MdHome, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../common/Dropdown';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
@@ -69,7 +69,7 @@ export default function HeaderSection({
     const handleSelectOption = async (value: string) => {
         switch (value) {
             case 'logout':
-                await signOut();
+                await signOut({ callbackUrl: '/' });
                 router.push('/');
                 break;
             case 'profile':
@@ -115,20 +115,22 @@ export default function HeaderSection({
     const Menu = () => {
         return (
             <>
-                {/* {isGlobalAdmin && (
-                    <li className={isActivePath('/admin') ? activeClass : inactiveClass}>
-                        <Link href="/admin" className="px-2 py-1">
-                            <span className="text-red-500">Admin</span>
-                        </Link>
-                    </li>
-                )} */}
-                <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
-                    <Link href="/learning-material" className="px-2 py-1">
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li className={isActivePath('/home') ? activeClass : inactiveClass}>
+                            <Link href="/home" className="px-2 py-1">
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="px-2 py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li className={isActivePath('/group') ? activeClass : inactiveClass}>
                             <Link href="/groups" className="px-2 py-1">
                                 {t('groups')}
@@ -174,7 +176,7 @@ export default function HeaderSection({
                                 </span>
                             )}
                         </li>
-                        <li className="lg:hidden px-2">
+                        <li className="lg:hidden p-2 rounded-full hover:bg-ve-collab-blue-light">
                             <Link href={'/search'}>
                                 <MdSearch size={20} />
                             </Link>
@@ -237,9 +239,18 @@ export default function HeaderSection({
                     </>
                 ) : (
                     <>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="px-2 py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
                                 {t('login')}
@@ -247,7 +258,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
                                 {t('register')}
@@ -270,12 +281,18 @@ export default function HeaderSection({
     const MenuMobile = () => {
         return (
             <>
-                {/* TODO may put most important items here?!?
-                    <li>
-                        <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
-                    </li> */}
                 {session && (
                     <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={`block p-2 rounded-full hover:bg-ve-collab-blue-light ${
+                                    isActivePath('/home') ? 'bg-gray-100' : ''
+                                }`}
+                            >
+                                <MdHome size={19} />
+                            </Link>
+                        </li>
                         <li>
                             <button
                                 className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
@@ -336,20 +353,32 @@ export default function HeaderSection({
     const SandwichMenuMobile = () => {
         return (
             <>
-                <li>
-                    <Link
-                        href="/learning-material"
-                        className={
-                            isActivePath('/learning-material')
-                                ? sandwichActiveItemClass
-                                : sandwichItemClass
-                        }
-                    >
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={
+                                    isActivePath('/home')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <Link
                                 href="/groups"
@@ -463,7 +492,10 @@ export default function HeaderSection({
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => signOut()} className={sandwichItemClass}>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                className={sandwichItemClass}
+                            >
                                 {t('logout')}
                             </button>
                         </li>
@@ -471,8 +503,20 @@ export default function HeaderSection({
                 ) : (
                     <>
                         <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
+                        <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('login')}
@@ -480,7 +524,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('register')}
@@ -519,10 +563,10 @@ export default function HeaderSection({
     };
 
     return (
-        <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
-            <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
+        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-40">
+            <nav className="flex flex-nowrap items-center mx-auto max-w-screen-2xl">
                 <div className="flex items-center ">
-                    <Link href="/">
+                    <Link href="/" className="shrink-0">
                         <Image
                             src={veCollabLogo}
                             alt="Ve Collab Logo"
@@ -532,13 +576,11 @@ export default function HeaderSection({
                     </Link>
                     {!router.query.search && (
                         <form
-                            className="mx-4 md:mx-1 xl:mx-10 items-stretch hidden lg:flex"
+                            className="mx-4 md:mx-6 xl:mx-10 items-stretch hidden lg:flex"
                             onSubmit={(e) => handleSearchSubmit(e)}
                         >
                             <input
-                                className={
-                                    'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
-                                }
+                                className={'w-3/4 border border-[#cccccc] rounded-l px-2 py-1'}
                                 type="text"
                                 placeholder={t('search_placeholder')}
                                 name="search"
@@ -558,11 +600,11 @@ export default function HeaderSection({
                     )}
                 </div>
 
-                <ul className="md:hidden flex flex-1 items-center justify-end">
+                <ul className="min-[876px]:hidden flex flex-1 items-center justify-end">
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center font-semibold space-x-0 xl:space-x-6">
+                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-0 xl:space-x-6 font-semibold">
                     <Menu />
                 </ul>
             </nav>
