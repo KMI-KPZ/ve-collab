@@ -24,6 +24,7 @@ import { FaRegQuestionCircle } from 'react-icons/fa';
 import { Tooltip } from '@/components/common/Tooltip';
 import ButtonLight from '@/components/common/buttons/ButtongLight';
 import Button from '@/components/common/buttons/Button';
+import { MdClose } from 'react-icons/md';
 
 export interface FormValues {
     partners: Partner[];
@@ -87,6 +88,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         control: methods.control,
     });
 
+    // const [originalExternalParties, setOriginalExternalParties] = useState<string[]>([]);
+
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
             setPlanAuthor(plan.author.username);
@@ -105,6 +108,7 @@ export default function Partners({ socket }: Props): JSX.Element {
             if (plan.involved_parties.length !== 0) {
                 extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
+                // setOriginalExternalParties(extPartners.map((a) => a.externalParty));
             }
             if (plan.partners.length !== 0) {
                 const snippets: BackendProfileSnippetsResponse = await fetchPOST(
@@ -147,6 +151,22 @@ export default function Partners({ socket }: Props): JSX.Element {
         },
         [replaceExternalParties, replacePartners, appendPartners, session]
     );
+
+    // const beforeSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
+    //     const extPartners = data.externalParties
+    //         .filter((value) => value.externalParty.trim() != '')
+    //         .map((element) => element.externalParty);
+
+    //     console.log('SUBMIT', { originalExternalParties, extPartners });
+
+    //     // (new) => true
+    //     if (extPartners.some((newPartner) => !originalExternalParties.includes(newPartner))) {
+    //         console.log('found new external oparties!');
+    //         return [];
+    //     }
+
+    //     return onSubmit(data);
+    // };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const extPartners = data.externalParties
@@ -258,6 +278,11 @@ export default function Partners({ socket }: Props): JSX.Element {
         removeExternalParties(index);
     };
 
+    const [addedExtWarning, setAddedExtWarning] = useState<number>(0);
+    const addedExternalPartyWarning = () => {
+        setAddedExtWarning((prev) => ++prev);
+    };
+
     const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
@@ -289,55 +314,40 @@ export default function Partners({ socket }: Props): JSX.Element {
             <Controller
                 name={name}
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => {
-                    console.log('AsyncCreatableSelect', { value });
-
-                    return (
-                        <AsyncCreatableSelect
-                            className="grow max-w-full"
-                            classNames={{
-                                control: (state) => {
-                                    console.log('control.state', { state });
-
-                                    return state.hasValue
-                                        ? '!border-0 hover:!border-0 hover:!border-transparent'
-                                        : '';
-                                },
-                            }}
-                            instanceId={index.toString()}
-                            isClearable={true}
-                            loadOptions={loadUsers}
-                            onChange={(target, type) => {
-                                onChange(
-                                    type.action == 'clear' ? { label: '', value: '' } : target
-                                );
-                            }}
-                            onBlur={onBlur}
-                            value={value.value == '' ? null : value}
-                            placeholder={t('designer:partners:search_users')}
-                            getOptionLabel={(option) => option.label}
-                            autoFocus={true}
-                            formatCreateLabel={(inputValue) => (
-                                <span>
-                                    <Trans
-                                        i18nKey="partners.search_users_no_hit"
-                                        ns="designer"
-                                        values={{ value: inputValue }}
-                                        components={{ bold: <strong />, br: <br /> }}
-                                    />
-                                </span>
-                            )}
-                            components={{
-                                DropdownIndicator: null,
-                            }}
-                            noOptionsMessage={() => null}
-                            onCreateOption={(value: string) => {
-                                removePartners(fieldsPartners.length - 1);
-                                appendPartners({ label: value, value: value });
-                            }}
-                        />
-                    );
-                }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <AsyncCreatableSelect
+                        className="grow max-w-full"
+                        instanceId={index.toString()}
+                        isClearable={true}
+                        loadOptions={loadUsers}
+                        onChange={(target, type) => {
+                            onChange(type.action == 'clear' ? { label: '', value: '' } : target);
+                        }}
+                        onBlur={onBlur}
+                        value={value.value == '' ? null : value}
+                        placeholder={t('designer:partners:search_users')}
+                        getOptionLabel={(option) => option.label}
+                        autoFocus={true}
+                        formatCreateLabel={(inputValue) => (
+                            <span>
+                                <Trans
+                                    i18nKey="partners.search_users_no_hit"
+                                    ns="designer"
+                                    values={{ value: inputValue }}
+                                    components={{ bold: <strong />, br: <br /> }}
+                                />
+                            </span>
+                        )}
+                        components={{
+                            DropdownIndicator: null,
+                        }}
+                        noOptionsMessage={() => null}
+                        onCreateOption={(value: string) => {
+                            removePartners(fieldsPartners.length - 1);
+                            appendPartners({ label: value, value: value });
+                        }}
+                    />
+                )}
             />
         );
     }
@@ -348,7 +358,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 <div className="flex">
                     <input
                         type="text"
-                        placeholder={t('common:enter_name')}
+                        placeholder={t('designer:partners:enter_ext')}
                         className="grow border border-gray-300 rounded-lg p-2 mr-2"
                         {...methods.register(`externalParties.${index}.externalParty`)}
                     />
@@ -466,10 +476,26 @@ export default function Partners({ socket }: Props): JSX.Element {
                         <p>{t('partners.description-2')}</p>
                         {renderExternalPartiesInputs()}
                         <div className="mt-4">
+                            {addedExtWarning == 1 && (
+                                <div className="w-full lg:w-1/2 rounded-md mb-4 bg-red-300 border border-red-500 p-2 text-slate-800 relative">
+                                    <Trans
+                                        i18nKey="partners.extparties_warning"
+                                        ns="designer"
+                                        components={{ bold: <strong />, br: <br /> }}
+                                    />
+                                    <Button
+                                        onClick={() => addedExternalPartyWarning()}
+                                        className="mx-2 shadow !rounded-full"
+                                    >
+                                        {t('common:ok')}
+                                    </Button>
+                                </div>
+                            )}
                             <button
                                 className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {
+                                    addedExternalPartyWarning();
                                     appendExternalParties({
                                         externalParty: '',
                                     });

@@ -70,7 +70,9 @@
         "partners_title": "Participants",
         "externpartners_title": "External participants",
         "search_users": "Enter name oder search user...",
-        "search_users_no_hit": "No match in the VE-Collab-Network.<br>Use \"<bold>{{value}}</bold>\" as participant anyway?"
+        "enter_ext": "Designation...",
+        "search_users_no_hit": "No match in the VE-Collab-Network.<br>Use \"<bold>{{value}}</bold>\" as participant anyway?",
+        "extparties_warning": "Note: External participants are <bold>not directly involved in the planning</bold> of the VE.<br>Persons involved in the VE should be entered above, even if they are not in the VE-Collab network."
     },
     "institutions": {
         "title": "Institutions",

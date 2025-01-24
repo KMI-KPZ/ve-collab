@@ -71,7 +71,9 @@
         "externpartners_title": "Extern Beteiligte",
         "externpartners_tooltip": "Extern Beteiligte können z.B Unternehmen oder Organisationen sein",
         "search_users": "Name eingeben oder Nutzer:in suchen...",
-        "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>\"<bold>{{value}}</bold>\" als beteiligte Person verwenden?"
+        "enter_ext": "Bezeichnung...",
+        "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>\"<bold>{{value}}</bold>\" als beteiligte Person verwenden?",
+        "extparties_warning": "Hinweis: extern Beteilgte sind <bold>nicht direkt an der Planung</bold> des VE's beteiligt.<br>Am VE beteiligte Personen sollten oben eingetragen werden, auch wenn sie nicht im VE-Collab Netzwerk sind."
     },
     "institutions": {
         "title": "Institutionen",
