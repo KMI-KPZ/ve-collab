@@ -585,7 +585,7 @@ export default function HeaderSection({
                             onSubmit={(e) => handleSearchSubmit(e)}
                         >
                             <input
-                                className={'w-3/4 border border-[#cccccc] rounded-l px-2 py-1'}
+                                className={'w-3/4 border border-[#cccccc] rounded-md px-2 py-1'}
                                 type="text"
                                 placeholder={t('search_placeholder')}
                                 data-placeholder={t('search_placeholder')}

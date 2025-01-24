@@ -127,7 +127,7 @@ export default function Plans({ socket }: Props) {
                 pageDescription={t('plans_description')}
             />
 
-            <div className="@conttainer flex flex-wrap justify-between items-center mb-10 mt-12">
+            <div className="@container flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
