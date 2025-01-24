@@ -81,6 +81,7 @@ export default function Wrapper({
     const { t } = useTranslation(['designer', 'common']);
 
     const [loading, setLoading] = useState(true);
+    const [formDataLoaded, setFormDataLoaded] = useState<boolean>(false);
     const [popUp, setPopUp] = useState<{
         isOpen: boolean;
         continueLink: string;
@@ -217,10 +218,15 @@ export default function Wrapper({
         };
 
         (async () => {
-            const data = await planerDataCallback(plan);
-            if (Object.keys(data).length) {
-                // reset form default values for isDirty check
-                methods.reset(data);
+            // hotfix: only reset form if not already done
+            //  otherwise we loose changes in <Select />-Components on browser tab-change (see #549)
+            if (!formDataLoaded) {
+                const data = await planerDataCallback(plan);
+                if (Object.keys(data).length) {
+                    // reset form default values for isDirty check
+                    methods.reset(data);
+                }
+                setFormDataLoaded(true);
             }
             if (idOfProgress) {
                 const progress = getProgressOfCurrentStep(plan.progress);
@@ -245,6 +251,7 @@ export default function Wrapper({
         plan,
         isLoading,
         error,
+        formDataLoaded,
         planerDataCallback,
         stageInMenu,
         idOfProgress,
