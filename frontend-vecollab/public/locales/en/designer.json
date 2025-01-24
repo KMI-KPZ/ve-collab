@@ -68,7 +68,9 @@
         "description-2": "If applicable, also list external participants (e.g. companies or other institutions) who are not directly involved in the planning and execution of the VE.",
         "tooltip": "You can find tips for finding partners in the self-learning materials…",
         "partners_title": "Participants",
-        "externpartners_title": "External participants"
+        "externpartners_title": "External participants",
+        "search_users": "Enter name oder search user...",
+        "search_users_no_hit": "No match in the VE-Collab-Network.<br>Use \"<bold>{{value}}</bold>\" as participant anyway?"
     },
     "institutions": {
         "title": "Institutions",

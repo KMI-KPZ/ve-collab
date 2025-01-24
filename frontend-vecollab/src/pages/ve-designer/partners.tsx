@@ -20,6 +20,10 @@ import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 import CustomHead from '@/components/metaData/CustomHead';
+import { FaRegQuestionCircle } from 'react-icons/fa';
+import { Tooltip } from '@/components/common/Tooltip';
+import ButtonLight from '@/components/common/buttons/ButtongLight';
+import Button from '@/components/common/buttons/Button';
 
 export interface FormValues {
     partners: Partner[];
@@ -64,6 +68,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     const {
         fields: fieldsPartners,
         append: appendPartners,
+        prepend: prependPartnes,
         remove: removePartners,
         update: updatePartners,
         replace: replacePartners,
@@ -284,34 +289,55 @@ export default function Partners({ socket }: Props): JSX.Element {
             <Controller
                 name={name}
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <AsyncCreatableSelect
-                        className="grow max-w-full"
-                        instanceId={index.toString()}
-                        isClearable={true}
-                        loadOptions={loadUsers}
-                        onChange={(target, type) => {
-                            onChange(type.action == 'clear' ? { label: '', value: '' } : target);
-                        }}
-                        onBlur={onBlur}
-                        value={value.value == '' ? null : value}
-                        placeholder={t('common:search_users')}
-                        getOptionLabel={(option) => option.label}
-                        autoFocus={true}
-                        formatCreateLabel={(inputValue) => (
-                            <span>
-                                <Trans
-                                    i18nKey="common:search_users_no_hit"
-                                    values={{ value: inputValue }}
-                                    components={{ bold: <strong /> }}
-                                />
-                            </span>
-                        )}
-                        components={{
-                            DropdownIndicator: null,
-                        }}
-                    />
-                )}
+                render={({ field: { onChange, onBlur, value } }) => {
+                    console.log('AsyncCreatableSelect', { value });
+
+                    return (
+                        <AsyncCreatableSelect
+                            className="grow max-w-full"
+                            classNames={{
+                                control: (state) => {
+                                    console.log('control.state', { state });
+
+                                    return state.hasValue
+                                        ? '!border-0 hover:!border-0 hover:!border-transparent'
+                                        : '';
+                                },
+                            }}
+                            instanceId={index.toString()}
+                            isClearable={true}
+                            loadOptions={loadUsers}
+                            onChange={(target, type) => {
+                                onChange(
+                                    type.action == 'clear' ? { label: '', value: '' } : target
+                                );
+                            }}
+                            onBlur={onBlur}
+                            value={value.value == '' ? null : value}
+                            placeholder={t('designer:partners:search_users')}
+                            getOptionLabel={(option) => option.label}
+                            autoFocus={true}
+                            formatCreateLabel={(inputValue) => (
+                                <span>
+                                    <Trans
+                                        i18nKey="partners.search_users_no_hit"
+                                        ns="designer"
+                                        values={{ value: inputValue }}
+                                        components={{ bold: <strong />, br: <br /> }}
+                                    />
+                                </span>
+                            )}
+                            components={{
+                                DropdownIndicator: null,
+                            }}
+                            noOptionsMessage={() => null}
+                            onCreateOption={(value: string) => {
+                                removePartners(fieldsPartners.length - 1);
+                                appendPartners({ label: value, value: value });
+                            }}
+                        />
+                    );
+                }}
             />
         );
     }
@@ -353,7 +379,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 socket={socket}
                 title={t('partners.title')}
                 subtitle={t('partners.subtitle')}
-                description={[t('partners.description-1'), t('partners.description-2')]}
+                description={[t('partners.description-1')]}
                 tooltip={{
                     text: t('partners.tooltip'),
                     link: '/learning-material/2/VA-Planung',
@@ -368,16 +394,34 @@ export default function Partners({ socket }: Props): JSX.Element {
             >
                 <div>
                     <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
+
                     {fieldsPartners.map((partner, index) => {
                         return (
                             <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
                                 {partner.value == planAuthor ? (
-                                    <div className="p-2">{partner.label}</div>
+                                    <div className="px-4 py-2 rounded-full border">
+                                        {partner.label}
+                                    </div>
+                                ) : partner.value != '' &&
+                                  fieldsPartners.find((a) => a.value == partner.value) ? (
+                                    <>
+                                        <div className="flex items-center">
+                                            <p className="px-4 py-2 rounded-full border ">
+                                                {partner.label}
+                                            </p>
+                                            <Button
+                                                onClick={() => handleDeletePartners(index)}
+                                                className="mx-2"
+                                            >
+                                                <RxMinus size={20} />
+                                            </Button>
+                                        </div>
+                                    </>
                                 ) : (
                                     <>
                                         {createSelect(methods.control, `partners.${index}`, index)}
                                         <button onClick={() => handleDeletePartners(index)}>
-                                            <RxMinus size={20} />
+                                            <RxMinus size={20} /> {partner.label}
                                         </button>
                                     </>
                                 )}
@@ -404,9 +448,22 @@ export default function Partners({ socket }: Props): JSX.Element {
                         </button>
                     </div>
                     <div>
-                        <p className="text-xl text-slate-600 mb-2 mt-10">
+                        <div className="text-xl text-slate-600 mb-2 mt-10">
                             {t('partners.externpartners_title')}
-                        </p>
+                            <Tooltip
+                                tooltipsText={
+                                    <Trans
+                                        i18nKey="partners.description-2"
+                                        ns="designer"
+                                        components={{ 1: <br /> }}
+                                    />
+                                }
+                                className="mx-2"
+                            >
+                                <FaRegQuestionCircle className="inline m-1 text-ve-collab-blue" />
+                            </Tooltip>
+                        </div>
+                        <p>{t('partners.description-2')}</p>
                         {renderExternalPartiesInputs()}
                         <div className="mt-4">
                             <button
