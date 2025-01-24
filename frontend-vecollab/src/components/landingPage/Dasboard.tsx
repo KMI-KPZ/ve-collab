@@ -24,6 +24,7 @@ import btnGPPlans from '@/images/btn_gp_plans.svg';
 import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
+import Error from '@/pages/_error';
 
 interface Props {
     notificationEvents: Notification[];
@@ -40,11 +41,13 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
     const {
         data: plans,
         isLoading: isLoadingPlans,
-        error,
+        error: errorLoadingPlans,
     } = useGetAvailablePlans(session!.accessToken);
-    const { data: profileInformation, isLoading: isLoadingProfile } = useGetOwnProfile(
-        session!.accessToken
-    );
+    const {
+        data: profileInformation,
+        isLoading: isLoadingProfile,
+        error: errorLoadingProfile,
+    } = useGetOwnProfile(session!.accessToken);
 
     useEffect(() => {
         if (!plans.length || !session) return;
@@ -185,6 +188,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
     );
 
     if (isLoadingProfile) return <></>;
+    if (errorLoadingProfile) return <Error />;
 
     return (
         <>
