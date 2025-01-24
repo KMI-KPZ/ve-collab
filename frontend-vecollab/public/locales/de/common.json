@@ -60,7 +60,7 @@
     "profile_pic": "Profilbild",
     "home": "Home",
     "search": "Suche",
-    "search_placeholder": "Suche Benutzer, Gruppe oder Beitrag ...",
+    "search_placeholder": "Suche Benutzer...;Suche Gruppe...;Suche Beitrag...",
     "search_title": "Suchen",
     "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
     "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
