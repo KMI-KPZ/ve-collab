@@ -24,7 +24,6 @@ import { FaRegQuestionCircle } from 'react-icons/fa';
 import { Tooltip } from '@/components/common/Tooltip';
 import ButtonLight from '@/components/common/buttons/ButtongLight';
 import Button from '@/components/common/buttons/Button';
-import { MdClose } from 'react-icons/md';
 
 export interface FormValues {
     partners: Partner[];
@@ -356,15 +355,23 @@ export default function Partners({ socket }: Props): JSX.Element {
         return fieldsExternalParties.map((externalParty, index) => (
             <div key={externalParty.id} className="my-2 w-full lg:w-1/2">
                 <div className="flex">
-                    <input
-                        type="text"
-                        placeholder={t('designer:partners:enter_ext')}
-                        className="grow border border-gray-300 rounded-lg p-2 mr-2"
-                        {...methods.register(`externalParties.${index}.externalParty`)}
-                    />
-                    <button type="button" onClick={() => handleDeleteExternalParties(index)}>
-                        <RxMinus size={20} />
-                    </button>
+                    {externalParty.externalParty != '' ? (
+                        <p className="px-4 py-2 min-w-56">{externalParty.externalParty}</p>
+                    ) : (
+                        <input
+                            type="text"
+                            placeholder={t('designer:partners:enter_ext')}
+                            className="grow border border-gray-300 rounded-lg p-2 mr-2"
+                            {...methods.register(`externalParties.${index}.externalParty`)}
+                        />
+                    )}
+
+                    <ButtonLight
+                        onClick={() => handleDeleteExternalParties(index)}
+                        className="mx-2 !p-2 shadow !rounded-full"
+                    >
+                        <RxMinus size={18} />
+                    </ButtonLight>
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
@@ -376,6 +383,46 @@ export default function Partners({ socket }: Props): JSX.Element {
                 )}
             </div>
         ));
+    };
+
+    const renderPartiesInputt = () => {
+        return fieldsPartners.map((partner, index) => {
+            return (
+                <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                    {partner.value == planAuthor ? (
+                        <div className="px-4 py-2">{partner.label}</div>
+                    ) : partner.value != '' &&
+                      fieldsPartners.find((a) => a.value == partner.value) ? (
+                        <>
+                            <div className="flex items-center">
+                                <p className="px-4 py-2 min-w-56">{partner.label}</p>
+                                <ButtonLight
+                                    onClick={() => handleDeletePartners(index)}
+                                    className="mx-2 !p-2 shadow !rounded-full"
+                                >
+                                    <RxMinus size={18} />
+                                </ButtonLight>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {createSelect(methods.control, `partners.${index}`, index)}
+                            <ButtonLight
+                                onClick={() => handleDeletePartners(index)}
+                                className="mx-2 !p-2 shadow !rounded-full"
+                            >
+                                <RxMinus size={18} />
+                            </ButtonLight>
+                        </>
+                    )}
+                    {methods.formState.errors?.partners?.[index]?.value?.message && (
+                        <p className="text-red-600 pt-2">
+                            {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
+                        </p>
+                    )}
+                </div>
+            );
+        });
     };
 
     return (
@@ -405,47 +452,8 @@ export default function Partners({ socket }: Props): JSX.Element {
                 <div>
                     <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
 
-                    {fieldsPartners.map((partner, index) => {
-                        return (
-                            <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                                {partner.value == planAuthor ? (
-                                    <div className="px-4 py-2 rounded-full border">
-                                        {partner.label}
-                                    </div>
-                                ) : partner.value != '' &&
-                                  fieldsPartners.find((a) => a.value == partner.value) ? (
-                                    <>
-                                        <div className="flex items-center">
-                                            <p className="px-4 py-2 rounded-full border ">
-                                                {partner.label}
-                                            </p>
-                                            <Button
-                                                onClick={() => handleDeletePartners(index)}
-                                                className="mx-2"
-                                            >
-                                                <RxMinus size={20} />
-                                            </Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        {createSelect(methods.control, `partners.${index}`, index)}
-                                        <button onClick={() => handleDeletePartners(index)}>
-                                            <RxMinus size={20} /> {partner.label}
-                                        </button>
-                                    </>
-                                )}
-                                {methods.formState.errors?.partners?.[index]?.value?.message && (
-                                    <p className="text-red-600 pt-2">
-                                        {t(
-                                            methods.formState.errors?.partners?.[index]?.value
-                                                ?.message!
-                                        )}
-                                    </p>
-                                )}
-                            </div>
-                        );
-                    })}
+                    <div className="p-2 rounded-md ">{renderPartiesInputt()}</div>
+
                     <div className="mt-4">
                         <button
                             className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
