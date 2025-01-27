@@ -67,8 +67,13 @@
         "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
         "description-2": "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.",
         "tooltip": "Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …",
-        "partners_title": "Beteiligte",
-        "externpartners_title": "Extern Beteiligte"
+        "partners_title": "Beteiligte Personen",
+        "externpartners_title": "Extern Beteiligte",
+        "externpartners_tooltip": "Extern Beteiligte können z.B Unternehmen oder Organisationen sein",
+        "search_users": "Name eingeben oder Nutzer:in suchen...",
+        "enter_ext": "Bezeichnung...",
+        "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>Hier klicken um \"<bold>{{value}}</bold>\" als beteiligte Person zu verwenden!",
+        "extparties_warning": "Hinweis: extern Beteilgte sind <bold>nicht direkt an der Planung</bold> des VE's beteiligt.<br>Am VE beteiligte Personen sollten oben eingetragen werden, auch wenn sie nicht im VE-Collab Netzwerk sind."
     },
     "institutions": {
         "title": "Institutionen",
