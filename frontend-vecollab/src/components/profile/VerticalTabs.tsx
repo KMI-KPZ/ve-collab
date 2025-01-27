@@ -4,6 +4,8 @@ import VerticalTab from './VerticalTab';
 interface TabsProps {
     children: JSX.Element[];
     isNoAuthPreview?: boolean;
+    onClickTabItem?: (activeTab: string) => void;
+    className?: string;
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -19,6 +21,9 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         if (this.props.isNoAuthPreview) return;
 
         this.setState({ activeTab: tab });
+        if (this.props.onClickTabItem) {
+            this.props.onClickTabItem(tab);
+        }
     };
 
     render() {
@@ -29,9 +34,9 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         } = this;
 
         return (
-            <div className={'flex'}>
+            <div className={`flex ${this.props.className ? this.props.className : ''}`}>
                 <div className={'w-1/4'}>
-                    <ol className={'pb-2'}>
+                    <ol className={'pb-2 divide-y'}>
                         {children.map((child) => {
                             return (
                                 <VerticalTab
@@ -46,7 +51,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                         })}
                     </ol>
                 </div>
-                <div className={'w-3/4 mx-14'}>
+                <div className={'w-3/4 mx-10'}>
                     {/* tab content wrapper*/}
                     {children.map((child) => {
                         if (child.props.tabid !== activeTab) return undefined;

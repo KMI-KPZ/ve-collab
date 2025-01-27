@@ -1,5 +1,8 @@
 {
     "groups_description": "The Virtual Community of Practice (VCOP) of VE-Collab serves the (international) exchange and networking on the topic of virtual exchanges (VE).",
+    "groups_instructions": "Overview of your groups and all visible groups in the VE-Collab network.",
+    "no_groups_available": "Unfortunately no groups available",
+    "no_groups_found": "Sorry, no matching groups found",
     "my_groups": "My groups",
     "you_are_member_of_groups": "You are a member of these groups",
     "group_picture": "Group Picture",
@@ -7,7 +10,7 @@
     "background_picture": "Background Picture",
     "no_description_available": "No description available",
     "find_new_groups": "Find new groups",
-    "search_groups_placeholder": "Search for groups, e.g. by name or description",
+    "search_groups_placeholder": "Search for group...",
     "no_results_found": "no results found",
     "join": "Join",
     "join_requested": "requested to join",
