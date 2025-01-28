@@ -35,7 +35,7 @@ export default function PersonalData({ bio, expertise, birthday, languages }: Pr
                     }
                 />
                 <li className={'py-4'}>
-                    <div className={'text-sm text-gray-600 my-1'}>{t('languages')}</div>
+                    <div className={'text-sm text-gray-600 my-1'}>{t('languages_subtitle_profile')}</div>
                     <div className={'font-bold text-slate-900 flex flex-wrap'}>
                         {languages.map((language) => (
                             <TagBox

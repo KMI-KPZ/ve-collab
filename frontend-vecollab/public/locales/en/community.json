@@ -99,6 +99,8 @@
     "expertise": "Speciality",
     "birthday": "Birthday",
     "languages": "Languages",
+    "languages_subtitle": "I can imagine doing a VE in these languages",
+    "languages_subtitle_profile": "available for VEs in",
     "achievements": "Achievements",
     "ve_window": "VE Vitrine",
     "pinned_posts": "pinned Posts",

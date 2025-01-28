@@ -99,6 +99,8 @@
     "expertise": "Fachgebiet",
     "birthday": "Geburtstag",
     "languages": "Sprachen",
+    "languages_subtitle": "In diesen Sprachen kann ich mir einen VE vorstellen",
+    "languages_subtitle_profile": "für VEs verfügbar auf",
     "achievements": "Abzeichen",
     "ve_window": "VE-Schaufenster",
     "pinned_posts": "angeheftete Beiträge",

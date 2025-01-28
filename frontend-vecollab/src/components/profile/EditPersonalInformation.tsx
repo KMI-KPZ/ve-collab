@@ -502,6 +502,7 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={t('languages')} />
+                <p className='text-gray-600 mb-2'>{t("languages_subtitle")}</p>
                 <CreatableSelect
                     className="w-full mb-1"
                     options={optionLists.languageKeys
@@ -617,7 +618,7 @@ export default function EditPersonalInformation({
                     {hasAnyAchievement(personalInformation.achievements) && (
                         <div>
                             <EditProfileHeadline name={t('decoration_badge')} />
-                            <p>{t('decoration_badge_descr')}</p>
+                            <p className='text-gray-600 mb-2'>{t('decoration_badge_descr')}</p>
                             <ul className="flex flex-wrap gap-4 items-center">
                                 {getBadges({ achievements: personalInformation.achievements }).map(
                                     (item, index) => {
