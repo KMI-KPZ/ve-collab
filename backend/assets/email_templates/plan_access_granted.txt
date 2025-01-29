@@ -1,0 +1,9 @@
+Hallo {recipient_name},
+{author} hat dir Zugriffsrechte zu folgendem VE-Plan gegeben: {plan_name}.
+
+Du findest diesen ab sofort in deinem persönlichen VE-Designer-Dashboard unter https://ve-collab.org/plans,
+oder direkt über diesen Link: https://ve-collab.org/plan/{plan_id}.
+
+
+Viele Grüße!
+Dein VE-Collab Team

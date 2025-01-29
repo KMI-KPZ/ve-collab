@@ -47,6 +47,16 @@
             "text2": "-Achievement Level hat sich erhöht!",
             "text3": "Du bist jetzt ",
             "level_x": "Level {{level}}"
+        },
+        "plan_access_granted": {
+            "title": "Zugriff auf VE-Plan erhalten",
+            "text1": " hat dir ",
+            "read": "Lese-",
+            "write": "Lese- und Schreib",
+            "text2": "zugriff auf den VE-Plan ",
+            "text3": " gewährt.",
+            "text4": "Du findest diesen Plan ab sofort in deinem Dashboard, oder direkt ",
+            "text5": "."
         }
     },
     "profile": "Profil",

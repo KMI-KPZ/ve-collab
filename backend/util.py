@@ -361,6 +361,17 @@ def _append_msg_text(
                 level=payload["level"],
                 edit_profile_link="https://ve-collab.org/profile/edit",
             )
+    elif template == "plan_access_granted.html":
+        with open("assets/email_templates/plan_access_granted.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                plan_name=payload["plan_name"],
+                plan_id=payload["plan_id"],
+                author=payload["author"],
+                read=payload["read"],
+                write=payload["write"],
+            )
     else:
         raise ValueError("Invalid template name: {}".format(template))
 
@@ -382,6 +393,8 @@ def send_email(
         "ve_invitation.html",
         "ve_invitation_reply.html",
         "new_messages.html",
+        "achievement_level_up.html",
+        "plan_access_granted.html"
     ],
     payload: Dict,
 ) -> None:

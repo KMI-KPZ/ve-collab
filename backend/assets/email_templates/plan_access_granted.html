@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p><b>{{ name|default("Ein/e Nutzer:in") }}</b> hat dir{% if
+    write %} Schreibrechte {%else %} Leserechte {% endif%}zu folgendem VE-Plan gegeben:
+    <b>{{ plan_name }}</b>.
+</p>
+<p>Du findest diesen VE-Plan ab sofort in deinem persönlichen <a
+        href="https://ve-collab.org/plans"><b>VE-Designer-Dashboard</b></a>, oder
+    direkt <a href="https://ve-collab.org/plan/{{ plan_id }}"><b>hier</b></a>.</p>
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}
