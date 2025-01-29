@@ -10909,7 +10909,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10924,8 +10924,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIn("another_test_user", db_state["read_access"])
-        self.assertNotIn("another_test_user", db_state["write_access"])
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertNotIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_grant_read_permission_error_insufficient_permission(self):
         """
@@ -10939,7 +10939,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10960,7 +10960,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10982,7 +10982,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -10997,8 +10997,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIn("another_test_user", db_state["read_access"])
-        self.assertIn("another_test_user", db_state["write_access"])
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_grant_write_permission_error_insufficient_permission(self):
         """
@@ -11012,7 +11012,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11033,7 +11033,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
