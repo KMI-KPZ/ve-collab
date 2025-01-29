@@ -2,7 +2,7 @@
 {% block content %}
 
 <p>Hallo {{ name|default("Nutzer:in") }},</p>
-<p><b>{{ name|default("Ein/e Nutzer:in") }}</b> hat dir{% if
+<p><b>{{ author|default("Ein/e Nutzer:in") }}</b> hat dir{% if
     write %} Schreibrechte {%else %} Leserechte {% endif%}zu folgendem VE-Plan gegeben:
     <b>{{ plan_name }}</b>.
 </p>
