@@ -38,6 +38,8 @@ class NotificationResource:
             "reminder_good_practise_examples",
             "reminder_icebreaker",
             "achievement_level_up",
+            "plan_access_granted",
+            "plan_added_as_partner"
         ]
 
         # mapping of notification types to the profile settings
@@ -52,6 +54,8 @@ class NotificationResource:
             "reminder_good_practise_examples": "system",
             "reminder_icebreaker": "system",
             "achievement_level_up": "system",
+            "plan_access_granted": "system",
+            "plan_added_as_partner": "system"
         }
 
         # mapping of notification types to the email templates
@@ -65,6 +69,8 @@ class NotificationResource:
             "reminder_good_practise_examples": "reminder_good_practise_examples.html",
             "reminder_icebreaker": "reminder_icebreaker.html",
             "achievement_level_up": "achievement_level_up.html",
+            "plan_access_granted": "plan_access_granted.html",
+            "plan_added_as_partner": "plan_added_as_partner.html"
         }
 
     async def send_notification(

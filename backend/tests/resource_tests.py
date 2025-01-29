@@ -5880,12 +5880,101 @@ class PlanResourceTest(BaseResourceTestCase):
         }
         self.db.plans.insert_one(self.default_plan)
 
+        # insert default profiles
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+                {
+                    "username": CURRENT_USER.username,
+                    "role": "user",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+            ]
+        )
+
         # initialize planner
         self.planner = VEPlanResource(self.db)
 
     def tearDown(self) -> None:
         # delete all plans
         self.db.plans.delete_many({})
+        self.db.profiles.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
