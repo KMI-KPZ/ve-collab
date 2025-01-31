@@ -25,6 +25,7 @@ import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
 import Error from '@/pages/_error';
+import { TbFileText } from 'react-icons/tb';
 
 interface Props {
     notificationEvents: Notification[];
@@ -105,13 +106,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
 
     const VeFeedWidget = () => (
         <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
-            <div className="flex justify-between items-center">
-                <H1>{t('ve_feed')}</H1>
-                {/* <p>Letzte Aktivitäten </p> */}
-                {/* <ButtonLight link="/plans" className="!rounded-full">
-                                    {t('common:all')} {t('common:plans')}
-                                </ButtonLight> */}
-            </div>
+            <H1>{t('ve_feed')}</H1>
             <div>
                 {sortedPlans.map((plan) => {
                     return (
@@ -126,7 +121,13 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                             <div className="flex flex-row items-center">
                                 <div className="grow flex items-center truncate ">
                                     <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
-                                        <Link href={`/plan/${plan._id}`}>{plan.name}</Link>
+                                        <Link
+                                            href={`/plan/${plan._id}`}
+                                            className="hover:text-ve-collab-orange"
+                                        >
+                                            <TbFileText className="inline mr-1" size={20} />
+                                            {plan.name}
+                                        </Link>
                                     </div>
                                     {plan.is_good_practise && (
                                         <div className="mx-2 text-ve-collab-blue">
