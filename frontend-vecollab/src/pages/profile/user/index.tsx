@@ -17,8 +17,13 @@ export const getServerSideProps: GetServerSideProps = async (
 
     return {
         redirect: {
-            destination: session ? `/profile/user/${session?.user.preferred_username}` : `/`,
+            destination: session
+                ? `${
+                      context.locale == context.defaultLocale ? '' : '/' + context.locale
+                  }/profile/user/${session?.user.preferred_username}`
+                : `/`,
             permanent: false,
+
             ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
         },
     };
