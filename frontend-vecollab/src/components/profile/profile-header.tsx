@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { RxTrash } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
@@ -15,6 +15,7 @@ import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import VEReadyFor from './VEReadyFor';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     profileInformation: BackendUser25;
@@ -101,8 +102,14 @@ export default function ProfileHeader({
         });
     };
 
+    useEffect(() => {
+        // reset followers after change route
+        setFollows([]);
+        setFollowers([]);
+    }, [router]);
+
     const Follows = () => (
-        <div className="absolute w-[15rem] overflow-y-auto max-h-32 truncate right-0 p-2 group-hover/follows:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+        <div className="overflow-y-auto max-h-32 truncate p-2">
             {follows.map((user, i) => (
                 <div key={i} className="flex items-center justify-between text-black">
                     <Link href={`/profile/user/${user.username}`} className="text-sm truncate">
@@ -138,7 +145,7 @@ export default function ProfileHeader({
     );
 
     const Followers = () => (
-        <div className="absolute w-[15rem] overflow-y-auto max-h-32 truncate left-0 p-2 group-hover/followers:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+        <div className="overflow-y-auto max-h-32 truncate p-2">
             {followers.map((user, i) => (
                 <Link
                     key={i}
@@ -191,38 +198,11 @@ export default function ProfileHeader({
 
             <div
                 className={
-                    'relative z-10 pt-[160px] mx-2 lg:mx-20 mb-2 px-5 flex flex-wrap items-center justify-between gap-y-6'
+                    'relative z-10 pt-[160px] mx-2 lg:mx-20 mb-2 px-5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-y-6'
                 }
             >
-                <div className="absolute flex right-2 xl:right-20 top-[90px] divide-x">
-                    <div
-                        className={
-                            'group/follows relative pr-6 text-lg text-white hover:cursor:pointer'
-                        }
-                        onMouseOver={() => fetchFollows(profileInformation.follows)}
-                    >
-                        <div>
-                            {foreignUser ? t('community:following') : t('community:iam_following')}
-                        </div>
-                        <div className={'font-bold'}>{profileInformation.follows.length}</div>
-                        {profileInformation.follows.length > 0 && <Follows />}
-                    </div>
-                    <div
-                        className={
-                            'group/followers relative pl-6 text-lg text-white hover:cursor:pointer'
-                        }
-                        onMouseOver={() => fetchFollowers(profileInformation.followers)}
-                    >
-                        <div>
-                            {foreignUser ? t('community:followers') : t('community:ive_followers')}
-                        </div>
-                        <div className={'font-bold'}>{profileInformation.followers.length}</div>
-                        {profileInformation.followers.length > 0 && <Followers />}
-                    </div>
-                </div>
-
                 <div className="flex items-center">
-                    <div className="flex-none mr-8 -mt-16">
+                    <div className="mr-8 -mt-16 flex-none">
                         <UserProfileImage
                             type="big"
                             chosen_achievement={profileInformation.profile.chosen_achievement}
@@ -231,15 +211,65 @@ export default function ProfileHeader({
                             profile_pic={profileInformation.profile.profile_pic}
                         />
                     </div>
-                    <div>
-                        <div className={'font-bold text-2xl text-slate-900'}>{name}</div>
-                        <div className={'text-gray-500'}>{institutiun}</div>
-                    </div>
-                    <div className="mx-6">
-                        <VEReadyFor ve_ready={profileInformation.profile.ve_ready} />
+                    <div className="flex flex-wrap">
+                        <div className="sm:max-w-[40%]">
+                            <div className={'font-bold text-2xl text-slate-900'}>{name}</div>
+                            <div className={'text-gray-500'}>{institutiun}</div>
+                        </div>
+                        <div className="sm:mx-6">
+                            <VEReadyFor ve_ready={profileInformation.profile.ve_ready} />
+                        </div>
                     </div>
                 </div>
-                <div className={'flex flex-wrap gap-x-2'}>
+
+                <div className="absolute flex right-2 xl:right-20 top-[90px] divide-x text-white">
+                    <div
+                        className={'group/follows relative pr-6 hover:cursor:pointer'}
+                        onMouseOver={() => fetchFollows(profileInformation.follows)}
+                    >
+                        <Tooltip
+                            tooltipsText={
+                                profileInformation.follows.length > 0 ? <Follows /> : null
+                            }
+                            position="left"
+                            className="pl-2"
+                            innerClassName="!top-2"
+                        >
+                            <div>
+                                {foreignUser
+                                    ? t('community:following')
+                                    : t('community:iam_following')}
+                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                    {profileInformation.follows.length}
+                                </div>
+                            </div>
+                        </Tooltip>
+                    </div>
+                    <div
+                        className={'group/followers relative pl-6 hover:cursor:pointer'}
+                        onMouseOver={() => fetchFollowers(profileInformation.followers)}
+                    >
+                        <Tooltip
+                            tooltipsText={
+                                profileInformation.followers.length > 0 ? <Followers /> : null
+                            }
+                            position="left"
+                            className="pl-2"
+                            innerClassName="!top-2"
+                        >
+                            <div>
+                                {foreignUser
+                                    ? t('community:followers')
+                                    : t('community:ive_followers')}
+                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                    {profileInformation.followers.length}
+                                </div>
+                            </div>
+                        </Tooltip>
+                    </div>
+                </div>
+
+                <div className={'flex flex-wrap gap-2'}>
                     {/* we only render follow and message buttons if it is not our own profile*/}
                     {foreignUser && (
                         <>

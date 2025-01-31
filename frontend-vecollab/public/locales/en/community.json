@@ -67,7 +67,7 @@
     "following": "Following",
     "iam_following": "You're following",
     "followers": "Followers",
-    "ive_followers": "Your following",
+    "ive_followers": "Followers",
     "user_follows": "{{username}} follows:",
     "users_that_follow": "Users that follow {{username}}",
     "edit_profile": "Edit profile",
