@@ -19,10 +19,9 @@ export default function VEVitrineItem({ title, excerpt, _id, date }: Props) {
                     <TbFileText className="mr-2" />{' '}
                     <span className="group-hover/ve-item:text-ve-collab-orange">{title}</span>
                 </div>
-                <div className={'text-sm text-gray-600 my-1 ml-6 line-clamp-2'}>
-                    Eine kurze Beschreibungdlf dsfop askdpodkg dspofksa dpsodkg sdpofksd gpo kds
-                    dpsodk psodks dfpo sdkdapoFKDBOKVFOTNRF WOI CVCOG JTPFOIWAJ POIJ ...{excerpt}
-                </div>
+                {excerpt.length > 0 && (
+                    <div className={'text-sm text-gray-600 my-1 ml-6 line-clamp-2'}>{excerpt}</div>
+                )}
                 {date !== undefined && <div>{date}</div>}
             </li>
         </Link>
