@@ -212,6 +212,7 @@ function PlansNoAuthPreview() {
             creation_timestamp: new Date(Date.now() - 24 * 2525 * 1000).toISOString(),
             last_modified: new Date(Date.now() - 2000 * 1000).toISOString(),
             is_good_practise: true,
+            abstract: '',
             steps: [],
             topics: [],
             progress: {
@@ -244,6 +245,7 @@ function PlansNoAuthPreview() {
             creation_timestamp: new Date(Date.now() - 24 * 1620 * 1000).toISOString(), // yesterday
             last_modified: new Date(Date.now() - 3430 * 1000).toISOString(), // one hour age
             is_good_practise: false,
+            abstract: '',
             steps: [],
             topics: [],
             progress: {
