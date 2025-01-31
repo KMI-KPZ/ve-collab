@@ -8,6 +8,7 @@ import {
     BackendUser,
     BackendProfile,
     BackendUserACLEntry,
+    BackendUser25,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -104,6 +105,29 @@ export function useGetProfileSnippets(
 
     return {
         data: isLoading || error || !usernames ? [] : data.user_snippets,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetProfile(
+    user: string,
+    accessToken: string
+): {
+    data: BackendUser25; // TODO may fix in backend
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        accessToken ? [`/profileinformation?username=${user}`, accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
         isLoading,
         error,
         mutate,
@@ -260,7 +284,9 @@ export function useGetMatching(
         : [];
 
     const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken] : null,
+        shouldFetch
+            ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken]
+            : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
