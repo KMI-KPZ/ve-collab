@@ -17,6 +17,22 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         };
     }
 
+    componentDidMount = () => {
+        const tab = this.getTabFromURL();
+
+        if (tab) this.onClickTabItem(tab);
+    };
+
+    getTabFromURL = () => {
+        const currentUrl = document.URL,
+            urlParts = currentUrl.split('#');
+
+        if (urlParts.length == 0 || !urlParts[1]?.startsWith('tab')) return null;
+
+        let tab = urlParts[1].replace('tab', '');
+        return this.props.children.find((a) => a.props.tabid == tab) == undefined ? null : tab;
+    };
+
     onClickTabItem = (tab: string) => {
         if (this.props.isNoAuthPreview) return;
 
