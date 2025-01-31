@@ -4,7 +4,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { GetServerSidePropsContext } from 'next';
 
-import { Notification } from '@/interfaces/socketio';
 import CustomHead from '@/components/metaData/CustomHead';
 import { SocketContext } from '@/pages/_app';
 import { useRouter } from 'next/router';
@@ -21,9 +20,14 @@ import VEVitrine from '@/components/profile/VEVitrine';
 import { getBadges, hasAnyAchievement } from '@/components/landingPage/Badge';
 import H2 from '@/components/common/H2';
 import Link from 'next/link';
-import { MdEdit } from 'react-icons/md';
+import { MdArrowRight, MdEdit } from 'react-icons/md';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
 import GroupsWidget from '@/components/profile/GroupsWidget';
+import { TbFileText } from 'react-icons/tb';
+import Timestamp from '@/components/common/Timestamp';
+import ButtonLight from '@/components/common/buttons/ButtongLight';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { FaMedal } from 'react-icons/fa';
 
 interface Props {
     openOrCreateChatWith: (users: string[]) => void;
@@ -48,24 +52,24 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
     } = useGetProfile(username, session!.accessToken);
 
     const [groups, setGroups] = useState<BackendGroup[]>([]);
+    const [plans, setPlans] = useState<PlanPreview[]>([]);
 
     // useEffect(() => {
     //     console.log({ profileInformation });
+    //     console.log({ publicPlans });
     // }, []);
 
     useEffect(() => {
-        if (!session || groups.length > 0) return;
+        if (!session) return;
 
         if (isOwnProfile) {
             fetchGET('/spaceadministration/my', session.accessToken).then((data) => {
-                console.log({ SPACES: data.spaces });
                 if (data.spaces) {
                     setGroups(data.spaces);
                 }
             });
         } else {
             fetchGET('/spaceadministration/list', session.accessToken).then((data) => {
-                console.log({ SPACS: data.spaces });
                 if (data.spaces) {
                     setGroups(
                         data.spaces.filter((space: BackendGroup) =>
@@ -75,7 +79,27 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                 }
             });
         }
-    }, [session, isOwnProfile, groups]);
+    }, [session, isOwnProfile]);
+
+    useEffect(() => {
+        if (!session) return;
+
+        if (isOwnProfile) {
+            fetchGET(`/planner/get_available`, session.accessToken).then((data) => {
+                if (data.plans) {
+                    setPlans(data.plans);
+                }
+            });
+        } else {
+            fetchGET(`/planner/get_public_of_user?username=${username}`, session.accessToken).then(
+                (data) => {
+                    if (data.plans) {
+                        setPlans(data.plans);
+                    }
+                }
+            );
+        }
+    }, [session, isOwnProfile, username]);
 
     if (isLoadingProfile) return <LoadingAnimation />;
     if (errorLoadingProfile || !Object.keys(profileInformation).length) return <Custom404 />;
@@ -99,8 +123,8 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                 }}
             />
 
-            <div className={'mx-20 flex space-x-12'}>
-                <div className={'w-1/3'}>
+            <div className={'mx-4 lg:mx-20 flex flex-wrap'}>
+                <div className={'w-full md:w-1/3'}>
                     <WhiteBox>
                         <>
                             <PersonalData
@@ -138,7 +162,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                         </>
                     </WhiteBox>
                 </div>
-                <div className={'w-2/3'}>
+                <div className={'w-full md:w-2/3 md:pl-12'}>
                     <WhiteBox>
                         <div className="min-h-[15rem]">
                             <ExtendedPersonalInformation
@@ -174,6 +198,62 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                             )}
                         </div>
                     </WhiteBox>
+
+                    {plans.length > 0 && (
+                        <div className="px-12 my-6 relative">
+                            <H1 className="mt-6 -ml-12">
+                                {isOwnProfile ? t('your_plans') : t('public_plans_of')}
+                                {/* <span className="italic text-slate-600 font-sm">
+                                    ({t('public')})
+                                </span> */}
+                            </H1>
+                            <div className="text-end text-slate-600 italic -mb-6">
+                                {t('last_change')}:
+                            </div>
+                            <div className="divide-y divide-slate-400 space-y-6">
+                                {plans.slice(0, 7).map((plan, i) => (
+                                    <div key={i} className="flex items-center justify-between pt-6">
+                                        <div className="grow flex items-center truncate">
+                                            <Link
+                                                href={`/ve-designer/name?plannerId=${plan._id}`}
+                                                className="group/ve-item"
+                                            >
+                                                <span className="font-bold text-lg group-hover/ve-item:text-ve-collab-orange">
+                                                    <TbFileText
+                                                        className="inline mr-2 p-1 border border-gray-600 rounded-full group-hover/ve-item:border-ve-collab-orange"
+                                                        size={30}
+                                                    />{' '}
+                                                    {plan.name}
+                                                </span>
+                                            </Link>
+                                            {plan.is_good_practise && (
+                                                <div className="mx-4 text-ve-collab-blue">
+                                                    <FaMedal
+                                                        title={t(
+                                                            'common:plans_marked_as_good_practise'
+                                                        )}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <Timestamp
+                                            timestamp={plan.last_modified}
+                                            className="text-base font-normal"
+                                            dateFormat="dd. MMM yy"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {plans.length > 7 && (
+                                <div className="text-end my-6">
+                                    <ButtonLight link="/plans" className="ml-auto">
+                                        {t('all')}{' '}
+                                        <MdArrowRight size={24} className="inline mx-1" />
+                                    </ButtonLight>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="pl-12">
                         <H1 className="mt-6 -ml-12">{t('community:posts')}</H1>
