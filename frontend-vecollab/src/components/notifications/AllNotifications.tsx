@@ -7,6 +7,8 @@ import GroupInvitationNotification from './GroupInvitationNotification';
 import GroupJoinRequestNotification from './GroupJoinRequestNotification';
 import ReminderNotification from './ReminderNotification';
 import AchievementLevelUpNotification from './AchievementLevelUpNotification';
+import PlanAccessGrantedNotification from './PlanAccessGrantedNotification';
+import PlanAddedAsPartnerNotification from './PlanAddedAsPartnerNotification';
 
 interface Props {
     socket: Socket;
@@ -96,6 +98,28 @@ export default function AllNotifications({ socket }: Props) {
                                 'reminder_icebreaker',
                             ].includes(notification.type) && (
                                 <ReminderNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'plan_access_granted' && (
+                                <PlanAccessGrantedNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'plan_added_as_partner' && (
+                                <PlanAddedAsPartnerNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string

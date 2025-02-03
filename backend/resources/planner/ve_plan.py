@@ -7,6 +7,7 @@ import gridfs
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 from typing import Any, Dict, List
+import tornado
 
 from exceptions import (
     FileDoesntExistError,
@@ -29,6 +30,7 @@ from model import (
     TargetGroup,
     VEPlan,
 )
+from resources.notifications import NotificationResource
 import util
 
 
@@ -563,6 +565,49 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
+
+        # if the updated field was partners, two side effects happen:
+        # - the partners will automatically gain write access to the plan
+        # - when they are added the first time, a notification will be dispatched to them
+        if field_name == "partners":
+            plan_state = self.get_plan(plan_id)
+
+            # get the partners that are not already in the write_access list
+            partners = list(set(value_copy) - set(plan_state.write_access))
+
+            if partners:
+                # add the partners to the write_access list
+                self.db.plans.update_one(
+                    {"_id": plan_id},
+                    {
+                        "$addToSet": {
+                            "write_access": {"$each": partners},
+                            "read_access": {"$each": partners},
+                        }
+                    },
+                )
+
+                # dispatch a notification to the partners
+                async def _notification_send(usernames, payload):
+                    # since this will be run in a separate task, we need to acquire a new db connection
+                    with util.get_mongodb() as db:
+                        notification_resources = NotificationResource(db)
+                        for username in usernames:
+                            await notification_resources.send_notification(
+                                username, "plan_added_as_partner", payload
+                            )
+
+                # create async task to avoid having to declare the function async
+                # everywhere
+                tornado.ioloop.IOLoop.current().add_callback(
+                    _notification_send,
+                    partners,
+                    {
+                        "plan_id": plan_id,
+                        "plan_name": plan_state.name,
+                        "author": plan_state.author,
+                    },
+                )
 
         # return either the plan_id itself, or,
         # in case of an upsert, the freshly upserted _id

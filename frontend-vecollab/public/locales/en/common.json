@@ -49,6 +49,23 @@
             "text2": "-Achievement level has increased!",
             "text3": "You are now ",
             "level_x": "level {{level}}"
+        },
+        "plan_access_granted": {
+            "title": "Access to VE-Plan granted",
+            "text1": " has granted you ",
+            "read": "read",
+            "write": "read and write",
+            "text2": " access to the VE-Plan ",
+            "text3": ".",
+            "text4": "This plan is now available in your dashboard, or directly ",
+            "text5": "."
+        },
+        "plan_added_as_partner": {
+            "title": "Added as VE-partner",
+            "text1": " has added you as a partner to the VE-Plan ",
+            "text2": ".",
+            "text3": "You have automatically received access to this plan and it is now available in your dashboard, or directly ",
+            "text4": "."
         }
     },
     "profile": "Profile",

@@ -35,6 +35,7 @@ import global_vars
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Evaluation, IndividualLearningGoal, Step, VEPlan
 from resources.network.profile import Profiles
+from resources.notifications import NotificationResource
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
@@ -270,7 +271,7 @@ class VEPlanHandler(BaseHandler):
                 self.set_status(404)
 
     @auth_needed
-    def post(self, slug):
+    async def post(self, slug):
         """
         POST /planner/insert
             insert a new plan into the db. To do this, the safest approach is
@@ -1412,7 +1413,7 @@ class VEPlanHandler(BaseHandler):
                 if not isinstance(http_body["write"], bool):
                     http_body["write"] = True if http_body["write"] == "true" else False
 
-                self.grant_acces_right(
+                await self.grant_acces_right(
                     db,
                     http_body["plan_id"],
                     http_body["username"],
@@ -1986,8 +1987,8 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
-        # count towards the achievements "ve_plans" and 
-        # conditionally count towards the "good_practice_plans" and 
+        # count towards the achievements "ve_plans" and
+        # conditionally count towards the "good_practice_plans" and
         # "unique_partners" achievements (obeying their constraints)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
@@ -2065,7 +2066,7 @@ class VEPlanHandler(BaseHandler):
                 logger.warn("etherpad is possibly down")
 
         # count towards the achievement "ve_plans" since update was successfull
-        # conditionally count towards the "good_practice_plans" and 
+        # conditionally count towards the "good_practice_plans" and
         # "unique_partners" achievements (obeying their constraints)
         profile_manager = Profiles(db)
         profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
@@ -2190,7 +2191,7 @@ class VEPlanHandler(BaseHandler):
                     logger.warn("etherpad is possibly down")
 
             # count towards the achievement "ve_plans" since update was successfull
-            # conditionally count towards the "good_practice_plans" and 
+            # conditionally count towards the "good_practice_plans" and
             # "unique_partners" achievements (obeying their constraints)
             profile_manager = Profiles(db)
             profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
@@ -2252,7 +2253,7 @@ class VEPlanHandler(BaseHandler):
                     # after a successful update, extend the lock expiry
                     self._extend_lock(plan_id)
 
-                    # conditionally count towards the "good_practice_plans" and 
+                    # conditionally count towards the "good_practice_plans" and
                     # "unique_partners" achievements (obeying their constraints)
                     if (
                         update_instruction["field_name"] == "is_good_practise"
@@ -2541,7 +2542,7 @@ class VEPlanHandler(BaseHandler):
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
 
-    def grant_acces_right(
+    async def grant_acces_right(
         self,
         db: Database,
         plan_id: str | ObjectId,
@@ -2589,6 +2590,20 @@ class VEPlanHandler(BaseHandler):
             # so we only gotta check read == True and write == False
             if read is True and write is False:
                 planner.set_read_permissions(plan_id, username)
+
+            plan_name = planner.get_plan(plan_id).name
+            notification_resource = NotificationResource(db)
+            await notification_resource.send_notification(
+                username,
+                "plan_access_granted",
+                {
+                    "plan_id": plan_id,
+                    "plan_name": plan_name,
+                    "author": self.current_user.username,
+                    "read": read,
+                    "write": write,
+                },
+            )
 
         except PlanDoesntExistError:
             self.set_status(409)
