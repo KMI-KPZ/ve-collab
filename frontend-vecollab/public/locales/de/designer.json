@@ -73,7 +73,7 @@
         "search_users": "Name eingeben oder Nutzer:in suchen...",
         "enter_ext": "Bezeichnung...",
         "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>Hier klicken um \"<bold>{{value}}</bold>\" als beteiligte Person zu verwenden!",
-        "extparties_warning": "Hinweis: extern Beteilgte sind <bold>nicht direkt an der Planung</bold> des VE's beteiligt.<br>Am VE beteiligte Personen sollten oben eingetragen werden, auch wenn sie nicht im VE-Collab Netzwerk sind."
+        "extparties_warning": "Hinweis: extern Beteilgte sind <bold>nicht direkt an der Planung</bold> des VEs beteiligt.<br>Am VE beteiligte Personen sollten oben eingetragen werden, auch wenn sie nicht im VE-Collab Netzwerk sind."
     },
     "institutions": {
         "title": "Institutionen",

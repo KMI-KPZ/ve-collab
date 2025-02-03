@@ -75,7 +75,7 @@
     "users_that_follow": "Users that follow {{username}}",
     "edit_profile": "Edit profile",
     "ve_ready_true": "available for VEs",
-    "ve_ready_false": "no VE's at the moment",
+    "ve_ready_false": "no VEs at the moment",
     "send_chat_message_to_user": "Send message to user",
     "is_following": "following",
     "unfollow": "unfollow",
