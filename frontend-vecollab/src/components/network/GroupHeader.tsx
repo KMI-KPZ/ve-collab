@@ -17,6 +17,7 @@ import Dropdown from '../common/Dropdown';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import { useTranslation } from 'next-i18next';
+import VerticalTabs from '../profile/VerticalTabs';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -168,12 +169,24 @@ export default function GroupHeader({ userIsAdmin }: Props) {
     };
 
     const leaveGroup = () => {
-        fetchDELETE(`/spaceadministration/leave?id=${group._id}`, {}, session!.accessToken).then(
-            (response) => {
+        fetchDELETE(`/spaceadministration/leave?id=${group._id}`, {}, session!.accessToken)
+            .then((response) => {
                 // TODO error handling
-            }
-        );
-        router.push('/groups');
+            })
+            .finally(() => {
+                router.push('/groups');
+            });
+    };
+
+    const deleteGroup = () => {
+        if (!userIsAdmin()) return;
+        fetchDELETE(`/spaceadministration/delete_space?id=${group._id}`, {}, session!.accessToken)
+            .then((response) => {
+                // TODO error handling
+            })
+            .finally(() => {
+                router.push('/groups');
+            });
     };
 
     function acceptRequest(requestUser: string): void {
@@ -341,8 +354,8 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                         title={t('edit_group')}
                         onClose={handleCloseEditDialog}
                     >
-                        <div className="w-full h-full min-h-[60vh]">
-                            <Tabs>
+                        <div className="w-full h-full min-h-[60vh] min-w-[50vw]">
+                            <VerticalTabs>
                                 <div tabid="pic_description" tabname={t('pic_and_description')}>
                                     <div className="flex">
                                         <div className="flex justify-center mx-6">
@@ -834,21 +847,51 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 <div tabid="leave_group" tabname={t('leave_group')}>
                                     <div className="flex">
                                         <div>
+                                            <p className="my-2">
+                                                {t('message_last_user_in_space')}
+                                            </p>
                                             <button
-                                                className={
-                                                    'h-12 bg-red-500 border text-white py-3 px-6 rounded-lg shadow-xl'
-                                                }
+                                                className={`h-12 border text-white py-3 px-6 rounded-lg shadow ${
+                                                    group.members.length == 1
+                                                        ? 'bg-orange-300'
+                                                        : 'bg-orange-600'
+                                                }`}
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     leaveGroup();
                                                 }}
+                                                disabled={group.members.length == 1}
                                             >
                                                 <span>{t('leave_group')}</span>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                            </Tabs>
+                                {userIsAdmin() ? (
+                                    <div tabid="delete_group" tabname={t('delete_group')}>
+                                        <div className="flex">
+                                            <div>
+                                                <p className="my-2 font-bold">
+                                                    {t('warning_before_delete_group')}
+                                                </p>
+                                                <button
+                                                    className={
+                                                        'h-12 bg-red-500 border text-white py-3 px-6 rounded-lg shadow'
+                                                    }
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        deleteGroup();
+                                                    }}
+                                                >
+                                                    <span>{t('delete_group')}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <></>
+                                )}
+                            </VerticalTabs>
                         </div>
                     </Dialog>
                 </>
