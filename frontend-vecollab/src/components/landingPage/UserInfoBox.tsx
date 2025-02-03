@@ -81,7 +81,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
                 </div>
             )}
 
-            {profileInformation.profile.ve_window.length > 0 && (
+            {/* {profileInformation.profile.ve_window.length > 0 && (
                 <VEVitrine
                     isOwnProfile={true}
                     items={profileInformation.profile.ve_window.map((plan: any, i) => {
@@ -95,7 +95,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
                         };
                     })}
                 />
-            )}
+            )} */}
 
             {myGroups.length > 0 && <GroupsWidget isOwnProfile={true} groups={myGroups} />}
         </div>

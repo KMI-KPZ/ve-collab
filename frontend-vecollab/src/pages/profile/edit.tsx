@@ -365,7 +365,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="VEWindow" tabname={t('ve_window')}>
+                                {/* <div tabid="VEWindow" tabname={t('ve_window')}>
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -373,7 +373,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                     />
-                                </div>
+                                </div> */}
                                 <div tabid="Settings" tabname={t('settings')}>
                                     <EditSettings
                                         updateProfileData={updateProfileData}
