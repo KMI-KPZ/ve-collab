@@ -1,18 +1,22 @@
 .loader {
-    --dim: 3rem;
+    --dim: 2rem;
     width: var(--dim);
     height: var(--dim);
     position: relative;
     animation: spin988 2s linear infinite;
 }
 
+.loaderBig {
+    --dim: 3rem !important;
+}
+
 .loaderSmall {
-    --dim: 2rem !important
+    --dim: 1rem !important;
 }
 
 .loader .circle {
     --color: #030303;
-    --dim: 1.2rem;
+    --dim: 0.9rem;
     width: var(--dim);
     height: var(--dim);
     background-color: var(--color);
@@ -20,8 +24,12 @@
     position: absolute;
 }
 
+.circleBig {
+    --dim: 1.2rem !important;
+}
+
 .circleSmall {
-    --dim: 0.9rem !important
+    --dim: 0.45rem !important;
 }
 
 .loader .circle:nth-child(1) {
