@@ -165,7 +165,7 @@ class VEPlanResource:
 
         # omit the "public readability" criteria since access to foreign
         # plans is not yet implemented
-        result = self.db.plans.find({"author": username})
+        result = self.db.plans.find({"author": username, "is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
     def get_good_practise_plans(self) -> List[VEPlan]:
