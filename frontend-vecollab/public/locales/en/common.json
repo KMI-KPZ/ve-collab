@@ -35,6 +35,8 @@
     "materials_only_german": "Unfortunately the learning material is only available in German at the moment. You can try to use your browsers translation tool.",
     "groups": "Groups",
     "chat": "Chat",
+    "your_groups": "Your groups",
+    "public_groups_of": "Puplic groups",
     "toggle_chat_window": "Toggle Chat",
     "notifications": {
         "title": "Notifications",
@@ -99,6 +101,9 @@
     "create": "Create",
     "btn_new_ve": "Start a new VE",
     "plans": "Plans",
+    "your_plans": "Your plans",
+    "gp_plans_of": "\"Good Practice\" plans",
+    "last_change": "Last change",
     "plans_description": "VE-Collab’s VE Designer is a digital planning tool that guides VE partners step by step through planning a virtual exchange.",
     "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
     "matching": "Partner Matching",

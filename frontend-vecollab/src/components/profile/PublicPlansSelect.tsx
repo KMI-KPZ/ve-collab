@@ -35,7 +35,7 @@ export default function PublicPlansSelect({ chosenPlanId, setChosenPlanId }: Pro
                     _id: plan._id,
                     name: plan.name,
                 }))
-                .sort((a: any, b: any) => a.name.localeCompare(b.name));
+                .sort((a: any, b: any) => a.name?.localeCompare(b.name));
             setMyPublicPlans(plans);
             // default select the first plan, otherwise it would be visible in the select, but value still null
             if (plans.length > 0) {

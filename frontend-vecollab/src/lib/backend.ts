@@ -8,6 +8,7 @@ import {
     BackendUser,
     BackendProfile,
     BackendUserACLEntry,
+    BackendUser25,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -110,6 +111,29 @@ export function useGetProfileSnippets(
     };
 }
 
+export function useGetProfile(
+    user: string,
+    accessToken: string
+): {
+    data: BackendUser25; // TODO may fix in backend
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        accessToken ? [`/profileinformation?username=${user}`, accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetOwnProfile(accessToken: string): {
     data: BackendUser;
     isLoading: boolean;
@@ -194,11 +218,11 @@ export function useGetPlanById(
     };
 }
 
-export function useGetPublicPlansOfCurrentUser(
+export function useGetPublicPlansUser(
     accessToken: string,
     username: string
 ): {
-    data: VEPlanSnippet[];
+    data: PlanPreview[]; // TODO backend currently gives all plan data which we may never need?!?
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -216,6 +240,10 @@ export function useGetPublicPlansOfCurrentUser(
                 : data.plans.map((plan: any) => ({
                       _id: plan._id,
                       name: plan.name,
+                      creation_timestamp: plan.creation_timestamp,
+                      last_modified: plan.last_modified,
+                      progress: plan.progress,
+                      is_good_practise: plan.is_good_practise,
                   })),
         isLoading,
         error,
@@ -260,7 +288,9 @@ export function useGetMatching(
         : [];
 
     const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken] : null,
+        shouldFetch
+            ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken]
+            : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );

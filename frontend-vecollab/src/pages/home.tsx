@@ -8,7 +8,7 @@ import BackgroundAnimation from '@/components/landingPage/BackgroundAnimation';
 
 import { Notification } from '@/interfaces/socketio';
 import CustomHead from '@/components/metaData/CustomHead';
-import Dashboard from '@/components/landingPage/Dasboard';
+import Dashboard from '@/components/landingPage/Dashboard';
 
 interface Props {
     notificationEvents: Notification[];

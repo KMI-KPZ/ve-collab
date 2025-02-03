@@ -172,7 +172,7 @@ export default function SuggestionBox() {
                                             width={40}
                                         />
                                     </span>
-                                    <span className="text-slate-900 capitalize truncate inline-block w-full @[230px]:w-fit text-center @[230px]:text-start">
+                                    <span className="text-slate-900 capitalize truncate inline-block w-full @[230px]:w-fit text-center @[230px]:text-start hover:text-ve-collab-orange">
                                         {printUsername(user)}
                                     </span>
                                 </Link>

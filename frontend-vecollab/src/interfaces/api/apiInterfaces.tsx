@@ -36,6 +36,17 @@ export interface BackendUser {
     chosen_achievement?: null | ChosenAchievement;
 }
 
+// TODO Backend should return BackendUser data, but currently does not; eg at /profilinformation
+export interface BackendUser25 {
+    user_id: string;
+    username: string;
+    role: string;
+    followers: string[];
+    follows: string[];
+    spaces: string[];
+    profile: BackendProfile;
+}
+
 export interface BackendProfile {
     achievements: Achievements;
     address: string;

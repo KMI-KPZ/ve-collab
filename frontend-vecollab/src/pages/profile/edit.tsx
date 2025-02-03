@@ -303,8 +303,13 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <VerticalTabs>
-                                <div tabid="Stammdaten" tabname={t('general')}>
+                            <VerticalTabs
+                                onClickTabItem={(tab) => {
+                                    window.location.href =
+                                        document.URL.split('#')[0] + '#tab' + tab;
+                                }}
+                            >
+                                <div tabid="General" tabname={t('general')}>
                                     <EditPersonalInformation
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
@@ -326,7 +331,10 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         optionLists={optionLists}
                                     />
                                 </div>
-                                <div tabid="Lehre & Forschung" tabname={t('research_and_teaching')}>
+                                <div
+                                    tabid="ResearchAndTeaching"
+                                    tabname={t('research_and_teaching')}
+                                >
                                     <EditResearchAndTeachingInformation
                                         researchAndTeachingInformation={
                                             researchandTeachingInformation
@@ -339,7 +347,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="Ausbildung" tabname={t('education')}>
+                                <div tabid="Education" tabname={t('education')}>
                                     <EditEducationInformation
                                         educations={educations}
                                         setEducations={setEducations}
@@ -348,7 +356,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="Berufserfahrung" tabname={t('work_experience')}>
+                                <div tabid="WorkExperience" tabname={t('work_experience')}>
                                     <EditWorkExperienceInformation
                                         workExperience={workExperience}
                                         setWorkExperience={setWorkExperience}
@@ -357,7 +365,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="VE-Schaufenster" tabname={t('ve_window')}>
+                                {/* <div tabid="VEWindow" tabname={t('ve_window')}>
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -365,8 +373,8 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                     />
-                                </div>
-                                <div tabid="Einstellungen" tabname={t('settings')}>
+                                </div> */}
+                                <div tabid="Settings" tabname={t('settings')}>
                                     <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
@@ -383,7 +391,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 </WhiteBox>
                 {successPopupOpen && (
                     <Alert
-                        type='success'
+                        type="success"
                         message={t('saved')}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}

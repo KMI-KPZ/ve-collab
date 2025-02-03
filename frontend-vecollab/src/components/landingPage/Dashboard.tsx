@@ -25,6 +25,7 @@ import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
 import Error from '@/pages/_error';
+import { TbFileText } from 'react-icons/tb';
 
 interface Props {
     notificationEvents: Notification[];
@@ -105,13 +106,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
 
     const VeFeedWidget = () => (
         <div className="pb-6 mb-6 border-b-2 border-b-ve-collab-orange">
-            <div className="flex justify-between items-center">
-                <H1>{t('ve_feed')}</H1>
-                {/* <p>Letzte Aktivitäten </p> */}
-                {/* <ButtonLight link="/plans" className="!rounded-full">
-                                    {t('common:all')} {t('common:plans')}
-                                </ButtonLight> */}
-            </div>
+            <H1>{t('ve_feed')}</H1>
             <div>
                 {sortedPlans.map((plan) => {
                     return (
@@ -126,7 +121,13 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                             <div className="flex flex-row items-center">
                                 <div className="grow flex items-center truncate ">
                                     <div className="mr-2 py-1 font-bold whitespace-nowrap truncate">
-                                        <Link href={`/plan/${plan._id}`}>{plan.name}</Link>
+                                        <Link
+                                            href={`/plan/${plan._id}`}
+                                            className="hover:text-ve-collab-orange"
+                                        >
+                                            <TbFileText className="inline mr-1" size={20} />
+                                            {plan.name}
+                                        </Link>
                                     </div>
                                     {plan.is_good_practise && (
                                         <div className="mx-2 text-ve-collab-blue">
@@ -155,7 +156,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
     );
 
     const NotificationWidget = () => (
-        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-lg">
+        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow">
             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
             <H2>{t('common:notifications.title')}</H2>
@@ -200,7 +201,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 ">
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
-                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md">
+                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md drop-shadow">
                         <div className="text-2xl text-left">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
@@ -233,7 +234,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 </div>
 
                 <div className="@container order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md">
+                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow rounded-md">
                         <div className="text-2xl mx-2 mt-1">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>

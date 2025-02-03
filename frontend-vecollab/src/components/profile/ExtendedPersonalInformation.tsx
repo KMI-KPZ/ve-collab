@@ -1,5 +1,5 @@
 import Tabs from './Tabs';
-import { AriaAttributes, DOMAttributes } from 'react';
+import { AriaAttributes, DOMAttributes } from 'react'; // need for  ESLint
 import VEInformation from './VEInformation';
 import TeachingAndResearchInformation from './TeachingAndResearchInformation';
 import CVInformation from './CVInformation';

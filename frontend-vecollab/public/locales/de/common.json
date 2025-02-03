@@ -34,6 +34,8 @@
     "materials_intro_text": "Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch. Sie konnten bereits Erfahrung mit VE sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.",
     "materials_only_german": "",
     "groups": "Gruppen",
+    "your_groups": "Deine Gruppen",
+    "public_groups_of": "Öffentliche Gruppen",
     "chat": "Chat",
     "toggle_chat_window": "Chatfenster ein-/ausblenden",
     "notifications": {
@@ -99,6 +101,9 @@
     "create": "Erstellen",
     "btn_new_ve": "Neuen VE planen",
     "plans": "Pläne",
+    "your_plans": "Deine Pläne",
+    "gp_plans_of": "\"Good Practice\" Pläne",
+    "last_change": "Letzte Änderung",
     "plans_description": "Der VE-Designer von VE-Collab ist ein digitales Planungstool, das VE-Partner*innen Schritt für Schritt durch die Planung eines virtuellen Austauschs leitet.",
     "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
     "matching": "Partner Suche",

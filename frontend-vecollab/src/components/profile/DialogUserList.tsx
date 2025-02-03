@@ -27,7 +27,7 @@ export default function DialogUserList({
 
     const router = useRouter();
     return (
-        <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
+        <div className="w-[30rem] min-h-[15rem] overflow-y-auto content-scrollbar">
             {loading ? (
                 <div className="flex w-full h-full justify-center items-center">
                     <LoadingAnimation />
