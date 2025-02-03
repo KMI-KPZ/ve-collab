@@ -86,22 +86,24 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
 
         if (isOwnProfile) {
             fetchGET(`/planner/get_available`, session.accessToken).then((data) => {
-                if (data.plans) {
-                    setPlans(data.plans);
-                }
+                if (!data.plans) return;
+                setPlans(() =>
+                    (data.plans as PlanPreview[]).filter((plan) =>
+                        plan.write_access.includes(session.user.preferred_username as string)
+                    )
+                );
             });
         } else {
             fetchGET(`/planner/get_public_of_user?username=${username}`, session.accessToken).then(
                 (data) => {
-                    if (data.plans) {
-                        setPlans(data.plans);
-                    }
+                    if (!data.plans) return;
+                    setPlans(data.plans);
                 }
             );
         }
     }, [session, isOwnProfile, username]);
 
-    if (isLoadingProfile) return <LoadingAnimation />;
+    if (isLoadingProfile) return <LoadingAnimation className="my-10" />;
     if (errorLoadingProfile || !Object.keys(profileInformation).length) return <Custom404 />;
 
     return (
@@ -142,14 +144,14 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 </div>
                             )}
 
-                            <VEVitrine
+                            {/* <VEVitrine
                                 isOwnProfile={isOwnProfile}
                                 items={profileInformation.profile.ve_window.map((elem: any) => ({
                                     plan: { _id: elem.plan_id, name: elem.plan_name },
                                     title: elem.title,
                                     description: elem.description,
                                 }))}
-                            />
+                            /> */}
 
                             {groups.length > 0 && (
                                 <GroupsWidget isOwnProfile={isOwnProfile} groups={groups} />
@@ -202,43 +204,50 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                     {plans.length > 0 && (
                         <div className="px-12 my-6 relative">
                             <H1 className="mt-6 -ml-12">
-                                {isOwnProfile ? t('your_plans') : t('public_plans_of')}
+                                {isOwnProfile ? t('your_plans') : t('gp_plans_of')}
                                 {/* <span className="italic text-slate-600 font-sm">
                                     ({t('public')})
                                 </span> */}
                             </H1>
-                            <div className="text-end text-slate-600 italic -mb-6">
+                            <div className="text-end text-slate-600 italic -mb-4">
                                 {t('last_change')}:
                             </div>
-                            <div className="divide-y divide-slate-400 space-y-6">
+                            <div className="divide-y divide-slate-400 space-y-4">
                                 {plans.slice(0, 7).map((plan, i) => (
-                                    <div key={i} className="flex items-center justify-between pt-6">
+                                    <div key={i} className="flex items-center justify-between pt-4">
                                         <div className="grow flex items-center truncate">
                                             <Link
                                                 href={`/ve-designer/name?plannerId=${plan._id}`}
-                                                className="group/ve-item"
+                                                className="group/ve-item flex items-center font-bold text-lg truncate hover:text-ve-collab-orange"
                                             >
-                                                <span className="font-bold text-lg group-hover/ve-item:text-ve-collab-orange">
-                                                    <TbFileText
-                                                        className="inline mr-2 p-1 border border-gray-600 rounded-full group-hover/ve-item:border-ve-collab-orange"
-                                                        size={30}
-                                                    />{' '}
-                                                    {plan.name}
+                                                <TbFileText
+                                                    className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full group-hover/ve-item:border-ve-collab-orange"
+                                                    size={30}
+                                                />{' '}
+                                                <span className="flex flex-col truncate">
+                                                    <span className="flex items-center">
+                                                        <span className="truncate">
+                                                            {plan.name}
+                                                        </span>
+                                                        {plan.is_good_practise && (
+                                                            <span className="mx-4 text-ve-collab-blue">
+                                                                <FaMedal
+                                                                    title={t(
+                                                                        'common:plans_marked_as_good_practise'
+                                                                    )}
+                                                                />
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                    <span className="font-normal text-base truncate">
+                                                        {plan.topics}
+                                                    </span>
                                                 </span>
                                             </Link>
-                                            {plan.is_good_practise && (
-                                                <div className="mx-4 text-ve-collab-blue">
-                                                    <FaMedal
-                                                        title={t(
-                                                            'common:plans_marked_as_good_practise'
-                                                        )}
-                                                    />
-                                                </div>
-                                            )}
                                         </div>
                                         <Timestamp
                                             timestamp={plan.last_modified}
-                                            className="text-base font-normal"
+                                            className="text-base font-normal flex-none"
                                             dateFormat="dd. MMM yy"
                                         />
                                     </div>
@@ -256,7 +265,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                     )}
 
                     <div className="pl-12">
-                        <H1 className="mt-6 -ml-12">{t('community:posts')}</H1>
+                        <H1 className="mt-10 -ml-12">{t('community:posts')}</H1>
 
                         {isOwnProfile ? (
                             <Timeline socket={socket} />

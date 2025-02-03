@@ -16,6 +16,7 @@ import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import VEReadyFor from './VEReadyFor';
 import { Tooltip } from '../common/Tooltip';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
     profileInformation: BackendUser25;
@@ -108,10 +109,10 @@ export default function ProfileHeader({
         setFollowers([]);
     }, [router]);
 
-    const Follows = () => (
-        <div className="overflow-y-auto max-h-32 truncate p-2">
+    const ToolitpFollows = () => (
+        <div className="overflow-y-auto max-h-32 content-scrollbar">
             {follows.map((user, i) => (
-                <div key={i} className="flex items-center justify-between text-black">
+                <div key={i} className="flex items-center justify-between truncate text-black my-2">
                     <Link href={`/profile/user/${user.username}`} className="text-sm truncate">
                         <AuthenticatedImage
                             imageId={user.profile_pic}
@@ -144,29 +145,30 @@ export default function ProfileHeader({
         </div>
     );
 
-    const Followers = () => (
-        <div className="overflow-y-auto max-h-32 truncate p-2">
+    const TooltipFollowers = () => (
+        <div className="overflow-y-auto max-h-32 content-scrollbar">
             {followers.map((user, i) => (
-                <Link
-                    key={i}
-                    href={`/profile/user/${user.username}`}
-                    className="text-black text-sm truncate"
-                >
-                    <AuthenticatedImage
-                        imageId={user.profile_pic}
-                        alt={t('profile_picture')}
-                        width={20}
-                        height={20}
-                        className="rounded-full mr-3 inline"
-                    />
-                    {user.first_name ? (
-                        <>
-                            {user.first_name} {user.last_name}
-                        </>
-                    ) : (
-                        <>{user.username}</>
-                    )}
-                </Link>
+                <div key={i} className="truncate my-2">
+                    <Link
+                        href={`/profile/user/${user.username}`}
+                        className="text-black text-sm truncate"
+                    >
+                        <AuthenticatedImage
+                            imageId={user.profile_pic}
+                            alt={t('profile_picture')}
+                            width={20}
+                            height={20}
+                            className="rounded-full mr-3 inline"
+                        />
+                        {user.first_name ? (
+                            <>
+                                {user.first_name} {user.last_name}
+                            </>
+                        ) : (
+                            <>{user.username}</>
+                        )}
+                    </Link>
+                </div>
             ))}
         </div>
     );
@@ -229,7 +231,11 @@ export default function ProfileHeader({
                     >
                         <Tooltip
                             tooltipsText={
-                                profileInformation.follows.length > 0 ? <Follows /> : null
+                                loadingFollows ? (
+                                    <LoadingAnimation size="small" className="my-2" />
+                                ) : profileInformation.follows.length > 0 ? (
+                                    <ToolitpFollows />
+                                ) : null
                             }
                             position="left"
                             className="pl-2"
@@ -251,7 +257,11 @@ export default function ProfileHeader({
                     >
                         <Tooltip
                             tooltipsText={
-                                profileInformation.followers.length > 0 ? <Followers /> : null
+                                loadingFollowers ? (
+                                    <LoadingAnimation size="small" className="my-2" />
+                                ) : profileInformation.followers.length > 0 ? (
+                                    <TooltipFollowers />
+                                ) : null
                             }
                             position="left"
                             className="pl-2"
