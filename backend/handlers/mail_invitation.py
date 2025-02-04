@@ -7,6 +7,11 @@ import util
 
 class EmailInvitationHandler(BaseHandler):
 
+    def options(self):
+        # no body
+        self.set_status(200)
+        self.finish()
+
     def is_valid_email(self, email: str):
         """
         helper function to check validity of an email address
