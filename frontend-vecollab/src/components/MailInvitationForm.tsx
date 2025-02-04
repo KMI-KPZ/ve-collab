@@ -1,14 +1,9 @@
-import { useTranslation } from 'next-i18next';
-import Link from 'next/link';
-import { MdMail, MdOutlineFeedback, MdOutlineShare } from 'react-icons/md';
+import { Trans, useTranslation } from 'next-i18next';
 import ButtonPrimary from './common/buttons/ButtonPrimary';
 import { useState } from 'react';
-import Dialog from './profile/Dialog';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { AlertState } from './common/dialogs/Alert';
 import ButtonSecondary from './common/buttons/ButtonSecondary';
-import LoadingAnimation from './common/LoadingAnimation';
 
 import { z } from 'zod';
 
@@ -97,7 +92,13 @@ export default function MailInvitationForm({
                 </>
             ) : (
                 <>
-                    <p className="mb-4">{t('mail_invitation_form.intro')}</p>
+                    <p className="mb-4">
+                        <Trans
+                            i18nKey="mail_invitation_form.intro"
+                            ns="common"
+                            components={{ br: <br />, bold: <strong /> }}
+                        />
+                    </p>
                     <div>
                         <div className="mb-4">
                             <input

@@ -16,7 +16,7 @@ export default function FeedbackBanner(): JSX.Element {
             <div className="hidden sm:flex fixed z-40 -right-80 bottom-20 w-96 h-72 -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-lg flex flex-row divide-x transition ease-in-out delay-150 hover:-translate-x-80 hover:cursor-pointer">
                 <div className="divide-y divide-gray-400 w-full p-1">
                     <div className="flex h-2/5 divide-x-2 divide-gray-400 p-1">
-                        <div className="w-14 flex justify-center items-center flex-none nowrap">
+                        <div className="w-12 flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('mail_invitation_form.share')}
                                 <MdOutlineShare className="inline ml-2" size={20} />
@@ -33,7 +33,7 @@ export default function FeedbackBanner(): JSX.Element {
                         </div>
                     </div>
                     <div className="flex h-3/5 divide-x-2 divide-gray-400 p-1">
-                        <div className="w-14 flex justify-center items-center flex-none nowrap">
+                        <div className="w-12 flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('feedback')}
                                 <MdOutlineFeedback className="inline ml-2" size={20} />

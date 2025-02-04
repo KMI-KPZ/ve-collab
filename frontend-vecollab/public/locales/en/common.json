@@ -536,7 +536,7 @@
     "mail_invitation_form": {
         "share": "Share",
         "intro_short": "Invite VE partners via email",
-        "intro": "Invite VE partners via email",
+        "intro": "Invite people to register in the VE-Collab network here.<br/> ATTENTION: The person is not automatically added to the plan as a partner.",
         "open": "open",
         "title": "VE invitation via e-mail",
         "name_placeholder": "Name",
