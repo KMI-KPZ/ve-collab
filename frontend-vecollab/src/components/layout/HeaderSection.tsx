@@ -613,7 +613,7 @@ export default function HeaderSection({
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-2 xl:space-x-6">
+                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-3 xl:space-x-6">
                     <Menu />
                 </ul>
             </nav>
