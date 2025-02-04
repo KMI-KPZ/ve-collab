@@ -15,6 +15,7 @@
     "join": "Beitreten",
     "join_requested": "angefragt",
     "request_join": "Beitritt anfragen",
+    "no_current_requests": "Es stehen keine Anfragen oder Einladungen aus",
     "no_matching_result_question": "Nichts passendes dabei?",
     "create_new_group": "Neue Gruppe erstellen",
     "my_requests_and_invitations": "Meine Anfragen & Einladungen",

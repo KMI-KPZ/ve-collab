@@ -356,8 +356,12 @@ export default function Groups() {
 
     const Items = () => (
         <div className="mx-10">
-            {!searchInput && groups?.length === 0 && <>{t('no_groups_available')}</>}
-            {searchInput && groups?.length === 0 && <>{t('no_groups_found')}</>}
+            {!searchInput && groups?.length === 0 && (
+                <p className="italic m-2">{t('no_groups_available')}</p>
+            )}
+            {searchInput && groups?.length === 0 && (
+                <p className="italic m-2">{t('no_groups_found')}</p>
+            )}
             {groups?.map((group, i) => {
                 // user is member
                 if (group.members.includes(session!.user.preferred_username!)) {
@@ -460,9 +464,9 @@ export default function Groups() {
                                 tabname={t('my_requests_and_invitations')}
                             >
                                 <div className="mx-10">
-                                    {myGroupInvites.length == 0 &&
-                                        myGroupRequests.length == 0 &&
-                                        t('no_current_requests')}
+                                    {myGroupInvites.length == 0 && myGroupRequests.length == 0 && (
+                                        <p className="italic m-2">{t('no_current_requests')}</p>
+                                    )}
 
                                     {myGroupInvites.length > 0 && (
                                         <>

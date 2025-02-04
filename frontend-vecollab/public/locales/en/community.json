@@ -15,6 +15,7 @@
     "join": "Join",
     "join_requested": "requested to join",
     "request_join": "Request to join",
+    "no_current_requests": "No pending requests or invitations",
     "no_matching_result_question": "No desired result found?",
     "create_new_group": "Create new group",
     "my_requests_and_invitations": "My requests & invitations",
