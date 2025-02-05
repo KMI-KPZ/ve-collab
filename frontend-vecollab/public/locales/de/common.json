@@ -533,9 +533,10 @@
         "learning-material/4": "Eine Sammlung interaktiver Lehrmodule zu kulturellen & sprachlichen Aspekten, Interaktion und Kollaboration und einem Methodenkoffer für digitale Lehre."
     },
     "mail_invitation_form": {
-        "share": "Teilen",
+        "share": "Einladen",
         "intro_short": "VE Partner:innen via E-Mail einladen",
-        "intro": "Invite people to register in the VE-Collab network here.<br/> ATTENTION: The person is not automatically added to the plan as a partner.",
+        "intro": "Lade Personen per E-Mail ein, VE-Collab beizutreten.",
+        "intro_attention": "<bold>Achtung:</bold> Die eingeladene Person wird nicht automatisch als VE-Partner:in hinzugefügt, nachdem sie sich registriert hat. Diesen Schritt müsst ihr leider manuell machen.",
         "open": "öffnen",
         "title": "VE-Einladung via E-Mail",
         "name_placeholder": "Name",

@@ -1,7 +1,9 @@
+import datetime
 import json
 
 from error_reasons import MISSING_KEY_IN_HTTP_BODY_SLUG
 from handlers.base_handler import BaseHandler, auth_needed
+from resources.mail_invitation import MailInvitation
 import util
 
 
@@ -113,10 +115,18 @@ class EmailInvitationHandler(BaseHandler):
             self.write({"success": False, "reason": "invalid_email"})
             return
 
-        # TODO check rate limit, e.g. allow only 5 invitations per 12 hours
-
-        # send email
         with util.get_mongodb() as mongodb:
+            invitation_manager = MailInvitation(mongodb)
+
+            # check rate limit, i.e. allow only 10 invitations per 24 hours
+            if not invitation_manager.check_within_rate_limit(
+                self.current_user.username
+            ):
+                self.set_status(429)
+                self.write({"success": False, "reason": "too_many_requests"})
+                return
+
+            # send email
             util.send_email(
                 recipient_name,
                 recipient_mail,
@@ -129,5 +139,15 @@ class EmailInvitationHandler(BaseHandler):
                     ),
                 },
             )
+
+            # save invitation in database
+            invitation = {
+                "recipient_mail": recipient_mail,
+                "recipient_name": recipient_name,
+                "message": message,
+                "sender": self.current_user.username,
+                "timestamp": datetime.datetime.now(),
+            }
+            invitation_manager.insert_invitation(invitation)
 
         self.write({"success": True})

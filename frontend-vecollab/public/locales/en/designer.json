@@ -57,7 +57,7 @@
         "title": "Project name",
         "page_description": "Which methodological approach underlies VE? Task-based, problem-oriented, inquiry-based learning or game-based learning?",
         "subtitle": "What will the project be called?",
-        "description": "Give your project a name.The name will appear in the VE-Display and in the project/Good Practice overview.",
+        "description": "Give your project a name. The name will appear in the VE-Display and in the project/Good Practice overview.",
         "placeholder": "Enter name"
     },
     "partners": {

@@ -546,6 +546,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                             handleFinish={() => {
                                 setOpenMailInvitationDialog(false);
                             }}
+                            renderAttentionMessage
                         />
                     </div>
                 </Dialog>

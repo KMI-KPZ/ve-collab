@@ -534,11 +534,12 @@
         "learning-material/4": "A collection of interactive teaching modules on cultural & linguistic aspects, interaction and collaboration and a method kit for digital teaching."
     },
     "mail_invitation_form": {
-        "share": "Share",
+        "share": "Invite",
         "intro_short": "Invite VE partners via email",
-        "intro": "Invite people to register in the VE-Collab network here.<br/> ATTENTION: The person is not automatically added to the plan as a partner.",
+        "intro": "Invite people to register in the VE-Collab network here",
+        "intro_attention": "<bold>Attention</bold>: The person is not automatically added to the plan as a partner. Unfortunately, this step has to be done manually after registration.",
         "open": "open",
-        "title": "VE invitation via e-mail",
+        "title": "VE invitation via E-Mail",
         "name_placeholder": "Name",
         "no_valid_name": "This name is not valid",
         "send_ok": "Invitation sent.",

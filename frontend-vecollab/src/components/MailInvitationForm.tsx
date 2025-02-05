@@ -15,8 +15,10 @@ const FormSchema = z.object({
 
 export default function MailInvitationForm({
     handleFinish,
+    renderAttentionMessage,
 }: {
     handleFinish?: () => void;
+    renderAttentionMessage?: boolean;
 }): JSX.Element {
     const { t } = useTranslation(['common']);
     const { data: session, status } = useSession();
@@ -92,13 +94,18 @@ export default function MailInvitationForm({
                 </>
             ) : (
                 <>
-                    <p className="mb-4">
-                        <Trans
-                            i18nKey="mail_invitation_form.intro"
-                            ns="common"
-                            components={{ br: <br />, bold: <strong /> }}
-                        />
+                    <p className={`${renderAttentionMessage ? 'mb-1' : 'mb-4'}`}>
+                        {t('mail_invitation_form.intro')}
                     </p>
+                    {renderAttentionMessage && (
+                        <p className="mb-4">
+                            <Trans
+                                i18nKey="mail_invitation_form.intro_attention"
+                                ns="common"
+                                components={{ bold: <strong /> }}
+                            />
+                        </p>
+                    )}
                     <div>
                         <div className="mb-4">
                             <input
