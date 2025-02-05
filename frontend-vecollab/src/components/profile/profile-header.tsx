@@ -1,41 +1,38 @@
 import Link from 'next/link';
-import { RxDotFilled } from 'react-icons/rx';
+import { RxTrash } from 'react-icons/rx';
 import { fetchDELETE, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { CSSProperties, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Dialog from './Dialog';
-import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
-import { badgeOutlineColors } from '../landingPage/Badge';
-import { ChosenAchievement } from '@/interfaces/api/apiInterfaces';
+import { BackendUser, BackendUser25 } from '@/interfaces/api/apiInterfaces';
 import UserProfileImage from '../network/UserProfileImage';
 import { IoIosSend } from 'react-icons/io';
 import ButtonLight from '../common/buttons/ButtongLight';
+import VEInvitationDialog from './VEInvitationDialog';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import VEReadyFor from './VEReadyFor';
+import { Tooltip } from '../common/Tooltip';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
-    name: string;
-    institution: string;
-    profilePictureUrl: string;
+    profileInformation: BackendUser25;
     foreignUser: boolean;
-    followers: string[];
-    veReady: boolean;
-    chosen_achievement?: null | ChosenAchievement;
+
     isNoAuthPreview?: boolean;
+    mutateProfileInformation: () => void;
     openOrCreateChatWith: () => void;
 }
 
 ProfileHeader.auth = true;
 export default function ProfileHeader({
-    name,
-    institution,
-    profilePictureUrl,
+    profileInformation,
     foreignUser,
-    followers,
-    veReady,
-    chosen_achievement,
     isNoAuthPreview = false,
+    mutateProfileInformation,
     openOrCreateChatWith,
 }: Props) {
     const router = useRouter();
@@ -43,7 +40,6 @@ export default function ProfileHeader({
     const { t } = useTranslation(['community', 'common']);
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
-
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
     const handleOpenInvitationDialog = () => {
         if (isNoAuthPreview) return;
@@ -56,10 +52,6 @@ export default function ProfileHeader({
         setIsInvitationDialogOpen(false);
     };
 
-    const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
-    const [chosenPlanId, setChosenPlanId] = useState('');
-    const [veInvitationMessage, setVeInvitationMessage] = useState('');
-
     const usernameOfProfileOwner =
         router.query.username !== undefined ? (router.query.username as string) : '';
 
@@ -67,220 +59,279 @@ export default function ProfileHeader({
         if (isNoAuthPreview) return;
 
         fetchPOST(`/follow?user=${usernameOfProfileOwner}`, {}, session?.accessToken).then(() => {
-            // probably a better solution is to control follower state from parent component and
-            // manage re-render of follow button by state and not by forcing a refresh and new api requests
-            // but for now it works
-            router.reload();
+            mutateProfileInformation();
         });
     };
 
-    const unfollowUser = () => {
+    const unfollowUser = (username: string) => {
         if (isNoAuthPreview) return;
 
-        fetchDELETE(`/follow?user=${usernameOfProfileOwner}`, {}, session?.accessToken).then(() => {
-            // probably a better solution is to control follower state from parent component and
-            // manage re-render of follow button by state and not by forcing a refresh and new api requests
-            // but for now it works
-            router.reload();
+        fetchDELETE(`/follow?user=${username}`, {}, session?.accessToken).then(() => {
+            mutateProfileInformation();
         });
     };
 
-    const sendVeInvitation = () => {
-        if (isNoAuthPreview) return;
+    const institutiun =
+        profileInformation?.profile?.institutions?.find(
+            (institution) => institution._id === profileInformation.profile.chosen_institution_id
+        )?.name || '';
 
-        const payload = {
-            message: veInvitationMessage,
-            plan_id: chosenPlanId === '' ? null : chosenPlanId,
-            username: usernameOfProfileOwner,
-        };
+    const name = `${profileInformation?.profile?.first_name} ${profileInformation?.profile?.last_name}`;
 
-        fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
-            setSuccessPopupOpen(true);
+    const [loadingFollows, setLoadingFollows] = useState<boolean>(false);
+    const [follows, setFollows] = useState<BackendUser[]>([]);
+
+    const [loadingFollowers, setLoadingFollowers] = useState<boolean>(false);
+    const [followers, setFollowers] = useState<BackendUser[]>([]);
+
+    const fetchFollows = (usernames: string[]) => {
+        if (usernames.length == 0 || follows.length > 0 || loadingFollows) return;
+        setLoadingFollows(true);
+
+        fetchPOST('/profile_snippets', { usernames }, session?.accessToken).then((data) => {
+            setFollows(data.user_snippets);
+            setLoadingFollows(false);
+        });
+    };
+    const fetchFollowers = (usernames: string[]) => {
+        if (usernames.length == 0 || followers.length > 0 || loadingFollowers) return;
+        setLoadingFollowers(true);
+
+        fetchPOST('/profile_snippets', { usernames }, session?.accessToken).then((data) => {
+            setFollowers(data.user_snippets);
+            setLoadingFollowers(false);
         });
     };
 
-    // we have to set style property here, because otherwise dynamic outline color is not applied
-    const achievementStyle: CSSProperties = chosen_achievement?.level
-        ? {
-              background: badgeOutlineColors[chosen_achievement.level - 1],
-          }
-        : {};
+    useEffect(() => {
+        // reset followers after change route
+        setFollows([]);
+        setFollowers([]);
+    }, [router]);
+
+    const ToolitpFollows = () => (
+        <div className="overflow-y-auto max-h-32 content-scrollbar">
+            {follows.map((user, i) => (
+                <div key={i} className="flex items-center justify-between truncate text-black my-2">
+                    <Link href={`/profile/user/${user.username}`} className="text-sm truncate">
+                        <AuthenticatedImage
+                            imageId={user.profile_pic}
+                            alt={t('profile_picture')}
+                            width={20}
+                            height={20}
+                            className="rounded-full mr-3 inline"
+                        />
+                        {user.first_name ? (
+                            <>
+                                {user.first_name} {user.last_name}
+                            </>
+                        ) : (
+                            <>{user.username}</>
+                        )}
+                    </Link>
+                    {!foreignUser && (
+                        <ButtonLight
+                            onClick={() => {
+                                unfollowUser(user.username);
+                            }}
+                            className="rounded-full mx-1"
+                            title={t('unfollow')}
+                        >
+                            <RxTrash />
+                        </ButtonLight>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+
+    const TooltipFollowers = () => (
+        <div className="overflow-y-auto max-h-32 content-scrollbar">
+            {followers.map((user, i) => (
+                <div key={i} className="truncate my-2">
+                    <Link
+                        href={`/profile/user/${user.username}`}
+                        className="text-black text-sm truncate"
+                    >
+                        <AuthenticatedImage
+                            imageId={user.profile_pic}
+                            alt={t('profile_picture')}
+                            width={20}
+                            height={20}
+                            className="rounded-full mr-3 inline"
+                        />
+                        {user.first_name ? (
+                            <>
+                                {user.first_name} {user.last_name}
+                            </>
+                        ) : (
+                            <>{user.username}</>
+                        )}
+                    </Link>
+                </div>
+            ))}
+        </div>
+    );
 
     return (
-        <div className={'flex'}>
-            <div className="flex-none mr-8">
-                <UserProfileImage
-                    type="big"
-                    chosen_achievement={chosen_achievement}
-                    height={168}
-                    width={168}
-                    profile_pic={profilePictureUrl}
-                />
-            </div>
-            <div className={'mr-auto'}>
-                <div className="mt-2 min-h-[2rem]">
-                    {!foreignUser && (
-                        <>
-                            <Link href={'/profile/edit'}>
-                                <button
-                                    className={
-                                        'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
-                                    }
-                                >
-                                    <span>{t('edit_profile')}</span>
-                                </button>
-                            </Link>
-                        </>
-                    )}
-                </div>
-                <div className={'mt-11 font-bold text-4xl text-slate-900'}>{name}</div>
-                <div className={'text-gray-500'}>{institution}</div>
-            </div>
-            <div className={'flex items-end mb-8'}>
-                <div className="flex mx-16 h-12 items-center">
-                    {veReady ? (
-                        <>
-                            <RxDotFilled
-                                size={50}
-                                className="text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,1)]"
-                            />
-                            <div className="flex items-center text-green-600">
-                                {t('ve_ready_true')}
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <RxDotFilled
-                                size={50}
-                                className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)]"
-                            />
-                            <div className="flex items-center text-red-600">
-                                {t('ve_ready_false')}
-                            </div>
-                        </>
-                    )}
-                </div>
-                {/* we only render follow and message buttons if it is not our own profile*/}
-                {foreignUser && (
-                    <>
-                        <ButtonLight
-                            className="!rounded-full mx-2 h-12"
-                            title={t('send_chat_message_to_user')}
-                            onClick={() => {
-                                openOrCreateChatWith();
-                            }}
-                        >
-                            <IoIosSend />
-                        </ButtonLight>
-                        {/* determine if current session user already follow the user behind the profile and render the follow button accordingly*/}
-                        {followers.includes(session?.user.preferred_username as string) ? (
-                            <button
-                                className={`w-40 h-12 bg-ve-collab-blue/10 border border-ve-collab-blue py-3 px-6 mr-2 rounded-lg shadow-lg ${
-                                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
-                                }`}
-                                onClick={unfollowUser}
-                            >
-                                {' '}
-                                <span>{t('is_following')}</span>
-                            </button>
-                        ) : (
-                            <button
-                                className={`w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-2 rounded-lg shadow-lg ${
-                                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
-                                }`}
-                                onClick={followUser}
-                            >
-                                {' '}
-                                <span>{t('follow')}</span>
-                            </button>
-                        )}
-                        <button
-                            className={`w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl ${
-                                isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
-                            }`}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleOpenInvitationDialog();
-                            }}
-                        >
-                            {' '}
-                            <span>{t('ve_invitation')}</span>
-                        </button>
-                        {!isNoAuthPreview && (
-                            <Dialog
-                                isOpen={isInvitationDialogOpen}
-                                title={t('invite_to_ve', { name: name })}
-                                onClose={handleCloseInvitationDialog}
-                            >
-                                <div className="w-[30rem] h-[26rem] overflow-y-auto content-scrollbar relative">
-                                    <div>{t('ve_invitation_message')}</div>
-                                    <textarea
-                                        className={
-                                            'w-full border border-gray-500 rounded-lg px-2 py-1 my-1'
-                                        }
-                                        rows={5}
-                                        placeholder={t('ve_invitation_message_placeholder')}
-                                        value={veInvitationMessage}
-                                        onChange={(e) => setVeInvitationMessage(e.target.value)}
-                                    ></textarea>
-                                    <div className="flex mb-2 mt-4">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            checked={appendPlanCheckboxChecked}
-                                            onChange={(e) =>
-                                                setAppendPlanCheckboxChecked(
-                                                    !appendPlanCheckboxChecked
-                                                )
-                                            }
-                                        />
-                                        <p>{t('append_existing_plan')}</p>
-                                    </div>
-                                    {appendPlanCheckboxChecked && (
-                                        <>
-                                            <PublicPlansSelect
-                                                chosenPlanId={chosenPlanId}
-                                                setChosenPlanId={setChosenPlanId}
-                                            />
-                                            <p className="my-2 text-gray-400">
-                                                {t('append_plan_disclaimer')}
-                                            </p>
-                                        </>
-                                    )}
+        <div className="relative">
+            <div
+                className={
+                    'absolute -left-2 w-[calc(100svw-16px)] xl:w-full h-[160px] top-0 xl:rounded-b-md bg-footer-pattern'
+                }
+            ></div>
 
-                                    <div className="flex absolute bottom-0 w-full">
-                                        <button
-                                            className={
-                                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                            }
-                                            onClick={handleCloseInvitationDialog}
-                                        >
-                                            <span>{t('common:cancel')}</span>
-                                        </button>
-                                        <button
-                                            className={
-                                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                            }
-                                            onClick={(e) => {
-                                                sendVeInvitation();
-                                                handleCloseInvitationDialog();
-                                            }}
-                                        >
-                                            <span>{t('common:send')}</span>
-                                        </button>
-                                    </div>
+            {!foreignUser && (
+                <>
+                    <Link
+                        href={'/profile/edit'}
+                        className="absolute z-20 right-0 top-6 mx-4 right-2 lx:right-20"
+                    >
+                        <button
+                            className={
+                                'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                            }
+                        >
+                            <span>{t('edit_profile')}</span>
+                        </button>
+                    </Link>
+                </>
+            )}
+
+            <div
+                className={
+                    'relative z-10 pt-[160px] mx-2 lg:mx-20 mb-2 px-5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-y-6'
+                }
+            >
+                <div className="flex items-center">
+                    <div className="mr-8 -mt-16 flex-none">
+                        <UserProfileImage
+                            type="big"
+                            chosen_achievement={profileInformation.profile.chosen_achievement}
+                            height={168}
+                            width={168}
+                            profile_pic={profileInformation.profile.profile_pic}
+                        />
+                    </div>
+                    <div className="flex flex-wrap">
+                        <div className="sm:max-w-[40%]">
+                            <div className={'font-bold text-2xl text-slate-900'}>{name}</div>
+                            <div className={'text-gray-500'}>{institutiun}</div>
+                        </div>
+                        <div className="sm:mx-6">
+                            <VEReadyFor ve_ready={profileInformation.profile.ve_ready} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="absolute flex right-2 xl:right-20 top-[90px] divide-x text-white">
+                    <div
+                        className={'group/follows relative pr-6 hover:cursor:pointer'}
+                        onMouseOver={() => fetchFollows(profileInformation.follows)}
+                    >
+                        <Tooltip
+                            tooltipsText={
+                                loadingFollows ? (
+                                    <LoadingAnimation size="small" className="my-2" />
+                                ) : profileInformation.follows.length > 0 ? (
+                                    <ToolitpFollows />
+                                ) : null
+                            }
+                            position="left"
+                            className="pl-2"
+                            innerClassName="!top-2"
+                        >
+                            <div>
+                                {foreignUser
+                                    ? t('community:following')
+                                    : t('community:iam_following')}
+                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                    {profileInformation.follows.length}
                                 </div>
-                            </Dialog>
-                        )}
-                        {successPopupOpen && (
-                            <Alert
-                                message={t('alert_ve_invitation_sent')}
-                                autoclose={2000}
-                                onClose={() => setSuccessPopupOpen(false)}
-                            />
-                        )}
-                    </>
-                )}
+                            </div>
+                        </Tooltip>
+                    </div>
+                    <div
+                        className={'group/followers relative pl-6 hover:cursor:pointer'}
+                        onMouseOver={() => fetchFollowers(profileInformation.followers)}
+                    >
+                        <Tooltip
+                            tooltipsText={
+                                loadingFollowers ? (
+                                    <LoadingAnimation size="small" className="my-2" />
+                                ) : profileInformation.followers.length > 0 ? (
+                                    <TooltipFollowers />
+                                ) : null
+                            }
+                            position="left"
+                            className="pl-2"
+                            innerClassName="!top-2"
+                        >
+                            <div>
+                                {foreignUser
+                                    ? t('community:followers')
+                                    : t('community:ive_followers')}
+                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                    {profileInformation.followers.length}
+                                </div>
+                            </div>
+                        </Tooltip>
+                    </div>
+                </div>
+
+                <div className={'flex flex-wrap gap-2'}>
+                    {/* we only render follow and message buttons if it is not our own profile*/}
+                    {foreignUser && (
+                        <>
+                            <ButtonLight
+                                className="!rounded-full mx-2 h-12"
+                                title={t('send_chat_message_to_user')}
+                                onClick={() => {
+                                    openOrCreateChatWith();
+                                }}
+                            >
+                                <IoIosSend />
+                            </ButtonLight>
+                            {/* determine if current session user already follow the user behind the profile and render the follow button accordingly*/}
+                            {profileInformation.followers.includes(
+                                session?.user.preferred_username as string
+                            ) ? (
+                                <ButtonSecondary
+                                    className="group"
+                                    onClick={() => unfollowUser(usernameOfProfileOwner)}
+                                >
+                                    <span className="group-hover:hidden">{t('is_following')}</span>
+                                    <span className="hidden group-hover:inline">
+                                        {t('unfollow')}
+                                    </span>
+                                </ButtonSecondary>
+                            ) : (
+                                <ButtonSecondary onClick={followUser}>
+                                    {t('follow')}
+                                </ButtonSecondary>
+                            )}
+                            <ButtonPrimary onClick={handleOpenInvitationDialog}>
+                                {t('ve_invitation')}
+                            </ButtonPrimary>
+
+                            {!isNoAuthPreview && (
+                                <VEInvitationDialog
+                                    userid={usernameOfProfileOwner}
+                                    username={name}
+                                    isOpen={isInvitationDialogOpen}
+                                    callbackDone={handleCloseInvitationDialog}
+                                />
+                            )}
+                            {successPopupOpen && (
+                                <Alert
+                                    message={t('alert_ve_invitation_sent')}
+                                    autoclose={2000}
+                                    onClose={() => setSuccessPopupOpen(false)}
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

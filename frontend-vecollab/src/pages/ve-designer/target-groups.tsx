@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 import CreatableSelect from 'react-select/creatable';
 import CustomHead from '@/components/metaData/CustomHead';
+import { languageKeys } from '@/data/languages';
 
 export interface TargetGroup {
     name: string;
@@ -39,19 +40,6 @@ interface FormValues {
     targetGroups: TargetGroupWithLanguageOptions[];
     languages: Language[];
 }
-
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
-//     formValues.languages.every((languageObject) => languageObject.language === '') &&
-//     formValues.targetGroups.every((targetGroup) => {
-//         return (
-//             targetGroup.name === '' &&
-//             targetGroup.age_min === 0 &&
-//             targetGroup.age_max === 0 &&
-//             targetGroup.experience === '' &&
-//             targetGroup.academic_course === '' &&
-//             targetGroup.languages === ''
-//         );
-//     });
 
 interface Props {
     socket: Socket;
@@ -150,14 +138,14 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('common:name')}
+                            {t('designer:target:target_group')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.name`)}
-                            placeholder={t('common:enter_name')}
+                            placeholder={t('designer:target:target_group_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -268,19 +256,6 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                                         </p>
                                     )
                             )}
-                        {/*}
-                        <input
-                            type="text"
-                            {...methods.register(`targetGroups.${index}.languages`)}
-                            placeholder={t('target.languages_placeholder')}
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {t(
-                                methods.formState.errors?.targetGroups?.[index]?.languages?.message!
-                            )}
-                        </p>
-                        */}
                     </div>
                 </div>
                 <div className="flex justify-end items-center">
@@ -427,14 +402,14 @@ export function TargetGroupsNoAuthPreview() {
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('common:name')}
+                                        {t('designer:target:target_group')}
                                     </label>
                                 </div>
                                 <div className="w-3/4">
                                     <input
                                         type="text"
                                         disabled
-                                        placeholder={t('common:enter_name')}
+                                        placeholder={t('designer:target:target_group_placeholder')}
                                         className="border border-gray-400 rounded-lg w-full p-2"
                                     />
                                 </div>
@@ -549,81 +524,6 @@ export function TargetGroupsNoAuthPreview() {
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
-    const languageKeys = [
-        'Afrikaans',
-        'Albanian',
-        'Arabic',
-        'Armenian',
-        'Basque',
-        'Bengali',
-        'Bulgarian',
-        'Catalan',
-        'Cambodian',
-        'Chinese (Mandarin)',
-        'Croatian',
-        'Czech',
-        'Danish',
-        'Dutch',
-        'English',
-        'Estonian',
-        'Fiji',
-        'Finnish',
-        'French',
-        'Georgian',
-        'German',
-        'Greek',
-        'Gujarati',
-        'Hebrew',
-        'Hindi',
-        'Hungarian',
-        'Icelandic',
-        'Indonesian',
-        'Irish',
-        'Italian',
-        'Japanese',
-        'Javanese',
-        'Korean',
-        'Latin',
-        'Latvian',
-        'Lithuanian',
-        'Macedonian',
-        'Malay',
-        'Malayalam',
-        'Maltese',
-        'Maori',
-        'Marathi',
-        'Mongolian',
-        'Nepali',
-        'Norwegian',
-        'Persian',
-        'Polish',
-        'Portuguese',
-        'Punjabi',
-        'Quechua',
-        'Romanian',
-        'Russian',
-        'Samoan',
-        'Serbian',
-        'Slovak',
-        'Slovenian',
-        'Spanish',
-        'Swahili',
-        'Swedish',
-        'Tamil',
-        'Tatar',
-        'Telugu',
-        'Thai',
-        'Tibetan',
-        'Tonga',
-        'Turkish',
-        'Ukrainian',
-        'Urdu',
-        'Uzbek',
-        'Vietnamese',
-        'Welsh',
-        'Xhosa',
-    ];
-
     return {
         props: {
             languageKeys,

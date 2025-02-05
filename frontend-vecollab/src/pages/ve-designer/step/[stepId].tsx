@@ -91,25 +91,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     original_plan: '',
 };
 
-// const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
-//     return (
-//         formValues.learning_activity === '' &&
-//         formValues.tasks.every((task) => {
-//             return (
-//                 task.task_formulation === '' &&
-//                 task.work_mode === '' &&
-//                 task.notes === '' &&
-//                 task.tools.every((tool) => {
-//                     return tool.name === '';
-//                 }) &&
-//                 task.materials.every((materials) => {
-//                     return materials.name === '';
-//                 })
-//             );
-//         })
-//     );
-// };
-
 interface Props {
     socket: Socket;
 }

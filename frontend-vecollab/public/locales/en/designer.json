@@ -18,7 +18,7 @@
         "atleast_one_field": "There must be at least one entry",
         "valid_date": "Please enter a valid date",
         "realistic_date": "Please enter a realistic date",
-        "max_5_mb":"Max. 5 MB allowed. Please select a smaller file.",
+        "max_5_mb": "Max. 5 MB allowed. Please select a smaller file.",
         "min_age_less_max_age": "The minimum age must be less than or equal to the maximum age.",
         "file_count_max": "Max. 4 files allowed"
     },
@@ -39,7 +39,7 @@
         "general": "General Information",
         "phases": "Project plan",
         "summary": "Completion",
-        "post_processing": "Post Processing",
+        "post_processing_menu": "Post Processing",
         "general_outline": "General outline",
         "project_name": "Project name",
         "partners": "Partners",
@@ -50,13 +50,14 @@
         "learning_env": "Learning environment",
         "methods": "Teaching Methods",
         "evaluation": "Assessment & Evaluation",
-        "checklist": "Checklist"
+        "checklist": "Checklist",
+        "post_processing": "Reflection & Publishing"
     },
     "name": {
         "title": "Project name",
         "page_description": "Which methodological approach underlies VE? Task-based, problem-oriented, inquiry-based learning or game-based learning?",
         "subtitle": "What will the project be called?",
-        "description": "Give your project a name.The name will appear in the VE-Display and in the project/Good Practice overview.",
+        "description": "Give your project a name. The name will appear in the VE-Display and in the project/Good Practice overview.",
         "placeholder": "Enter name"
     },
     "partners": {
@@ -67,10 +68,15 @@
         "description-2": "If applicable, also list external participants (e.g. companies or other institutions) who are not directly involved in the planning and execution of the VE.",
         "tooltip": "You can find tips for finding partners in the self-learning materials…",
         "partners_title": "Participants",
-        "externpartners_title": "External participants"
+        "externpartners_title": "External participants",
+        "search_users": "Enter name oder search user...",
+        "enter_ext": "Designation...",
+        "search_users_no_hit": "No match in the VE-Collab Network.<br>Click here to use \"<bold>{{value}}</bold>\" as participant!",
+        "extparties_warning": "Note: External participants are <bold>not directly involved in the planning</bold> of the VE.<br>Persons involved in the VE should be entered above, even if they are not in the VE-Collab network."
     },
     "institutions": {
         "title": "Institutions",
+        "institution": "Institution",
         "page_description": "The VE was successfully planned and can now be carried out. You can see a complete summary again.",
         "subtitle": "Which institutions are involved?",
         "description": "This field provides you with a better overview of the institutions involved as well as the relevant departments.",
@@ -90,6 +96,7 @@
     },
     "lectures": {
         "title": "Courses",
+        "lecture": "Lecture",
         "page_description": "Create the courses in which the VE is to be implemented. Important information is name, type, format and number of participants.",
         "subtitle": "In which classes will the VE be implemented?",
         "compulsory": "Compulsory course",
@@ -103,6 +110,8 @@
     },
     "target": {
         "title": "Target groups & languages",
+        "target_group": "target group",
+        "target_group_placeholder": "e.g. students of the computer science department",
         "page_description": "The rough planning enables the creation of phases and associated learning objectives that are completed in the VE (e.g. icebreaker, work phase, presentation).",
         "subtitle": "Which target groups is the VE designed for?",
         "description": "It is important to consider the target group in order to tailor the teaching/learning objectives and content of the VE to the learners. Asking about the participants' first languages and other languages can be important in identifying a lingua franca or establishing a multilingual setting.",
@@ -111,7 +120,7 @@
         "semester_placeholder": "in which semester are the students? If multiple, separate them by comma",
         "language_title": "Which languages will (mainly) be spoken during the VE?",
         "language_description": "Consider the linguistic diversity in your groups and discuss how you can utilise this potential for the VE.",
-        "relevant_exp": "VE-related experience ",
+        "relevant_exp": "Relevant prior knowledge",
         "relevant_exp_placeholder": "e.g. language skills, previous courses on the topic, etc.",
         "degree": "Degree program",
         "degree_placeholder": "Enter degree program(s), separate several by comma",
@@ -157,7 +166,7 @@
         "sync": "synchronous",
         "async": "asynchronous",
         "asyncAndSync": "asynchronous and synchronous",
-        "pysicalSupp": "Is the VE accompanied / supplemented by physical mobility?",
+        "physicalMeetings": "Is the VE accompanied / supplemented by face-to-face meetings?",
         "place": "Place",
         "enter_place": "Enter Place"
     },
@@ -221,7 +230,7 @@
         "add_userdefined_title": "Add user-defined aspect",
         "new_userbox_placeholder": "Label ..."
     },
-    "step-names" : {
+    "step-names": {
         "page_description": "The rough planning enables the creation of phases and associated learning objectives that are completed in the VE (e.g. icebreaker, work phase, presentation).",
         "no_good_practice_plans": "No Good-Practice plans with phases available for import",
         "select_steps_to_import": "Select phases you wish to import from the Good-Practice plans",
@@ -260,6 +269,7 @@
         "add_learning_activity": "Add another learning activity",
         "task": "Task description",
         "work_mode": "Type of activity",
+        "work_mode_placeholder": "e.g. individual work, group work, project work",
         "notes": "Notes",
         "tools": "Tools",
         "tools_placeholder": "Which tools can be used?",

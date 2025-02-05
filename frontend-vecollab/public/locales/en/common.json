@@ -35,6 +35,8 @@
     "materials_only_german": "Unfortunately the learning material is only available in German at the moment. You can try to use your browsers translation tool.",
     "groups": "Groups",
     "chat": "Chat",
+    "your_groups": "Your groups",
+    "public_groups_of": "Puplic groups",
     "toggle_chat_window": "Toggle Chat",
     "notifications": {
         "title": "Notifications",
@@ -47,6 +49,23 @@
             "text2": "-Achievement level has increased!",
             "text3": "You are now ",
             "level_x": "level {{level}}"
+        },
+        "plan_access_granted": {
+            "title": "Access to VE-Plan granted",
+            "text1": " has granted you ",
+            "read": "read",
+            "write": "read and write",
+            "text2": " access to the VE-Plan ",
+            "text3": ".",
+            "text4": "This plan is now available in your dashboard, or directly ",
+            "text5": "."
+        },
+        "plan_added_as_partner": {
+            "title": "Added as VE-partner",
+            "text1": " has added you as a partner to the VE-Plan ",
+            "text2": ".",
+            "text3": "You have automatically received access to this plan and it is now available in your dashboard, or directly ",
+            "text4": "."
         }
     },
     "profile": "Profile",
@@ -58,8 +77,9 @@
     "logout": "Logout",
     "redirect": "Redirected...",
     "profile_pic": "Profile picture",
+    "home": "Home",
     "search": "Search",
-    "search_placeholder": "Search User, Group oder Post ...",
+    "search_placeholder": "Search User...;Search Group...;Search Post...",
     "search_title": "Search",
     "search_description": "Search for content on VE-Collab, such as people, groups, posts, learning materials or plans",
     "search_instructions": "Search for users, groups, plans, etc.",
@@ -81,6 +101,9 @@
     "create": "Create",
     "btn_new_ve": "Start a new VE",
     "plans": "Plans",
+    "your_plans": "Your plans",
+    "gp_plans_of": "\"Good Practice\" plans",
+    "last_change": "Last change",
     "plans_description": "VE-Collab’s VE Designer is a digital planning tool that guides VE partners step by step through planning a virtual exchange.",
     "plans_overview_subtitle": "Overview of your Plans, shared Plans and Good Practice Plans",
     "matching": "Partner Matching",
@@ -95,6 +118,7 @@
     "plans_filter_title_placeholder": "Filter by name ...",
     "plans_filter_good_practice_examples": "is \"Good Practice\"",
     "plans_btn_new_plan": "Start a new plan",
+    "show_good_practice_plans": "Show \"Good Practice\" plans",
     "loading_plans": "Loading plans...",
     "plans_table_progress": "Progress",
     "plans_table_name": "Name",
@@ -139,7 +163,7 @@
     "plans_alert_copy_unexpected_error": "An unexpected error occured while copying the plan",
     "plans_alert_open_insufficient_permission": "You do not have permissions to open this plan",
     "plans_alert_open_unexpected_error": "An unexpected error occured while opening the plan",
-    "plans_marked_as_good_practise": "Plan is marked as 'good practice example'",
+    "plans_marked_as_good_practise": "Plan is publicised as 'good practice example'",
     "plans_alert_step_doesnt_exist": "Step does not exist",
     "plans_shared_by": "Plan shared by {{name}}",
     "plans_confirm_delete": "Delete plan?",
@@ -425,6 +449,7 @@
             }
         }
     },
+    "dashboard_description": "Your start page on the VE-Collab platform shows an overview of activities and important news from the network.",
     "show_more": "Learn more",
     "access_denied": "Access denied",
     "qualification": "Qualification",
@@ -512,5 +537,20 @@
         "learning-material/2": "A collection of interactive teaching modules for concrete planning of VEs and evaluation.",
         "learning-material/3": "A collection of interactive teaching modules on useful tools for VEs, data protection issues, digital media and Open Educational Resources (OER).",
         "learning-material/4": "A collection of interactive teaching modules on cultural & linguistic aspects, interaction and collaboration and a method kit for digital teaching."
+    },
+    "mail_invitation_form": {
+        "share": "Invite",
+        "intro_short": "Invite VE partners via email",
+        "intro": "Invite people to register in the VE-Collab network here",
+        "intro_attention": "<bold>Attention</bold>: The person is not automatically added to the plan as a partner. Unfortunately, this step has to be done manually after registration.",
+        "open": "open",
+        "title": "VE invitation via E-Mail",
+        "name_placeholder": "Name",
+        "no_valid_name": "This name is not valid",
+        "send_ok": "Invitation sent.",
+        "send_error": "An error has occurred. Please try again later.",
+        "mail_placeholder": "E-mail",
+        "no_valid_mail": "This email is not valid",
+        "message_placeholder": "Message"
     }
 }

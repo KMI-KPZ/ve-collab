@@ -7,7 +7,7 @@ import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileItemRow from './EditProfileItemRow';
 import Swapper from './Swapper';
 import { VEWindowItem } from '@/interfaces/profile/profileInterfaces';
-import { useGetPublicPlansOfCurrentUser } from '@/lib/backend';
+import { useGetPublicPlansUser } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Select from 'react-select';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -37,7 +37,7 @@ export default function EditProfileVeWindow({
         isLoading,
         error,
         mutate,
-    } = useGetPublicPlansOfCurrentUser(session!.accessToken, session!.user!.preferred_username!);
+    } = useGetPublicPlansUser(session!.accessToken, session!.user!.preferred_username!);
 
     const modifyTitle = (index: number, value: string) => {
         let newItems = [...items];

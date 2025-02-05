@@ -1,6 +1,7 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import {
+    fetchTaxonomy,
     getChildrenOfNodeByText,
     getMaterialNodesOfNodeByText,
     getNodeByText,
@@ -68,15 +69,17 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
+    const taxonomy = await fetchTaxonomy();
+
     const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
-    const currentNode = await getNodeByText(params?.node as string);
+    const currentNode = await getNodeByText(params?.node as string, taxonomy);
 
     if (!clusterSlug || !currentNode) {
         return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
-    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
-    const lectionsOfNode = await getMaterialNodesOfNodeByText(currentNode.text);
+    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);
+    const lectionsOfNode = await getMaterialNodesOfNodeByText(currentNode.text, taxonomy);
 
     if (lectionsOfNode.length > 0) {
         return {

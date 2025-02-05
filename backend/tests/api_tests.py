@@ -7780,7 +7780,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[0],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "space_post_admin",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7791,7 +7791,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.utcnow(),
+                        "creation_date": datetime.now(),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -7802,7 +7802,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[1],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "normal_post_admin",
                 "space": None,
                 "pinned": False,
@@ -7816,7 +7816,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[2],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "space_post_user",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7830,7 +7830,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[3],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.utcnow(),
+                "creation_date": datetime.now(),
                 "text": "normal_post_user",
                 "space": None,
                 "pinned": False,
@@ -7903,8 +7903,8 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/timeline?from={}&to={}".format(
-                (datetime.utcnow() - timedelta(hours=2)).isoformat(),
-                (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+                (datetime.now() - timedelta(hours=2)).isoformat(),
+                (datetime.now() - timedelta(hours=1)).isoformat(),
             ),
             True,
             200,
@@ -7960,7 +7960,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.utcnow() + timedelta(days=1),
+                "creation_date": datetime.now() + timedelta(days=1),
                 "text": "pinned_space_post_admin",
                 "space": self.test_space_id,
                 "pinned": True,
@@ -8157,7 +8157,7 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # query for new posts in the last 30 minutes
         # plenty of time, since setup happens right before the test
-        timestamp = (datetime.utcnow() - timedelta(minutes=30)).isoformat()
+        timestamp = (datetime.now() - timedelta(minutes=30)).isoformat()
 
         response = self.base_checks(
             "GET", "/updates?from={}".format(timestamp), True, 200
@@ -8178,9 +8178,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {},
             {
                 "$set": {
-                    "creation_date": (
-                        datetime.utcnow() - timedelta(days=10)
-                    ).isoformat()
+                    "creation_date": (datetime.now() - timedelta(days=10)).isoformat()
                 }
             },
         )
@@ -8198,6 +8196,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         self.base_permission_environment_setUp()
         self.default_plan_setup()
+        self.additional_user_profiles_setup()
 
     def tearDown(self) -> None:
         self.base_permission_environments_tearDown()
@@ -8400,6 +8399,93 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "username": CURRENT_ADMIN.username,
             "expires": datetime.now() + timedelta(hours=1),
         }
+
+    def additional_user_profiles_setup(self):
+        # add additional user profiles
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": "test",
+                    "role": "guest",
+                    "follows": [],
+                    "bio": None,
+                    "institutions": [],
+                    "chosen_institution_id": None,
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "test",
+                    "last_name": "test",
+                    "gender": None,
+                    "address": None,
+                    "birthday": None,
+                    "experience": None,
+                    "expertise": None,
+                    "languages": [],
+                    "ve_interests": [],
+                    "ve_goals": [],
+                    "preferred_formats": [],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "push",
+                        "ve_invite": "push",
+                        "group_invite": "push",
+                        "system": "push",
+                    },
+                    "achievements": {
+                        "social": {"level": 3, "progress": 185, "next_level": 540},
+                        "ve": {"level": 0, "progress": 0, "next_level": 40},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "social", "level": 1},
+                },
+                {
+                    "username": "test2",
+                    "role": "guest",
+                    "follows": [],
+                    "bio": None,
+                    "institutions": [],
+                    "chosen_institution_id": None,
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "test2",
+                    "last_name": "test2",
+                    "gender": None,
+                    "address": None,
+                    "birthday": None,
+                    "experience": None,
+                    "expertise": None,
+                    "languages": [],
+                    "ve_interests": [],
+                    "ve_goals": [],
+                    "preferred_formats": [],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "push",
+                        "ve_invite": "push",
+                        "group_invite": "push",
+                        "system": "push",
+                    },
+                    "achievements": {
+                        "social": {"level": 3, "progress": 185, "next_level": 540},
+                        "ve": {"level": 0, "progress": 0, "next_level": 40},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "social", "level": 1},
+                },
+            ]
+        )
 
     def json_serialize(self, dictionary: dict) -> dict:
         """
@@ -9808,6 +9894,56 @@ class VEPlanHandlerTest(BaseApiTestCase):
             + 1 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["ve_plans"],
         )
 
+    def test_post_update_field_side_effect_partner_notification(self):
+        """
+        expect: when adding a partner to a plan, the partner should receive write access
+        and a notification about it
+        """
+
+        # add the other user as partner
+        payload = {
+            "plan_id": self.plan_id,
+            "field_name": "partners",
+            "value": [CURRENT_ADMIN.username, CURRENT_USER.username],
+        }
+
+        response = self.base_checks(
+            "POST",
+            "/planner/update_field",
+            True,
+            200,
+            body=self.json_serialize(payload),
+        )
+
+        self.assertEqual(response["updated_id"], str(self.plan_id))
+
+        db_state = self.db.plans.find_one({"_id": self.plan_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(
+            db_state["partners"], [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertIn(CURRENT_USER.username, db_state["write_access"])
+
+        # expect that a notification has been dispatched to the user
+        notification = self.db.notifications.find_one(
+            {
+                "type": "plan_added_as_partner",
+                "to": CURRENT_USER.username,
+                "payload.plan_id": self.plan_id,
+            }
+        )
+        self.assertIsNotNone(notification)
+        self.assertIn("payload", notification)
+        self.assertEqual(
+            notification["payload"],
+            {
+                "plan_id": self.plan_id,
+                "plan_name": db_state["name"],
+                "author": CURRENT_ADMIN.username,
+            },
+        )
+
     def test_post_update_field_error_missing_key(self):
         """
         expect: fail message because plan_id, field_name or value is missing
@@ -10909,7 +11045,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10924,8 +11060,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIn("another_test_user", db_state["read_access"])
-        self.assertNotIn("another_test_user", db_state["write_access"])
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertNotIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_grant_read_permission_error_insufficient_permission(self):
         """
@@ -10939,7 +11075,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10960,7 +11096,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "false",
         }
@@ -10982,7 +11118,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -10997,8 +11133,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIn("another_test_user", db_state["read_access"])
-        self.assertIn("another_test_user", db_state["write_access"])
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_grant_write_permission_error_insufficient_permission(self):
         """
@@ -11012,7 +11148,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11033,7 +11169,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11057,15 +11193,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             {"_id": self.plan_id},
             {
                 "$addToSet": {
-                    "read_access": "another_test_user",
-                    "write_access": "another_test_user",
+                    "read_access": CURRENT_USER.username,
+                    "write_access": CURRENT_USER.username,
                 }
             },
         )
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11081,8 +11217,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect the user not to be in the read_access nor write_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertNotIn("another_test_user", db_state["read_access"])
-        self.assertNotIn("another_test_user", db_state["write_access"])
+        self.assertNotIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertNotIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_revoke_read_permission_error_insufficient_permission(self):
         """
@@ -11095,7 +11231,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11116,7 +11252,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "true",
             "write": "true",
         }
@@ -11140,15 +11276,15 @@ class VEPlanHandlerTest(BaseApiTestCase):
             {"_id": self.plan_id},
             {
                 "$addToSet": {
-                    "read_access": "another_test_user",
-                    "write_access": "another_test_user",
+                    "read_access": CURRENT_USER.username,
+                    "write_access": CURRENT_USER.username,
                 }
             },
         )
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "false",
             "write": "true",
         }
@@ -11164,8 +11300,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
         # expect the user not to be in the write_access, but still in the read_access list
         db_state = self.db.plans.find_one({"_id": self.plan_id})
         self.assertIsNotNone(db_state)
-        self.assertIn("another_test_user", db_state["read_access"])
-        self.assertNotIn("another_test_user", db_state["write_access"])
+        self.assertIn(CURRENT_USER.username, db_state["read_access"])
+        self.assertNotIn(CURRENT_USER.username, db_state["write_access"])
 
     def test_post_revoke_write_permission_error_insufficient_permission(self):
         """
@@ -11178,7 +11314,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": self.plan_id,
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "false",
             "write": "true",
         }
@@ -11199,7 +11335,7 @@ class VEPlanHandlerTest(BaseApiTestCase):
 
         payload = {
             "plan_id": ObjectId(),
-            "username": "another_test_user",
+            "username": CURRENT_USER.username,
             "read": "false",
             "write": "true",
         }

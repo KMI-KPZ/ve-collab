@@ -51,7 +51,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
     if (firstVisit === false) return null;
 
     return (
-        <div className="w-11/12 min-w-96 py-2 m-auto mb-8 bg-white rounded-md relative">
+        <div className="w-11/12 min-w-96 py-2 m-auto mb-8 bg-white rounded-md relative drop-shadow">
             <div className="w-fit absolute top-3 right-3 z-10">
                 <button onClick={onClick}>
                     <MdClose size={20} />

@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import veCollabLogo from '@/images/veCollabLogo.png';
 import Link from 'next/link';
@@ -7,12 +7,12 @@ import { useRouter } from 'next/router';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { Notification } from '@/interfaces/socketio';
 import { IoMdNotificationsOutline } from 'react-icons/io';
-import { MdArrowDropDown, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
+import { MdArrowDropDown, MdHome, MdMenu, MdOutlineMessage, MdSearch } from 'react-icons/md';
 import Dropdown from '../common/Dropdown';
-import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useGetOwnProfile, useIsGlobalAdmin } from '@/lib/backend';
 import { useTranslation } from 'next-i18next';
 import UserProfileImage from '../network/UserProfileImage';
+import useDynamicPlaceholder from '../common/useDynamicPlaceholder';
 
 interface Props {
     notificationEvents: Notification[];
@@ -34,9 +34,9 @@ export default function HeaderSection({
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
     const baseStyle =
-        'whitespace-nowrap rounded-md border-b-2 hover:border-b-2 md:hover:border-ve-collab-orange';
-    const inactiveClass = `${baseStyle} border-transparent`;
-    const activeClass = `${baseStyle} border-ve-collab-orange-light`;
+        'whitespace-nowrap hover:text-ve-collab-orange hover:after:visible hover:after:w-full after:content-[""] after:block after:h-[2px] after:w-0 after:bg-ve-collab-blue after:invisible after:transition-all	';
+    const inactiveClass = `${baseStyle}`;
+    const activeClass = `${baseStyle} font-semibold`;
 
     const sandwichItemClass =
         'block w-full px-2 py-1 whitespace-nowrap text-left hover:bg-slate-50';
@@ -44,6 +44,9 @@ export default function HeaderSection({
 
     const isGlobalAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
     const { data: userProfile } = useGetOwnProfile(session ? session.accessToken : '');
+
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    useDynamicPlaceholder(searchInputRef);
 
     useEffect(() => {
         //filter out the messages that the user sent himself --> they should not trigger a notification icon
@@ -69,7 +72,7 @@ export default function HeaderSection({
     const handleSelectOption = async (value: string) => {
         switch (value) {
             case 'logout':
-                await signOut();
+                await signOut({ callbackUrl: '/' });
                 router.push('/');
                 break;
             case 'profile':
@@ -115,22 +118,24 @@ export default function HeaderSection({
     const Menu = () => {
         return (
             <>
-                {/* {isGlobalAdmin && (
-                    <li className={isActivePath('/admin') ? activeClass : inactiveClass}>
-                        <Link href="/admin" className="px-2 py-1">
-                            <span className="text-red-500">Admin</span>
-                        </Link>
-                    </li>
-                )} */}
-                <li className={isActivePath('/learning-material') ? activeClass : inactiveClass}>
-                    <Link href="/learning-material" className="px-2 py-1">
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li className={isActivePath('/home') ? activeClass : inactiveClass}>
+                            <Link href="/home" className="py-1">
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li className={isActivePath('/group') ? activeClass : inactiveClass}>
-                            <Link href="/groups" className="px-2 py-1">
+                            <Link href="/groups" className="py-1">
                                 {t('groups')}
                             </Link>
                         </li>
@@ -141,7 +146,7 @@ export default function HeaderSection({
                                     : inactiveClass
                             }
                         >
-                            <Link href="/plans" className="px-2 py-1">
+                            <Link href="/plans" className="py-1">
                                 <span className="text-ve-collab-orange">VE</span>{' '}
                                 <span className="text-ve-collab-blue">Designer</span>
                             </Link>
@@ -155,7 +160,7 @@ export default function HeaderSection({
                                 <MdOutlineMessage size={20} />
                             </button>
                             {messageEventCount > 0 && (
-                                <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
+                                <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs">
                                     {messageEventCount}
                                 </span>
                             )}
@@ -169,12 +174,12 @@ export default function HeaderSection({
                                 <IoMdNotificationsOutline size={20} />
                             </button>
                             {notificationEvents.length > 0 && (
-                                <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
+                                <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs">
                                     {notificationEvents.length}
                                 </span>
                             )}
                         </li>
-                        <li className="lg:hidden px-2">
+                        <li className="lg:hidden p-2 rounded-full hover:bg-ve-collab-blue-light">
                             <Link href={'/search'}>
                                 <MdSearch size={20} />
                             </Link>
@@ -213,20 +218,22 @@ export default function HeaderSection({
                                     ].filter((a) => 'value' in a)}
                                     icon={
                                         <div className="flex items-center">
-                                            <UserProfileImage
-                                                profile_pic={userProfile?.profile?.profile_pic}
-                                                chosen_achievement={
-                                                    userProfile?.profile?.chosen_achievement
-                                                }
-                                            />
+                                            <span className="shrink-0">
+                                                <UserProfileImage
+                                                    profile_pic={userProfile?.profile?.profile_pic}
+                                                    chosen_achievement={
+                                                        userProfile?.profile?.chosen_achievement
+                                                    }
+                                                />
+                                            </span>
                                             <div
                                                 title={`${userProfile?.profile?.first_name} ${userProfile?.profile?.last_name}`}
-                                                className="max-w-[96px] truncate font-semibold"
+                                                className="max-w-[96px] truncate"
                                             >
                                                 {userProfile?.profile?.first_name}{' '}
                                                 {userProfile?.profile?.last_name}
                                             </div>
-                                            <MdArrowDropDown />
+                                            <MdArrowDropDown className="shrink-0" />
                                         </div>
                                     }
                                     ulClasses="min-w-[10rem]"
@@ -237,21 +244,35 @@ export default function HeaderSection({
                     </>
                 ) : (
                     <>
+                        <li
+                            className={
+                                isActivePath('/learning-material') ? activeClass : inactiveClass
+                            }
+                        >
+                            <Link href="/learning-material" className="py-1">
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
-                                className={`${inactiveClass} px-2 py-1`}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
+                                className={`${inactiveClass} py-1`}
                             >
                                 {t('login')}
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={`${inactiveClass} px-2 py-1`}
                             >
                                 {t('register')}
                             </button>
+                        </li>
+                        <li className="lg:hidden px-2">
+                            <Link href={'/search'}>
+                                <MdSearch size={20} />
+                            </Link>
                         </li>
                         <li>
                             <LanguageSelector />
@@ -265,49 +286,48 @@ export default function HeaderSection({
     const MenuMobile = () => {
         return (
             <>
-                {/* TODO may put most important items here?!?
-                    <li>
-                        <Link href={'/search'} className={`px-2 py-1`}><MdSearch size={20} /></Link>
-                    </li> */}
-                <li>
-                    <button
-                        className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
-                        onClick={(e) => toggleChatWindow()}
-                        title="Chat Fenster öffnen"
-                    >
-                        <MdOutlineMessage size={20} />
-                    </button>
-                    {messageEventCount > 0 && (
-                        <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
-                            {messageEventCount}
-                        </span>
-                    )}
-                </li>
-                <li>
-                    <button
-                        className="p-2 rounded-full hover:bg-ve-collab-blue-light"
-                        onClick={(e) => toggleNotifWindow()}
-                        title="Notifications Fenster öffnen"
-                    >
-                        <IoMdNotificationsOutline size={20} />
-                    </button>
-                    {notificationEvents.length > 0 && (
-                        <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs font-semibold">
-                            {notificationEvents.length}
-                        </span>
-                    )}
-                </li>
-                <li>
-                    <Link href={'/profile'}>
-                        <UserProfileImage
-                            profile_pic={userProfile?.profile?.profile_pic}
-                            chosen_achievement={userProfile?.profile?.chosen_achievement}
-                            width={30}
-                            height={30}
-                            className="mx-3"
-                        />
-                    </Link>
-                </li>
+                {session && (
+                    <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={`block p-2 rounded-full hover:bg-ve-collab-blue-light ${
+                                    isActivePath('/home') ? 'bg-gray-100' : ''
+                                }`}
+                            >
+                                <MdHome size={19} />
+                            </Link>
+                        </li>
+                        <li>
+                            <button
+                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
+                                onClick={(e) => toggleChatWindow()}
+                                title="Chat Fenster öffnen"
+                            >
+                                <MdOutlineMessage size={20} />
+                            </button>
+                            {messageEventCount > 0 && (
+                                <span className="absolute -ml-4 -mt-2 px-2 py-1 rounded-full bg-blue-500/75 text-xs">
+                                    {messageEventCount}
+                                </span>
+                            )}
+                        </li>
+                        <li>
+                            <button
+                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                onClick={(e) => toggleNotifWindow()}
+                                title="Notifications Fenster öffnen"
+                            >
+                                <IoMdNotificationsOutline size={20} />
+                            </button>
+                            {notificationEvents.length > 0 && (
+                                <span className="absolute -ml-4 -mt-2 py-1 px-2 rounded-[50%] bg-blue-500/75 text-xs">
+                                    {notificationEvents.length}
+                                </span>
+                            )}
+                        </li>
+                    </>
+                )}
                 <li>
                     <Dropdown
                         options={[
@@ -319,6 +339,18 @@ export default function HeaderSection({
                         ulClasses="min-w-[15rem]"
                     />
                 </li>
+                {session && (
+                    <li>
+                        <Link href={'/profile'} className="mx-3">
+                            <UserProfileImage
+                                profile_pic={userProfile?.profile?.profile_pic}
+                                chosen_achievement={userProfile?.profile?.chosen_achievement}
+                                width={30}
+                                height={30}
+                            />
+                        </Link>
+                    </li>
+                )}
             </>
         );
     };
@@ -326,20 +358,32 @@ export default function HeaderSection({
     const SandwichMenuMobile = () => {
         return (
             <>
-                <li>
-                    <Link
-                        href="/learning-material"
-                        className={
-                            isActivePath('/learning-material')
-                                ? sandwichActiveItemClass
-                                : sandwichItemClass
-                        }
-                    >
-                        {t('materials')}
-                    </Link>
-                </li>
                 {session ? (
                     <>
+                        <li>
+                            <Link
+                                href="/home"
+                                className={
+                                    isActivePath('/home')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('home')}
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
                         <li>
                             <Link
                                 href="/groups"
@@ -453,7 +497,10 @@ export default function HeaderSection({
                             </button>
                         </li>
                         <li>
-                            <button onClick={() => signOut()} className={sandwichItemClass}>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                className={sandwichItemClass}
+                            >
                                 {t('logout')}
                             </button>
                         </li>
@@ -461,8 +508,20 @@ export default function HeaderSection({
                 ) : (
                     <>
                         <li>
+                            <Link
+                                href="/learning-material"
+                                className={
+                                    isActivePath('/learning-material')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('materials')}
+                            </Link>
+                        </li>
+                        <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('login')}
@@ -470,7 +529,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                onClick={() => signIn('keycloak')}
+                                onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
                             >
                                 {t('register')}
@@ -498,7 +557,7 @@ export default function HeaderSection({
                             </button>
                         </li>
                         <li>
-                            <Link href={'/search'} className={`px-2 py-1`}>
+                            <Link href={'/search'} className={`${sandwichItemClass} px-2 py-1`}>
                                 {t('search')}
                             </Link>
                         </li>
@@ -509,10 +568,10 @@ export default function HeaderSection({
     };
 
     return (
-        <header className="bg-white px-4 py-2.5 drop-shadow-lg relative z-40">
-            <nav className="flex flex-wrap items-center mx-auto max-w-screen-2xl">
+        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-40">
+            <nav className="flex flex-nowrap items-center mx-auto max-w-screen-2xl">
                 <div className="flex items-center ">
-                    <Link href="/">
+                    <Link href="/" className="shrink-0">
                         <Image
                             src={veCollabLogo}
                             alt="Ve Collab Logo"
@@ -522,20 +581,22 @@ export default function HeaderSection({
                     </Link>
                     {!router.query.search && (
                         <form
-                            className="mx-4 md:mx-1 xl:mx-10 items-stretch hidden lg:flex"
+                            className="mx-4 md:mx-6 xl:mx-10 items-stretch hidden lg:flex"
                             onSubmit={(e) => handleSearchSubmit(e)}
                         >
                             <input
                                 className={
-                                    'w-3/4 xl:w-full border border-[#cccccc] rounded-l px-2 py-1'
+                                    'w-3/4 border border-[#cccccc] rounded-md px-2 py-1 focus:outline-none'
                                 }
                                 type="text"
                                 placeholder={t('search_placeholder')}
+                                data-placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
                                 defaultValue={
                                     router.query.search ? (router.query.search as string) : ''
                                 }
+                                ref={searchInputRef}
                             />
                             <button
                                 type="submit"
@@ -548,11 +609,11 @@ export default function HeaderSection({
                     )}
                 </div>
 
-                <ul className="md:hidden flex flex-1 items-center justify-end">
+                <ul className="min-[876px]:hidden flex flex-1 items-center justify-end">
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden md:flex flex-1 justify-center md:justify-end items-center font-semibold space-x-0 xl:space-x-6">
+                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-2 xl:space-x-6">
                     <Menu />
                 </ul>
             </nav>

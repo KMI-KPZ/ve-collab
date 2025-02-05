@@ -1,46 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
         <loc>https://ve-collab.org/</loc>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ve-collab.org/en/"/>
         <video:video>
             <video:thumbnail_loc>https://ve-collab.org/images/video-thumbnails/landingpage_vorstellung.png</video:thumbnail_loc>
             <video:title>Vorstellung der VE-Collab Platform</video:title>
-            <video:description>
-                Entdecken Sie, wie VE-Collab Ihre Zusammenarbeit bei der Planung von Unterrichtseinheiten mit Ihrem Team transformieren kann. In diesem kurzen Video stellen wir die wichtigsten Funktionen von VE-Collab vor. VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten und gibt Hilfestellungen bei der Planung und Durchführung virtueller Austausche.
-            </video:description>
-            <video:player_loc allow_embed="yes">https://ve-collab.org/</video:player_loc>
-            <video:content_loc> https://ve-collab.org/videos/ve-collab-promo.mp4</video:content_loc>
+            <video:description>Entdecken Sie, wie VE-Collab Ihre Zusammenarbeit bei der Planung von Unterrichtseinheiten mit Ihrem Team transformieren kann. In diesem kurzen Video stellen wir die wichtigsten Funktionen von VE-Collab vor. VE-Collab unterstützt Lehrende mit vielfältigen Qualifizierungsangeboten und gibt Hilfestellungen bei der Planung und Durchführung virtueller Austausche.</video:description>
+            <video:content_loc>https://ve-collab.org/videos/ve-collab-promo.mp4</video:content_loc>
             <video:family_friendly>yes</video:family_friendly>
             <video:duration>99</video:duration>
         </video:video>
     </url>
     <url>
         <loc>https://ve-collab.org/learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch</loc>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ve-collab.org/en/learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch"/>
         <video:video>
             <video:thumbnail_loc>https://ve-collab.org/images/video-thumbnails/selbstlern_einfuehrung_wasIstEinVirtuellerAustausch.jpg</video:thumbnail_loc>
             <video:title>Konzept Virtueller Austausch</video:title>
-            <video:description>
-                In diesem Video wird das Konzept des 'Virtuellen Austauschs' vorgestellt, inklusive seiner wichtigsten Merkmale und Vorteile. Erfahren Sie, wie der virtuelle Austausch es ermöglicht, Teams und Lernende unabhängig von ihrem Standort miteinander zu vernetzen und den interkulturellen Dialog zu fördern.
-            </video:description>
-            <video:player_loc allow_embed="yes">https://ve-collab.org/learning-material/1/Einf%C3%BChrung/Was%20ist%20ein%20Virtueller%20Austausch</video:player_loc>
-            <video:content_loc> https://www.youtube.com/watch?v=oFB7ooV6lWQ </video:content_loc>
+            <video:description>In diesem Video wird das Konzept des 'Virtuellen Austauschs' vorgestellt, inklusive seiner wichtigsten Merkmale und Vorteile. Erfahren Sie, wie der virtuelle Austausch es ermöglicht, Teams und Lernende unabhängig von ihrem Standort miteinander zu vernetzen und den interkulturellen Dialog zu fördern.</video:description>
+            <video:player_loc allow_embed="yes">https://www.youtube.com/watch?v=oFB7ooV6lWQ</video:player_loc>
             <video:family_friendly>yes</video:family_friendly>
             <video:duration>182</video:duration>
         </video:video>
     </url>
     <url>
         <loc>https://ve-collab.org/learning-material/1/Potenziale/Kompetenzmodelle</loc>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ve-collab.org/en/learning-material/1/Potenziale/Kompetenzmodelle"/>
         <video:video>
             <video:thumbnail_loc>https://ve-collab.org/images/video-thumbnails/selbstlern_potenziale_kompetenzmodelle.jpg</video:thumbnail_loc>
             <video:title>Das 4K-Modell des Lernens</video:title>
-            <video:description>
-                Zeitgemäße Bildung zielt auf die Entwicklung der so genannten 4-K-Kompetenzen: Kollaboration, Kreativität, Kritisches Denken und Kommunikation. Diese werden im erweiterten Modell der 21st Century Skills (siehe Kapitel 2.2 weiter unten) auch als Lernkompetenzen bezeichnet.
-            </video:description>
-            <video:player_loc allow_embed="yes">https://ve-collab.org/learning-material/1/Potenziale/Kompetenzmodelle</video:player_loc>
-            <video:content_loc> https://www.youtube.com/watch?v=6Qqx76hRNV4 </video:content_loc>
+            <video:description>Zeitgemäße Bildung zielt auf die Entwicklung der so genannten 4-K-Kompetenzen: Kollaboration, Kreativität, Kritisches Denken und Kommunikation. Diese werden im erweiterten Modell der 21st Century Skills (siehe Kapitel 2.2 weiter unten) auch als Lernkompetenzen bezeichnet.</video:description>
+            <video:player_loc allow_embed="yes">https://www.youtube.com/watch?v=6Qqx76hRNV4</video:player_loc>
             <video:family_friendly>yes</video:family_friendly>
             <video:duration>183</video:duration>
+        </video:video>
+    </url>
+    <url>
+        <loc>https://ve-collab.org/about-ve-designer</loc>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ve-collab.org/en/about-ve-designer"/>
+        <video:video>
+            <video:thumbnail_loc>https://ve-collab.org/images/video-thumbnails/about-ve-designer.png</video:thumbnail_loc>
+            <video:title>VE-Planungstool: VE-Designer</video:title>
+            <video:description>Tool, das VE-Partner*innen Schritt für Schritt durch die Planung eines VE leitet. Zusätzliche Hilfestellungen zu fast allen Aspekten der Planung, u. a. durch Verweise auf die Selbstlernmaterialien. Möglichkeit, erarbeitete und durchgeführte VE-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen.</video:description>
+            <video:content_loc>https://ve-collab.org/videos/screencast-web.webm</video:content_loc>
+            <video:family_friendly>yes</video:family_friendly>
+            <video:duration>38</video:duration>
+        </video:video>
+    </url>
+    <url>
+        <loc>https://ve-collab.org/about-virtual-community-of-practice</loc>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ve-collab.org/en/about-virtual-community-of-practice"/>
+        <video:video>
+            <video:thumbnail_loc>https://ve-collab.org/images/video-thumbnails/about-ve-designer.png</video:thumbnail_loc>
+            <video:title>VE Virtual Community of Practice</video:title>
+            <video:description>Profil erstellen, Gruppen beitreten (oder auch selbst gründen), Status posten, Interessantes teilen oder Fragen stellen. Informiert bleiben durch Notifications. VE-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching. Möglichkeit, auch interdisziplinär Partner*innen zu finden.</video:description>
+            <video:content_loc>https://ve-collab.org/videos/placeholder.mp4</video:content_loc>
+            <video:family_friendly>yes</video:family_friendly>
+            <video:duration>5</video:duration>
         </video:video>
     </url>
 </urlset>

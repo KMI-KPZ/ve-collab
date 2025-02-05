@@ -28,12 +28,14 @@
     "choose": "Auswählen",
     "choose_option": "Option auswählen...",
     "last_modified": "Zuletzt geändert",
-    "materials": "Selbstlernmaterialien",
+    "materials": "Lernmaterialien",
     "materials_description": "VE-Collab bietet ein wachsendes Angebot interaktiver Selbstlernmaterialien zu Themen rund um virtuelle Austausche, z.B. Potenziale oder Herausforderungen.",
     "materials_welcome": "Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!",
     "materials_intro_text": "Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch. Sie konnten bereits Erfahrung mit VE sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.",
     "materials_only_german": "",
     "groups": "Gruppen",
+    "your_groups": "Deine Gruppen",
+    "public_groups_of": "Öffentliche Gruppen",
     "chat": "Chat",
     "toggle_chat_window": "Chatfenster ein-/ausblenden",
     "notifications": {
@@ -47,6 +49,23 @@
             "text2": "-Achievement Level hat sich erhöht!",
             "text3": "Du bist jetzt ",
             "level_x": "Level {{level}}"
+        },
+        "plan_access_granted": {
+            "title": "Zugriff auf VE-Plan erhalten",
+            "text1": " hat dir ",
+            "read": "Lese-",
+            "write": "Lese- und Schreib",
+            "text2": "zugriff auf den VE-Plan ",
+            "text3": " gewährt.",
+            "text4": "Du findest diesen Plan ab sofort in deinem Dashboard, oder direkt ",
+            "text5": "."
+        },
+        "plan_added_as_partner": {
+            "title": "Als Partner:in in VE-Plan hinzugefügt",
+            "text1": " hat dich als Partner*in im VE-Plan ",
+            "text2": " hinzugefügt.",
+            "text3": "Du hast automatisch Zugriff auf diesen VE-Plan bekommen und findest ihn ab sofort in deinem Dashboard, oder direkt ",
+            "text4": "."
         }
     },
     "profile": "Profil",
@@ -58,8 +77,9 @@
     "logout": "Abmelden",
     "redirect": "Weiterleitung...",
     "profile_pic": "Profilbild",
+    "home": "Home",
     "search": "Suche",
-    "search_placeholder": "Suche Benutzer, Gruppe oder Beitrag ...",
+    "search_placeholder": "Suche Personen...;Suche Gruppe...;Suche Beitrag...",
     "search_title": "Suchen",
     "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
     "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
@@ -81,6 +101,9 @@
     "create": "Erstellen",
     "btn_new_ve": "Neuen VE planen",
     "plans": "Pläne",
+    "your_plans": "Deine Pläne",
+    "gp_plans_of": "\"Good Practice\" Pläne",
+    "last_change": "Letzte Änderung",
     "plans_description": "Der VE-Designer von VE-Collab ist ein digitales Planungstool, das VE-Partner*innen Schritt für Schritt durch die Planung eines virtuellen Austauschs leitet.",
     "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
     "matching": "Partner Suche",
@@ -95,6 +118,7 @@
     "plans_filter_title_placeholder": "Nach Titel filtern ...",
     "plans_filter_good_practice_examples": "ist \"Good Practice\"",
     "plans_btn_new_plan": "Neuen Plan starten",
+    "show_good_practice_plans": "\"Good Practice\" Pläne anzeigen",
     "loading_plans": "Lade Pläne...",
     "plans_table_progress": "Progress",
     "plans_table_name": "Name",
@@ -140,7 +164,7 @@
     "plans_alert_open_insufficient_permission": "Du hast keine Berechtigung, um diesen Plan zu öffnen",
     "plans_alert_open_unexpected_error": "ein unerwarteter Fehler ist aufgetreten",
     "plans_alert_step_doesnt_exist": "Diese Etappe existiert nicht",
-    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' markiert",
+    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' veröffentlicht",
     "plans_shared_by": "Plan geteilt von {{name}}",
     "plans_confirm_delete": "Plan löschen?",
     "max_5_mb": "max. 5 MB erlaubt",
@@ -425,6 +449,7 @@
             }
         }
     },
+    "dashboard_description": "Deine Startseite der VE-Collab Plattform zeigt eine Übersicht von Aktivitäten und wichtigen Neuigkeiten des Netzwerkes.",
     "show_more": "Mehr erfahren",
     "access_denied": "Zugriff verweigert",
     "qualification": "Qualifikation",
@@ -511,5 +536,20 @@
         "learning-material/2": "Eine Sammlung interaktiver Lehrmodule zur konkreten Planung von VEs und der Evaluation.",
         "learning-material/3": "Eine Sammlung interaktiver Lehrmodule zu nützlichen Tools für VEs, Datenschutzfragen, digitalen Medien und Open Educational Resources (OER).",
         "learning-material/4": "Eine Sammlung interaktiver Lehrmodule zu kulturellen & sprachlichen Aspekten, Interaktion und Kollaboration und einem Methodenkoffer für digitale Lehre."
+    },
+    "mail_invitation_form": {
+        "share": "Einladen",
+        "intro_short": "VE Partner:innen via E-Mail einladen",
+        "intro": "Lade Personen per E-Mail ein, VE-Collab beizutreten.",
+        "intro_attention": "<bold>Achtung:</bold> Die eingeladene Person wird nicht automatisch als VE-Partner:in hinzugefügt, nachdem sie sich registriert hat. Diesen Schritt müsst ihr leider manuell machen.",
+        "open": "öffnen",
+        "title": "VE-Einladung via E-Mail",
+        "name_placeholder": "Name",
+        "no_valid_name": "Dieser Name ist nicht gültig",
+        "send_ok": "Einladung verschickt.",
+        "send_error": "Es ist ein Fehler aufgetreten. Bitte probiere es später erneut.",
+        "mail_placeholder": "E-Mail",
+        "no_valid_mail": "Diese E-Mail ist nicht gültig",
+        "message_placeholder": "Nachricht"
     }
 }

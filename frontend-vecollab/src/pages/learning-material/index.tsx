@@ -1,4 +1,5 @@
 import {
+    fetchTaxonomy,
     getChildrenOfNode,
     getMaterialNodesOfNodeByText,
     getTopLevelNodes,
@@ -119,15 +120,14 @@ export default function PageCategoryNotSelected(props: Props) {
 
             {/* 3 BUBBLE */}
             {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
-                '-top-[2.5rem] -left-[5rem]', // digitale medien
                 '-bottom-[3.5rem] -right-[7rem]', // datenschutz
-                'bottom-0 -left-[4rem]', // tools
+                '-top-[1rem] -left-[3rem]', // tools
                 'top-0 -right-[4rem]', // oer
             ])}
 
             {/* 4 BUBBLE */}
             {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
-                '-bottom-[.5rem] -left-[10.5rem]', // interaktion
+                '-bottom-[.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                 '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
                 '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
@@ -177,12 +177,14 @@ export default function PageCategoryNotSelected(props: Props) {
 }
 
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
-    const cluster = await getTopLevelNodes();
+    const taxonomy = await fetchTaxonomy();
+
+    const cluster = await getTopLevelNodes(taxonomy);
     const nodes: { [key: string]: INode[] } = {};
 
     await Promise.all(
         cluster.map(async (bubble) => {
-            nodes[bubble.text] = await getChildrenOfNode(bubble.id);
+            nodes[bubble.text] = await getChildrenOfNode(bubble.id, taxonomy);
         })
     );
 
@@ -190,7 +192,7 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
         Object.values(nodes).flatMap(async (nodeArray) =>
             Promise.all(
                 nodeArray.map(async (node) => {
-                    const learning_page = await getMaterialNodesOfNodeByText(node.text);
+                    const learning_page = await getMaterialNodesOfNodeByText(node.text, taxonomy);
                     return {
                         node_text: node.text,
                         learning_page: learning_page,
