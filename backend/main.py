@@ -25,6 +25,7 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
+from handlers.mail_invitation import EmailInvitationHandler
 from handlers.material_taxonomy import (
     MBRSyncHandler,
     MBRTestHandler,
@@ -132,6 +133,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/notifications", NotificationHandler),
             (r"/chatroom/(.*)", RoomHandler),
             (r"/material_taxonomy", MaterialTaxonomyHandler),
+            (r"/mail_invitation", EmailInvitationHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
             (r"/mbr_sync", MBRSyncHandler),

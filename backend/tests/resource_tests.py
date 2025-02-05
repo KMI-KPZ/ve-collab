@@ -59,6 +59,7 @@ from model import (
     VEPlan,
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.mail_invitation import MailInvitation
 from resources.network.acl import ACL
 from resources.network.chat import Chat
 from resources.network.post import Posts
@@ -3603,7 +3604,6 @@ class ProfileResourceTest(BaseResourceTestCase):
             self.default_profile["username"],
             {"chosen_achievement": {"type": "social", "level": 1}},
         )
-
 
     def test_update_profile_information_error_invalid_achievement(self):
         """
@@ -8965,3 +8965,95 @@ class ElasticsearchIntegrationTest(BaseResourceTestCase):
 
 class NotificationIntegrationTest(BaseResourceTestCase):
     pass
+
+
+class MailInvitationResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # create default invitation:
+        self.default_invitation = {
+            "_id": ObjectId(),
+            "sender": CURRENT_ADMIN.username,
+            "recipient_name": "invitation_receiver",
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "timestamp": datetime.now(),
+        }
+        self.db.mail_invitations.insert_one(self.default_invitation)
+
+        self.invitation_manager = MailInvitation(self.db)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.mail_invitations.delete_many({})
+
+    def test_check_within_rate_limit(self):
+        """
+        expect: successfully check if the user is within the rate limit
+        """
+
+        # expect True because the user has sent less than 10 invitations in the last 24 hours
+        self.assertTrue(
+            self.invitation_manager.check_within_rate_limit(CURRENT_ADMIN.username)
+        )
+
+        # add 10 more invitations
+        for i in range(10):
+            self.db.mail_invitations.insert_one(
+                {
+                    "_id": ObjectId(),
+                    "sender": CURRENT_ADMIN.username,
+                    "recipient_name": "invitation_receiver",
+                    "recipient_mail": "invitation_receiver@mail.com",
+                    "message": "test",
+                    "timestamp": datetime.now() - timedelta(hours=i),
+                }
+            )
+
+        # expect False because the user has now sent more than 10 invitations in the last 24 hours
+        self.assertFalse(
+            self.invitation_manager.check_within_rate_limit(CURRENT_ADMIN.username)
+        )
+
+    def test_insert_invitation(self):
+        """
+        expect: successfully insert an invitation
+        """
+
+        invitation = {
+            "sender": CURRENT_ADMIN.username,
+            "recipient_name": "invitation_receiver",
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "timestamp": datetime.now(),
+        }
+
+        inserted_id = self.invitation_manager.insert_invitation(invitation)
+
+        # expect the invitation to be in the db
+        db_state = self.db.mail_invitations.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["sender"], invitation["sender"])
+        self.assertEqual(db_state["recipient_name"], invitation["recipient_name"])
+        self.assertEqual(db_state["recipient_mail"], invitation["recipient_mail"])
+        self.assertEqual(db_state["message"], invitation["message"])
+        self.assertIsNotNone(db_state["timestamp"])
+
+    def test_insert_invitation_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because the invitation is missing required attributes
+        """
+
+        # recipient_name missing
+        invitation = {
+            "sender": CURRENT_ADMIN.username,
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "timestamp": datetime.now(),
+        }
+
+        self.assertRaises(
+            ValueError, self.invitation_manager.insert_invitation, invitation
+        )

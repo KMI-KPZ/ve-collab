@@ -24,6 +24,10 @@ import { FaRegQuestionCircle } from 'react-icons/fa';
 import { Tooltip } from '@/components/common/Tooltip';
 import ButtonLight from '@/components/common/buttons/ButtongLight';
 import Button from '@/components/common/buttons/Button';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { MdOutlineMail } from 'react-icons/md';
+import MailInvitationForm from '@/components/MailInvitationForm';
+import Dialog from '@/components/profile/Dialog';
 
 export interface FormValues {
     partners: Partner[];
@@ -49,6 +53,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
+    const [openMailInvitationDialog, setOpenMailInvitationDialog] = useState<boolean>(false);
 
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
@@ -425,6 +430,8 @@ export default function Partners({ socket }: Props): JSX.Element {
         });
     };
 
+    const openMailInvitationForm = () => {};
+
     return (
         <>
             <CustomHead
@@ -451,19 +458,32 @@ export default function Partners({ socket }: Props): JSX.Element {
             >
                 <div>
                     <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
+                    <div className="flex flex-wrap">
+                        <div className="grow">
+                            <div className="p-2">{renderPartiesInputt()}</div>
 
-                    <div className="p-2 rounded-md ">{renderPartiesInputt()}</div>
-
-                    <div className="mt-4">
-                        <button
-                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
-                            type="button"
-                            onClick={() => {
-                                appendPartners({ label: '', value: '' });
-                            }}
-                        >
-                            <RxPlus size={25} />
-                        </button>
+                            <div className="mt-4">
+                                <button
+                                    className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                    type="button"
+                                    onClick={() => {
+                                        appendPartners({ label: '', value: '' });
+                                    }}
+                                >
+                                    <RxPlus size={25} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="lg:basis-1/4 text-center p-4 m-2 rounded-lg border shadow self-start">
+                            <p>{t('common:mail_invitation_form.intro_short')}</p>
+                            <ButtonLightBlue
+                                className="m-2"
+                                onClick={() => setOpenMailInvitationDialog(true)}
+                            >
+                                <MdOutlineMail className="inline" />{' '}
+                                {t('common:mail_invitation_form.open')}
+                            </ButtonLightBlue>
+                        </div>
                     </div>
                     <div>
                         <div className="text-xl text-slate-600 mb-2 mt-10">
@@ -481,39 +501,55 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 <FaRegQuestionCircle className="inline m-1 text-ve-collab-blue" />
                             </Tooltip>
                         </div>
-                        <p>{t('partners.description-2')}</p>
-                        {renderExternalPartiesInputs()}
-                        <div className="mt-4">
-                            {addedExtWarning == 1 && (
-                                <div className="w-full lg:w-1/2 rounded-md mb-4 bg-red-300 border border-red-500 p-2 text-slate-800 relative">
-                                    <Trans
-                                        i18nKey="partners.extparties_warning"
-                                        ns="designer"
-                                        components={{ bold: <strong />, br: <br /> }}
-                                    />
-                                    <Button
-                                        onClick={() => addedExternalPartyWarning()}
-                                        className="mx-2 shadow !rounded-full"
-                                    >
-                                        {t('common:ok')}
-                                    </Button>
-                                </div>
-                            )}
-                            <button
-                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
-                                type="button"
-                                onClick={() => {
-                                    addedExternalPartyWarning();
-                                    appendExternalParties({
-                                        externalParty: '',
-                                    });
-                                }}
-                            >
-                                <RxPlus size={25} />
-                            </button>
+                        <div>
+                            <p>{t('partners.description-2')}</p>
+                            {renderExternalPartiesInputs()}
+                            <div className="mt-4">
+                                {addedExtWarning == 1 && (
+                                    <div className="w-full lg:w-1/2 rounded-md mb-4 bg-red-300 border border-red-500 p-2 text-slate-800 relative">
+                                        <Trans
+                                            i18nKey="partners.extparties_warning"
+                                            ns="designer"
+                                            components={{ bold: <strong />, br: <br /> }}
+                                        />
+                                        <Button
+                                            onClick={() => addedExternalPartyWarning()}
+                                            className="mx-2 shadow !rounded-full"
+                                        >
+                                            {t('common:ok')}
+                                        </Button>
+                                    </div>
+                                )}
+                                <button
+                                    className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                    type="button"
+                                    onClick={() => {
+                                        addedExternalPartyWarning();
+                                        appendExternalParties({
+                                            externalParty: '',
+                                        });
+                                    }}
+                                >
+                                    <RxPlus size={25} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <Dialog
+                    isOpen={openMailInvitationDialog}
+                    title={t('common:mail_invitation_form.title')}
+                    onClose={() => setOpenMailInvitationDialog(false)}
+                >
+                    <div className="w-[20vw]">
+                        <MailInvitationForm
+                            handleFinish={() => {
+                                setOpenMailInvitationDialog(false);
+                            }}
+                            renderAttentionMessage
+                        />
+                    </div>
+                </Dialog>
             </Wrapper>
         </>
     );
