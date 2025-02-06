@@ -54,10 +54,10 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
         if (!plans.length || !session) return;
 
         let sortedPlans = plans
-            .filter(
-                (plan) => plan.author.username != session?.user.preferred_username
-                // && plan.is_good_practise
-            )
+            // .filter(
+            //     (plan) => plan.author.username != session?.user.preferred_username
+            //     // && plan.is_good_practise
+            // )
             .sort((a, b) => {
                 let av = a['last_modified']?.toString() || '';
                 let bv = b['last_modified']?.toString() || '';
