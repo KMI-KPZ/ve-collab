@@ -1,0 +1,320 @@
+import json
+
+from handlers.base_handler import BaseHandler, auth_needed
+from error_reasons import (
+    INSUFFICIENT_PERMISSIONS,
+    MISSING_KEY_IN_HTTP_BODY_SLUG,
+    MISSING_KEY_SLUG,
+    REPORT_DOESNT_EXIST,
+)
+from exceptions import ReportDoesntExistError
+from resources.reports import Reports
+import util
+
+
+class ReportHandler(BaseHandler):
+
+    def options(self, slug):
+        # no body
+        self.set_status(200)
+        self.finish()
+
+    def get(self, slug):
+        """
+        - get all reports (open and/or closed --> filter)
+        - get single report
+
+        protect by admin only access
+
+        GET /report/get
+            get a single report. Requires admin privileges.
+
+            Query params:
+                report_id: string
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                {"success": true,
+                 "report": {<report>}}
+
+                400 Bad Request
+                (a query param is missing)
+                {"success": false,
+                 "reason": "missing_key:report_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (user is not an admin)
+                {"success": false,
+                 "reason": "insufficient_permissions"}
+
+                409 Conflict
+                (the report does not exist)
+                {"success": false,
+                 "reason": "report_doesnt_exist"}
+
+        GET /report/get_open
+            get all open reports. Requires admin privileges.
+
+            Query params:
+                None
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                {"success": true,
+                 "reports": [{<report>}]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (user is not an admin)
+                {"success": false,
+                 "reason": "insufficient_permissions"}
+
+        GET /report/get_all
+            get all reports. Requires admin privileges.
+
+            Query params:
+                None
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                {"success": true,
+                 "reports": [{<report>}]}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (user is not an admin)
+                {"success": false,
+                 "reason": "insufficient_permissions"}
+        """
+
+        if slug == "get":
+            report_id = self.get_argument("report_id", None)
+            if report_id is None:
+                self.set_status(400)
+                self.write({"success": False, "reason": MISSING_KEY_SLUG + "report_id"})
+                return
+            
+            if not self.is_current_user_lionet_admin():
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+            
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+                try:
+                    report = reports.get_report(report_id)
+                except ReportDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": REPORT_DOESNT_EXIST})
+                    return
+                
+                self.write({"success": True, "report": report})
+
+        elif slug == "get_open":
+            if not self.is_current_user_lionet_admin():
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+                open_reports = reports.get_open_reports()
+                self.write({"success": True, "reports": open_reports})
+
+        elif slug == "get_all":
+            if not self.is_current_user_lionet_admin():
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+                all_reports = reports.get_all_reports()
+                self.write({"success": True, "reports": all_reports})
+
+        else:
+            self.set_status(404)
+
+    @auth_needed
+    def post(self, slug):
+        """
+        POST /report/submit
+            Submit a new report for any content in the platform.
+
+            Query params:
+                None
+
+            http body:
+                {
+                    "type": "post|comment|plan|profile|group|message",
+                    "item": "_id_of_reported_item",
+                    "reason": "string"
+                }
+
+            returns:
+
+                200 OK
+                (report was submitted)
+                {"success": true}
+
+                400 Bad Request
+                (the http body is not valid json)
+                {"success": false,
+                "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the http body misses a required key)
+                {"success": false,
+                "reason": "missing_key_in_http_body:<attribute>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                "reason": "no_logged_in_user"}
+
+
+        Post /report/close
+            Close, i.e. resolve a report.
+            Requires admin privileges.
+
+            Query params:
+                None
+
+            http body:
+                {
+                    "report_id": "_id_of_report"
+                }
+
+            returns:
+
+                200 OK
+                (report was closed)
+                {"success": true}
+
+                400 Bad Request
+                (the http body is not valid json)
+                {"success": false,
+                "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the http body misses a required key)
+                {"success": false,
+                "reason": "missing_key_in_http_body:<attribute>"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (user is not an admin)
+                {"success": false,
+                 "reason": "insufficient_permissions"}
+
+                409 Conflict
+                (the report does not exist)
+                {"success": false,
+                 "reason": "report_doesnt_exist"}
+
+        """
+
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write({"success": False, "reason": "json_parsing_error"})
+            return
+
+        if slug == "submit":
+
+            if "type" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {"success": False, "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "type"}
+                )
+                return
+            if "item" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {"success": False, "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "item"}
+                )
+                return
+            if "reason" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "reason",
+                    }
+                )
+                return
+
+            # delete any other keys from the http body
+            # and add reporter
+            http_body = {key: http_body[key] for key in ["type", "item", "reason"]}
+            http_body["reporter"] = self.current_user.username
+
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+
+                # TODO check if the item in question exists
+
+                # TODO check if the user has already reported the same item before?
+
+                # insert the report
+                reports.insert_report(http_body)
+
+            self.write({"success": True})
+
+        elif slug == "close":
+            if "report_id" not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "report_id",
+                    }
+                )
+                return
+
+            # require admin privileges
+            if not self.is_current_user_lionet_admin():
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+                try:
+                    reports.close_report(http_body["report_id"])
+                except ReportDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": REPORT_DOESNT_EXIST})
+                    return
+
+            self.write({"success": True})
+
+        else:
+            self.set_status(404)

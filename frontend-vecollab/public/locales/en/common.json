@@ -552,5 +552,14 @@
         "mail_placeholder": "E-mail",
         "no_valid_mail": "This email is not valid",
         "message_placeholder": "Message"
+    },
+    "report": {
+        "report_title": "Report",
+        "report_dialog_title": "Report this {{type}}",
+        "report_description": "Please describe the reason why you want to report this {{type}}. This will help us to take appropriate action.",
+        "report_reason_placeholder": "e.g. spam, inappropriate content, harassment, etc.",
+        "report_types": {
+            "post": "Post"
+        }
     }
 }

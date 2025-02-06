@@ -551,5 +551,14 @@
         "mail_placeholder": "E-Mail",
         "no_valid_mail": "Diese E-Mail ist nicht gültig",
         "message_placeholder": "Nachricht"
+    },
+    "report": {
+        "report_title": "Melden",
+        "report_dialog_title": "Diesen {{type}} melden",
+        "report_description": "Bitte beschreibe kurz, warum du diesen {{type}} melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+        "report_reason_placeholder": "z.B. Spam, unangemessener Inhalt, Belästigung, etc.",
+        "report_types": {
+            "post": "Post"
+        }
     }
 }

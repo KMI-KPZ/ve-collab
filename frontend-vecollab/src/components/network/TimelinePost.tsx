@@ -38,6 +38,8 @@ import ConfirmDialog from '../common/dialogs/Confirm';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     post: BackendPost;
@@ -84,6 +86,7 @@ export default function TimelinePost({
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState<boolean>(false);
 
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
     const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
@@ -213,6 +216,9 @@ export default function TimelinePost({
                 break;
             case 'remove-comment':
                 deleteComment(rest[0]);
+                break;
+            case 'report':
+                setReportDialogOpen(true);
                 break;
             default:
                 break;
@@ -388,7 +394,15 @@ export default function TimelinePost({
     };
 
     const PostHeaderDropdown = ({ post }: { post: BackendPost }) => {
-        let options = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
+        let options: [
+            {
+                value: string;
+                label: string | JSX.Element;
+                title?: string;
+                liClasses?: string;
+                icon?: JSX.Element;
+            }
+        ] = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username) ||
             (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
@@ -400,6 +414,12 @@ export default function TimelinePost({
         } else if (userIsAdmin) {
             options.push({ value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> });
         }
+        options.push({
+            value: 'report',
+            label: t('common:report.report_title'),
+            icon: <GoAlert />,
+            liClasses: 'text-red-500',
+        });
 
         return <Dropdown options={options} onSelect={handleSelectOption} />;
     };
@@ -418,6 +438,15 @@ export default function TimelinePost({
                     callback={(proceed) => {
                         if (proceed) deletePost();
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={post._id}
+                    reportedItemType="post"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
                     }}
                 />
             )}
