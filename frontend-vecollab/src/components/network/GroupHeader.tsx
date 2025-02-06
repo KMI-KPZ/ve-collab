@@ -317,21 +317,23 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                 <LoadingAnimation />
             ) : (
                 <>
-                    <div className={'flex'}>
-                        <div
-                            className={
-                                'mr-8 rounded-full overflow-hidden border-4 border-white shadow-2xl w-[180px] h-[180px]'
-                            }
-                        >
-                            <AuthenticatedImage
-                                imageId={group.space_pic}
-                                alt={t('group_picture')}
-                                width={180}
-                                height={180}
-                            />
-                        </div>
-                        <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
-                            <div className={'text-4xl pr-6'}>{group.name}</div>
+                    <div className={'flex flex-wrap justify-between'}>
+                        <div className="flex flex-nowrap">
+                            <div
+                                className={
+                                    'flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow w-[180px] h-[180px]'
+                                }
+                            >
+                                <AuthenticatedImage
+                                    imageId={group.space_pic}
+                                    alt={t('group_picture')}
+                                    width={180}
+                                    height={180}
+                                />
+                            </div>
+                            <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
+                                <div className={'text-4xl pr-6'}>{group.name}</div>
+                            </div>
                         </div>
                         <div className={'flex items-center mt-6'}>
                             <div className="mt-2 min-h-[2rem]">
