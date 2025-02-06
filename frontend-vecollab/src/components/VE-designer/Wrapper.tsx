@@ -107,13 +107,17 @@ export default function Wrapper({
         isLoading,
         error,
         mutate: mutateGetPlanById,
-    } = useGetPlanById(router.query.plannerId as string, !isNoAuthPreview);
+    } = useGetPlanById(
+        router.query.plannerId as string,
+        !isNoAuthPreview && router.query.plannerId !== undefined
+    );
 
     // detect window close or a click outside of planer
     useEffect(() => {
         if (isNoAuthPreview) return;
 
         if (!router.isReady) return;
+        if (!router.query.plannerId) return;
         let clickedOutside: boolean = false;
 
         const handleClickOutside = (e: MouseEvent) => {
@@ -153,11 +157,7 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (isLoading || !session || error) return;
-
-        if (!router.query.plannerId) {
-            router.push('/plans');
-            return;
-        }
+        if (!router.query.plannerId) return;
 
         getPlanLock(socket!, router.query.plannerId).catch((response) => {
             if (response.reason === 'plan_locked') {
@@ -200,7 +200,12 @@ export default function Wrapper({
     useEffect(() => {
         if (isNoAuthPreview) return;
 
-        if (!plan || isLoading || error) return;
+        if (!router.isReady || isLoading || error) return;
+        if (!router.query.plannerId) {
+            // remove loader for blank new plan
+            setLoading(false);
+            return;
+        }
 
         let willRouteChange: boolean = false;
 
@@ -259,6 +264,26 @@ export default function Wrapper({
         isNoAuthPreview,
     ]);
 
+    const createNewPlan = async (name: string): Promise<string> => {
+        const newPlanner = await fetchPOST(
+            '/planner/insert_empty',
+            { name: name.length > 0 ? name : '[neuer Plan]' },
+            session?.accessToken
+        );
+
+        if (!newPlanner.inserted_id) return Promise.reject(false);
+
+        return new Promise((resolve, reject) => {
+            getPlanLock(socket!, newPlanner.inserted_id)
+                .then((response) => {
+                    resolve(newPlanner.inserted_id);
+                })
+                .catch((response) => {
+                    reject(false);
+                });
+        });
+    };
+
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
         if (isNoAuthPreview) return;
@@ -270,10 +295,39 @@ export default function Wrapper({
             value: any;
         }[];
 
+        let plannerId = router.query.plannerId;
+
+        if (!router.query.plannerId) {
+            const newName = fields.find((a) => a.field_name == 'name')?.value;
+            const newPlanId = await createNewPlan(newName !== undefined ? newName : '');
+
+            if (!newPlanId) {
+                setAlert({
+                    message: t('alert_error_save'),
+                    type: 'error',
+                    onClose: () => {
+                        setAlert({ open: false });
+                        setLoading(false);
+                    },
+                });
+                return;
+            }
+            plannerId = newPlanId;
+            fields.map((field) => {
+                field.plan_id = plannerId as string;
+                return field;
+            });
+
+            router.push({
+                pathname: '',
+                query: { plannerId: newPlanId },
+            });
+        }
+
         if (fields && Object.keys(fields).length > 0) {
             if (typeof idOfProgress === 'string') {
                 fields.push({
-                    plan_id: router.query.plannerId as string,
+                    plan_id: plannerId as string,
                     field_name: 'progress',
                     value: progressOfPlan,
                 });
@@ -309,8 +363,8 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (popUp.continueLink && popUp.continueLink != '') {
+            // user leaves the designer
             if (!popUp.continueLink.startsWith('/ve-designer')) {
-                // release plan if we leave designer
                 await dropPlanLock(socket!, router.query.plannerId);
                 // update all plans SWR to update /plans list
                 await router.push({
@@ -318,11 +372,26 @@ export default function Wrapper({
                     query: {},
                 });
             } else {
+                let plannerId = router.query.plannerId;
+                if (!router.query.plannerId) {
+                    const newPlanId = await createNewPlan('');
+                    if (!newPlanId) {
+                        setAlert({
+                            message: t('alert_error_save'),
+                            type: 'error',
+                            onClose: () => {
+                                setAlert({ open: false });
+                                setLoading(false);
+                            },
+                        });
+                        return;
+                    }
+                    plannerId = newPlanId;
+                }
+                // go to next planer-page
                 await router.push({
                     pathname: popUp.continueLink,
-                    query: popUp.continueLink.startsWith('/ve-designer')
-                        ? { plannerId: router.query.plannerId }
-                        : {},
+                    query: { plannerId },
                 });
             }
         } else {
