@@ -109,7 +109,7 @@ export default function ProfileHeader({
         setFollowers([]);
     }, [router]);
 
-    const ToolitpFollows = () => (
+    const TooltipFollows = () => (
         <div className="overflow-y-auto max-h-32 content-scrollbar">
             {follows.map((user, i) => (
                 <div key={i} className="flex items-center justify-between truncate text-black my-2">
@@ -234,7 +234,7 @@ export default function ProfileHeader({
                                 loadingFollows ? (
                                     <LoadingAnimation size="small" className="my-2" />
                                 ) : profileInformation.follows.length > 0 ? (
-                                    <ToolitpFollows />
+                                    <TooltipFollows />
                                 ) : null
                             }
                             position="left"
