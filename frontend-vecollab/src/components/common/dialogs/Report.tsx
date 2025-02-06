@@ -39,7 +39,7 @@ export default function ReportDialog({ reportedItemId, reportedItemType, closeCa
                 '/report/submit',
                 {
                     type: reportedItemType,
-                    item: reportedItemId,
+                    item_id: reportedItemId,
                     reason: reason,
                 },
                 session?.accessToken

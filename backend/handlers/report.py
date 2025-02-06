@@ -21,11 +21,6 @@ class ReportHandler(BaseHandler):
 
     def get(self, slug):
         """
-        - get all reports (open and/or closed --> filter)
-        - get single report
-
-        protect by admin only access
-
         GET /report/get
             get a single report. Requires admin privileges.
 
@@ -115,12 +110,12 @@ class ReportHandler(BaseHandler):
                 self.set_status(400)
                 self.write({"success": False, "reason": MISSING_KEY_SLUG + "report_id"})
                 return
-            
+
             if not self.is_current_user_lionet_admin():
                 self.set_status(403)
                 self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                 return
-            
+
             with util.get_mongodb() as db:
                 reports = Reports(db)
                 try:
@@ -129,8 +124,8 @@ class ReportHandler(BaseHandler):
                     self.set_status(409)
                     self.write({"success": False, "reason": REPORT_DOESNT_EXIST})
                     return
-                
-                self.write({"success": True, "report": report})
+
+                self.serialize_and_write({"success": True, "report": report})
 
         elif slug == "get_open":
             if not self.is_current_user_lionet_admin():
@@ -141,7 +136,7 @@ class ReportHandler(BaseHandler):
             with util.get_mongodb() as db:
                 reports = Reports(db)
                 open_reports = reports.get_open_reports()
-                self.write({"success": True, "reports": open_reports})
+                self.serialize_and_write({"success": True, "reports": open_reports})
 
         elif slug == "get_all":
             if not self.is_current_user_lionet_admin():
@@ -152,7 +147,7 @@ class ReportHandler(BaseHandler):
             with util.get_mongodb() as db:
                 reports = Reports(db)
                 all_reports = reports.get_all_reports()
-                self.write({"success": True, "reports": all_reports})
+                self.serialize_and_write({"success": True, "reports": all_reports})
 
         else:
             self.set_status(404)
@@ -169,7 +164,7 @@ class ReportHandler(BaseHandler):
             http body:
                 {
                     "type": "post|comment|plan|profile|group|message",
-                    "item": "_id_of_reported_item",
+                    "item_id": "_id_of_reported_item",
                     "reason": "string"
                 }
 
@@ -255,10 +250,13 @@ class ReportHandler(BaseHandler):
                     {"success": False, "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "type"}
                 )
                 return
-            if "item" not in http_body:
+            if "item_id" not in http_body:
                 self.set_status(400)
                 self.write(
-                    {"success": False, "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "item"}
+                    {
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "item_id",
+                    }
                 )
                 return
             if "reason" not in http_body:
@@ -273,7 +271,7 @@ class ReportHandler(BaseHandler):
 
             # delete any other keys from the http body
             # and add reporter
-            http_body = {key: http_body[key] for key in ["type", "item", "reason"]}
+            http_body = {key: http_body[key] for key in ["type", "item_id", "reason"]}
             http_body["reporter"] = self.current_user.username
 
             with util.get_mongodb() as db:

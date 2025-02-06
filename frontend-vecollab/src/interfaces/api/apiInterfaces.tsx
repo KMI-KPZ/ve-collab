@@ -214,3 +214,14 @@ export interface ChosenAchievement {
     type: 'social' | 've' | '';
     level: number;
 }
+
+export interface Report {
+    _id: string;
+    type: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'message';
+    item_id: string;
+    reason: string;
+    reporter: string;
+    timestamp: string;
+    state: 'open' | 'closed';
+    item: any;
+}

@@ -4,7 +4,7 @@ import Timestamp from '@/components/common/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { fetchPOST, useGetAllPlans, useIsGlobalAdmin } from '@/lib/backend';
+import { fetchPOST, useGetAllPlans, useGetOpenReports, useIsGlobalAdmin } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -25,6 +25,12 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
     const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
     const { data: plans, isLoading, error, mutate } = useGetAllPlans(session!.accessToken);
+    const {
+        data: reports,
+        isLoading: isLoadingReports,
+        error: errorReports,
+        mutate: mutateReports,
+    } = useGetOpenReports(session!.accessToken);
 
     const [userProfileSnippets, setUserProfileSnippets] = useState<BackendUserSnippet[]>();
 
@@ -147,6 +153,46 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                     ))}
                             </ul>
                         </div>
+                    </div>
+                    <div tabid="reports" tabname="Meldungen">
+                        {reports.map((report) => (
+                            <div
+                                key={report._id}
+                                className="flex justify-between items-center p-2 border-b"
+                            >
+                                <div className="flex justify-between">
+                                    <div>
+                                        <p>
+                                            <span className="font-bold">{report.type}</span> -{' '}
+                                            <span className="text-gray-400">{report.item_id}</span>
+                                        </p>
+                                        <div className="font-bold">Reason:</div>
+                                        <p>{report.reason}</p>
+                                        <div className="font-bold">Item:</div>
+                                        <pre>{JSON.stringify(report.item, null, 2)}</pre>
+                                        <div className="font-bold">Report ID:</div>
+                                        <p>{report._id}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="bg-ve-collab-orange text-white rounded-lg p-2 h-16"
+                                    onClick={() => {
+                                        fetchPOST(
+                                            '/report/close',
+                                            {
+                                                report_id: report._id,
+                                            },
+                                            session!.accessToken
+                                        ).then(() => {
+                                            mutateReports();
+                                        });
+                                    }}
+                                >
+                                    Mark as resolved
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 </VerticalTabs>
             </WhiteBox>
