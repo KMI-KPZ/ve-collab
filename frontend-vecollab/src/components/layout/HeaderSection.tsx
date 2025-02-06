@@ -579,7 +579,7 @@ export default function HeaderSection({
                             className="duration-300 hover:scale-110"
                         ></Image>
                     </Link>
-                    {!router.query.search && (
+                    {!isActivePath('/search') && (
                         <form
                             className="mx-4 md:mx-6 xl:mx-10 items-stretch hidden lg:flex"
                             onSubmit={(e) => handleSearchSubmit(e)}
@@ -589,8 +589,8 @@ export default function HeaderSection({
                                     'w-3/4 border border-[#cccccc] rounded-md px-2 py-1 focus:outline-none'
                                 }
                                 type="text"
-                                placeholder={t('search_placeholder')}
-                                data-placeholder={t('search_placeholder')}
+                                placeholder={t('search_placeholder_caroussel')}
+                                data-placeholder={t('search_placeholder_caroussel')}
                                 name="search"
                                 autoComplete="off"
                                 defaultValue={
