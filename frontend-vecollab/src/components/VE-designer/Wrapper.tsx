@@ -267,7 +267,7 @@ export default function Wrapper({
     const createNewPlan = async (name: string): Promise<string> => {
         const newPlanner = await fetchPOST(
             '/planner/insert_empty',
-            { name: name.length > 0 ? name : '[neuer Plan]' },
+            { name: name.length > 0 ? name : t('default_new_plan_name') },
             session?.accessToken
         );
 

@@ -34,7 +34,8 @@
     "unsaved_changes": "Unsaved changes",
     "unsaved_changes_text": "Your current changes to this site will not be saved.",
     "step_done_question": "Step ready?",
-    "toggle_state_hover": "KKlick to change the editing status",
+    "toggle_state_hover": "Klick to change the editing status",
+    "default_new_plan_name": "Plan",
     "sidebar": {
         "general": "General Information",
         "phases": "Project plan",
