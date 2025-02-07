@@ -316,3 +316,70 @@ class ReportHandler(BaseHandler):
 
         else:
             self.set_status(404)
+
+    def delete(self, slug):
+        """
+        DELETE /report/delete
+            Given the reports _id, delete the reported item within.
+            This may cause cascading deletions, e.g. deleting a post will
+            also delete its comments, and also possibly unwanted side effects,
+            like orphaned data.
+            USE ONLY WHEN ABSOLUTELY NECESSARY.
+
+            Query params:
+                report_id: string
+
+            http body:
+                None
+
+            returns:
+                200 OK
+                (reported item was deleted)
+                {"success": true}
+
+                400 Bad Request
+                (a query param is missing)
+                {"success": false,
+                 "reason": "missing_key:report_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": false,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (user is not an admin)
+                {"success": false,
+                 "reason": "insufficient_permissions"}
+
+                409 Conflict
+                (the report does not exist)
+                {"success": false,
+                 "reason": "report_doesnt_exist"}
+        """
+
+        if slug == "delete":
+            report_id = self.get_argument("report_id", None)
+            if report_id is None:
+                self.set_status(400)
+                self.write({"success": False, "reason": MISSING_KEY_SLUG + "report_id"})
+                return
+
+            if not self.is_current_user_lionet_admin():
+                self.set_status(403)
+                self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                return
+
+            with util.get_mongodb() as db:
+                reports = Reports(db)
+                try:
+                    reports.delete_reported_item(report_id)
+                except ReportDoesntExistError:
+                    self.set_status(409)
+                    self.write({"success": False, "reason": REPORT_DOESNT_EXIST})
+                    return
+
+            self.write({"success": True})
+
+        else:
+            self.set_status(404)

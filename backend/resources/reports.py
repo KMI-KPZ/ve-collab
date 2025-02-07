@@ -137,3 +137,47 @@ class Reports:
 
         if result.matched_count == 0:
             raise ReportDoesntExistError("Report not found")
+
+    def delete_reported_item(self, report_id: str | ObjectId) -> None:
+        """
+        Given the `report_id`, delete the item that was reported within the report.
+        This may cause cascading deletions, e.g. deleting a post will also delete its comments,
+        and also possibly unwanted side effects, like orphaned data, because the
+        deletion is delegated the the respective resources.
+
+        Returns nothing.
+
+        Raises `ReportDoesntExistError` if the report doesn't exist.
+        """
+
+        report_id = util.parse_object_id(report_id)
+
+        report = self.get_report(report_id)
+
+        # TODO dispatch notification to the respective owners / authors of the item,
+        # informing them that their item has been deleted due to a report
+
+        if report["type"] == "post":
+            post_manager = Posts(self.db)
+            post_manager.delete_post(report["item_id"])
+        elif report["type"] == "comment":
+            post_manager = Posts(self.db)
+            post_manager.delete_comment(report["item_id"])
+        elif report["type"] == "plan":
+            plan_manager = VEPlanResource(self.db)
+            plan_manager.delete_plan(report["item_id"])
+        elif report["type"] == "profile":
+            # TODO
+            # we cant delete profiles completely, find solution what to do
+            pass
+        elif report["type"] == "group":
+            space_manager = Spaces(self.db)
+            space_manager.delete_space(report["item_id"])
+        elif report["type"] == "message":
+            # TODO
+            # we cant delete a whole room, and deleting a message completely
+            # also disturbs context, maybe just set the message content to [deleted] or sth
+            pass
+
+        # after deleting the item, close the report automatically
+        self.close_report(report_id)

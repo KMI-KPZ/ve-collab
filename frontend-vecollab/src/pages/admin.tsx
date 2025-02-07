@@ -4,7 +4,13 @@ import Timestamp from '@/components/common/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { fetchPOST, useGetAllPlans, useGetOpenReports, useIsGlobalAdmin } from '@/lib/backend';
+import {
+    fetchDELETE,
+    fetchPOST,
+    useGetAllPlans,
+    useGetOpenReports,
+    useIsGlobalAdmin,
+} from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,6 +19,7 @@ import { Socket } from 'socket.io-client';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
+import ConfirmDialog from '@/components/common/dialogs/Confirm';
 
 interface Props {
     socket: Socket;
@@ -32,7 +39,14 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
         mutate: mutateReports,
     } = useGetOpenReports(session!.accessToken);
 
+    const [askDeletion, setAskDeletion] = useState<boolean>(false);
+
     const [userProfileSnippets, setUserProfileSnippets] = useState<BackendUserSnippet[]>();
+
+    const deleteReportedItem = async (reportId: string) => {
+        await fetchDELETE(`/report/delete?report_id=${reportId}`, undefined, session!.accessToken);
+        mutateReports();
+    };
 
     useEffect(() => {
         if (isLoading || error || !session || !plans) {
@@ -174,23 +188,46 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                         <p>{report._id}</p>
                                     </div>
                                 </div>
-                                <button
-                                    type="button"
-                                    className="bg-ve-collab-orange text-white rounded-lg p-2 h-16"
-                                    onClick={() => {
-                                        fetchPOST(
-                                            '/report/close',
-                                            {
-                                                report_id: report._id,
-                                            },
-                                            session!.accessToken
-                                        ).then(() => {
-                                            mutateReports();
-                                        });
-                                    }}
-                                >
-                                    Mark as resolved
-                                </button>
+                                <div className="flex flex-col">
+                                    <button
+                                        type="button"
+                                        className="bg-ve-collab-orange text-white rounded-lg my-4 p-2 h-16"
+                                        onClick={() => {
+                                            fetchPOST(
+                                                '/report/close',
+                                                {
+                                                    report_id: report._id,
+                                                },
+                                                session!.accessToken
+                                            ).then(() => {
+                                                mutateReports();
+                                            });
+                                        }}
+                                    >
+                                        Mark as resolved
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="border border-red-600 text-red-600 bg-white rounded-lg my-4 p-2 h-16"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAskDeletion(true);
+                                        }}
+                                    >
+                                        Delete reported Item
+                                    </button>
+                                </div>
+                                {askDeletion && (
+                                    <ConfirmDialog
+                                        message={
+                                            "Really delete the reported item? This can't be undone."
+                                        }
+                                        callback={(proceed) => {
+                                            if (proceed) deleteReportedItem(report._id);
+                                            setAskDeletion(false);
+                                        }}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>
