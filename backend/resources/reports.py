@@ -35,7 +35,7 @@ class Reports:
                 return post_manager.get_post_by_comment_id(item_id)
             elif item_type == "plan":
                 plan_manager = VEPlanResource(self.db)
-                return plan_manager.get_plan(item_id)
+                return plan_manager.get_plan(item_id).to_dict()
             elif item_type == "profile":
                 profile_manager = Profiles(self.db)
                 return profile_manager.get_profile(item_id)

@@ -560,7 +560,8 @@
         "report_reason_placeholder": "e.g. spam, inappropriate content, harassment, etc.",
         "report_types": {
             "post": "Post",
-            "comment": "Comment"
+            "comment": "Comment",
+            "plan": "VE-Plan"
         }
     }
 }
