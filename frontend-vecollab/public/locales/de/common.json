@@ -560,7 +560,8 @@
         "report_types": {
             "post": "Post",
             "comment": "Kommentar",
-            "plan": "VE-Plan"
+            "plan": "VE-Plan",
+            "group": "Gruppe"
         }
     }
 }
