@@ -370,7 +370,103 @@ class SearchHandler(BaseHandler):
 
         return reduced
 
-    def _search_plans(self, query: str) -> List[Dict]:
+    def _search_plans(self, slug: str) -> List[Dict]:
+        """
+        suggestion search on public and own plans on plan name, topics and abstract
+        :param slug: search slug
+        :return: any plan matching the slug
+        """
+
+        # TODO may move directly to elasticsearch_integration ?!
+
+        query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": { "author": self.current_user.username}
+                                    },
+                                    {
+                                        "match": { "read_access": self.current_user.username}
+                                    },
+                                    {
+                                        "match": { "write_access": self.current_user.username}
+                                    },
+                                    {
+                                        "term": { "is_good_practise": True}
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": { "name": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    },
+                                    {
+                                        "match": { "topics": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    },
+                                    {
+                                        "match": { "abstract": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+        }
+
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "plans"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
+        response = requests.post(
+            search_url,
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+            json=query,
+        )
+
+        # map _id's to exchange them for full plans
+        plans_ids = [elem["_id"] for elem in response.json()["hits"]["hits"]]
+
+        with util.get_mongodb() as db:
+            plans_manager = VEPlanResource(db)
+
+            matched_plans = [
+                plan.to_dict()
+                for plan in plans_manager.get_bulk_plans(plans_ids)
+            ]
+            matched_plans = self.add_authors_profile(matched_plans)
+
+        if matched_plans:
+            return matched_plans
+        else:
+            return []
+
+    def _search_plans_old(self, query: str) -> List[Dict]:
         """
         suggestion search on public and own plans on plan name, topics and abstract
         :param query: search query
