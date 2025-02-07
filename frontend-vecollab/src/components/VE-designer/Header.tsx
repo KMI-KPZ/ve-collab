@@ -104,38 +104,60 @@ export default function Header({
 
             <div className="flex items-center justify-between w-full lg:w-fit">
                 <div className="flex items-center">
-                    <Link
-                        href={`/etherpad/${router.query.plannerId}`}
-                        target="_blank"
-                        className="mx-2"
-                    >
-                        <button
-                            type="submit"
-                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
-                            title={t('open_collaborative_pad')}
-                        >
-                            <MdEditSquare className="inline" /> Pad
-                        </button>
-                    </Link>
-                    <Link
-                        href={`/meeting/${router.query.plannerId}`}
-                        target="_blank"
-                        className="mx-2"
-                    >
-                        <button
-                            type="submit"
-                            className="px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            title={t('enter_jtsi')}
-                        >
-                            <MdMeetingRoom className="inline" /> Video
-                        </button>
-                    </Link>
+                    {router.query.plannerId !== undefined ? (
+                        <>
+                            <Link
+                                href={
+                                    router.query.plannerId
+                                        ? `/etherpad/${router.query.plannerId}`
+                                        : ''
+                                }
+                                target="_blank"
+                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
+                                title={t('open_collaborative_pad')}
+                            >
+                                <MdEditSquare className="inline" /> Pad
+                            </Link>
+                            <Link
+                                href={
+                                    router.query.plannerId
+                                        ? `/meeting/${router.query.plannerId}`
+                                        : ''
+                                }
+                                target="_blank"
+                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                title={t('enter_jtsi')}
+                            >
+                                <MdMeetingRoom className="inline" /> Video
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                type="submit"
+                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
+                                title={t('save_first')}
+                                disabled
+                            >
+                                <MdEditSquare className="inline" /> Pad
+                            </button>
+                            <button
+                                type="submit"
+                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue"
+                                title={t('save_first')}
+                                disabled
+                            >
+                                <MdMeetingRoom className="inline" /> Video
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 <div>
                     <button
                         className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         onClick={async (e) => {
+                            // TODO handleInvalidData ...
                             if (Object.keys(methods.formState.dirtyFields).length > 0) {
                                 handleUnsavedData(null, '/plans');
                             } else {

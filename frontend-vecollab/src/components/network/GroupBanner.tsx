@@ -1,5 +1,3 @@
-import Image from 'next/image';
-import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import Dialog from '../profile/Dialog';
 import { useState } from 'react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
@@ -74,36 +72,38 @@ export default function GroupBanner({ userIsAdmin }: Props) {
             mutate();
         });
     };
+
     return (
         <>
-            <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
-                <Image fill src={blueBackground} alt={t('background_picture')} />
-                {isLoading ? (
-                    <LoadingAnimation />
-                ) : (
-                    <div className={'flex absolute bottom-5 right-14 divide-x z-10'}>
-                        <div className={'flex items-center pr-6 text-lg text-white'}>
-                            <div>
-                                <div className="font-bold">
-                                    {group.joinable ? t('public') : t('private')}
-                                </div>
-                                <div className="font-bold">
-                                    {group.invisible ? t('invisible') : t('visible')}
-                                </div>
+            <div className={'relative'}>
+                <div
+                    className={
+                        'absolute -left-2 w-[calc(100svw-16px)] xl:w-full h-[160px] top-0 xl:rounded-b-md bg-footer-pattern'
+                    }
+                ></div>
+
+                <div className={'flex absolute top-[90px] right-14 divide-x z-10'}>
+                    <div className={'flex items-center pr-6 text-lg text-white'}>
+                        <div>
+                            <div className="font-bold">
+                                {group.joinable ? t('public') : t('private')}
+                            </div>
+                            <div className="font-bold">
+                                {group.invisible ? t('invisible') : t('visible')}
                             </div>
                         </div>
-                        <div
-                            className={'pl-6 text-lg text-white cursor-pointer'}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleOpenMemberDialog();
-                            }}
-                        >
-                            <div className={'font-bold'}>{group.members.length}</div>
-                            <div>{t('members')}</div>
-                        </div>
                     </div>
-                )}
+                    <div
+                        className={'pl-6 text-lg text-white cursor-pointer'}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleOpenMemberDialog();
+                        }}
+                    >
+                        <div className={'font-bold'}>{group.members.length}</div>
+                        <div>{t('members')}</div>
+                    </div>
+                </div>
             </div>
             <Dialog
                 isOpen={isMemberDialogOpen}
