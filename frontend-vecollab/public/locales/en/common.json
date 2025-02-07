@@ -561,14 +561,16 @@
             "comment": "Report this comment",
             "plan": "Report this VE-Plan",
             "group": "Report this group",
-            "profile": "Report this profile"
+            "profile": "Report this profile",
+            "chatroom": "Report this chat"
         },
         "report_descriptions": {
             "post": "Please describe the reason why you want to report this post. This will help us to take appropriate action.",
             "comment": "Please describe the reason why you want to report this comment. This will help us to take appropriate action.",
             "plan": "Please describe the reason why you want to report this VE-Plan. This will help us to take appropriate action.",
             "group": "Please describe the reason why you want to report this group. This will help us to take appropriate action.",
-            "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action."
+            "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action.",
+            "chatroom": "Please describe the reason why you want to report this chat. This will help us to take appropriate action."
         }
     }
 }

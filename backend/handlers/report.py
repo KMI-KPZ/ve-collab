@@ -163,7 +163,7 @@ class ReportHandler(BaseHandler):
 
             http body:
                 {
-                    "type": "post|comment|plan|profile|group|message",
+                    "type": "post|comment|plan|profile|group|chatroom",
                     "item_id": "_id_of_reported_item",
                     "reason": "string"
                 }

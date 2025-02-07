@@ -217,7 +217,7 @@ export interface ChosenAchievement {
 
 export interface Report {
     _id: string;
-    type: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'message';
+    type: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'chatroom';
     item_id: string;
     reason: string;
     reporter: string;

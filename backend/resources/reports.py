@@ -44,7 +44,7 @@ class Reports:
             elif item_type == "group":
                 space_manager = Spaces(self.db)
                 return space_manager.get_space(item_id)
-            elif item_type == "message":
+            elif item_type == "chatroom":
                 chat_manager = Chat(self.db)
                 return chat_manager.get_all_messages_of_room(item_id)
             else:
@@ -175,9 +175,9 @@ class Reports:
         elif report["type"] == "group":
             space_manager = Spaces(self.db)
             space_manager.delete_space(report["item_id"])
-        elif report["type"] == "message":
+        elif report["type"] == "chatroom":
             # TODO
-            # we cant delete a whole room, and deleting a message completely
+            # we cant delete a whole room, and deleting messages completely
             # also disturbs context, maybe just set the message content to [deleted] or sth
             pass
 

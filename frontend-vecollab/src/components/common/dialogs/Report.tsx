@@ -6,7 +6,7 @@ import { IoMdClose } from 'react-icons/io';
 
 interface Props {
     reportedItemId: string;
-    reportedItemType: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'message';
+    reportedItemType: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'chatroom';
     closeCallback: () => void;
 }
 

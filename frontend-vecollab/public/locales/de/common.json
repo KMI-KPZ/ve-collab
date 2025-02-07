@@ -560,14 +560,16 @@
             "comment": "Diesen Kommentar melden",
             "plan": "Diesen VE-Plan melden",
             "group": "Diese Gruppe melden",
-            "profile": "Dieses Profil melden"
+            "profile": "Dieses Profil melden",
+            "chatroom": "Diesen Chatverlauf melden"
         },
         "report_descriptions": {
             "post": "Bitte beschreibe kurz, warum du diesen Post melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
             "comment": "Bitte beschreibe kurz, warum du diesen Kommentar melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
             "plan": "Bitte beschreibe kurz, warum du diesen VE-Plan melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
             "group": "Bitte beschreibe kurz, warum du diese Gruppe melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
+            "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "chatroom": "Bitte beschreibe kurz, warum du diesen Chatverlauf melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
         }
     }
 }
