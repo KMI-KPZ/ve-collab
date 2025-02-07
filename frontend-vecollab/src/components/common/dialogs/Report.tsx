@@ -62,29 +62,24 @@ export default function ReportDialog({ reportedItemId, reportedItemType, closeCa
                 </div>
                 <div className="flex flex-col p-2">
                     <div className="font-bold">
-                        {t('report.report_dialog_title', { type: t('report.report_types.post') })}
+                        {t('report.report_dialog_title', {
+                            type: t('report.report_types.' + reportedItemType),
+                        })}
                     </div>
-                    {reportedItemType === 'post' && (
-                        <div className="my-2">
-                            <p className="mb-2">
-                                {t('report.report_description', {
-                                    type: t('report.report_types.post'),
-                                })}
-                            </p>
-                            <textarea
-                                rows={3}
-                                value={reason}
-                                className="w-full p-2 border rounded-lg"
-                                placeholder={t('report.report_reason_placeholder')}
-                                onChange={(e) => setReason(e.target.value)}
-                            />
-                        </div>
-                    )}
-                    {reportedItemType === 'comment' && <></>}
-                    {reportedItemType === 'plan' && <></>}
-                    {reportedItemType === 'profile' && <></>}
-                    {reportedItemType === 'group' && <></>}
-                    {reportedItemType === 'message' && <></>}
+                    <div className="my-2">
+                        <p className="mb-2">
+                            {t('report.report_description', {
+                                type: t('report.report_types.' + reportedItemType),
+                            })}
+                        </p>
+                        <textarea
+                            rows={3}
+                            value={reason}
+                            className="w-full p-2 border rounded-lg"
+                            placeholder={t('report.report_reason_placeholder')}
+                            onChange={(e) => setReason(e.target.value)}
+                        />
+                    </div>
                     <div className="flex justify-between mt-2">
                         <button
                             className="py-2 px-6 m-2 rounded-lg ring-2 ring-inset ring-ve-collab-orange"

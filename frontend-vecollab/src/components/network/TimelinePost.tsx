@@ -86,7 +86,11 @@ export default function TimelinePost({
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
-    const [reportDialogOpen, setReportDialogOpen] = useState<boolean>(false);
+    const [reportPostDialogOpen, setReportPostDialogOpen] = useState<boolean>(false);
+    const [reportCommentDialogOpen, setReportCommentDialogOpen] = useState<boolean>(false);
+    const [reportedComment, setReportedComment] = useState<BackendPostComment | undefined>(
+        undefined
+    );
 
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
     const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
@@ -217,8 +221,12 @@ export default function TimelinePost({
             case 'remove-comment':
                 deleteComment(rest[0]);
                 break;
-            case 'report':
-                setReportDialogOpen(true);
+            case 'report-post':
+                setReportPostDialogOpen(true);
+                break;
+            case 'report-comment':
+                setReportedComment(rest[0]);
+                setReportCommentDialogOpen(true);
                 break;
             default:
                 break;
@@ -355,6 +363,12 @@ export default function TimelinePost({
                             label: t('common:delete'),
                             icon: <MdDeleteOutline />,
                         },
+                        {
+                            value: 'report-comment',
+                            label: t('common:report.report_title'),
+                            icon: <GoAlert />,
+                            liClasses: 'text-red-500',
+                        },
                     ]}
                     onSelect={(value) => {
                         handleSelectOption(value, comment);
@@ -415,7 +429,7 @@ export default function TimelinePost({
             options.push({ value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> });
         }
         options.push({
-            value: 'report',
+            value: 'report-post',
             label: t('common:report.report_title'),
             icon: <GoAlert />,
             liClasses: 'text-red-500',
@@ -441,12 +455,22 @@ export default function TimelinePost({
                     }}
                 />
             )}
-            {reportDialogOpen && (
+            {reportPostDialogOpen && (
                 <ReportDialog
                     reportedItemId={post._id}
                     reportedItemType="post"
                     closeCallback={() => {
-                        setReportDialogOpen(false);
+                        setReportPostDialogOpen(false);
+                    }}
+                />
+            )}
+            {reportCommentDialogOpen && (
+                <ReportDialog
+                    reportedItemId={reportedComment!._id}
+                    reportedItemType="comment"
+                    closeCallback={() => {
+                        setReportedComment(undefined);
+                        setReportCommentDialogOpen(false);
                     }}
                 />
             )}

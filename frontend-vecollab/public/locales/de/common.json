@@ -558,7 +558,8 @@
         "report_description": "Bitte beschreibe kurz, warum du diesen {{type}} melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
         "report_reason_placeholder": "z.B. Spam, unangemessener Inhalt, Belästigung, etc.",
         "report_types": {
-            "post": "Post"
+            "post": "Post",
+            "comment": "Kommentar"
         }
     }
 }
