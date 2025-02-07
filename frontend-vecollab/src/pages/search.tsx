@@ -20,11 +20,13 @@ import Link from 'next/link';
 import { FaMedal } from 'react-icons/fa';
 import { TbFileText } from 'react-icons/tb';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { useSession } from 'next-auth/react';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
 export default function SearchResult() {
     const { t } = useTranslation(['common', 'community']);
+    const { data: session, status } = useSession();
 
     const router = useRouter();
     const [postsPagination, setPostsPagination] = useState<number>(5);
@@ -176,7 +178,14 @@ export default function SearchResult() {
                                             <div className="flex flex-row items-center my-1">
                                                 <div className="grow flex items-center truncate">
                                                     <Link
-                                                        href={`/ve-designer/name?plannerId=${plan._id}`}
+                                                        href={
+                                                            plan.write_access.includes(
+                                                                session?.user
+                                                                    .preferred_username as string
+                                                            )
+                                                                ? `/ve-designer/name?plannerId=${plan._id}`
+                                                                : `/plan/${plan._id}`
+                                                        }
                                                         className="group/ve-item flex items-center font-bold text-lg truncate hover:text-ve-collab-orange"
                                                     >
                                                         <TbFileText
