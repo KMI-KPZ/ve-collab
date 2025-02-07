@@ -170,6 +170,49 @@ class VEPlanResource:
         result = self.db.plans.find({"author": username, "is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
+    def find_plans_for_user_by_slug(self, username: str, slug: str) -> List[VEPlan]:
+        """
+        Search all available plans of given user (author, read/write access, GoodPracticePlans)
+        by given slug (name, topics, abstract)
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        # query plans where the user is the author or has read or write access
+        # regex with given slug
+        result = self.db.plans.find(
+            {
+                "$and": [
+                    {
+                        "$or": [
+                            {"author": username},
+                            {"read_access": username},
+                            {"write_access": username},
+                            {"is_good_practise": True},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"name": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }},
+                            {"topics": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }},
+                            {"abstract": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }}
+                        ]
+                    }
+                ]
+            }
+        )
+        return [VEPlan.from_dict(res) for res in result]
+
     def get_good_practise_plans(self) -> List[VEPlan]:
         """
         Request all plans that are marked as good practise.

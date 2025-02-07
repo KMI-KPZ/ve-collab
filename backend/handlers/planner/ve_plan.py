@@ -1835,6 +1835,27 @@ class VEPlanHandler(BaseHandler):
 
         self.serialize_and_write({"success": True, "plan": plan_dict})
 
+    def find_available_plans_for_user_by_slug(self, slug: str, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Search for all available plans (name, topics, abstract) of the current user by given slug
+
+        Responses:
+            200 OK --> contains all found plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [
+            plan.to_dict()
+            for plan in planner.find_plans_for_user_by_slug(self.current_user.username, slug)
+        ]
+        plans = self.add_profile_information_to_author(plans)
+
+        self.serialize_and_write({"success": True, "plans": plans})
+
     def get_available_plans_for_user(self, db: Database) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
