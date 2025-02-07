@@ -24,7 +24,9 @@ class Reports:
         based on the item_id and type from within the report, return the item that was reported
         """
 
-        item_id = util.parse_object_id(item_id)
+        # profile identifiers are not ObjectIds, but usernames
+        if item_type != "profile":
+            item_id = util.parse_object_id(item_id)
 
         try:
             if item_type == "post":

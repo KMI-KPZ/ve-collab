@@ -554,14 +554,20 @@
     },
     "report": {
         "report_title": "Melden",
-        "report_dialog_title": "Diesen {{type}} melden",
-        "report_description": "Bitte beschreibe kurz, warum du diesen {{type}} melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
         "report_reason_placeholder": "z.B. Spam, unangemessener Inhalt, Belästigung, etc.",
-        "report_types": {
-            "post": "Post",
-            "comment": "Kommentar",
-            "plan": "VE-Plan",
-            "group": "Gruppe"
+        "report_dialog_titles": {
+            "post": "Diesen Post melden",
+            "comment": "Diesen Kommentar melden",
+            "plan": "Diesen VE-Plan melden",
+            "group": "Diese Gruppe melden",
+            "profile": "Dieses Profil melden"
+        },
+        "report_descriptions": {
+            "post": "Bitte beschreibe kurz, warum du diesen Post melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "comment": "Bitte beschreibe kurz, warum du diesen Kommentar melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "plan": "Bitte beschreibe kurz, warum du diesen VE-Plan melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "group": "Bitte beschreibe kurz, warum du diese Gruppe melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
         }
     }
 }

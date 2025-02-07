@@ -272,7 +272,7 @@ export default function PlansBrowserItem({
                 setReportDialogOpen(true);
             }}
         >
-            <GoAlert title={t('report')} color="red" />
+            <GoAlert title={t('report.report_title')} color="red" />
         </button>
     );
 

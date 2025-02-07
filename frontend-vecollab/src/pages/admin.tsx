@@ -208,11 +208,18 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                     </button>
                                     <button
                                         type="button"
-                                        className="border border-red-600 text-red-600 bg-white rounded-lg my-4 p-2 h-16"
+                                        className={`border border-red-600 rounded-lg my-4 p-2 h-16 ${
+                                            report.type === 'profile'
+                                                ? 'text-gray-400 border-red-600/50 cursor-not-allowed'
+                                                : 'text-red-600 bg-white'
+                                        }`}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            setAskDeletion(true);
+                                            if (report.type !== 'profile') {
+                                                setAskDeletion(true);
+                                            }
                                         }}
+                                        disabled={report.type === 'profile'} // profiles can't be fully deleted (obviously)
                                     >
                                         Delete reported Item
                                     </button>

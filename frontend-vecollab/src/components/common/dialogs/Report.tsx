@@ -62,15 +62,11 @@ export default function ReportDialog({ reportedItemId, reportedItemType, closeCa
                 </div>
                 <div className="flex flex-col p-2">
                     <div className="font-bold">
-                        {t('report.report_dialog_title', {
-                            type: t('report.report_types.' + reportedItemType),
-                        })}
+                        {t(`report.report_dialog_titles.${reportedItemType}`)}
                     </div>
                     <div className="my-2">
                         <p className="mb-2">
-                            {t('report.report_description', {
-                                type: t('report.report_types.' + reportedItemType),
-                            })}
+                            {t(`report.report_descriptions.${reportedItemType}`)}
                         </p>
                         <textarea
                             rows={3}

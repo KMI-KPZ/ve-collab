@@ -555,14 +555,20 @@
     },
     "report": {
         "report_title": "Report",
-        "report_dialog_title": "Report this {{type}}",
-        "report_description": "Please describe the reason why you want to report this {{type}}. This will help us to take appropriate action.",
         "report_reason_placeholder": "e.g. spam, inappropriate content, harassment, etc.",
-        "report_types": {
-            "post": "Post",
-            "comment": "Comment",
-            "plan": "VE-Plan",
-            "group": "Group"
+        "report_dialog_titles": {
+            "post": "Report this post",
+            "comment": "Report this comment",
+            "plan": "Report this VE-Plan",
+            "group": "Report this group",
+            "profile": "Report this profile"
+        },
+        "report_descriptions": {
+            "post": "Please describe the reason why you want to report this post. This will help us to take appropriate action.",
+            "comment": "Please describe the reason why you want to report this comment. This will help us to take appropriate action.",
+            "plan": "Please describe the reason why you want to report this VE-Plan. This will help us to take appropriate action.",
+            "group": "Please describe the reason why you want to report this group. This will help us to take appropriate action.",
+            "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action."
         }
     }
 }
