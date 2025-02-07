@@ -641,13 +641,18 @@ export function useGetSearchResults(
     search: string,
     filterBy?: string[]
 ): {
-    data: { posts: BackendPost[]; spaces: BackendGroup[]; users: BackendProfile[] };
+    data: {
+        posts: BackendPost[];
+        spaces: BackendGroup[];
+        users: BackendProfile[];
+        plans: PlanPreview[];
+    };
     isLoading: boolean;
     error: APIError;
     mutate: KeyedMutator<any>;
 } {
     const { data: session } = useSession();
-    const defaultFilter = ['posts', 'users', 'spaces'];
+    const defaultFilter = ['posts', 'users', 'spaces', 'plans'];
     filterBy =
         filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
     const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
