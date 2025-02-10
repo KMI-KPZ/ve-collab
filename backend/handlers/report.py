@@ -1,5 +1,7 @@
 import json
 
+import tornado
+
 from handlers.base_handler import BaseHandler, auth_needed
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
@@ -8,6 +10,8 @@ from error_reasons import (
     REPORT_DOESNT_EXIST,
 )
 from exceptions import ReportDoesntExistError
+from resources.network.profile import Profiles
+from resources.notifications import NotificationResource
 from resources.reports import Reports
 import util
 
@@ -283,6 +287,28 @@ class ReportHandler(BaseHandler):
 
                 # insert the report
                 reports.insert_report(http_body)
+
+                # notify admins about the new report
+                profile_resource = Profiles(db)
+                admin_usernames = [
+                    result["username"]
+                    for result in profile_resource.get_admin_profiles(
+                        projection={"username": True}
+                    )
+                ]
+
+                async def _notification_send(usernames, payload):
+                    # since this will be run in a separate task, we need to acquire a new db connection
+                    with util.get_mongodb() as db:
+                        notification_resources = NotificationResource(db)
+                        for username in usernames:
+                            await notification_resources.send_notification(
+                                username, "report_submitted", payload
+                            )
+
+                tornado.ioloop.IOLoop.current().add_callback(
+                    _notification_send, admin_usernames, http_body
+                )
 
             self.write({"success": True})
 
