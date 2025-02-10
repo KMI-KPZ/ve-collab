@@ -31,6 +31,7 @@ from model import (
     VEPlan,
 )
 from resources.notifications import NotificationResource
+from resources.elasticsearch_integration import ElasticsearchConnector
 import util
 
 
@@ -170,6 +171,51 @@ class VEPlanResource:
         result = self.db.plans.find({"author": username, "is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
+    def find_plans_for_user_by_slug(self, username: str, slug: str) -> List[VEPlan]:
+        """
+        Search all available plans of given user (author, read/write access, GoodPracticePlans)
+        by given slug (name, topics, abstract)
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        # TODO use ElasticSearch query instead
+
+        # query plans where the user is the author or has read or write access
+        # regex with given slug
+        result = self.db.plans.find(
+            {
+                "$and": [
+                    {
+                        "$or": [
+                            {"author": username},
+                            {"read_access": username},
+                            {"write_access": username},
+                            {"is_good_practise": True},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"name": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }},
+                            {"topics": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }},
+                            {"abstract": {
+                                "$regex": slug,
+                                "$options": "i"
+                            }}
+                        ]
+                    }
+                ]
+            }
+        )
+        return [VEPlan.from_dict(res) for res in result]
+
     def get_good_practise_plans(self) -> List[VEPlan]:
         """
         Request all plans that are marked as good practise.
@@ -181,7 +227,38 @@ class VEPlanResource:
         result = self.db.plans.find({"is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
-    def insert_plan(self, plan: VEPlan) -> ObjectId:
+    def _get_plan_for_elastic(self, plan: VEPlan) -> Dict:
+        """
+        Get minimized copy of a plan for elastic
+        """
+
+        elastic_plan = {
+            "_id": plan._id,
+            "name": plan.name,
+            "author": plan.author,
+            "read_access": plan.read_access,
+            "write_access": plan.write_access,
+            "topics": plan.topics,
+            "is_good_practise": plan.is_good_practise,
+            "abstract": plan.abstract
+        }
+
+        return elastic_plan.copy()
+
+    def _update_elastic_plan(self, plan_id: str | ObjectId, elasticsearch_collection: str = "plans") -> None:
+        """
+        Simply update existing plan in Elasticsearch by given plan_id
+        """
+
+        elastic_plan = self._get_plan_for_elastic(
+            self.get_plan(plan_id)
+        )
+
+        ElasticsearchConnector().on_update(
+            plan_id, elasticsearch_collection, elastic_plan
+        )
+
+    def insert_plan(self, plan: VEPlan, elasticsearch_collection: str = "plans") -> ObjectId:
         """
         Insert the given plan into the database, returning the ObjectId of the
         freshly generated document.
@@ -201,6 +278,12 @@ class VEPlanResource:
             result = self.db.plans.insert_one(plan.to_dict())
         except DuplicateKeyError:
             raise PlanAlreadyExistsError()
+
+        elastic_plan = self._get_plan_for_elastic(plan)
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(
+            result.inserted_id, elastic_plan, elasticsearch_collection
+        )
 
         return result.inserted_id
 
@@ -370,6 +453,9 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan._id)
 
         return plan._id
 
@@ -565,6 +651,9 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
 
         # if the updated field was partners, two side effects happen:
         # - the partners will automatically gain write access to the plan
@@ -935,6 +1024,8 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
+        # TODO update elastic
+
     def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Set write permissions for the user given by `username` for the plan with the
@@ -962,6 +1053,9 @@ class VEPlanResource:
 
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
 
     def revoke_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
@@ -992,6 +1086,9 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
     def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Revoke write permissions for the user given by `username` for the plan with the
@@ -1019,7 +1116,10 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
-    def delete_plan(self, _id: str | ObjectId) -> None:
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
+    def delete_plan(self, _id: str | ObjectId, elasticsearch_collection: str = "plans") -> None:
         """
         Remove a plan from the database by specifying its `_id`.
 
@@ -1043,6 +1143,9 @@ class VEPlanResource:
 
         if result.deleted_count != 1:
             raise PlanDoesntExistError()
+
+        # update elastic
+        ElasticsearchConnector().on_delete(_id, elasticsearch_collection)
 
     def delete_step_by_id(
         self,
