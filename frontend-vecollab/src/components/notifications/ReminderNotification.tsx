@@ -42,7 +42,7 @@ export default function ReminderNotification({
                                         die Zeit, Evaluationen durchzuführen - davon sind auch deine
                                         VE-Projekte nicht ausgeschlossen. Wenn du noch Informationen
                                         und Inspiration für die Evaluation suchst, dann schau doch
-                                        mal in die <b>Materialien zur Evaluation von VE&apos;s</b>!
+                                        mal in die <b>Materialien zur Evaluation von VEs</b>!
                                     </p>
                                 );
                             case 'reminder_good_practise_examples':
@@ -52,9 +52,8 @@ export default function ReminderNotification({
                                         methodisch-didaktische Gestaltung deines Projekts? Wirf doch
                                         einen Blick in die Good-Practice-Beispiele auf deinem
                                         <b>VE-Designer-Dashboard</b>, um neue Inspiration zu
-                                        schöpfen! Oder schau dir Beispiel-VE&apos;s aus
-                                        verschiedenen Fachbereichen in den{' '}
-                                        <b>Selbstlernmaterialien</b> an.
+                                        schöpfen! Oder schau dir Beispiel-VEs aus verschiedenen
+                                        Fachbereichen in den <b>Selbstlernmaterialien</b> an.
                                     </p>
                                 );
                             case 'reminder_icebreaker':

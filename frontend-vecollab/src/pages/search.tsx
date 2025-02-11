@@ -4,7 +4,7 @@ import TimelinePostText from '@/components/network/TimelinePostText';
 import Timestamp from '@/components/common/Timestamp';
 import { useGetSearchResults } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import { GiSadCrab } from 'react-icons/gi';
 import { MdSearch } from 'react-icons/md';
 import GeneralError from '@/components/common/GeneralError';
@@ -14,6 +14,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 import UserProfileImage from '@/components/network/UserProfileImage';
+import useDynamicPlaceholder from '@/components/common/useDynamicPlaceholder';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -27,6 +28,9 @@ export default function SearchResult() {
         router.query.search as string,
         router.query.filter ? (router.query.filter as string).split(',') : undefined
     );
+
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    useDynamicPlaceholder(searchInputRef);
 
     const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -48,6 +52,7 @@ export default function SearchResult() {
                                 placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
+                                ref={searchInputRef}
                                 defaultValue={
                                     router.query.search ? (router.query.search as string) : ''
                                 }

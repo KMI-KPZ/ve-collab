@@ -290,94 +290,93 @@ export default function Group({ socket }: Props): JSX.Element {
         return isGlobalAdmin || group.admins.includes(session?.user?.preferred_username as string);
     }
 
+    if (isLoading) return <LoadingAnimation />;
+
+    if (!(userIsMember() || userIsAdmin()))
+        return (
+            <>
+                <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
+                <AccessDenied />
+            </>
+        );
+
     return (
         <>
-            {isLoading ? (
-                <LoadingAnimation />
-            ) : (
-                <>
-                    <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
-                    {!(userIsMember() || userIsAdmin()) ? (
-                        <AccessDenied />
-                    ) : (
-                        <>
-                            <GroupBanner userIsAdmin={userIsAdmin} />
-                            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
-                                <GroupHeader userIsAdmin={userIsAdmin} />
-                            </div>
-                            <div className={'mx-20 flex'}>
-                                <div className={'w-3/4  mr-4'}>
-                                    {(() => {
-                                        switch (renderPicker) {
-                                            case 'timeline':
-                                                return (
-                                                    <Timeline
-                                                        socket={socket}
-                                                        group={group._id}
-                                                        userIsAdmin={userIsAdmin()}
-                                                        groupACL={groupACLEntry}
-                                                    />
-                                                );
-                                            case 'members':
-                                                return members();
-                                            case 'files':
-                                                return files();
+            <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
 
-                                            default:
-                                                return <div></div>;
-                                        }
-                                    })()}
-                                </div>
-                                <div className={'w-1/4  ml-4'}>
-                                    <button
-                                        className={
-                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                            (renderPicker === 'timeline'
-                                                ? 'bg-ve-collab-blue text-white'
-                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                                        }
-                                        onClick={() => setRenderPicker('timeline')}
-                                    >
-                                        <span>{t('dashboard')}</span>
-                                    </button>
-                                    <button
-                                        className={
-                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                            (renderPicker === 'members'
-                                                ? 'bg-ve-collab-blue text-white'
-                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                                        }
-                                        onClick={() => setRenderPicker('members')}
-                                    >
-                                        <span>{t('members')}</span>
-                                    </button>
-                                    <button
-                                        className={
-                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
-                                            (renderPicker === 'files'
-                                                ? 'bg-ve-collab-blue text-white'
-                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                                        }
-                                        onClick={() => setRenderPicker('files')}
-                                    >
-                                        <span>{t('fileshare')}</span>
-                                    </button>
-                                    <WhiteBox>
-                                        <BoxHeadline title={t('description')} />
-                                        <div className="min-h-[20vh] mx-2 my-4 px-1">
-                                            <div className={'text-gray-500'}>
-                                                {group?.space_description
-                                                    ? group.space_description
-                                                    : t('no_description_available')}
-                                            </div>
-                                        </div>
-                                    </WhiteBox>
-                                </div>
+            <GroupBanner userIsAdmin={userIsAdmin} />
+            <div className={'md:mx-20 mb-2 px-5 pt-[100px] relative'}>
+                <GroupHeader userIsAdmin={userIsAdmin} />
+            </div>
+            <div className={'md:mx-20 flex flex-wrap flex-wrap-reverse'}>
+                <div className={'w-full md:w-3/4 md:pr-4'}>
+                    {(() => {
+                        switch (renderPicker) {
+                            case 'timeline':
+                                return (
+                                    <Timeline
+                                        socket={socket}
+                                        group={group._id}
+                                        userIsAdmin={userIsAdmin()}
+                                        groupACL={groupACLEntry}
+                                    />
+                                );
+                            case 'members':
+                                return members();
+                            case 'files':
+                                return files();
+
+                            default:
+                                return <div></div>;
+                        }
+                    })()}
+                </div>
+                <div className={'w-full md:w-1/4 lg:pl-4'}>
+                    <button
+                        className={
+                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            (renderPicker === 'timeline'
+                                ? 'bg-ve-collab-blue text-white'
+                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                        }
+                        onClick={() => setRenderPicker('timeline')}
+                    >
+                        <span>{t('dashboard')}</span>
+                    </button>
+                    <button
+                        className={
+                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            (renderPicker === 'members'
+                                ? 'bg-ve-collab-blue text-white'
+                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                        }
+                        onClick={() => setRenderPicker('members')}
+                    >
+                        <span>{t('members')}</span>
+                    </button>
+                    <button
+                        className={
+                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            (renderPicker === 'files'
+                                ? 'bg-ve-collab-blue text-white'
+                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                        }
+                        onClick={() => setRenderPicker('files')}
+                    >
+                        <span>{t('fileshare')}</span>
+                    </button>
+                    <WhiteBox>
+                        <BoxHeadline title={t('description')} />
+                        <div className="min-h-[20vh] mx-2 my-4 px-1">
+                            <div className={'text-gray-500'}>
+                                {group?.space_description
+                                    ? group.space_description
+                                    : t('no_description_available')}
                             </div>
-                        </>
-                    )}
-                </>
-            )}
+                        </div>
+                    </WhiteBox>
+                </div>
+            </div>
         </>
     );
 }

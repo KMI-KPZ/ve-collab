@@ -321,37 +321,69 @@ export default function Groups() {
         return <Dropdown options={options} onSelect={handleSelectOption} />;
     };
 
-    const Item = ({ group, buttons }: { group: BackendGroup; buttons: JSX.Element }) => (
-        <>
-            <div className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer flex flex-nowrap items-center">
-                <Link
-                    href={`/group/${group._id}`}
-                    className="py-2 w-full flex flex-nowrap items-center"
-                >
-                    <AuthenticatedImage
-                        imageId={group.space_pic}
-                        alt={t('group_picture')}
-                        width={60}
-                        height={60}
-                        className="rounded-full mr-2"
-                    ></AuthenticatedImage>
+    const Item = ({
+        group,
+        clickable,
+        buttons,
+    }: {
+        group: BackendGroup;
+        clickable: boolean;
+        buttons: JSX.Element;
+    }) => (
+        <div className="flex items-center">
+            <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center hover:bg-slate-50 px-2">
+                {clickable ? (
+                    <Link
+                        href={`/group/${group._id}`}
+                        className="py-2 w-full flex flex-nowrap items-center"
+                    >
+                        <AuthenticatedImage
+                            imageId={group.space_pic}
+                            alt={t('group_picture')}
+                            width={60}
+                            height={60}
+                            className="rounded-full mr-2"
+                        ></AuthenticatedImage>
 
-                    <div className="flex flex-col truncate">
-                        <span className="font-semibold truncate">
-                            {group.name}
-                            {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
+                        <div className="flex flex-col truncate">
+                            <span className="font-semibold truncate">
+                                {group.name}
+                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
                             {group.members.length} {t('members')}
                         </span> */}
-                        </span>
-                        {group.space_description && (
-                            <p className="truncate">{group.space_description}</p>
-                        )}
+                            </span>
+                            {group.space_description && (
+                                <p className="truncate">{group.space_description}</p>
+                            )}
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="py-2 w-full flex flex-nowrap items-center">
+                        <AuthenticatedImage
+                            imageId={group.space_pic}
+                            alt={t('group_picture')}
+                            width={60}
+                            height={60}
+                            className="rounded-full mr-2"
+                        ></AuthenticatedImage>
+
+                        <div className="flex flex-col truncate">
+                            <span className="font-semibold truncate">
+                                {group.name}
+                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
+                            {group.members.length} {t('members')}
+                        </span> */}
+                            </span>
+                            {group.space_description && (
+                                <p className="truncate">{group.space_description}</p>
+                            )}
+                        </div>
                     </div>
-                </Link>
+                )}
                 {buttons}
-                <div className="sm:ml-0 md:ml-2 lg:ml-4">
-                    <GroupDrowndown />
-                </div>
+            </div>
+            <div className="sm:ml-0 md:ml-2 lg:ml-4">
+                <GroupDrowndown />
             </div>
             {reportDialogOpen && (
                 <ReportDialog
@@ -362,22 +394,32 @@ export default function Groups() {
                     }}
                 />
             )}
-        </>
+        </div>
     );
 
     const Items = () => (
         <div className="mx-10">
-            {!searchInput && groups?.length === 0 && <>{t('no_groups_available')}</>}
-            {searchInput && groups?.length === 0 && <>{t('no_groups_found')}</>}
-            {groups?.map((group, i) => (
-                <Item
-                    group={group}
-                    key={i}
-                    buttons={
-                        <>
-                            {!group.members.includes(session!.user.preferred_username!) &&
-                                // if group is joinable, render join button
-                                (group.joinable ? (
+            {!searchInput && groups?.length === 0 && (
+                <p className="italic m-2">{t('no_groups_available')}</p>
+            )}
+            {searchInput && groups?.length === 0 && (
+                <p className="italic m-2">{t('no_groups_found')}</p>
+            )}
+            {groups?.map((group, i) => {
+                // user is member
+                if (group.members.includes(session!.user.preferred_username!)) {
+                    return <Item clickable={true} group={group} key={i} buttons={<></>} />;
+                }
+                // user is not member
+                return (
+                    <Item
+                        clickable={false}
+                        group={group}
+                        key={i}
+                        buttons={
+                            <>
+                                {/* group is joinable, render join button */}
+                                {group.joinable ? (
                                     <ButtonDarkBlue
                                         onClick={() => {
                                             sendJoinRequest(group._id);
@@ -385,12 +427,13 @@ export default function Groups() {
                                     >
                                         {t('join')}
                                     </ButtonDarkBlue>
-                                ) : // if group is not joinable and user has already requested to join, render disabled "already requested" button
+                                ) : // group is not joinable; user has already requested to join
                                 group.requests.includes(session!.user.preferred_username!) ? (
                                     <span className="px-4 py-2 rounded-md shadow border">
                                         {t('join_requested')}
                                     </span>
                                 ) : (
+                                    // group is not joinable; user has not already requested to join
                                     <ButtonLightBlue
                                         onClick={() => {
                                             sendJoinRequest(group._id);
@@ -398,11 +441,12 @@ export default function Groups() {
                                     >
                                         {t('request_join')}
                                     </ButtonLightBlue>
-                                ))}
-                        </>
-                    }
-                />
-            ))}
+                                )}
+                            </>
+                        }
+                    />
+                );
+            })}
         </div>
     );
 
@@ -463,17 +507,18 @@ export default function Groups() {
                                 tabname={t('my_requests_and_invitations')}
                             >
                                 <div className="mx-10">
-                                    {myGroupInvites.length == 0 &&
-                                        myGroupRequests.length == 0 &&
-                                        t('no_current_requests')}
+                                    {myGroupInvites.length == 0 && myGroupRequests.length == 0 && (
+                                        <p className="italic m-2">{t('no_current_requests')}</p>
+                                    )}
 
                                     {myGroupInvites.length > 0 && (
                                         <>
                                             <H2>{t('pending_invitations')}</H2>
                                             {myGroupInvites.map((group, i) => (
                                                 <Item
-                                                    group={group}
                                                     key={i}
+                                                    group={group}
+                                                    clickable={true}
                                                     buttons={
                                                         <>
                                                             <ButtonPrimary
@@ -503,8 +548,9 @@ export default function Groups() {
                                             <H2>{t('pending_requests')}</H2>
                                             {myGroupRequests.map((group, i) => (
                                                 <Item
-                                                    group={group}
                                                     key={i}
+                                                    group={group}
+                                                    clickable={false}
                                                     buttons={
                                                         <ButtonLightBlue
                                                             onClick={() => {

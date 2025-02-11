@@ -34,7 +34,8 @@
     "unsaved_changes": "Unsaved changes",
     "unsaved_changes_text": "Your current changes to this site will not be saved.",
     "step_done_question": "Step ready?",
-    "toggle_state_hover": "KKlick to change the editing status",
+    "toggle_state_hover": "Klick to change the editing status",
+    "default_new_plan_name": "Plan",
     "sidebar": {
         "general": "General Information",
         "phases": "Project plan",
@@ -154,7 +155,7 @@
     },
     "learningEnv": {
         "title": "Digital learning environment",
-        "page_description": "Describe the VE's digital learning environment, specify the format (synchronous / asynchronous), and add optional physical meetings.",
+        "page_description": "Describe the VEs digital learning environment, specify the format (synchronous / asynchronous), and add optional physical meetings.",
         "subtitle": "In which digital learning environment does the VE take place?",
         "description": "Please specify which shared learning platform is available to your participants, e.g. a joint project page or shared padlet, or which individual platform each of the participating partners use. If applicable, also name the most important digital tools for your project, e.g. the video conferencing system or virtual environments you will be using.",
         "tooltip": "More about LMS can be found in the self-learning materials…",
