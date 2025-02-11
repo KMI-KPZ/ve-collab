@@ -51,6 +51,7 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
+from handlers.report import ReportHandler
 from handlers.template_debug_handler import TemplateDebugHandler
 from resources.notifications import (
     new_message_mail_notification_dispatch,
@@ -136,6 +137,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/mail_invitation", EmailInvitationHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
+            (r"/report/(.+)", ReportHandler),
             (r"/mbr_sync", MBRSyncHandler),
             (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),

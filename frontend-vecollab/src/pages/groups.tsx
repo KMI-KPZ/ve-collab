@@ -28,6 +28,9 @@ import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import ButtonDarkBlue from '@/components/common/buttons/ButtonDarkBlue';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import H2 from '@/components/common/H2';
+import { GoAlert } from 'react-icons/go';
+import Dropdown from '@/components/common/Dropdown';
+import ReportDialog from '@/components/common/dialogs/Report';
 
 Groups.auth = true;
 Groups.noAuthPreview = <GroupsNoAuthPreview />;
@@ -43,6 +46,8 @@ export default function Groups() {
     // const [searchResults, setSearchResults] = useState<BackendGroup[]>([]);
 
     const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
     // const { data: myGroups, mutate: mutateMyGroups } = useGetMyGroups(session!.accessToken);
     const {
@@ -292,6 +297,30 @@ export default function Groups() {
     //     </>
     // );
 
+    const handleSelectOption = (value: string, ...rest: any[]) => {
+        switch (value) {
+            case 'report':
+                setReportDialogOpen(true);
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    const GroupDrowndown = () => {
+        const options = [
+            {
+                value: 'report',
+                label: t('common:report.report_title'),
+                icon: <GoAlert />,
+                liClasses: 'text-red-500',
+            },
+        ];
+
+        return <Dropdown options={options} onSelect={handleSelectOption} />;
+    };
+
     const Item = ({
         group,
         clickable,
@@ -301,56 +330,70 @@ export default function Groups() {
         clickable: boolean;
         buttons: JSX.Element;
     }) => (
-        <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center hover:bg-slate-50 px-2">
-            {clickable ? (
-                <Link
-                    href={`/group/${group._id}`}
-                    className="py-2 w-full flex flex-nowrap items-center"
-                >
-                    <AuthenticatedImage
-                        imageId={group.space_pic}
-                        alt={t('group_picture')}
-                        width={60}
-                        height={60}
-                        className="rounded-full mr-2"
-                    ></AuthenticatedImage>
+        <div className="flex items-center">
+            <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center hover:bg-slate-50 px-2">
+                {clickable ? (
+                    <Link
+                        href={`/group/${group._id}`}
+                        className="py-2 w-full flex flex-nowrap items-center"
+                    >
+                        <AuthenticatedImage
+                            imageId={group.space_pic}
+                            alt={t('group_picture')}
+                            width={60}
+                            height={60}
+                            className="rounded-full mr-2"
+                        ></AuthenticatedImage>
 
-                    <div className="flex flex-col truncate">
-                        <span className="font-semibold truncate">
-                            {group.name}
-                            {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
+                        <div className="flex flex-col truncate">
+                            <span className="font-semibold truncate">
+                                {group.name}
+                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
                             {group.members.length} {t('members')}
                         </span> */}
-                        </span>
-                        {group.space_description && (
-                            <p className="truncate">{group.space_description}</p>
-                        )}
-                    </div>
-                </Link>
-            ) : (
-                <div className="py-2 w-full flex flex-nowrap items-center">
-                    <AuthenticatedImage
-                        imageId={group.space_pic}
-                        alt={t('group_picture')}
-                        width={60}
-                        height={60}
-                        className="rounded-full mr-2"
-                    ></AuthenticatedImage>
+                            </span>
+                            {group.space_description && (
+                                <p className="truncate">{group.space_description}</p>
+                            )}
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="py-2 w-full flex flex-nowrap items-center">
+                        <AuthenticatedImage
+                            imageId={group.space_pic}
+                            alt={t('group_picture')}
+                            width={60}
+                            height={60}
+                            className="rounded-full mr-2"
+                        ></AuthenticatedImage>
 
-                    <div className="flex flex-col truncate">
-                        <span className="font-semibold truncate">
-                            {group.name}
-                            {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
+                        <div className="flex flex-col truncate">
+                            <span className="font-semibold truncate">
+                                {group.name}
+                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
                             {group.members.length} {t('members')}
                         </span> */}
-                        </span>
-                        {group.space_description && (
-                            <p className="truncate">{group.space_description}</p>
-                        )}
+                            </span>
+                            {group.space_description && (
+                                <p className="truncate">{group.space_description}</p>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
+                {buttons}
+            </div>
+            <div className="sm:ml-0 md:ml-2 lg:ml-4">
+                <GroupDrowndown />
+            </div>
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={group._id}
+                    reportedItemType="group"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
+                    }}
+                />
             )}
-            {buttons}
         </div>
     );
 

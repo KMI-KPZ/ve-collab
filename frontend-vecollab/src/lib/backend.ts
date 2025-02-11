@@ -9,6 +9,7 @@ import {
     BackendProfile,
     BackendUserACLEntry,
     BackendUser25,
+    Report,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -664,6 +665,26 @@ export function useGetSearchResults(
 
     return {
         data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetOpenReports(accessToken: string): {
+    data: Report[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/report/get_open', accessToken],
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? [] : data.reports,
         isLoading,
         error,
         mutate,
