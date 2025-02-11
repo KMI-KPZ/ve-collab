@@ -66,6 +66,14 @@
             "text2": " hinzugefügt.",
             "text3": "Du hast automatisch Zugriff auf diesen VE-Plan bekommen und findest ihn ab sofort in deinem Dashboard, oder direkt ",
             "text4": "."
+        },
+        "report_submitted": {
+            "title": "neue Meldung",
+            "text1": "Ein neuer Inhalt wurde gemeldet. Klicke hier zu moderieren."
+        },
+        "content_deleted_due_to_report": {
+            "title": "Inhalt gelöscht",
+            "text1": "Einer deiner Inhalte wurde aufgrund einer Meldung gelöscht. Falls du E-Mail-Benachrichtigungen aktiviert hast, erhältst du darüber detailiertere Informationen."
         }
     },
     "profile": "Profil",

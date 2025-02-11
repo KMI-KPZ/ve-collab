@@ -218,6 +218,7 @@ def _append_msg_text(
         "plan_added_as_partner.html",
         "email_invitation.html",
         "report_submitted.html",
+        "content_deleted_due_to_report.html",
     ],
     payload: Dict,
 ) -> None:
@@ -399,6 +400,13 @@ def _append_msg_text(
         with open("assets/email_templates/report_submitted.txt", "r") as f:
             text = f.read()
 
+    elif template == "content_deleted_due_to_report.html":
+        with open("assets/email_templates/content_deleted_due_to_report.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name, content_type=payload["type"]
+            )
+
     else:
         raise ValueError("Invalid template name: {}".format(template))
 
@@ -425,6 +433,7 @@ def send_email(
         "plan_added_as_partner.html",
         "email_invitation.html",
         "report_submitted.html",
+        "content_deleted_due_to_report.html",
     ],
     payload: Dict,
 ) -> None:

@@ -343,7 +343,7 @@ class ReportHandler(BaseHandler):
         else:
             self.set_status(404)
 
-    def delete(self, slug):
+    async def delete(self, slug):
         """
         DELETE /report/delete
             Given the reports _id, delete the reported item within.
@@ -399,7 +399,7 @@ class ReportHandler(BaseHandler):
             with util.get_mongodb() as db:
                 reports = Reports(db)
                 try:
-                    reports.delete_reported_item(report_id)
+                    await reports.delete_reported_item(report_id)
                 except ReportDoesntExistError:
                     self.set_status(409)
                     self.write({"success": False, "reason": REPORT_DOESNT_EXIST})

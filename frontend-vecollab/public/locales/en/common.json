@@ -66,6 +66,14 @@
             "text2": ".",
             "text3": "You have automatically received access to this plan and it is now available in your dashboard, or directly ",
             "text4": "."
+        },
+        "report_submitted": {
+            "title": "new Report",
+            "text1": "Someone has filed a new report. Please click here to moderate the report."
+        },
+        "content_deleted_due_to_report": {
+            "title": "Content deleted",
+            "text1": "Your content has been deleted due to a report. If you have E-Mail notifications enabled, you will receive a detailed explanation."
         }
     },
     "profile": "Profile",

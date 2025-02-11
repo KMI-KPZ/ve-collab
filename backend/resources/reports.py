@@ -7,6 +7,7 @@ from resources.network.chat import Chat
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+from resources.notifications import NotificationResource
 from resources.planner.ve_plan import VEPlanResource
 from exceptions import ReportDoesntExistError
 import util
@@ -140,7 +141,7 @@ class Reports:
         if result.matched_count == 0:
             raise ReportDoesntExistError("Report not found")
 
-    def delete_reported_item(self, report_id: str | ObjectId) -> None:
+    async def delete_reported_item(self, report_id: str | ObjectId) -> None:
         """
         Given the `report_id`, delete the item that was reported within the report.
         This may cause cascading deletions, e.g. deleting a post will also delete its comments,
@@ -153,33 +154,56 @@ class Reports:
         """
 
         report_id = util.parse_object_id(report_id)
-
         report = self.get_report(report_id)
 
-        # TODO dispatch notification to the respective owners / authors of the item,
-        # informing them that their item has been deleted due to a report
+        send_deletion_notification = True
 
-        if report["type"] == "post":
-            post_manager = Posts(self.db)
-            post_manager.delete_post(report["item_id"])
-        elif report["type"] == "comment":
-            post_manager = Posts(self.db)
-            post_manager.delete_comment(report["item_id"])
-        elif report["type"] == "plan":
-            plan_manager = VEPlanResource(self.db)
-            plan_manager.delete_plan(report["item_id"])
-        elif report["type"] == "profile":
-            # TODO
-            # we cant delete profiles completely, find solution what to do
-            pass
-        elif report["type"] == "group":
-            space_manager = Spaces(self.db)
-            space_manager.delete_space(report["item_id"])
-        elif report["type"] == "chatroom":
-            # TODO
-            # we cant delete a whole room, and deleting messages completely
-            # also disturbs context, maybe just set the message content to [deleted] or sth
-            pass
+        try:
+            if report["type"] == "post":
+                post_manager = Posts(self.db)
+                post_manager.delete_post(report["item_id"])
+            elif report["type"] == "comment":
+                post_manager = Posts(self.db)
+                post_manager.delete_comment(report["item_id"])
+            elif report["type"] == "plan":
+                plan_manager = VEPlanResource(self.db)
+                plan_manager.delete_plan(report["item_id"])
+            elif report["type"] == "profile":
+                # we cant delete profiles completely, manual resolution by admins required
+                send_deletion_notification = False
+            elif report["type"] == "group":
+                space_manager = Spaces(self.db)
+                space_manager.delete_space(report["item_id"])
+            elif report["type"] == "chatroom":
+                # cant delete chatrooms completely, manual resolution by admins required
+                send_deletion_notification = False
 
-        # after deleting the item, close the report automatically
-        self.close_report(report_id)
+            if send_deletion_notification:
+                # determine owner/author of the item
+                if report["type"] == "post":
+                    owner = report["item"]["author"]
+                elif report["type"] == "comment":
+                    owner = None
+                    for comment in report["item"]["comments"]:
+                        if util.parse_object_id(comment["_id"]) == util.parse_object_id(
+                            report["item_id"]
+                        ):
+                            owner = comment["author"]
+                            break
+                elif report["type"] == "plan":
+                    owner = report["item"]["author"]
+                elif report["type"] == "group":
+                    owner = report["item"]["admins"][0]
+                else:
+                    owner = None
+
+                if owner is not None:
+                    notification_resource = NotificationResource(self.db)
+                    await notification_resource.send_notification(
+                        owner,
+                        "content_deleted_due_to_report",
+                        {"type": report["type"], "item": report["item"]},
+                    )
+        finally:
+            # after deleting the item, close the report automatically
+            self.close_report(report_id)
