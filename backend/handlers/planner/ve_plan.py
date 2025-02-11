@@ -174,7 +174,7 @@ class VEPlanHandler(BaseHandler):
                 filter_gp: <true|false>, if true, only return good practise examples
                 filter_access: <all|own|shared>, if "all", return all plans that i have access to (default),
                     if "own", return only my own plans, if "shared", return only plans that i have gotten read/write access to
-                query: <str>, if given, only return plans that contain the query in their name
+                query: <str>, if given, only return plans that contain the query in their name, topics or abstract
                 limit: <int>, if given, limit the amount of returned plans to this number (default 10)
                 offset: <int>, if given, skip this amount of plans before returning the results (default 0)
 
@@ -1898,6 +1898,20 @@ class VEPlanHandler(BaseHandler):
         Request all available plans for the current user, i.e. their own plans and
         those that he/she has read/write access to and those that are marked as
         good practise examples (read only).
+
+        Optionally, apply the following filters and searches:
+        - `filter_good_practice_only`: only return good practise plans
+        - `filter_access`:
+            - all: return all plans that the user has access to, i.e. own plans, 
+                   read/write access and good practise plans
+            - own: return only the user's own plans
+            - shared: return only plans that the user has read/write access to
+        - `search_query`: a string to search for in the plans' names, topics and abstracts
+
+        `filter_access` and `search_query` are first combined with an AND operator and afterwards
+        the `filter_good_practice_only` is applied on top of this result.
+        
+        `limit` and `offset` are used for pagination.
 
         Responses:
             200 OK --> contains all available plans in a list of dictionaries
