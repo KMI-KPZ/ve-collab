@@ -344,13 +344,13 @@ export default function PlansBrowserItem({
                     </span>
                 ) : (
                     <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer"
+                        className="w-[45px] h-[45px] flex justify-center items-center rounded-full border text-sm -m-1 whitespace-nowrap cursor-pointer"
                         title={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,
                         })}
                     >
-                        {completedSteps} / {stepsToProgress}
+                        {completedSteps}/{stepsToProgress}
                     </span>
                 )}
             </div>
@@ -368,7 +368,7 @@ export default function PlansBrowserItem({
             >
                 <div className="flex items-center flex-wrap">
                     <div className="flex order-1 truncate xl:max-w-[60%] items-center">
-                        <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
+                        <div className="grow mr-2 font-bold whitespace-nowrap truncate">
                             <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                                 {plan.name}
                             </Link>
@@ -379,8 +379,13 @@ export default function PlansBrowserItem({
                             </div>
                         )}
                     </div>
+                    {plan.abstract && (
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm truncate">
+                            {plan.abstract}
+                        </div>
+                    )}
                     {plan.topics.length > 0 && (
-                        <div className="w-full order-2 xl:order-3 mr-2 py-1 text-gray-700 truncate">
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm italic truncate">
                             {plan.topics.join(' / ')}
                         </div>
                     )}
