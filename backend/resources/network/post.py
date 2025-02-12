@@ -77,7 +77,6 @@ class Posts:
         if not post:
             raise PostNotExistingException()
 
-        logger.info("DEBUG.get_post {}".format(post))
 
         # may add plans information
         if "plans" in post and post["plans"] != []:
@@ -85,7 +84,6 @@ class Posts:
             with util.get_mongodb() as db:
                 plan_manager = VEPlanResource(db)
                 plans = plan_manager.get_bulk_plans(plan_ids)
-                logger.info("DEBUG.get_post.plans {}".format(plans))
                 post["plans"] = []
                 for plan in plans:
                     if isinstance(plan, VEPlan):
