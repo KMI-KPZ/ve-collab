@@ -12,8 +12,12 @@ from pymongo.database import Database
 
 from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+from model import VEPlan
+from resources.planner.ve_plan import VEPlanResource
 import util
 
+# import logging
+# logger = logging.getLogger(__name__)
 
 class Posts:
     """
@@ -165,9 +169,30 @@ class Posts:
             {"_id": post_id}, {"$set": {"text": text}}
         )
 
-        # if no documents have been modified by the update
-        # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+        return post_id
+
+    def update_post_plans(self, post_id: str | ObjectId, plan_ids: List[str | ObjectId]) -> ObjectId:
+        """
+        update the plans of an existing post
+        """
+
+        post_id = util.parse_object_id(post_id)
+        for plan_id in plan_ids:
+            try:
+                plan_id = util.parse_object_id(plan_id)
+            except InvalidId:
+                pass
+
+        # try to do the update
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"plans": plan_ids}}
+        )
+
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
         return post_id
 

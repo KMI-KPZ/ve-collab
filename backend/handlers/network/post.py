@@ -412,6 +412,7 @@ class PostHandler(BaseTimelineHandler):
                         return
 
                 # update the text
+                # logger.info("DEBUG.update_post {}".format(post))
                 try:
                     post_manager.update_post_text(_id, text)
                 except PostNotExistingException:
@@ -420,6 +421,26 @@ class PostHandler(BaseTimelineHandler):
                         {"status": 409, "success": False, "reason": "post_doesnt_exist"}
                     )
                     return
+
+                plans_ids = self.get_body_argument("plans", [])
+                try:
+                    plans_ids = json.loads(plans_ids)
+                except Exception:
+                    pass
+
+                plan_manager = VEPlanResource(db)
+                if plans_ids:
+                    # got plans from request -> update DB
+                    for plan_id in plans_ids:
+                        try:
+                            if not plan_manager._check_write_access(plan_id, self.current_user.username):
+                                raise NoWriteAccessError()
+                        except PlanDoesntExistError:
+                            raise
+                    post_manager.update_post_plans(_id, plans_ids)
+                elif post["plans"]:
+                    # had plans in post but not in request -> remove in post!
+                    post_manager.update_post_plans(_id, [])
 
             self.set_status(200)
             self.write({"status": 200, "success": True})
