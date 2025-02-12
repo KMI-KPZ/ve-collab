@@ -12,6 +12,8 @@ from pymongo.database import Database
 
 from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+from model import VEPlan
+from resources.planner.ve_plan import VEPlanResource
 import util
 
 
@@ -74,6 +76,21 @@ class Posts:
         post = self.db.posts.find_one({"_id": post_id}, projection=projection)
         if not post:
             raise PostNotExistingException()
+
+        logger.info("DEBUG.get_post {}".format(post))
+
+        # may add plans information
+        if "plans" in post and post["plans"] != []:
+            plan_ids = post["plans"].copy()
+            with util.get_mongodb() as db:
+                plan_manager = VEPlanResource(db)
+                plans = plan_manager.get_bulk_plans(plan_ids)
+                logger.info("DEBUG.get_post.plans {}".format(plans))
+                post["plans"] = []
+                for plan in plans:
+                    if isinstance(plan, VEPlan):
+                        plan = plan.to_dict()
+                    post["plans"].append(plan)
 
         return post
 
