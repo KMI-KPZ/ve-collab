@@ -209,6 +209,23 @@ class Posts:
             raise PostNotExistingException()
         return post_id
 
+    def update_post_files(self, post_id: str | ObjectId, files: List[Dict]) -> ObjectId:
+        """
+        update the files of an existing post
+        """
+
+        post_id = util.parse_object_id(post_id)
+
+        # try to do the update
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"files": files}}
+        )
+
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+        return post_id
+
     def delete_post(self, post_id: str | ObjectId) -> None:
         """
         delete a post by specifying its id
@@ -221,23 +238,10 @@ class Posts:
         except PostNotExistingException:
             raise
 
-        # delete files from gridfs and - if post was in a space,
-        # from the space's repository
+        # delete post.files from gridfs and may the space
         if post["files"]:
-            fs = gridfs.GridFS(self.db)
             for file_obj in post["files"]:
-                fs.delete(file_obj["file_id"])
-            if post["space"]:
-                space_manager = Spaces(self.db)
-                for file_obj in post["files"]:
-                    try:
-                        space_manager.remove_post_file(
-                            post["space"], file_obj["file_id"]
-                        )
-                    except SpaceDoesntExistError:
-                        pass
-                    except FileDoesntExistError:
-                        pass
+                self.delete_post_file(post_id, file_obj["file_id"])
 
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
@@ -510,6 +514,35 @@ class Posts:
         )
 
         return _id
+
+    def delete_post_file(self, post_id: str | ObjectId, file_id: str | ObjectId) -> None:
+        """
+        delete a file from uploads directory gridfs
+        and if post was in a space from the space's repository
+        """
+
+        fs = gridfs.GridFS(self.db)
+        post_id = util.parse_object_id(post_id)
+        file_id = util.parse_object_id(file_id)
+
+        try:
+            post = self.get_post(post_id, projection={"space": True, "files": True})
+        except PostNotExistingException:
+            raise
+
+        fs.delete(file_id)
+
+        if post["space"]:
+            space_manager = Spaces(self.db)
+            try:
+                space_manager.remove_post_file(
+                    post["space"], file_id
+                )
+            except SpaceDoesntExistError:
+                pass
+            except FileDoesntExistError:
+                pass
+
 
     def get_full_timeline(
         self, time_to: datetime.datetime, limit: int = 10
