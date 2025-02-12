@@ -10,6 +10,9 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { MdArrowBackIosNew, MdOutlineGroup } from 'react-icons/md';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useTranslation } from 'next-i18next';
+import { GoAlert } from 'react-icons/go';
+import Dropdown from '../common/Dropdown';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     socket: Socket;
@@ -70,6 +73,32 @@ export default function ChatRoom({
         );
     };
 
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+
+    const handleSelectOption = (value: string) => {
+        switch (value) {
+            case 'report':
+                setReportDialogOpen(true);
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    const ChatRoomDropdown = () => {
+        const options = [
+            {
+                value: 'report',
+                label: t('common:report.report_title'),
+                icon: <GoAlert />,
+                liClasses: 'text-red-500',
+            },
+        ];
+
+        return <Dropdown options={options} onSelect={handleSelectOption} />;
+    };
+
     useEffect(() => {
         // wait till message history is loaded
         if (isLoading) return;
@@ -108,23 +137,26 @@ export default function ChatRoom({
                         {room.name}
                     </span>
                 )}
-                <div className="group/members text-sm flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible">
-                    {room.members.length}&nbsp;
-                    <MdOutlineGroup size={20} />
-                    <div className="absolute w-40 xl:w-60 overflow-y-auto truncate max-h-32 right-0 p-2 mt-5 group-hover/members:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border z-10">
-                        {memberProfileSnippets.map((member, i) => (
-                            <div key={i} className="truncate my-1">
-                                <AuthenticatedImage
-                                    imageId={member.profilePicUrl}
-                                    alt={t('profile_picture')}
-                                    width={20}
-                                    height={20}
-                                    className="rounded-full mr-3 inline"
-                                />
-                                <span className="truncate">{member.name}</span>
-                            </div>
-                        ))}
+                <div className="flex items-center">
+                    <div className="group/members text-sm flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible">
+                        {room.members.length}&nbsp;
+                        <MdOutlineGroup size={20} />
+                        <div className="absolute w-40 xl:w-60 overflow-y-auto truncate max-h-32 right-0 p-2 mt-5 group-hover/members:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border z-10">
+                            {memberProfileSnippets.map((member, i) => (
+                                <div key={i} className="truncate my-1">
+                                    <AuthenticatedImage
+                                        imageId={member.profilePicUrl}
+                                        alt={t('profile_picture')}
+                                        width={20}
+                                        height={20}
+                                        className="rounded-full mr-3 inline"
+                                    />
+                                    <span className="truncate">{member.name}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
+                    <ChatRoomDropdown />
                 </div>
             </div>
             <div
@@ -148,6 +180,15 @@ export default function ChatRoom({
                 )}
             </div>
             <InputArea roomID={room._id} socket={socket} />
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={room._id}
+                    reportedItemType="chatroom"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
+                    }}
+                />
+            )}
         </div>
     );
 }

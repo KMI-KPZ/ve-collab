@@ -1,0 +1,10 @@
+Hallo {recipient_name},
+
+aufgrund einer Meldung haben wir einen deiner Inhalte gelöscht.
+Verwende die HTML-Version dieser E-Mail, um anzuzeigen, um welchen Inhalt es sich handelt.
+
+Diese Entscheidung wurde von den Administratoren getroffen, ist final und kann nicht angefochten werden, die unwiderrufliche Löschung wurde bereits durchgeführt.
+Diese Nachricht dient lediglich als Information.
+
+Viele Grüße!
+Dein VE-Collab Team

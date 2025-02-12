@@ -66,6 +66,14 @@
             "text2": ".",
             "text3": "You have automatically received access to this plan and it is now available in your dashboard, or directly ",
             "text4": "."
+        },
+        "report_submitted": {
+            "title": "new Report",
+            "text1": "Someone has filed a new report. Please click here to moderate the report."
+        },
+        "content_deleted_due_to_report": {
+            "title": "Content deleted",
+            "text1": "Your content has been deleted due to a report. If you have E-Mail notifications enabled, you will receive a detailed explanation."
         }
     },
     "profile": "Profile",
@@ -556,5 +564,25 @@
         "mail_placeholder": "E-mail",
         "no_valid_mail": "This email is not valid",
         "message_placeholder": "Message"
+    },
+    "report": {
+        "report_title": "Report",
+        "report_reason_placeholder": "e.g. spam, inappropriate content, harassment, etc.",
+        "report_dialog_titles": {
+            "post": "Report this post",
+            "comment": "Report this comment",
+            "plan": "Report this VE-Plan",
+            "group": "Report this group",
+            "profile": "Report this profile",
+            "chatroom": "Report this chat"
+        },
+        "report_descriptions": {
+            "post": "Please describe the reason why you want to report this post. This will help us to take appropriate action.",
+            "comment": "Please describe the reason why you want to report this comment. This will help us to take appropriate action.",
+            "plan": "Please describe the reason why you want to report this VE-Plan. This will help us to take appropriate action.",
+            "group": "Please describe the reason why you want to report this group. This will help us to take appropriate action.",
+            "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action.",
+            "chatroom": "Please describe the reason why you want to report this chat. This will help us to take appropriate action."
+        }
     }
 }

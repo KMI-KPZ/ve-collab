@@ -157,6 +157,12 @@ class MessageDoesntExistError(Exception):
     pass
 
 
+class ReportDoesntExistError(Exception):
+    """the requested report doesn't exist"""
+
+    pass
+
+
 class MbrAPIError(Exception):
     """any error related to the Mein Bildungsraum API"""
 

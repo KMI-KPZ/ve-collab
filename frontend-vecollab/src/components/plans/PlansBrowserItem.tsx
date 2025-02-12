@@ -23,6 +23,8 @@ import { FaEye, FaMedal } from 'react-icons/fa';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     plan: PlanPreview;
@@ -48,6 +50,7 @@ export default function PlansBrowserItem({
     const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
     const [planSummary, setPlanSummary] = useState<IPlan>();
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState<boolean>(false);
 
     // BACKLOG: remember this cool useSWRMutation to trigger changes
     // const getPlanById = async (url: string, { arg }: { arg: string }) => {
@@ -261,6 +264,18 @@ export default function PlansBrowserItem({
         </button>
     );
 
+    const ReportButton = () => (
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                setReportDialogOpen(true);
+            }}
+        >
+            <GoAlert title={t('report.report_title')} color="red" />
+        </button>
+    );
+
     const deletePlan = async (planId: string) => {
         const response = await fetchDELETE(
             `/planner/delete?_id=${planId}`,
@@ -383,6 +398,7 @@ export default function PlansBrowserItem({
                                 <DeleteButton />
                             </>
                         )}
+                        <ReportButton />
                     </div>
                 </div>
             </div>
@@ -430,6 +446,16 @@ export default function PlansBrowserItem({
                     callback={(proceed) => {
                         if (proceed) deletePlan(plan._id);
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={plan._id}
+                    reportedItemType="plan"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
                     }}
                 />
             )}

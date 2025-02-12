@@ -132,6 +132,20 @@ class Profiles:
 
         return profiles
 
+    def get_admin_profiles(self, projection: dict = None) -> List[Dict]:
+        """
+        get all profiles from the database with the role 'admin'.
+        """
+
+        profiles = list(self.db.profiles.find({"role": "admin"}, projection=projection))
+
+        # hide the achievement tracking from the frontend
+        for profile in profiles:
+            if "achievements" in profile and "tracking" in profile["achievements"]:
+                del profile["achievements"]["tracking"]
+
+        return profiles
+
     def insert_default_profile(
         self,
         username: str,
