@@ -79,6 +79,19 @@ class Posts:
         if not post:
             raise PostNotExistingException()
 
+
+        # may add plans information
+        if "plans" in post and post["plans"] != []:
+            plan_ids = post["plans"].copy()
+            with util.get_mongodb() as db:
+                plan_manager = VEPlanResource(db)
+                plans = plan_manager.get_bulk_plans(plan_ids)
+                post["plans"] = []
+                for plan in plans:
+                    if isinstance(plan, VEPlan):
+                        plan = plan.to_dict()
+                    post["plans"].append(plan)
+
         return post
 
     def get_post_by_comment_id(self, comment_id: str, projection: dict = {}) -> Dict:
