@@ -261,8 +261,8 @@ class VEPlanHandler(BaseHandler):
                     )
                     return
                 query = self.get_argument("query", None)
-                limit = self.get_argument("limit", 10)
-                offset = self.get_argument("offset", 0)
+                limit =  int(self.get_argument("limit", 10))
+                offset = int(self.get_argument("offset", 0))
 
                 self.get_available_plans_for_user(
                     db, filter_good_practice_only, filter_access, query, limit, offset
@@ -1902,7 +1902,7 @@ class VEPlanHandler(BaseHandler):
         Optionally, apply the following filters and searches:
         - `filter_good_practice_only`: only return good practise plans
         - `filter_access`:
-            - all: return all plans that the user has access to, i.e. own plans, 
+            - all: return all plans that the user has access to, i.e. own plans,
                    read/write access and good practise plans
             - own: return only the user's own plans
             - shared: return only plans that the user has read/write access to
@@ -1910,7 +1910,7 @@ class VEPlanHandler(BaseHandler):
 
         `filter_access` and `search_query` are first combined with an AND operator and afterwards
         the `filter_good_practice_only` is applied on top of this result.
-        
+
         `limit` and `offset` are used for pagination.
 
         Responses:

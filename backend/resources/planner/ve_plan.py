@@ -163,26 +163,28 @@ class VEPlanResource:
 
         gp_filter = {"is_good_practise": True}
 
-        access_filters = []
+        access_filters = {}
         if filter_access == "own":
-            access_filters.append({"author": username})
+            access_filters = {"author": username}
         elif filter_access == "shared":
-            access_filters.extend(
-                [
-                    {"read_access": username},
-                    {"write_access": username},
+            access_filters = {
+                "$and": [
                     {"author": {"$ne": username}},
+                    {"$or": [
+                        {"read_access": username},
+                        {"write_access": username},
+                    ]}
                 ]
-            )
+            }
         elif filter_access == "all":
-            access_filters.extend(
-                [
-                    {"author": username},
-                    {"read_access": username},
-                    {"write_access": username},
-                    {"is_good_practise": True},
+            access_filters = {
+                "$or": [
+                        {"author": username},
+                        {"read_access": username},
+                        {"write_access": username},
+                        {"is_good_practise": True},
                 ]
-            )
+            }
 
         search_filter = {
             "$or": [
@@ -196,18 +198,14 @@ class VEPlanResource:
         # access filters (OR) and search query are applied first with an AND,
         # then the good practise filter is applied on top of that result
         stages = [
-            {
-                "$match": {
-                    "$and": [
-                        {"$or": access_filters},
-                        search_filter if search_query else {},
-                    ]
-                }
-            },
+            {"$match": access_filters},
+            {"$match": search_filter if search_query else {}},
             {"$match": gp_filter if filter_good_practice_only else {}},
-            {"$limit": limit},
+            {"$sort": {"last_modified": -1} },
             {"$skip": offset},
+            {"$limit": limit},
         ]
+        logger.info("DEBUG.stages: {}".format(stages))
         result = self.db.plans.aggregate(stages)
 
         return [VEPlan.from_dict(res) for res in result]
