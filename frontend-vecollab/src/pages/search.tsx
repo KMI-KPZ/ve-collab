@@ -178,23 +178,16 @@ export default function SearchResult() {
                                             <div className="flex flex-row items-center my-1">
                                                 <div className="grow flex items-center truncate">
                                                     <Link
-                                                        href={
-                                                            plan.write_access.includes(
-                                                                session?.user
-                                                                    .preferred_username as string
-                                                            )
-                                                                ? `/ve-designer/name?plannerId=${plan._id}`
-                                                                : `/plan/${plan._id}`
-                                                        }
-                                                        className="group/ve-item flex items-center font-bold text-lg truncate hover:text-ve-collab-orange"
+                                                        href={`/plan/${plan._id}`}
+                                                        className="group/ve-item flex items-center font-bold text-lg truncate"
                                                     >
                                                         <TbFileText
-                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full group-hover/ve-item:border-ve-collab-orange"
+                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full"
                                                             size={30}
                                                         />{' '}
                                                         <span className="flex flex-col truncate">
                                                             <span className="flex items-center">
-                                                                <span className="truncate">
+                                                                <span className="truncate group-hover/ve-item:text-ve-collab-orange">
                                                                     {plan.name}
                                                                 </span>
                                                                 {plan.is_good_practise && (
@@ -208,12 +201,12 @@ export default function SearchResult() {
                                                                 )}
                                                             </span>
                                                             {plan.abstract && (
-                                                                <span className="font-normal text-base truncate">
+                                                                <span className="font-normal text-sm italic">
                                                                     {plan.abstract}
                                                                 </span>
                                                             )}
                                                             {plan.topics.length > 0 && (
-                                                                <span className="font-normal text-base truncate">
+                                                                <span className="font-normal text-sm italic truncate">
                                                                     <span>
                                                                         {t('community:ve_topics')}:
                                                                     </span>{' '}
@@ -320,24 +313,29 @@ export default function SearchResult() {
                                                 router.push(`/post/${post._id}`);
                                             }}
                                         >
-                                            {/* TODO use <TimelinePost /> !  */}
-                                            <div className="flex flex-col mb-2">
-                                                {/* <PostHeader author={post.author} date={post.creation_date} /> */}
-
-                                                {/* <span className="font-bold text-slate-900">{post.author as unknown as string}</span> */}
-                                                <a
-                                                    href={`/post/${post._id}`}
-                                                    className="hover:cursor-pointer hover:underline font-bold text-slate-900"
-                                                >
-                                                    {post.author as unknown as string}
-                                                </a>
-
-                                                <Timestamp
-                                                    relative={true}
-                                                    timestamp={post.creation_date}
-                                                    showTitle={true}
-                                                    className="text-xs text-gray-500"
+                                            <div className="flex mb-2">
+                                                <UserProfileImage
+                                                    profile_pic={post.author.profile_pic}
+                                                    chosen_achievement={
+                                                        post.author.chosen_achievement
+                                                    }
                                                 />
+                                                <div className="flex flex-col">
+                                                    <Link
+                                                        href={`/profile/user/${post.author.username}`}
+                                                        className="font-bold"
+                                                    >
+                                                        {post.author.first_name}
+                                                        {post.author.last_name}
+                                                    </Link>
+
+                                                    <Timestamp
+                                                        relative={true}
+                                                        timestamp={post.creation_date}
+                                                        showTitle={true}
+                                                        className="text-xs text-gray-500"
+                                                    />
+                                                </div>
                                             </div>
                                             <div
                                                 className="max-h-20 text-ellipsis overflow-hidden"
