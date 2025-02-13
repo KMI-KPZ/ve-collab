@@ -142,6 +142,8 @@ class VEPlanResource:
         search_query: str | None = None,
         limit: int = 10,
         offset: int = 0,
+        sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
+        order: int = -1
     ) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
@@ -201,7 +203,7 @@ class VEPlanResource:
             {"$match": access_filters},
             {"$match": search_filter if search_query else {}},
             {"$match": gp_filter if filter_good_practice_only else {}},
-            {"$sort": {"last_modified": -1} },
+            {"$sort": {sort: order}},
             {"$skip": offset},
             {"$limit": limit},
         ]

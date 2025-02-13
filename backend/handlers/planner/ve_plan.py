@@ -177,6 +177,8 @@ class VEPlanHandler(BaseHandler):
                 query: <str>, if given, only return plans that contain the query in their name, topics or abstract
                 limit: <int>, if given, limit the amount of returned plans to this number (default 10)
                 offset: <int>, if given, skip this amount of plans before returning the results (default 0)
+                sort: <name|last_modified|creation_timestamp> sort by given proerty
+                order: <-1|1> order DESC or ASC
 
             http body:
 
@@ -263,9 +265,11 @@ class VEPlanHandler(BaseHandler):
                 query = self.get_argument("query", None)
                 limit =  int(self.get_argument("limit", 10))
                 offset = int(self.get_argument("offset", 0))
+                sort = self.get_argument("sort_by", 'last_modified')
+                order = int(self.get_argument("order", -1))
 
                 self.get_available_plans_for_user(
-                    db, filter_good_practice_only, filter_access, query, limit, offset
+                    db, filter_good_practice_only, filter_access, query, limit, offset, sort, order
                 )
                 return
 
@@ -1889,6 +1893,8 @@ class VEPlanHandler(BaseHandler):
         search_query: str | None,
         limit: int = 10,
         offset: int = 0,
+        sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
+        order: int = -1
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -1927,6 +1933,8 @@ class VEPlanHandler(BaseHandler):
                 search_query,
                 limit,
                 offset,
+                sort,
+                order
             )
         ]
         plans = self.add_profile_information_to_author(plans)
