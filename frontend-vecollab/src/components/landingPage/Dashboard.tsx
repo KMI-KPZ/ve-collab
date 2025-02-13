@@ -43,7 +43,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
         data: plans,
         isLoading: isLoadingPlans,
         error: errorLoadingPlans,
-    } = useGetAvailablePlans(session!.accessToken);
+    } = useGetAvailablePlans({});
     const {
         data: profileInformation,
         isLoading: isLoadingProfile,
@@ -198,10 +198,10 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     <UserInfoBox profileInformation={profileInformation} />
                 </div>
 
-                <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 ">
+                <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 z-10">
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
-                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md drop-shadow">
+                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md shadow">
                         <div className="text-2xl text-left">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>

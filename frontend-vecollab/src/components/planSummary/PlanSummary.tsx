@@ -47,7 +47,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         isOpen: false,
     });
     const [loadingExport, setLoadingExport] = useState<boolean>(false);
-    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
+    const { data: availablePlans } = useGetAvailablePlans({});
     const { data: partnerUserSnippets, isLoading } = useGetProfileSnippets(
         [...plan.partners, plan.author.username],
         session!.accessToken

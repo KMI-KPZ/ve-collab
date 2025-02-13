@@ -1,43 +1,33 @@
 import { MdArrowDropDown, MdClose } from 'react-icons/md';
-import { useSession } from 'next-auth/react';
-import { IfilterBy } from '@/pages/plans';
+import { IplansFilter } from '@/pages/plans';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { FaMedal } from 'react-icons/fa';
 import Dropdown from '../common/Dropdown';
 
 interface Props {
-    filterBy: IfilterBy[];
-    filterByCallback: ({ compare, id }: IfilterBy) => void;
+    filterByCallback: (filter: IplansFilter) => void;
+    filterBy: IplansFilter;
     isNoAuthPreview?: boolean;
 }
 
-export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview = false }: Props) {
-    const { data: session } = useSession();
+export function PlansBrowserFilter({
+    filterBy,
+    filterByCallback: filterByCallback,
+    isNoAuthPreview = false,
+}: Props) {
     const { t } = useTranslation('common');
     const [search, setSearch] = useState<string>('');
-    const showGoodPracticeOnly = filterBy.some((f) => f.id == 'isGoodPractice' && f.value == true);
-
-    // filterBy.find((f) => f.id == 'author' && f.value === undefined)
+    const showGoodPracticeOnly = filterBy['goodPracticeOnly'] === true;
     const [currentAuthorFilter, setCurrentAuthorFilter] = useState<string>(t('plans_filter_all'));
 
     const handleClickShowGoodPracticeOnly = () => {
         if (isNoAuthPreview) return;
 
-        if (showGoodPracticeOnly) {
-            filterByCallback({
-                compare: undefined,
-                id: 'isGoodPractice',
-                value: undefined,
-            });
-        } else {
-            filterByCallback({
-                compare: (plan) => plan.is_good_practise === true,
-                id: 'isGoodPractice',
-                value: true,
-            });
-        }
+        filterByCallback({ goodPracticeOnly: !showGoodPracticeOnly });
     };
+
+    const [reqDebounce, setReqDebounce] = useState<ReturnType<typeof setTimeout>>();
 
     const handleSwitchAuthorChange = (value: string) => {
         if (isNoAuthPreview) return;
@@ -45,40 +35,32 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
         switch (value) {
             case 'all':
                 setCurrentAuthorFilter(t('plans_filter_all'));
-                filterByCallback({
-                    compare: () => true,
-                    id: 'author',
-                    value: undefined,
-                });
-
+                filterByCallback({ owner: 'all' });
                 break;
 
-            case 'my':
+            case 'own':
                 setCurrentAuthorFilter(t('plans_filter_my'));
-                filterByCallback({
-                    compare: (plan) => plan.author.username == session?.user.preferred_username,
-                    id: 'author',
-                    value: 'me',
-                });
                 break;
 
             case 'shared':
                 setCurrentAuthorFilter(t('plans_filter_shared'));
-                filterByCallback({
-                    compare: (plan) => {
-                        return (
-                            plan.read_access.includes(session?.user.preferred_username as string) &&
-                            plan.author.username != session?.user.preferred_username
-                        );
-                    },
-                    id: 'author',
-                    value: 'other',
-                });
+                filterByCallback({ owner: 'shared' });
                 break;
 
             default:
                 break;
         }
+    };
+
+    const handleSearch = (value: string) => {
+        setSearch(value);
+
+        if (reqDebounce) clearTimeout(reqDebounce);
+        setReqDebounce(
+            setTimeout(() => {
+                filterByCallback({ searchQuery: value });
+            }, 300)
+        );
     };
 
     return (
@@ -118,7 +100,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                             label: t('plans_filter_all'),
                         },
                         {
-                            value: 'my',
+                            value: 'own',
                             label: t('plans_filter_my'),
                         },
                         {
@@ -157,17 +139,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                     disabled={isNoAuthPreview}
                     onChange={(event) => {
                         if (isNoAuthPreview) return;
-
                         const value = (event.target as HTMLInputElement).value;
-                        setSearch(value);
-                        filterByCallback({
-                            compare: (plan) => {
-                                if (!plan.name) return false;
-                                return plan.name.toLocaleLowerCase().includes(value.toLowerCase());
-                            },
-                            id: 'searchByName',
-                            value: value,
-                        });
+                        handleSearch(value);
                     }}
                 />
                 <div
@@ -175,11 +148,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                         if (isNoAuthPreview) return;
 
                         setSearch('');
-                        filterByCallback({
-                            compare: undefined,
-                            id: 'searchByName',
-                            value: null,
-                        });
+                        handleSearch('');
                     }}
                     className={`text-slate-600 inline relative -left-[22px] ${
                         isNoAuthPreview ? '' : 'hover:cursor-pointer'

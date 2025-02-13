@@ -1,6 +1,5 @@
 import { useGetAvailablePlans } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { PlansBrowser } from '@/components/plans/PlansBrowser';
@@ -20,20 +19,25 @@ import btnSearchUser from '@/images/btn_search_user.svg';
 import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 import { useRouter } from 'next/router';
 
-export interface IfilterBy {
-    /** compare function
-     * If compare is undefined the filter (id) will removed  */
-    compare: undefined | ((plan: PlanPreview) => boolean);
-    /** id of the filter function (used in filterBy array) */
-    id: string;
-    /** value of the filter, required to recognise current filter  */
-    value: any;
+export interface IplansFilter {
+    goodPracticeOnly?: boolean;
+    owner?: 'all' | 'own' | 'shared';
+    searchQuery?: string;
+    limit?: number;
+    offset?: number;
+    sortBy?: keyof PlanPreview;
+    order?: 'ASC' | 'DESC';
 }
 
-export interface IsortBy {
-    key: keyof PlanPreview;
-    order: 'ASC' | 'DESC';
-}
+const defaultFilter: IplansFilter = {
+    goodPracticeOnly: false,
+    owner: 'all',
+    searchQuery: '',
+    limit: 10,
+    offset: 0,
+    sortBy: 'last_modified',
+    order: 'ASC',
+};
 
 interface Props {
     socket: Socket;
@@ -43,80 +47,26 @@ Plans.auth = true;
 Plans.noAuthPreview = <PlansNoAuthPreview />;
 
 export default function Plans({ socket }: Props) {
-    const { data: session } = useSession();
     const router = useRouter();
-
     const { t } = useTranslation('common');
-    const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
-    const [filterBy, setFilterBy] = useState<IfilterBy[]>([
-        {
-            compare: () => true,
-            id: 'author',
-            value: undefined,
-        },
-    ]);
-    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
-    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
+    const [filterBy, setFilterBy] = useState<IplansFilter>(defaultFilter);
+
+    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(filterBy);
 
     // may initial only show GP plans
     useEffect(() => {
         if (router.query.isGP && router.query.isGP === 'true') {
-            setFilterBy((prev) => [
-                ...prev,
-                {
-                    id: 'isGoodPractice',
-                    compare: (plan) => plan.is_good_practise === true,
-                    value: true,
-                },
-            ]);
+            setFilterBy((prev) => ({ ...prev, goodPracticeOnly: true }));
         }
     }, [router.query]);
 
-    useEffect(() => {
-        if (isLoading || !plans.length) return;
-
-        let sortedPlans = plans.sort((a, b) => {
-            let av = a[sortBy.key]?.toString() || '';
-            let bv = b[sortBy.key]?.toString() || '';
-
-            return sortBy.order == 'DESC' ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
-
-        if (filterBy && filterBy.length) {
-            filterBy.forEach((filter) => {
-                sortedPlans = sortedPlans.filter((p) =>
-                    typeof filter.compare !== 'undefined' ? filter.compare(p) : true
-                );
-            });
-        }
-
-        setSortedPlans([...sortedPlans]);
-    }, [plans, isLoading, sortBy, filterBy]);
-
-    const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy((prev) => {
-            return {
-                key: key,
-                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
-            };
-        });
-    };
-
     /**
      * Add/Remove/Update filter method
-     * Usage: See description in IfilterBy
+     * Usage: See description in IplansFilter
      */
-    const handleFilterBy = ({ compare, id, value }: IfilterBy) => {
-        if (typeof compare === 'undefined') {
-            setFilterBy((prev) => prev.filter((f) => f.id != id));
-        } else {
-            if (filterBy.find((f) => f.id == id)) {
-                setFilterBy((prev) => prev.map((f) => (f.id == id ? { id, compare, value } : f)));
-            } else {
-                setFilterBy((prev) => [...prev, { id, compare, value }]);
-            }
-        }
+    const handleFilterBy_ = (filter: IplansFilter) => {
+        setFilterBy((prev) => ({ ...prev, ...filter }));
     };
 
     return (
@@ -162,7 +112,7 @@ export default function Plans({ socket }: Props) {
                 </div>
             </div>
 
-            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy} />
+            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy_} />
 
             {typeof error !== 'undefined' && (
                 <Alert type="error" message={'Error loading plans. See console for details.'} />
@@ -174,10 +124,9 @@ export default function Plans({ socket }: Props) {
                 </div>
             ) : (
                 <PlansBrowser
-                    plans={sortedPlans}
-                    sortBy={sortBy}
+                    plans={plans}
                     filterBy={filterBy}
-                    sortByCallback={handleSortBy}
+                    filterByCallback={handleFilterBy_}
                     refetchPlansCallback={mutate}
                 />
             )}
@@ -187,15 +136,7 @@ export default function Plans({ socket }: Props) {
 
 function PlansNoAuthPreview() {
     const { t } = useTranslation('common');
-
-    const filterBy = [
-        {
-            compare: () => true,
-            id: 'author',
-            value: undefined,
-        },
-    ];
-    const sortBy: IsortBy = { key: 'last_modified', order: 'ASC' };
+    const [filterBy, setFilterBy] = useState<IplansFilter>(defaultFilter);
     const examplePlans: PlanPreview[] = [
         {
             _id: '1',
@@ -316,9 +257,8 @@ function PlansNoAuthPreview() {
 
             <PlansBrowser
                 plans={examplePlans}
-                sortBy={sortBy}
                 filterBy={filterBy}
-                sortByCallback={() => {}}
+                filterByCallback={() => {}}
                 refetchPlansCallback={async () => {}}
                 isNoAuthPreview={true}
             />
