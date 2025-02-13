@@ -329,6 +329,7 @@ class SearchHandler(BaseHandler):
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:
+            matched_posts = self.add_authors_profile(matched_posts)
             return self.reduce_disallowed_posts(matched_posts)
         else:
             return []
