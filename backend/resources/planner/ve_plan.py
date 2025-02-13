@@ -205,7 +205,6 @@ class VEPlanResource:
             {"$skip": offset},
             {"$limit": limit},
         ]
-        logger.info("DEBUG.stages: {}".format(stages))
         result = self.db.plans.aggregate(stages)
 
         return [VEPlan.from_dict(res) for res in result]
