@@ -119,8 +119,8 @@ export default function TimelinePost({
         if (ref.current && post.isRepost) {
             // TODO update on resize window ?!
             setTimeout(() => {
-                const repostEl = ref.current.querySelector('.repost-text');
-                setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
+                const repostEl = ref.current?.querySelector('.repost-text');
+                if (repostEl) setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
             }, 1);
         }
     });
@@ -584,7 +584,7 @@ export default function TimelinePost({
                     )}
                 </div>
 
-                {attachedImages.length > 0 && (
+                {!editPost && attachedImages.length > 0 && (
                     <div className="my-4">
                         <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
                             {attachedImages.map((file, index) => (
@@ -610,7 +610,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {attachedFiles.length > 0 && (
+                {!editPost && attachedFiles.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('files')}</div>
                         <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
@@ -633,7 +633,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {post.plans !== undefined && post.plans.length > 0 && (
+                {!editPost && post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('plans')}</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
