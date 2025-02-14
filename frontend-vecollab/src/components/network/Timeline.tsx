@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import { Socket } from 'socket.io-client';
 import GeneralError from '../common/GeneralError';
 import { useTranslation } from 'next-i18next';
+import { add } from 'date-fns';
 
 interface Props {
     /** User is global admin or admin of current group */
@@ -40,6 +41,10 @@ export default function Timeline({
     const { t } = useTranslation(['community', 'common']);
 
     const router = useRouter();
+
+    // hotfix for date issue #570
+    // let isoDate = new Date();
+    // isoDate = add(isoDate, { minutes: -1 * isoDate.getTimezoneOffset() });
     const [toDate, setToDate] = useState<Date>(new Date());
     const [postToRepost, setPostToRepost] = useState<BackendPost | null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
@@ -47,7 +52,7 @@ export default function Timeline({
     const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState<boolean>(false);
     const [fetchCount, setFetchCount] = useState<number>(0);
     const perFetchLimit = 10;
-    const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
+    const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(true);
 
     const datePillColors: { vg: string; bg: string }[] = [
         { vg: '#00748f', bg: '#d8f2f9' }, // blue
@@ -77,7 +82,12 @@ export default function Timeline({
     );
 
     useEffect(() => {
-        if (!newFetchedPosts.length) return;
+        if (isFetchingNewPosts) {
+            return;
+        } else if (!newFetchedPosts.length) {
+            setIsLoadingTimeline(false);
+            return;
+        }
         if (allPosts.some((a) => newFetchedPosts.some((b) => b._id == a._id))) return;
         setIsLoadingTimeline(true);
 
@@ -88,7 +98,7 @@ export default function Timeline({
             setIsLoadingTimeline(false);
             return allPosts;
         });
-    }, [newFetchedPosts, allPosts]);
+    }, [newFetchedPosts, isFetchingNewPosts, allPosts]);
 
     // may get repost from request query: ?repost=...
     useEffect(() => {
@@ -167,7 +177,7 @@ export default function Timeline({
     }
 
     return (
-        <>
+        <div className="mb-5">
             {pinnedPosts.length > 0 && (
                 <>
                     <div className="mx-2 my-10 px-4 pb-4 rounded-md border-2 border-gray-600 outline outline-1 outline-gray-400 outline-offset-4">
@@ -325,6 +335,6 @@ export default function Timeline({
                     {group ? t('no_posts_in_group_yet') : t('no_posts_in_your_timeline_yet')}
                 </div>
             )}
-        </>
+        </div>
     );
 }
