@@ -497,12 +497,15 @@ class PostHandler(BaseTimelineHandler):
                 return
 
             # if the post is in a space, one of the following allows the user to delete the post:
-            # 1. user is author of the post
+            # 1. user is author or repostAuthor of the post
             # 2. user is lionet global admin
             # 3. user is space admin
             if post_to_delete["space"]:
                 post_to_delete["space"] = util.parse_object_id(post_to_delete["space"])
-                if self.current_user.username != post_to_delete["author"]:
+
+                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
+                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                ):
                     if not self.is_current_user_lionet_admin():
                         space_manager = Spaces(db)
                         if not space_manager.check_user_is_space_admin(
@@ -532,7 +535,9 @@ class PostHandler(BaseTimelineHandler):
             # if the post is not in a space, the option to be space admin
             # to remove the post doesnt hold anymore, check only the other 2 options
             else:
-                if self.current_user.username != post_to_delete["author"]:
+                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
+                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                ):
                     if not self.is_current_user_lionet_admin():
                         # none of the two permission cases apply, deny removal
                         self.set_status(403)

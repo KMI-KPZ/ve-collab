@@ -371,7 +371,7 @@ export default function PlansBrowserItem({
             >
                 <div className="flex items-center flex-wrap">
                     <div className="flex order-1 truncate xl:max-w-[60%] items-center">
-                        <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
+                        <div className="grow mr-2 font-bold whitespace-nowrap truncate">
                             <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                                 {plan.name}
                             </Link>
@@ -382,8 +382,13 @@ export default function PlansBrowserItem({
                             </div>
                         )}
                     </div>
+                    {plan.abstract && (
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm truncate">
+                            {plan.abstract}
+                        </div>
+                    )}
                     {plan.topics.length > 0 && (
-                        <div className="w-full order-2 xl:order-3 mr-2 py-1 text-gray-700 truncate">
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm italic truncate">
                             {plan.topics.join(' / ')}
                         </div>
                     )}
