@@ -65,12 +65,12 @@ class Reports:
 
         report_id = util.parse_object_id(report_id)
 
-        report = self.db.reports.find_one({"_id": ObjectId(report_id)})
-
-        report["item"] = self.get_reported_item(report["item_id"], report["type"])
+        report = self.db.reports.find_one({"_id": report_id})
 
         if report is None:
             raise ReportDoesntExistError("Report not found")
+
+        report["item"] = self.get_reported_item(report["item_id"], report["type"])
 
         return report
 
@@ -117,8 +117,9 @@ class Reports:
         report["state"] = "open"
         report["timestamp"] = datetime.now()
 
-        report_id = self.db.reports.insert_one(report)
-        return report_id
+        insert_result = self.db.reports.insert_one(report)
+        
+        return insert_result.inserted_id
 
     def close_report(self, report_id: str | ObjectId) -> None:
         """

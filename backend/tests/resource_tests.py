@@ -34,6 +34,7 @@ from exceptions import (
     OnlyAdminError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    ReportDoesntExistError,
     RoomDoesntExistError,
     PostFileNotDeleteableError,
     PostNotExistingException,
@@ -66,6 +67,7 @@ from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
+from resources.reports import Reports
 import util
 
 # don't change, these values match with the ones in BaseHandler
@@ -9057,3 +9059,381 @@ class MailInvitationResourceTest(BaseResourceTestCase):
         self.assertRaises(
             ValueError, self.invitation_manager.insert_invitation, invitation
         )
+
+
+class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.report_manager = Reports(self.db)
+
+        self.report_id = ObjectId()
+        self.reported_item_id = ObjectId()
+
+        self.default_report = {
+            "_id": self.report_id,
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+            "reason": "test",
+            "state": "open",
+            "timestamp": datetime.now(),
+        }
+        self.db.reports.insert_one(self.default_report)
+
+        self.reported_post = {
+            "_id": self.reported_item_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(self.reported_post)
+
+        self.db.profiles.insert_one(
+            {
+                "_id": ObjectId(),
+                "username": CURRENT_ADMIN.username,
+                "role": "guest",
+                "follows": [],
+                "bio": "test",
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "Test",
+                "last_name": "Admin",
+                "gender": "male",
+                "address": "test",
+                "birthday": "2023-01-01",
+                "experience": ["test", "test"],
+                "expertise": "test",
+                "languages": ["german", "english"],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": ["test", "test"],
+                "ve_contents": ["test", "test"],
+                "ve_goals": ["test", "test"],
+                "interdisciplinary_exchange": True,
+                "preferred_format": "test",
+                "research_tags": ["test"],
+                "courses": [
+                    {"title": "test", "academic_course": "test", "semester": "test"}
+                ],
+                "lms": ["test"],
+                "tools": ["test"],
+                "educations": [
+                    {
+                        "institution": "test",
+                        "degree": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "additional_info": "test",
+                    }
+                ],
+                "work_experience": [
+                    {
+                        "position": "test",
+                        "institution": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "city": "test",
+                        "country": "test",
+                        "additional_info": "test",
+                    }
+                ],
+                "ve_window": [
+                    {
+                        "plan_id": ObjectId(),
+                        "title": "test",
+                        "description": "test",
+                    }
+                ],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
+                "achievements": {
+                    "social": {"level": 0, "progress": 0, "next_level": 20},
+                    "ve": {"level": 0, "progress": 0, "next_level": 40},
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
+                },
+                "chosen_achievement": {"type": "", "level": 0},
+            }
+        )
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.reports.delete_many({})
+        self.db.posts.delete_many({})
+        self.db.profiles.delete_many({})
+        self.report_manager = None
+
+    def test_get_report(self):
+        """
+        expect: successfully get a report
+        """
+
+        report = self.report_manager.get_report(self.report_id)
+
+        self.assertIsNotNone(report)
+        self.assertEqual(report["type"], self.default_report["type"])
+        self.assertEqual(report["item_id"], self.reported_item_id)
+        self.assertEqual(report["item"]["_id"], self.reported_item_id)
+        self.assertEqual(report["reason"], self.default_report["reason"])
+        self.assertEqual(report["reporter"], self.default_report["reporter"])
+        self.assertEqual(report["state"], self.default_report["state"])
+
+    def test_get_report_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        self.assertRaises(
+            ReportDoesntExistError, self.report_manager.get_report, ObjectId()
+        )
+
+    def test_get_report_item_none(self):
+        """
+        expect: get the report, but the item inside doesn't exist --> should be None
+        instead of raising an errror
+        """
+
+        # add a report with an item that doesn't exist
+        report_id = ObjectId()
+        self.db.reports.insert_one(
+            {
+                "_id": report_id,
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "test",
+                "state": "open",
+                "timestamp": datetime.now(),
+            }
+        )
+
+        report = self.report_manager.get_report(report_id)
+
+        self.assertIsNotNone(report)
+        self.assertIsNone(report["item"])
+
+    def test_get_open_reports(self):
+        """
+        expect: get all reports with state "open"
+        """
+
+        # add one more report with state "open" and one with state "closed"
+        self.db.reports.insert_many(
+            [
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "open",
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "closed",
+                    "timestamp": datetime.now(),
+                },
+            ]
+        )
+
+        reports = self.report_manager.get_open_reports()
+
+        self.assertEqual(len(reports), 2)
+        self.assertIsNotNone(reports[0])
+        self.assertIsNotNone(reports[1])
+        self.assertEqual(reports[0]["state"], "open")
+        self.assertEqual(reports[1]["state"], "open")
+
+    def test_get_all_reports(self):
+        """
+        expect: successfully get all reports
+        """
+
+        # add one more report with state "open" and one with state "closed"
+        self.db.reports.insert_many(
+            [
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "open",
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "closed",
+                    "timestamp": datetime.now(),
+                },
+            ]
+        )
+
+        reports = self.report_manager.get_all_reports()
+
+        self.assertEqual(len(reports), 3)
+        # two reports with state "open" and one with state "closed"
+        self.assertEqual(len(list(filter(lambda r: r["state"] == "open", reports))), 2)
+        self.assertEqual(
+            len(list(filter(lambda r: r["state"] == "closed", reports))), 1
+        )
+
+    def test_get_reported_item(self):
+        """
+        expect: successfully get the reported item
+        """
+
+        reported_item = self.report_manager.get_reported_item(
+            self.reported_item_id, "post"
+        )
+
+        self.assertIsNotNone(reported_item)
+        self.assertEqual(reported_item["_id"], self.reported_item_id)
+        self.assertEqual(reported_item["author"], self.reported_post["author"])
+        self.assertEqual(reported_item["text"], self.reported_post["text"])
+        self.assertEqual(
+            reported_item["creation_date"], self.reported_post["creation_date"]
+        )
+
+    def test_get_reported_item_item_none(self):
+        """
+        expect: get the reported item, but the item doesn't exist --> should be None
+        instead of raising an errror
+        """
+
+        # add a report with an item that doesn't exist
+        report_id = ObjectId()
+        self.db.reports.insert_one(
+            {
+                "_id": report_id,
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "test",
+                "state": "open",
+                "timestamp": datetime.now(),
+            }
+        )
+
+        reported_item = self.report_manager.get_reported_item(ObjectId(), "post")
+
+        self.assertIsNone(reported_item)
+
+    def test_insert_report(self):
+        """
+        expect: successfully insert a report
+        """
+
+        report = {
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+            "reason": "another_report",
+        }
+
+        inserted_id = self.report_manager.insert_report(report)
+
+        # expect the report to be in the db
+        db_state = self.db.reports.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+
+        self.assertEqual(db_state["reporter"], report["reporter"])
+        self.assertEqual(db_state["type"], report["type"])
+        self.assertEqual(db_state["item_id"], report["item_id"])
+        self.assertEqual(db_state["reason"], report["reason"])
+        self.assertEqual(db_state["state"], "open")
+        self.assertIsNotNone(db_state["timestamp"])
+
+    def test_insert_report_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because the report is missing required attributes
+        """
+
+        # reason missing
+        report = {
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+        }
+
+        self.assertRaises(ValueError, self.report_manager.insert_report, report)
+
+    def test_close_report(self):
+        """
+        expect: successfully set a report's state to closed
+        """
+
+        self.report_manager.close_report(self.report_id)
+
+        # expect the report to be in the db with state "closed"
+        db_state = self.db.reports.find_one({"_id": self.report_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["state"], "closed")
+
+    def test_close_report_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        self.assertRaises(
+            ReportDoesntExistError, self.report_manager.close_report, ObjectId()
+        )
+
+    @gen_test
+    async def test_delete_reported_item(self):
+        """
+        expect: successfully delete the reported item
+        """
+
+        await self.report_manager.delete_reported_item(self.report_id)
+
+        # expect the reported item to be deleted
+        db_state = self.db.posts.find_one({"_id": self.reported_item_id})
+        self.assertIsNone(db_state)
+
+    @gen_test
+    async def test_delete_reported_item_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        with self.assertRaises(ReportDoesntExistError):
+            await self.report_manager.delete_reported_item(ObjectId())
