@@ -25,6 +25,7 @@ import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
 import { GoAlert } from 'react-icons/go';
 import ReportDialog from '../common/dialogs/Report';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     plan: PlanPreview;
@@ -337,26 +338,28 @@ export default function PlansBrowserItem({
 
     return (
         <>
-            <div className="basis-1/12 flex justify-center">
+            <div className="basis-1/12 flex justify-center text-center hidden md:block">
                 {isPlanProgressCompleted() ? (
                     <span className="cursor-pointer" title={t('plans_title_all_steps_completed')}>
                         <HiOutlineCheckCircle size={23} />
                     </span>
                 ) : (
-                    <span
-                        className="w-[45px] h-[45px] flex justify-center items-center rounded-full border text-sm -m-1 whitespace-nowrap cursor-pointer"
-                        title={t('plans_title_partial_steps_completed', {
+                    <Tooltip
+                        tooltipsText={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,
                         })}
+                        position="bottom-right"
                     >
-                        {completedSteps}/{stepsToProgress}
-                    </span>
+                        <span className="text-center text-sm text-slate-800 whitespace-nowrap cursor-pointer">
+                            {completedSteps} / {stepsToProgress}
+                        </span>
+                    </Tooltip>
                 )}
             </div>
 
             <div
-                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
+                className="grow basis-5/6 sm:basis-4/6 md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -425,7 +428,7 @@ export default function PlansBrowserItem({
                 )}
             </div>
 
-            <div className="basis-1/6 hidden md:block">
+            <div className="basis-1/6 hidden sm:block">
                 <Timestamp
                     timestamp={plan.last_modified}
                     className="text-sm"

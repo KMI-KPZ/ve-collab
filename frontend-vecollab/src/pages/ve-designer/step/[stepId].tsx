@@ -118,7 +118,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
-    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
+    const { data: availablePlans } = useGetAvailablePlans({});
     const [loadingStep, setLoadingStep] = useState<boolean>(true);
 
     const setPlanerData = useCallback(

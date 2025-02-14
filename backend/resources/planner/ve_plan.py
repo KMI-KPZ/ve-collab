@@ -6,7 +6,7 @@ from bson.errors import InvalidId
 import gridfs
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 import tornado
 
 from exceptions import (
@@ -134,27 +134,81 @@ class VEPlanResource:
 
         return [VEPlan.from_dict(res) for res in result]
 
-    def get_plans_for_user(self, username: str) -> List[VEPlan]:
+    def get_plans_for_user(
+        self,
+        username: str,
+        filter_good_practice_only: bool | None = None,
+        filter_access: Literal["all", "own", "shared"] = "all",
+        search_query: str | None = None,
+        limit: int = 10,
+        offset: int = 0,
+        sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
+        order: int = -1
+    ) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
         i.e. their own plans and those that he/she has read or write access to and those
         that are marked as good practise examples (read only).
 
+        Optionally, apply the following filters (including combinations):
+        - `filter_good_practice_only`: if set to True, only plans that are marked as good practise
+           are returned
+        - `filter_access`: filter the plans by their access level, i.e. "all" (default), "own"
+        (plans where i am the author) or "shared" (plans where i have received read/write access from external)
+        - `search_query`: a search query to filter plans by their `name` attribute
+
+        The `limit` and `offset` parameters can be used to paginate the results.
+
         Returns a list of `VEPlan` objects, or an empty list, if there are no plans
         that match the criteria.
         """
 
-        # query plans where the user is the author or has read or write access
-        result = self.db.plans.find(
-            {
-                "$or": [
-                    {"author": username},
-                    {"read_access": username},
-                    {"write_access": username},
-                    {"is_good_practise": True},
+        gp_filter = {"is_good_practise": True}
+
+        access_filters = {}
+        if filter_access == "own":
+            access_filters = {"author": username}
+        elif filter_access == "shared":
+            access_filters = {
+                "$and": [
+                    {"author": {"$ne": username}},
+                    {"$or": [
+                        {"read_access": username},
+                        {"write_access": username},
+                    ]}
                 ]
             }
-        )
+        elif filter_access == "all":
+            access_filters = {
+                "$or": [
+                        {"author": username},
+                        {"read_access": username},
+                        {"write_access": username},
+                        {"is_good_practise": True},
+                ]
+            }
+
+        search_filter = {
+            "$or": [
+                {"name": {"$regex": search_query, "$options": "i"}},
+                {"topics": {"$regex": search_query, "$options": "i"}},
+                {"abstract": {"$regex": search_query, "$options": "i"}},
+            ]
+        }
+
+        # apply filters and query for results,
+        # access filters (OR) and search query are applied first with an AND,
+        # then the good practise filter is applied on top of that result
+        stages = [
+            {"$match": access_filters},
+            {"$match": search_filter if search_query else {}},
+            {"$match": gp_filter if filter_good_practice_only else {}},
+            {"$sort": {sort: order}},
+            {"$skip": offset},
+            {"$limit": limit},
+        ]
+        result = self.db.plans.aggregate(stages)
+
         return [VEPlan.from_dict(res) for res in result]
 
     def get_public_plans_of_user(self, username: str) -> List[VEPlan]:
@@ -197,20 +251,11 @@ class VEPlanResource:
                     },
                     {
                         "$or": [
-                            {"name": {
-                                "$regex": slug,
-                                "$options": "i"
-                            }},
-                            {"topics": {
-                                "$regex": slug,
-                                "$options": "i"
-                            }},
-                            {"abstract": {
-                                "$regex": slug,
-                                "$options": "i"
-                            }}
+                            {"name": {"$regex": slug, "$options": "i"}},
+                            {"topics": {"$regex": slug, "$options": "i"}},
+                            {"abstract": {"$regex": slug, "$options": "i"}},
                         ]
-                    }
+                    },
                 ]
             }
         )
@@ -240,25 +285,27 @@ class VEPlanResource:
             "write_access": plan.write_access,
             "topics": plan.topics,
             "is_good_practise": plan.is_good_practise,
-            "abstract": plan.abstract
+            "abstract": plan.abstract,
         }
 
         return elastic_plan.copy()
 
-    def _update_elastic_plan(self, plan_id: str | ObjectId, elasticsearch_collection: str = "plans") -> None:
+    def _update_elastic_plan(
+        self, plan_id: str | ObjectId, elasticsearch_collection: str = "plans"
+    ) -> None:
         """
         Simply update existing plan in Elasticsearch by given plan_id
         """
 
-        elastic_plan = self._get_plan_for_elastic(
-            self.get_plan(plan_id)
-        )
+        elastic_plan = self._get_plan_for_elastic(self.get_plan(plan_id))
 
         ElasticsearchConnector().on_update(
             plan_id, elasticsearch_collection, elastic_plan
         )
 
-    def insert_plan(self, plan: VEPlan, elasticsearch_collection: str = "plans") -> ObjectId:
+    def insert_plan(
+        self, plan: VEPlan, elasticsearch_collection: str = "plans"
+    ) -> ObjectId:
         """
         Insert the given plan into the database, returning the ObjectId of the
         freshly generated document.
@@ -1119,7 +1166,9 @@ class VEPlanResource:
         # Update Elasticsearch
         self._update_elastic_plan(plan_id)
 
-    def delete_plan(self, _id: str | ObjectId, elasticsearch_collection: str = "plans") -> None:
+    def delete_plan(
+        self, _id: str | ObjectId, elasticsearch_collection: str = "plans"
+    ) -> None:
         """
         Remove a plan from the database by specifying its `_id`.
 

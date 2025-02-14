@@ -22,6 +22,7 @@ import {
     INodeWithLections,
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
+import { IplansFilter } from '@/pages/plans';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -175,14 +176,41 @@ export function useGetUsers(accessToken?: string): {
     };
 }
 
-export function useGetAvailablePlans(accessToken: string): {
+export function useGetAvailablePlans({
+    goodPracticeOnly,
+    owner = 'all',
+    searchQuery,
+    limit = 10,
+    offset = 0,
+    sortBy = 'last_modified',
+    order = 'ASC',
+}: IplansFilter): {
     data: IPlan[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const { data: session } = useSession();
+    const params: { [key: string]: any } = {
+        // filter_gp: true,
+        filter_access: owner,
+        query: searchQuery,
+        limit,
+        offset,
+        sort_by: sortBy,
+        order: order == 'ASC' ? -1 : 1,
+    };
+    if (goodPracticeOnly) {
+        // hotfix while backend does not work with filter_gp = false
+        params['filter_gp'] = true;
+    }
     const { data, error, isLoading, mutate } = useSWR(
-        ['/planner/get_available', accessToken],
+        [
+            `/planner/get_available?${Object.keys(params)
+                .map((a) => `${a}=${params[a]}&`)
+                .join('')}`,
+            session?.accessToken,
+        ],
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
