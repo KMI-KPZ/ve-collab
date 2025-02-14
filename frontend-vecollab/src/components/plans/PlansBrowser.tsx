@@ -48,9 +48,7 @@ export function PlansBrowser({
         <>
             <div className="mb-12 rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
-                    <div className="basis-1/12 text-center">
-                        {/* {t('plans_table_progress')} */}
-                    </div>
+                    <div className="basis-1/12 text-center hidden md:block"></div>
                     <div
                         className={`grow md:basis-5/12 group ${
                             isNoAuthPreview ? '' : 'hover:underline hover:cursor-pointer'
@@ -62,7 +60,7 @@ export function PlansBrowser({
                     </div>
                     <div className="basis-1/6">{t('plans_table_author')}</div>
                     <div
-                        className={`basis-1/6 group hidden md:block ${
+                        className={`basis-1/6 group hidden sm:block ${
                             isNoAuthPreview ? '' : 'hover:underline hover:cursor-pointer'
                         }`}
                         onClick={() => handleSortBy('last_modified')}
