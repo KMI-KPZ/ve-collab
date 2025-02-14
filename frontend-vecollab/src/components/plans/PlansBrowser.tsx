@@ -4,6 +4,7 @@ import { MdArrowDownward, MdArrowUpward } from 'react-icons/md';
 import PlansBrowserItem from './PlansBrowserItem';
 import { IplansFilter } from '@/pages/plans';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 
 interface Props {
     plans: PlanPreview[];
@@ -21,6 +22,7 @@ export function PlansBrowser({
     isNoAuthPreview = false,
 }: Props) {
     const { t } = useTranslation('common');
+    const router = useRouter();
 
     const SortArrow = ({ by }: { by: keyof PlanPreview }) => {
         if (isNoAuthPreview) return <></>;
@@ -82,7 +84,9 @@ export function PlansBrowser({
                 <div>
                     {plans.length == 0 ? (
                         <div className="m-12">
-                            {filterBy.owner == 'shared'
+                            {parseInt(router.query.page as string) > 1
+                                ? t('no_further_plans_available')
+                                : filterBy.owner == 'shared'
                                 ? filterBy.goodPracticeOnly === true
                                     ? t('plans_no_good_practise_plan_shared')
                                     : t('plans_no_plan_shared')

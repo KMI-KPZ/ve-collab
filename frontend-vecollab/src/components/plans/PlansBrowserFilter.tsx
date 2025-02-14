@@ -40,6 +40,7 @@ export function PlansBrowserFilter({
 
             case 'own':
                 setCurrentAuthorFilter(t('plans_filter_my'));
+                filterByCallback({ owner: 'own' });
                 break;
 
             case 'shared':

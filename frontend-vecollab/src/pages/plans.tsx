@@ -18,6 +18,8 @@ import btnNewVe from '@/images/btn_new_ve.svg';
 import btnSearchUser from '@/images/btn_search_user.svg';
 import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
 import { useRouter } from 'next/router';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
 export interface IplansFilter {
     goodPracticeOnly?: boolean;
@@ -51,13 +53,24 @@ export default function Plans({ socket }: Props) {
     const { t } = useTranslation('common');
 
     const [filterBy, setFilterBy] = useState<IplansFilter>(defaultFilter);
+    const pageLength = 10;
 
     const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(filterBy);
+    const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
 
     // may initial only show GP plans
     useEffect(() => {
         if (router.query.isGP && router.query.isGP === 'true') {
             setFilterBy((prev) => ({ ...prev, goodPracticeOnly: true }));
+        }
+
+        if (router.query.page) {
+            const page = parseInt(router.query.page as string) - 1;
+            setFilterBy((prev) => ({
+                ...prev,
+                offset: page * pageLength,
+            }));
+            setIsLoadingPage(false);
         }
     }, [router.query]);
 
@@ -65,8 +78,24 @@ export default function Plans({ socket }: Props) {
      * Add/Remove/Update filter method
      * Usage: See description in IplansFilter
      */
-    const handleFilterBy_ = (filter: IplansFilter) => {
-        setFilterBy((prev) => ({ ...prev, ...filter }));
+    const handleFilterBy = (filter: IplansFilter) => {
+        if (filter.sortBy) {
+            setFilterBy((prev) => ({ ...prev, ...filter }));
+        } else {
+            // reset offset; avoids also double requests in useEffect!
+            setFilterBy((prev) => ({ ...prev, ...filter, offset: 0 }));
+            setTimeout(() => {
+                gotoPage(1);
+            }, 1);
+        }
+    };
+
+    const gotoPage = (number: number) => {
+        setIsLoadingPage(true);
+        router.push(`?page=${number}`, undefined, {
+            shallow: true,
+        });
+        window.scrollTo({ behavior: 'smooth', top: 0 });
     };
 
     return (
@@ -112,23 +141,50 @@ export default function Plans({ socket }: Props) {
                 </div>
             </div>
 
-            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy_} />
+            <PlansBrowserFilter filterBy={filterBy} filterByCallback={handleFilterBy} />
 
             {typeof error !== 'undefined' && (
                 <Alert type="error" message={'Error loading plans. See console for details.'} />
             )}
 
-            {isLoading ? (
-                <div className="m-12">
-                    <LoadingAnimation size="small" /> {t('loading_plans')}
+            {isLoading || isLoadingPage ? (
+                <div className="m-12 flex">
+                    <LoadingAnimation className="!inline-block !w-fit" />
+                    <span className="ml-6">{t('loading_plans')}</span>
                 </div>
             ) : (
-                <PlansBrowser
-                    plans={plans}
-                    filterBy={filterBy}
-                    filterByCallback={handleFilterBy_}
-                    refetchPlansCallback={mutate}
-                />
+                <>
+                    <PlansBrowser
+                        plans={plans}
+                        filterBy={filterBy}
+                        filterByCallback={handleFilterBy}
+                        refetchPlansCallback={mutate}
+                    />
+                    {plans.length >= pageLength && typeof filterBy.offset != 'undefined' && (
+                        <div className="flex items-center justify-center -mt-6 mb-12 space-x-4">
+                            <ButtonLightBlue
+                                onClick={() => {
+                                    gotoPage((filterBy.offset! - pageLength) / pageLength + 1);
+                                }}
+                                disabled={filterBy.offset! == 0}
+                                className="!rounded-full"
+                            >
+                                <MdArrowBackIos className="inline mr-2" />
+                                {t('prev_page')}
+                            </ButtonLightBlue>
+                            <ButtonLightBlue
+                                onClick={() => {
+                                    gotoPage((pageLength + filterBy.offset!) / pageLength + 1);
+                                }}
+                                disabled={plans.length < pageLength}
+                                className="!rounded-full"
+                            >
+                                {t('next_page')}
+                                <MdArrowForwardIos className="inline ml-2" />
+                            </ButtonLightBlue>
+                        </div>
+                    )}
+                </>
             )}
         </>
     );
