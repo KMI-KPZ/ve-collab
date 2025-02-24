@@ -66,6 +66,14 @@
             "text2": " hinzugefügt.",
             "text3": "Du hast automatisch Zugriff auf diesen VE-Plan bekommen und findest ihn ab sofort in deinem Dashboard, oder direkt ",
             "text4": "."
+        },
+        "report_submitted": {
+            "title": "neue Meldung",
+            "text1": "Ein neuer Inhalt wurde gemeldet. Klicke hier zu moderieren."
+        },
+        "content_deleted_due_to_report": {
+            "title": "Inhalt gelöscht",
+            "text1": "Einer deiner Inhalte wurde aufgrund einer Meldung gelöscht. Falls du E-Mail-Benachrichtigungen aktiviert hast, erhältst du darüber detailiertere Informationen."
         }
     },
     "profile": "Profil",
@@ -79,15 +87,17 @@
     "profile_pic": "Profilbild",
     "home": "Home",
     "search": "Suche",
-    "search_placeholder": "Suche Personen...;Suche Gruppe...;Suche Beitrag...",
+    "search_placeholder": "Suche Pläne, Personen, Gruppen oder Beiträge...",
+    "search_placeholder_caroussel": "Suche Pläne...;Suche Personen...;Suche Gruppe...;Suche Beitrag...",
     "search_title": "Suchen",
-    "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
-    "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
+    "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Plänen, Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
+    "search_instructions": "Suche nach Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
     "search_no_results": "Keine Ergebnisse",
+    "search_result_show_more": "Weitere Ergebnisse",
     "search_result_users": "Nutzer:innen",
     "search_result_groups": "Gruppen",
     "search_result_posts": "Beiträge",
-    "search_result_show_more_posts": "weitere Beiträge anzeigen",
+    "search_result_plans": "VE Pläne",
     "chats": "Chats",
     "no_rooms_yet": "Es ist noch kein Chat vorhanden",
     "type_message_placeholder": "Nachricht eingeben...",
@@ -120,6 +130,8 @@
     "plans_btn_new_plan": "Neuen Plan starten",
     "show_good_practice_plans": "\"Good Practice\" Pläne anzeigen",
     "loading_plans": "Lade Pläne...",
+    "prev_page": "Vorherige",
+    "next_page": "Nächste",
     "plans_table_progress": "Progress",
     "plans_table_name": "Name",
     "plans_table_author": "Autor*in",
@@ -131,6 +143,7 @@
     "plans_no_plan_shared": "Es wurde noch kein Plan mit Dir geteilt.",
     "plans_no_good_practise_plan_created": "Du hast noch keinen Good Practice Plan erstellt.",
     "plans_no_plan_created": "Du hast noch keinen Plan erstellt.",
+    "no_further_plans_available": "Keine weiteren Pläne verfügbar.",
     "plans_share_dialog_title": "Teilen",
     "plans_share_dialog_tabname_new": "Neu",
     "plans_share_dialog_tabname_manage": "Verwalten",
@@ -153,6 +166,7 @@
     "download": "Herunterladen",
     "delete_plan": "Plan löschen",
     "share_plan": "Plan teilen",
+    "save_first": "Plan erst speichern",
     "plans_shared_with_1_user": "Plan geteilt mit 1 Nutzer:in",
     "plans_shared_with_x_users": "Plan geteilt mit {{count}} Nutzer:innen",
     "create_copy": "Kopie erstellen",
@@ -485,7 +499,7 @@
         "ve_content2": "Ethnische Fragestellungen",
         "ve_experience1": "1x VE mit spanischer Universität",
         "group_name1": "VE Fremdsprachen",
-        "group_description1": "Austausch und Treff für VE's im Fremdsprachenbereich",
+        "group_description1": "Austausch und Treff für VEs im Fremdsprachenbereich",
         "group_name2": "Klimawandel",
         "plan_name": "Planung VE Sommersemester 2025",
         "partner1": "Partner*in 1",
@@ -551,5 +565,25 @@
         "mail_placeholder": "E-Mail",
         "no_valid_mail": "Diese E-Mail ist nicht gültig",
         "message_placeholder": "Nachricht"
+    },
+    "report": {
+        "report_title": "Melden",
+        "report_reason_placeholder": "z.B. Spam, unangemessener Inhalt, Belästigung, etc.",
+        "report_dialog_titles": {
+            "post": "Diesen Post melden",
+            "comment": "Diesen Kommentar melden",
+            "plan": "Diesen VE-Plan melden",
+            "group": "Diese Gruppe melden",
+            "profile": "Dieses Profil melden",
+            "chatroom": "Diesen Chatverlauf melden"
+        },
+        "report_descriptions": {
+            "post": "Bitte beschreibe kurz, warum du diesen Post melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "comment": "Bitte beschreibe kurz, warum du diesen Kommentar melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "plan": "Bitte beschreibe kurz, warum du diesen VE-Plan melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "group": "Bitte beschreibe kurz, warum du diese Gruppe melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
+            "chatroom": "Bitte beschreibe kurz, warum du diesen Chatverlauf melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
+        }
     }
 }

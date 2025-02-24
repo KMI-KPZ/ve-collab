@@ -3,7 +3,7 @@ import React from 'react';
 interface Props {
     children: React.ReactNode | null;
     tooltipsText: string | React.ReactNode | null;
-    position?: 'top' | 'left' | 'right' | 'bottom';
+    position?: 'top' | 'left' | 'right' | 'bottom' | 'bottom-right';
     className?: string;
     innerClassName?: string;
 }
@@ -58,6 +58,19 @@ export const Tooltip = ({
                     className={`absolute top-full left-1/2 w-[20rem] z-20 mb-2 -translate-x-1/2 rounded bg-white border shadow px-4 py-[6px] text-sm hidden group-hover:block ${innerClassName}`}
                 >
                     <span className="absolute border-t border-l top-[-7px] left-1/2 -z-10 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm bg-white"></span>
+                    {tooltipsText}
+                </div>
+            </Wrapper>
+        );
+    }
+
+    if (position == 'bottom-right') {
+        return (
+            <Wrapper>
+                <div
+                    className={`absolute top-full -right-1/2 w-[20rem] z-20 mb-2 translate-x-[calc(100%-50px)] rounded bg-white border shadow px-4 py-[6px] text-sm hidden group-hover:block ${innerClassName}`}
+                >
+                    <span className="absolute border-t border-l top-[-7px] -z-10 h-3 w-3 rotate-45 rounded-sm bg-white"></span>
                     {tooltipsText}
                 </div>
             </Wrapper>

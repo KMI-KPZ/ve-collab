@@ -38,6 +38,8 @@ import ConfirmDialog from '../common/dialogs/Confirm';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     post: BackendPost;
@@ -84,6 +86,11 @@ export default function TimelinePost({
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportPostDialogOpen, setReportPostDialogOpen] = useState<boolean>(false);
+    const [reportCommentDialogOpen, setReportCommentDialogOpen] = useState<boolean>(false);
+    const [reportedComment, setReportedComment] = useState<BackendPostComment | undefined>(
+        undefined
+    );
 
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
     const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
@@ -112,8 +119,8 @@ export default function TimelinePost({
         if (ref.current && post.isRepost) {
             // TODO update on resize window ?!
             setTimeout(() => {
-                const repostEl = ref.current.querySelector('.repost-text');
-                setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
+                const repostEl = ref.current?.querySelector('.repost-text');
+                if (repostEl) setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
             }, 1);
         }
     });
@@ -213,6 +220,13 @@ export default function TimelinePost({
                 break;
             case 'remove-comment':
                 deleteComment(rest[0]);
+                break;
+            case 'report-post':
+                setReportPostDialogOpen(true);
+                break;
+            case 'report-comment':
+                setReportedComment(rest[0]);
+                setReportCommentDialogOpen(true);
                 break;
             default:
                 break;
@@ -349,6 +363,12 @@ export default function TimelinePost({
                             label: t('common:delete'),
                             icon: <MdDeleteOutline />,
                         },
+                        {
+                            value: 'report-comment',
+                            label: t('common:report.report_title'),
+                            icon: <GoAlert />,
+                            liClasses: 'text-red-500',
+                        },
                     ]}
                     onSelect={(value) => {
                         handleSelectOption(value, comment);
@@ -388,7 +408,15 @@ export default function TimelinePost({
     };
 
     const PostHeaderDropdown = ({ post }: { post: BackendPost }) => {
-        let options = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
+        let options: [
+            {
+                value: string;
+                label: string | JSX.Element;
+                title?: string;
+                liClasses?: string;
+                icon?: JSX.Element;
+            }
+        ] = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username) ||
             (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
@@ -400,6 +428,12 @@ export default function TimelinePost({
         } else if (userIsAdmin) {
             options.push({ value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> });
         }
+        options.push({
+            value: 'report-post',
+            label: t('common:report.report_title'),
+            icon: <GoAlert />,
+            liClasses: 'text-red-500',
+        });
 
         return <Dropdown options={options} onSelect={handleSelectOption} />;
     };
@@ -418,6 +452,25 @@ export default function TimelinePost({
                     callback={(proceed) => {
                         if (proceed) deletePost();
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+            {reportPostDialogOpen && (
+                <ReportDialog
+                    reportedItemId={post._id}
+                    reportedItemType="post"
+                    closeCallback={() => {
+                        setReportPostDialogOpen(false);
+                    }}
+                />
+            )}
+            {reportCommentDialogOpen && (
+                <ReportDialog
+                    reportedItemId={reportedComment!._id}
+                    reportedItemType="comment"
+                    closeCallback={() => {
+                        setReportedComment(undefined);
+                        setReportCommentDialogOpen(false);
                     }}
                 />
             )}
@@ -531,7 +584,7 @@ export default function TimelinePost({
                     )}
                 </div>
 
-                {attachedImages.length > 0 && (
+                {!editPost && attachedImages.length > 0 && (
                     <div className="my-4">
                         <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
                             {attachedImages.map((file, index) => (
@@ -557,7 +610,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {attachedFiles.length > 0 && (
+                {!editPost && attachedFiles.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('files')}</div>
                         <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
@@ -580,7 +633,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {post.plans !== undefined && post.plans.length > 0 && (
+                {!editPost && post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('plans')}</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">

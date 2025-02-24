@@ -33,7 +33,7 @@ from handlers.network.timeline import BaseTimelineHandler
 import util
 import copy
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 class PostHandler(BaseTimelineHandler):
@@ -421,6 +421,78 @@ class PostHandler(BaseTimelineHandler):
                     )
                     return
 
+                plans_ids = self.get_body_argument("plans", [])
+                try:
+                    plans_ids = json.loads(plans_ids)
+                except Exception:
+                    pass
+
+                # may update attached plans
+                plan_manager = VEPlanResource(db)
+                if plans_ids:
+                    # got plans from request -> update DB
+                    for plan_id in plans_ids:
+                        try:
+                            if not plan_manager._check_write_access(plan_id, self.current_user.username):
+                                raise NoWriteAccessError()
+                        except PlanDoesntExistError:
+                            raise
+                    post_manager.update_post_plans(_id, plans_ids)
+                elif post["plans"]:
+                    # had plans in post but not in request -> remove in post!
+                    post_manager.update_post_plans(_id, [])
+
+                # may update attached files
+                files = []
+                existing_files_ids = self.get_body_argument("files", [])
+                files_to_upload = self.get_body_argument("file_amount", None)
+
+                # delete removed files
+                if post["files"]:
+                    for stored_file in post["files"]:
+                        if str(stored_file["file_id"]) not in existing_files_ids:
+                            post_manager.delete_post_file(_id, stored_file["file_id"])
+                        else:
+                            files.append(stored_file)
+
+                # upload new files
+                if files_to_upload:
+                    # save every file
+                    for i in range(0, int(files_to_upload)):
+                        file_obj = self.request.files["file" + str(i)][0]
+
+                        stored_id = post_manager.add_new_post_file(
+                            file_obj["filename"],
+                            file_obj["body"],
+                            file_obj["content_type"],
+                            self.current_user.username,
+                        )
+
+                        files.append(
+                            {
+                                "file_id": stored_id,
+                                "file_name": file_obj["filename"],
+                                "file_type": file_obj["content_type"],
+                                "author": self.current_user.username,
+                            }
+                        )
+
+                        # if the post was in a space, also store the file in the repo,
+                        # indicating it is part of a post by setting manually_uploaded to False
+                        if post["space"]:
+                            try:
+                                space_manager.add_new_post_file(
+                                    post["space"],
+                                    self.current_user.username,
+                                    stored_id,
+                                    file_obj["filename"],
+                                )
+                            except FileAlreadyInRepoError:
+                                pass
+
+                # update post with existing and news files
+                post_manager.update_post_files(_id, files)
+
             self.set_status(200)
             self.write({"status": 200, "success": True})
 
@@ -497,12 +569,15 @@ class PostHandler(BaseTimelineHandler):
                 return
 
             # if the post is in a space, one of the following allows the user to delete the post:
-            # 1. user is author of the post
+            # 1. user is author or repostAuthor of the post
             # 2. user is lionet global admin
             # 3. user is space admin
             if post_to_delete["space"]:
                 post_to_delete["space"] = util.parse_object_id(post_to_delete["space"])
-                if self.current_user.username != post_to_delete["author"]:
+
+                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
+                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                ):
                     if not self.is_current_user_lionet_admin():
                         space_manager = Spaces(db)
                         if not space_manager.check_user_is_space_admin(
@@ -532,7 +607,9 @@ class PostHandler(BaseTimelineHandler):
             # if the post is not in a space, the option to be space admin
             # to remove the post doesnt hold anymore, check only the other 2 options
             else:
-                if self.current_user.username != post_to_delete["author"]:
+                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
+                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                ):
                     if not self.is_current_user_lionet_admin():
                         # none of the two permission cases apply, deny removal
                         self.set_status(403)

@@ -23,6 +23,7 @@ const useDynamicPlaceholder = (searchInputRef: React.RefObject<HTMLInputElement>
             const writePlaceholder = () => {
                 j++;
                 if (j > placeholders[i].length) return;
+                if (searchInputRef?.current == undefined) return;
 
                 searchInputRef!.current!.placeholder = placeholders[i].slice(0, j);
                 timeoutId.current = setTimeout(writePlaceholder, CHARACTER_WRITE_DELAY);

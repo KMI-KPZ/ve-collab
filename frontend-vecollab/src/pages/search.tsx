@@ -4,9 +4,9 @@ import TimelinePostText from '@/components/network/TimelinePostText';
 import Timestamp from '@/components/common/Timestamp';
 import { useGetSearchResults } from '@/lib/backend';
 import { useRouter } from 'next/router';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import { GiSadCrab } from 'react-icons/gi';
-import { MdSearch } from 'react-icons/md';
+import { MdArrowDownward, MdArrowRight, MdKeyboardArrowDown, MdSearch } from 'react-icons/md';
 import GeneralError from '@/components/common/GeneralError';
 import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 import { GetStaticPropsContext } from 'next';
@@ -14,19 +14,31 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 import UserProfileImage from '@/components/network/UserProfileImage';
+import useDynamicPlaceholder from '@/components/common/useDynamicPlaceholder';
+import H2 from '@/components/common/H2';
+import Link from 'next/link';
+import { FaMedal } from 'react-icons/fa';
+import { TbFileText } from 'react-icons/tb';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { useSession } from 'next-auth/react';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
 export default function SearchResult() {
-    const { t } = useTranslation('common');
+    const { t } = useTranslation(['common', 'community']);
+    const { data: session, status } = useSession();
 
     const router = useRouter();
-    const [postsPagination, setPostsPagination] = useState<number>(2);
+    const [postsPagination, setPostsPagination] = useState<number>(5);
+    const [plansPagination, setPlansPagination] = useState<number>(5);
 
     const { data, isLoading, error, mutate } = useGetSearchResults(
         router.query.search as string,
         router.query.filter ? (router.query.filter as string).split(',') : undefined
     );
+
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    useDynamicPlaceholder(searchInputRef);
 
     const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -48,6 +60,7 @@ export default function SearchResult() {
                                 placeholder={t('search_placeholder')}
                                 name="search"
                                 autoComplete="off"
+                                ref={searchInputRef}
                                 defaultValue={
                                     router.query.search ? (router.query.search as string) : ''
                                 }
@@ -89,7 +102,8 @@ export default function SearchResult() {
         router.query.search &&
         !data?.posts?.length &&
         !data?.users?.length &&
-        !data?.spaces?.length
+        !data?.spaces?.length &&
+        !data?.plans?.length
     ) {
         return (
             <Wrapper>
@@ -126,11 +140,99 @@ export default function SearchResult() {
             </div> */}
 
                 <div>
-                    {data.users.length > 0 && (
-                        <>
-                            <div className="font-bold text-xl text-slate-900">
-                                {t('search_result_users')} ({data.users.length})
+                    {data.plans.length > 0 && (
+                        <div className="mb-10">
+                            <H2>
+                                {t('search_result_plans')} ({data.plans.length})
+                            </H2>
+                            <div className="m-2">
+                                {data.plans.map((plan, i) => {
+                                    if (i > plansPagination) return;
+                                    if (i == plansPagination) {
+                                        return (
+                                            <ButtonLightBlue
+                                                key={i}
+                                                label={
+                                                    <>
+                                                        {t('search_result_show_more')}{' '}
+                                                        <MdKeyboardArrowDown
+                                                            size={24}
+                                                            className="inline mx-1"
+                                                        />
+                                                    </>
+                                                }
+                                                onClick={() => setPlansPagination((x) => x + 10)}
+                                                className="mt-4"
+                                            />
+                                        );
+                                    }
+                                    return (
+                                        <div
+                                            key={plan._id}
+                                            className="flex flex-col p-4 mb-4 bg-white rounded shadow hover:bg-slate-50"
+                                        >
+                                            <Timestamp
+                                                timestamp={plan.last_modified}
+                                                className="text-sm text-slate-650 italic"
+                                            />
+                                            <div className="flex flex-row items-center my-1">
+                                                <div className="grow flex items-center truncate">
+                                                    <Link
+                                                        href={`/plan/${plan._id}`}
+                                                        className="group/ve-item flex items-center font-bold text-lg truncate"
+                                                    >
+                                                        <TbFileText
+                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full"
+                                                            size={30}
+                                                        />{' '}
+                                                        <span className="flex flex-col truncate">
+                                                            <span className="flex items-center">
+                                                                <span className="truncate group-hover/ve-item:text-ve-collab-orange">
+                                                                    {plan.name}
+                                                                </span>
+                                                                {plan.is_good_practise && (
+                                                                    <span className="mx-4 text-ve-collab-blue">
+                                                                        <FaMedal
+                                                                            title={t(
+                                                                                'common:plans_marked_as_good_practise'
+                                                                            )}
+                                                                        />
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                            {plan.abstract && (
+                                                                <span className="font-normal text-sm italic">
+                                                                    {plan.abstract}
+                                                                </span>
+                                                            )}
+                                                            {plan.topics.length > 0 && (
+                                                                <span className="font-normal text-sm italic truncate">
+                                                                    <span>
+                                                                        {t('community:ve_topics')}:
+                                                                    </span>{' '}
+                                                                    {plan.topics.join(' / ')}
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                    </Link>
+                                                </div>
+
+                                                <div className="truncate">
+                                                    {plan.author.first_name} {plan.author.last_name}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
+                        </div>
+                    )}
+
+                    {data.users.length > 0 && (
+                        <div className="mb-10">
+                            <H2>
+                                {t('search_result_users')} ({data.users.length})
+                            </H2>
                             <div className="flex flex-wrap m-2">
                                 {data.users.map((user, i) => {
                                     return (
@@ -152,14 +254,14 @@ export default function SearchResult() {
                                     );
                                 })}
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {data.spaces.length > 0 && (
-                        <>
-                            <div className="font-bold text-xl text-slate-900">
+                        <div className="mb-10">
+                            <H2>
                                 {t('search_result_groups')} ({data.spaces.length})
-                            </div>
+                            </H2>
                             <div className="flex m-2">
                                 {data.spaces.map((space, i) => {
                                     return (
@@ -182,22 +284,22 @@ export default function SearchResult() {
                                     );
                                 })}
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {data.posts.length > 0 && (
-                        <>
-                            <div className="font-bold text-xl text-slate-900">
+                        <div>
+                            <H2>
                                 {t('search_result_posts')} ({data.posts.length})
-                            </div>
+                            </H2>
                             <div className="m-2">
                                 {data.posts.map((post, i) => {
                                     if (i > postsPagination) return;
                                     if (i == postsPagination) {
                                         return (
-                                            <ButtonSecondary
+                                            <ButtonLightBlue
                                                 key={i}
-                                                label={t('search_result_show_more_posts')}
+                                                label={t('search_result_show_more')}
                                                 onClick={() => setPostsPagination((x) => x + 10)}
                                             />
                                         );
@@ -211,24 +313,29 @@ export default function SearchResult() {
                                                 router.push(`/post/${post._id}`);
                                             }}
                                         >
-                                            {/* TODO use <TimelinePost /> !  */}
-                                            <div className="flex flex-col mb-2">
-                                                {/* <PostHeader author={post.author} date={post.creation_date} /> */}
-
-                                                {/* <span className="font-bold text-slate-900">{post.author as unknown as string}</span> */}
-                                                <a
-                                                    href={`/post/${post._id}`}
-                                                    className="hover:cursor-pointer hover:underline font-bold text-slate-900"
-                                                >
-                                                    {post.author as unknown as string}
-                                                </a>
-
-                                                <Timestamp
-                                                    relative={true}
-                                                    timestamp={post.creation_date}
-                                                    showTitle={true}
-                                                    className="text-xs text-gray-500"
+                                            <div className="flex mb-2">
+                                                <UserProfileImage
+                                                    profile_pic={post.author.profile_pic}
+                                                    chosen_achievement={
+                                                        post.author.chosen_achievement
+                                                    }
                                                 />
+                                                <div className="flex flex-col">
+                                                    <Link
+                                                        href={`/profile/user/${post.author.username}`}
+                                                        className="font-bold"
+                                                    >
+                                                        {post.author.first_name}
+                                                        {post.author.last_name}
+                                                    </Link>
+
+                                                    <Timestamp
+                                                        relative={true}
+                                                        timestamp={post.creation_date}
+                                                        showTitle={true}
+                                                        className="text-xs text-gray-500"
+                                                    />
+                                                </div>
                                             </div>
                                             <div
                                                 className="max-h-20 text-ellipsis overflow-hidden"
@@ -246,7 +353,7 @@ export default function SearchResult() {
                                     );
                                 })}
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </Wrapper>
@@ -257,7 +364,7 @@ export default function SearchResult() {
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
         },
     };
 }

@@ -66,6 +66,14 @@
             "text2": ".",
             "text3": "You have automatically received access to this plan and it is now available in your dashboard, or directly ",
             "text4": "."
+        },
+        "report_submitted": {
+            "title": "new Report",
+            "text1": "Someone has filed a new report. Please click here to moderate the report."
+        },
+        "content_deleted_due_to_report": {
+            "title": "Content deleted",
+            "text1": "Your content has been deleted due to a report. If you have E-Mail notifications enabled, you will receive a detailed explanation."
         }
     },
     "profile": "Profile",
@@ -79,15 +87,17 @@
     "profile_pic": "Profile picture",
     "home": "Home",
     "search": "Search",
-    "search_placeholder": "Search User...;Search Group...;Search Post...",
+    "search_placeholder": "Search plans, user, groups or posts...",
+    "search_placeholder_caroussel": "Search plans...;Search user...;Search group...;Search post...",
     "search_title": "Search",
     "search_description": "Search for content on VE-Collab, such as people, groups, posts, learning materials or plans",
-    "search_instructions": "Search for users, groups, plans, etc.",
+    "search_instructions": "Search for people, groups, posts, learning materials or plans",
     "search_no_results": "No results found",
+    "search_result_show_more": "more results",
     "search_result_users": "Users",
     "search_result_groups": "Groups",
     "search_result_posts": "Posts",
-    "search_result_show_more_posts": "Show more posts",
+    "search_result_plans": "VE plans",
     "chats": "Chats",
     "no_rooms_yet": "There is no chat yet",
     "type_message_placeholder": "Type your message here...",
@@ -100,6 +110,7 @@
     "give_chat_name": "Name your new chat (optional)",
     "create": "Create",
     "btn_new_ve": "Start a new VE",
+    "plan": "Plan",
     "plans": "Plans",
     "your_plans": "Your plans",
     "gp_plans_of": "\"Good Practice\" plans",
@@ -120,6 +131,8 @@
     "plans_btn_new_plan": "Start a new plan",
     "show_good_practice_plans": "Show \"Good Practice\" plans",
     "loading_plans": "Loading plans...",
+    "prev_page": "Previous",
+    "next_page": "Next",
     "plans_table_progress": "Progress",
     "plans_table_name": "Name",
     "plans_table_author": "Author",
@@ -131,6 +144,7 @@
     "plans_no_plan_shared": "Nobody shared plans with you yet.",
     "plans_no_good_practise_plan_created": "You have not created any good practice plans yet.",
     "plans_no_plan_created": "You have not created any plans yet.",
+    "no_further_plans_available": "No further plans available.",
     "plans_share_dialog_title": "Share",
     "plans_share_dialog_tabname_new": "New",
     "plans_share_dialog_tabname_manage": "Manage",
@@ -153,6 +167,7 @@
     "download": "Download",
     "delete_plan": "Delete plan",
     "share_plan": "Share plan",
+    "save_first": "Save plan first",
     "plans_shared_with_1_user": "Plan shared with 1 user",
     "plans_shared_with_x_users": "Plan shared with {{count}} users",
     "create_copy": "Create a copy",
@@ -552,5 +567,25 @@
         "mail_placeholder": "E-mail",
         "no_valid_mail": "This email is not valid",
         "message_placeholder": "Message"
+    },
+    "report": {
+        "report_title": "Report",
+        "report_reason_placeholder": "e.g. spam, inappropriate content, harassment, etc.",
+        "report_dialog_titles": {
+            "post": "Report this post",
+            "comment": "Report this comment",
+            "plan": "Report this VE-Plan",
+            "group": "Report this group",
+            "profile": "Report this profile",
+            "chatroom": "Report this chat"
+        },
+        "report_descriptions": {
+            "post": "Please describe the reason why you want to report this post. This will help us to take appropriate action.",
+            "comment": "Please describe the reason why you want to report this comment. This will help us to take appropriate action.",
+            "plan": "Please describe the reason why you want to report this VE-Plan. This will help us to take appropriate action.",
+            "group": "Please describe the reason why you want to report this group. This will help us to take appropriate action.",
+            "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action.",
+            "chatroom": "Please describe the reason why you want to report this chat. This will help us to take appropriate action."
+        }
     }
 }

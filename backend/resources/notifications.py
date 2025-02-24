@@ -39,7 +39,9 @@ class NotificationResource:
             "reminder_icebreaker",
             "achievement_level_up",
             "plan_access_granted",
-            "plan_added_as_partner"
+            "plan_added_as_partner",
+            "report_submitted",
+            "content_deleted_due_to_report",
         ]
 
         # mapping of notification types to the profile settings
@@ -55,7 +57,9 @@ class NotificationResource:
             "reminder_icebreaker": "system",
             "achievement_level_up": "system",
             "plan_access_granted": "system",
-            "plan_added_as_partner": "system"
+            "plan_added_as_partner": "system",
+            "report_submitted": "system",
+            "content_deleted_due_to_report": "system",
         }
 
         # mapping of notification types to the email templates
@@ -70,7 +74,9 @@ class NotificationResource:
             "reminder_icebreaker": "reminder_icebreaker.html",
             "achievement_level_up": "achievement_level_up.html",
             "plan_access_granted": "plan_access_granted.html",
-            "plan_added_as_partner": "plan_added_as_partner.html"
+            "plan_added_as_partner": "plan_added_as_partner.html",
+            "report_submitted": "report_submitted.html",
+            "content_deleted_due_to_report": "content_deleted_due_to_report.html",
         }
 
     async def send_notification(

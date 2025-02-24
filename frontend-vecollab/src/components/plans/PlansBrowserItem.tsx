@@ -23,6 +23,9 @@ import { FaEye, FaMedal } from 'react-icons/fa';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     plan: PlanPreview;
@@ -48,6 +51,7 @@ export default function PlansBrowserItem({
     const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
     const [planSummary, setPlanSummary] = useState<IPlan>();
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState<boolean>(false);
 
     // BACKLOG: remember this cool useSWRMutation to trigger changes
     // const getPlanById = async (url: string, { arg }: { arg: string }) => {
@@ -261,6 +265,18 @@ export default function PlansBrowserItem({
         </button>
     );
 
+    const ReportButton = () => (
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            onClick={(e) => {
+                e.stopPropagation();
+                setReportDialogOpen(true);
+            }}
+        >
+            <GoAlert title={t('report.report_title')} color="red" />
+        </button>
+    );
+
     const deletePlan = async (planId: string) => {
         const response = await fetchDELETE(
             `/planner/delete?_id=${planId}`,
@@ -322,26 +338,28 @@ export default function PlansBrowserItem({
 
     return (
         <>
-            <div className="basis-1/12 flex justify-center">
+            <div className="basis-1/12 flex justify-center text-center hidden md:block">
                 {isPlanProgressCompleted() ? (
                     <span className="cursor-pointer" title={t('plans_title_all_steps_completed')}>
                         <HiOutlineCheckCircle size={23} />
                     </span>
                 ) : (
-                    <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer"
-                        title={t('plans_title_partial_steps_completed', {
+                    <Tooltip
+                        tooltipsText={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,
                         })}
+                        position="bottom-right"
                     >
-                        {completedSteps} / {stepsToProgress}
-                    </span>
+                        <span className="text-center text-sm text-slate-800 whitespace-nowrap cursor-pointer">
+                            {completedSteps} / {stepsToProgress}
+                        </span>
+                    </Tooltip>
                 )}
             </div>
 
             <div
-                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
+                className="grow basis-5/6 sm:basis-4/6 md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -353,7 +371,7 @@ export default function PlansBrowserItem({
             >
                 <div className="flex items-center flex-wrap">
                     <div className="flex order-1 truncate xl:max-w-[60%] items-center">
-                        <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
+                        <div className="grow mr-2 font-bold whitespace-nowrap truncate">
                             <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                                 {plan.name}
                             </Link>
@@ -364,8 +382,13 @@ export default function PlansBrowserItem({
                             </div>
                         )}
                     </div>
+                    {plan.abstract && (
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm truncate">
+                            {plan.abstract}
+                        </div>
+                    )}
                     {plan.topics.length > 0 && (
-                        <div className="w-full order-2 xl:order-3 mr-2 py-1 text-gray-700 truncate">
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm italic truncate">
                             {plan.topics.join(' / ')}
                         </div>
                     )}
@@ -383,6 +406,7 @@ export default function PlansBrowserItem({
                                 <DeleteButton />
                             </>
                         )}
+                        <ReportButton />
                     </div>
                 </div>
             </div>
@@ -404,7 +428,7 @@ export default function PlansBrowserItem({
                 )}
             </div>
 
-            <div className="basis-1/6 hidden md:block">
+            <div className="basis-1/6 hidden sm:block">
                 <Timestamp
                     timestamp={plan.last_modified}
                     className="text-sm"
@@ -430,6 +454,16 @@ export default function PlansBrowserItem({
                     callback={(proceed) => {
                         if (proceed) deletePlan(plan._id);
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={plan._id}
+                    reportedItemType="plan"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
                     }}
                 />
             )}

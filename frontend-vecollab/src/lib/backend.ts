@@ -9,6 +9,7 @@ import {
     BackendProfile,
     BackendUserACLEntry,
     BackendUser25,
+    Report,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -21,6 +22,7 @@ import {
     INodeWithLections,
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
+import { IplansFilter } from '@/pages/plans';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -174,14 +176,41 @@ export function useGetUsers(accessToken?: string): {
     };
 }
 
-export function useGetAvailablePlans(accessToken: string): {
+export function useGetAvailablePlans({
+    goodPracticeOnly,
+    owner = 'all',
+    searchQuery,
+    limit = 10,
+    offset = 0,
+    sortBy = 'last_modified',
+    order = 'ASC',
+}: IplansFilter): {
     data: IPlan[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
+    const { data: session } = useSession();
+    const params: { [key: string]: any } = {
+        // filter_gp: true,
+        filter_access: owner,
+        query: searchQuery,
+        limit,
+        offset,
+        sort_by: sortBy,
+        order: order == 'ASC' ? -1 : 1,
+    };
+    if (goodPracticeOnly) {
+        // hotfix while backend does not work with filter_gp = false
+        params['filter_gp'] = true;
+    }
     const { data, error, isLoading, mutate } = useSWR(
-        ['/planner/get_available', accessToken],
+        [
+            `/planner/get_available?${Object.keys(params)
+                .map((a) => `${a}=${params[a]}&`)
+                .join('')}`,
+            session?.accessToken,
+        ],
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
@@ -641,13 +670,18 @@ export function useGetSearchResults(
     search: string,
     filterBy?: string[]
 ): {
-    data: { posts: BackendPost[]; spaces: BackendGroup[]; users: BackendProfile[] };
+    data: {
+        posts: BackendPost[];
+        spaces: BackendGroup[];
+        users: BackendProfile[];
+        plans: PlanPreview[];
+    };
     isLoading: boolean;
     error: APIError;
     mutate: KeyedMutator<any>;
 } {
     const { data: session } = useSession();
-    const defaultFilter = ['posts', 'users', 'spaces'];
+    const defaultFilter = ['posts', 'users', 'spaces', 'plans'];
     filterBy =
         filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
     const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
@@ -659,6 +693,26 @@ export function useGetSearchResults(
 
     return {
         data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetOpenReports(accessToken: string): {
+    data: Report[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/report/get_open', accessToken],
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? [] : data.reports,
         isLoading,
         error,
         mutate,

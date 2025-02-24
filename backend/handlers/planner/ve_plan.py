@@ -1,7 +1,7 @@
 import datetime
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -171,6 +171,14 @@ class VEPlanHandler(BaseHandler):
             (read only).
 
             query params:
+                filter_gp: <true|false>, if true, only return good practise examples
+                filter_access: <all|own|shared>, if "all", return all plans that i have access to (default),
+                    if "own", return only my own plans, if "shared", return only plans that i have gotten read/write access to
+                query: <str>, if given, only return plans that contain the query in their name, topics or abstract
+                limit: <int>, if given, limit the amount of returned plans to this number (default 10)
+                offset: <int>, if given, skip this amount of plans before returning the results (default 0)
+                sort: <name|last_modified|creation_timestamp> sort by given proerty
+                order: <-1|1> order DESC or ASC
 
             http body:
 
@@ -243,7 +251,26 @@ class VEPlanHandler(BaseHandler):
                 return
 
             elif slug == "get_available":
-                self.get_available_plans_for_user(db)
+                filter_good_practice_only = self.get_argument("filter_gp", False)
+                filter_access = self.get_argument("filter_access", "all")
+                if filter_access not in ["all", "own", "shared"]:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": "invalid_filter_access_value",
+                        }
+                    )
+                    return
+                query = self.get_argument("query", None)
+                limit =  int(self.get_argument("limit", 10))
+                offset = int(self.get_argument("offset", 0))
+                sort = self.get_argument("sort_by", 'last_modified')
+                order = int(self.get_argument("order", -1))
+
+                self.get_available_plans_for_user(
+                    db, filter_good_practice_only, filter_access, query, limit, offset, sort, order
+                )
                 return
 
             elif slug == "get_good_practise":
@@ -1835,7 +1862,40 @@ class VEPlanHandler(BaseHandler):
 
         self.serialize_and_write({"success": True, "plan": plan_dict})
 
-    def get_available_plans_for_user(self, db: Database) -> None:
+    def find_available_plans_for_user_by_slug(self, slug: str, db: Database) -> None:
+        """
+        This function is invoked by the handler when the correspoding endpoint
+        is requested. It just de-crowds the handler function and should therefore
+        not be called manually anywhere else.
+
+        Search for all available plans (name, topics, abstract) of the current user by given slug
+
+        Responses:
+            200 OK --> contains all found plans in a list of dictionaries
+        """
+
+        planner = VEPlanResource(db)
+        plans = [
+            plan.to_dict()
+            for plan in planner.find_plans_for_user_by_slug(
+                self.current_user.username, slug
+            )
+        ]
+        plans = self.add_profile_information_to_author(plans)
+
+        self.serialize_and_write({"success": True, "plans": plans})
+
+    def get_available_plans_for_user(
+        self,
+        db: Database,
+        filter_good_practice_only: bool,
+        filter_access: Literal["all", "own", "shared"],
+        search_query: str | None,
+        limit: int = 10,
+        offset: int = 0,
+        sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
+        order: int = -1
+    ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
         is requested. It just de-crowds the handler function and should therefore
@@ -1845,6 +1905,20 @@ class VEPlanHandler(BaseHandler):
         those that he/she has read/write access to and those that are marked as
         good practise examples (read only).
 
+        Optionally, apply the following filters and searches:
+        - `filter_good_practice_only`: only return good practise plans
+        - `filter_access`:
+            - all: return all plans that the user has access to, i.e. own plans,
+                   read/write access and good practise plans
+            - own: return only the user's own plans
+            - shared: return only plans that the user has read/write access to
+        - `search_query`: a string to search for in the plans' names, topics and abstracts
+
+        `filter_access` and `search_query` are first combined with an AND operator and afterwards
+        the `filter_good_practice_only` is applied on top of this result.
+
+        `limit` and `offset` are used for pagination.
+
         Responses:
             200 OK --> contains all available plans in a list of dictionaries
         """
@@ -1852,7 +1926,16 @@ class VEPlanHandler(BaseHandler):
         planner = VEPlanResource(db)
         plans = [
             plan.to_dict()
-            for plan in planner.get_plans_for_user(self.current_user.username)
+            for plan in planner.get_plans_for_user(
+                self.current_user.username,
+                filter_good_practice_only,
+                filter_access,
+                search_query,
+                limit,
+                offset,
+                sort,
+                order
+            )
         ]
         plans = self.add_profile_information_to_author(plans)
 

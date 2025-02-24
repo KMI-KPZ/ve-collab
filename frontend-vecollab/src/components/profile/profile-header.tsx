@@ -17,6 +17,9 @@ import AuthenticatedImage from '../common/AuthenticatedImage';
 import VEReadyFor from './VEReadyFor';
 import { Tooltip } from '../common/Tooltip';
 import LoadingAnimation from '../common/LoadingAnimation';
+import { GoAlert } from 'react-icons/go';
+import Dropdown from '../common/Dropdown';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     profileInformation: BackendUser25;
@@ -41,6 +44,9 @@ export default function ProfileHeader({
 
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const [isInvitationDialogOpen, setIsInvitationDialogOpen] = useState(false);
+
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+
     const handleOpenInvitationDialog = () => {
         if (isNoAuthPreview) return;
 
@@ -103,13 +109,37 @@ export default function ProfileHeader({
         });
     };
 
+    const handleSelectOption = (value: string, ...rest: any[]) => {
+        switch (value) {
+            case 'report':
+                setReportDialogOpen(true);
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    const ProfileDropdown = () => {
+        const options = [
+            {
+                value: 'report',
+                label: t('common:report.report_title'),
+                icon: <GoAlert />,
+                liClasses: 'text-red-500',
+            },
+        ];
+
+        return <Dropdown options={options} onSelect={handleSelectOption} />;
+    };
+
     useEffect(() => {
         // reset followers after change route
         setFollows([]);
         setFollowers([]);
     }, [router]);
 
-    const ToolitpFollows = () => (
+    const TooltipFollows = () => (
         <div className="overflow-y-auto max-h-32 content-scrollbar">
             {follows.map((user, i) => (
                 <div key={i} className="flex items-center justify-between truncate text-black my-2">
@@ -234,7 +264,7 @@ export default function ProfileHeader({
                                 loadingFollows ? (
                                     <LoadingAnimation size="small" className="my-2" />
                                 ) : profileInformation.follows.length > 0 ? (
-                                    <ToolitpFollows />
+                                    <TooltipFollows />
                                 ) : null
                             }
                             position="left"
@@ -313,6 +343,9 @@ export default function ProfileHeader({
                             <ButtonPrimary onClick={handleOpenInvitationDialog}>
                                 {t('ve_invitation')}
                             </ButtonPrimary>
+                            <div className="flex items-center">
+                                <ProfileDropdown />
+                            </div>
 
                             {!isNoAuthPreview && (
                                 <VEInvitationDialog
@@ -327,6 +360,16 @@ export default function ProfileHeader({
                                     message={t('alert_ve_invitation_sent')}
                                     autoclose={2000}
                                     onClose={() => setSuccessPopupOpen(false)}
+                                />
+                            )}
+
+                            {reportDialogOpen && (
+                                <ReportDialog
+                                    reportedItemId={profileInformation.username}
+                                    reportedItemType="profile"
+                                    closeCallback={() => {
+                                        setReportDialogOpen(false);
+                                    }}
                                 />
                             )}
                         </>
