@@ -40,7 +40,7 @@ export default function Sidebar({
     if (isLoading) return <LoadingAnimation size="small" />;
 
     return (
-        <div className="relative pl-2 pr-4 max-h-[80vh]">
+        <div className="relative max-h-[80vh]">
             {roomSnippets.length == 0 ? (
                 <div>{t('no_rooms_yet')}</div>
             ) : (

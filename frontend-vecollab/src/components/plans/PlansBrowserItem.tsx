@@ -66,17 +66,18 @@ export default function PlansBrowserItem({
         await refetchPlansCallback();
     };
 
-    const stepsToProgress =
-        Object.keys(initialSideProgressBarStates).filter((a) => a !== 'steps').length +
-        plan.steps.length;
+    const stepsDone = Object.keys(plan.progress).filter(
+        (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
+    ).length;
+    const stepsTotal = Object.keys(initialSideProgressBarStates).filter(
+        (a) => a !== 'steps'
+    ).length;
+    const phasesDone = plan.progress.steps.filter(
+        (a) => a[Object.keys(a)[0]] == ProgressState.completed
+    ).length;
+    const phasesTotal = plan.steps.length;
 
-    const completedSteps =
-        Object.keys(plan.progress).filter(
-            (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
-        ).length +
-        plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
-
-    const isPlanProgressCompleted = () => completedSteps == stepsToProgress;
+    const isPlanProgressCompleted = () => stepsDone + phasesDone == stepsTotal + phasesTotal;
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -273,7 +274,7 @@ export default function PlansBrowserItem({
                 setReportDialogOpen(true);
             }}
         >
-            <GoAlert title={t('report.report_title')} color="red" />
+            <GoAlert title={t('report.report_title')} />
         </button>
     );
 
@@ -340,19 +341,51 @@ export default function PlansBrowserItem({
         <>
             <div className="basis-1/12 flex justify-center text-center hidden md:block">
                 {isPlanProgressCompleted() ? (
-                    <span className="cursor-pointer" title={t('plans_title_all_steps_completed')}>
+                    <Tooltip
+                        tooltipsText={
+                            <Trans
+                                i18nKey="plans_title_all_steps_completed"
+                                components={{
+                                    br: <br />,
+                                    italic: <i />,
+                                    checkMark: <HiOutlineCheckCircle className="inline" />,
+                                }}
+                                values={{
+                                    stepsTotal,
+                                    phasesTotal,
+                                }}
+                            />
+                        }
+                        position="bottom-right"
+                        className="text-left"
+                    >
                         <HiOutlineCheckCircle size={23} />
-                    </span>
+                    </Tooltip>
                 ) : (
                     <Tooltip
-                        tooltipsText={t('plans_title_partial_steps_completed', {
-                            count: completedSteps,
-                            total: stepsToProgress,
-                        })}
+                        tooltipsText={
+                            <Trans
+                                i18nKey="plans_title_partial_steps_completed"
+                                ns="common"
+                                components={{
+                                    br: <br />,
+                                    bold: <strong />,
+                                    italic: <i />,
+                                    checkMark: <HiOutlineCheckCircle className="inline" />,
+                                }}
+                                values={{
+                                    stepsDone,
+                                    stepsTotal,
+                                    phasesDone,
+                                    phasesTotal,
+                                }}
+                            />
+                        }
                         position="bottom-right"
+                        className="text-left"
                     >
                         <span className="text-center text-sm text-slate-800 whitespace-nowrap cursor-pointer">
-                            {completedSteps} / {stepsToProgress}
+                            {stepsDone + phasesDone} / {stepsTotal + phasesTotal}
                         </span>
                     </Tooltip>
                 )}

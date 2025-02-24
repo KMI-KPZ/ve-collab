@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
 import { useEffect, useState } from 'react';
 import { MdOutlineGroup } from 'react-icons/md';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     room: BackendChatroomSnippet;
@@ -28,20 +29,33 @@ export default function RoomSnippet({
             headerBarMessageEvents.filter((message) => message.room_id === room._id).length
         );
     }, [headerBarMessageEvents, room._id]);
+    const otherUser =
+        memberProfileSnippets.length == 2
+            ? memberProfileSnippets.find(
+                  (member) => member.preferredUsername !== session?.user.preferred_username
+              )
+            : undefined;
 
     return (
         <li
             className="rounded-md py-2 cursor-pointer hover:bg-gray-200 overflow-hidden whitespace-nowrap text-ellipsis"
             onClick={() => handleChatSelect(room._id)}
         >
-            <div className="flex items-center">
-                <div className="flex items-center justify-center relative rounded-full p-6 shadow mr-2">
-                    <span className="absolute">
-                        <MdOutlineGroup size={30} className="text-gray-400 shrink-0" />
-                    </span>
-                    <span className="absolute font-bold text-sm text-gray-600">
-                        {room.members.length}
-                    </span>
+            <div className="flex items-center px-1">
+                <div className="flex-none">
+                    {memberProfileSnippets.length > 2 ? (
+                        <MdOutlineGroup
+                            size={30}
+                            className="text-gray-400 shrink-0 ml-1 mr-2 rounded-full bg-white"
+                        />
+                    ) : (
+                        <UserProfileImage
+                            profile_pic={otherUser?.profilePicUrl}
+                            chosen_achievement={otherUser?.chosen_achievement}
+                            width={30}
+                            height={30}
+                        />
+                    )}
                 </div>
 
                 <div className="flex flex-col truncate">
@@ -51,16 +65,18 @@ export default function RoomSnippet({
                         </p>
                     )}
 
-                    <div className="text-sm flex items-center gap-x-1">
+                    <div className="text-sm flex items-center gap-x-1 truncate">
                         <div className="flex truncate">
-                            {memberProfileSnippets.map((member, i) => (
-                                <>
-                                    <span key={i} className="max-w-1/3 inline-block truncate">
-                                        {member.name}
-                                    </span>
-                                    {i + 1 < memberProfileSnippets.length && <>,&nbsp;</>}
-                                </>
-                            ))}
+                            {memberProfileSnippets.length > 2 ? (
+                                memberProfileSnippets.map((member, i) => (
+                                    <div key={i} className="truncate">
+                                        <span className="max-w-1/3 truncate">{member.name}</span>
+                                        {i + 1 < memberProfileSnippets.length && <>,&nbsp;</>}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="truncate">{otherUser?.name}</div>
+                            )}
                         </div>
                     </div>
 

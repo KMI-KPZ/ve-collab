@@ -463,26 +463,22 @@ export default function TimelinePostForm({
                 title={t('link')}
                 onClose={() => setIsLinkDialogOpen(false)}
             >
-                <div className="w-[20vw]">
-                    <div>
-                        <form onSubmit={submitNewLinkDialog}>
-                            <input
-                                type="url"
-                                name="url"
-                                defaultValue={cursorInLink ? cursorInLink.href : ''}
-                                autoComplete="off"
-                                autoFocus
-                                className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
-                            />
-                            <button
-                                type="submit"
-                                className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
-                            >
-                                {t('common:ok')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                <form onSubmit={submitNewLinkDialog}>
+                    <input
+                        type="url"
+                        name="url"
+                        defaultValue={cursorInLink ? cursorInLink.href : ''}
+                        autoComplete="off"
+                        autoFocus
+                        className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
+                    />
+                    <button
+                        type="submit"
+                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
+                    >
+                        {t('common:ok')}
+                    </button>
+                </form>
             </Dialog>
 
             {/* VE plan dialog */}
