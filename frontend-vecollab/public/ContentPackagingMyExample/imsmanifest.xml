@@ -3,13 +3,17 @@
 
 <!--
     User specific data:
-    organisation:
-        - Title of the course: Main title
-        - Elements with identifierref pointing to resources
-    resources:
-        - resource_1: stepName.html (correct identifier, href)
-        - resource_n: stepName2.html
-    create html files for each step and put them in the sco folder
+
+        manifest file:
+            User specific data:
+            organisation:
+                - Title of the course: Main title
+                - Elements with identifierref pointing to resources
+            resources:
+                - resource_1: stepName.html (correct identifier, href)
+                - resource_n: stepName2.html
+        html files in folder sco: (don't have to be in a folder)
+            - create html files for each step and put them in the sco folder
 -->
 <manifest identifier="com.scorm.golfsamples.contentpackaging.singlesco.12" version="1"
           xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
