@@ -81,15 +81,12 @@ export function PlansBrowser({
 
                 <div>
                     {plans.length == 0 ? (
-                        <div className="m-12">
-                            {parseInt(router.query.page as string) > 1
-                                ? t('no_further_plans_available')
-                                : filterBy.owner == 'shared'
-                                ? filterBy.goodPracticeOnly === true
-                                    ? t('plans_no_good_practise_plan_shared')
-                                    : t('plans_no_plan_shared')
-                                : filterBy.goodPracticeOnly === true
-                                ? t('plans_no_good_practise_plan_created')
+                        <div className="p-12">
+                            {parseInt(router.query.page as string) > 1 ||
+                            filterBy.owner == 'shared' ||
+                            filterBy.goodPracticeOnly === true ||
+                            filterBy.searchQuery!.length > 0
+                                ? t('plans_nothing_matches')
                                 : t('plans_no_plan_created')}
                         </div>
                     ) : (
