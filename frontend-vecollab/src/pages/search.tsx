@@ -2,13 +2,12 @@ import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import TimelinePostText from '@/components/network/TimelinePostText';
 import Timestamp from '@/components/common/Timestamp';
-import { useGetSearchResults } from '@/lib/backend';
+import { useGetSearchLearningModuls, useGetSearchResults } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import { FormEvent, useRef, useState } from 'react';
 import { GiSadCrab } from 'react-icons/gi';
-import { MdArrowDownward, MdArrowRight, MdKeyboardArrowDown, MdSearch } from 'react-icons/md';
+import { MdArrowRight, MdKeyboardArrowDown, MdSearch } from 'react-icons/md';
 import GeneralError from '@/components/common/GeneralError';
-import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
@@ -21,6 +20,7 @@ import { FaMedal } from 'react-icons/fa';
 import { TbFileText } from 'react-icons/tb';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { useSession } from 'next-auth/react';
+import { INode } from '@/interfaces/material/materialInterfaces';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -36,6 +36,8 @@ export default function SearchResult() {
         router.query.search as string,
         router.query.filter ? (router.query.filter as string).split(',') : undefined
     );
+
+    const { data: learningModules } = useGetSearchLearningModuls(router.query.search as string);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
     useDynamicPlaceholder(searchInputRef);
@@ -103,7 +105,8 @@ export default function SearchResult() {
         !data?.posts?.length &&
         !data?.users?.length &&
         !data?.spaces?.length &&
-        !data?.plans?.length
+        !data?.plans?.length &&
+        !learningModules.length
     ) {
         return (
             <Wrapper>
@@ -228,31 +231,74 @@ export default function SearchResult() {
                         </div>
                     )}
 
+                    {learningModules.length > 0 && (
+                        <div className="mb-10">
+                            <H2>
+                                {t('search_result_learning_modules')} ({learningModules.length})
+                            </H2>
+                            <div className="m-2">
+                                {learningModules.map((learningModule, i) => (
+                                    <div key={i} className="m-4 flex items-center">
+                                        {/* <Link
+                                            href={`/learning-material/${
+                                                (learningModule.cluster.id % 10) + 1
+                                            }`}
+                                            className="relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow"
+                                        >
+                                            {getClusterIconBySlug(learningModule.cluster.text)({
+                                                size: 30,
+                                                className:
+                                                    'text-white transition-colors hover:text-ve-collab-orange',
+                                            })}
+                                        </Link> */}
+                                        <Link
+                                            className="px-4 py-2 text-ve-collab-blue hover:text-ve-collab-orange transition ease-in-out"
+                                            href={`/learning-material/${
+                                                (learningModule.cluster.id % 10) + 1
+                                            }/${learningModule.section.text}`}
+                                        >
+                                            {learningModule.section.text}
+                                        </Link>
+                                        <MdArrowRight className="inline mx-1" />
+                                        <Link
+                                            className="px-4 py-2 text-ve-collab-blue hover:text-ve-collab-orange transition ease-in-out"
+                                            href={`/learning-material/${
+                                                (learningModule.cluster.id % 10) + 1
+                                            }/${learningModule.section.text}/${
+                                                learningModule.text
+                                            }`}
+                                        >
+                                            {learningModule.text}
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {data.users.length > 0 && (
                         <div className="mb-10">
                             <H2>
                                 {t('search_result_users')} ({data.users.length})
                             </H2>
                             <div className="flex flex-wrap m-2">
-                                {data.users.map((user, i) => {
-                                    return (
-                                        <a
-                                            key={i}
-                                            className="flex m-2 items-center"
-                                            href={`/profile/user/${user.username}`}
-                                        >
-                                            <UserProfileImage
-                                                profile_pic={user.profile_pic}
-                                                chosen_achievement={user.chosen_achievement}
-                                                width={50}
-                                                height={50}
-                                            />
-                                            <span className="font-bold text-slate-900">
-                                                {user.first_name} {user.last_name}
-                                            </span>
-                                        </a>
-                                    );
-                                })}
+                                {data.users.map((user, i) => (
+                                    <Link
+                                        key={i}
+                                        className="flex m-2 items-center"
+                                        href={`/profile/user/${user.username}`}
+                                    >
+                                        <UserProfileImage
+                                            profile_pic={user.profile_pic}
+                                            chosen_achievement={user.chosen_achievement}
+                                            width={50}
+                                            height={50}
+                                        />
+                                        <span className="font-bold text-slate-900">
+                                            {user.first_name} {user.last_name}
+                                        </span>
+                                    </Link>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -360,6 +406,16 @@ export default function SearchResult() {
         </>
     );
 }
+
+// export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
+//     const taxonomy = await fetchTaxonomy();
+
+//     return {
+//         props: {
+//             ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+//         },
+//     };
+// }
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {

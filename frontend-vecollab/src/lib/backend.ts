@@ -20,6 +20,8 @@ import {
     IMaterialNode,
     INode,
     INodeWithLections,
+    ISearchMaterial,
+    ISearchMaterialWP,
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
 import { IplansFilter } from '@/pages/plans';
@@ -689,6 +691,57 @@ export function useGetSearchResults(
         [`/search?query=${search}&${filter}`, session?.accessToken],
         ([url, token]) => GETfetcher(url, token),
         swrConfig
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetSearchLearningModuls(search: string): {
+    data: ISearchMaterial[];
+    isLoading: boolean;
+    error: APIError;
+    mutate: KeyedMutator<any>;
+} {
+    const baseurl = 'https://soserve.rz.uni-leipzig.de:10001';
+    const fetcher = (url: string) =>
+        fetch(url)
+            .then((res: any) => {
+                return res.json();
+            })
+            .then(async (result: ISearchMaterialWP[]) => {
+                let modulesEnabled: ISearchMaterial[] = [];
+                const taxonomy = await fetchTaxonomy();
+
+                await Promise.all(
+                    result.map(async (resultModule) => {
+                        const moduleInTaxonomy = taxonomy.find(
+                            (node) => node.data?.url == resultModule.url
+                        );
+                        if (moduleInTaxonomy !== undefined) {
+                            const path = await getMaterialNodePath(moduleInTaxonomy.id);
+
+                            modulesEnabled.push({
+                                id: moduleInTaxonomy.id,
+                                text: moduleInTaxonomy.text,
+                                section: path.category,
+                                cluster: path.bubble,
+                            });
+                        }
+                    })
+                );
+
+                return modulesEnabled;
+            })
+            .catch((e) => e);
+
+    const { data, error, isLoading, mutate } = useSWR(
+        `${baseurl}/wp-json/wp/v2/search?search=${search}`,
+        fetcher
     );
 
     return {
