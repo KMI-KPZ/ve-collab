@@ -328,6 +328,18 @@ export default function HeaderSection({
                         </li>
                     </>
                 )}
+                {session && (
+                    <li>
+                        <Link href={'/profile'} className="ml-3 -mr-3">
+                            <UserProfileImage
+                                profile_pic={userProfile?.profile?.profile_pic}
+                                chosen_achievement={userProfile?.profile?.chosen_achievement}
+                                width={30}
+                                height={30}
+                            />
+                        </Link>
+                    </li>
+                )}
                 <li>
                     <Dropdown
                         options={[
@@ -339,18 +351,6 @@ export default function HeaderSection({
                         ulClasses="min-w-[15rem]"
                     />
                 </li>
-                {session && (
-                    <li>
-                        <Link href={'/profile'} className="mx-3">
-                            <UserProfileImage
-                                profile_pic={userProfile?.profile?.profile_pic}
-                                chosen_achievement={userProfile?.profile?.chosen_achievement}
-                                width={30}
-                                height={30}
-                            />
-                        </Link>
-                    </li>
-                )}
             </>
         );
     };

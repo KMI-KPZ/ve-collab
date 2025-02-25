@@ -160,7 +160,7 @@ export default function Plans({ socket }: Props) {
                         filterByCallback={handleFilterBy}
                         refetchPlansCallback={mutate}
                     />
-                    {plans.length >= pageLength && typeof filterBy.offset != 'undefined' && (
+                    {plans.length >= pageLength || filterBy.offset! > 0 ? (
                         <div className="flex items-center justify-center -mt-6 mb-12 space-x-4">
                             <ButtonLightBlue
                                 onClick={() => {
@@ -183,6 +183,8 @@ export default function Plans({ socket }: Props) {
                                 <MdArrowForwardIos className="inline ml-2" />
                             </ButtonLightBlue>
                         </div>
+                    ) : (
+                        <></>
                     )}
                 </>
             )}

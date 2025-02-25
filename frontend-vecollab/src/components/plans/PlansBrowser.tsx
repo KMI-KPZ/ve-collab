@@ -46,7 +46,7 @@ export function PlansBrowser({
 
     return (
         <>
-            <div className="mb-12 rounded-lg shadow bg-white overflow-scroll md:overflow-auto w-full text-left border-1 border-gray-400">
+            <div className="mb-12 rounded-lg shadow bg-white w-full text-left border-1 border-gray-400">
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
                     <div className="basis-1/12 text-center hidden md:block"></div>
                     <div
@@ -81,15 +81,12 @@ export function PlansBrowser({
 
                 <div>
                     {plans.length == 0 ? (
-                        <div className="m-12">
-                            {parseInt(router.query.page as string) > 1
-                                ? t('no_further_plans_available')
-                                : filterBy.owner == 'shared'
-                                ? filterBy.goodPracticeOnly === true
-                                    ? t('plans_no_good_practise_plan_shared')
-                                    : t('plans_no_plan_shared')
-                                : filterBy.goodPracticeOnly === true
-                                ? t('plans_no_good_practise_plan_created')
+                        <div className="p-12">
+                            {parseInt(router.query.page as string) > 1 ||
+                            filterBy.owner == 'shared' ||
+                            filterBy.goodPracticeOnly === true ||
+                            filterBy.searchQuery!.length > 0
+                                ? t('plans_nothing_matches')
                                 : t('plans_no_plan_created')}
                         </div>
                     ) : (
