@@ -71,6 +71,7 @@ NON_UNIQUE_TASKS_ERROR = "non_unique_tasks"
 PLAN_LOCKED_ERROR = "plan_locked"
 MAXIMUM_FILES_EXCEEDED_ERROR = "maximum_files_exceeded"
 FILE_DOESNT_EXIST_ERROR = "file_doesnt_exist"
+REPORT_DOESNT_EXIST_ERROR = "report_doesnt_exist"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -12479,3 +12480,355 @@ class ChatHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
         )
+
+
+class ReportHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+
+        self.report_id = ObjectId()
+        self.reported_item_id = ObjectId()
+        self.default_report = {
+            "_id": self.report_id,
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+            "reason": "test",
+            "state": "open",
+            "timestamp": datetime.now(),
+        }
+        self.db.reports.insert_one(self.default_report)
+
+        self.reported_post = {
+            "_id": self.reported_item_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(self.reported_post)
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+
+        self.db.reports.delete_many({})
+        self.db.posts.delete_many({})
+
+        super().tearDown()
+
+    def test_get_report(self):
+        """
+        expect: successfully get the report
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/report/get?report_id={}".format(str(self.report_id)),
+            True,
+            200,
+        )
+
+        self.assertIn("report", response)
+        report = response["report"]
+        self.assertEqual(ObjectId(report["_id"]), self.default_report["_id"])
+        self.assertEqual(report["reporter"], self.default_report["reporter"])
+        self.assertEqual(report["type"], self.default_report["type"])
+        self.assertEqual(report["item_id"], str(self.reported_item_id))
+        self.assertEqual(report["reason"], self.default_report["reason"]),
+        self.assertEqual(report["state"], self.default_report["state"])
+
+    def test_get_report_error_missing_key(self):
+        """
+        expect: fail message because report_id is missing
+        """
+
+        response = self.base_checks("GET", "/report/get", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "report_id")
+
+    def test_get_report_error_report_doesnt_exist(self):
+        """
+        expect: fail message because no report with the given id exists
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/report/get?report_id={}".format(str(ObjectId())),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], REPORT_DOESNT_EXIST_ERROR)
+
+    def test_get_report_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "GET",
+            "/report/get?report_id={}".format(str(self.report_id)),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_open_reports(self):
+        """
+        expect: successfully get all open reports
+        """
+
+        # add another closed report
+        self.db.reports.insert_one(
+            {
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "test",
+                "state": "closed",
+                "timestamp": datetime.now(),
+            }
+        )
+
+        response = self.base_checks("GET", "/report/get_open", True, 200)
+        self.assertIn("reports", response)
+
+        reports = response["reports"]
+        self.assertEqual(len(reports), 1)
+        self.assertEqual(ObjectId(reports[0]["_id"]), self.default_report["_id"])
+        self.assertEqual(reports[0]["reporter"], self.default_report["reporter"])
+        self.assertEqual(reports[0]["type"], self.default_report["type"])
+        self.assertEqual(reports[0]["item_id"], str(self.reported_item_id))
+        self.assertEqual(reports[0]["reason"], self.default_report["reason"]),
+        self.assertEqual(reports[0]["state"], self.default_report["state"])
+
+    def test_get_open_reports_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/report/get_open", False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_all_reports(self):
+        """
+        expect: successfully get all reports
+        """
+
+        # add another closed report and one open report
+        first_id = ObjectId()
+        second_id = ObjectId()
+        self.db.reports.insert_many(
+            [
+                {
+                    "_id": first_id,
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "closed",
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "_id": second_id,
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test2",
+                    "state": "open",
+                    "timestamp": datetime.now(),
+                },
+            ]
+        )
+
+        response = self.base_checks("GET", "/report/get_all", True, 200)
+        self.assertIn("reports", response)
+
+        reports = response["reports"]
+        self.assertEqual(len(reports), 3)
+        self.assertIn(str(self.report_id), [report["_id"] for report in reports])
+        self.assertIn(str(first_id), [report["_id"] for report in reports])
+        self.assertIn(str(second_id), [report["_id"] for report in reports])
+
+    def test_get_all_reports_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/report/get_all", False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_submit_report(self):
+        """
+        expect: successfully submit a report
+        """
+
+        payload = {
+            "type": "post",
+            "item_id": str(self.reported_item_id),
+            "reason": "test2",
+        }
+
+        self.base_checks("POST", "/report/submit", True, 200, body=payload)
+
+        # expect the report to be in the db
+        db_state = self.db.reports.find_one({"reason": "test2"})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["reporter"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["type"], "post")
+        self.assertEqual(ObjectId(db_state["item_id"]), self.reported_item_id)
+        self.assertEqual(db_state["reason"], "test2")
+        self.assertEqual(db_state["state"], "open")
+
+    def test_post_submit_report_error_missing_key(self):
+        """
+        expect: fail message because type, item_id or reason is missing
+        """
+
+        # missing reason
+        payload = {
+            "type": "post",
+            "item_id": str(self.reported_item_id),
+        }
+
+        response = self.base_checks("POST", "/report/submit", False, 400, body=payload)
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "reason"
+        )
+
+    def test_post_close_report(self):
+        """
+        expect: successfully close a report
+        """
+
+        payload = {
+            "report_id": str(self.report_id),
+        }
+
+        self.base_checks("POST", "/report/close", True, 200, body=payload)
+
+        # expect the report to be closed
+        db_state = self.db.reports.find_one({"_id": self.report_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["state"], "closed")
+
+    def test_post_close_report_error_missing_key(self):
+        """
+        expect: fail message because report_id is missing
+        """
+
+        response = self.base_checks("POST", "/report/close", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "report_id"
+        )
+
+    def test_post_close_report_error_report_doesnt_exist(self):
+        """
+        expect: fail message because no report with the given id exists
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/report/close",
+            False,
+            409,
+            body={"report_id": str(ObjectId())},
+        )
+        self.assertEqual(response["reason"], REPORT_DOESNT_EXIST_ERROR)
+
+    def test_post_close_report_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "POST",
+            "/report/close",
+            False,
+            403,
+            body={"report_id": str(self.report_id)},
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_delete_reported_item(self):
+        """
+        expect: successfully delete the reported item
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/report/delete?report_id={}".format(str(self.report_id)),
+            True,
+            200,
+        )
+
+        # expect the report to be closed
+        db_state = self.db.reports.find_one({"_id": self.report_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["state"], "closed")
+
+        # expect the reported item to be deleted
+        db_state2 = self.db.posts.find_one({"_id": self.reported_item_id})
+        self.assertIsNone(db_state2)
+
+    def test_delete_reported_item_error_missing_key(self):
+        """
+        expect: fail message because report_id is missing
+        """
+
+        response = self.base_checks("DELETE", "/report/delete", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "report_id")
+
+    def test_delete_reported_item_error_report_doesnt_exist(self):
+        """
+        expect: fail message because no report with the given id exists
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/report/delete?report_id={}".format(str(ObjectId())),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], REPORT_DOESNT_EXIST_ERROR)
+
+    def test_delete_reported_item_error_insufficient_permission(self):
+        """
+        expect: fail message because user is not an admin
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks(
+            "DELETE",
+            "/report/delete?report_id={}".format(str(self.report_id)),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
