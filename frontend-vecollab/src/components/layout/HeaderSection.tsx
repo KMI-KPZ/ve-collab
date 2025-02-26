@@ -589,7 +589,7 @@ export default function HeaderSection({
                                     'w-3/4 border border-[#cccccc] rounded-md px-2 py-1 focus:outline-none'
                                 }
                                 type="text"
-                                placeholder={t('search_placeholder_caroussel')}
+                                placeholder={`${t('search')}...`}
                                 data-placeholder={t('search_placeholder_caroussel')}
                                 name="search"
                                 autoComplete="off"
