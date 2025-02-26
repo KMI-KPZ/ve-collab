@@ -11,7 +11,7 @@ from error_reasons import (
     POST_DOESNT_EXIST,
     SPACE_DOESNT_EXIST,
 )
-from exceptions import PlanDoesntExistError
+from exceptions import NoWriteAccessError, PlanDoesntExistError
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.post import (
