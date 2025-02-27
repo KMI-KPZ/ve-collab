@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { MdArrowRight, MdHome } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import Dropdown from '../common/Dropdown';
-import { getClusterIconBySlug, getClusterSlugByRouteQuery } from '@/pages/learning-material';
+import { getClusterIconBySlug } from '@/pages/learning-material';
 import WhiteBox from '../common/WhiteBox';
 
 interface Props {
@@ -24,7 +24,7 @@ export default function ContentWrapper({
         node: categorySlug
     } = router.query
 
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(clusterRouterQuery as string))
+    const clusterSlug = clusterRouterQuery as string
     const clusterIcon = clusterSlug ? getClusterIconBySlug(clusterSlug) : undefined
 
     return (

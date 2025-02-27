@@ -1905,8 +1905,6 @@ class PostHandlerTest(BaseApiTestCase):
             ],
         )
 
-        self.db.plans.delete_many({})
-
     def test_post_edit_post_space(self):
         """
         expect: successfully edit post

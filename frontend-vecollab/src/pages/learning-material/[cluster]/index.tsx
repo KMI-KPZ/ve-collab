@@ -5,7 +5,6 @@ import { INodeWithLections } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { RxDot } from 'react-icons/rx';
-import { getClusterSlugByRouteQuery } from '..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
@@ -103,7 +102,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
+    const clusterSlug = params?.cluster as string;
 
     if (!clusterSlug) {
         return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
