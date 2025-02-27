@@ -8,7 +8,7 @@ import { Notification } from '@/interfaces/socketio';
 import { useRouter } from 'next/router';
 import FeedbackBanner from '../FeedbackBanner';
 import { usePathname } from 'next/navigation';
-import Screencasts from '../landingPage/Screencasts';
+import IntroTutorial from '../landingPage/IntroTutorial';
 
 interface Props {
     children: JSX.Element;
@@ -51,7 +51,7 @@ export default function LayoutSection({
             >
                 {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
-                <Screencasts />
+                <IntroTutorial />
                 <div className="container mx-auto max-w-screen-2xl px-2">{children}</div>
             </main>
             <FooterSection />
