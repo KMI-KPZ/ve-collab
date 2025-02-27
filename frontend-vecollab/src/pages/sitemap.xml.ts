@@ -3,6 +3,7 @@ import {
     fetchTaxonomy,
     getChildrenOfNode,
     getMaterialNodesOfNodeByText,
+    getNodeById,
     getTopLevelNodes,
 } from '@/lib/backend';
 import { INode } from '@/interfaces/material/materialInterfaces';
@@ -10,7 +11,7 @@ import { NextApiResponse } from 'next';
 
 async function getClusterLearningMaterial(taxonomy?: INode[]): Promise<string[]> {
     const clusters = await getTopLevelNodes(taxonomy);
-    return clusters.map((_, index) => `/learning-material/${index + 1}`);
+    return clusters.map((cluster, index) => `/learning-material/${cluster.text}`);
 }
 
 async function getClusterSlugLearningMaterial(taxonomy?: INode[]): Promise<string[]> {
@@ -31,7 +32,7 @@ async function getClusterSlugLearningMaterial(taxonomy?: INode[]): Promise<strin
                     return {
                         node_text: node.text,
                         learning_page: learning_page,
-                        cluster_id: (node.parent % 10) + 1, // get last digit
+                        cluster_id: (await getNodeById(node.parent, taxonomy)).text,
                     };
                 })
             )
