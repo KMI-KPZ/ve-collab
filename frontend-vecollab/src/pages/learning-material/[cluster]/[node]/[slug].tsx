@@ -11,7 +11,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
-import { getClusterSlugByRouteQuery } from '../..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import CustomHead from '@/components/metaData/CustomHead';
@@ -240,7 +239,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 }: GetServerSidePropsContext) => {
     const taxonomy = await fetchTaxonomy();
 
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
+    const clusterSlug = params?.cluster as string;
     if (!clusterSlug) return { notFound: true };
 
     const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);

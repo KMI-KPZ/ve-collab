@@ -893,6 +893,11 @@ export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<IN
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
 }
 
+export async function getNodeById(nodeId: number, tax?: INode[]): Promise<INode> {
+    const taxonomy = tax || (await fetchTaxonomy());
+    return taxonomy.find((node: any) => node.id === nodeId) as INode;
+}
+
 export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {
     const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === nodeId);

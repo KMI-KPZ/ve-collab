@@ -164,7 +164,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                     {hover && (
                         <div className="flex ml-10">
                             {/* the bubbles are immutable in the taxonomy, because changing their names or deleting them crashes the structure*/}
-                            {!['top-bubble', 'left-bubble', 'bottom-bubble', 'right-bubble'].includes(
+                            {!['Grundlagen', 'Zusammen Lernen', 'Digitales', 'Zusammen Planen'].includes(
                                 text
                             ) && (
                                 <>
