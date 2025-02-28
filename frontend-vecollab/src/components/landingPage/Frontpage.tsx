@@ -91,7 +91,7 @@ export default function Frontpage() {
 
     return (
         <>
-            <div className="m-auto w-full max-w-screen-2xl text-black bg-white/75 rounded-md">
+            <div className="m-auto w-full max-w-(--breakpoint-2xl) text-black bg-white/75 rounded-md">
                 <div className="p-6 lg:px-12 lg:py-6">
                     <Swiper />
                 </div>
@@ -114,8 +114,8 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-full lg:w-5/6 mx-auto md:my-10 max-w-screen-xl" id="features">
-                <H2 className="mb-8 font-bold !text-2xl md:!text-3xl text-center">
+            <div className="w-full lg:w-5/6 mx-auto md:my-10 max-w-(--breakpoint-xl)" id="features">
+                <H2 className="mb-8 font-bold text-2xl! md:text-3xl! text-center">
                     {t('frontpage.features.title')}
                 </H2>
 
@@ -162,7 +162,7 @@ export default function Frontpage() {
             </div>
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
-                <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg">
+                <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-(--breakpoint-xl) flex justify-center rounded-md drop-shadow-lg">
                     <video width="320" height="240" controls className="w-full h-auto rounded-md">
                         <source
                             src={`/videos/ve-collab-promo-${
@@ -176,8 +176,8 @@ export default function Frontpage() {
             </div>
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white -mb-12">
-                <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="institutional-values">
-                    <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
+                <div className="w-5/6 mx-auto my-10 max-w-(--breakpoint-xl)" id="institutional-values">
+                    <H2 className="mb-12 font-bold text-2xl! md:text-3xl! text-center">
                         {t('frontpage.institutional_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">
@@ -207,8 +207,8 @@ export default function Frontpage() {
                     </div>
                 </div>
 
-                <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="teachers-values">
-                    <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
+                <div className="w-5/6 mx-auto my-10 max-w-(--breakpoint-xl)" id="teachers-values">
+                    <H2 className="mb-12 font-bold text-2xl! md:text-3xl! text-center">
                         {t('frontpage.teachers_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">

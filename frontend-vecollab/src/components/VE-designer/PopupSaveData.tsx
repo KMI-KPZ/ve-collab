@@ -43,14 +43,14 @@ export default function PopupSaveData({
                             <div className="flex justify-end space-x-2">
                                 <button
                                     type="button"
-                                    className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                    className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                     onClick={handleCancel}
                                 >
                                     {t("common:back")}
                                 </button>
                                 <button
                                     type="button"
-                                    className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                                    className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                                     onClick={handleContinue}
                                 >
                                     {t("proceed_without_saving")}

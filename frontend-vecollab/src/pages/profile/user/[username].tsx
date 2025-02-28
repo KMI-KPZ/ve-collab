@@ -134,7 +134,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 isOwnProfile={isOwnProfile}
                             />
                             {hasAnyAchievement(profileInformation.profile.achievements) && (
-                                <div className="mt-4 border-t pt-4">
+                                <div className="mt-4 border-t border-t-gray-200 pt-4">
                                     <H2 className="mb-4">{t('community:achievements')}</H2>
                                     <div className="flex flex-wrap gap-4">
                                         {getBadges({
@@ -157,7 +157,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 <GroupsWidget isOwnProfile={isOwnProfile} groups={groups} />
                             )}
 
-                            {/* <div className="mt-4 border-t pt-4">
+                            {/* <div className="mt-4 border-t border-t-gray-200 pt-4">
                                 <H2>{t('deine_ves')}</H2>
                                 TODO: ?!
                             </div> */}

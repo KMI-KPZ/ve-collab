@@ -51,7 +51,7 @@ export default function ReportDialog({ reportedItemId, reportedItemType, closeCa
 
     return (
         <div className="fixed inset-0 z-40 bg-gray-900/50">
-            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 md:w-[28rem] sm:w-80 rounded-lg p-2 bg-white border shadow-sm">
+            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 md:w-[28rem] sm:w-80 rounded-lg p-2 bg-white border border-gray-200 shadow-xs">
                 <div className="absolute right-0 top-0 p-2">
                     <button
                         className="text-gray-500 hover:text-gray-700"
@@ -71,7 +71,7 @@ export default function ReportDialog({ reportedItemId, reportedItemType, closeCa
                         <textarea
                             rows={3}
                             value={reason}
-                            className="w-full p-2 border rounded-lg"
+                            className="w-full p-2 border border-gray-200 rounded-lg"
                             placeholder={t('report.report_reason_placeholder')}
                             onChange={(e) => setReason(e.target.value)}
                         />

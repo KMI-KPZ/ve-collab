@@ -15,7 +15,7 @@ export default function GroupsWidget({ groups, isOwnProfile }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
     return (
-        <div className="my-4 pt-4 border-t group/groups">
+        <div className="my-4 pt-4 border-t border-t-gray-200 group/groups">
             <div className="flex">
                 <H2 className="inline">
                     {isOwnProfile ? t('common:your_groups') : t('common:public_groups_of')}

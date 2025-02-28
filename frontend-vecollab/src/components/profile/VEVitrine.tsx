@@ -16,7 +16,7 @@ export default function VEVitrine({ items, isOwnProfile }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
     return (
-        <div className="mt-4 border-t pt-4 group">
+        <div className="mt-4 border-t border-t-gray-200 pt-4 group">
             <div className="flex">
                 <H2 className="flex">{t('ve_window')}</H2>
                 {isOwnProfile && (

@@ -178,7 +178,7 @@ export default function PlansBrowserItem({
             }}
         >
             <div>
-                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t">
+                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t border-gray-200">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
@@ -531,7 +531,7 @@ function PlansBrowserItemNoAuthPreview(plan: PlanPreview) {
                     </span>
                 ) : (
                     <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap"
+                        className="w-[72px] text-center rounded-full border border-gray-200 px-2 py-1 -m-1 whitespace-nowrap"
                         title={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,

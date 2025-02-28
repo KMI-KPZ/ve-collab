@@ -35,7 +35,7 @@ export default function Disclaimer() {
         return (
             <div className="fixed bottom-0 left-0 w-full z-40">
                 <div className="flex flex-col items-start px-5 py-3 bg-gray-300 md:flex-row md:space-y-0 md:items-stretch md:space-x-2">
-                    <div className="flex items-center flex-grow">
+                    <div className="flex items-center grow">
                         <p className="text-sm font-medium text-black">{t('cookie_banner')}</p>
                     </div>
                     <div className="flex items-center">

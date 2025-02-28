@@ -187,7 +187,7 @@ export default function Group({ socket }: Props): JSX.Element {
                         <input type="file" onChange={uploadToClient} />
                         <button
                             className={
-                                'bg-ve-collab-orange border text-white mx-auto py-2 px-5 rounded-lg shadow-xl ' +
+                                'bg-ve-collab-orange border border-gray-200 text-white mx-auto py-2 px-5 rounded-lg shadow-xl ' +
                                 (uploadFile === undefined ? 'opacity-50 cursor-not-allowed' : '')
                             }
                             onClick={uploadToBackend}
@@ -334,7 +334,7 @@ export default function Group({ socket }: Props): JSX.Element {
                 <div className={'w-full md:w-1/4 lg:pl-4'}>
                     <button
                         className={
-                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm ' +
                             (renderPicker === 'timeline'
                                 ? 'bg-ve-collab-blue text-white'
                                 : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
@@ -345,7 +345,7 @@ export default function Group({ socket }: Props): JSX.Element {
                     </button>
                     <button
                         className={
-                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm ' +
                             (renderPicker === 'members'
                                 ? 'bg-ve-collab-blue text-white'
                                 : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
@@ -356,7 +356,7 @@ export default function Group({ socket }: Props): JSX.Element {
                     </button>
                     <button
                         className={
-                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow ' +
+                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm ' +
                             (renderPicker === 'files'
                                 ? 'bg-ve-collab-blue text-white'
                                 : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')

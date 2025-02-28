@@ -352,7 +352,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         </button>
                         {fields.length == 0 && (
                             <button
-                                className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                className="px-4 py-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {
                                     append({
@@ -368,12 +368,12 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         )}
                     </div>
 
-                    <div className="divide-y">{renderInstitutionInputs()}</div>
+                    <div className="divide-y divide-gray-200">{renderInstitutionInputs()}</div>
 
                     {fields.length > 0 && (
                         <div className="flex justify-center">
                             <button
-                                className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {
                                     append({
@@ -437,7 +437,7 @@ export function InstitutionsNoAuthPreview() {
                         </button>
                     </div>
 
-                    <div className="divide-y">
+                    <div className="divide-y divide-gray-200">
                         <div className="pt-4 pb-2">
                             <div className="mt-2 flex">
                                 <div className="w-1/3 flex items-center">
@@ -532,7 +532,7 @@ export function InstitutionsNoAuthPreview() {
 
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -542,7 +542,7 @@ export function InstitutionsNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
         </div>
     );
 }

@@ -64,7 +64,7 @@ export default function Dropdown({
 
             {open && (
                 <ul
-                    className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow border`}
+                    className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow-sm border border-gray-200`}
                 >
                     {options.map((element, i) => {
                         return 'value' in element ? (

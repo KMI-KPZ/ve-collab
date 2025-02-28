@@ -209,7 +209,7 @@ export default function Groups() {
         <div className="flex items-center">
             <input
                 className={
-                    'w-1/2 border border-[#cccccc] rounded-md px-2 py-1 active:outline-none focus:outline-none'
+                    'w-1/2 border border-[#cccccc] rounded-md px-2 py-1 active:outline-hidden focus:outline-hidden'
                 }
                 type="text"
                 placeholder={t('search_groups_placeholder')}
@@ -244,7 +244,7 @@ export default function Groups() {
     //     <>
     //         <div
     //             title={t('groups_filter_own_only_title')}
-    //             className={`flex p-2 rounded-full shadow border cursor-pointer bg-gray-100`}
+    //             className={`flex p-2 rounded-full shadow-sm border border-gray-200 cursor-pointer bg-gray-100`}
     //             onClick={handleClickSetOwnOnly}
     //         >
     //             <div className="relative w-[32px] flex items-center ">
@@ -291,7 +291,7 @@ export default function Groups() {
     //                         <MdArrowDropDown />
     //                     </span>
     //                 }
-    //                 ulClasses="!left-16 !right-auto"
+    //                 ulClasses="left-16! right-auto!"
     //             />
     //         </div>
     //     </>
@@ -429,7 +429,7 @@ export default function Groups() {
                                     </ButtonDarkBlue>
                                 ) : // group is not joinable; user has already requested to join
                                 group.requests.includes(session!.user.preferred_username!) ? (
-                                    <span className="px-4 py-2 rounded-md shadow border">
+                                    <span className="px-4 py-2 rounded-md shadow-sm border border-gray-200">
                                         {t('join_requested')}
                                     </span>
                                 ) : (
@@ -481,13 +481,13 @@ export default function Groups() {
                     )}
                 </div>
 
-                <div className="bg-white rounded-lg shadow border-1 border-gray-800 py-6 px-4 space-x-4">
+                <div className="bg-white rounded-lg shadow-sm py-6 px-4 space-x-4">
                     {isLoadingAll ? (
                         <div className="m-12">
                             <LoadingAnimation size="small" />
                         </div>
                     ) : (
-                        <VerticalTabs onClickTabItem={onClickTabItem} className="divide-x">
+                        <VerticalTabs onClickTabItem={onClickTabItem} className="divide-x divide-gray-200">
                             <div tabid="my_groups" tabname={t('my_groups')}>
                                 <div className="mx-10 my-4">
                                     <SearchInput />
@@ -642,7 +642,7 @@ export default function Groups() {
                         </button>
                         <button
                             className={
-                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={() => {
                                 createNewGroup();
@@ -687,7 +687,7 @@ function GroupsNoAuthPreview() {
                         <div tabid="my_groups" tabname={t('my_groups')}>
                             <div className="min-h-[63vh]">
                                 <BoxHeadline title={t('you_are_member_of_groups')} />
-                                <div className="divide-y my-4">
+                                <div className="divide-y divide-gray-200 my-4">
                                     {exampleGroups.map((group, index) => (
                                         <div key={index} className="px-2 pt-5 pb-3 flex">
                                             <div className="flex-none">
@@ -722,7 +722,7 @@ function GroupsNoAuthPreview() {
                     </VerticalTabs>
                 </WhiteBox>
             </div>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white to-white pointer-events-none"></div>
         </div>
     );
 }

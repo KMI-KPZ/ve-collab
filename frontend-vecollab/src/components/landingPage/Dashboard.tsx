@@ -72,11 +72,11 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
             <ButtonNewPlan
                 socket={socket}
                 label={t('common:btn_new_ve')}
-                className="bg-none w-full !px-0 !py-4"
+                className="bg-none rounded-none w-full px-0! py-4!"
             >
                 <div className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                             <Image src={btnNewVe} alt={'form_image'} className="h-[36px]" />
                         </span>
                     </div>
@@ -92,7 +92,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     className=" flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
                 >
                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                             <Image src={btnSearchUser} alt={'form_image'} className="h-[32px]" />
                         </span>
                     </div>
@@ -112,7 +112,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     return (
                         <div
                             key={plan._id}
-                            className="flex flex-col px-1 py-3 border-b border-bg-gray-300 bg-white/50 hover:bg-gray-100/50"
+                            className="flex flex-col px-1 py-3 border-b border-b-gray-300 bg-white/50 hover:bg-gray-100/50"
                         >
                             <Timestamp
                                 timestamp={plan.last_modified}
@@ -147,7 +147,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 })}
             </div>
             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                <ButtonLight link="/plans" className="!rounded-full">
+                <ButtonLight link="/plans" className="rounded-full!">
                     {t('common:all')} {t('common:plans')}
                     <MdArrowRight size={24} className="inline mx-1" />
                 </ButtonLight>
@@ -156,7 +156,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
     );
 
     const NotificationWidget = () => (
-        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow">
+        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-sm">
             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
             <H2>{t('common:notifications.title')}</H2>
@@ -201,7 +201,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 z-10">
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
-                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md shadow">
+                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md shadow-sm">
                         <div className="text-2xl text-left">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
@@ -234,7 +234,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 </div>
 
                 <div className="@container order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow rounded-md">
+                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow-sm rounded-md">
                         <div className="text-2xl mx-2 mt-1">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
@@ -248,7 +248,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                                     className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center transition ease-in-out hover:scale-105"
                                 >
                                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                                             <Image
                                                 src={btnGPPlans}
                                                 alt={'form_image'}

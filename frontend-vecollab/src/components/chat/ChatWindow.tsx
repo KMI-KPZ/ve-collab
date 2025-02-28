@@ -119,12 +119,12 @@ export default function ChatWindow({
 
     return (
         <div
-            className={`absolute z-50 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}
+            className={`absolute z-50 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow-sm rounded-l bg-white border border-gray-200`}
         >
             <div className="absolute -top-[16px] -left-[16px]">
                 <button
                     onClick={(e) => toggleChatWindow()}
-                    className="bg-white rounded-full shadow p-2 hover:bg-slate-50"
+                    className="bg-white rounded-full shadow-sm p-2 hover:bg-slate-50"
                 >
                     <MdClose size={20} />
                 </button>
