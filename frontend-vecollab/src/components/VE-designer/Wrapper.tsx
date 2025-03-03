@@ -318,8 +318,8 @@ export default function Wrapper({
                 return field;
             });
 
-            router.push({
-                pathname: '',
+            router.query.plannerId = newPlanId;
+            await router.replace({
                 query: { plannerId: newPlanId },
             });
         }

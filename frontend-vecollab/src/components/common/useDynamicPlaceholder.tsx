@@ -17,19 +17,23 @@ const useDynamicPlaceholder = (searchInputRef: React.RefObject<HTMLInputElement>
         searchInputRef.current.placeholder = placeholders[i];
 
         const updatePlaceholder = () => {
+            // get placeholder-data again to avoid previous data after language change
+            if (!searchInputRef?.current?.dataset?.placeholder) return;
+            const placeholders = searchInputRef.current.dataset.placeholder.split(';');
+
             i = (i + 1) % placeholders.length;
             let j = 0;
 
-            const writePlaceholder = () => {
+            const writeCharacter = () => {
                 j++;
                 if (j > placeholders[i].length) return;
                 if (searchInputRef?.current == undefined) return;
 
                 searchInputRef!.current!.placeholder = placeholders[i].slice(0, j);
-                timeoutId.current = setTimeout(writePlaceholder, CHARACTER_WRITE_DELAY);
+                timeoutId.current = setTimeout(writeCharacter, CHARACTER_WRITE_DELAY);
             };
 
-            writePlaceholder();
+            writeCharacter();
         };
 
         intervalId.current = setInterval(updatePlaceholder, PLACEHOLDER_UPDATE_INTERVAL);
