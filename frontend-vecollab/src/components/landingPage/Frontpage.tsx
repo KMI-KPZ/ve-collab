@@ -163,13 +163,13 @@ export default function Frontpage() {
 
             <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
                 <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg">
-                    <video width="320" height="240" controls className="w-full h-auto rounded-md">
-                        <source
-                            src={`/videos/ve-collab-promo-${
-                                router.locale === 'en' ? 'en' : 'de'
-                            }.mp4`}
-                            type="video/mp4"
-                        />
+                    <video
+                        width="320"
+                        height="240"
+                        controls
+                        className="w-full h-auto rounded-md"
+                        src={`/videos/ve-collab-promo-${router.locale === 'en' ? 'en' : 'de'}.mp4`}
+                    >
                         {t('video_not_supported')}
                     </video>
                 </div>
