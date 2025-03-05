@@ -165,7 +165,7 @@
     "download": "Download",
     "delete_plan": "Delete plan",
     "share_plan": "Share plan",
-    "save_first": "Save plan first",
+    "save_first": "The plan must first be saved",
     "plans_shared_with_1_user": "Plan shared with 1 user",
     "plans_shared_with_x_users": "Plan shared with {{count}} users",
     "create_copy": "Create a copy",
