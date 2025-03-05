@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
-import { useCookies } from 'react-cookie';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -11,28 +10,31 @@ import { useSession } from 'next-auth/react';
 import { MdPlayCircle } from 'react-icons/md';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import { VIDEO_TUTORIALS } from '@/pages/help';
-
-const COOKIE = 'firstvisit-tutorial';
+import { fetchPOST, useGetOwnProfile } from '@/lib/backend';
 
 export default function IntroTutorial() {
     const { data: session } = useSession();
-    const { t } = useTranslation(['community', 'common']);
+    const { t } = useTranslation(['common']);
 
-    const [cookies, setCookie] = useCookies([COOKIE]);
-    const [visable, setVisable] = useState(
-        cookies[COOKIE] === undefined || cookies[COOKIE] === true
-    );
+    const {
+        data: userProfile,
+        isLoading,
+        mutate,
+    } = useGetOwnProfile(session?.accessToken ? session.accessToken : '');
+
     const [showOverview, setShowOverview] = useState<boolean>(false);
     const [idx, setIdx] = useState<number>(0);
 
-    const handleClose = () => {
-        // TODO backend save in user profile!
-        // determine tomorrows Date for cookie expires attribute
-        const expiryTomorrow = new Date();
-        expiryTomorrow.setDate(expiryTomorrow.getDate() + 1);
+    const handleClose = async () => {
+        await fetchPOST(
+            '/profileinformation',
+            {
+                first_view: true,
+            },
+            session?.accessToken
+        );
 
-        setCookie(COOKIE, 'false', { expires: expiryTomorrow });
-        setVisable(false);
+        mutate();
     };
 
     const handlePlay = (i: number) => {
@@ -40,9 +42,8 @@ export default function IntroTutorial() {
         setShowOverview(false);
     };
 
-    if (!session) return <></>;
-
-    if (visable === false) return null;
+    if (!session || isLoading) return <></>;
+    if (userProfile.profile.first_view === true) return null;
 
     return (
         <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm">
@@ -52,7 +53,7 @@ export default function IntroTutorial() {
                     if (showOverview) handleClose();
                     else setShowOverview(true);
                 }}
-                title={showOverview ? 'Video-Tutorials' : VIDEO_TUTORIALS[idx].title}
+                title={showOverview ? t('help.video_tutorials') : VIDEO_TUTORIALS[idx].title}
             >
                 <div className="w-[50vw] min-w-[420px]">
                     {!showOverview ? (
@@ -61,7 +62,7 @@ export default function IntroTutorial() {
                             height="240"
                             controls
                             preload="none"
-                            className="w-full h-auto m-auto rounded-md"
+                            className="w-full h-auto m-auto rounded-md cursor-pointer"
                             poster={VIDEO_TUTORIALS[idx].poster}
                             autoPlay
                             onEnded={() => setTimeout(() => setShowOverview(true), 3000)}
@@ -90,7 +91,7 @@ export default function IntroTutorial() {
                                             className="w-full h-auto absolute rounded-md"
                                         />
                                         <MdPlayCircle
-                                            className="absolute text-gray-500 hover:text-gray-800"
+                                            className="absolute bg-white rounded-full text-gray-500 hover:text-gray-800"
                                             size={32}
                                         />
                                         <span className="absolute font-bold bg-white/75 top-0 p-2 w-full">
@@ -103,7 +104,7 @@ export default function IntroTutorial() {
                                 onClick={handleClose}
                                 className="my-2 block ml-auto text-right"
                             >
-                                {'close'}
+                                {t('close')}
                             </ButtonPrimary>
                         </div>
                     )}

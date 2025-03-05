@@ -92,6 +92,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                 navigation
                 spaceBetween={25}
                 slidesPerView={1}
+                loop={true}
             >
                 {hasIncompleteProfile() && (
                     <SwiperSlide>
@@ -115,12 +116,10 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
 
                 <SwiperSlide>
                     <div className="mb-4 mx-12 my-2">
-                        <H2>{t('common:video_tutorials')}</H2>
-                        <div
+                        <H2>{t('common:help.video_tutorials')}</H2>
+                        <Link
+                            href={'/help'}
                             className={`mx-auto group m-4 w-[320px] h-[240px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
-                            onClick={(e) => {
-                                router.push('/help');
-                            }}
                         >
                             <Image
                                 src={'/images/video-thumbnails/screencast.png'}
@@ -133,7 +132,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                                 className="absolute text-gray-500 hover:text-gray-800"
                                 size={32}
                             />
-                        </div>
+                        </Link>
                     </div>
                 </SwiperSlide>
 
