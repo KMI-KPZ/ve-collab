@@ -8,6 +8,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { dropPlanLock } from './PlanSocket';
 import { useTranslation } from 'next-i18next';
 import { FaMedal } from 'react-icons/fa';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -133,22 +134,25 @@ export default function Header({
                         </>
                     ) : (
                         <>
-                            <button
-                                type="submit"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
-                                title={t('save_first')}
-                                disabled
-                            >
-                                <MdEditSquare className="inline" /> Pad
-                            </button>
-                            <button
-                                type="submit"
-                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue"
-                                title={t('save_first')}
-                                disabled
-                            >
-                                <MdMeetingRoom className="inline" /> Video
-                            </button>
+                            <Tooltip tooltipsText={t('save_first')} position="bottom">
+                                <button
+                                    type="submit"
+                                    className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow cursor-not-allowed	"
+                                    disabled
+                                >
+                                    <MdEditSquare className="inline" /> Pad
+                                </button>
+                            </Tooltip>
+                            <Tooltip tooltipsText={t('save_first')} position="bottom">
+                                <button
+                                    type="submit"
+                                    className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue shadow cursor-not-allowed	"
+                                    title={t('save_first')}
+                                    disabled
+                                >
+                                    <MdMeetingRoom className="inline" /> Video
+                                </button>
+                            </Tooltip>
                         </>
                     )}
                 </div>
