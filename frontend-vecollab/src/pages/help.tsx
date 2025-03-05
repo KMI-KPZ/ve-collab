@@ -12,18 +12,18 @@ import H2 from '@/components/common/H2';
 export const VIDEO_TUTORIALS: { title: string; src: string; poster: string }[] = [
     {
         title: 'Einführung',
-        src: '/videos/screencast-web-1.mp4',
-        poster: '/images/video-thumbnails/screencast.png',
+        src: '/videos/screencast-intro.mp4',
+        poster: '/images/video-thumbnails/screencast-intro.png',
     },
     {
         title: 'VE Designer',
-        src: '/videos/screencast-web-1.mp4',
-        poster: '/images/video-thumbnails/screencast.png',
+        src: '/videos/screencast-designer.mp4',
+        poster: '/images/video-thumbnails/screencast-designer.png',
     },
     {
         title: 'Community',
-        src: '/videos/screencast-web-1.mp4',
-        poster: '/images/video-thumbnails/screencast.png',
+        src: '/videos/screencast-vcop.mp4',
+        poster: '/images/video-thumbnails/screencast-vcop.png',
     },
 ];
 
@@ -41,21 +41,21 @@ export default function Help(): JSX.Element {
     return (
         <>
             <CustomHead
-                pageTitle={t('help')}
-                pageSlug={'help'}
+                pageTitle={t('help.title')}
+                pageSlug={'help.title'}
                 pageDescription={t('help.description')}
             />
 
             <div className="m-auto p-6 sm:p-12">
                 <div className="flex flex-wrap  items-center mb-10 mt-12">
                     <div>
-                        <H1>{t('help')}</H1>
-                        <div className={'text-gray-500 text-xl'}>{t('help_instructions')}</div>
+                        <H1>{t('help.title')}</H1>
+                        <div className={'text-gray-500 text-xl'}>{t('help.instructions')}</div>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow border-1 border-gray-800 py-6 px-4 space-x-4">
-                    <H2>{t('video_tutorials')}</H2>
+                    <H2>{t('help.video_tutorials')}</H2>
 
                     <div className="flex flex-wrap">
                         <div className="flex flex-row sm:flex-col items-center w-full sm:w-1/4">
@@ -75,7 +75,7 @@ export default function Help(): JSX.Element {
                                         className="w-full h-auto  rounded-md"
                                     />
                                     <MdPlayCircle
-                                        className="absolute text-gray-500 hover:text-gray-800"
+                                        className="absolute bg-white rounded-full text-gray-500 hover:text-gray-800"
                                         size={32}
                                     />
                                     <span className="absolute font-bold bg-white/75 top-0 p-2 w-full">
@@ -94,9 +94,8 @@ export default function Help(): JSX.Element {
                                 height="240"
                                 controls
                                 preload="none"
-                                className="w-full h-auto m-auto rounded-md shadow"
+                                className="w-full h-auto m-auto rounded-md shadow cursor-pointer"
                                 poster={VIDEO_TUTORIALS[idx].poster}
-                                autoPlay
                             >
                                 <source
                                     src={VIDEO_TUTORIALS[idx].src}
@@ -116,7 +115,7 @@ export default function Help(): JSX.Element {
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 }

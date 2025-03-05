@@ -584,5 +584,11 @@
             "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
             "chatroom": "Bitte beschreibe kurz, warum du diesen Chatverlauf melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
         }
+    },
+    "help": {
+        "title": "Hilfe",
+        "description": "Hilfsangebote für die VE-Collab Plattform",
+        "instructions": "Hilfsangebote für die VE-Collab Plattform.",
+        "video_tutorials": "Video-Tutorials"
     }
 }
