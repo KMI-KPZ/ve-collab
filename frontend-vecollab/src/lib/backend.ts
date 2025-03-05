@@ -181,7 +181,7 @@ export function useGetUsers(accessToken?: string): {
 export function useGetAvailablePlans({
     goodPracticeOnly,
     owner = 'all',
-    searchQuery,
+    searchQuery = '',
     limit = 10,
     offset = 0,
     sortBy = 'last_modified',
