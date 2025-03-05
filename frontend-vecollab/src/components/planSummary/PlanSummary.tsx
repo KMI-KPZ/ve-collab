@@ -9,7 +9,7 @@ import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/ba
 import LoadingAnimation from '../common/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import Dialog from '../profile/Dialog';
-import { MdEdit, MdNewspaper } from 'react-icons/md';
+import { MdEdit } from 'react-icons/md';
 import Timestamp from '../common/Timestamp';
 import Alert, { AlertState } from '../common/dialogs/Alert';
 import { socket } from '@/lib/socket';
@@ -17,6 +17,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 import { useTranslation } from 'next-i18next';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     plan: IPlan;
@@ -172,7 +173,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                                 setExportStep2Plan((prev) => ({ ...prev, plan }));
                             }}
                         >
-                            <MdNewspaper />
+                            <PlanIcon />
                             <div className="text-xl font-bold grow-0">{plan.name}</div>
                             <span title={t('last_modified')}>
                                 <Timestamp timestamp={plan.last_modified} className="text-sm" />

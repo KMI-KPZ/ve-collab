@@ -25,7 +25,7 @@ import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
 import Error from '@/pages/_error';
-import { TbFileText } from 'react-icons/tb';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     notificationEvents: Notification[];
@@ -125,7 +125,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                                             href={`/plan/${plan._id}`}
                                             className="hover:text-ve-collab-orange"
                                         >
-                                            <TbFileText className="inline mr-1" size={20} />
+                                            <PlanIcon className="inline h-[20px] w-fit mr-1 mb-1" />
                                             {plan.name}
                                         </Link>
                                     </div>

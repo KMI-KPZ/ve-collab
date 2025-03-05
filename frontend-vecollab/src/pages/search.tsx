@@ -17,10 +17,9 @@ import useDynamicPlaceholder from '@/components/common/useDynamicPlaceholder';
 import H2 from '@/components/common/H2';
 import Link from 'next/link';
 import { FaMedal } from 'react-icons/fa';
-import { TbFileText } from 'react-icons/tb';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { useSession } from 'next-auth/react';
-import { INode } from '@/interfaces/material/materialInterfaces';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -184,10 +183,9 @@ export default function SearchResult() {
                                                         href={`/plan/${plan._id}`}
                                                         className="group/ve-item flex items-center font-bold text-lg truncate"
                                                     >
-                                                        <TbFileText
-                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full"
-                                                            size={30}
-                                                        />{' '}
+                                                        <span className="mr-1 mb-1 group-hover/ve-item:text-ve-collab-orange">
+                                                            <PlanIcon />
+                                                        </span>
                                                         <span className="flex flex-col truncate">
                                                             <span className="flex items-center">
                                                                 <span className="truncate group-hover/ve-item:text-ve-collab-orange">

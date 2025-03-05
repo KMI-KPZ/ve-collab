@@ -19,7 +19,6 @@ import {
     MdDeleteOutline,
     MdDoubleArrow,
     MdModeEdit,
-    MdOutlineDocumentScanner,
     MdOutlineKeyboardDoubleArrowDown,
     MdShare,
     MdThumbUp,
@@ -40,6 +39,7 @@ import { Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
 import { GoAlert } from 'react-icons/go';
 import ReportDialog from '../common/dialogs/Report';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     post: BackendPost;
@@ -644,7 +644,7 @@ export default function TimelinePost({
                                     title="Open plan"
                                 >
                                     <div className="flex justify-center">
-                                        <MdOutlineDocumentScanner size={50} />
+                                        <PlanIcon className="h-[36px]" />
                                     </div>
                                     <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
                                         {plan.name}
