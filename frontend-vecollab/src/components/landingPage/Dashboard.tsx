@@ -201,20 +201,20 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 z-10">
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
-                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md shadow">
+                    <div className="w-11/12 px-6 py-6 m-auto bg-white rounded-md shadow">
                         <div className="text-2xl text-left">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
-                        <div className="flex sm:hidden flex-row items-center mb-6 pb-2 border-b-2 border-b-ve-collab-orange">
+                        <div className="flex sm:hidden flex-row items-start mb-6 border-b-2 border-b-ve-collab-orange">
                             <VeDesignerButtons />
 
                             <Link
                                 href={'/plans'}
-                                className="flex flex-wrap items-center justify-center"
+                                className="flex flex-wrap items-center justify-center py-4"
                             >
-                                <span className="self-center text-ve-collab-blue rounded-full p-2 my-2 mx-4 border border-ve-collab-blue">
-                                    <FaMedal size={18} className="" />
+                                <span className="w-[64px] h-[64px] flex items-center justify-center shrink-0 self-center text-ve-collab-blue rounded-full p-2 mx-4 border-2 border-ve-collab-blue">
+                                    <FaMedal size={24} className="" />
                                 </span>
                                 <span className="text-center text-wrap xl:w-2/3 font-bold">
                                     {t('common:show_good_practice_plans')}

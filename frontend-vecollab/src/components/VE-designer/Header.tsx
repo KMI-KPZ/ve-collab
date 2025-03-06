@@ -97,13 +97,13 @@ export default function Header({
                     </span>
                 )}
                 {plan.is_good_practise && (
-                    <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue">
+                    <span className="mx-2 text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue">
                         <FaMedal title={t('plans_marked_as_good_practise')} size={18} />
                     </span>
                 )}
             </div>
 
-            <div className="flex items-center justify-between w-full lg:w-fit">
+            <div className="flex items-center justify-end md:justify-between flex-wrap gap-y-2 w-full lg:w-fit">
                 <div className="flex items-center">
                     {router.query.plannerId !== undefined ? (
                         <>
@@ -114,10 +114,10 @@ export default function Header({
                                         : ''
                                 }
                                 target="_blank"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
+                                className="mx-2 px-4 py-2 flex items-center  rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
                                 title={t('open_collaborative_pad')}
                             >
-                                <MdEditSquare className="inline" /> Pad
+                                <MdEditSquare className="inline mr-1" /> Pad
                             </Link>
                             <Link
                                 href={
@@ -126,10 +126,10 @@ export default function Header({
                                         : ''
                                 }
                                 target="_blank"
-                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                className="mx-2 px-4 py-2 flex items-center rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                                 title={t('enter_jtsi')}
                             >
-                                <MdMeetingRoom className="inline" /> Video
+                                <MdMeetingRoom className="inline mr-1" /> Video
                             </Link>
                         </>
                     ) : (
@@ -137,20 +137,20 @@ export default function Header({
                             <Tooltip tooltipsText={t('save_first')} position="bottom">
                                 <button
                                     type="submit"
-                                    className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow cursor-not-allowed	"
+                                    className="mx-2 px-4 py-2 flex items-center rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow cursor-not-allowed	"
                                     disabled
                                 >
-                                    <MdEditSquare className="inline" /> Pad
+                                    <MdEditSquare className="inline mr-1" /> Pad
                                 </button>
                             </Tooltip>
                             <Tooltip tooltipsText={t('save_first')} position="bottom">
                                 <button
                                     type="submit"
-                                    className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue shadow cursor-not-allowed	"
+                                    className="mx-2 px-4 py-2 flex items-center  rounded-full bg-[#d8f2f9] text-ve-collab-blue shadow cursor-not-allowed	"
                                     title={t('save_first')}
                                     disabled
                                 >
-                                    <MdMeetingRoom className="inline" /> Video
+                                    <MdMeetingRoom className="inline mr-1" /> Video
                                 </button>
                             </Tooltip>
                         </>

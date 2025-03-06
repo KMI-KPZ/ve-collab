@@ -38,7 +38,7 @@ export default function Swiper({ className }: Props) {
         imgAlt?: string;
     }) => (
         <div className="flex flex-wrap-reverse mx-12 my-6 gap-x-12 gap-y-6 lg:pb-12 items-center justify-center">
-            <div className="w-3/4 lg:w-1/2 min-w-96 text-center lg:text-left">
+            <div className="w-3/4 lg:w-1/2 text-center lg:text-left">
                 <h1 className="mb-4 text-2xl md:text-3xl font-bold">{title}</h1>
                 <p className="">{text}</p>
                 <p className="lg:text-right my-4">

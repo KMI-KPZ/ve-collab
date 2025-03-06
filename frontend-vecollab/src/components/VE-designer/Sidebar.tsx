@@ -10,12 +10,13 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IMainMenuItems, IMenuDataState, mainMenuData } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
-import { MdArrowDropDown, MdArrowRight } from 'react-icons/md';
+import { MdArrowDropDown, MdArrowRight, MdMenu } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { useTranslation } from 'next-i18next';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
 import { is } from 'date-fns/locale';
+import Dropdown from '../common/Dropdown';
 
 interface Props {
     methods: UseFormReturn<any>;
@@ -206,9 +207,13 @@ export default function Sidebar({
         );
     };
 
+    const hideSandwichMenu = () => {
+        document.dispatchEvent(new Event('mousedown'));
+    };
+
     return (
         <>
-            <nav className="flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
+            <nav className="hidden md:block flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
                 <ul className="flex flex-col divide-y gap-1 bg-white">
                     {Object.keys(mainMenuData_).map((el, i) => (
                         <li key={i}>
@@ -216,6 +221,28 @@ export default function Sidebar({
                         </li>
                     ))}
                 </ul>
+            </nav>
+
+            <nav className="absolute z-10 md:hidden border shadow md:border-none md:shadow-none flex flex-col text-center m-2 bg-white rounded-xl">
+                <Dropdown
+                    options={[
+                        <ul
+                            className="flex flex-col divide-y gap-1 bg-white"
+                            onClick={() => hideSandwichMenu()}
+                            key={0}
+                        >
+                            {Object.keys(mainMenuData_).map((el, i) => (
+                                <li key={i}>
+                                    <MainMenuItem
+                                        item={mainMenuData_[el as keyof IMainMenuItems]}
+                                    />
+                                </li>
+                            ))}
+                        </ul>,
+                    ]}
+                    icon={<MdMenu size={25} />}
+                    ulClasses="min-w-[15rem] !left-0 h-[35vh] overflow-y-scroll"
+                />
             </nav>
         </>
     );

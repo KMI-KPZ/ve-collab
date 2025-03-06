@@ -147,7 +147,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_plans')} ({data.plans.length})
                             </H2>
-                            <div className="m-2">
+                            <div className="m-2 max-w-[90vw]">
                                 {data.plans.map((plan, i) => {
                                     if (i > plansPagination) return;
                                     if (i == plansPagination) {
@@ -177,7 +177,7 @@ export default function SearchResult() {
                                                 timestamp={plan.last_modified}
                                                 className="text-sm text-slate-650 italic"
                                             />
-                                            <div className="flex flex-row items-center my-1">
+                                            <div className="flex flex-row flex-wrap items-center my-1 truncate">
                                                 <div className="grow flex items-center truncate">
                                                     <Link
                                                         href={`/plan/${plan._id}`}
@@ -306,7 +306,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_groups')} ({data.spaces.length})
                             </H2>
-                            <div className="flex m-2">
+                            <div className="flex flex-wrap m-2">
                                 {data.spaces.map((space, i) => {
                                     return (
                                         <a

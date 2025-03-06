@@ -445,12 +445,11 @@ export default function Wrapper({
     };
 
     const Breadcrumb = () => {
-        if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenuData[stageInMenu];
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = plan.steps.find((a) => currentPath.endsWith(a._id!));
+            const currentStep = plan.steps?.find((a) => currentPath.endsWith(a._id!));
 
             subMenuItem = currentStep
                 ? {
@@ -462,7 +461,7 @@ export default function Wrapper({
         }
 
         return (
-            <div className="text-normale py-2 flex items-center text-slate-500">
+            <div className="ml-10 mt-1 md:ml-0 md:mt-0 text-normale py-2 flex items-center text-slate-500">
                 <MdArrowForwardIos size={15} /> {t(mainMenuItem.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
@@ -709,7 +708,7 @@ export default function Wrapper({
                             }}
                         />
 
-                        <div className="flex flex-row divide-x gap-1">
+                        <div className="relative flex flex-row divide-x gap-1">
                             <Sidebar
                                 methods={methods}
                                 submitCallback={async (data) => {
