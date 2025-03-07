@@ -708,7 +708,7 @@ export default function Wrapper({
                             }}
                         />
 
-                        <div className="relative flex flex-row divide-x divide-gray-200 gap-1">
+                        <div className="relative flex flex-row md:divide-x divide-gray-200 gap-1">
                             <Sidebar
                                 methods={methods}
                                 submitCallback={async (data) => {

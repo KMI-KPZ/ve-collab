@@ -221,12 +221,9 @@ export default function Sidebar({
         );
     };
 
-    const hideSandwichMenu = () => {
-        document.dispatchEvent(new Event('mousedown'));
-    };
-
     return (
         <>
+            {/* desktop navigation */}
             <nav className="hidden md:block flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
                 <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
                     {Object.keys(mainMenuData_).map((el, i) => (
@@ -237,32 +234,29 @@ export default function Sidebar({
                 </ul>
             </nav>
 
-            <nav className="absolute h-full z-10 md:hidden flex flex-col text-center m-2 border-none">
-                <Dropdown
-                    options={[
-                        <ul
-                            className="flex flex-col divide-y gap-1 bg-white"
-                            onClick={() => hideSandwichMenu()}
-                            key={0}
-                        >
-                            {Object.keys(mainMenuData_).map((el, i) => (
-                                <li key={i}>
-                                    <MainMenuItem
-                                        item={mainMenuData_[el as keyof IMainMenuItems]}
-                                    />
-                                </li>
-                            ))}
-                        </ul>,
-                    ]}
-                    icon={
-                        <span className="rounded-md shadow border h-[41px] w-[41px] -mt-[8px] inline-block flex justify-center items-center">
-                            <MdMenu size={25} className="inline-block" />
-                        </span>
-                    }
-                    wrapperClassNames="h-full"
-                    ulClasses="min-w-[15rem] h-[calc(100%-41px)] max-h-fit !left-[8px] !top-[41px] overflow-y-scroll"
-                />
-            </nav>
+            {/* stacked mobile sandwich navigation */}
+            <Dropdown
+                options={[
+                    <ul
+                        className="flex flex-col divide-y gap-1 bg-white"
+                        // onClick={() => hideSandwichMenu()}
+                        key={0}
+                    >
+                        {Object.keys(mainMenuData_).map((el, i) => (
+                            <li key={i}>
+                                <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />
+                            </li>
+                        ))}
+                    </ul>,
+                ]}
+                icon={
+                    <div className="absolute rounded-md shadow border h-[41px] w-[41px] -mt-[8px] flex justify-center items-center">
+                        <MdMenu size={25} className="inline-block" />
+                    </div>
+                }
+                wrapperClassNames="!absolute h-full z-10 md:hidden"
+                ulClasses="absolute min-w-[15rem] h-fit max-h-[calc(100%-41px)] !left-[8px] !top-[50px] overflow-y-scroll"
+            />
         </>
     );
 }
