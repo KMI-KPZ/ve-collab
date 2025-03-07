@@ -331,7 +331,7 @@ export default function Groups() {
         buttons: JSX.Element;
     }) => (
         <div className="flex items-center">
-            <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center hover:bg-slate-50 px-2">
+            <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center justify-between hover:bg-slate-50 px-2">
                 {clickable ? (
                     <Link
                         href={`/group/${group._id}`}
@@ -358,7 +358,7 @@ export default function Groups() {
                         </div>
                     </Link>
                 ) : (
-                    <div className="py-2 w-full flex flex-nowrap items-center">
+                    <div className="py-2 flex flex-nowrap items-center truncate">
                         <AuthenticatedImage
                             imageId={group.space_pic}
                             alt={t('group_picture')}
@@ -398,7 +398,7 @@ export default function Groups() {
     );
 
     const Items = () => (
-        <div className="mx-10">
+        <div className="mx-4 lg:mx-10">
             {!searchInput && groups?.length === 0 && (
                 <p className="italic m-2">{t('no_groups_available')}</p>
             )}
@@ -489,14 +489,14 @@ export default function Groups() {
                     ) : (
                         <VerticalTabs onClickTabItem={onClickTabItem} className="divide-x divide-gray-200">
                             <div tabid="my_groups" tabname={t('my_groups')}>
-                                <div className="mx-10 my-4">
+                                <div className="mx-4 lg:mx-10 my-4">
                                     <SearchInput />
                                 </div>
                                 <Items />
                             </div>
 
                             <div tabid="all_groups" tabname={t('common:all')}>
-                                <div className="mx-10 my-4">
+                                <div className="mx-4 lg:mx-10 my-4">
                                     <SearchInput />
                                 </div>
                                 <Items />
@@ -506,7 +506,7 @@ export default function Groups() {
                                 tabid="requests_invitations"
                                 tabname={t('my_requests_and_invitations')}
                             >
-                                <div className="mx-10">
+                                <div className="mx-4 lg:mx-10">
                                     {myGroupInvites.length == 0 && myGroupRequests.length == 0 && (
                                         <p className="italic m-2">{t('no_current_requests')}</p>
                                     )}
