@@ -41,17 +41,31 @@ export default function Sidebar({
     const currentPath = usePathname();
     const { t } = useTranslation('common');
 
-    let menuStates: IMenuDataState[] = Object.keys(mainMenuData).map((a) => {
-        return { id: mainMenuData[a as keyof IMainMenuItems].id, open: true };
-    });
+    const SESS_DESIGNER_MENU_STATE = 'designer_menu_state';
 
-    // note: but why does this work while change a route?!
-    //  because we actually do not reload the page
+    // get may prev stored menu state from session cookie
+    const sessMenuState: IMenuDataState[] =
+        sessionStorage.getItem(SESS_DESIGNER_MENU_STATE) !== null
+            ? JSON.parse(sessionStorage.getItem(SESS_DESIGNER_MENU_STATE) as string)
+            : [];
+
+    // initial menu state (may from session)
+    const [menuStates, setMenuStates] = useState<IMenuDataState[]>(
+        sessMenuState.length
+            ? sessMenuState
+            : Object.keys(mainMenuData).map((a) => ({
+                  id: mainMenuData[a as keyof IMainMenuItems].id,
+                  open: true,
+              }))
+    );
+
     const updateMenuState = (id: string, state: boolean) => {
-        menuStates = menuStates.map((a) => ({
+        const _menuStates = menuStates.map((a) => ({
             id: a.id,
             open: a.id == id ? state : a.open,
         }));
+        setMenuStates(_menuStates);
+        sessionStorage.setItem(SESS_DESIGNER_MENU_STATE, JSON.stringify(_menuStates));
     };
 
     const [mainMenuData_, setMainMenuData_] = useState<IMainMenuItems>(mainMenuData);
