@@ -490,7 +490,7 @@ export default function Groups() {
                     ) : (
                         <VerticalTabs
                             onClickTabItem={onClickTabItem}
-                            className="[&>*]:w-full md:[&>*]:max-w-[75%] divide-y md:divide-y-0 divide-x-0 md:divide-x-2 flex-1 flex-wrap md:flex-none md:flex-nowrap divide-gray-200"
+                            className="[&>*]:w-full md:[&>*:nth-child(1)]:w-1/3 md:[&>*:nth-child(2)]:w-2/3 lg:[&>*:nth-child(1)]:w-1/4 divide-y md:divide-y-0 divide-x-0 md:divide-x-2 flex-1 flex-wrap md:flex-none md:flex-nowrap divide-gray-200"
                             navClassName="flex items-stretch md:flex-wrap [&>*]:w-full divide-x !divide-y-0 md:divide-x-0 md:!divide-y-2"
                         >
                             <div tabid="my_groups" tabname={t('my_groups')}>
