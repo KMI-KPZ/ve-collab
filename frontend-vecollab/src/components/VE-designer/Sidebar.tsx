@@ -223,7 +223,7 @@ export default function Sidebar({
                 </ul>
             </nav>
 
-            <nav className="absolute z-10 md:hidden border shadow md:border-none md:shadow-none flex flex-col text-center m-2 bg-white rounded-xl">
+            <nav className="absolute h-full z-10 md:hidden flex flex-col text-center m-2 border-none">
                 <Dropdown
                     options={[
                         <ul
@@ -240,8 +240,13 @@ export default function Sidebar({
                             ))}
                         </ul>,
                     ]}
-                    icon={<MdMenu size={25} />}
-                    ulClasses="min-w-[15rem] !left-0 h-[35vh] overflow-y-scroll"
+                    icon={
+                        <span className="rounded-md shadow border h-[41px] w-[41px] -mt-[8px] inline-block flex justify-center items-center">
+                            <MdMenu size={25} className="inline-block" />
+                        </span>
+                    }
+                    wrapperClassNames="h-full"
+                    ulClasses="min-w-[15rem] h-[calc(100%-41px)] max-h-fit !left-[8px] !top-[41px] overflow-y-scroll"
                 />
             </nav>
         </>

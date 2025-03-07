@@ -590,7 +590,7 @@ export default function Wrapper({
                         isNoAuthPreview={isNoAuthPreview}
                     />
 
-                    <div className="flex flex-row divide-x gap-1">
+                    <div className="flex flex-row md:divide-x gap-1">
                         <Sidebar
                             methods={methods}
                             submitCallback={async () => {}}
