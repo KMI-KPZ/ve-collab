@@ -219,7 +219,7 @@ export default function ProfileHeader({
                     >
                         <button
                             className={
-                                'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                'border border-white bg-black/75 text-white rounded-lg px-3 py-1 cursor-pointer'
                             }
                         >
                             <span>{t('edit_profile')}</span>
@@ -254,7 +254,7 @@ export default function ProfileHeader({
                     </div>
                 </div>
 
-                <div className="absolute flex right-2 xl:right-20 top-[90px] divide-x text-white">
+                <div className="absolute flex right-2 xl:right-20 top-[90px] divide-x divide-gray-200 text-white">
                     <div
                         className={'group/follows relative pr-6 hover:cursor:pointer'}
                         onMouseOver={() => fetchFollows(profileInformation.follows)}
@@ -269,13 +269,13 @@ export default function ProfileHeader({
                             }
                             position="left"
                             className="pl-2"
-                            innerClassName="!top-2"
+                            innerClassName="top-2!"
                         >
                             <div>
                                 {foreignUser
                                     ? t('community:following')
                                     : t('community:iam_following')}
-                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                <div className="font-bold border border-gray-200 rounded-full w-fit px-3 py-1">
                                     {profileInformation.follows.length}
                                 </div>
                             </div>
@@ -295,13 +295,13 @@ export default function ProfileHeader({
                             }
                             position="left"
                             className="pl-2"
-                            innerClassName="!top-2"
+                            innerClassName="top-2!"
                         >
                             <div>
                                 {foreignUser
                                     ? t('community:followers')
                                     : t('community:ive_followers')}
-                                <div className="font-bold border rounded-full w-fit px-3 py-1">
+                                <div className="font-bold border border-gray-200 rounded-full w-fit px-3 py-1">
                                     {profileInformation.followers.length}
                                 </div>
                             </div>
@@ -314,7 +314,7 @@ export default function ProfileHeader({
                     {foreignUser && (
                         <>
                             <ButtonLight
-                                className="!rounded-full mx-2 h-12"
+                                className="rounded-full! mx-2 h-12"
                                 title={t('send_chat_message_to_user')}
                                 onClick={() => {
                                     openOrCreateChatWith();

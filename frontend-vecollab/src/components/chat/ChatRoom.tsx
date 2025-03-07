@@ -141,7 +141,7 @@ export default function ChatRoom({
                     <div className="group/members text-sm flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible">
                         {room.members.length}&nbsp;
                         <MdOutlineGroup size={20} />
-                        <div className="absolute w-40 xl:w-60 overflow-y-auto truncate max-h-32 right-0 p-2 mt-5 group-hover/members:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border z-10">
+                        <div className="absolute w-40 xl:w-60 overflow-y-auto truncate max-h-32 right-0 p-2 mt-5 group-hover/members:opacity-100 hover:opacity-100! transition-opacity opacity-0 rounded-md bg-white shadow-sm border border-gray-200 z-10">
                             {memberProfileSnippets.map((member, i) => (
                                 <div key={i} className="truncate my-1">
                                     <AuthenticatedImage
@@ -161,7 +161,7 @@ export default function ChatRoom({
             </div>
             <div
                 ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border"
+                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border-gray-200"
             >
                 {/* Chat messages */}
                 {isLoading ? (

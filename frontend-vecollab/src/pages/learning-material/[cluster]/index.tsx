@@ -56,7 +56,7 @@ export default function BubbleSelected(props: Props) {
                             {props.nodesWithLectionsOfCluster.map((node) => {
                                 return (
                                     <div key={node.id} className="basis-1/4 max-w-96">
-                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b hover:text-ve-collab-orange transition-colors">
+                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b border-b-gray-200 hover:text-ve-collab-orange transition-colors">
                                             <Link
                                                 href={`/learning-material/${router.query.cluster}/${node.text}`}
                                             >

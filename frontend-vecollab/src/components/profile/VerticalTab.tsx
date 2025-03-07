@@ -23,7 +23,7 @@ class Tab extends Component<TabProps, {}> {
 
         return activeTab == tabid ? (
             <div
-                className={`px-3 mx-1 py-2 text-slate-900 font-bold text-ve-collab-blue ${
+                className={`px-3 mx-1 py-2 font-bold text-ve-collab-blue ${
                     isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
                 }`}
                 onClick={onClick}

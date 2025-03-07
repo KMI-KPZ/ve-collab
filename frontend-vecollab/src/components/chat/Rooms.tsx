@@ -44,7 +44,7 @@ export default function Sidebar({
             {roomSnippets.length == 0 ? (
                 <div>{t('no_rooms_yet')}</div>
             ) : (
-                <ul className="flex flex-col overflow-y-auto border-b pb-2">
+                <ul className="flex flex-col overflow-y-auto border-b border-b-gray-200 pb-2">
                     {roomSnippets.map((room) => (
                         <RoomSnippet
                             key={room._id}
@@ -60,7 +60,7 @@ export default function Sidebar({
             )}
 
             <ButtonLight
-                className="mt-4 !rounded-full"
+                className="mt-4 rounded-full!"
                 onClick={() => handleOpenNewChatDialog()}
                 title={t('create_new_chat_title')}
             >

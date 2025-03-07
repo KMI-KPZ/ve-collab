@@ -52,7 +52,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         return (
             <div className={`flex ${this.props.className ? this.props.className : ''}`}>
                 <div className={'w-1/4'}>
-                    <ol className={'pb-2 divide-y'}>
+                    <ol className={'pb-2 divide-y divide-gray-200'}>
                         {children.map((child) => {
                             return (
                                 <VerticalTab

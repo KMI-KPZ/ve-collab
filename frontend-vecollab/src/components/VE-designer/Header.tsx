@@ -33,7 +33,7 @@ export default function Header({
 
     if (isNoAuthPreview) {
         return (
-            <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
+            <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b border-gray-200">
                 <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
                     <span className="text-ve-collab-orange">VE</span>
                     <span className="text-ve-collab-blue ml-2">Designer</span>
@@ -48,7 +48,7 @@ export default function Header({
                     <div className="flex items-center">
                         <button
                             type="submit"
-                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
+                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm"
                             title={t('open_collaborative_pad')}
                             disabled
                         >
@@ -67,14 +67,14 @@ export default function Header({
 
                     <div>
                         <button
-                            className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-default"
+                            className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-default"
                             onClick={() => {}}
                         >
                             {t('exit')}
                         </button>
 
                         <button
-                            className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-default"
+                            className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-default"
                             onClick={() => {}}
                         >
                             {t('save')}
@@ -86,7 +86,7 @@ export default function Header({
     }
 
     return (
-        <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
+        <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b border-b-gray-200">
             <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
                 <span className="text-ve-collab-orange">VE</span>
                 <span className="text-ve-collab-blue ml-2">Designer</span>
@@ -113,7 +113,7 @@ export default function Header({
                                         : ''
                                 }
                                 target="_blank"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
+                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm hover:bg-slate-50"
                                 title={t('open_collaborative_pad')}
                             >
                                 <MdEditSquare className="inline" /> Pad
@@ -135,7 +135,7 @@ export default function Header({
                         <>
                             <button
                                 type="submit"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
+                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm"
                                 title={t('save_first')}
                                 disabled
                             >
@@ -155,7 +155,7 @@ export default function Header({
 
                 <div>
                     <button
-                        className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                        className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         onClick={async (e) => {
                             // TODO handleInvalidData ...
                             if (Object.keys(methods.formState.dirtyFields).length > 0) {
@@ -173,7 +173,7 @@ export default function Header({
                     </button>
 
                     <button
-                        className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                         onClick={methods.handleSubmit(
                             // valid form
                             async (data: any) => {

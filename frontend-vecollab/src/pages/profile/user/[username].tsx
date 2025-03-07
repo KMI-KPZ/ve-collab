@@ -134,7 +134,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 isOwnProfile={isOwnProfile}
                             />
                             {hasAnyAchievement(profileInformation.profile.achievements) && (
-                                <div className="mt-4 border-t pt-4">
+                                <div className="mt-4 border-t border-t-gray-200 pt-4">
                                     <H2 className="mb-4">{t('community:achievements')}</H2>
                                     <div className="flex flex-wrap gap-4">
                                         {getBadges({
@@ -157,7 +157,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 <GroupsWidget isOwnProfile={isOwnProfile} groups={groups} />
                             )}
 
-                            {/* <div className="mt-4 border-t pt-4">
+                            {/* <div className="mt-4 border-t border-t-gray-200 pt-4">
                                 <H2>{t('deine_ves')}</H2>
                                 TODO: ?!
                             </div> */}
@@ -212,9 +212,9 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                             <div className="text-end text-slate-600 italic -mb-4">
                                 {t('last_change')}:
                             </div>
-                            <div className="divide-y divide-slate-400 space-y-4">
+                            <div className="divide-y divide-slate-400">
                                 {plans.slice(0, 7).map((plan, i) => (
-                                    <div key={i} className="flex items-center justify-between pt-4">
+                                    <div key={i} className="flex items-center justify-between py-4">
                                         <div className="grow flex items-center truncate">
                                             <Link
                                                 href={`/ve-designer/name?plannerId=${plan._id}`}

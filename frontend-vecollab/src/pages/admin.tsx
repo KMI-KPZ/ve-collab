@@ -99,7 +99,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                     <div tabid="plans" tabname="VE-Pläne">
                         <div className="h-screen overflow-y-auto">
                             {isLoading && <LoadingAnimation />}
-                            <ul className="divide-y">
+                            <ul className="divide-y divide-gray-200">
                                 {plans
                                     .sort((a, b) => {
                                         return (
@@ -172,7 +172,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                         {reports.map((report) => (
                             <div
                                 key={report._id}
-                                className="flex justify-between items-center p-2 border-b"
+                                className="flex justify-between items-center p-2 border-b border-gray-200"
                             >
                                 <div className="flex justify-between">
                                     <div>

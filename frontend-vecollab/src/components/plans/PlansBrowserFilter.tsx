@@ -67,7 +67,7 @@ export function PlansBrowserFilter({
     return (
         <div className="mb-4 flex flex-wrap items-center gap-y-2">
             <div
-                className={`flex p-2 rounded-full shadow border ${
+                className={`flex p-2 rounded-full shadow border border-gray-200 ${
                     isNoAuthPreview ? '' : 'cursor-pointer'
                 }`}
                 onClick={handleClickShowGoodPracticeOnly}
@@ -124,14 +124,14 @@ export function PlansBrowserFilter({
                             <MdArrowDropDown />
                         </span>
                     }
-                    ulClasses="!left-16 !right-auto"
+                    ulClasses="left-16! right-auto!"
                     isNoAuthPreview={isNoAuthPreview}
                 />
             </div>
 
             <div className="flex items-center">
                 <input
-                    className={'border border-[#cccccc] rounded-l px-2 py-1'}
+                    className={'border border-[#cccccc] bg-white rounded-l px-2 py-1'}
                     type="text"
                     placeholder={t('plans_filter_title_placeholder')}
                     name="search"

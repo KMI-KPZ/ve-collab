@@ -33,7 +33,7 @@ export default function DialogUserList({
                     <LoadingAnimation />
                 </div>
             ) : (
-                <ul className="px-1 divide-y">
+                <ul className="px-1 divide-y divide-gray-200">
                     {userSnippets.map((snippet, index) => (
                         <li key={index} className="flex py-2">
                             <div

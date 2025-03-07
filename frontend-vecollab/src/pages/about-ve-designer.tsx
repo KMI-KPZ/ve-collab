@@ -33,7 +33,7 @@ export default function AboutVeDesigner(): JSX.Element {
                             onClick={() => {
                                 signIn('keycloak');
                             }}
-                            className="w-fit m-auto px-6 py-4  flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow rounded-full cursor-pointer transition ease-in-out hover:scale-105"
+                            className="w-fit m-auto px-6 py-4  flex items-center justify-center bg-white border-4 border-ve-collab-orange drop-shadow-sm rounded-full cursor-pointer transition ease-in-out hover:scale-105"
                         >
                             <Image
                                 src={teamCollabImg}

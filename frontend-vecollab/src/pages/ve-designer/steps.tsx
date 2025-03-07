@@ -318,7 +318,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <div className="shadow rounded px-2 py-4 my-4">
+                        <div className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -402,7 +402,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
                                             }}
@@ -529,7 +529,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 </DragDropContext>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {
@@ -584,7 +584,7 @@ export function StepNamesNoAuthPreview() {
                 {Array(3)
                     .fill(null)
                     .map((_, index) => (
-                        <div key={index} className="shadow rounded px-2 py-4 my-4">
+                        <div key={index} className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -633,7 +633,7 @@ export function StepNamesNoAuthPreview() {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={() => {}}
                                         />
                                     </div>
@@ -661,7 +661,7 @@ export function StepNamesNoAuthPreview() {
 
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {}}
@@ -681,7 +681,7 @@ export function StepNamesNoAuthPreview() {
                     </button>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
         </div>
     );
 }
