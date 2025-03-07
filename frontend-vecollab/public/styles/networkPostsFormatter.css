@@ -1,3 +1,5 @@
+@import 'tailwindcss';
+
 .network-post-value {
     @apply whitespace-pre-wrap p-0;
 }
@@ -19,7 +21,7 @@
 }
 
 .network-post-value a {
-    @apply text-ve-collab-blue;
+    color: var(--text-ve-collab-blue);
 }
 .network-post-value a:hover {
     @apply underline;
@@ -52,15 +54,15 @@
 }
 
 .rsw-toolbar button:hover {
-    @apply bg-ve-collab-blue-light
+    background: var(--bg-ve-collab-blue-light);
 }
 
 .rsw-toolbar button[data-active=true] {
-    @apply bg-ve-collab-blue-light
+    background: var(--bg-ve-collab-blue-light);
 }
 
 .rsw-editor a {
-    @apply text-ve-collab-blue;
+    color: var(--text-ve-collab-blue);
 }
 .rsw-editor a:hover {
     /* @apply underline; */

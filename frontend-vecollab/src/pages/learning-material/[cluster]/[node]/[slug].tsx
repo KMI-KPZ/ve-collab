@@ -93,7 +93,7 @@ export default function LearningContentView(props: Props) {
     }, [router]);
 
     const ListOfLectionsSidebar = ({ lections }: { lections: IMaterialNode[] }) => (
-        <ul className="flex flex-col divide-y gap-1 bg-white">
+        <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
             <li>
                 <div className="font-konnect text-xl pb-2">Kapitel</div>
             </li>
@@ -136,7 +136,7 @@ export default function LearningContentView(props: Props) {
                         liClasses: `${router.query.slug == node.text ? 'font-bold' : ''}`,
                     };
                 })}
-                ulClasses="!left-0 !right-auto max-w-96 w-fit"
+                ulClasses="left-0! right-auto! max-w-96 w-fit"
             />
         </div>
     );
@@ -168,7 +168,7 @@ export default function LearningContentView(props: Props) {
                     </>
                 }
                 contentChildren={
-                    <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
+                    <div className="md:mt-6 md:flex md:flex-row md:divide-x divide-gray-200 md:gap-1">
                         {props.lectionsOfNode.length && (
                             <div className="w-80 hidden md:block">
                                 <ListOfLectionsSidebar lections={props.lectionsOfNode} />
@@ -177,7 +177,7 @@ export default function LearningContentView(props: Props) {
 
                         <div className="w-full md:pl-6 pt-1 relative">
                             {loading && (
-                                <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                <div className="absolute bg-white/50 backdrop-blur-xs md:-ml-6 inset-0">
                                     <span className="m-2">
                                         <LoadingAnimation />
                                     </span>
@@ -193,8 +193,8 @@ export default function LearningContentView(props: Props) {
                             ></iframe>
 
                             {(props.prevNode || props.nextNode) && (
-                                <div className="flex my-4 pt-4 border-t">
-                                    {/* <div className="my-8 border-t py-3 flex justify-between"> */}
+                                <div className="flex my-4 pt-4 border-t border-gray-200">
+                                    {/* <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between"> */}
                                     {props.prevNode && (
                                         <Link
                                             className="mr-auto"

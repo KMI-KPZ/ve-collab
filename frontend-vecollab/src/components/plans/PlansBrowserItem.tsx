@@ -178,7 +178,7 @@ export default function PlansBrowserItem({
             }}
         >
             <div>
-                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t">
+                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t border-gray-200">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
@@ -219,7 +219,7 @@ export default function PlansBrowserItem({
 
     const DeleteButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setAskDeletion(true);
@@ -231,7 +231,7 @@ export default function PlansBrowserItem({
 
     const ShareButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setIsShareDialogOpen(true);
@@ -256,7 +256,7 @@ export default function PlansBrowserItem({
 
     const CopyButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 createCopy(plan._id);
@@ -268,7 +268,7 @@ export default function PlansBrowserItem({
 
     const ReportButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setReportDialogOpen(true);
@@ -531,7 +531,7 @@ function PlansBrowserItemNoAuthPreview(plan: PlanPreview) {
                     </span>
                 ) : (
                     <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap"
+                        className="w-[72px] text-center rounded-full border border-gray-200 px-2 py-1 -m-1 whitespace-nowrap"
                         title={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,

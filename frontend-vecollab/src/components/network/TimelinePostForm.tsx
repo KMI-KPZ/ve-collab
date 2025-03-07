@@ -397,7 +397,7 @@ export default function TimelinePostForm({
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div className="mb-2 pb-2 border-b">{t('add_your_gp_plans')}</div>
+                <div className="mb-2 pb-2 border-b border-gray-200">{t('add_your_gp_plans')}</div>
                 {plans
                     .sort((a, b) => {
                         return (
@@ -494,7 +494,7 @@ export default function TimelinePostForm({
                             left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
                             top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow-sm border border-gray-200 text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
                         <a
                             href={cursorInLink.getAttribute('href') as string}
@@ -549,7 +549,7 @@ export default function TimelinePostForm({
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                    <div className="my-5 ml-[50px] p-3 rounded-sm bg-slate-100">
                         <div className="flex items-center mb-6">
                             {postToRepost.isRepost ? (
                                 <PostHeader
