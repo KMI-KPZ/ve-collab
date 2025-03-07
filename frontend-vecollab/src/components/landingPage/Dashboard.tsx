@@ -26,6 +26,7 @@ import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
 import Error from '@/pages/_error';
 import PlanIcon from '../plans/PlanIcon';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
     notificationEvents: Notification[];
@@ -159,21 +160,19 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
         <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow">
             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-            <H2>{t('common:notifications.title')}</H2>
+            <H2 className="break-words">{t('common:notifications.title')}</H2>
 
             <div className="flex  items-center ">
                 <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">
                     <IoMdNotificationsOutline size={30} className="" />
                 </span>
-                {notificationEvents.length == 1 ? (
-                    <span>{t('one_new_notification')}</span>
-                ) : (
-                    <span>
-                        {t('multiple_new_notifications', {
-                            count: notificationEvents.length,
-                        })}
-                    </span>
-                )}
+                <span className="w-2/3 break-words">
+                    {notificationEvents.length == 1
+                        ? t('one_new_notification')
+                        : t('multiple_new_notifications', {
+                              count: notificationEvents.length,
+                          })}
+                </span>
             </div>
             <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                 <Button
@@ -188,7 +187,12 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
         </div>
     );
 
-    if (isLoadingProfile) return <></>;
+    if (isLoadingProfile)
+        return (
+            <>
+                <LoadingAnimation />
+            </>
+        );
     if (errorLoadingProfile) return <Error />;
 
     return (
@@ -265,19 +269,6 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     </div>
 
                     {notificationEvents.length > 0 && <NotificationWidget />}
-
-                    {/* <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="flex">
-                            <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2  border border-ve-collab-blue">
-                                <FaMedal size={18} />
-                            </span>
-                            <H2>{t('common:good_practice_plans')}</H2>
-                        </div>
-
-                        <div>Gesamt: 123</div>
-
-                        <div>Zuletzt: 12.03.2025</div>
-                    </div> */}
 
                     <SuggestionBox />
                 </div>
