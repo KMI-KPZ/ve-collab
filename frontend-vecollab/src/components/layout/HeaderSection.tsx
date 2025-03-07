@@ -106,7 +106,7 @@ export default function HeaderSection({
     const LanguageSelector = () => (
         <button
             onClick={onToggleLanguage}
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
             title={t('change_language', {
                 language: changeToLanguage == 'de' ? 'german' : 'englisch',
             })}
@@ -153,7 +153,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
+                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
                                 onClick={(e) => toggleChatWindow()}
                                 title={t('toggle_chat_window')}
                             >
@@ -167,7 +167,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
                                 onClick={(e) => toggleNotifWindow()}
                                 title={t('notifications.toggle_notification_window')}
                             >
@@ -197,7 +197,7 @@ export default function HeaderSection({
                                                 ? {
                                                       value: 'admin',
                                                       label: 'Admin Dashboard',
-                                                      liClasses: 'text-red-600 border-b',
+                                                      liClasses: 'text-red-600 border-b border-gray-200',
                                                   }
                                                 : null
                                         ),
@@ -569,7 +569,7 @@ export default function HeaderSection({
 
     return (
         <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-20">
-            <nav className="flex flex-nowrap items-center mx-auto max-w-screen-2xl">
+            <nav className="flex flex-nowrap items-center mx-auto max-w-(--breakpoint-2xl)">
                 <div className="flex items-center ">
                     <Link href="/" className="shrink-0">
                         <Image
@@ -586,7 +586,7 @@ export default function HeaderSection({
                         >
                             <input
                                 className={
-                                    'w-3/4 border border-[#cccccc] rounded-md px-2 py-1 focus:outline-none'
+                                    'w-3/4 border border-[#cccccc] rounded-md px-2 py-1 focus:outline-hidden'
                                 }
                                 type="text"
                                 placeholder={`${t('search')}...`}
@@ -601,7 +601,7 @@ export default function HeaderSection({
                             <button
                                 type="submit"
                                 title={t('search_title')}
-                                className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
+                                className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light cursor-pointer"
                             >
                                 <MdSearch className="text-white" />
                             </button>

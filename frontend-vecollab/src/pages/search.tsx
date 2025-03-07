@@ -171,7 +171,7 @@ export default function SearchResult() {
                                     return (
                                         <div
                                             key={plan._id}
-                                            className="flex flex-col p-4 mb-4 bg-white rounded shadow hover:bg-slate-50"
+                                            className="flex flex-col p-4 mb-4 bg-white rounded-sm shadow-sm hover:bg-slate-50"
                                         >
                                             <Timestamp
                                                 timestamp={plan.last_modified}
@@ -241,7 +241,7 @@ export default function SearchResult() {
                                             href={`/learning-material/${
                                                 (learningModule.cluster.id % 10) + 1
                                             }`}
-                                            className="relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow"
+                                            className="relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow-sm"
                                         >
                                             {getClusterIconBySlug(learningModule.cluster.text)({
                                                 size: 30,
@@ -351,7 +351,7 @@ export default function SearchResult() {
                                     return (
                                         <div
                                             key={i}
-                                            className="p-4 mb-4 bg-white rounded shadow hover:cursor-pointer hover:bg-slate-50"
+                                            className="p-4 mb-4 bg-white rounded-sm shadow-sm hover:cursor-pointer hover:bg-slate-50"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 router.push(`/post/${post._id}`);

@@ -182,7 +182,7 @@ export default function Sidebar({
                 >
                     <span
                         className={`w-10 h-10 border-4 rounded-full text-lg flex items-center justify-center ${
-                            isCurrentPage ? 'border-ve-collab-blue' : ''
+                            isCurrentPage ? 'border-ve-collab-blue' : 'border-gray-200'
                         }`}
                     >
                         <Image src={item.image} alt={`${item.text} logo`}></Image>
@@ -205,7 +205,7 @@ export default function Sidebar({
                     )}
                 </div>
                 {item.submenu.length > 0 && openSubmenu ? (
-                    <ul className="flex flex-col divide-y gap-1 bg-white ml-6">
+                    <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white ml-6">
                         {item.submenu.map((subItem, subIndex) => {
                             return (
                                 <li key={subIndex}>
@@ -228,7 +228,7 @@ export default function Sidebar({
     return (
         <>
             <nav className="hidden md:block flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
-                <ul className="flex flex-col divide-y gap-1 bg-white">
+                <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
                     {Object.keys(mainMenuData_).map((el, i) => (
                         <li key={i}>
                             <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />

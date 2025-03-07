@@ -491,7 +491,7 @@ export default function ViewAttributes({
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="rounded-full! px-8! text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline mx-2" />
@@ -505,7 +505,7 @@ export default function ViewAttributes({
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="rounded-full! px-8! text-slate-800 print:hidden"
                                 >
                                     {t('show_all')}
                                     <MdKeyboardDoubleArrowDown className="inline mx-2" />

@@ -116,7 +116,7 @@ export default function Plans({ socket }: Props) {
                     <ButtonNewPlan
                         socket={socket}
                         label={t('common:btn_new_ve')}
-                        className="min-h-[50px] bg-none !px-4 !py-2 !rounded-full cursor-pointer shadow border bg-white hover:bg-gray-50"
+                        className="min-h-[50px] bg-none px-4! py-2! rounded-full! cursor-pointer shadow-sm border border-gray-200 bg-white hover:bg-gray-50"
                     >
                         <div className="flex items-center justify-center text-wrap font-bold">
                             <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
@@ -127,7 +127,7 @@ export default function Plans({ socket }: Props) {
                     <div className="px-2">
                         <Link
                             href={'/matching'}
-                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow border hover:bg-gray-50"
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow-sm border border-gray-200 hover:bg-gray-50"
                         >
                             <Image
                                 src={btnSearchUser}
@@ -149,7 +149,7 @@ export default function Plans({ socket }: Props) {
 
             {isLoading || isLoadingPage ? (
                 <div className="m-12 flex">
-                    <LoadingAnimation className="!inline-block !w-fit" />
+                    <LoadingAnimation className="inline-block! w-fit!" />
                     <span className="ml-6">{t('loading_plans')}</span>
                 </div>
             ) : (
@@ -167,7 +167,7 @@ export default function Plans({ socket }: Props) {
                                     gotoPage((filterBy.offset! - pageLength) / pageLength + 1);
                                 }}
                                 disabled={filterBy.offset! == 0}
-                                className="!rounded-full"
+                                className="rounded-full!"
                             >
                                 <MdArrowBackIos className="inline mr-2" />
                                 {t('prev_page')}
@@ -177,7 +177,7 @@ export default function Plans({ socket }: Props) {
                                     gotoPage((pageLength + filterBy.offset!) / pageLength + 1);
                                 }}
                                 disabled={plans.length < pageLength}
-                                className="!rounded-full"
+                                className="rounded-full!"
                             >
                                 {t('next_page')}
                                 <MdArrowForwardIos className="inline ml-2" />
@@ -282,7 +282,7 @@ function PlansNoAuthPreview() {
                     <ButtonNewPlan
                         isNoAuthPreview={true}
                         label={t('common:btn_new_ve')}
-                        className="min-h-[50px] bg-none !px-4 !py-2 !rounded-full cursor-pointer shadow border bg-white hover:bg-gray-50"
+                        className="min-h-[50px] bg-none px-4! py-2! rounded-full! cursor-pointer shadow-sm border border-gray-200 bg-white hover:bg-gray-50"
                     >
                         <div className="flex items-center justify-center text-wrap font-bold">
                             <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
@@ -293,7 +293,7 @@ function PlansNoAuthPreview() {
                     <div className="px-2">
                         <Link
                             href={'/matching'}
-                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow border hover:bg-gray-50"
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow-sm border border-gray-200 hover:bg-gray-50"
                         >
                             <Image
                                 src={btnSearchUser}
@@ -320,7 +320,7 @@ function PlansNoAuthPreview() {
                 refetchPlansCallback={async () => {}}
                 isNoAuthPreview={true}
             />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
         </div>
     );
 }

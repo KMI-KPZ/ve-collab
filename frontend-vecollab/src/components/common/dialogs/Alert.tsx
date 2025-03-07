@@ -116,7 +116,7 @@ export default function Alert({
                 <div className="m-2 font-bold">{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
-                        className="relative -top-[28px] -right-[28px] text-black top bg-white rounded-full shadow border p-2 hover:bg-slate-50"
+                        className="relative -top-[28px] -right-[28px] text-black top bg-white rounded-full shadow-sm border border-gray-200 p-2 hover:bg-slate-50"
                         onClick={handleClose}
                         aria-label="Close"
                     >

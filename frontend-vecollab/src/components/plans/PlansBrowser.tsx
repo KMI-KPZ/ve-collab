@@ -46,7 +46,7 @@ export function PlansBrowser({
 
     return (
         <>
-            <div className="mb-12 rounded-lg shadow bg-white w-full text-left border-1 border-gray-400">
+            <div className="mb-12 rounded-lg shadow-sm bg-white w-full text-left">
                 <div className="flex flex-row space-x-3 py-2 items-center bg-gray-300 rounded-t-lg text-base font-semibold">
                     <div className="basis-1/12 text-center hidden md:block"></div>
                     <div
@@ -93,7 +93,7 @@ export function PlansBrowser({
                         plans.map((plan, index) => (
                             <div
                                 key={index}
-                                className={`flex flex-row min-h-[72px] p-1 space-x-3 items-center border-b border-bg-gray-300 ${
+                                className={`flex flex-row min-h-[72px] p-1 space-x-3 items-center border-b border-b-gray-200 ${
                                     isNoAuthPreview ? '' : 'hover:bg-gray-100'
                                 }`}
                             >

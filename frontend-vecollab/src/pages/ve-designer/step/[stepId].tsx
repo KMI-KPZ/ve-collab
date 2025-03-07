@@ -335,7 +335,7 @@ export function FinePlannerNoAuthPreview() {
             >
                 <StageNoAuthPreview />
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/55 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/55 to-white pointer-events-none"></div>
         </div>
     );
 }

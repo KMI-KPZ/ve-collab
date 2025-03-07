@@ -106,7 +106,7 @@ export default function ViewAttributes({ plan, openAllBoxes, isSingleView }: Pro
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="rounded-full! px-8! text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline ml-2" />
@@ -124,7 +124,7 @@ export default function ViewAttributes({ plan, openAllBoxes, isSingleView }: Pro
                             <div className="col-span-4 flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenShowMore(!isOpenShowMore)}
-                                    className="!rounded-full !px-8 text-slate-800 print:hidden"
+                                    className="rounded-full! px-8! text-slate-800 print:hidden"
                                 >
                                     {t('show_all')}
                                     <MdKeyboardDoubleArrowDown className="inline ml-2" />

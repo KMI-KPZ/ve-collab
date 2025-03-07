@@ -287,7 +287,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                         <div className="text-right mt-2">
                             {loadingExport && <LoadingAnimation size="small" />}
                             <button
-                                className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                                className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                                 onClick={(e) => {
                                     setExportStep2Plan((prev) => ({ ...prev, plan: undefined }));
                                 }}
@@ -296,7 +296,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                             </button>
                             <button
                                 type="button"
-                                className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                 onClick={methods.handleSubmit(
                                     // valid
                                     async (data: any) => {
@@ -322,7 +322,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
 
                 <div className="mt-4 flex flex-row">
                     <Link
-                        className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                        className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         href={{
                             pathname: '/ve-designer/step-names',
                             query: { plannerId: exportStep2Plan.plan?._id },
@@ -333,7 +333,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     </Link>
                     <button
                         type="button"
-                        className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                         onClick={(e) => {
                             setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined });
                         }}
