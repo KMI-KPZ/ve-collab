@@ -237,11 +237,7 @@ export default function Sidebar({
             {/* stacked mobile sandwich navigation */}
             <Dropdown
                 options={[
-                    <ul
-                        className="flex flex-col divide-y gap-1 bg-white"
-                        // onClick={() => hideSandwichMenu()}
-                        key={0}
-                    >
+                    <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white" key={0}>
                         {Object.keys(mainMenuData_).map((el, i) => (
                             <li key={i}>
                                 <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />
@@ -250,7 +246,7 @@ export default function Sidebar({
                     </ul>,
                 ]}
                 icon={
-                    <div className="absolute rounded-md shadow border h-[41px] w-[41px] -mt-[8px] flex justify-center items-center">
+                    <div className="absolute rounded-md shadow border border-gray-200 h-[41px] w-[41px] -mt-[8px] flex justify-center items-center">
                         <MdMenu size={25} className="inline-block" />
                     </div>
                 }
