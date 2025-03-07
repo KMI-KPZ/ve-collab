@@ -20,7 +20,7 @@ export default function FeedbackBanner(): JSX.Element {
             <div
                 className={`
                     fixed z-40 rotate-90 sm:rotate-0
-                    right-[80px] sm:-right-80 -bottom-[280px] sm:bottom-20
+                    right-[80px] sm:-right-[322px] -bottom-[280px] sm:bottom-20
                     w-72 h-96 sm:w-96 sm:h-72
                     flex flex-row
                     -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-lg divide-x divide-gray-200
@@ -29,7 +29,7 @@ export default function FeedbackBanner(): JSX.Element {
               `}
             >
                 <div className="flex sm:flex-none flex-col divide-y divide-gray-400 w-full p-1">
-                    <div className="flex h-1/2 sm:h-2/5 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-gray-400 p-1">
+                    <div className="flex h-1/2 sm:h-2/5 divide-x-2 divide-gray-400 p-1">
                         <div className="w-12 flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('mail_invitation_form.share')}
@@ -46,7 +46,7 @@ export default function FeedbackBanner(): JSX.Element {
                             </ButtonPrimary>
                         </div>
                     </div>
-                    <div className="flex h-1/2 sm:h-3/5 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-gray-400 p-1 sm:w-auto">
+                    <div className="flex h-1/2 sm:h-3/5 divide-x-2 divide-gray-400 p-1 sm:w-auto">
                         <div className="w-12 flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('feedback')}
