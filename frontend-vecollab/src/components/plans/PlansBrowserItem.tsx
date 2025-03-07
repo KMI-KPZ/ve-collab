@@ -219,7 +219,7 @@ export default function PlansBrowserItem({
 
     const DeleteButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setAskDeletion(true);
@@ -231,7 +231,7 @@ export default function PlansBrowserItem({
 
     const ShareButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setIsShareDialogOpen(true);
@@ -256,7 +256,7 @@ export default function PlansBrowserItem({
 
     const CopyButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 createCopy(plan._id);
@@ -268,7 +268,7 @@ export default function PlansBrowserItem({
 
     const ReportButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setReportDialogOpen(true);

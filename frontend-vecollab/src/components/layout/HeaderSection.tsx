@@ -106,7 +106,7 @@ export default function HeaderSection({
     const LanguageSelector = () => (
         <button
             onClick={onToggleLanguage}
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
             title={t('change_language', {
                 language: changeToLanguage == 'de' ? 'german' : 'englisch',
             })}
@@ -153,7 +153,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light "
+                                className="relative p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
                                 onClick={(e) => toggleChatWindow()}
                                 title={t('toggle_chat_window')}
                             >
@@ -167,7 +167,7 @@ export default function HeaderSection({
                         </li>
                         <li>
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full hover:bg-ve-collab-blue-light cursor-pointer"
                                 onClick={(e) => toggleNotifWindow()}
                                 title={t('notifications.toggle_notification_window')}
                             >
@@ -601,7 +601,7 @@ export default function HeaderSection({
                             <button
                                 type="submit"
                                 title={t('search_title')}
-                                className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light"
+                                className="-ml-1 bg-ve-collab-orange rounded-r p-2 hover:bg-ve-collab-orange-light cursor-pointer"
                             >
                                 <MdSearch className="text-white" />
                             </button>

@@ -54,7 +54,7 @@ export default function Dropdown({
     return (
         <div className="inline relative" ref={wrapperRef}>
             <button
-                className="p-2"
+                className="p-2 cursor-pointer"
                 type="button"
                 onClick={() => setOpen(!open)}
                 disabled={isNoAuthPreview}

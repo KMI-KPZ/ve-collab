@@ -557,7 +557,7 @@ export default function EditPersonalInformation({
                             <div className="flex justify-center">
                                 <button
                                     className={
-                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'
                                     }
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -594,7 +594,7 @@ export default function EditPersonalInformation({
                             <input
                                 type="file"
                                 accept="image/*"
-                                className="my-2"
+                                className="my-2 border border-[#cccccc] rounded-md px-2 py-[6px] cursor-pointer"
                                 onChange={onSelectProfilePicFile}
                                 onClick={(e) => {
                                     e.currentTarget.value = '';

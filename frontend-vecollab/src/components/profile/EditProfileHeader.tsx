@@ -49,7 +49,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                 <button
                     type="submit"
                     className={
-                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40'
+                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'
                     }
                     onClick={(e) => triggerOrcidAccountLink(e)}
                 >
@@ -66,7 +66,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                 <button
                     type="submit"
                     className={
-                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40'
+                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'
                     }
                     onClick={(e) => importOrcidProfile(e)}
                 >
@@ -83,13 +83,13 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
 
             <div className="flex justify-end">
                 <Link href={'/profile'}>
-                    <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'}>
+                    <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer'}>
                         {t("common:cancel")}
                     </button>
                 </Link>
                 <button
                     type="submit"
-                    className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
+                    className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'}
                 >
                     {t("common:save")}
                 </button>

@@ -219,7 +219,7 @@ export default function ProfileHeader({
                     >
                         <button
                             className={
-                                'border border-white bg-black/75 text-white rounded-lg px-3 py-1'
+                                'border border-white bg-black/75 text-white rounded-lg px-3 py-1 cursor-pointer'
                             }
                         >
                             <span>{t('edit_profile')}</span>
