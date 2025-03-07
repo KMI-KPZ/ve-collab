@@ -568,7 +568,7 @@ export default function HeaderSection({
     };
 
     return (
-        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-40">
+        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-20">
             <nav className="flex flex-nowrap items-center mx-auto max-w-(--breakpoint-2xl)">
                 <div className="flex items-center ">
                     <Link href="/" className="shrink-0">

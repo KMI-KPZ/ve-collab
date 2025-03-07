@@ -485,9 +485,14 @@ export default function Groups() {
                     {isLoadingAll ? (
                         <div className="m-12">
                             <LoadingAnimation size="small" />
+                            {t('loading')}
                         </div>
                     ) : (
-                        <VerticalTabs onClickTabItem={onClickTabItem} className="divide-x divide-gray-200">
+                        <VerticalTabs
+                            onClickTabItem={onClickTabItem}
+                            className="[&>*]:w-full md:[&>*:nth-child(1)]:w-1/3 md:[&>*:nth-child(2)]:w-2/3 lg:[&>*:nth-child(1)]:w-1/4 divide-y md:divide-y-0 divide-x-0 md:divide-x-2 flex-1 flex-wrap md:flex-none md:flex-nowrap divide-gray-200"
+                            navClassName="flex items-stretch md:flex-wrap [&>*]:w-full divide-x !divide-y-0 md:divide-x-0 md:!divide-y-2"
+                        >
                             <div tabid="my_groups" tabname={t('my_groups')}>
                                 <div className="mx-4 lg:mx-10 my-4">
                                     <SearchInput />
@@ -504,7 +509,7 @@ export default function Groups() {
 
                             <div
                                 tabid="requests_invitations"
-                                tabname={t('my_requests_and_invitations')}
+                                tabname={t('requests_and_invitations')}
                             >
                                 <div className="mx-4 lg:mx-10">
                                     {myGroupInvites.length == 0 && myGroupRequests.length == 0 && (
@@ -717,7 +722,7 @@ function GroupsNoAuthPreview() {
                         <div tabid="all_groups" tabname={t('common:all')}></div>
                         <div
                             tabid="requests_invitations"
-                            tabname={t('my_requests_and_invitations')}
+                            tabname={t('requests_and_invitations')}
                         ></div>
                     </VerticalTabs>
                 </WhiteBox>

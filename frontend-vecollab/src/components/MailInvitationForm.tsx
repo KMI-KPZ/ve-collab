@@ -86,7 +86,7 @@ export default function MailInvitationForm({
     }
 
     return (
-        <div>
+        <div className="max-w-4xl">
             {success ? (
                 <>
                     <p className="mb-4">{t('mail_invitation_form.send_ok')}</p>

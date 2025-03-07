@@ -71,7 +71,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     <input
                         type="text"
                         placeholder={t('name.placeholder')}
-                        className="border border-gray-300 rounded-md p-2 w-1/2"
+                        className="border border-gray-300 rounded-md p-2 w-full md:w-1/2"
                         autoComplete="off"
                         autoFocus={true}
                         {...methods.register('name')}

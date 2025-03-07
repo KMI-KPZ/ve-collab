@@ -30,6 +30,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 import CustomHead from '@/components/metaData/CustomHead';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -246,7 +247,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         .map((plan, i) => (
                             <div key={i}>
                                 <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
-                                    <MdNewspaper />
+                                    <PlanIcon />
                                     <Link
                                         className="text-xl font-bold grow-0 group"
                                         href={`/plan/${plan._id}`}

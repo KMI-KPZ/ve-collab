@@ -536,19 +536,19 @@ export default function Partners({ socket }: Props): JSX.Element {
                         </div>
                     </div>
                 </div>
-                <Dialog
-                    isOpen={openMailInvitationDialog}
-                    title={t('common:mail_invitation_form.title')}
-                    onClose={() => setOpenMailInvitationDialog(false)}
-                >
-                    <MailInvitationForm
-                        handleFinish={() => {
-                            setOpenMailInvitationDialog(false);
-                        }}
-                        renderAttentionMessage
-                    />
-                </Dialog>
             </Wrapper>
+            <Dialog
+                isOpen={openMailInvitationDialog}
+                title={t('common:mail_invitation_form.title')}
+                onClose={() => setOpenMailInvitationDialog(false)}
+            >
+                <MailInvitationForm
+                    handleFinish={() => {
+                        setOpenMailInvitationDialog(false);
+                    }}
+                    renderAttentionMessage
+                />
+            </Dialog>
         </>
     );
 }

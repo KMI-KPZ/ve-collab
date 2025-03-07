@@ -18,7 +18,7 @@ export default function GroupsWidget({ groups, isOwnProfile }: Props) {
         <div className="my-4 pt-4 border-t border-t-gray-200 group/groups">
             <div className="flex">
                 <H2 className="inline">
-                    {isOwnProfile ? t('common:your_groups') : t('common:public_groups_of')}
+                    {isOwnProfile ? t('common:groups') : t('common:public_groups_of')}
                 </H2>
                 {isOwnProfile && (
                     <span className="italic text-slate-600 text-xs ml-auto invisible group-hover/groups:visible">

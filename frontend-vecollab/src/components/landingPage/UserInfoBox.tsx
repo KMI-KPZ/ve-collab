@@ -8,7 +8,6 @@ import { MdEdit } from 'react-icons/md';
 import { useGetMyGroups } from '@/lib/backend';
 import { getBadges, hasAnyAchievement } from './Badge';
 import UserProfileImage from '../network/UserProfileImage';
-import VEVitrine from '../profile/VEVitrine';
 import GroupsWidget from '../profile/GroupsWidget';
 import VEReadyFor from '../profile/VEReadyFor';
 
@@ -80,22 +79,6 @@ export default function UserInfoBox({ profileInformation }: Props) {
                     </div>
                 </div>
             )}
-
-            {/* {profileInformation.profile.ve_window.length > 0 && (
-                <VEVitrine
-                    isOwnProfile={true}
-                    items={profileInformation.profile.ve_window.map((plan: any, i) => {
-                        return {
-                            description: plan.description,
-                            title: plan.plan_name,
-                            plan: {
-                                _id: plan.plan_id,
-                                name: plan.plan_name,
-                            },
-                        };
-                    })}
-                />
-            )} */}
 
             {myGroups.length > 0 && <GroupsWidget isOwnProfile={true} groups={myGroups} />}
         </div>

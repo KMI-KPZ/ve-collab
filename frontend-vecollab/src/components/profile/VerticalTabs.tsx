@@ -6,6 +6,7 @@ interface TabsProps {
     isNoAuthPreview?: boolean;
     onClickTabItem?: (activeTab: string) => void;
     className?: string;
+    navClassName?: string;
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -52,7 +53,11 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         return (
             <div className={`flex ${this.props.className ? this.props.className : ''}`}>
                 <div className={'w-1/4'}>
-                    <ol className={'pb-2 divide-y divide-gray-200'}>
+                    <ol
+                        className={`pb-2 divide-y divide-gray-200 ${
+                            this.props.navClassName ? this.props.navClassName : ''
+                        }`}
+                    >
                         {children.map((child) => {
                             return (
                                 <VerticalTab

@@ -17,10 +17,9 @@ import useDynamicPlaceholder from '@/components/common/useDynamicPlaceholder';
 import H2 from '@/components/common/H2';
 import Link from 'next/link';
 import { FaMedal } from 'react-icons/fa';
-import { TbFileText } from 'react-icons/tb';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { useSession } from 'next-auth/react';
-import { INode } from '@/interfaces/material/materialInterfaces';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -148,7 +147,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_plans')} ({data.plans.length})
                             </H2>
-                            <div className="m-2">
+                            <div className="m-2 max-w-[90vw]">
                                 {data.plans.map((plan, i) => {
                                     if (i > plansPagination) return;
                                     if (i == plansPagination) {
@@ -178,16 +177,15 @@ export default function SearchResult() {
                                                 timestamp={plan.last_modified}
                                                 className="text-sm text-slate-650 italic"
                                             />
-                                            <div className="flex flex-row items-center my-1">
+                                            <div className="flex flex-row flex-wrap items-center my-1 truncate">
                                                 <div className="grow flex items-center truncate">
                                                     <Link
                                                         href={`/plan/${plan._id}`}
                                                         className="group/ve-item flex items-center font-bold text-lg truncate"
                                                     >
-                                                        <TbFileText
-                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full"
-                                                            size={30}
-                                                        />{' '}
+                                                        <span className="mr-1 mb-1 group-hover/ve-item:text-ve-collab-orange">
+                                                            <PlanIcon />
+                                                        </span>
                                                         <span className="flex flex-col truncate">
                                                             <span className="flex items-center">
                                                                 <span className="truncate group-hover/ve-item:text-ve-collab-orange">
@@ -308,7 +306,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_groups')} ({data.spaces.length})
                             </H2>
-                            <div className="flex m-2">
+                            <div className="flex flex-wrap m-2">
                                 {data.spaces.map((space, i) => {
                                     return (
                                         <a
