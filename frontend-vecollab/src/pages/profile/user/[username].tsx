@@ -212,9 +212,9 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                             <div className="text-end text-slate-600 italic -mb-4">
                                 {t('last_change')}:
                             </div>
-                            <div className="divide-y divide-slate-400 space-y-4">
+                            <div className="divide-y divide-slate-400">
                                 {plans.slice(0, 7).map((plan, i) => (
-                                    <div key={i} className="flex items-center justify-between pt-4">
+                                    <div key={i} className="flex items-center justify-between py-4">
                                         <div className="grow flex items-center truncate">
                                             <Link
                                                 href={`/ve-designer/name?plannerId=${plan._id}`}
