@@ -88,9 +88,11 @@ export default function Header({
 
     return (
         <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
-            <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
-                <span className="text-ve-collab-orange">VE</span>
-                <span className="text-ve-collab-blue ml-2">Designer</span>
+            <div className="grow text-4xl font-bold flex flex-wrap items-end text-slate-400 w-full lg:w-1/2">
+                <span>
+                    <span className="text-ve-collab-orange">VE</span>
+                    <span className="text-ve-collab-blue ml-2">Designer</span>
+                </span>
                 {plan && plan.name && (
                     <span className="ml-4 text-2xl truncate before:content-['•'] before:mr-2">
                         {plan.name}
