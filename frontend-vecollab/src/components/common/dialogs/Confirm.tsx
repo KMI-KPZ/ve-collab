@@ -43,7 +43,7 @@ export default function ConfirmDialog({ message, callback }: Props) {
 
     return (
         <div className="fixed inset-0 z-50 bg-gray-900/50" onClick={(e) => handleClick(e, false)}>
-            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-80 rounded-lg p-2 bg-white border shadow-sm">
+            <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-80 rounded-lg p-2 bg-white border border-gray-200 shadow-xs">
                 <div className="absolute right-0 top-0 p-2">
                     <button
                         className="text-gray-500 hover:text-gray-700"

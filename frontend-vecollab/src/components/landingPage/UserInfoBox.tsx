@@ -8,7 +8,6 @@ import { MdEdit } from 'react-icons/md';
 import { useGetMyGroups } from '@/lib/backend';
 import { getBadges, hasAnyAchievement } from './Badge';
 import UserProfileImage from '../network/UserProfileImage';
-import VEVitrine from '../profile/VEVitrine';
 import GroupsWidget from '../profile/GroupsWidget';
 import VEReadyFor from '../profile/VEReadyFor';
 
@@ -23,7 +22,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
     const { data: myGroups } = useGetMyGroups(session!.accessToken);
 
     return (
-        <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4 drop-shadow">
+        <div className="w-full m-6 px-4 pb-6 bg-white rounded-md space-y-4 drop-shadow-sm">
             <div className="group @container">
                 <div className="-mt-[52px] -ml-[32px] flex relative">
                     <div className="flex-none w-[180px]">
@@ -61,7 +60,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
                 </div>
             </div>
 
-            <div className={'flex divide-x'}>
+            <div className={'flex divide-x divide-gray-200'}>
                 <div className="pr-4">
                     {t('iam_following')} <span>{profileInformation.followers.length}</span>
                 </div>
@@ -71,7 +70,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
             </div>
 
             {hasAnyAchievement(profileInformation.profile.achievements) && (
-                <div className="mt-4 border-t pt-4">
+                <div className="mt-4 border-t border-t-gray-200 pt-4">
                     <H2 className="mb-4">{t('achievements')}</H2>
                     <div className="flex flex-wrap gap-4">
                         {getBadges({ achievements: profileInformation.profile.achievements }).map(
@@ -80,22 +79,6 @@ export default function UserInfoBox({ profileInformation }: Props) {
                     </div>
                 </div>
             )}
-
-            {/* {profileInformation.profile.ve_window.length > 0 && (
-                <VEVitrine
-                    isOwnProfile={true}
-                    items={profileInformation.profile.ve_window.map((plan: any, i) => {
-                        return {
-                            description: plan.description,
-                            title: plan.plan_name,
-                            plan: {
-                                _id: plan.plan_id,
-                                name: plan.plan_name,
-                            },
-                        };
-                    })}
-                />
-            )} */}
 
             {myGroups.length > 0 && <GroupsWidget isOwnProfile={true} groups={myGroups} />}
         </div>

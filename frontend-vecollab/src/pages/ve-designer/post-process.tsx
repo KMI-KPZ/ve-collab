@@ -370,7 +370,7 @@ export default function PostProcess({ socket }: Props) {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <div className="py-6 divide-y">
+                <div className="py-6 divide-y divide-gray-200">
                     <div className="flex flex-col justify-between mb-3">
                         <div>
                             <p className="font-medium">{t('post-process.text_1')}</p>
@@ -433,7 +433,7 @@ export default function PostProcess({ socket }: Props) {
                         className={`mt-4 mb-3 pt-6 px-6 list-decimal list-outside marker:font-bold ${
                             methods.watch('sharePlanned') === true
                                 ? ''
-                                : 'opacity-20 [&_*]:cursor-not-allowed'
+                                : 'opacity-20 **:cursor-not-allowed'
                         }`}
                     >
                         <li className="mb-4 mt-2">
@@ -708,7 +708,7 @@ export default function PostProcess({ socket }: Props) {
                         className={`flex flex-col justify-between mt-4 pt-6 ${
                             methods.watch('sharePlanned') === true
                                 ? ''
-                                : 'opacity-50 [&_*]:cursor-not-allowed'
+                                : 'opacity-50 **:cursor-not-allowed'
                         }`}
                     >
                         <div>
@@ -778,7 +778,7 @@ export function PostProcessNoAuthPreview() {
                 submitCallback={() => {}}
                 isNoAuthPreview
             >
-                <div className="py-6 divide-y">
+                <div className="py-6 divide-y divide-gray-200">
                     <div className="flex flex-col justify-between mb-3">
                         <div>
                             <p className="font-medium">{t('post-process.text_1')}</p>
@@ -955,7 +955,7 @@ export function PostProcessNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
         </div>
     );
 }

@@ -2,13 +2,7 @@ import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from 'react';
 import { IoIosSend, IoMdClose } from 'react-icons/io';
-import AuthenticatedImage from '../common/AuthenticatedImage';
-import {
-    BackendPost,
-    BackendPostAuthor,
-    BackendPostFile,
-    BackendUserSnippet,
-} from '@/interfaces/api/apiInterfaces';
+import { BackendPost, BackendPostAuthor, BackendPostFile } from '@/interfaces/api/apiInterfaces';
 import { useRef } from 'react';
 import PostHeader from './PostHeader';
 import {
@@ -18,8 +12,6 @@ import {
     MdFormatClear,
     MdInsertLink,
     MdLinkOff,
-    MdNewspaper,
-    MdPublic,
 } from 'react-icons/md';
 import { RxFile } from 'react-icons/rx';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -38,7 +30,7 @@ import TimelinePostText from './TimelinePostText';
 import { sanitizedText } from './sanitizedText';
 import Dialog from '../profile/Dialog';
 import Dropdown from '../common/Dropdown';
-import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
 import { Socket } from 'socket.io-client';
@@ -46,9 +38,9 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import UserProfileImage from './UserProfileImage';
 
-import iconVeDocument from '@/images/icons/ve-document.svg';
 import { FaMedal } from 'react-icons/fa';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -405,7 +397,7 @@ export default function TimelinePostForm({
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div className="mb-2 pb-2 border-b">{t('add_your_gp_plans')}</div>
+                <div className="mb-2 pb-2 border-b border-gray-200">{t('add_your_gp_plans')}</div>
                 {plans
                     .sort((a, b) => {
                         return (
@@ -422,14 +414,7 @@ export default function TimelinePostForm({
                                 addPlanAttachment(plan);
                             }}
                         >
-                            {/* <MdNewspaper /> */}
-                            <span className="shrink-0 grow-0 w-[16px]">
-                                <Image
-                                    src={iconVeDocument}
-                                    alt={'ve_document'}
-                                    className="h-[24px]"
-                                />
-                            </span>
+                            <PlanIcon />
 
                             <div className="text-xl font-bold grow-0">{plan.name}</div>
                             {plan.is_good_practise && (
@@ -509,7 +494,7 @@ export default function TimelinePostForm({
                             left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
                             top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow-sm border border-gray-200 text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
                         <a
                             href={cursorInLink.getAttribute('href') as string}
@@ -564,7 +549,7 @@ export default function TimelinePostForm({
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                    <div className="my-5 ml-[50px] p-3 rounded-sm bg-slate-100">
                         <div className="flex items-center mb-6">
                             {postToRepost.isRepost ? (
                                 <PostHeader
@@ -658,7 +643,7 @@ export default function TimelinePostForm({
                                 className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden"
                                 key={index}
                             >
-                                <MdNewspaper size={20} className="flex-none" />
+                                <PlanIcon />
                                 <div className="truncate font-bold grow">{plan.name}</div>
                                 <div className="text-sm text-gray-500 flex-none">
                                     {plan.author.first_name} {plan.author.last_name}

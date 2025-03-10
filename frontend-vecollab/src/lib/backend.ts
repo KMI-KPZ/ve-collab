@@ -20,6 +20,8 @@ import {
     IMaterialNode,
     INode,
     INodeWithLections,
+    ISearchMaterial,
+    ISearchMaterialWP,
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
 import { IplansFilter } from '@/pages/plans';
@@ -179,7 +181,7 @@ export function useGetUsers(accessToken?: string): {
 export function useGetAvailablePlans({
     goodPracticeOnly,
     owner = 'all',
-    searchQuery,
+    searchQuery = '',
     limit = 10,
     offset = 0,
     sortBy = 'last_modified',
@@ -699,6 +701,57 @@ export function useGetSearchResults(
     };
 }
 
+export function useGetSearchLearningModuls(search: string): {
+    data: ISearchMaterial[];
+    isLoading: boolean;
+    error: APIError;
+    mutate: KeyedMutator<any>;
+} {
+    const baseurl = 'https://soserve.rz.uni-leipzig.de:10001';
+    const fetcher = (url: string) =>
+        fetch(url)
+            .then((res: any) => {
+                return res.json();
+            })
+            .then(async (result: ISearchMaterialWP[]) => {
+                let modulesEnabled: ISearchMaterial[] = [];
+                const taxonomy = await fetchTaxonomy();
+
+                await Promise.all(
+                    result.map(async (resultModule) => {
+                        const moduleInTaxonomy = taxonomy.find(
+                            (node) => node.data?.url == resultModule.url
+                        );
+                        if (moduleInTaxonomy !== undefined) {
+                            const path = await getMaterialNodePath(moduleInTaxonomy.id);
+
+                            modulesEnabled.push({
+                                id: moduleInTaxonomy.id,
+                                text: moduleInTaxonomy.text,
+                                section: path.category,
+                                cluster: path.bubble,
+                            });
+                        }
+                    })
+                );
+
+                return modulesEnabled;
+            })
+            .catch((e) => e);
+
+    const { data, error, isLoading, mutate } = useSWR(
+        `${baseurl}/wp-json/wp/v2/search?search=${search}`,
+        fetcher
+    );
+
+    return {
+        data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
 export function useGetOpenReports(accessToken: string): {
     data: Report[];
     isLoading: boolean;
@@ -838,6 +891,11 @@ export async function getTopLevelNodes(tax?: INode[]): Promise<ITopLevelNode[]> 
 export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<INode> {
     const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
+}
+
+export async function getNodeById(nodeId: number, tax?: INode[]): Promise<INode> {
+    const taxonomy = tax || (await fetchTaxonomy());
+    return taxonomy.find((node: any) => node.id === nodeId) as INode;
 }
 
 export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {

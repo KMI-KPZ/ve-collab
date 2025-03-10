@@ -10,12 +10,13 @@ import {
 } from '@/interfaces/ve-designer/sideProgressBar';
 import { IMainMenuItems, IMenuDataState, mainMenuData } from '@/data/sideMenuSteps';
 import { UseFormReturn } from 'react-hook-form';
-import { MdArrowDropDown, MdArrowRight } from 'react-icons/md';
+import { MdArrowDropDown, MdArrowRight, MdMenu } from 'react-icons/md';
 import { usePathname } from 'next/navigation';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { useTranslation } from 'next-i18next';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
 import { is } from 'date-fns/locale';
+import Dropdown from '../common/Dropdown';
 
 interface Props {
     methods: UseFormReturn<any>;
@@ -40,17 +41,31 @@ export default function Sidebar({
     const currentPath = usePathname();
     const { t } = useTranslation('common');
 
-    let menuStates: IMenuDataState[] = Object.keys(mainMenuData).map((a) => {
-        return { id: mainMenuData[a as keyof IMainMenuItems].id, open: true };
-    });
+    const SESS_DESIGNER_MENU_STATE = 'designer_menu_state';
 
-    // note: but why does this work while change a route?!
-    //  because we actually do not reload the page
+    // get may prev stored menu state from session cookie
+    const sessMenuState: IMenuDataState[] =
+        sessionStorage.getItem(SESS_DESIGNER_MENU_STATE) !== null
+            ? JSON.parse(sessionStorage.getItem(SESS_DESIGNER_MENU_STATE) as string)
+            : [];
+
+    // initial menu state (may from session)
+    const [menuStates, setMenuStates] = useState<IMenuDataState[]>(
+        sessMenuState.length
+            ? sessMenuState
+            : Object.keys(mainMenuData).map((a) => ({
+                  id: mainMenuData[a as keyof IMainMenuItems].id,
+                  open: true,
+              }))
+    );
+
     const updateMenuState = (id: string, state: boolean) => {
-        menuStates = menuStates.map((a) => ({
+        const _menuStates = menuStates.map((a) => ({
             id: a.id,
             open: a.id == id ? state : a.open,
         }));
+        setMenuStates(_menuStates);
+        sessionStorage.setItem(SESS_DESIGNER_MENU_STATE, JSON.stringify(_menuStates));
     };
 
     const [mainMenuData_, setMainMenuData_] = useState<IMainMenuItems>(mainMenuData);
@@ -167,7 +182,7 @@ export default function Sidebar({
                 >
                     <span
                         className={`w-10 h-10 border-4 rounded-full text-lg flex items-center justify-center ${
-                            isCurrentPage ? 'border-ve-collab-blue' : ''
+                            isCurrentPage ? 'border-ve-collab-blue' : 'border-gray-200'
                         }`}
                     >
                         <Image src={item.image} alt={`${item.text} logo`}></Image>
@@ -190,7 +205,7 @@ export default function Sidebar({
                     )}
                 </div>
                 {item.submenu.length > 0 && openSubmenu ? (
-                    <ul className="flex flex-col divide-y gap-1 bg-white ml-6">
+                    <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white ml-6">
                         {item.submenu.map((subItem, subIndex) => {
                             return (
                                 <li key={subIndex}>
@@ -208,8 +223,9 @@ export default function Sidebar({
 
     return (
         <>
-            <nav className="flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
-                <ul className="flex flex-col divide-y gap-1 bg-white">
+            {/* desktop navigation */}
+            <nav className="hidden md:block flex flex-col text-center w-80 mb-3 bg-white rounded-xl">
+                <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
                     {Object.keys(mainMenuData_).map((el, i) => (
                         <li key={i}>
                             <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />
@@ -217,6 +233,26 @@ export default function Sidebar({
                     ))}
                 </ul>
             </nav>
+
+            {/* stacked mobile sandwich navigation */}
+            <Dropdown
+                options={[
+                    <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white" key={0}>
+                        {Object.keys(mainMenuData_).map((el, i) => (
+                            <li key={i}>
+                                <MainMenuItem item={mainMenuData_[el as keyof IMainMenuItems]} />
+                            </li>
+                        ))}
+                    </ul>,
+                ]}
+                icon={
+                    <div className="absolute rounded-md shadow border border-gray-200 h-[41px] w-[41px] -mt-[8px] flex justify-center items-center">
+                        <MdMenu size={25} className="inline-block" />
+                    </div>
+                }
+                wrapperClassNames="!absolute h-full z-10 md:hidden"
+                ulClasses="absolute min-w-[15rem] h-fit max-h-[calc(100%-41px)] !left-[8px] !top-[50px] overflow-y-scroll"
+            />
         </>
     );
 }

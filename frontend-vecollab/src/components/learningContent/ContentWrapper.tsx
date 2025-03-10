@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { MdArrowRight, MdHome } from 'react-icons/md';
 import { useRouter } from 'next/router';
 import Dropdown from '../common/Dropdown';
-import { getClusterIconBySlug, getClusterSlugByRouteQuery } from '@/pages/learning-material';
+import { getClusterIconBySlug } from '@/pages/learning-material';
 import WhiteBox from '../common/WhiteBox';
 
 interface Props {
@@ -24,18 +24,18 @@ export default function ContentWrapper({
         node: categorySlug
     } = router.query
 
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(clusterRouterQuery as string))
+    const clusterSlug = clusterRouterQuery as string
     const clusterIcon = clusterSlug ? getClusterIconBySlug(clusterSlug) : undefined
 
     return (
         <>
             <WhiteBox>
                 <div className="flex flex-col">
-                    <div className="pb-2 flex flex-wrap items-center border-b">
+                    <div className="pb-2 flex flex-wrap items-center border-b border-gray-200">
                         <div className="flex items-center">
                             <Link
                                 href={`/learning-material/${router.query.cluster}`}
-                                className='relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow'
+                                className='relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow-sm'
                             >
                                 {typeof clusterIcon !== 'undefined' && (<>
                                     {clusterIcon({
@@ -72,7 +72,7 @@ export default function ContentWrapper({
                                                 {categorySlug}
                                             </div>
                                         }
-                                        ulClasses='w-fit max-w-96 !left-0'
+                                        ulClasses='w-fit max-w-96 left-0!'
                                     />
                                 </div>
                             )}
@@ -82,7 +82,7 @@ export default function ContentWrapper({
                         {headerChildren}
 
                         <Link href="/learning-material"
-                            className="ml-auto block mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                            className="ml-auto block mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         >
                             <MdHome />
                         </Link>

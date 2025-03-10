@@ -318,8 +318,8 @@ export default function Wrapper({
                 return field;
             });
 
-            router.push({
-                pathname: '',
+            router.query.plannerId = newPlanId;
+            await router.replace({
                 query: { plannerId: newPlanId },
             });
         }
@@ -445,12 +445,11 @@ export default function Wrapper({
     };
 
     const Breadcrumb = () => {
-        if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenuData[stageInMenu];
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = plan.steps.find((a) => currentPath.endsWith(a._id!));
+            const currentStep = plan.steps?.find((a) => currentPath.endsWith(a._id!));
 
             subMenuItem = currentStep
                 ? {
@@ -462,7 +461,7 @@ export default function Wrapper({
         }
 
         return (
-            <div className="text-normale py-2 flex items-center text-slate-500">
+            <div className="ml-10 mt-1 md:ml-0 md:mt-0 text-normale py-2 flex items-center text-slate-500">
                 <MdArrowForwardIos size={15} /> {t(mainMenuItem.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
@@ -486,7 +485,7 @@ export default function Wrapper({
         if (nextpage === 'undefined') return <></>;
 
         return (
-            <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
+            <div className="shadow-sm flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
                 {typeof idOfProgress !== 'undefined' && (
                     <span
                         className={`group px-4 py-2 flex items-center text-slate-700 ${
@@ -591,7 +590,7 @@ export default function Wrapper({
                         isNoAuthPreview={isNoAuthPreview}
                     />
 
-                    <div className="flex flex-row divide-x gap-1">
+                    <div className="flex flex-row md:divide-x divide-gray-200 gap-1">
                         <Sidebar
                             methods={methods}
                             submitCallback={async () => {}}
@@ -603,7 +602,7 @@ export default function Wrapper({
                         />
 
                         <form
-                            className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
+                            className="relative w-full px-6 pt-1 max-w-(--breakpoint-2xl) flex flex-col gap-x-4"
                             onSubmit={() => {}}
                         >
                             <Breadcrumb />
@@ -636,7 +635,7 @@ export default function Wrapper({
 
                             {(typeof prevpage !== 'undefined' ||
                                 typeof nextpage !== 'undefined') && (
-                                <div className="my-8 border-t py-3 flex justify-between">
+                                <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between">
                                     <div>
                                         {typeof prevpage !== 'undefined' && (
                                             <button
@@ -709,7 +708,7 @@ export default function Wrapper({
                             }}
                         />
 
-                        <div className="flex flex-row divide-x gap-1">
+                        <div className="relative flex flex-row md:divide-x md:divide-gray-200 gap-1">
                             <Sidebar
                                 methods={methods}
                                 submitCallback={async (data) => {
@@ -725,7 +724,7 @@ export default function Wrapper({
                             />
 
                             <form
-                                className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
+                                className="relative w-full px-6 pt-1 max-w-(--breakpoint-2xl) flex flex-col gap-x-4"
                                 onSubmit={methods.handleSubmit(
                                     // valid
                                     async (data: any) => {
@@ -756,7 +755,7 @@ export default function Wrapper({
                                             <Link
                                                 target="_blank"
                                                 href={tooltip.link}
-                                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                                             >
                                                 <PiBookOpenText
                                                     size={30}
@@ -801,13 +800,13 @@ export default function Wrapper({
 
                                 {(typeof prevpage !== 'undefined' ||
                                     typeof nextpage !== 'undefined') && (
-                                    <div className="my-8 border-t py-3 flex justify-between">
+                                    <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between">
                                         <div>
                                             {typeof prevpage !== 'undefined' && (
                                                 <button
                                                     type="button"
                                                     title={t('common:back')}
-                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                    className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
                                                         async (data: any) => {
@@ -836,7 +835,7 @@ export default function Wrapper({
                                         </div>
 
                                         <div className="flex tex-center">
-                                            {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r'>
+                                            {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r border-gray-200'>
                                                 <span>{t("editing_state")}:</span>
 
                                                 <span className=' hover:cursor-pointer' title={t("toggle_state_hover")} onClick={e => handleClickToggleProgress()}>

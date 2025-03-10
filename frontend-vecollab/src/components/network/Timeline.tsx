@@ -215,7 +215,7 @@ export default function Timeline({
                                     onClick={(e) => {
                                         setPinnedPostsExpanded(true);
                                     }}
-                                    className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t to-50% from-[#e5e7eb]"
+                                    className="absolute bottom-0 left-0 w-full h-full bg-linear-to-t to-50% from-[#e5e7eb]"
                                 ></div>
                             )}
                         </div>
@@ -227,7 +227,7 @@ export default function Timeline({
                                     setPinnedPostsExpanded(false);
                                 }}
                                 title={t('show_less')}
-                                className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
+                                className="shadow-sm px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
                             >
                                 <MdKeyboardDoubleArrowUp />
                             </button>
@@ -237,7 +237,7 @@ export default function Timeline({
                                     setPinnedPostsExpanded(true);
                                 }}
                                 title={t('show_all')}
-                                className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
+                                className="shadow-sm px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
                             >
                                 <MdKeyboardDoubleArrowDown />
                             </button>
@@ -247,7 +247,7 @@ export default function Timeline({
             )}
 
             {!hideForm && (!groupACL || groupACL.post) ? (
-                <div className={'p-4 my-8 bg-white rounded shadow '}>
+                <div className={'p-4 my-8 bg-white rounded-sm shadow-sm '}>
                     <TimelinePostForm
                         group={group}
                         postToRepost={postToRepost}
@@ -266,7 +266,7 @@ export default function Timeline({
                     <div
                         key={date}
                         style={{ borderColor: datePill.vg }}
-                        className="-ml-7 pl-7 pb-4 border-l"
+                        className="-ml-7 pl-7 pb-4 border-l border-gray-200"
                     >
                         <div className="relativ sticky z-20 -ml-[47px] top-[17px] mb-4 flex items-center font-bold">
                             <div
@@ -275,13 +275,13 @@ export default function Timeline({
                                     borderColor: datePill.vg,
                                     backgroundColor: datePill.bg,
                                 }}
-                                className="rounded-full border p-[2px] -mt-[11px] shadow"
+                                className="rounded-full border border-gray-200 p-[2px] -mt-[11px] shadow-sm"
                             >
                                 <HiOutlineCalendar className="m-2" />
                             </div>
                             <div
                                 style={{ color: datePill.vg, backgroundColor: datePill.bg }}
-                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow"
+                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow-sm"
                             >
                                 <Timestamp timestamp={date} dateFormat="d. MMM" />
                             </div>

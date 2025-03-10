@@ -16,18 +16,17 @@ import WhiteBox from '@/components/common/WhiteBox';
 import Timeline from '@/components/network/Timeline';
 import ExtendedPersonalInformation from '@/components/profile/ExtendedPersonalInformation';
 import PersonalData from '@/components/profile/PersonalData';
-import VEVitrine from '@/components/profile/VEVitrine';
 import { getBadges, hasAnyAchievement } from '@/components/landingPage/Badge';
 import H2 from '@/components/common/H2';
 import Link from 'next/link';
 import { MdArrowRight, MdEdit } from 'react-icons/md';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
 import GroupsWidget from '@/components/profile/GroupsWidget';
-import { TbFileText } from 'react-icons/tb';
 import Timestamp from '@/components/common/Timestamp';
 import ButtonLight from '@/components/common/buttons/ButtongLight';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { FaMedal } from 'react-icons/fa';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 interface Props {
     openOrCreateChatWith: (users: string[]) => void;
@@ -134,7 +133,7 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 isOwnProfile={isOwnProfile}
                             />
                             {hasAnyAchievement(profileInformation.profile.achievements) && (
-                                <div className="mt-4 border-t pt-4">
+                                <div className="mt-4 border-t border-t-gray-200 pt-4">
                                     <H2 className="mb-4">{t('community:achievements')}</H2>
                                     <div className="flex flex-wrap gap-4">
                                         {getBadges({
@@ -144,20 +143,11 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                                 </div>
                             )}
 
-                            {/* <VEVitrine
-                                isOwnProfile={isOwnProfile}
-                                items={profileInformation.profile.ve_window.map((elem: any) => ({
-                                    plan: { _id: elem.plan_id, name: elem.plan_name },
-                                    title: elem.title,
-                                    description: elem.description,
-                                }))}
-                            /> */}
-
                             {groups.length > 0 && (
                                 <GroupsWidget isOwnProfile={isOwnProfile} groups={groups} />
                             )}
 
-                            {/* <div className="mt-4 border-t pt-4">
+                            {/* <div className="mt-4 border-t border-t-gray-200 pt-4">
                                 <H2>{t('deine_ves')}</H2>
                                 TODO: ?!
                             </div> */}
@@ -212,18 +202,17 @@ export default function UserProfile({ openOrCreateChatWith }: Props): JSX.Elemen
                             <div className="text-end text-slate-600 italic -mb-4">
                                 {t('last_change')}:
                             </div>
-                            <div className="divide-y divide-slate-400 space-y-4">
+                            <div className="divide-y divide-slate-400">
                                 {plans.slice(0, 7).map((plan, i) => (
-                                    <div key={i} className="flex items-center justify-between pt-4">
+                                    <div key={i} className="flex items-center justify-between py-4">
                                         <div className="grow flex items-center truncate">
                                             <Link
                                                 href={`/ve-designer/name?plannerId=${plan._id}`}
                                                 className="group/ve-item flex items-center font-bold text-lg truncate hover:text-ve-collab-orange"
                                             >
-                                                <TbFileText
-                                                    className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full group-hover/ve-item:border-ve-collab-orange"
-                                                    size={30}
-                                                />{' '}
+                                                <span className="mr-2 mb-1">
+                                                    <PlanIcon />
+                                                </span>
                                                 <span className="flex flex-col truncate">
                                                     <span className="flex items-center">
                                                         <span className="truncate">
