@@ -578,6 +578,7 @@ export default function HeaderSection({
                             alt="Ve Collab Logo"
                             width={100}
                             className="duration-300 hover:scale-110"
+                            quality={100}
                         ></Image>
                     </Link>
                     {!isActivePath('/search') && (
