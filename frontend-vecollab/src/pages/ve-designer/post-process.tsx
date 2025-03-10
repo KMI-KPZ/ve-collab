@@ -568,10 +568,10 @@ export default function PostProcess({ socket }: Props) {
                                             disabled={methods.watch('sharePlanned') === false}
                                             className={`ml-2 p-2 rounded-full ${
                                                 methods.watch('sharePlanned') === true
-                                                    ? 'hover:bg-ve-collab-blue-light'
+                                                    ? 'cursor-pointer hover:bg-ve-collab-blue-light'
                                                     : ''
                                             }`}
-                                            title="Datei Entfernen"
+                                            title={t('common:delete_file')}
                                         >
                                             <IoMdClose />
                                         </button>
@@ -673,7 +673,7 @@ export default function PostProcess({ socket }: Props) {
                                                         }
                                                         className={`ml-2 p-2 rounded-full ${
                                                             methods.watch('sharePlanned') === true
-                                                                ? 'hover:bg-ve-collab-blue-light'
+                                                                ? 'cursor-pointer hover:bg-ve-collab-blue-light'
                                                                 : ''
                                                         }`}
                                                         title={t('common:delete_file')}

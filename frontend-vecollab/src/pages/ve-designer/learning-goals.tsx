@@ -245,7 +245,11 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                         })}
                                     />
                                 </div>
-                                <button type="button" onClick={() => removeTopic(index)}>
+                                <button
+                                    type="button"
+                                    onClick={() => removeTopic(index)}
+                                    className="cursor-pointer"
+                                >
                                     <RxMinus size={20} />
                                 </button>
                             </div>
@@ -257,7 +261,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 </div>
                 <div className="">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow-sm"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer"
                         type="button"
                         onClick={() => {
                             appendTopic({

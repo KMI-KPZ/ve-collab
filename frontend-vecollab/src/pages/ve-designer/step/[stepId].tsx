@@ -261,7 +261,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                     <div className="text-xl text-slate-900">
                         {t('common:plans_alert_step_doesnt_exist')}
                     </div>
-                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white cursor-pointer">
                         <Link href="/plans">{t('back_to_overview')}</Link>
                     </button>
                 </div>
@@ -396,11 +396,7 @@ export function StageNoAuthPreview() {
             <div className="mt-4 flex">
                 <div className="flex flex-col w-full">
                     <div className="relative">
-                        <div
-                            className={
-                                'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'
-                            }
-                        >
+                        <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200'}>
                             <div className="mt-2 flex">
                                 <div className="w-1/6 flex items-center">
                                     <label htmlFor="task_formulation" className="px-2 py-2">

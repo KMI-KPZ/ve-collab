@@ -161,7 +161,7 @@ export default function Header({
 
                 <div>
                     <button
-                        className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                        className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-pointer"
                         onClick={async (e) => {
                             // TODO handleInvalidData ...
                             if (Object.keys(methods.formState.dirtyFields).length > 0) {
@@ -179,7 +179,7 @@ export default function Header({
                     </button>
 
                     <button
-                        className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-pointer"
                         onClick={methods.handleSubmit(
                             // valid form
                             async (data: any) => {

@@ -19,6 +19,9 @@ import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
 import CustomHead from '@/components/metaData/CustomHead';
+import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import ButtonLight from '@/components/common/buttons/ButtongLight';
 
 export interface Institution {
     name: string;
@@ -296,14 +299,12 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         </div>
                     );
                 })}
-                <div className="ml-auto text-right">
-                    <button
-                        type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                <div className="ml-auto text-right space-x-2">
+                    <ButtonSecondary
                         onClick={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
                     >
                         {t('common:cancel')}
-                    </button>
+                    </ButtonSecondary>
                     <ButtonPrimary label={t('common:import')} onClick={() => handleImport()} />
                 </div>
             </div>
@@ -341,40 +342,33 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 </Dialog>
 
                 <div className={'px-4 w-full lg:w-2/3'}>
-                    <div className="flex">
-                        <button
-                            className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
-                            type="button"
-                            title={t('institutions.import_institutions')}
+                    <div className="flex space-x-2">
+                        <ButtonLightBlue
                             onClick={() => openImportDialog()}
+                            title={t('institutions.import_institutions')}
                         >
                             {t('common:import')}
-                        </button>
-                        {fields.length == 0 && (
-                            <button
-                                className="px-4 py-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
-                                type="button"
-                                onClick={() => {
-                                    append({
-                                        name: '',
-                                        school_type: '',
-                                        country: '',
-                                        department: '',
-                                    });
-                                }}
-                            >
-                                {t('common:new')}
-                            </button>
-                        )}
+                        </ButtonLightBlue>
+                        <ButtonLight
+                            onClick={() => {
+                                append({
+                                    name: '',
+                                    school_type: '',
+                                    country: '',
+                                    department: '',
+                                });
+                            }}
+                        >
+                            {t('common:new')}
+                        </ButtonLight>
                     </div>
 
                     <div className="divide-y divide-gray-200">{renderInstitutionInputs()}</div>
 
                     {fields.length > 0 && (
                         <div className="flex justify-center">
-                            <button
-                                className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
-                                type="button"
+                            <ButtonLight
+                                className="!rounded-full"
                                 onClick={() => {
                                     append({
                                         name: '',
@@ -385,7 +379,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 }}
                             >
                                 <RxPlus size={25} />
-                            </button>
+                            </ButtonLight>
                         </div>
                     )}
                 </div>

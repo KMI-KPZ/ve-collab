@@ -6,6 +6,8 @@ import Dialog from './Dialog';
 import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     userid: string;
@@ -79,26 +81,18 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
                         </>
                     )}
 
-                    <div className="flex absolute bottom-0 w-full">
-                        <button
-                            className={
-                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                            }
-                            onClick={handleCloseInvitationDialog}
-                        >
-                            <span>{t('common:cancel')}</span>
-                        </button>
-                        <button
-                            className={
-                                'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
-                            }
-                            onClick={(e) => {
+                    <div className="flex absolute bottom-0 w-full flex justify-between">
+                        <ButtonSecondary onClick={handleCloseInvitationDialog}>
+                            {t('common:cancel')}
+                        </ButtonSecondary>
+                        <ButtonPrimary
+                            onClick={() => {
                                 sendVeInvitation();
                                 handleCloseInvitationDialog();
                             }}
                         >
-                            <span>{t('common:send')}</span>
-                        </button>
+                            {t('common:send')}
+                        </ButtonPrimary>
                     </div>
                 </div>
             </Dialog>

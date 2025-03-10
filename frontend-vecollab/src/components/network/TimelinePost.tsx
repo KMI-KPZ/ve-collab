@@ -335,7 +335,7 @@ export default function TimelinePost({
                 >
                     {userIsAdmin || comment.author.username == session?.user.preferred_username ? (
                         <button
-                            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             onClick={(e) => pinComment(comment)}
                             title={comment.pinned ? t('unpin_comment') : t('pin_comment')}
                         >
@@ -503,14 +503,14 @@ export default function TimelinePost({
                     <div className="ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity">
                         {post.likers.includes(session?.user.preferred_username as string) ? (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickLikeBtn}
                             >
                                 <HiHeart />
                             </button>
                         ) : (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickLikeBtn}
                             >
                                 <HiOutlineHeart />
@@ -518,7 +518,7 @@ export default function TimelinePost({
                         )}
                         {group && userIsAdmin && (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickPin}
                                 title={post.pinned ? t('unpin_post') : t('pin_post')}
                             >
@@ -526,7 +526,7 @@ export default function TimelinePost({
                             </button>
                         )}
                         <button
-                            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             onClick={onClickRepostBtn}
                             title={t('cite_post')}
                         >
@@ -556,7 +556,7 @@ export default function TimelinePost({
                                 } absolute left-0 bottom-0 w-full h-20 bg-linear-to-b from-transparent to-[#e5f1f4]`}
                             >
                                 <button
-                                    className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="absolute bottom-0 left-10 mx-4 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     onClick={() => setRepostExpand(true)}
                                     title={t('expand')}
                                 >
@@ -661,7 +661,7 @@ export default function TimelinePost({
                     <div className="mt-4 mb-2">
                         <button
                             onClick={openCommentForm}
-                            className="px-2 py-[6px] w-1/3 rounded-md border border-gray-200 text-gray-400 text-left text-nowrap overflow-hidden truncate"
+                            className="px-2 py-[6px] w-1/3 rounded-md border border-gray-200 text-gray-400 text-left text-nowrap overflow-hidden truncate cursor-pointer"
                         >
                             {t('write_comment')}
                         </button>
@@ -687,7 +687,11 @@ export default function TimelinePost({
                                     name="text"
                                     autoComplete="off"
                                 />
-                                <button className="p-2" type="submit" title={t('send')}>
+                                <button
+                                    className="p-2 cursor-pointer"
+                                    type="submit"
+                                    title={t('send')}
+                                >
                                     <IoIosSend />
                                 </button>
                             </form>
@@ -714,7 +718,7 @@ export default function TimelinePost({
                                                 comments.filter((c) => !c.pinned).length >
                                                     showXComments && (
                                                     <button
-                                                        className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light"
+                                                        className="py-2 px-5 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                                         onClick={() =>
                                                             setShowXComments(showXComments + 5)
                                                         }

@@ -24,6 +24,14 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         if (tab) this.onClickTabItem(tab);
     };
 
+    componentDidUpdate(
+        prevProps: Readonly<TabsProps>,
+        prevState: Readonly<{ activeTab: string }>,
+        snapshot?: any
+    ): void {
+        console.log('update ...');
+    }
+
     getTabFromURL = () => {
         const currentUrl = document.URL,
             urlParts = currentUrl.split('#');

@@ -526,7 +526,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 <div className="flex items-center">
                                                     <button
                                                         className={
-                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl cursor-pointer'
                                                         }
                                                         onClick={(e) => acceptRequest(requestUser)}
                                                     >
@@ -534,7 +534,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     </button>
                                                     <button
                                                         className={
-                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl cursor-pointer'
                                                         }
                                                         onClick={(e) => declineRequest(requestUser)}
                                                     >
@@ -829,7 +829,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                 </div>
                                                                 <button
                                                                     className={
-                                                                        'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                                        'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'
                                                                     }
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
@@ -853,7 +853,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 {t('message_last_user_in_space')}
                                             </p>
                                             <button
-                                                className={`h-12 border border-gray-200 text-white py-3 px-6 rounded-lg shadow ${
+                                                className={`h-12 border border-gray-200 text-white py-3 px-6 rounded-lg shadow cursor-pointer ${
                                                     group.members.length == 1
                                                         ? 'bg-orange-300'
                                                         : 'bg-orange-600'
@@ -878,7 +878,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 </p>
                                                 <button
                                                     className={
-                                                        'h-12 bg-red-500 border  border-gray-200 text-white py-3 px-6 rounded-lg shadow-sm'
+                                                        'h-12 bg-red-500 border  border-gray-200 text-white py-3 px-6 rounded-lg shadow-sm cursor-pointer'
                                                     }
                                                     onClick={(e) => {
                                                         e.preventDefault();

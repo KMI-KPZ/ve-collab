@@ -134,7 +134,7 @@ export default function Sidebar({
             <button
                 type="button"
                 onClick={(e) => handleClick(item, e)}
-                className={`flex justify-between p-2 w-full`}
+                className={`flex justify-between p-2 w-full cursor-pointer`}
                 disabled={isNoAuthPreview}
             >
                 <p

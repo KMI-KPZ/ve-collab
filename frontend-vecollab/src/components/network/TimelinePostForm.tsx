@@ -416,7 +416,7 @@ export default function TimelinePostForm({
                         >
                             <PlanIcon />
 
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
+                            <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
                             {plan.is_good_practise && (
                                 <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
                                     <FaMedal title={t('common:plans_marked_as_good_practise')} />
@@ -459,7 +459,7 @@ export default function TimelinePostForm({
                     />
                     <button
                         type="submit"
-                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
+                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white cursor-pointer"
                     >
                         {t('common:ok')}
                     </button>
@@ -564,7 +564,7 @@ export default function TimelinePostForm({
                             )}
                             <button
                                 onClick={onCancelRepost}
-                                className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="ml-auto self-start p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             >
                                 <IoMdClose />
                             </button>
@@ -600,7 +600,7 @@ export default function TimelinePostForm({
                                         e.preventDefault();
                                         removeStoredFile(index);
                                     }}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_file')}
                                 >
                                     <IoMdClose />
@@ -618,7 +618,7 @@ export default function TimelinePostForm({
                                         className="m-1 rounded-md"
                                     />
                                 ) : (
-                                    <RxFile size={30} className="m-1" />
+                                    <RxFile size={30} className="m-1 cursor-pointer" />
                                 )}
                                 <div className="truncate py-2">{file.name}</div>
                                 <button
@@ -626,7 +626,7 @@ export default function TimelinePostForm({
                                         e.preventDefault();
                                         removeSelectedFile(index);
                                     }}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_file')}
                                 >
                                     <IoMdClose />
@@ -654,7 +654,7 @@ export default function TimelinePostForm({
                                 />
                                 <button
                                     onClick={() => removePlanAttachment(plan)}
-                                    className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="flex-none p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_plan')}
                                 >
                                     <IoMdClose />
@@ -669,7 +669,7 @@ export default function TimelinePostForm({
                         !postToEdit && !postToRepost && !formHadFocus ? 'hidden' : ''
                     }`}
                 >
-                    <div className="ml-auto text-right space-x-4">
+                    <div className="ml-auto text-right space-x-4 space-y-2">
                         {!postToRepost && (
                             <>
                                 <div
@@ -705,7 +705,7 @@ export default function TimelinePostForm({
                         )}
                         {postToEdit && (
                             <button
-                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg`}
+                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer`}
                                 onClick={onCancel}
                                 type="button"
                             >
@@ -714,8 +714,10 @@ export default function TimelinePostForm({
                         )}
                         <button
                             type="submit"
-                            className={`relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${
-                                text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''
+                            className={`relative py-2 px-5 rounded-lg text-white overflow-hidden ${
+                                text.trim() == ''
+                                    ? 'cursor-default bg-ve-collab-orange/75'
+                                    : 'cursor-pointer bg-ve-collab-orange'
                             }`}
                         >
                             {postToEdit ? (
