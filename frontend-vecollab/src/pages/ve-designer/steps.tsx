@@ -249,7 +249,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
                                     <PlanIcon />
                                     <Link
-                                        className="text-xl font-bold grow-0 group"
+                                        className="text-xl font-bold grow-0 group truncate"
                                         href={`/plan/${plan._id}`}
                                         target="_blank"
                                     >

@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 import { useTranslation } from 'next-i18next';
 import PlanIcon from '../plans/PlanIcon';
+import { FaMedal } from 'react-icons/fa';
 
 interface Props {
     plan: IPlan;
@@ -167,15 +168,30 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     .map((plan, i) => (
                         <div
                             key={plan._id}
-                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                            title={t('choose')}
+                            className="p-2 flex items-center justify-start gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                            title={t('common:choose')}
                             onClick={(e) => {
                                 setExportStep2Plan((prev) => ({ ...prev, plan }));
                             }}
                         >
                             <PlanIcon />
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
-                            <span title={t('last_modified')}>
+
+                            <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
+                            {plan.is_good_practise && (
+                                <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
+                                    <FaMedal title={t('common:plans_marked_as_good_practise')} />
+                                </div>
+                            )}
+                            {plan.steps.length > 1 && (
+                                <div className="text-nowrap">({plan.steps.length} Etappen)</div>
+                            )}
+                            {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
+                            {session?.user.preferred_username != plan.author.username && (
+                                <div className="text-sm text-gray-500">
+                                    von {plan.author.first_name} {plan.author.last_name}
+                                </div>
+                            )}
+                            <span className="grow text-right" title="zuletzt geändert">
                                 <Timestamp timestamp={plan.last_modified} className="text-sm" />
                             </span>
                         </div>
@@ -287,7 +303,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                         <div className="text-right mt-2">
                             {loadingExport && <LoadingAnimation size="small" />}
                             <button
-                                className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                                className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-pointer"
                                 onClick={(e) => {
                                     setExportStep2Plan((prev) => ({ ...prev, plan: undefined }));
                                 }}
@@ -296,7 +312,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                             </button>
                             <button
                                 type="button"
-                                className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-pointer"
                                 onClick={methods.handleSubmit(
                                     // valid
                                     async (data: any) => {
@@ -333,7 +349,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     </Link>
                     <button
                         type="button"
-                        className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full cursor-pointer hover:bg-ve-collab-orange"
                         onClick={(e) => {
                             setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined });
                         }}
