@@ -34,7 +34,7 @@ export default function HeaderSection({
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
     const baseStyle =
-        'whitespace-nowrap hover:text-ve-collab-orange hover:after:visible hover:after:w-full after:content-[""] after:block after:h-[2px] after:w-0 after:bg-ve-collab-blue after:invisible after:transition-all	';
+        'whitespace-nowrap cursor-pointer hover:text-ve-collab-orange hover:after:visible hover:after:w-full after:content-[""] after:block after:h-[2px] after:w-0 after:bg-ve-collab-blue after:invisible after:transition-all	';
     const inactiveClass = `${baseStyle}`;
     const activeClass = `${baseStyle} font-semibold`;
 
