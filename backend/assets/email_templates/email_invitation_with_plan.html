@@ -1,0 +1,36 @@
+{% extends "base.html" %} {% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>
+  <b>{{ sender|default("Ein/e andere/r Nutzer:in") }}</b> hat dich eingeladen,
+  der VE-Collab Plattform beizutreten und gemeinsam an {% if plan_name is
+  defined %} dem VE <b>{{ plan_name|e }}</b>
+  {% else %} einem VE {% endif %} zu arbeiten!
+</p>
+
+{% if message is defined %}
+<p>Folgende Nachricht wurde dazu verfasst:</p>
+<div style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd">
+  {{ message|e }}
+</div>
+<div style="text-align: center; color: gray; padding: 0px 16px 16px">
+  <p>
+    <b><u>Hinweis:</u></b> Klicke niemals auf Links oder öffne diese, die du in
+    der Nachricht von Personen findest!
+  </p>
+</div>
+{% endif %}
+
+<p>
+  Registriere dich noch heute auf der
+  <a href="https://ve-collab.org/invitation?invitationId={{ invitation_id }}"
+    >VE-Collab Plattform</a
+  >
+  und plane gemeinsam mit
+  <b>{{ sender|default("einem/r anderen Nutzer:in") }}</b> deinen nächsten VE!
+</p>
+
+<p style="margin-top: 30px">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

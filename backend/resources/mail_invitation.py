@@ -2,7 +2,10 @@ import datetime
 
 from bson import ObjectId
 from pymongo.database import Database
-
+from bson.errors import InvalidId
+from exceptions import InvitationDoesntExistError
+from typing import Dict
+import util
 
 class MailInvitation:
     """
@@ -22,6 +25,8 @@ class MailInvitation:
             "recipient_name",
             "message",
             "sender",
+            "plan_id",
+            "replied",
             "timestamp",
         ]
 
@@ -40,6 +45,42 @@ class MailInvitation:
         result = self.db.mail_invitations.insert_one(invitation)
 
         return result.inserted_id
+
+    def reply_to_invitation(self, _id: str | ObjectId) -> None:
+        """
+        Set invitation.replied to True
+        """
+
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise InvitationDoesntExistError()
+
+        result = self.db.mail_invitations.update_one(
+            {"_id": _id}, {"$set": {"replied": True}}
+        )
+
+        if result.matched_count == 0:
+            raise InvitationDoesntExistError()
+
+    def get_invitation(self, _id: str | ObjectId) -> Dict:
+        """
+        Get an invitation from DB
+
+        :param invitation: invitation to save as a dict
+        """
+
+        try:
+            _id = util.parse_object_id(_id)
+        except InvalidId:
+            raise InvitationDoesntExistError()
+
+        result = self.db.mail_invitations.find_one({"_id": _id})
+
+        if not result:
+            raise InvitationDoesntExistError()
+
+        return result
 
     def check_within_rate_limit(self, username: str) -> bool:
         """

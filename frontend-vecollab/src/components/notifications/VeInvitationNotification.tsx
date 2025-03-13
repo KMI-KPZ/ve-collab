@@ -77,8 +77,12 @@ export default function VeInvitationNotification({
                 >
                     <p className="mb-1 underline decoration-ve-collab-blue">VE-Einladung</p>
                     <p>
-                        Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen:{' '}
-                        <b>{invitedVePlan?.name}</b>
+                        Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen
+                        {invitedVePlan && (
+                            <>
+                                : <b>{invitedVePlan.name}</b>
+                            </>
+                        )}
                     </p>
                     <Timestamp
                         className="text-sm text-gray-500"
@@ -123,10 +127,9 @@ export default function VeInvitationNotification({
                                 hat bereits vorgearbeitet, sieh dir den zugehörigen Plan an:
                             </p>
                             <div className="flex my-4 justify-center text-slate-900 text-xl font-bold">
-                                {/* todo this should link to a read-only view of the plan*/}
                                 <Link
                                     target="_blank"
-                                    href={`/ve-designer/name?plannerId=${notification.payload.plan_id}`}
+                                    href={`/plan/${notification.payload.plan_id}`}
                                 >
                                     {invitedVePlan?.name}
                                 </Link>
