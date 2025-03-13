@@ -373,7 +373,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
                     <ButtonLight
                         onClick={() => handleDeleteExternalParties(index)}
-                        className="mx-2 !p-2 shadow !rounded-full"
+                        className="mx-2 p-2! shadow-sm rounded-full!"
                     >
                         <RxMinus size={18} />
                     </ButtonLight>
@@ -403,7 +403,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 <p className="px-4 py-2 min-w-56">{partner.label}</p>
                                 <ButtonLight
                                     onClick={() => handleDeletePartners(index)}
-                                    className="mx-2 !p-2 shadow !rounded-full"
+                                    className="mx-2 p-2! shadow-sm rounded-full!"
                                 >
                                     <RxMinus size={18} />
                                 </ButtonLight>
@@ -414,7 +414,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                             {createSelect(methods.control, `partners.${index}`, index)}
                             <ButtonLight
                                 onClick={() => handleDeletePartners(index)}
-                                className="mx-2 !p-2 shadow !rounded-full"
+                                className="mx-2 p-2! shadow-sm rounded-full!"
                             >
                                 <RxMinus size={18} />
                             </ButtonLight>
@@ -464,7 +464,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
                             <div className="mt-4">
                                 <button
-                                    className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         appendPartners({ label: '', value: '' });
@@ -474,7 +474,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 </button>
                             </div>
                         </div>
-                        <div className="lg:basis-1/4 text-center p-4 m-2 rounded-lg border shadow self-start">
+                        <div className="lg:basis-1/4 text-center p-4 m-2 rounded-lg border border-gray-200 shadow-sm self-start">
                             <p>{t('common:mail_invitation_form.intro_short')}</p>
                             <ButtonLightBlue
                                 className="m-2"
@@ -514,14 +514,14 @@ export default function Partners({ socket }: Props): JSX.Element {
                                         />
                                         <Button
                                             onClick={() => addedExternalPartyWarning()}
-                                            className="mx-2 shadow !rounded-full"
+                                            className="mx-2 shadow-sm rounded-full!"
                                         >
                                             {t('common:ok')}
                                         </Button>
                                     </div>
                                 )}
                                 <button
-                                    className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         addedExternalPartyWarning();
@@ -536,19 +536,19 @@ export default function Partners({ socket }: Props): JSX.Element {
                         </div>
                     </div>
                 </div>
-                <Dialog
-                    isOpen={openMailInvitationDialog}
-                    title={t('common:mail_invitation_form.title')}
-                    onClose={() => setOpenMailInvitationDialog(false)}
-                >
-                    <MailInvitationForm
-                        handleFinish={() => {
-                            setOpenMailInvitationDialog(false);
-                        }}
-                        renderAttentionMessage
-                    />
-                </Dialog>
             </Wrapper>
+            <Dialog
+                isOpen={openMailInvitationDialog}
+                title={t('common:mail_invitation_form.title')}
+                onClose={() => setOpenMailInvitationDialog(false)}
+            >
+                <MailInvitationForm
+                    handleFinish={() => {
+                        setOpenMailInvitationDialog(false);
+                    }}
+                    renderAttentionMessage
+                />
+            </Dialog>
         </>
     );
 }
@@ -601,7 +601,7 @@ export function PartnersNoAuthPreview() {
 
                     <div className="mt-4">
                         <button
-                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -618,7 +618,7 @@ export function PartnersNoAuthPreview() {
                         </div>
                         <div className="mt-4">
                             <button
-                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {}}
                                 disabled
@@ -629,7 +629,7 @@ export function PartnersNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { dropPlanLock } from './PlanSocket';
 import { useTranslation } from 'next-i18next';
 import { FaMedal } from 'react-icons/fa';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     methods: UseFormReturn<any, any, undefined>;
@@ -33,7 +34,7 @@ export default function Header({
 
     if (isNoAuthPreview) {
         return (
-            <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
+            <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b border-gray-200">
                 <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
                     <span className="text-ve-collab-orange">VE</span>
                     <span className="text-ve-collab-blue ml-2">Designer</span>
@@ -48,7 +49,7 @@ export default function Header({
                     <div className="flex items-center">
                         <button
                             type="submit"
-                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
+                            className=" px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm"
                             title={t('open_collaborative_pad')}
                             disabled
                         >
@@ -67,14 +68,14 @@ export default function Header({
 
                     <div>
                         <button
-                            className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-default"
+                            className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-default"
                             onClick={() => {}}
                         >
                             {t('exit')}
                         </button>
 
                         <button
-                            className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-default"
+                            className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-default"
                             onClick={() => {}}
                         >
                             {t('save')}
@@ -86,23 +87,25 @@ export default function Header({
     }
 
     return (
-        <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b">
-            <div className="grow text-4xl font-bold flex flex-nowrap items-end text-slate-400 w-full lg:w-1/2">
-                <span className="text-ve-collab-orange">VE</span>
-                <span className="text-ve-collab-blue ml-2">Designer</span>
+        <div className="p-3 flex justify-between flex-wrap gap-y-2 border-b border-b-gray-200">
+            <div className="grow text-4xl font-bold flex flex-wrap items-end text-slate-400 w-full lg:w-1/2">
+                <span>
+                    <span className="text-ve-collab-orange">VE</span>
+                    <span className="text-ve-collab-blue ml-2">Designer</span>
+                </span>
                 {plan && plan.name && (
                     <span className="ml-4 text-2xl truncate before:content-['•'] before:mr-2">
                         {plan.name}
                     </span>
                 )}
                 {plan.is_good_practise && (
-                    <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue">
+                    <span className="mx-2 text-ve-collab-blue rounded-full p-2 border border-ve-collab-blue">
                         <FaMedal title={t('plans_marked_as_good_practise')} size={18} />
                     </span>
                 )}
             </div>
 
-            <div className="flex items-center justify-between w-full lg:w-fit">
+            <div className="flex items-center justify-end md:justify-between flex-wrap gap-y-2 w-full lg:w-fit">
                 <div className="flex items-center">
                     {router.query.plannerId !== undefined ? (
                         <>
@@ -113,10 +116,10 @@ export default function Header({
                                         : ''
                                 }
                                 target="_blank"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow hover:bg-slate-50"
+                                className="mx-2 px-4 py-2 flex items-center  rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm hover:bg-slate-50"
                                 title={t('open_collaborative_pad')}
                             >
-                                <MdEditSquare className="inline" /> Pad
+                                <MdEditSquare className="inline mr-1" /> Pad
                             </Link>
                             <Link
                                 href={
@@ -125,37 +128,40 @@ export default function Header({
                                         : ''
                                 }
                                 target="_blank"
-                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                className="mx-2 px-4 py-2 flex items-center rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                                 title={t('enter_jtsi')}
                             >
-                                <MdMeetingRoom className="inline" /> Video
+                                <MdMeetingRoom className="inline mr-1" /> Video
                             </Link>
                         </>
                     ) : (
                         <>
-                            <button
-                                type="submit"
-                                className="mx-2 px-4 py-2 rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow"
-                                title={t('save_first')}
-                                disabled
-                            >
-                                <MdEditSquare className="inline" /> Pad
-                            </button>
-                            <button
-                                type="submit"
-                                className="mx-2 px-4 py-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue"
-                                title={t('save_first')}
-                                disabled
-                            >
-                                <MdMeetingRoom className="inline" /> Video
-                            </button>
+                            <Tooltip tooltipsText={t('save_first')} position="bottom">
+                                <button
+                                    type="submit"
+                                    className="mx-2 px-4 py-2 flex items-center rounded-full text-ve-collab-blue bg-[#d8f2f9] shadow-sm cursor-not-allowed	"
+                                    disabled
+                                >
+                                    <MdEditSquare className="inline mr-1" /> Pad
+                                </button>
+                            </Tooltip>
+                            <Tooltip tooltipsText={t('save_first')} position="bottom">
+                                <button
+                                    type="submit"
+                                    className="mx-2 px-4 py-2 flex items-center  rounded-full bg-[#d8f2f9] text-ve-collab-blue shadow cursor-not-allowed	"
+                                    title={t('save_first')}
+                                    disabled
+                                >
+                                    <MdMeetingRoom className="inline mr-1" /> Video
+                                </button>
+                            </Tooltip>
                         </>
                     )}
                 </div>
 
                 <div>
                     <button
-                        className="mx-2 px-4 py-2 shadow border border-ve-collab-orange text-ve-collab-orange rounded-full"
+                        className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-pointer"
                         onClick={async (e) => {
                             // TODO handleInvalidData ...
                             if (Object.keys(methods.formState.dirtyFields).length > 0) {
@@ -173,7 +179,7 @@ export default function Header({
                     </button>
 
                     <button
-                        className="mx-2 px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                        className="mx-2 px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange cursor-pointer"
                         onClick={methods.handleSubmit(
                             // valid form
                             async (data: any) => {

@@ -20,12 +20,12 @@ export default function EditProfilePlusMinusButtons({
     return (
         <div className={'w-full mt-1 flex justify-end' + ' ' + extendClassName}>
             {minusCallback !== undefined && (
-                <button onClick={minusCallback} title={t("delete")}>
+                <button onClick={minusCallback} title={t("delete")} className='cursor-pointer'>
                     <RxMinus size={20} />
                 </button>
             )}
             {plusCallback !== undefined && (
-                <button onClick={plusCallback} title={t("new")}>
+                <button onClick={plusCallback} title={t("new")} className='cursor-pointer'>
                     <RxPlus size={20} />
                 </button>
             )}

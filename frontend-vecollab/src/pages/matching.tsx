@@ -221,7 +221,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
 
                 <div className="flex gap-x-2 opacity-0 group-hover/item:opacity-100 transition-opacity pr-4">
                     <ButtonLight
-                        className="!rounded-full"
+                        className="rounded-full!"
                         title={t('send_chat_message_to_user')}
                         onClick={() => {
                             openOrCreateChatWith([
@@ -275,7 +275,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
 
                 <div
                     title={t('filter_show_ve_ready_only_title')}
-                    className={`flex p-2 rounded-full shadow border ${
+                    className={`flex p-2 rounded-full shadow border border-gray-200 ${
                         isNoAuthPreview ? '' : 'cursor-pointer'
                     }`}
                     onClick={handleClickShowVeReadyOnly}
@@ -300,7 +300,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 </div>
             </div>
 
-            <div className="flex bg-white rounded-lg shadow border-1 border-gray-800 py-6 px-4 space-x-4">
+            <div className="flex bg-white rounded-lg shadow-sm py-6 px-4 space-x-4">
                 {viewFilterArea === true && <FilterArea />}
                 {isLoadingMatching ? (
                     <div className="m-12">
@@ -308,7 +308,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                         {/* {t('loading_users')} */}
                     </div>
                 ) : (
-                    <div className="overflow-scroll md:overflow-auto w-full text-left divide-y">
+                    <div className="overflow-scroll md:overflow-auto w-full text-left divide-y divide-gray-200">
                         {result.length === 0 ? (
                             <>{t('no_user_found')}</>
                         ) : (

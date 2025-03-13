@@ -6,7 +6,6 @@ import { fetchGET, fetchTaxonomy } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { getClusterRouteBySlug } from '@/pages/learning-material';
 import LocalStorage from '@/lib/storage';
 import UserProfileImage from '../network/UserProfileImage';
 
@@ -48,7 +47,7 @@ export default function SuggestionBox() {
                 allLections.push({
                     id: lection.id,
                     text: lection.text,
-                    path: `/learning-material/${getClusterRouteBySlug(cluster?.text!)}/${
+                    path: `/learning-material/${cluster?.text!}/${
                         node?.text
                     }/${lection.text}`,
                 });

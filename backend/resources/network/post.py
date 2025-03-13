@@ -194,10 +194,7 @@ class Posts:
 
         post_id = util.parse_object_id(post_id)
         for plan_id in plan_ids:
-            try:
-                plan_id = util.parse_object_id(plan_id)
-            except InvalidId:
-                pass
+            plan_id = util.parse_object_id(plan_id)
 
         # try to do the update
         update_result = self.db.posts.update_one(

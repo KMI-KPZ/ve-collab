@@ -20,17 +20,17 @@ export default function FeedbackBanner(): JSX.Element {
             <div
                 className={`
                     fixed z-40 rotate-90 sm:rotate-0
-                    right-[80px] sm:-right-80 -bottom-[280px] sm:bottom-20
-                    w-72 h-96 sm:w-96 sm:h-72
+                    right-[80px] sm:-right-[340px] -bottom-[292px] sm:bottom-20
+                    w-[280px] h-[380px] sm:w-96 sm:h-72
                     flex flex-row
-                    -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-lg divide-x
+                    -mr-[6px] text-center rounded-lg bg-ve-collab-blue text-white border-2 border-slate-50 shadow-lg divide-x divide-gray-200
                     hover:-translate-y-[210px] sm:hover:-translate-y-0 hover:-translate-x-0 sm:hover:-translate-x-80 hover:cursor-pointer
                     transition ease-in-out delay-150
               `}
             >
                 <div className="flex sm:flex-none flex-col divide-y divide-gray-400 w-full p-1">
-                    <div className="flex h-1/2 sm:h-2/5 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-gray-400 p-1">
-                        <div className="w-12 flex justify-center items-center flex-none nowrap">
+                    <div className="flex h-1/2 sm:h-2/5 divide-x-2 divide-gray-400 py-1">
+                        <div className="w-[35px] flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('mail_invitation_form.share')}
                                 <MdOutlineShare className="inline ml-2" size={20} />
@@ -46,8 +46,8 @@ export default function FeedbackBanner(): JSX.Element {
                             </ButtonPrimary>
                         </div>
                     </div>
-                    <div className="flex h-1/2 sm:h-3/5 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-gray-400 p-1 sm:w-auto">
-                        <div className="w-12 flex justify-center items-center flex-none nowrap">
+                    <div className="flex h-1/2 sm:h-3/5 divide-x-2 divide-gray-400 py-1 sm:w-auto">
+                        <div className="w-[35px] flex justify-center items-center flex-none nowrap">
                             <div className="-rotate-90 text-nowrap">
                                 {t('feedback')}
                                 <MdOutlineFeedback className="inline ml-2" size={20} />
@@ -58,7 +58,7 @@ export default function FeedbackBanner(): JSX.Element {
                             {typeof process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL == 'string' && (
                                 <ButtonPrimary
                                     link={process.env.NEXT_PUBLIC_FEEDBACK_FORM_URL}
-                                    className="!p-2 !m-2 !inline-block"
+                                    className="p-2! m-2! inline-block!"
                                 >
                                     {t('to_survey')}
                                 </ButtonPrimary>

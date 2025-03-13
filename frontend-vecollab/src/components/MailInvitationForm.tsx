@@ -86,7 +86,7 @@ export default function MailInvitationForm({
     }
 
     return (
-        <div>
+        <div className="max-w-4xl">
             {success ? (
                 <>
                     <p className="mb-4">{t('mail_invitation_form.send_ok')}</p>
@@ -128,7 +128,7 @@ export default function MailInvitationForm({
                         <div className="mb-4">
                             <input
                                 type="email"
-                                className="w-full border border-gray-500 rounded-md px-2 py-1 invalid:!border-red-500"
+                                className="w-full border border-gray-500 rounded-md px-2 py-1 invalid:border-red-500!"
                                 placeholder={t('mail_invitation_form.mail_placeholder')}
                                 value={mail}
                                 onChange={(e) => {

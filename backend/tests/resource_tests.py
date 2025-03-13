@@ -2653,6 +2653,71 @@ class PostResourceTest(BaseResourceTestCase):
             post_manager.check_new_posts_since_timestamp(datetime(2023, 1, 2))
         )
 
+    def test_update_post_plans(self):
+        """
+        expect: successfully change the attached plans of a post
+        """
+
+        plan_ids = [ObjectId(), ObjectId(), ObjectId()]
+
+        post_manager = Posts(self.db)
+        post_manager.update_post_plans(self.post_id, plan_ids)
+
+        # check if plans were updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["plans"], plan_ids)
+
+    def test_update_post_plans_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.update_post_plans, ObjectId(), []
+        )
+
+    def test_update_post_files(self):
+        """
+        expect: successfully change the attached files of a post
+        """
+
+        new_files = [
+            {
+                "file_id": ObjectId(),
+                "file_name": "test.txt",
+                "file_type": "text/plain",
+                "author": CURRENT_ADMIN.username,
+            },
+            {
+                "file_id": ObjectId(),
+                "file_name": "test2.txt",
+                "file_type": "text/plain",
+                "author": CURRENT_ADMIN.username,
+            },
+        ]
+
+        post_manager = Posts(self.db)
+        post_manager.update_post_files(self.post_id, new_files)
+
+        # check if files were updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["files"], new_files)
+
+    def test_update_post_files_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.update_post_files, ObjectId(), []
+        )
+
 
 class ProfileResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:

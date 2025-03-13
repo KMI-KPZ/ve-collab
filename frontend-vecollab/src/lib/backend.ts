@@ -181,7 +181,7 @@ export function useGetUsers(accessToken?: string): {
 export function useGetAvailablePlans({
     goodPracticeOnly,
     owner = 'all',
-    searchQuery,
+    searchQuery = '',
     limit = 10,
     offset = 0,
     sortBy = 'last_modified',
@@ -891,6 +891,11 @@ export async function getTopLevelNodes(tax?: INode[]): Promise<ITopLevelNode[]> 
 export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<INode> {
     const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
+}
+
+export async function getNodeById(nodeId: number, tax?: INode[]): Promise<INode> {
+    const taxonomy = tax || (await fetchTaxonomy());
+    return taxonomy.find((node: any) => node.id === nodeId) as INode;
 }
 
 export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {

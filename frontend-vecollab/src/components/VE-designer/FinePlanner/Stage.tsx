@@ -5,6 +5,7 @@ import { useFormContext, useFieldArray, Controller } from 'react-hook-form';
 import Image from 'next/image';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
 import { useTranslation } from 'next-i18next';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 
 interface Props {
     fineStep: IFineStepFrontend;
@@ -89,10 +90,7 @@ export default function Stage({ fineStep }: Props) {
                     <div className="mx-2">
                         {dateFrom} - {dateTo}
                     </div>
-                    <input
-                        type="hidden"
-                        {...register(`_id`)}
-                    />
+                    <input type="hidden" {...register(`_id`)} />
                 </div>
             </div>
             <div className="mt-4 flex">
@@ -124,7 +122,11 @@ export default function Stage({ fineStep }: Props) {
                             <div className="relative" key={task.id}>
                                 <Tasks taskIndex={taskIndex} />
                                 <div className="absolute left-10 bottom-7">
-                                    <button type="button" onClick={() => handleDelete(taskIndex)}>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDelete(taskIndex)}
+                                        className="cursor-pointer"
+                                    >
                                         <Image
                                             src={imageTrashcan}
                                             width={20}
@@ -136,15 +138,13 @@ export default function Stage({ fineStep }: Props) {
                             </div>
                         ))}
                         <div className="w-full flex items-center justify-center">
-                            <button
-                                type="button"
-                                className="rounded-2xl bg-slate-200 px-4 py-2 flex items-center space-x-2"
+                            <ButtonLightBlue
                                 onClick={() => {
                                     append(emptyTask);
                                 }}
                             >
                                 {t('step-data.add_learning_activity')}
-                            </button>
+                            </ButtonLightBlue>
                         </div>
                     </div>
                 </div>

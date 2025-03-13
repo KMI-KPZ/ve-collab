@@ -30,7 +30,7 @@ export default function CVInformation({ cvInfo }: Props) {
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
                 <BoxContentHeadline className={''} text={t('education')} />
                 {cvInfo.educations.length > 0 ? (
-                    <ul className={'divide-y mr-4'}>
+                    <ul className={'divide-y divide-gray-200 mr-4'}>
                         {cvInfo.educations.map((education, index) => (
                             <CVEducationItem
                                 key={index}
@@ -50,7 +50,7 @@ export default function CVInformation({ cvInfo }: Props) {
             <div className={'w-1/2 overflow-y-auto content-scrollbar'}>
                 <BoxContentHeadline className={''} text={t('work_experience')} />
                 {cvInfo.workExperience.length > 0 ? (
-                    <ul className={'divide-y ml-4'}>
+                    <ul className={'divide-y divide-gray-200 ml-4'}>
                         {cvInfo.workExperience.map((workExp, index) => (
                             <CVWorkItem
                                 key={index}

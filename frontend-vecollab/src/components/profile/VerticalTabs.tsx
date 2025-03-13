@@ -6,6 +6,7 @@ interface TabsProps {
     isNoAuthPreview?: boolean;
     onClickTabItem?: (activeTab: string) => void;
     className?: string;
+    navClassName?: string;
 }
 
 class Tabs extends Component<TabsProps, { activeTab: string }> {
@@ -22,6 +23,14 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
 
         if (tab) this.onClickTabItem(tab);
     };
+
+    componentDidUpdate(
+        prevProps: Readonly<TabsProps>,
+        prevState: Readonly<{ activeTab: string }>,
+        snapshot?: any
+    ): void {
+        console.log('update ...');
+    }
 
     getTabFromURL = () => {
         const currentUrl = document.URL,
@@ -52,7 +61,11 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         return (
             <div className={`flex ${this.props.className ? this.props.className : ''}`}>
                 <div className={'w-1/4'}>
-                    <ol className={'pb-2 divide-y'}>
+                    <ol
+                        className={`pb-2 divide-y divide-gray-200 ${
+                            this.props.navClassName ? this.props.navClassName : ''
+                        }`}
+                    >
                         {children.map((child) => {
                             return (
                                 <VerticalTab
@@ -67,7 +80,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
                         })}
                     </ol>
                 </div>
-                <div className={'w-3/4 mx-10'}>
+                <div className={'w-3/4 mx-4 lg:mx-10'}>
                     {/* tab content wrapper*/}
                     {children.map((child) => {
                         if (child.props.tabid !== activeTab) return undefined;

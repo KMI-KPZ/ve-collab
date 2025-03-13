@@ -1849,12 +1849,25 @@ class PostHandlerTest(BaseApiTestCase):
             }
         )
 
+        # to update plan, we have to create one first
+        plan_id = ObjectId()
+        self.db.plans.insert_one(
+            VEPlan(_id=plan_id, write_access=[CURRENT_ADMIN.username]).to_dict()
+        )
+        # create file with IO Buffer
+        file = io.BytesIO()
+        file.write(b"this is a binary test file")
+        file.seek(0)
+
         # construct update request payload
         updated_text = "updated_post_text"
         request = MultipartEncoder(
             fields={
                 "_id": str(oid),
                 "text": updated_text,
+                "plans": json.dumps([str(plan_id)]),
+                "file_amount": "1",
+                "file0": ("test.txt", file, "text/plain"),
             }
         )
 
@@ -1872,6 +1885,16 @@ class PostHandlerTest(BaseApiTestCase):
         updated_post = self.db.posts.find_one({"_id": oid})
         self.assertIn("text", updated_post)
         self.assertEqual(updated_post["text"], updated_text)
+
+        # assert that the plan has been updated
+        self.assertIn("plans", updated_post)
+        self.assertEqual(updated_post["plans"], [str(plan_id)])
+
+        # assert that the file has been updated
+        self.assertIn("files", updated_post)
+        self.assertEqual(updated_post["files"][0]["file_name"], "test.txt")
+        self.assertEqual(updated_post["files"][0]["file_type"], "text/plain")
+        self.assertEqual(updated_post["files"][0]["author"], CURRENT_ADMIN.username)
 
         # check that the update did not count towards the achievement "social"
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})

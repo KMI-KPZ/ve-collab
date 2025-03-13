@@ -165,7 +165,7 @@
     "download": "Herunterladen",
     "delete_plan": "Plan löschen",
     "share_plan": "Plan teilen",
-    "save_first": "Plan erst speichern",
+    "save_first": "Der Plan muss erst gespeichert werden",
     "plans_shared_with_1_user": "Plan geteilt mit 1 Nutzer:in",
     "plans_shared_with_x_users": "Plan geteilt mit {{count}} Nutzer:innen",
     "create_copy": "Kopie erstellen",

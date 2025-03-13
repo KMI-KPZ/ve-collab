@@ -234,7 +234,7 @@
     },
     "step-names": {
         "page_description": "Die Grobplanung ermöglicht das Anlegen von Phasen und zugehörigen Lernzielen, die im VE durchlaufen werden (z.B. Icebreaker, Arbeitsphase, Präsentation).",
-        "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",
+        "no_good_practice_plans": "Keine Good-Practice Pläne mit Phasen zum Importieren vorhanden",
         "select_steps_to_import": "Wähle Phasen, die du aus den Good-Practice Plänen importieren möchtest",
         "by": "von",
         "last_modified": "Zuletzt geändert",

@@ -65,7 +65,7 @@ export default function TeachingAndResearchInformation({ researchAndTeachingInfo
             <div>
                 <BoxContentHeadline className={''} text={t('lectures')} />
                 {researchAndTeachingInfo.courses.length > 0 ? (
-                    <ul className={'divide-y'}>
+                    <ul className={'divide-y divide-gray-200'}>
                         {researchAndTeachingInfo.courses.map((course, index) => (
                             <TeachingInformationContentItem
                                 key={index}

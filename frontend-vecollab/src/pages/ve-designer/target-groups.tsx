@@ -339,11 +339,11 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
-                    <div className="divide-y">{renderTargetGroupsInputs()}</div>
+                <div className={'rounded-sm shadow-sm px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y divide-gray-200">{renderTargetGroupsInputs()}</div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer"
                             type="button"
                             onClick={() => {
                                 appendTg(emptyTG);
@@ -396,8 +396,8 @@ export function TargetGroupsNoAuthPreview() {
                 submitCallback={() => {}}
                 isNoAuthPreview
             >
-                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
-                    <div className="divide-y">
+                <div className={'rounded-sm shadow-sm px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y divide-gray-200">
                         <div className="pt-4 pb-2">
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
@@ -491,7 +491,7 @@ export function TargetGroupsNoAuthPreview() {
                     </div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -518,7 +518,7 @@ export function TargetGroupsNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/50 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/50 to-white pointer-events-none"></div>
         </div>
     );
 }

@@ -82,7 +82,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                     }
                 ></div>
 
-                <div className={'flex absolute top-[90px] right-14 divide-x z-10'}>
+                <div className={'flex absolute top-[90px] right-14 divide-x divide-gray-200 z-10'}>
                     <div className={'flex items-center pr-6 text-lg text-white'}>
                         <div>
                             <div className="font-bold">
@@ -116,7 +116,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                             <LoadingAnimation />
                         </div>
                     ) : (
-                        <ul className="px-1 divide-y">
+                        <ul className="px-1 divide-y divide-gray-200">
                             {memberSnippets.map((snippet, index) => (
                                 <li key={index} className="flex py-2">
                                     <div

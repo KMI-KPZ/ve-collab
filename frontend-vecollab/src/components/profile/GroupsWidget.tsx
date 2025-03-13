@@ -15,10 +15,10 @@ export default function GroupsWidget({ groups, isOwnProfile }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
     return (
-        <div className="my-4 pt-4 border-t group/groups">
+        <div className="my-4 pt-4 border-t border-t-gray-200 group/groups">
             <div className="flex">
                 <H2 className="inline">
-                    {isOwnProfile ? t('common:your_groups') : t('common:public_groups_of')}
+                    {isOwnProfile ? t('common:groups') : t('common:public_groups_of')}
                 </H2>
                 {isOwnProfile && (
                     <span className="italic text-slate-600 text-xs ml-auto invisible group-hover/groups:visible">
@@ -30,7 +30,7 @@ export default function GroupsWidget({ groups, isOwnProfile }: Props) {
             </div>
             <ul className="space-y-2 font-bold text-lg">
                 {groups.slice(0, 7).map((group) => (
-                    <li key={group._id} className="max-w-1/2">
+                    <li key={group._id} className="">
                         <Link
                             href={`/group/${group._id}`}
                             className="flex items-center hover:text-ve-collab-orange"

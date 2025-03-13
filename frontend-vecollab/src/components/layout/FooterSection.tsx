@@ -19,7 +19,7 @@ export default function FooterSection() {
                     : 'bg-footer-pattern text-white'
             }`}
         >
-            <div className="flex flex-wrap items-center max-w-screen-2xl md:w-8/12 mx-auto py-4 md:py-10">
+            <div className="flex flex-wrap items-center max-w-(--breakpoint-2xl) md:w-8/12 mx-auto py-4 md:py-10">
                 <div className="flex-none mx-2">
                     <Image src={bmbfLogo} height={100} alt="BMBF Logo" className='sm:-mt-12'></Image>
                 </div>
