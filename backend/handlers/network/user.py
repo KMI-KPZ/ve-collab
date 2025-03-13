@@ -120,7 +120,8 @@ class ProfileInformationHandler(BaseHandler):
                         "chosen_achievement": {
                             "type": "<string>",           --> one of achievement types above
                             "level": "<number>"
-                        }
+                        },
+                        "first_view": <boolean>
                     },
                     "spaces": [<string1>, <string2>, ...],
                     "follows": [<string1>, <string2>, ...],

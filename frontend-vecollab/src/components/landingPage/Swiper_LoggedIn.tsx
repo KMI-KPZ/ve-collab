@@ -6,7 +6,7 @@ import H2 from '../common/H2';
 import Link from 'next/link';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
-import { MdClose, MdEdit } from 'react-icons/md';
+import { MdClose, MdEdit, MdPlayCircle } from 'react-icons/md';
 
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -15,7 +15,7 @@ import 'swiper/css/navigation';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
-const FIRST_VISIT = 'first_visit';
+const COOKIE = 'firstvisit-home';
 
 interface Props {
     className?: string;
@@ -27,9 +27,9 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
     const { t } = useTranslation(['community', 'common']);
     const router = useRouter();
 
-    const [cookies, setCookie] = useCookies([FIRST_VISIT]);
+    const [cookies, setCookie] = useCookies([COOKIE]);
     const [firstVisit, setFirstVisit] = useState(
-        cookies[FIRST_VISIT] === undefined || cookies[FIRST_VISIT] === true
+        cookies[COOKIE] === undefined || cookies[COOKIE] === true
     );
 
     const onClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -39,7 +39,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
         const expiryTomorrow = new Date();
         expiryTomorrow.setDate(expiryTomorrow.getDate() + 1);
 
-        setCookie(FIRST_VISIT, 'false', { expires: expiryTomorrow });
+        setCookie(COOKIE, 'false', { expires: expiryTomorrow });
         setFirstVisit(false);
     };
 
@@ -92,6 +92,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                 navigation
                 spaceBetween={25}
                 slidesPerView={1}
+                loop={true}
             >
                 {hasIncompleteProfile() && (
                     <SwiperSlide>
@@ -115,17 +116,23 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
 
                 <SwiperSlide>
                     <div className="mb-4 mx-12 my-2">
-                        <H2>{t('common:platform_tour')}</H2>
-                        <video
-                            width="320"
-                            height="240"
-                            controls
-                            preload="none"
-                            className="w-full h-auto m-auto rounded-md"
+                        <H2>{t('common:help.video_tutorials')}</H2>
+                        <Link
+                            href={'/help'}
+                            className={`mx-auto group m-4 w-[320px] h-[280px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
                         >
-                            <source src="/videos/screencast-web.webm" type="video/webm" />
-                            {t('common:video_not_supported')}
-                        </video>
+                            <Image
+                                src={'/images/video-thumbnails/screencast-intro.png'}
+                                alt={t('common:video_tutorials')}
+                                width={320}
+                                height={144}
+                                className="w-full h-auto absolute rounded-md"
+                            />
+                            <MdPlayCircle
+                                className="absolute text-gray-500 hover:text-gray-800"
+                                size={32}
+                            />
+                        </Link>
                     </div>
                 </SwiperSlide>
 

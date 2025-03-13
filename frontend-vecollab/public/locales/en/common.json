@@ -585,5 +585,11 @@
             "profile": "Please describe the reason why you want to report this profile. This will help us to take appropriate action.",
             "chatroom": "Please describe the reason why you want to report this chat. This will help us to take appropriate action."
         }
+    },
+    "help": {
+        "title": "Help",
+        "description": "Helpcenter for the VE-Collab platform",
+        "instructions": "Helpcenter for the VE-Collab platform. The screencasts are currently only available in German.",
+        "video_tutorials": "Video-Tutorials"
     }
 }

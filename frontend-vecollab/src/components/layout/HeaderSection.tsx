@@ -84,6 +84,9 @@ export default function HeaderSection({
             case 'language':
                 onToggleLanguage();
                 break;
+            case 'help':
+                router.push('/help');
+                break;
             case 'admin':
                 router.push('/admin');
                 break;
@@ -211,6 +214,10 @@ export default function HeaderSection({
                                             value: 'edit_profile',
                                             label: t('edit_profile'),
                                             title: t('edit_profile_title'),
+                                        },
+                                        {
+                                            value: 'help',
+                                            label: t('help.title'),
                                         },
                                         {
                                             value: 'logout',
@@ -496,6 +503,18 @@ export default function HeaderSection({
                                     EN
                                 </span>
                             </button>
+                        </li>
+                        <li>
+                            <Link
+                                href={'/help'}
+                                className={
+                                    isActivePath('/help')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('help.title')}
+                            </Link>
                         </li>
                         <li>
                             <button
