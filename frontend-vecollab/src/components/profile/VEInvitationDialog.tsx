@@ -3,11 +3,11 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Dialog from './Dialog';
-import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
+import PlansSelector from './PlansSelector';
 
 interface Props {
     userid: string;
@@ -29,15 +29,17 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
     };
 
     const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
-    const [chosenPlanId, setChosenPlanId] = useState('');
+    const [chosenPlanId, setChosenPlanId] = useState<string>();
     const [veInvitationMessage, setVeInvitationMessage] = useState('');
 
     const sendVeInvitation = () => {
         const payload = {
             message: veInvitationMessage,
-            plan_id: chosenPlanId === '' ? null : chosenPlanId,
+            plan_id: chosenPlanId,
             username: userid,
         };
+
+        console.log({ sendVeInvitation: payload });
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             setSuccessPopupOpen(true);
@@ -73,7 +75,7 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
                     </div>
                     {appendPlanCheckboxChecked && (
                         <>
-                            <PublicPlansSelect
+                            <PlansSelector
                                 chosenPlanId={chosenPlanId}
                                 setChosenPlanId={setChosenPlanId}
                             />
