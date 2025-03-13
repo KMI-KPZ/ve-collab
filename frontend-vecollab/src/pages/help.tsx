@@ -54,7 +54,7 @@ export default function Help(): JSX.Element {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow border-1 border-gray-800 py-6 px-4 space-x-4">
+                <div className="bg-white rounded-lg shadow py-6 px-4 space-x-4">
                     <H2>{t('help.video_tutorials')}</H2>
 
                     <div className="flex flex-wrap">
@@ -70,12 +70,12 @@ export default function Help(): JSX.Element {
                                     <Image
                                         src={video.poster}
                                         alt={video.title}
-                                        width={208}
-                                        height={155}
+                                        width={210}
+                                        height={118}
                                         className="w-full h-auto  rounded-md"
                                     />
                                     <MdPlayCircle
-                                        className="absolute bg-white rounded-full text-gray-500 hover:text-gray-800"
+                                        className="absolute -translate-y-1/2 top-1/2 -translate-x-1/2 left-1/2 bg-white rounded-full text-gray-500 hover:text-gray-800"
                                         size={32}
                                     />
                                     <span className="absolute font-bold bg-white/75 top-0 p-2 w-full">
@@ -91,7 +91,7 @@ export default function Help(): JSX.Element {
                             <video
                                 ref={videoRef}
                                 width="320"
-                                height="240"
+                                height="280"
                                 controls
                                 preload="none"
                                 className="w-full h-auto m-auto rounded-md shadow cursor-pointer"

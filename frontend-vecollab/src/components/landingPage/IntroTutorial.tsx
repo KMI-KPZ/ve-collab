@@ -46,7 +46,7 @@ export default function IntroTutorial() {
     if (userProfile.profile.first_view === true) return null;
 
     return (
-        <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[99] bg-black/25 backdrop-blur-sm">
             <Dialog
                 isOpen={true}
                 onClose={() => {
@@ -76,22 +76,22 @@ export default function IntroTutorial() {
                         </video>
                     ) : (
                         <div>
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center my-20">
                                 {VIDEO_TUTORIALS.map((video, i) => (
                                     <div
                                         key={i}
-                                        className={`group m-4 w-[208px] h-[155px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
+                                        className={`group m-4 w-[210px] h-[118  px] rounded-md shadow relative flex items-center justify-center cursor-pointer transition ease-in-out hover:scale-105`}
                                         onClick={(e) => handlePlay(i)}
                                     >
                                         <Image
                                             src={video.poster}
                                             alt={video.title}
-                                            width={208}
-                                            height={155}
+                                            width={210}
+                                            height={118}
                                             className="w-full h-auto absolute rounded-md"
                                         />
                                         <MdPlayCircle
-                                            className="absolute bg-white rounded-full text-gray-500 hover:text-gray-800"
+                                            className="absolute z-10 bg-white rounded-full text-gray-500 hover:text-gray-800"
                                             size={32}
                                         />
                                         <span className="absolute font-bold bg-white/75 top-0 p-2 w-full">

@@ -119,10 +119,10 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                         <H2>{t('common:help.video_tutorials')}</H2>
                         <Link
                             href={'/help'}
-                            className={`mx-auto group m-4 w-[320px] h-[240px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
+                            className={`mx-auto group m-4 w-[320px] h-[280px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
                         >
                             <Image
-                                src={'/images/video-thumbnails/screencast.png'}
+                                src={'/images/video-thumbnails/screencast-intro.png'}
                                 alt={t('common:video_tutorials')}
                                 width={320}
                                 height={144}
