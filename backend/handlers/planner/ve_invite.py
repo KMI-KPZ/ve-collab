@@ -213,9 +213,9 @@ class VeInvitationHandler(BaseHandler):
             # grant user read access to plan if one was appended to the invitation
             if plan_id is not None:
                 # reject if the user is not the author of the plan --> cannot
-                try:
-                    plan = plan_manager.get_plan(plan_id, self.current_user.username)
-                except:
+                if not plan_manager._check_user_is_author(
+                    plan_id, self.current_user.username
+                ):
                     self.set_status(403)
                     self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                     return
@@ -244,7 +244,7 @@ class VeInvitationHandler(BaseHandler):
 
             # save plan invitation in db
             invitation_id = plan_manager.insert_plan_invitation(
-                None,
+                plan_id,
                 message,
                 self.current_user.username,
                 username,
@@ -307,10 +307,11 @@ class VeInvitationHandler(BaseHandler):
                     plan_manager.revoke_read_permissions(
                         invitation["plan_id"], self.current_user.username
                     )
-
-            # add as partner, set write/read access, add checklist etc
-            plan_manager.set_write_permissions(invitation["plan_id"], self.current_user.username)
-            # plan_manager.add_partner(invitation["plan_id"], self.current_user.username)
+            else:
+                if invitation["plan_id"] is not None:
+                    # add as partner, set write/read access, add checklist etc
+                    plan_manager.set_write_permissions(invitation["plan_id"], self.current_user.username)
+                    # plan_manager.add_partner(invitation["plan_id"], self.current_user.username)
 
             # trigger notification to the original ve invitation sender
             # to notify him/her about the decision that the invited user
