@@ -508,16 +508,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Dialog
-                    isOpen={isImportStepsDialogOpen}
-                    title={t('step-names.import_phases')}
-                    onClose={() => setIsImportStepsDialogOpen(false)}
-                >
-                    <div className="w-[40vw]">
-                        <ImportStepsDialog />
-                    </div>
-                </Dialog>
-
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="stepNames-items">
                         {(provided: DroppableProvided) => (
@@ -550,6 +540,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
                 </div>
             </Wrapper>
+            <Dialog
+                isOpen={isImportStepsDialogOpen}
+                title={t('step-names.import_phases')}
+                onClose={() => setIsImportStepsDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
+            </Dialog>
         </>
     );
 }
