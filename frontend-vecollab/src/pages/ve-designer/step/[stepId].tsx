@@ -6,7 +6,6 @@ import { ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { useSession } from 'next-auth/react';
 import { useGetAvailablePlans } from '@/lib/backend';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
@@ -20,6 +19,7 @@ import CustomHead from '@/components/metaData/CustomHead';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import { RxMinus, RxPlus } from 'react-icons/rx';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 
 export interface ITask {
     task_formulation: string;
@@ -99,10 +99,8 @@ FinePlanner.auth = true;
 FinePlanner.noAuthPreview = <FinePlannerNoAuthPreview />;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session } = useSession();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
 
-    const stepId: string = router.query.stepId as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         resolver: zodResolver(FineStepFormSchema),
@@ -110,6 +108,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             ...defaultFormValueDataFineStepFrontend,
         },
     });
+    let stepId = router.query.stepId as string;
     const [prevpage, setPrevpage] = useState<string>('/ve-designer/step/');
     const [nextpage, setNextpage] = useState<string>('/ve-designer/step/');
     const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
@@ -122,24 +121,25 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
     const [loadingStep, setLoadingStep] = useState<boolean>(true);
 
     const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            if (!plan.steps?.length) {
-                // TODO ???
-                return {};
-            }
-            if (stepId == '1') {
-                return router.push({
+        async (plan: IPlan) => {
+            if (!plan.steps?.length) return {};
+            if (router.query.stepId == '1') {
+                await router.replace({
                     pathname: `/ve-designer/step/${plan.steps[0]._id}`,
                     query: {
                         plannerId: router.query.plannerId,
                     },
                 });
+                if (!plan.steps[0]._id) return {};
+                router.query.stepId = plan.steps[0]._id;
             }
             let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
+
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
-                (item: IFineStep) => item._id === stepId
+                (item: IFineStep) => item._id === router.query.stepId
             );
+
             if (currentFineStepCopy) {
                 const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
                     (task: ITask) => {
@@ -165,7 +165,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
             return { ...fineStepCopyTransformedTools };
         },
-        [stepId, router]
+        [router]
     );
 
     useEffect(() => {
@@ -293,7 +293,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Stage fineStep={currentFineStep} />
+                {loadingStep ? <LoadingAnimation /> : <Stage fineStep={currentFineStep} />}
             </Wrapper>
         </>
     );

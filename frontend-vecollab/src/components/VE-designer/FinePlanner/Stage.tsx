@@ -46,41 +46,41 @@ export default function Stage({ fineStep }: Props) {
                 name={name}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <>
-                        <div className="flex">
-                            <div>
-                                <label className="px-2 py-2">{t('common:yes')}</label>
-                            </div>
-                            <div>
-                                <input
-                                    type="radio"
-                                    className="border border-gray-400 rounded-lg p-2"
-                                    onBlur={onBlur} // notify when input is touched
-                                    onChange={() => onChange(true)} // send value to hook form
-                                    checked={value === true}
-                                />
-                            </div>
+                        <div>
+                            <label className="px-2 py-2" htmlFor="yes">
+                                {t('common:yes')}
+                            </label>
+                            <input
+                                type="radio"
+                                id="yes"
+                                className="border border-gray-400 rounded-lg p-2"
+                                onBlur={onBlur} // notify when input is touched
+                                onChange={() => onChange(true)} // send value to hook form
+                                checked={value === true}
+                            />
                         </div>
-                        <div className="flex">
-                            <div>
-                                <label className="px-2 py-2">{t('common:no')}</label>
-                            </div>
-                            <div>
-                                <input
-                                    type="radio"
-                                    onBlur={onBlur} // notify when input is touched
-                                    onChange={() => {
-                                        setValue('tasks', [emptyTask]);
-                                        return onChange(false);
-                                    }}
-                                    checked={value === false}
-                                />
-                            </div>
+                        <div>
+                            <label className="px-2 py-2" htmlFor="no">
+                                {t('common:no')}
+                            </label>
+                            <input
+                                type="radio"
+                                id="no"
+                                onBlur={onBlur} // notify when input is touched
+                                onChange={() => {
+                                    setValue('tasks', [emptyTask]);
+                                    return onChange(false);
+                                }}
+                                checked={value === false}
+                            />
                         </div>
                     </>
                 )}
             />
         );
     }
+
+    if (!fineStep._id) return <></>;
 
     return (
         <div>
