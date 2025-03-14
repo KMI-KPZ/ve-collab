@@ -688,13 +688,13 @@ export function useGetSearchResults(
         filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
     const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
     const { data, error, isLoading, mutate } = useSWR(
-        [`/search?query=${search}&${filter}`, session?.accessToken],
+        search ? [`/search?query=${search}&${filter}`, session?.accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
 
     return {
-        data: isLoading || error ? {} : data,
+        data: isLoading || !data || error ? { posts: [], spaces: [], users: [], plans: [] } : data,
         isLoading,
         error,
         mutate,
@@ -740,12 +740,12 @@ export function useGetSearchLearningModuls(search: string): {
             .catch((e) => e);
 
     const { data, error, isLoading, mutate } = useSWR(
-        `${baseurl}/wp-json/wp/v2/search?search=${search}`,
+        search ? `${baseurl}/wp-json/wp/v2/search?search=${search}` : null,
         fetcher
     );
 
     return {
-        data: isLoading || error ? {} : data,
+        data: isLoading || !data || error ? [] : data,
         isLoading,
         error,
         mutate,
