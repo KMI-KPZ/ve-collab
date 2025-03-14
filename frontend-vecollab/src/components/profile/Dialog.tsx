@@ -22,9 +22,9 @@ export default function Dialog({ isOpen, title, onClose, children }: Props) {
     return (
         <>
             {isOpen ? (
-                <div className="fixed inset-0 z-40 flex justify-center">
-                    <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-                    <div className="relative top-[70px] h-fit bg-white rounded-lg p-6 m-6 max-w-(--breakpoint-xl)">
+                <div className="fixed inset-0 z-40 flex justify-center overflow-scroll bg-black/50">
+                    <div className="absolute inset-0" onClick={onClose}></div>
+                    <div className="relative top-[90px] h-fit bg-white rounded-lg p-6 m-6 max-w-(--breakpoint-xl)">
                         <div className="flex justify-between items-center mb-4">
                             {typeof title === 'string' && (
                                 <h2 className="text-xl font-bold">{title}</h2>
