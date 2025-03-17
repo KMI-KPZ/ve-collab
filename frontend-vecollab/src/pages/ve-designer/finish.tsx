@@ -8,6 +8,8 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import { useGetPlanAsScormById } from '@/lib/backend';
+import { useRouter } from 'next/router';
 
 interface Props {
     socket: Socket;
@@ -18,6 +20,23 @@ Finished.auth = true;
 Finished.noAuthPreview = <FinishedNoAuthPreview />;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
     const { t } = useTranslation(['designer', 'common']);
+
+    const router = useRouter();
+    const planId = router.query.plannerId as string;
+    const { data: zipPlan, isLoading } = useGetPlanAsScormById(planId);
+
+    const downloadZip = () => {
+        if (!zipPlan) return;
+
+        const url = window.URL.createObjectURL(zipPlan);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 've_collab_scorm.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    };
 
     const [plan, setPlanData] = useState<IPlan>();
 
@@ -58,6 +77,13 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                         {t('finish.feedback_2')}
                     </div>
                 )}
+                <button
+                    className="border-2 cursor-pointer"
+                    onClick={downloadZip}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Loading...' : 'Download SCORM ZIP'}
+                </button>
             </Wrapper>
         </>
     );
