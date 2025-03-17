@@ -44,7 +44,7 @@ import util
 import os
 import zipfile
 from io import BytesIO
-import shutil
+import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -3094,7 +3094,7 @@ class VEPlanHandler(BaseHandler):
 
         self.write({"success": True})
 
-    def get_scorm_files(self, _id):
+    def get_scorm_files(self, _id: str | ObjectId) -> None:
         """
         This function is invoked by the handler when the corresponding endpoint
         is requested. It reads the planning steps, fills the step data into the
@@ -3114,33 +3114,36 @@ class VEPlanHandler(BaseHandler):
 
             step_scorm = []
             for i, step in enumerate(steps, start=1):
-                step_scorm["step_name"] = step["name"]
-                step["ressource_id"] = f"resource_{i}"
-                step["item_id"] = f"item_id_{i}"
-                step["filename"] = f"filename{i}.html"
+                step_data = {
+                    "step_name": step.name,
+                    "ressource_id": f"resource_{i}",
+                    "item_id": f"item_id_{i}",
+                    "filename": f"filename{i}.html"
+                }
+                step_scorm.append(step_data)
 
             zipFile = BytesIO()  # temporary file in memory
-            # Creates a ZIP file in write mode
             with zipfile.ZipFile(zipFile, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-                # Fill the step data into the imsmanifest.xml file and write it to zip stream
+                # Fill the step data into the imsmanifest.xml file & write it to zip stream
                 imsmanifest_content = self.fill_imsmanifest(step_scorm, project_title)
-                zf.writestr("imsmanifest.xml",
-                            imsmanifest_content.tostring(
-                                encoding="utf-8"))  # b'<?xml version="1.0" standalone="no" ?>\n' +
+                zf.writestr("imsmanifest.xml", ET.tostring(imsmanifest_content, encoding='utf-8'))
 
-                # Fill the step data into the html files and write it to zip stream
+                # Fill the step data into the html files & copy xsd files ->  write it to zip stream
                 self.fill_html_files(step_scorm, zf)
+                self.copy_xsd_files(zf)
 
-                # copy xsd files
-                copy_xsd_files_and_scorm_functions(zf)
-
-            zipFile.seek(0)  # set zip file pointer to start
+            # Set headers for file download
             self.set_status(200)
+            self.set_header("Content-Type", "application/zip")
+            self.set_header("Content-Disposition", 'attachment; filename="ve_collab_scorm.zip"')
+            self.set_header("Content-Length", str(len(zipFile.getvalue())))  # FIXED VARIABLE NAME
 
-            # TODO use tornado fileresponse (Django or fastAPI way)
-            return FileResponse(zipfile, as_attachment=True, filename="ve_collab_scorm.zip")
+            # Send the file as a response
+            self.write(zipFile.getvalue())
+            self.finish()
 
-    def fill_imsmanifest(self, steps: List, project_title: str) -> ET.ElementTree:
+    @staticmethod
+    def fill_imsmanifest(steps: List, project_title: str) -> ET.Element:
         # Implement the logic to fill the imsmanifest.xml content with the steps data
         manifest = ET.Element("manifest", {
             "identifier": "com.scorm.golfsamples.contentpackaging.singlesco.12",
@@ -3173,28 +3176,19 @@ class VEPlanHandler(BaseHandler):
 
         # Ressources
         resources = ET.SubElement(manifest, "resources")
-
         for res in steps:
             resource = ET.SubElement(resources, "resource", {
                 "identifier": res["ressource_id"],
                 "type": "webcontent",
                 "adlcp:scormtype": "asset",
-                "href": f"sco/{res['filename']}"
+                "href": f"{res['filename']}"
             })
-            ET.SubElement(resource, "file", {"href": f"sco/{res['filename']}"})
-            ET.SubElement(resource, "dependency", {"identifierref": "common_files"})
+            ET.SubElement(resource, "file", {"href": f"{res['filename']}"})
 
-        common_resource = ET.SubElement(resources, "resource", {
-            "identifier": "common_files",
-            "type": "webcontent",
-            "adlcp:scormtype": "asset"
-        })
-        ET.SubElement(common_resource, "file", {"href": "shared/scormfunctions.js"})
+        return manifest
 
-        return ET.ElementTree(manifest)
-
-
-    def fill_html_files(self, steps: List, zf) -> None:
+    @staticmethod
+    def fill_html_files(steps: List, zf: zipfile.ZipFile) -> None:
         # Implement the logic to fill the HTML files content with the steps data
         html_template = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -3205,28 +3199,16 @@ class VEPlanHandler(BaseHandler):
                     <script type='text/javascript' src='../shared/scormfunctions.js'></script>
                 </head>
                 <body>
-                <p> Your custom course </p>
+                <p> Your custom course {title} </p>
                 </body>
                 </html>"""
 
-
-        output_folder = "sco"
-        filepath = os.path.join("scorm", output_folder)
-        os.makedirs(filepath, exist_ok=True)
-
-
         for step in steps:
-            """
-                filepath = os.path.join("scorm", output_folder, step["filename"])
-                with open(filepath, "w", encoding="utf-8") as file:
-                    file.write(html_template.format(title=step["step_name"]))
-            """
             html_content = html_template.format(title=step["step_name"])
-            zf.writestr(step["filename"], html_content)
-        return
+            zf.writestr(step["filename"], html_content.encode("utf-8"))
 
-
-    def copy_xsd_files_and_scorm_functions(self, zf) -> None:
+    @staticmethod
+    def copy_xsd_files(zf: zipfile.ZipFile) -> None:
         source_folder = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'scorm_copy_files')
 
         for filename in os.listdir(source_folder):
@@ -3234,4 +3216,3 @@ class VEPlanHandler(BaseHandler):
             if os.path.isfile(source_file):
                 with open(source_file, "rb") as f:
                     zf.writestr(filename, f.read())
-        return
