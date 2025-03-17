@@ -249,7 +249,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
                                     <PlanIcon />
                                     <Link
-                                        className="text-xl font-bold grow-0 group"
+                                        className="text-xl font-bold grow-0 group truncate"
                                         href={`/plan/${plan._id}`}
                                         target="_blank"
                                     >
@@ -297,7 +297,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <div className="ml-auto text-right pt-4">
                     <button
                         type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg cursor-pointer"
                         onClick={() => setIsImportStepsDialogOpen(false)}
                     >
                         {t('common:cancel')}
@@ -457,7 +457,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 </div>
                                 <div className="flex items-center mr-6">
                                     <Image
-                                        className="mx-2"
+                                        className="mx-2 cursor-grab"
                                         {...provided.dragHandleProps}
                                         src={iconUpAndDown}
                                         width={20}
@@ -508,16 +508,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Dialog
-                    isOpen={isImportStepsDialogOpen}
-                    title={t('step-names.import_phases')}
-                    onClose={() => setIsImportStepsDialogOpen(false)}
-                >
-                    <div className="w-[40vw]">
-                        <ImportStepsDialog />
-                    </div>
-                </Dialog>
-
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="stepNames-items">
                         {(provided: DroppableProvided) => (
@@ -530,7 +520,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 </DragDropContext>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {
@@ -541,7 +531,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
 
                     <button
-                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue cursor-pointer hover:bg-ve-collab-blue/20"
                         type="button"
                         title={t('step-names.import_phases')}
                         onClick={() => openStepsImportDialog()}
@@ -550,6 +540,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
                 </div>
             </Wrapper>
+            <Dialog
+                isOpen={isImportStepsDialogOpen}
+                title={t('step-names.import_phases')}
+                onClose={() => setIsImportStepsDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
+            </Dialog>
         </>
     );
 }

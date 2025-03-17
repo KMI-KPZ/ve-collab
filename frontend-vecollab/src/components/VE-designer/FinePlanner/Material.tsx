@@ -19,12 +19,12 @@ export default function Material({ materialsIndex, taskIndex, removeItem }: Prop
             <input
                 type="text"
                 {...register(`tasks.${taskIndex}.materials.${materialsIndex}.name`)}
-                placeholder={t("step-data.materials_placeholder")}
+                placeholder={t('step-data.materials_placeholder')}
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button
                 type="button"
-                className=""
+                className="cursor-pointer"
                 onClick={() => {
                     removeItem(materialsIndex);
                 }}

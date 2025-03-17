@@ -60,7 +60,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    {t("link_orcid_account")}
+                    {t('link_orcid_account')}
                 </button>
             ) : (
                 <button
@@ -77,21 +77,26 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    {t("import_orcid_profile")}
+                    {t('import_orcid_profile')}
                 </button>
             )}
 
             <div className="flex justify-end">
+                {/* TODO go back to previous page */}
                 <Link href={'/profile'}>
-                    <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer'}>
-                        {t("common:cancel")}
+                    <button
+                        className={
+                            'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer'
+                        }
+                    >
+                        {t('common:cancel')}
                     </button>
                 </Link>
                 <button
                     type="submit"
                     className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'}
                 >
-                    {t("common:save")}
+                    {t('common:save')}
                 </button>
             </div>
         </div>

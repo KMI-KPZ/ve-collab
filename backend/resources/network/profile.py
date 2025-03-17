@@ -56,6 +56,7 @@ class Profiles:
             "notification_settings": dict,
             "achievements": dict,
             "chosen_achievement": (dict, type(None)),
+            "first_view": bool,
         }
 
         self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = {

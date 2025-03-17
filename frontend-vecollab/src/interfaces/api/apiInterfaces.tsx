@@ -78,6 +78,7 @@ export interface BackendProfile {
     ve_window: VEWindowItem[];
     work_experience: WorkExperience[];
     notification_settings: NotificationSettings;
+    first_view?: boolean;
 }
 
 export interface BackendSearchResponse {

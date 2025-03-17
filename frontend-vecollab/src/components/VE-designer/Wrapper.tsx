@@ -517,7 +517,7 @@ export default function Wrapper({
                 <button
                     type="button"
                     title={t('save_and_continue')}
-                    className={`px-4 py-2 shadow text-white bg-ve-collab-orange ${
+                    className={`px-4 py-2 shadow text-white bg-ve-collab-orange cursor-pointer ${
                         typeof idOfProgress !== 'undefined' ? 'rounded-r-full' : 'rounded-full'
                     } ${isNoAuthPreview ? 'cursor-default' : ''}`}
                     disabled={isNoAuthPreview}
@@ -806,7 +806,7 @@ export default function Wrapper({
                                                 <button
                                                     type="button"
                                                     title={t('common:back')}
-                                                    className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
+                                                    className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full cursor-pointer hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
                                                         async (data: any) => {

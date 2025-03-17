@@ -403,9 +403,12 @@ export default function PostProcess({ socket }: Props) {
                             name={'sharePlanned'}
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <div className="flex w-40 mb-4">
-                                    <label className="px-2 py-2">{t('common:yes')}</label>
+                                    <label className="px-2 py-2" htmlFor="preYes">
+                                        {t('common:yes')}
+                                    </label>
                                     <input
                                         type="radio"
+                                        id="preYes"
                                         className="border border-gray-400 rounded-lg p-2"
                                         onBlur={onBlur} // notify when input is touched
                                         onChange={() => {
@@ -413,9 +416,12 @@ export default function PostProcess({ socket }: Props) {
                                         }} // send value to hook form
                                         checked={value === true}
                                     />
-                                    <label className="px-2 py-2">{t('common:no')}</label>
+                                    <label className="px-2 py-2" htmlFor="preNo">
+                                        {t('common:no')}
+                                    </label>
                                     <input
                                         type="radio"
+                                        id="preNo"
                                         className="border border-gray-400 rounded-lg p-2"
                                         onBlur={onBlur} // notify when input is touched
                                         onChange={() => {
@@ -568,10 +574,10 @@ export default function PostProcess({ socket }: Props) {
                                             disabled={methods.watch('sharePlanned') === false}
                                             className={`ml-2 p-2 rounded-full ${
                                                 methods.watch('sharePlanned') === true
-                                                    ? 'hover:bg-ve-collab-blue-light'
+                                                    ? 'cursor-pointer hover:bg-ve-collab-blue-light'
                                                     : ''
                                             }`}
-                                            title="Datei Entfernen"
+                                            title={t('common:delete_file')}
                                         >
                                             <IoMdClose />
                                         </button>
@@ -673,7 +679,7 @@ export default function PostProcess({ socket }: Props) {
                                                         }
                                                         className={`ml-2 p-2 rounded-full ${
                                                             methods.watch('sharePlanned') === true
-                                                                ? 'hover:bg-ve-collab-blue-light'
+                                                                ? 'cursor-pointer hover:bg-ve-collab-blue-light'
                                                                 : ''
                                                         }`}
                                                         title={t('common:delete_file')}
@@ -725,18 +731,24 @@ export default function PostProcess({ socket }: Props) {
                             name={'share'}
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <div className="flex w-40 mb-4">
-                                    <label className="px-2 py-2">{t('common:yes')}</label>
+                                    <label className="px-2 py-2" htmlFor="yes">
+                                        {t('common:yes')}
+                                    </label>
                                     <input
                                         type="radio"
+                                        id="yes"
                                         className="border border-gray-400 rounded-lg p-2"
                                         onBlur={onBlur} // notify when input is touched
                                         onChange={() => onChange(true)} // send value to hook form
                                         disabled={methods.watch('sharePlanned') === false}
                                         checked={value === true}
                                     />
-                                    <label className="px-2 py-2">{t('common:no')}</label>
+                                    <label className="px-2 py-2" htmlFor="no">
+                                        {t('common:no')}
+                                    </label>
                                     <input
                                         type="radio"
+                                        id="no"
                                         className="border border-gray-400 rounded-lg p-2"
                                         onBlur={onBlur} // notify when input is touched
                                         onChange={() => onChange(false)} // send value to hook form

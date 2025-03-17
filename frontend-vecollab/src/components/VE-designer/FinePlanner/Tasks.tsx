@@ -57,11 +57,11 @@ export default function Tasks({ taskIndex }: Props) {
     };
 
     return (
-        <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'}>
+        <div className={'px-4 pt-4 pb-12 my-4 mx-2 shadow'}>
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="task_formulation" className="px-2 py-2">
-                        {t("step-data.task")}
+                        {t('step-data.task')}
                     </label>
                 </div>
                 <div className="w-5/6">
@@ -78,7 +78,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="work_mode" className="px-2 py-2">
-                        {t("step-data.work_mode")}
+                        {t('step-data.work_mode')}
                     </label>
                 </div>
                 <div className="w-5/6">
@@ -95,14 +95,14 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="notes" className="px-2 py-2">
-                        {t("step-data.notes")}
+                        {t('step-data.notes')}
                     </label>
                 </div>
                 <div className="w-5/6">
                     <textarea
                         rows={3}
                         {...register(`tasks.${taskIndex}.notes`)}
-                        placeholder={t("common:optional")}
+                        placeholder={t('common:optional')}
                         className="border border-gray-400 rounded-lg w-full p-2"
                     />
                     <p className="text-red-600 pt-2">
@@ -113,7 +113,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-2 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="tools" className="px-2 py-2">
-                        {t("step-data.tools")}
+                        {t('step-data.tools')}
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
@@ -135,6 +135,7 @@ export default function Tasks({ taskIndex }: Props) {
                         onClick={() => {
                             appendTools(defaultValueTools);
                         }}
+                        className="cursor-pointer"
                     >
                         <RxPlus size={20} />
                     </button>
@@ -143,7 +144,7 @@ export default function Tasks({ taskIndex }: Props) {
             <div className="mt-4 flex">
                 <div className="w-1/6 flex items-center">
                     <label htmlFor="materials" className="px-2 py-2">
-                        {t("step-data.materials")}
+                        {t('step-data.materials')}
                     </label>
                 </div>
                 <div className="w-5/6 flex flex-col gap-2">
@@ -165,6 +166,7 @@ export default function Tasks({ taskIndex }: Props) {
                         onClick={() => {
                             appendMaterial(defaultValueMedia);
                         }}
+                        className="cursor-pointer"
                     >
                         <RxPlus size={20} />
                     </button>

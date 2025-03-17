@@ -34,7 +34,7 @@ export default function HeaderSection({
     const [messageEventCount, setMessageEventCount] = useState<number>(0);
     const currentPath = usePathname();
     const baseStyle =
-        'whitespace-nowrap hover:text-ve-collab-orange hover:after:visible hover:after:w-full after:content-[""] after:block after:h-[2px] after:w-0 after:bg-ve-collab-blue after:invisible after:transition-all	';
+        'whitespace-nowrap cursor-pointer hover:text-ve-collab-orange hover:after:visible hover:after:w-full after:content-[""] after:block after:h-[2px] after:w-0 after:bg-ve-collab-blue after:invisible after:transition-all	';
     const inactiveClass = `${baseStyle}`;
     const activeClass = `${baseStyle} font-semibold`;
 
@@ -83,6 +83,9 @@ export default function HeaderSection({
                 break;
             case 'language':
                 onToggleLanguage();
+                break;
+            case 'help':
+                router.push('/help');
                 break;
             case 'admin':
                 router.push('/admin');
@@ -197,7 +200,8 @@ export default function HeaderSection({
                                                 ? {
                                                       value: 'admin',
                                                       label: 'Admin Dashboard',
-                                                      liClasses: 'text-red-600 border-b border-gray-200',
+                                                      liClasses:
+                                                          'text-red-600 border-b border-gray-200',
                                                   }
                                                 : null
                                         ),
@@ -210,6 +214,10 @@ export default function HeaderSection({
                                             value: 'edit_profile',
                                             label: t('edit_profile'),
                                             title: t('edit_profile_title'),
+                                        },
+                                        {
+                                            value: 'help',
+                                            label: t('help.title'),
                                         },
                                         {
                                             value: 'logout',
@@ -497,6 +505,18 @@ export default function HeaderSection({
                             </button>
                         </li>
                         <li>
+                            <Link
+                                href={'/help'}
+                                className={
+                                    isActivePath('/help')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('help.title')}
+                            </Link>
+                        </li>
+                        <li>
                             <button
                                 onClick={() => signOut({ callbackUrl: '/' })}
                                 className={sandwichItemClass}
@@ -568,7 +588,7 @@ export default function HeaderSection({
     };
 
     return (
-        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-20">
+        <header className="bg-white px-4 md:px-2 lg:px-4 py-2.5 drop-shadow-lg relative z-50">
             <nav className="flex flex-nowrap items-center mx-auto max-w-(--breakpoint-2xl)">
                 <div className="flex items-center ">
                     <Link href="/" className="shrink-0">
@@ -577,6 +597,7 @@ export default function HeaderSection({
                             alt="Ve Collab Logo"
                             width={100}
                             className="duration-300 hover:scale-110"
+                            quality={100}
                         ></Image>
                     </Link>
                     {!isActivePath('/search') && (

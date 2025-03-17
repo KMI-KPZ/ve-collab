@@ -2,14 +2,15 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
-import { fetchGET, fetchTaxonomy } from '@/lib/backend';
+import { fetchGET, fetchTaxonomy, getTopLevelNodes } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import LocalStorage from '@/lib/storage';
 import UserProfileImage from '../network/UserProfileImage';
+import printUsername from '../common/Username';
 
-interface ISuggestedLection {
+interface ISuggestedModul {
     id: number;
     text: string;
     path: string;
@@ -32,54 +33,52 @@ export default function SuggestionBox() {
         );
     };
 
-    const SuggestedLections = () => {
-        const [lections, setLections] = useState<ISuggestedLection[]>([]);
+    const SuggestedModules = () => {
+        const [modul, setModuls] = useState<ISuggestedModul[]>([]);
 
-        const getSuggestedLection = async () => {
-            let allLections: ISuggestedLection[] = [];
+        const getSuggestedModules = async () => {
+            let allModules: ISuggestedModul[] = [];
             const taxonomy = await fetchTaxonomy();
+            const cluster = await getTopLevelNodes();
+            const clusterIds = cluster.map((a) => a.id);
 
-            taxonomy.map((lection) => {
-                if (!Object.hasOwn(lection, 'data')) return;
-
-                const node = taxonomy.find((a) => a.id == lection.parent);
-                const cluster = taxonomy.find((a) => a.id == node!.parent);
-                allLections.push({
-                    id: lection.id,
-                    text: lection.text,
-                    path: `/learning-material/${cluster?.text!}/${
-                        node?.text
-                    }/${lection.text}`,
-                });
+            taxonomy.map((node) => {
+                if (clusterIds.includes(node.parent)) {
+                    const parent = cluster.find((a) => a.id == node.parent);
+                    allModules.push({
+                        id: node.id,
+                        text: node.text,
+                        path: `/learning-material/${parent?.text!}/${node?.text}`,
+                    });
+                }
             });
 
-            const randomLections = allLections.sort(() => 0.5 - Math.random());
-            return randomLections.slice(0, 5);
+            return allModules.sort(() => 0.5 - Math.random()).slice(0, 5);
         };
 
         useEffect(() => {
-            if (lections.length) return;
-            const storedLections = LocalStorage.getItem('suggested_lections');
-            if (storedLections) {
-                setLections(storedLections);
+            if (modul.length) return;
+            const storedModules = LocalStorage.getItem('suggested_modules');
+            if (storedModules) {
+                setModuls(storedModules);
                 return;
             }
-            getSuggestedLection()
-                .then((lections) => {
-                    setLections(lections);
-                    LocalStorage.addItem('suggested_lections', lections, ttl);
+            getSuggestedModules()
+                .then((moduls) => {
+                    setModuls(moduls);
+                    LocalStorage.addItem('suggested_modules', moduls, ttl);
                 })
                 .catch(console.error);
-        }, [lections]);
+        }, [modul]);
 
-        if (!lections.length) return <></>;
+        if (!modul.length) return <></>;
 
         return (
             <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
 
                 <ul className="*:px-4 *:py-2 *:my-3 *:text-ve-collab-blue">
-                    {lections.map((lection, index) => {
+                    {modul.map((lection, index) => {
                         return (
                             <li
                                 key={index}
@@ -139,17 +138,6 @@ export default function SuggestionBox() {
                 .catch(console.error);
         }, [suggestedUsers]);
 
-        const printUsername = (user: BackendUserSnippet) => {
-            if (user.first_name) {
-                return (
-                    <>
-                        {user.first_name} {user.last_name}
-                    </>
-                );
-            }
-            return <>{user.username?.replaceAll('_', ' ')}</>;
-        };
-
         if (!suggestedUsers) return <></>;
 
         return (
@@ -190,7 +178,7 @@ export default function SuggestionBox() {
 
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
-        const modules = [<SuggestedLections key={0} />, <SuggestedUsers key={1} />];
+        const modules = [<SuggestedModules key={0} />, <SuggestedUsers key={1} />];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
         );

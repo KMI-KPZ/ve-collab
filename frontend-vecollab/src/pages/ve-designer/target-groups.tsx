@@ -343,7 +343,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                     <div className="divide-y divide-gray-200">{renderTargetGroupsInputs()}</div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow-sm"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer"
                             type="button"
                             onClick={() => {
                                 appendTg(emptyTG);

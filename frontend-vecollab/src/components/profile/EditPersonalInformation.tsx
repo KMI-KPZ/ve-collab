@@ -27,6 +27,8 @@ import cat from '@/images/defaultProfilPictures/cat.jpg';
 import dog from '@/images/defaultProfilPictures/dog.jpg';
 import fox from '@/images/defaultProfilPictures/fox.jpg';
 import Image from 'next/image';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -419,27 +421,18 @@ export default function EditPersonalInformation({
                                 />
                             </div>
                         </div>
-                        <div className="flex absolute bottom-0 w-full">
-                            <button
-                                className={
-                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                }
-                                onClick={handleCloseNewInstitutionDialog}
-                            >
-                                <span>{t('common:cancel')}</span>
-                            </button>
-                            <button
-                                className={
-                                    'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
-                                }
-                                onClick={(e) => {
-                                    e.preventDefault();
+                        <div className="flex absolute bottom-0 w-full flex justify-between">
+                            <ButtonSecondary onClick={handleCloseNewInstitutionDialog}>
+                                {t('common:cancel')}
+                            </ButtonSecondary>
+                            <ButtonPrimary
+                                onClick={() => {
                                     uploadNewInstitution();
                                     handleCloseNewInstitutionDialog();
                                 }}
                             >
-                                <span>{t('common:create')}</span>
-                            </button>
+                                {t('common:create')}
+                            </ButtonPrimary>
                         </div>
                     </div>
                 </Dialog>
@@ -502,7 +495,7 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={t('languages')} />
-                <p className='text-gray-600 mb-2'>{t("languages_subtitle")}</p>
+                <p className="text-gray-600 mb-2">{t('languages_subtitle')}</p>
                 <CreatableSelect
                     className="w-full mb-1"
                     options={optionLists.languageKeys
@@ -618,7 +611,7 @@ export default function EditPersonalInformation({
                     {hasAnyAchievement(personalInformation.achievements) && (
                         <div>
                             <EditProfileHeadline name={t('decoration_badge')} />
-                            <p className='text-gray-600 mb-2'>{t('decoration_badge_descr')}</p>
+                            <p className="text-gray-600 mb-2">{t('decoration_badge_descr')}</p>
                             <ul className="flex flex-wrap gap-4 items-center">
                                 {getBadges({ achievements: personalInformation.achievements }).map(
                                     (item, index) => {

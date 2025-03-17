@@ -8,7 +8,7 @@ export default function printUsername({
     last_name: string;
 }) {
     if (first_name || last_name) {
-        return <>{first_name.concat(last_name)}</>;
+        return <>{first_name.concat(' ', last_name)}</>;
     }
     return <span className="capitalize">{username?.replaceAll('_', ' ')}</span>;
 }

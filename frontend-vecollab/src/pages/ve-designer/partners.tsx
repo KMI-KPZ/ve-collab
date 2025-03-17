@@ -464,7 +464,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
                             <div className="mt-4">
                                 <button
-                                    className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         appendPartners({ label: '', value: '' });
@@ -521,7 +521,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                                     </div>
                                 )}
                                 <button
-                                    className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         addedExternalPartyWarning();

@@ -72,7 +72,7 @@ export default function UserInfoBox({ profileInformation }: Props) {
             {hasAnyAchievement(profileInformation.profile.achievements) && (
                 <div className="mt-4 border-t border-t-gray-200 pt-4">
                     <H2 className="mb-4">{t('achievements')}</H2>
-                    <div className="flex flex-wrap gap-4">
+                    <div className="flex flex-wrap gap-4 *:w-[48px] md:*:w-[72px]">
                         {getBadges({ achievements: profileInformation.profile.achievements }).map(
                             (item) => item.badge
                         )}

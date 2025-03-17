@@ -225,7 +225,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                     <div className="divide-y divide-gray-200">{renderLecturesInputs()}</div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-3 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                            className="p-2 m-3 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                             type="button"
                             onClick={() => {
                                 append({
