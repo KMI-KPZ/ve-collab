@@ -723,6 +723,8 @@ class VEPlanResource:
                     },
                 )
 
+                # TODO do not notification if "dummy" user was added as partner!
+
                 # dispatch a notification to the partners
                 async def _notification_send(usernames, payload):
                     # since this will be run in a separate task, we need to acquire a new db connection
@@ -1164,6 +1166,66 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
+    def add_partner(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Add username as partner to a plan, set readt/write access, add user in checklist, avaluation, individual_learning_goals
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        try:
+            plan = self.get_plan(plan_id)
+        except:
+            raise PlanDoesntExistError()
+
+        partners = plan.partners
+        partners.append(username)
+        self.update_field(
+            plan_id,
+            "partners",
+            partners
+        )
+
+        individual_learning_goals = [a.to_dict() for a in plan.individual_learning_goals]
+        individual_learning_goals.append({
+            'username': username,
+            'learning_goal': None
+        })
+        self.update_field(
+            plan_id,
+            "individual_learning_goals",
+            individual_learning_goals
+        )
+
+        checklist = plan.checklist
+        checklist.append({'username': username})
+        self.update_field(
+            plan_id,
+            "checklist",
+            checklist
+        )
+
+        evaluation = [a.to_dict() for a in plan.evaluation]
+        evaluation.append({
+            'username': 'test_user',
+            'is_graded': False,
+            'task_type': None,
+            'assessment_type': None,
+            'evaluation_before': '',
+            'evaluation_while': None,
+            'evaluation_after': None
+        })
+        self.update_field(
+            plan_id,
+            "evaluation",
+            evaluation
+        )
+
         self._update_elastic_plan(plan_id)
 
     def delete_plan(

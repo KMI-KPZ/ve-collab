@@ -86,7 +86,7 @@
     "ve_invitation_message": "Message:",
     "ve_invitation_message_placeholder": "Describe what your VE should be about. It will increase your chance of the person accepting your invitation!",
     "append_existing_plan": "Append an existing plan",
-    "append_plan_disclaimer": "Note: The invited person will be automatically granted read access to your plan!",
+    "append_plan_disclaimer": "Note: The invited person will be automatically granted read and write access to your plan!",
     "alert_ve_invitation_sent": "VE invitation sent",
     "ve_info": "VE Info",
     "research_and_teaching": "Research & Teaching",

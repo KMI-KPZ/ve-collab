@@ -134,7 +134,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/notifications", NotificationHandler),
             (r"/chatroom/(.*)", RoomHandler),
             (r"/material_taxonomy", MaterialTaxonomyHandler),
-            (r"/mail_invitation", EmailInvitationHandler),
+            (r"/mail_invitation/(.+)", EmailInvitationHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
             (r"/report/(.+)", ReportHandler),

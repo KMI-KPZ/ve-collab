@@ -393,7 +393,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     const renderPartiesInputt = () => {
         return fieldsPartners.map((partner, index) => {
             return (
-                <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-3/4">
                     {partner.value == planAuthor ? (
                         <div className="px-4 py-2">{partner.label}</div>
                     ) : partner.value != '' &&
@@ -403,7 +403,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                                 <p className="px-4 py-2 min-w-56">{partner.label}</p>
                                 <ButtonLight
                                     onClick={() => handleDeletePartners(index)}
-                                    className="mx-2 p-2! shadow-sm rounded-full!"
+                                    className="h-10 w-10 grow-0 mx-2 p-2! shadow-sm rounded-full!"
                                 >
                                     <RxMinus size={18} />
                                 </ButtonLight>
@@ -414,7 +414,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                             {createSelect(methods.control, `partners.${index}`, index)}
                             <ButtonLight
                                 onClick={() => handleDeletePartners(index)}
-                                className="mx-2 p-2! shadow-sm rounded-full!"
+                                className="h-10 w-10 grow-0 mx-2 p-2! shadow-sm rounded-full!"
                             >
                                 <RxMinus size={18} />
                             </ButtonLight>
@@ -546,7 +546,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                     handleFinish={() => {
                         setOpenMailInvitationDialog(false);
                     }}
-                    renderAttentionMessage
+                    planId={router.query.plannerId as string}
                 />
             </Dialog>
         </>

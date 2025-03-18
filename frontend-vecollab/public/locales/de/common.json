@@ -554,7 +554,7 @@
         "share": "Einladen",
         "intro_short": "VE Partner:innen via E-Mail einladen",
         "intro": "Lade Personen per E-Mail ein, VE-Collab beizutreten.",
-        "intro_attention": "<bold>Achtung:</bold> Die eingeladene Person wird nicht automatisch als VE-Partner:in hinzugefügt, nachdem sie sich registriert hat. Diesen Schritt müsst ihr leider manuell machen.",
+        "intro_attention": "Hinweis: die eingeladene Person erhält Lese- und Schreibrechte auf diesen Plan nachdem sie sich registriert hat.",
         "open": "öffnen",
         "title": "VE-Einladung via E-Mail",
         "name_placeholder": "Name",
@@ -564,6 +564,10 @@
         "mail_placeholder": "E-Mail",
         "no_valid_mail": "Diese E-Mail ist nicht gültig",
         "message_placeholder": "Nachricht"
+    },
+    "mail_invitation_page": {
+        "title": "VE Einladung",
+        "intro": "Sie müssen sich anmelden oder registrieren um die Einladung zu erhalten. Nach der Anmeldung können Sie die Details der Einladung zum VE im Benachrichtigungsbereich einsehen."
     },
     "report": {
         "report_title": "Melden",

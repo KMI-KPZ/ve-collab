@@ -555,7 +555,7 @@
         "share": "Invite",
         "intro_short": "Invite VE partners via email",
         "intro": "Invite people to register in the VE-Collab network here",
-        "intro_attention": "<bold>Attention</bold>: The person is not automatically added to the plan as a partner. Unfortunately, this step has to be done manually after registration.",
+        "intro_attention": "Note: the invited person receives read and write access to this plan after they have registered",
         "open": "open",
         "title": "VE invitation via E-Mail",
         "name_placeholder": "Name",
@@ -565,6 +565,10 @@
         "mail_placeholder": "E-mail",
         "no_valid_mail": "This email is not valid",
         "message_placeholder": "Message"
+    },
+    "mail_invitation_page": {
+        "title": "VE Invitation",
+        "intro": "You must log in or register to receive the invitation. After logging in, you can view the details of the invitation to the VE in the notification area."
     },
     "report": {
         "report_title": "Report",

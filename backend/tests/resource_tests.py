@@ -9094,6 +9094,8 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "recipient_name": "invitation_receiver",
             "recipient_mail": "invitation_receiver@mail.com",
             "message": "test",
+            "plan_id": None,
+            "replied": False,
             "timestamp": datetime.now(),
         }
 

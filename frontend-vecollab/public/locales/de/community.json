@@ -86,7 +86,7 @@
     "ve_invitation_message": "Nachricht:",
     "ve_invitation_message_placeholder": "Beschreibe, worum es in deinem VE gehen soll. Das erhöht die Chance, dass die Person die Einladung annimmt!",
     "append_existing_plan": "vorhandenen Plan anhängen",
-    "append_plan_disclaimer": "Hinweis: Es werden automatisch Leserechte an die eingeladenen Personen vergeben!",
+    "append_plan_disclaimer": "Hinweis: Es werden automatisch Lese- und Schreibrechte an die eingeladenen Personen vergeben!",
     "alert_ve_invitation_sent": "VE-Einladung gesendet",
     "ve_info": "VE-Infos",
     "research_and_teaching": "Lehre & Forschung",
