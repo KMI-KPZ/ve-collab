@@ -283,6 +283,8 @@
     "plan_summary_evaluation_before": "before the VE:",
     "plan_summary_evaluation_while": "during the VE (formative):",
     "plan_summary_evaluation_after": "after the VE (summative):",
+    "plan_summary_download_scorm_title": "Export Plan",
+    "plan_summary_download_scorm_text": "This file can be uploaded to your desired learning platform (e.g. Moodle)",
     "type": "Type",
     "show_all": "Show all",
     "show_less": "Show less",

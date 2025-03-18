@@ -5,7 +5,12 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import ViewAfterVE from './ViewAfterVE';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useSession } from 'next-auth/react';
-import { fetchPOST, useGetAvailablePlans, useGetProfileSnippets } from '@/lib/backend';
+import {
+    fetchPOST,
+    useGetAvailablePlans,
+    useGetPlanAsScormById,
+    useGetProfileSnippets,
+} from '@/lib/backend';
 import LoadingAnimation from '../common/LoadingAnimation';
 import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import Dialog from '../profile/Dialog';
@@ -19,6 +24,7 @@ import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 import { useTranslation } from 'next-i18next';
 import PlanIcon from '../plans/PlanIcon';
 import { FaMedal } from 'react-icons/fa';
+import { useRouter } from 'next/router';
 
 interface Props {
     plan: IPlan;
@@ -54,6 +60,9 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         [...plan.partners, plan.author.username],
         session!.accessToken
     );
+    const router = useRouter();
+    const planId = router.query.plannerId as string;
+    const { data: zipPlan, isLoading: isLoadingScorm } = useGetPlanAsScormById(planId);
 
     useEffect(() => {
         if (!partnerUserSnippets?.length) return;
@@ -64,6 +73,20 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         });
         setPartnerProfileSnippets(partnerSnippets);
     }, [partnerUserSnippets]);
+
+    const downloadZip = (zipData: Blob | undefined, fileName: string = 'plan.zip') => {
+        if (!zipData) return;
+
+        const url = window.URL.createObjectURL(zipData);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    };
 
     const openExportDialog = (step: IFineStep) => {
         step._id = undefined;
@@ -165,12 +188,12 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                             new Date(a.last_modified).getTime()
                         );
                     })
-                    .map((plan, i) => (
+                    .map((plan, _) => (
                         <div
                             key={plan._id}
                             className="p-2 flex items-center justify-start gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
                             title={t('common:choose')}
-                            onClick={(e) => {
+                            onClick={() => {
                                 setExportStep2Plan((prev) => ({ ...prev, plan }));
                             }}
                         >
@@ -304,7 +327,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                             {loadingExport && <LoadingAnimation size="small" />}
                             <button
                                 className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full cursor-pointer"
-                                onClick={(e) => {
+                                onClick={() => {
                                     setExportStep2Plan((prev) => ({ ...prev, plan: undefined }));
                                 }}
                             >
@@ -350,7 +373,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     <button
                         type="button"
                         className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full cursor-pointer hover:bg-ve-collab-orange"
-                        onClick={(e) => {
+                        onClick={() => {
                             setExportStep2Plan({ isOpen: false, step: undefined, plan: undefined });
                         }}
                     >
@@ -373,6 +396,27 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
     //         }}
     //     />
     // )
+
+    const downloadSection = (zipPlan: Blob | undefined) => {
+        return (
+            <div>
+                <div className="col-span-4 mb-6 text-2xl font-semibold underline decoration-ve-collab-blue decoration-4 underline-offset-6">
+                    {t('plan_summary_download_scorm_title')}
+                </div>
+                <p className="mb-6">{t('plan_summary_download_scorm_text')}</p>
+                <button
+                    onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+                        downloadZip(zipPlan, 'plan-scorm.zip');
+                        e.preventDefault();
+                    }}
+                    disabled={isLoadingScorm}
+                    className="bg-white shadow-sm hover:bg-slate-100 rounded-full! px-8! text-slate-800 print:hidden p-2 cursor-pointer"
+                >
+                    Download
+                </button>
+            </div>
+        );
+    };
 
     return (
         <>
@@ -428,13 +472,10 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     openAllBoxes={isSingleView || openAllBoxes}
                     isSingleView={isSingleView}
                 />
-
                 <Separator />
-
                 <div className="text-2xl font-semibold mb-4 underline decoration-ve-collab-blue/50 decoration-4 underline-offset-6">
                     {t('plan_summary_phases')}
                 </div>
-
                 {plan.steps !== undefined && plan.steps.length > 0 ? (
                     plan.steps.map((fineStep, index) => (
                         <ViewFinestep
@@ -450,9 +491,9 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                 ) : (
                     <div className="ml-4">{t('plan_summary_no_phases')}</div>
                 )}
-
                 <Separator />
-
+                {downloadSection(zipPlan)}
+                <Separator />
                 <ViewAfterVE
                     plan={plan}
                     openAllBoxes={isSingleView || openAllBoxes}
