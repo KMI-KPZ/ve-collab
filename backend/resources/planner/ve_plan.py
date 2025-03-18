@@ -1044,6 +1044,7 @@ class VEPlanResource:
         plan_copy.author = new_author if new_author is not None else plan.author
         plan_copy.read_access = [plan_copy.author]
         plan_copy.write_access = [plan_copy.author]
+        plan_copy.is_good_practise = False
 
         # insert the copy into the db
         return self.insert_plan(plan_copy)
