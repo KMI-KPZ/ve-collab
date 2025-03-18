@@ -757,7 +757,11 @@ export default function Wrapper({
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
                                     {typeof tooltip !== 'undefined' && (
-                                        <Tooltip tooltipsText={tooltip.text} position="left">
+                                        <Tooltip
+                                            tooltipsText={tooltip.text}
+                                            position="left"
+                                            className="text-slate-600"
+                                        >
                                             <Link
                                                 target="_blank"
                                                 href={tooltip.link}
@@ -765,8 +769,7 @@ export default function Wrapper({
                                             >
                                                 <PiBookOpenText
                                                     size={30}
-                                                    color="#00748f"
-                                                    className="inline relative"
+                                                    className="inline relative text-ve-collab-blue"
                                                 />
                                             </Link>
                                         </Tooltip>

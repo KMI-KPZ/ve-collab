@@ -250,7 +250,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                 description={t('learningEnv.description')}
                 tooltip={{
                     text: t('learningEnv.tooltip'),
-                    link: '/learning-material/3/Digitale%20Medien',
+                    link: '/learning-material/Digitales/Tools',
                 }}
                 stageInMenu="generally"
                 idOfProgress="learning_env"
@@ -279,7 +279,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                         }
                     >
                         {t('learningEnv.subtitle2')}
-                        <Tooltip tooltipsText={t('learningEnv.tooltip2')}>
+                        {/* <Tooltip tooltipsText={t('learningEnv.tooltip2')} position='left'>
                             <Link
                                 target="_blank"
                                 href={
@@ -289,7 +289,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                             >
                                 <PiBookOpenText size={30} color="#00748f" />
                             </Link>
-                        </Tooltip>
+                        </Tooltip> */}
                     </div>
                     <p className="mb-8">{t('learningEnv.description2')}</p>
                     <div className="w-full lg:w-1/2">

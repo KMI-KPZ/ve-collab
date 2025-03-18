@@ -290,7 +290,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 description={t('goals.description')}
                 tooltip={{
                     text: t('goals.tooltip'),
-                    link: '/learning-material/1/Potenziale',
+                    link: '/learning-material/Zusammen%20Planen/VA-Planung',
                 }}
                 stageInMenu="generally"
                 idOfProgress="learning_goals"
@@ -343,13 +343,13 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         }
                     >
                         {t('goals.2-title')}
-                        <Tooltip tooltipsText={t('goals.2-tooltip')}>
+                        <Tooltip tooltipsText={t('goals.2-tooltip')} position="left">
                             <Link
                                 target="_blank"
-                                href={'/learning-material/top-bubble/Potenziale'}
+                                href={'/learning-material/Grundlagen/Potenziale'}
                                 className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
-                                <PiBookOpenText size={30} color="#00748f" />
+                                <PiBookOpenText size={30} className="text-ve-collab-blue" />
                             </Link>
                         </Tooltip>
                     </div>
@@ -369,15 +369,15 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         }
                     >
                         {t('goals.3-title')}
-                        <Tooltip tooltipsText={t('goals.3-tooltip')}>
+                        <Tooltip tooltipsText={t('goals.3-tooltip')} position="left">
                             <Link
                                 target="_blank"
                                 href={
-                                    '/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'
+                                    '/learning-material/Grundlagen/Beispiele%20aus%20der%20Praxis'
                                 }
                                 className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
-                                <PiBookOpenText size={30} color="#00748f" />
+                                <PiBookOpenText size={30} className="text-ve-collab-blue" />
                             </Link>
                         </Tooltip>
                     </div>

@@ -136,7 +136,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                 description={t('methodology.description')}
                 tooltip={{
                     text: t('methodology.tooltip'),
-                    link: '/learning-material/4/Methodenkoffer',
+                    link: '/learning-material/Zusammen%20Lernen/Methodenkoffer',
                 }}
                 stageInMenu="generally"
                 idOfProgress="methodical_approaches"

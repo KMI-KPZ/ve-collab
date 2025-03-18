@@ -8,12 +8,15 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 import CreatableSelect from 'react-select/creatable';
 import CustomHead from '@/components/metaData/CustomHead';
 import { languageKeys } from '@/data/languages';
+import { Tooltip } from '@/components/common/Tooltip';
+import Link from 'next/link';
+import { PiBookOpenText } from 'react-icons/pi';
 
 export interface TargetGroup {
     name: string;
@@ -328,8 +331,8 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 subtitle={t('target.subtitle')}
                 description={t('target.description')}
                 tooltip={{
-                    text: t('target.tooltip'),
-                    link: '/learning-material/2/VA-Planung',
+                    text: t('target.tooltip-1'),
+                    link: '/learning-material/Zusammen%20Planen/VA-Planung',
                 }}
                 stageInMenu="generally"
                 idOfProgress="target_groups"
@@ -355,7 +358,30 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 </div>
 
                 <div className="">
-                    <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                    <div className="text-xl text-slate-600 flex justify-between items-center">
+                        {t('target.language_title')}
+                        <Tooltip
+                            tooltipsText={
+                                <Trans
+                                    i18nKey="target.tooltip-2"
+                                    ns="designer"
+                                    components={{ 1: <br /> }}
+                                />
+                            }
+                            position="left"
+                        >
+                            <Link
+                                target="_blank"
+                                href="/learning-material/Zusammen%20Lernen/sprachliche%20Aspekte"
+                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
+                            >
+                                <PiBookOpenText
+                                    size={30}
+                                    className="inline relative text-ve-collab-blue"
+                                />
+                            </Link>
+                        </Tooltip>
+                    </div>
                     <div className="mb-8">{t('target.language_description')}</div>
                     <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 </div>
