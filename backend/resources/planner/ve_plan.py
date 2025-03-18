@@ -635,16 +635,6 @@ class VEPlanResource:
                             "checklist",
                         )
 
-                    # ensure that the username is also a partner of the plan
-                    if not self._check_user_is_author_or_partner(
-                        plan_id, checklist_item["username"]
-                    ):
-                        raise ValueError(
-                            "username '{}' in checklist is not a partner of the plan".format(
-                                checklist_item["username"]
-                            )
-                        )
-
                     # ensure that any other values are of type bool or None
                     for attr, value in checklist_item.items():
                         if attr != "username":
