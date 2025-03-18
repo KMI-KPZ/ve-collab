@@ -264,6 +264,12 @@ export default function Wrapper({
         isNoAuthPreview,
     ]);
 
+    useEffect(() => {
+        if (!router.query.stepId || router.query.stepId == '1') return;
+        // fix reload plan after change step
+        setFormDataLoaded(false);
+    }, [router.query.stepId]);
+
     const createNewPlan = async (name: string): Promise<string> => {
         const newPlanner = await fetchPOST(
             '/planner/insert_empty',
