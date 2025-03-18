@@ -6,7 +6,6 @@ import { ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
-import { useSession } from 'next-auth/react';
 import { useGetAvailablePlans } from '@/lib/backend';
 import Link from 'next/link';
 import { MdArrowOutward } from 'react-icons/md';
@@ -20,6 +19,7 @@ import CustomHead from '@/components/metaData/CustomHead';
 import imageTrashcan from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import { RxMinus, RxPlus } from 'react-icons/rx';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 
 export interface ITask {
     task_formulation: string;
@@ -91,25 +91,6 @@ export const defaultFormValueDataFineStepFrontend: IFineStepFrontend = {
     original_plan: '',
 };
 
-// const areAllFormValuesEmpty = (formValues: IFineStepFrontend): boolean => {
-//     return (
-//         formValues.learning_activity === '' &&
-//         formValues.tasks.every((task) => {
-//             return (
-//                 task.task_formulation === '' &&
-//                 task.work_mode === '' &&
-//                 task.notes === '' &&
-//                 task.tools.every((tool) => {
-//                     return tool.name === '';
-//                 }) &&
-//                 task.materials.every((materials) => {
-//                     return materials.name === '';
-//                 })
-//             );
-//         })
-//     );
-// };
-
 interface Props {
     socket: Socket;
 }
@@ -118,10 +99,8 @@ FinePlanner.auth = true;
 FinePlanner.noAuthPreview = <FinePlannerNoAuthPreview />;
 export default function FinePlanner({ socket }: Props): JSX.Element {
     const router = useRouter();
-    const { data: session } = useSession();
     const { t } = useTranslation(['designer', 'common']); // designer is default ns
 
-    const stepId: string = router.query.stepId as string;
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
         resolver: zodResolver(FineStepFormSchema),
@@ -129,6 +108,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
             ...defaultFormValueDataFineStepFrontend,
         },
     });
+    let stepId = router.query.stepId as string;
     const [prevpage, setPrevpage] = useState<string>('/ve-designer/step/');
     const [nextpage, setNextpage] = useState<string>('/ve-designer/step/');
     const [currentFineStep, setCurrentFineStep] = useState<IFineStepFrontend>({
@@ -137,28 +117,29 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
     const [steps, setSteps] = useState<IFineStep[]>([]);
     const [sideMenuStepsData, setSideMenuStepsData] = useState<ISubmenuData[]>([]);
-    const { data: availablePlans } = useGetAvailablePlans(session!.accessToken);
+    const { data: availablePlans } = useGetAvailablePlans({});
     const [loadingStep, setLoadingStep] = useState<boolean>(true);
 
     const setPlanerData = useCallback(
-        (plan: IPlan) => {
-            if (!plan.steps?.length) {
-                // TODO ???
-                return {};
-            }
-            if (stepId == '1') {
-                return router.push({
+        async (plan: IPlan) => {
+            if (!plan.steps?.length) return {};
+            if (router.query.stepId == '1') {
+                await router.replace({
                     pathname: `/ve-designer/step/${plan.steps[0]._id}`,
                     query: {
                         plannerId: router.query.plannerId,
                     },
                 });
+                if (!plan.steps[0]._id) return {};
+                router.query.stepId = plan.steps[0]._id;
             }
             let fineStepCopyTransformedTools = defaultFormValueDataFineStepFrontend;
             setSteps(plan.steps);
+
             const currentFineStepCopy: IFineStep | undefined = plan.steps.find(
-                (item: IFineStep) => item._id === stepId
+                (item: IFineStep) => item._id === router.query.stepId
             );
+
             if (currentFineStepCopy) {
                 const transformedTasks: ITaskFrontend[] = currentFineStepCopy.tasks.map(
                     (task: ITask) => {
@@ -184,7 +165,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
             return { ...fineStepCopyTransformedTools };
         },
-        [stepId, router]
+        [router]
     );
 
     useEffect(() => {
@@ -280,7 +261,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                     <div className="text-xl text-slate-900">
                         {t('common:plans_alert_step_doesnt_exist')}
                     </div>
-                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
+                    <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white cursor-pointer">
                         <Link href="/plans">{t('back_to_overview')}</Link>
                     </button>
                 </div>
@@ -312,7 +293,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Stage fineStep={currentFineStep} />
+                {loadingStep ? <LoadingAnimation /> : <Stage fineStep={currentFineStep} />}
             </Wrapper>
         </>
     );
@@ -354,7 +335,7 @@ export function FinePlannerNoAuthPreview() {
             >
                 <StageNoAuthPreview />
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/55 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/55 to-white pointer-events-none"></div>
         </div>
     );
 }
@@ -415,11 +396,7 @@ export function StageNoAuthPreview() {
             <div className="mt-4 flex">
                 <div className="flex flex-col w-full">
                     <div className="relative">
-                        <div
-                            className={
-                                'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200 rounded-3xl shadow-2xl'
-                            }
-                        >
+                        <div className={'px-4 pt-4 pb-12 my-4 mx-2 bg-slate-200'}>
                             <div className="mt-2 flex">
                                 <div className="w-1/6 flex items-center">
                                     <label htmlFor="task_formulation" className="px-2 py-2">

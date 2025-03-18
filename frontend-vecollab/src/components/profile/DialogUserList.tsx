@@ -2,9 +2,9 @@ import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useRouter } from 'next/router';
 import { RxTrash } from 'react-icons/rx';
 import LoadingAnimation from '../common/LoadingAnimation';
-import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import { useTranslation } from 'next-i18next';
+import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     loading: boolean;
@@ -27,17 +27,17 @@ export default function DialogUserList({
 
     const router = useRouter();
     return (
-        <div className="w-[30rem] h-[28rem] overflow-y-auto content-scrollbar">
+        <div className="w-[30rem] min-h-[15rem] overflow-y-auto content-scrollbar">
             {loading ? (
                 <div className="flex w-full h-full justify-center items-center">
                     <LoadingAnimation />
                 </div>
             ) : (
-                <ul className="px-1 divide-y">
+                <ul className="px-1 divide-y divide-gray-200">
                     {userSnippets.map((snippet, index) => (
                         <li key={index} className="flex py-2">
                             <div
-                                className="flex cursor-pointer"
+                                className="flex cursor-pointer items-center"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     router.push(`/profile/user/${snippet.preferredUsername}`);
@@ -45,13 +45,12 @@ export default function DialogUserList({
                                 }}
                             >
                                 <div>
-                                    <AuthenticatedImage
-                                        imageId={snippet.profilePicUrl}
-                                        alt={t("profile_picture")}
+                                    <UserProfileImage
+                                        profile_pic={snippet.profilePicUrl}
+                                        chosen_achievement={snippet.chosen_achievement}
                                         width={60}
                                         height={60}
-                                        className="rounded-full"
-                                    ></AuthenticatedImage>
+                                    />
                                 </div>
                                 <div>
                                     <BoxHeadline title={snippet.name} />

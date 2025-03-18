@@ -1,0 +1,7 @@
+Hallo {recipient_name},
+{author} hat dich als Partner:in zu folgendem VE-Plan hinzugefügt: {plan_name}.
+
+Du erhältst damit automatisch Schreibzugriff auf diesen VE-plan und findest ihn ab sofort in deinem persönlichen VE-Designer-Dashboard unter https://ve-collab.org/plans, oder direkt über diesen Link: https://ve-collab.org/plan/{plan_id}.
+
+Viele Grüße!
+Dein VE-Collab Team

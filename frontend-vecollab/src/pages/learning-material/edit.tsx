@@ -245,8 +245,6 @@ export default function Edit() {
         setSuccessPopupOpen(true);
     }
 
-    console.log(treeData);
-
     return (
         <>
             <CustomHead pageTitle={t('edit')} pageSlug={`learning-material/edit`} />
@@ -318,7 +316,7 @@ export default function Edit() {
                                                     Metadaten mit MeinBildungsraum synchronisieren
                                                 </button>
                                             </div>
-                                            <div className="h-[3/4] px-1 mx-2 my-1">
+                                            <div className="h-3/4 px-1 mx-2 my-1">
                                                 <Tree
                                                     tree={treeData}
                                                     rootId={0}
@@ -405,7 +403,7 @@ export default function Edit() {
                             </button>
                             <button
                                 className={
-                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                    'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
                                 onClick={() => {
                                     handleCreateNewMaterial();

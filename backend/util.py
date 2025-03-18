@@ -213,6 +213,12 @@ def _append_msg_text(
         "ve_invitation.html",
         "ve_invitation_reply.html",
         "new_messages.html",
+        "achievement_level_up.html",
+        "plan_access_granted.html",
+        "plan_added_as_partner.html",
+        "email_invitation.html",
+        "report_submitted.html",
+        "content_deleted_due_to_report.html",
     ],
     payload: Dict,
 ) -> None:
@@ -269,7 +275,6 @@ def _append_msg_text(
             )
 
     elif template == "space_join_request.html":
-
         sender_display_name = _exchange_username_for_display_name(
             payload["join_request_sender"], db
         )
@@ -289,7 +294,6 @@ def _append_msg_text(
             )
 
     elif template == "ve_invitation.html":
-
         sender_display_name = _exchange_username_for_display_name(payload["from"], db)
 
         if sender_display_name is None:
@@ -312,7 +316,6 @@ def _append_msg_text(
             )
 
     elif template == "ve_invitation_reply.html":
-
         invitation_recipient_name = _exchange_username_for_display_name(
             payload["from"], db
         )
@@ -350,6 +353,60 @@ def _append_msg_text(
                 unread_messages_amount=payload["unread_messages_amount"],
                 unread_rooms_amount=payload["unread_rooms_amount"],
             )
+
+    elif template == "achievement_level_up.html":
+        with open("assets/email_templates/achievement_level_up.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                achievement_type=(
+                    "Social" if payload["achievement_type"] == "social" else "VE"
+                ),
+                level=payload["level"],
+                edit_profile_link="https://ve-collab.org/profile/edit",
+            )
+
+    elif template == "plan_access_granted.html":
+        with open("assets/email_templates/plan_access_granted.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                plan_name=payload["plan_name"],
+                plan_id=payload["plan_id"],
+                author=payload["author"],
+                read=payload["read"],
+                write=payload["write"],
+            )
+
+    elif template == "plan_added_as_partner.html":
+        with open("assets/email_templates/plan_added_as_partner.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                plan_name=payload["plan_name"],
+                plan_id=payload["plan_id"],
+                author=payload["author"],
+            )
+
+    elif template == "email_invitation.html":
+        with open("assets/email_templates/email_invitation.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                sender=payload["sender"],
+                message=payload["message"],
+            )
+    elif template == "report_submitted.html":
+        with open("assets/email_templates/report_submitted.txt", "r") as f:
+            text = f.read()
+
+    elif template == "content_deleted_due_to_report.html":
+        with open("assets/email_templates/content_deleted_due_to_report.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name, content_type=payload["type"]
+            )
+
     else:
         raise ValueError("Invalid template name: {}".format(template))
 
@@ -371,6 +428,12 @@ def send_email(
         "ve_invitation.html",
         "ve_invitation_reply.html",
         "new_messages.html",
+        "achievement_level_up.html",
+        "plan_access_granted.html",
+        "plan_added_as_partner.html",
+        "email_invitation.html",
+        "report_submitted.html",
+        "content_deleted_due_to_report.html",
     ],
     payload: Dict,
 ) -> None:
@@ -408,7 +471,10 @@ def send_email(
     with get_mongodb() as db:
         display_name = _exchange_username_for_display_name(recipient_username, db)
         if display_name is None:
-            display_name = "Nutzer:in"
+            if recipient_username is None:
+                display_name = "Nutzer:in"
+            else:
+                display_name = recipient_username
 
         msg = _construct_email_header(display_name, recipient_email, subject)
 

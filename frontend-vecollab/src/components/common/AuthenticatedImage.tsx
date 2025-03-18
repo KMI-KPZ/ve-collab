@@ -1,6 +1,6 @@
 import { fetchImage } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, CSSProperties } from 'react';
 import Image from 'next/image';
 
 interface Props {
@@ -9,7 +9,9 @@ interface Props {
     width: number;
     height: number;
     className?: string;
+    style?: CSSProperties;
     isNoAuthPreview?: boolean;
+    onLoad?: () => void;
 }
 
 AuthenticatedImage.auth = true;
@@ -19,7 +21,9 @@ export default function AuthenticatedImage({
     width,
     height,
     className,
+    style,
     isNoAuthPreview,
+    onLoad = () => {},
 }: Props) {
     const { data: session, status } = useSession();
     const [image, setImage] = useState('');
@@ -61,6 +65,7 @@ export default function AuthenticatedImage({
                     width={width}
                     height={height}
                     className={className}
+                    style={style}
                 />
             ) : (
                 <>
@@ -71,6 +76,8 @@ export default function AuthenticatedImage({
                             width={width}
                             height={height}
                             className={className}
+                            style={style}
+                            onLoad={onLoad}
                         />
                     ) : (
                         imageId && <div className={className} style={{ height, width }}></div>

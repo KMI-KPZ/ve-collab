@@ -100,7 +100,7 @@ export default function Methodology({ socket }: Props): JSX.Element {
                             onChange={onChange}
                             onBlur={onBlur}
                             value={value}
-                            options={options}
+                            options={options.sort((a, b) => a.label.localeCompare(b.label))}
                             isClearable={true}
                             isMulti
                             closeMenuOnSelect={false}
@@ -196,7 +196,7 @@ export function MethodologyNoAuthPreview() {
                     />
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
         </div>
     );
 }

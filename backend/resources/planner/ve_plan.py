@@ -6,7 +6,8 @@ from bson.errors import InvalidId
 import gridfs
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
+import tornado
 
 from exceptions import (
     FileDoesntExistError,
@@ -29,6 +30,8 @@ from model import (
     TargetGroup,
     VEPlan,
 )
+from resources.notifications import NotificationResource
+from resources.elasticsearch_integration import ElasticsearchConnector
 import util
 
 
@@ -131,27 +134,81 @@ class VEPlanResource:
 
         return [VEPlan.from_dict(res) for res in result]
 
-    def get_plans_for_user(self, username: str) -> List[VEPlan]:
+    def get_plans_for_user(
+        self,
+        username: str,
+        filter_good_practice_only: bool | None = None,
+        filter_access: Literal["all", "own", "shared"] = "all",
+        search_query: str | None = None,
+        limit: int = 10,
+        offset: int = 0,
+        sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
+        order: int = -1
+    ) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
         i.e. their own plans and those that he/she has read or write access to and those
         that are marked as good practise examples (read only).
 
+        Optionally, apply the following filters (including combinations):
+        - `filter_good_practice_only`: if set to True, only plans that are marked as good practise
+           are returned
+        - `filter_access`: filter the plans by their access level, i.e. "all" (default), "own"
+        (plans where i am the author) or "shared" (plans where i have received read/write access from external)
+        - `search_query`: a search query to filter plans by their `name` attribute
+
+        The `limit` and `offset` parameters can be used to paginate the results.
+
         Returns a list of `VEPlan` objects, or an empty list, if there are no plans
         that match the criteria.
         """
 
-        # query plans where the user is the author or has read or write access
-        result = self.db.plans.find(
-            {
-                "$or": [
-                    {"author": username},
-                    {"read_access": username},
-                    {"write_access": username},
-                    {"is_good_practise": True},
+        gp_filter = {"is_good_practise": True}
+
+        access_filters = {}
+        if filter_access == "own":
+            access_filters = {"author": username}
+        elif filter_access == "shared":
+            access_filters = {
+                "$and": [
+                    {"author": {"$ne": username}},
+                    {"$or": [
+                        {"read_access": username},
+                        {"write_access": username},
+                    ]}
                 ]
             }
-        )
+        elif filter_access == "all":
+            access_filters = {
+                "$or": [
+                        {"author": username},
+                        {"read_access": username},
+                        {"write_access": username},
+                        {"is_good_practise": True},
+                ]
+            }
+
+        search_filter = {
+            "$or": [
+                {"name": {"$regex": search_query, "$options": "i"}},
+                {"topics": {"$regex": search_query, "$options": "i"}},
+                {"abstract": {"$regex": search_query, "$options": "i"}},
+            ]
+        }
+
+        # apply filters and query for results,
+        # access filters (OR) and search query are applied first with an AND,
+        # then the good practise filter is applied on top of that result
+        stages = [
+            {"$match": access_filters},
+            {"$match": search_filter if search_query else {}},
+            {"$match": gp_filter if filter_good_practice_only else {}},
+            {"$sort": {sort: order}},
+            {"$skip": offset},
+            {"$limit": limit},
+        ]
+        result = self.db.plans.aggregate(stages)
+
         return [VEPlan.from_dict(res) for res in result]
 
     def get_public_plans_of_user(self, username: str) -> List[VEPlan]:
@@ -165,7 +222,43 @@ class VEPlanResource:
 
         # omit the "public readability" criteria since access to foreign
         # plans is not yet implemented
-        result = self.db.plans.find({"author": username})
+        result = self.db.plans.find({"author": username, "is_good_practise": True})
+        return [VEPlan.from_dict(res) for res in result]
+
+    def find_plans_for_user_by_slug(self, username: str, slug: str) -> List[VEPlan]:
+        """
+        Search all available plans of given user (author, read/write access, GoodPracticePlans)
+        by given slug (name, topics, abstract)
+
+        Returns a list of `VEPlan` objects, or an empty list, if there are no plans
+        that match the criteria.
+        """
+
+        # TODO use ElasticSearch query instead
+
+        # query plans where the user is the author or has read or write access
+        # regex with given slug
+        result = self.db.plans.find(
+            {
+                "$and": [
+                    {
+                        "$or": [
+                            {"author": username},
+                            {"read_access": username},
+                            {"write_access": username},
+                            {"is_good_practise": True},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"name": {"$regex": slug, "$options": "i"}},
+                            {"topics": {"$regex": slug, "$options": "i"}},
+                            {"abstract": {"$regex": slug, "$options": "i"}},
+                        ]
+                    },
+                ]
+            }
+        )
         return [VEPlan.from_dict(res) for res in result]
 
     def get_good_practise_plans(self) -> List[VEPlan]:
@@ -179,7 +272,40 @@ class VEPlanResource:
         result = self.db.plans.find({"is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
 
-    def insert_plan(self, plan: VEPlan) -> ObjectId:
+    def _get_plan_for_elastic(self, plan: VEPlan) -> Dict:
+        """
+        Get minimized copy of a plan for elastic
+        """
+
+        elastic_plan = {
+            "_id": plan._id,
+            "name": plan.name,
+            "author": plan.author,
+            "read_access": plan.read_access,
+            "write_access": plan.write_access,
+            "topics": plan.topics,
+            "is_good_practise": plan.is_good_practise,
+            "abstract": plan.abstract,
+        }
+
+        return elastic_plan.copy()
+
+    def _update_elastic_plan(
+        self, plan_id: str | ObjectId, elasticsearch_collection: str = "plans"
+    ) -> None:
+        """
+        Simply update existing plan in Elasticsearch by given plan_id
+        """
+
+        elastic_plan = self._get_plan_for_elastic(self.get_plan(plan_id))
+
+        ElasticsearchConnector().on_update(
+            plan_id, elasticsearch_collection, elastic_plan
+        )
+
+    def insert_plan(
+        self, plan: VEPlan, elasticsearch_collection: str = "plans"
+    ) -> ObjectId:
         """
         Insert the given plan into the database, returning the ObjectId of the
         freshly generated document.
@@ -199,6 +325,12 @@ class VEPlanResource:
             result = self.db.plans.insert_one(plan.to_dict())
         except DuplicateKeyError:
             raise PlanAlreadyExistsError()
+
+        elastic_plan = self._get_plan_for_elastic(plan)
+        # replicate the insert to elasticsearch
+        ElasticsearchConnector().on_insert(
+            result.inserted_id, elastic_plan, elasticsearch_collection
+        )
 
         return result.inserted_id
 
@@ -340,9 +472,11 @@ class VEPlanResource:
         now_timestamp = datetime.datetime.now()
         plan.last_modified = now_timestamp
         plan_dict = plan.to_dict()
-        del plan_dict[
-            "creation_timestamp"
-        ]  # make sure creation timestamp doesn't get overridden
+        # make sure meta attributes are not overwritten
+        del plan_dict["creation_timestamp"]
+        del plan_dict["author"]
+        del plan_dict["read_access"]
+        del plan_dict["write_access"]
 
         # if a user is given, check if he/she has appropriate write access
         if requesting_username is not None:
@@ -366,6 +500,9 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan._id)
 
         return plan._id
 
@@ -561,6 +698,52 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
+        # if the updated field was partners, two side effects happen:
+        # - the partners will automatically gain write access to the plan
+        # - when they are added the first time, a notification will be dispatched to them
+        if field_name == "partners":
+            plan_state = self.get_plan(plan_id)
+
+            # get the partners that are not already in the write_access list
+            partners = list(set(value_copy) - set(plan_state.write_access))
+
+            if partners:
+                # add the partners to the write_access list
+                self.db.plans.update_one(
+                    {"_id": plan_id},
+                    {
+                        "$addToSet": {
+                            "write_access": {"$each": partners},
+                            "read_access": {"$each": partners},
+                        }
+                    },
+                )
+
+                # dispatch a notification to the partners
+                async def _notification_send(usernames, payload):
+                    # since this will be run in a separate task, we need to acquire a new db connection
+                    with util.get_mongodb() as db:
+                        notification_resources = NotificationResource(db)
+                        for username in usernames:
+                            await notification_resources.send_notification(
+                                username, "plan_added_as_partner", payload
+                            )
+
+                # create async task to avoid having to declare the function async
+                # everywhere
+                tornado.ioloop.IOLoop.current().add_callback(
+                    _notification_send,
+                    partners,
+                    {
+                        "plan_id": plan_id,
+                        "plan_name": plan_state.name,
+                        "author": plan_state.author,
+                    },
+                )
 
         # return either the plan_id itself, or,
         # in case of an upsert, the freshly upserted _id
@@ -888,6 +1071,8 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
+        # TODO update elastic
+
     def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Set write permissions for the user given by `username` for the plan with the
@@ -915,6 +1100,9 @@ class VEPlanResource:
 
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
+
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
 
     def revoke_read_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
@@ -945,6 +1133,9 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
     def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Revoke write permissions for the user given by `username` for the plan with the
@@ -972,7 +1163,12 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
-    def delete_plan(self, _id: str | ObjectId) -> None:
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
+    def delete_plan(
+        self, _id: str | ObjectId, elasticsearch_collection: str = "plans"
+    ) -> None:
         """
         Remove a plan from the database by specifying its `_id`.
 
@@ -996,6 +1192,9 @@ class VEPlanResource:
 
         if result.deleted_count != 1:
             raise PlanDoesntExistError()
+
+        # update elastic
+        ElasticsearchConnector().on_delete(_id, elasticsearch_collection)
 
     def delete_step_by_id(
         self,

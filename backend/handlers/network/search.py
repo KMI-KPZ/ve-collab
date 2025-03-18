@@ -9,6 +9,8 @@ from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+from resources.planner.ve_plan import VEPlanResource
+
 import util
 
 
@@ -17,7 +19,7 @@ class SearchHandler(BaseHandler):
     def get(self):
         """
         GET /search
-        search the database for posts, tags, spaces, and users
+        search the database for posts, tags, spaces, users and plans
         required parameters:
             query - search query
                 (if you search for tags, u may use a comma-delimited list of strings to search for multiple tags)
@@ -26,7 +28,8 @@ class SearchHandler(BaseHandler):
             posts - bool to include posts in the search (only "true" will evaluate to True!)
             tags - bool to include tags in the search (only "true" will evaluate to True!)
             users - bool to include users in the search (only "true" will evaluate to True!)
-            spaces - bool to include users in the search (only "true" will evaluate to True!)
+            spaces - bool to include spaces in the search (only "true" will evaluate to True!)
+            plans - bool to include plans in the search (only "true" will evaluate to True!)
 
         returns:
             200 OK
@@ -35,7 +38,8 @@ class SearchHandler(BaseHandler):
              "users": [list_of_users_with_matching_profile_content],
              "tags": [list_of_posts_with_matching_tags],
              "posts": [list_of_posts_with_matching_content],
-             "spaces": [list_of_spaces_with_matching_content]}
+             "spaces": [list_of_spaces_with_matching_content]},
+             "plans": [list_of_plans_with_matching_content]}
 
             400 Bad Request
             {"status": 400,
@@ -65,15 +69,17 @@ class SearchHandler(BaseHandler):
         search_tags = self.get_argument("tags", "false")
         search_users = self.get_argument("users", "false")
         search_spaces = self.get_argument("spaces", "false")
+        search_plans = self.get_argument("plans", "false")
 
         # ensure type safety: only "true" will be True, everything else will evaluate to False
         search_posts = search_posts == "true"
         search_tags = search_tags == "true"
         search_users = search_users == "true"
         search_spaces = search_spaces == "true"
+        search_plans = search_plans == "true"
 
         # reject if all search categories are false
-        if not any([search_posts, search_tags, search_users, search_spaces]):
+        if not any([search_posts, search_tags, search_users, search_spaces, search_plans]):
             self.set_status(400)
             self.write(
                 {
@@ -88,6 +94,7 @@ class SearchHandler(BaseHandler):
         tags_search_result = []
         posts_search_result = []
         spaces_search_result = []
+        plans_search_result = []
 
         # depending on flags, gather search results
         if search_users:
@@ -102,6 +109,9 @@ class SearchHandler(BaseHandler):
         if search_spaces:
             spaces_search_result = self._search_spaces(query)
 
+        if search_plans:
+            plans_search_result = self._search_plans(query)
+
         response = self.json_serialize_response(
             {
                 "status": 200,
@@ -110,6 +120,7 @@ class SearchHandler(BaseHandler):
                 "tags": tags_search_result,
                 "posts": posts_search_result,
                 "spaces": spaces_search_result,
+                "plans": plans_search_result,
             }
         )
 
@@ -318,6 +329,7 @@ class SearchHandler(BaseHandler):
             matched_posts = post_manager.fulltext_search(query)
 
         if matched_posts:
+            matched_posts = self.add_authors_profile(matched_posts)
             return self.reduce_disallowed_posts(matched_posts)
         else:
             return []
@@ -358,3 +370,151 @@ class SearchHandler(BaseHandler):
                     reduced.append(post)
 
         return reduced
+
+    def _search_plans(self, slug: str) -> List[Dict]:
+        """
+        suggestion search on public and own plans on plan name, topics and abstract
+        :param slug: search slug
+        :return: any plan matching the slug
+        """
+
+        # TODO may move directly to elasticsearch_integration ?!
+
+        query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": { "author": self.current_user.username}
+                                    },
+                                    {
+                                        "match": { "read_access": self.current_user.username}
+                                    },
+                                    {
+                                        "match": { "write_access": self.current_user.username}
+                                    },
+                                    {
+                                        "term": { "is_good_practise": True}
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": { "name": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    },
+                                    {
+                                        "match": { "topics": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    },
+                                    {
+                                        "match": { "abstract": {
+                                            "query": slug,
+                                            "fuzziness": "AUTO"
+                                        }}
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+        }
+
+        search_url = "{}/{}/_search?".format(
+            global_vars.elasticsearch_base_url, "plans"
+        )
+
+        # catch test mode, because test_mode forces "test" index
+        if options.test_admin or options.test_user:
+            search_url = "{}/{}/_search?".format(
+                global_vars.elasticsearch_base_url, "test"
+            )
+
+        response = requests.post(
+            search_url,
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+            json=query,
+        )
+
+        # map _id's to exchange them for full plans
+        plans_ids = [elem["_id"] for elem in response.json()["hits"]["hits"]]
+
+        with util.get_mongodb() as db:
+            plans_manager = VEPlanResource(db)
+
+            matched_plans = [
+                plan.to_dict()
+                for plan in plans_manager.get_bulk_plans(plans_ids)
+            ]
+            matched_plans = self.add_authors_profile(matched_plans)
+
+        if matched_plans:
+            return matched_plans
+        else:
+            return []
+
+    def _search_plans_old(self, query: str) -> List[Dict]:
+        """
+        suggestion search on public and own plans on plan name, topics and abstract
+        :param query: search query
+        :return: any plans matching the query
+        """
+
+        with util.get_mongodb() as db:
+            plans_manager = VEPlanResource(db)
+            matched_plans = [
+                plan.to_dict()
+                for plan in plans_manager.find_plans_for_user_by_slug(self.current_user.username, query)
+            ]
+            matched_plans = self.add_authors_profile(matched_plans)
+
+        if matched_plans:
+            return matched_plans
+        else:
+            return []
+
+    def add_authors_profile(self, assets: List[Dict]) -> List[Dict]:
+        """
+        Add author profile information like first_name, last_name profile_pic to any list with "author" property
+        :param assets: list with "author" property
+        :return: assets list
+        """
+
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+
+            # collect all usernames that we have to request the profile information for, avoiding duplicates
+            usernames_to_request = []
+            for asset in assets:
+                if asset["author"] not in usernames_to_request:
+                    usernames_to_request.append(asset["author"])
+
+            profile_snippets = profile_manager.get_profile_snippets(
+                usernames_to_request
+            )
+
+            for asset in assets:
+                asset["author"] = next(
+                    (
+                        profile
+                        for profile in profile_snippets
+                        if profile["username"] == asset["author"]
+                    ),
+                    [None],
+                )
+
+        return assets

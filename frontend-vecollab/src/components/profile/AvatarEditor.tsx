@@ -52,7 +52,7 @@ export function getCroppedImg(image: HTMLImageElement | null, crop: Crop): Promi
             );
         });
     } else {
-        return new Promise((resolve, reject) => {
+        return new Promise((_, reject) => {
             reject();
         });
     }
@@ -106,13 +106,15 @@ function AvatarEditor({ sourceImg, onFinishUpload }: Props) {
                 keepSelection={true}
                 minWidth={100}
             />
-            <button
-                type="button"
-                className={'bg-ve-collab-orange text-white py-2 px-5 mt-2 rounded-lg'}
-                onClick={uploadImage}
-            >
-                {t('upload')}
-            </button>
+            <div className="mt-2">
+                <button
+                    type="button"
+                    className={'bg-ve-collab-orange text-white py-2 px-5 mt-2 rounded-lg'}
+                    onClick={uploadImage}
+                >
+                    {t('upload')}
+                </button>
+            </div>
         </div>
     );
 }

@@ -1,30 +1,30 @@
-import CustomHead from '@/components/metaData/CustomHead';
-import { useTranslation } from 'next-i18next';
-import { Socket } from 'socket.io-client';
-import UserProfile, { UserProfileNoAuthPreview } from '..';
-import { GetServerSidePropsContext } from 'next';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import React from 'react';
+import { getSession } from 'next-auth/react';
 
-interface Props {
-    socket: Socket;
+RedirectToProfile.auth = true;
+RedirectToProfile.autoForward = true;
+
+export default function RedirectToProfile() {
+    return <></>;
 }
 
-NoSelectedUserProfile.auth = true;
-NoSelectedUserProfile.noAuthPreview = <UserProfileNoAuthPreview />;
-export default function NoSelectedUserProfile({ socket }: Props): JSX.Element {
-    const { t } = useTranslation(['community', 'common']);
-    return (
-        <>
-            <CustomHead pageTitle={t('common:profile')} pageSlug={`profile/user`} />
-            <UserProfile socket={socket} />
-        </>
-    );
-}
+export const getServerSideProps: GetServerSideProps = async (
+    context: GetServerSidePropsContext
+) => {
+    const session = await getSession(context);
 
-export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
-        props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['common', 'community'])),
+        redirect: {
+            destination: session
+                ? `${
+                      context.locale == context.defaultLocale ? '' : '/' + context.locale
+                  }/profile/user/${session?.user.preferred_username}`
+                : `/`,
+            permanent: false,
+
+            ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
         },
     };
-}
+};

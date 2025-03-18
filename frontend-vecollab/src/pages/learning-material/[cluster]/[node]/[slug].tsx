@@ -1,13 +1,16 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
+import {
+    fetchTaxonomy,
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
-import { getClusterSlugByRouteQuery } from '../..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import CustomHead from '@/components/metaData/CustomHead';
@@ -90,7 +93,7 @@ export default function LearningContentView(props: Props) {
     }, [router]);
 
     const ListOfLectionsSidebar = ({ lections }: { lections: IMaterialNode[] }) => (
-        <ul className="flex flex-col divide-y gap-1 bg-white">
+        <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
             <li>
                 <div className="font-konnect text-xl pb-2">Kapitel</div>
             </li>
@@ -133,7 +136,7 @@ export default function LearningContentView(props: Props) {
                         liClasses: `${router.query.slug == node.text ? 'font-bold' : ''}`,
                     };
                 })}
-                ulClasses="!left-0 !right-auto max-w-96 w-fit"
+                ulClasses="left-0! right-auto! max-w-96 w-fit"
             />
         </div>
     );
@@ -165,7 +168,7 @@ export default function LearningContentView(props: Props) {
                     </>
                 }
                 contentChildren={
-                    <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
+                    <div className="md:mt-6 md:flex md:flex-row md:divide-x divide-gray-200 md:gap-1">
                         {props.lectionsOfNode.length && (
                             <div className="w-80 hidden md:block">
                                 <ListOfLectionsSidebar lections={props.lectionsOfNode} />
@@ -174,7 +177,7 @@ export default function LearningContentView(props: Props) {
 
                         <div className="w-full md:pl-6 pt-1 relative">
                             {loading && (
-                                <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                <div className="absolute bg-white/50 backdrop-blur-xs md:-ml-6 inset-0">
                                     <span className="m-2">
                                         <LoadingAnimation />
                                     </span>
@@ -190,8 +193,8 @@ export default function LearningContentView(props: Props) {
                             ></iframe>
 
                             {(props.prevNode || props.nextNode) && (
-                                <div className="flex my-4 pt-4 border-t">
-                                    {/* <div className="my-8 border-t py-3 flex justify-between"> */}
+                                <div className="flex my-4 pt-4 border-t border-gray-200">
+                                    {/* <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between"> */}
                                     {props.prevNode && (
                                         <Link
                                             className="mr-auto"
@@ -234,11 +237,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
+    const taxonomy = await fetchTaxonomy();
+
+    const clusterSlug = params?.cluster as string;
     if (!clusterSlug) return { notFound: true };
 
-    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
-    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string);
+    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);
+    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string, taxonomy);
     const currentNode = lectionsOfNode.find((node) => node.text === params?.slug);
     if (!currentNode) return { notFound: true };
 

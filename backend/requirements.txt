@@ -5,7 +5,7 @@ bidict==0.23.1
 certifi==2024.8.30
 cffi==1.17.1
 charset-normalizer==3.3.2
-cryptography==43.0.1
+cryptography==44.0.1
 deprecation==2.1.0
 dnspython==2.6.1
 exceptiongroup==1.2.2
@@ -13,7 +13,7 @@ h11==0.14.0
 httpcore==1.0.5
 httpx==0.27.2
 idna==3.8
-Jinja2==3.1.4
+Jinja2==3.1.5
 jwcrypto==1.5.6
 MarkupSafe==3.0.2
 packaging==24.1

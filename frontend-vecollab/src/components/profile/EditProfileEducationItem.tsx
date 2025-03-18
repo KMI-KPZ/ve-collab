@@ -65,7 +65,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                                 modifyCallbacks.modifyEducationTimestampFrom(index, e.target.value)
                             }
                             placeholder={t('common:optional')}
-                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
+                            className="border border-[#cccccc] bg-white rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>
@@ -84,7 +84,7 @@ export default function EditProfileEducationItem({ education, index, modifyCallb
                                 modifyCallbacks.modifyEducationTimestampTo(index, e.target.value)
                             }
                             placeholder={t('common:optional')}
-                            className="border border-[#cccccc] rounded-md px-2 py-[6px] w-full text-gray-400"
+                            className="border border-[#cccccc] bg-white rounded-md px-2 py-[6px] w-full text-gray-400"
                         />
                     </div>
                 </div>

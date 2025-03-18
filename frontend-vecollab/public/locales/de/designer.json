@@ -1,4 +1,4 @@
- {
+{
     "messages": {
         "maxlength5000": "Das Feld darf nicht mehr als 5000 Buchstaben enthalten.",
         "maxlength1000": "Das Feld darf nicht mehr als 1000 Buchstaben enthalten.",
@@ -18,7 +18,7 @@
         "atleast_one_field": "Es muss mindestens ein Eintrag vorhanden sein",
         "valid_date": "Bitte ein gültiges Datum eingeben",
         "realistic_date": "Bitte ein realistisches Datum eingeben",
-        "max_5_mb":"Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
+        "max_5_mb": "Max. 5 MB erlaubt. Bitte wählen Sie eine kleinere Datei.",
         "min_age_less_max_age": "Das Mindestalter muss kleiner oder gleich dem Höchstalter sein.",
         "file_count_max": "Max. 4 Dateien erlaubt"
     },
@@ -35,11 +35,12 @@
     "unsaved_changes_text": "Deine Änderungen auf der aktuellen Seite werden nicht gespeichert und gehen verloren.",
     "step_done_question": "Schritt fertig?",
     "toggle_state_hover": "Klicken um den Bearbeitungsstatus zu wechseln",
+    "default_new_plan_name": "Plan",
     "sidebar": {
         "general": "Allgemein",
         "phases": "Projektplanung",
         "summary": "Abschluss",
-        "post_processing": "Nachbearbeitung",
+        "post_processing_menu": "Nachbearbeitung",
         "general_outline": "Grobplanung",
         "project_name": "Projektname",
         "partners": "Partner:innen",
@@ -50,7 +51,8 @@
         "learning_env": "Lernumgebung",
         "methods": "Methodik",
         "evaluation": "Bewertung & Evaluation",
-        "checklist": "Checkliste"
+        "checklist": "Checkliste",
+        "post_processing": "Reflexion & Veröffentlichung"
     },
     "name": {
         "title": "Projektname",
@@ -61,16 +63,22 @@
     },
     "partners": {
         "title": "Projektpartner:innen",
-        "page_description": "Füge deine Partner*innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner*in ab.",
+        "page_description": "Füge deine Partner:innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner:in ab.",
         "subtitle": "Wer ist am Projekt beteiligt?",
-        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner*innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
+        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner:innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
         "description-2": "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.",
         "tooltip": "Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …",
-        "partners_title": "Beteiligte",
-        "externpartners_title": "Extern Beteiligte"
+        "partners_title": "Beteiligte Personen",
+        "externpartners_title": "Extern Beteiligte",
+        "externpartners_tooltip": "Extern Beteiligte können z.B Unternehmen oder Organisationen sein",
+        "search_users": "Name eingeben oder Nutzer:in suchen...",
+        "enter_ext": "Bezeichnung...",
+        "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>Hier klicken um \"<bold>{{value}}</bold>\" als beteiligte Person zu verwenden!",
+        "extparties_warning": "Hinweis: extern Beteilgte sind <bold>nicht direkt an der Planung</bold> des VEs beteiligt.<br>Am VE beteiligte Personen sollten oben eingetragen werden, auch wenn sie nicht im VE-Collab Netzwerk sind."
     },
     "institutions": {
         "title": "Institutionen",
+        "institution": "Institution",
         "page_description": "Erfasse alle am VE teilnehmenden Institutionen mit deren Name, Art der Bildungseinrichtung, dem Fachbereich und Land.",
         "subtitle": "In welchen Institutionen soll der VE umgesetzt werden?",
         "description": "Dieses Feld gibt euch einen besseren Überblick über die beteiligten Einrichtungen und die entsprechenden Fachbereiche.",
@@ -90,6 +98,7 @@
     },
     "lectures": {
         "title": "Lehrveranstaltungen",
+        "lecture": "Lehrveranstaltung",
         "page_description": "Lege die Lehrveranstaltungen an, in denen der VE implementiert werden soll. Wichtige Information sind Name, Art, Format und Anzahl der Teilnehmenden.",
         "subtitle": "Im Rahmen welcher Lehrveranstaltungen soll der VE umgesetzt werden?",
         "compulsory": "Pflichtveranstaltung",
@@ -103,6 +112,8 @@
     },
     "target": {
         "title": "Zielgruppen & Sprachen",
+        "target_group": "Zielgruppe",
+        "target_group_placeholder": "z.B. Studierende des Fachbereichs Informatik",
         "page_description": "Notiere Informationen über die Zielgruppen des VE, wie z.B. deren Semester, Studiengang, Sprachen und VE-relevante Erfahrungen.",
         "subtitle": "An welche Zielgruppen richtet sich der VE?",
         "description": "Es ist wichtig, sich mit der Zielgruppe zu beschäftigen, um Lehr-/Lernziele und Inhalte des VE optimal an die Lernenden anzupassen. Das Erfragen der Erstsprachen und weiterer Sprachen der Teilnehmenden kann bei der Findung einer Lingua Franca bzw. eines multilingualen Settings von Bedeutung sein.",
@@ -111,7 +122,7 @@
         "semester_placeholder": "In welchem Semester sind die Studierenden? Mehrere durch Komma trennen",
         "language_title": "In welchen Sprachen findet der VE (hauptsächlich) statt?",
         "language_description": "Berücksichtigt bei eurer Entscheidung die sprachliche Vielfalt in euren Lernendengruppen und besprecht, wie ihr dieses Potenzial für den VE nutzen könnt.",
-        "relevant_exp": "VE-Projektrelevante Erfahrungen",
+        "relevant_exp": "Relevantes Vorwissen",
         "relevant_exp_placeholder": "z.B. Sprachkenntnisse, bisherige Veranstaltungen zum Thema, etc.",
         "degree": "Studiengang",
         "degree_placeholder": "Studiengang eingeben, mehrere durch Komma trennen",
@@ -147,7 +158,7 @@
         "title": "Digital Lernumgebung",
         "page_description": "Beschreibe die digitale Lernumgebung des VE, lege das Format fest (synchron / asynchron) und füge optionale physische Treffen hinzu.",
         "subtitle": "In welcher digitalen Lernumgebung findet der VE statt?",
-        "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner*innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
+        "description": "Bitte gebt an, welche gemeinsame Lernplattform euren Teilnehmenden zur Verfügung steht, z. B. eine gemeinsame Projektseite oder ein gemeinsames Padlet, oder welche eigene Plattform die beteiligten Partner:innen jeweils nutzen. Nennt ggf. außerdem die für euer Projekt wichtigsten digitalen Tools, wie z. B. das verwendete Videokonferenzsystem oder virtuelle Welten.",
         "tooltip": "Mehr zu LMS findest du hier in den Selbstlernmaterialien …",
         "placeholder": "Lernumgebung beschreiben",
         "subtitle2": "In welchem Format / welchen Formaten soll der VE umgesetzt werden?",
@@ -157,7 +168,7 @@
         "sync": "synchron",
         "async": "asynchron",
         "asyncAndSync": "asynchron und synchron",
-        "pysicalSupp": "Wird der VE durch eine physische Mobilität ergänzt / begleitet?",
+        "physicalMeetings": "Wird der VE durch ein Präsenztreffen ergänzt / begleitet?",
         "place": "Ort",
         "enter_place": "Ort eingeben"
     },
@@ -200,8 +211,8 @@
         "tooltip": "Mehr zu den Aspekten der Checkliste findest du hier in den Selbstlernmaterialien",
         "time_title": "Zeit",
         "time_descr": [
-                "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
-                "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind."
+            "Findet Zeiten für die gemeinsame Vorbereitung des VE. Am besten erstellt ihr einen Zeitplan. ",
+            "Findet Zeitslots für die Durchführung des VE, falls synchrone Meetings geplant sind."
         ],
         "topic_title": "Themen",
         "topic_descr": "Überprüft, ob das Thema / die Themen des VE mit den Modulvorgaben / dem Lehrplan aller beteiligten Personen vereinbar ist / sind.",
@@ -221,9 +232,9 @@
         "add_userdefined_title": "Benutzerdefinierten Aspekt hinzufügen",
         "new_userbox_placeholder": "Bezeichnung ..."
     },
-    "step-names" : {
+    "step-names": {
         "page_description": "Die Grobplanung ermöglicht das Anlegen von Phasen und zugehörigen Lernzielen, die im VE durchlaufen werden (z.B. Icebreaker, Arbeitsphase, Präsentation).",
-        "no_good_practice_plans": "Es sind noch Good-Practice Pläne mit Phasen zum Importieren vorhanden",
+        "no_good_practice_plans": "Keine Good-Practice Pläne mit Phasen zum Importieren vorhanden",
         "select_steps_to_import": "Wähle Phasen, die du aus den Good-Practice Plänen importieren möchtest",
         "by": "von",
         "last_modified": "Zuletzt geändert",
@@ -260,6 +271,7 @@
         "add_learning_activity": "weitere Lernaktivität hinzufügen",
         "task": "Aufgabenstellung",
         "work_mode": "Arbeitsform",
+        "work_mode_placeholder": "z.B. Einzelarbeit, Gruppenarbeit, Projektarbeit",
         "notes": "Notizen",
         "tools": "Tools",
         "tools_placeholder": "Welche Tools können verwendet werden?",
@@ -268,7 +280,7 @@
     },
     "post-process": {
         "title": "Nachbearbeitung",
-        "page_description": "Füge deine Partner*innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner*in ab.",
+        "page_description": "Füge deine Partner:innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner:in ab.",
         "subtitle": "Kehrt hierher zurück, nachdem ihr den VE durchgeführt habt.",
         "submit": "Absenden & Schließen",
         "text_1": "Plant ihr, euren VE der Community als Good Practice Beispiel zur Verfügung stellen?",
@@ -281,7 +293,7 @@
         "read_and_import_tooltip": "Ich stelle der Community meinen Plan teilweise lizenzfrei zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung finden, anschauen und Teile (z. B. Lernaktivitäten) daraus in eigene VE-Pläne importieren.<1/>Die herunterladbare Gesamtübersicht meines Plans steht unter der folgenden Lizenz: CC-BY-NC-ND 4.0",
         "read_only": "Nur Lesen",
         "read_only_tooltip": "Ich stelle der Community meinen Plan unter der Lizenz CC-BY-NC-ND 4.0 zur Verfügung, d. h.: Jede(r) registrierte VE-Collab-Nutzende kann die Planung als Leseansicht finden, anschauen und als Inspiration für eigene VE nutzen.<1/>Die herunterladbare Gesamtübersicht meines Plans steht ebenfalls unter der folgenden Lizenz: CC-BY-NC-ND 4.0",
-        "abstract_task": "Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen, in dem du die wichtigsten Eckpunkte deines VE (Partner*innen, Inhalt, Ablauf) ganz kurz zusammenfasst.",
+        "abstract_task": "Bitte verfasse hier ein kurzes Abstract von ca. 5 Zeilen, in dem du die wichtigsten Eckpunkte deines VE (Partner:innen, Inhalt, Ablauf) ganz kurz zusammenfasst.",
         "abstract_placeholder": "Kurze Beschreibung des VE ...",
         "reflection": "Reflexion",
         "reflection_task_1": "Was macht diesen VE zum Good Practice Beispiel? Was hat deiner Meinung nach gut funktioniert? Was waren Herausforderungen und wie bist du damit umgegangen? Was würdest du das nächste Mal anders machen?",

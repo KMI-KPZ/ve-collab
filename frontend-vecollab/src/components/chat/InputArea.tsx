@@ -36,8 +36,8 @@ export default function InputArea({ roomID, socket }: Props) {
         <div className="my-2">
             <div className="border border-[#cccccc] bg-white rounded-md ">
                 <textarea
-                    className="w-full h-16 p-2 border-b rounded-t-md resize-none"
-                    placeholder={t("type_message_placeholder")}
+                    className="w-full h-16 p-2 border-b border-b-gray-200 rounded-t-md resize-none"
+                    placeholder={t('type_message_placeholder')}
                     value={sendingMessage}
                     onChange={(e) => setSendingMessage(e.target.value)}
                     onKeyDown={(e) => sendOnEnter(e)}
@@ -72,13 +72,6 @@ export default function InputArea({ roomID, socket }: Props) {
                     >
                         <RxFace />
                     </button>
-                    {/* <button
-                        type='submit'
-                        className="bg-ve-collab-orange hover:bg-ve-collab-orange/70 text-white font-bold py-2 px-4 rounded-md ml-2"
-                        onClick={handleMessageSend}
-                    >
-                        Send
-                    </button> */}
                     <button
                         type="submit"
                         className="py-2 px-4 rounded-md ml-2"

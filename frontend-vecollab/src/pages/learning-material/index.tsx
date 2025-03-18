@@ -1,4 +1,5 @@
 import {
+    fetchTaxonomy,
     getChildrenOfNode,
     getMaterialNodesOfNodeByText,
     getTopLevelNodes,
@@ -17,25 +18,11 @@ import { useRouter } from 'next/router';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
 
-export const ClusterRouteMapping: { [key: string]: { route: number; slug: string } } = {
-    topBubble: { route: 1, slug: 'top-bubble' },
-    leftBubble: { route: 2, slug: 'left-bubble' },
-    rightBubble: { route: 3, slug: 'right-bubble' },
-    bottomBubble: { route: 4, slug: 'bottom-bubble' },
-};
-
-export const getClusterSlugByRouteQuery = (nr: number) => {
-    const cluster = Object.keys(ClusterRouteMapping).find(
-        (a) => ClusterRouteMapping[a].route == nr
-    );
-    return cluster ? ClusterRouteMapping[cluster].slug : undefined;
-};
-
-export const getClusterRouteBySlug = (slug: string) => {
-    const cluster = Object.keys(ClusterRouteMapping).find(
-        (a) => ClusterRouteMapping[a].slug == slug
-    );
-    return cluster ? ClusterRouteMapping[cluster].route : undefined;
+export const ClusterRouteMapping: { [key: string]: { slug: string } } = {
+    topBubble: { slug: 'Grundlagen' },
+    leftBubble: { slug: 'Zusammen Planen' },
+    rightBubble: { slug: 'Digitales' },
+    bottomBubble: { slug: 'Zusammen Lernen' },
 };
 
 const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element } = {
@@ -47,14 +34,14 @@ const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element
 
 export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || (() => <></>);
 
-const styleBubbleWrapper = 'relative w-48 max-xl:mx-auto max-xl:my-24';
+const styleBubbleWrapper = 'relative w-48 mx-auto my-24 xl:mx-0 xl:my-0';
 const styleBubbleMain = `group block relative h-48 w-48 z-10 rounded-full
-    bg-footer-pattern bg-center drop-shadow-lg opacity-85 flex justify-center items-center #
+    bg-footer-pattern bg-center shadow-lg opacity-85 flex justify-center items-center
     transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110`;
 const styleBubbleLeaf = `block absolute px-6 py-3 min-w-24 max-w-48 rounded-full bg-white
-    flex font-konnect items-center justify-center text-center text-ve-collab-blue drop-shadow-lg
+    flex font-konnect items-center justify-center text-center text-ve-collab-blue shadow-lg
     hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300
-    hover:-translate-y-105 hover:scale-110`;
+    hover:scale-110`;
 
 interface Props {
     nodes: { [key: string]: INode[] };
@@ -71,28 +58,28 @@ export default function PageCategoryNotSelected(props: Props) {
 
     const isUserAdmin = useIsGlobalAdmin(session ? session.accessToken : '');
 
-    const Bubble = (querySlug: number, wrapperStyle: string, nodes: string[]) => {
-        const slug = getClusterSlugByRouteQuery(querySlug);
-        if (!slug) return <></>;
+    const Bubble = (querySlug: string, wrapperStyle: string, nodes: string[]) => {
+        if (!querySlug) return <></>;
         return (
             <div className={`${styleBubbleWrapper} ${wrapperStyle}`}>
                 <Link
                     href={`/learning-material/${querySlug}`}
                     className={`${styleBubbleMain} hover:cursor-pointer`}
+                    title={querySlug}
                 >
-                    {getClusterIconBySlug(slug)({
+                    {getClusterIconBySlug(querySlug)({
                         size: 100,
                         className: 'text-white transition-colors group-hover:text-ve-collab-orange',
                     })}
                 </Link>
                 {nodes.map((style, i) => (
                     <div key={i}>
-                        {props.nodes[slug][i]?.text && (
+                        {props.nodes[querySlug][i]?.text && (
                             <Link
-                                href={`/learning-material/${querySlug}/${props.nodes[slug][i]?.text}`}
+                                href={`/learning-material/${querySlug}/${props.nodes[querySlug][i]?.text}`}
                                 className={`${styleBubbleLeaf} ${style}`}
                             >
-                                {props.nodes[slug][i]?.text}
+                                {props.nodes[querySlug][i]?.text}
                             </Link>
                         )}
                     </div>
@@ -104,7 +91,7 @@ export default function PageCategoryNotSelected(props: Props) {
     const Bubbles = () => (
         <>
             {/* 1 BUBBLE */}
-            {Bubble(1, 'xl:left-[37%] xl:-translate-x-1/1', [
+            {Bubble('Grundlagen', 'xl:left-[50%] xl:-translate-x-full', [
                 '-top-[1.5rem] -left-[5rem]', //einfuehrung
                 'top-[.5rem] -right-[6.5rem]', // potenziale
                 '-bottom-[2.2rem] -right-[7rem]', // herausforderungen
@@ -112,22 +99,21 @@ export default function PageCategoryNotSelected(props: Props) {
             ])}
 
             {/* 2 BUBBLE */}
-            {Bubble(2, 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
+            {Bubble('Zusammen Planen', 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
                 '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
             ])}
 
             {/* 3 BUBBLE */}
-            {Bubble(3, 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
-                '-top-[2.5rem] -left-[5rem]', // digitale medien
+            {Bubble('Digitales', 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
                 '-bottom-[3.5rem] -right-[7rem]', // datenschutz
-                'bottom-0 -left-[4rem]', // tools
+                '-top-[1.5rem] -left-[3rem]', // tools
                 'top-0 -right-[4rem]', // oer
             ])}
 
             {/* 4 BUBBLE */}
-            {Bubble(4, 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
-                '-bottom-[.5rem] -left-[10.5rem]', // interaktion
+            {Bubble('Zusammen Lernen', 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
+                '-bottom-[.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                 '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
                 '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
@@ -177,12 +163,14 @@ export default function PageCategoryNotSelected(props: Props) {
 }
 
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
-    const cluster = await getTopLevelNodes();
+    const taxonomy = await fetchTaxonomy();
+
+    const cluster = await getTopLevelNodes(taxonomy);
     const nodes: { [key: string]: INode[] } = {};
 
     await Promise.all(
         cluster.map(async (bubble) => {
-            nodes[bubble.text] = await getChildrenOfNode(bubble.id);
+            nodes[bubble.text] = await getChildrenOfNode(bubble.id, taxonomy);
         })
     );
 
@@ -190,7 +178,7 @@ export async function getServerSideProps({ locale }: GetServerSidePropsContext) 
         Object.values(nodes).flatMap(async (nodeArray) =>
             Promise.all(
                 nodeArray.map(async (node) => {
-                    const learning_page = await getMaterialNodesOfNodeByText(node.text);
+                    const learning_page = await getMaterialNodesOfNodeByText(node.text, taxonomy);
                     return {
                         node_text: node.text,
                         learning_page: learning_page,

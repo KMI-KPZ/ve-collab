@@ -4,7 +4,13 @@ import Timestamp from '@/components/common/Timestamp';
 import Timeline from '@/components/network/Timeline';
 import VerticalTabs from '@/components/profile/VerticalTabs';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { fetchPOST, useGetAllPlans, useIsGlobalAdmin } from '@/lib/backend';
+import {
+    fetchDELETE,
+    fetchPOST,
+    useGetAllPlans,
+    useGetOpenReports,
+    useIsGlobalAdmin,
+} from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -13,6 +19,7 @@ import { Socket } from 'socket.io-client';
 import { GetStaticPropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
+import ConfirmDialog from '@/components/common/dialogs/Confirm';
 
 interface Props {
     socket: Socket;
@@ -25,8 +32,21 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
     const router = useRouter();
     const isGlobalAdmin = useIsGlobalAdmin(session!.accessToken);
     const { data: plans, isLoading, error, mutate } = useGetAllPlans(session!.accessToken);
+    const {
+        data: reports,
+        isLoading: isLoadingReports,
+        error: errorReports,
+        mutate: mutateReports,
+    } = useGetOpenReports(session!.accessToken);
+
+    const [askDeletion, setAskDeletion] = useState<boolean>(false);
 
     const [userProfileSnippets, setUserProfileSnippets] = useState<BackendUserSnippet[]>();
+
+    const deleteReportedItem = async (reportId: string) => {
+        await fetchDELETE(`/report/delete?report_id=${reportId}`, undefined, session!.accessToken);
+        mutateReports();
+    };
 
     useEffect(() => {
         if (isLoading || error || !session || !plans) {
@@ -79,7 +99,7 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                     <div tabid="plans" tabname="VE-Pläne">
                         <div className="h-screen overflow-y-auto">
                             {isLoading && <LoadingAnimation />}
-                            <ul className="divide-y">
+                            <ul className="divide-y divide-gray-200">
                                 {plans
                                     .sort((a, b) => {
                                         return (
@@ -147,6 +167,81 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                     ))}
                             </ul>
                         </div>
+                    </div>
+                    <div tabid="reports" tabname="Meldungen">
+                        {reports.map((report) => (
+                            <div
+                                key={report._id}
+                                className="flex justify-between items-center p-2 border-b border-gray-200"
+                            >
+                                <div className="flex justify-between">
+                                    <div>
+                                        <p>
+                                            <span className="font-bold">{report.type}</span> -{' '}
+                                            <span className="text-gray-400">{report.item_id}</span>
+                                        </p>
+                                        <div className="font-bold">Reason:</div>
+                                        <p>{report.reason}</p>
+                                        <div className="font-bold">Item:</div>
+                                        <pre>{JSON.stringify(report.item, null, 2)}</pre>
+                                        <div className="font-bold">Report ID:</div>
+                                        <p>{report._id}</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col">
+                                    <button
+                                        type="button"
+                                        className="bg-ve-collab-orange text-white rounded-lg my-4 p-2 h-16"
+                                        onClick={() => {
+                                            fetchPOST(
+                                                '/report/close',
+                                                {
+                                                    report_id: report._id,
+                                                },
+                                                session!.accessToken
+                                            ).then(() => {
+                                                mutateReports();
+                                            });
+                                        }}
+                                    >
+                                        Mark as resolved
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`border border-red-600 rounded-lg my-4 p-2 h-16 ${
+                                            report.type === 'profile' || report.type === 'chatroom'
+                                                ? 'text-gray-400 border-red-600/50 cursor-not-allowed'
+                                                : 'text-red-600 bg-white'
+                                        }`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (
+                                                report.type !== 'profile' &&
+                                                report.type !== 'chatroom'
+                                            ) {
+                                                setAskDeletion(true);
+                                            }
+                                        }}
+                                        disabled={
+                                            report.type === 'profile' || report.type === 'chatroom'
+                                        } // profiles and chatrooms can't be fully deleted
+                                    >
+                                        Delete reported Item
+                                    </button>
+                                </div>
+                                {askDeletion && (
+                                    <ConfirmDialog
+                                        message={
+                                            "Really delete the reported item? This can't be undone."
+                                        }
+                                        callback={(proceed) => {
+                                            if (proceed) deleteReportedItem(report._id);
+                                            setAskDeletion(false);
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </VerticalTabs>
             </WhiteBox>

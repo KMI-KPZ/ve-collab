@@ -46,7 +46,6 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
         if (inputValue.length > 1) {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
-                    // console.log({data});
                     setUsersProfileSnippets(
                         data.users.reduce(
                             (acc, current, i) => ({ ...acc, [current.username]: current }),
@@ -76,9 +75,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                 name: optionalRoomName !== '' ? optionalRoomName : null,
             },
             session?.accessToken
-        ).then((data) => {
-            console.log(data);
-        });
+        );
     };
 
     const getUserLabel = (user: BackendUserSnippet) => {
@@ -88,7 +85,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
     return (
         <div className="relative h-[47vh]">
             <div className="w-[30vw] min-w-96 h-[40vh] overflow-y-auto content-scrollbar relative px-2">
-                <h1 className="my-4">{t("add_members_to_chat")}</h1>
+                <h1 className="my-4">{t('add_members_to_chat')}</h1>
                 {members.map((member, index) => (
                     <div key={index} className="my-2">
                         <AsyncSelect
@@ -104,10 +101,10 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                                       }
                                     : null
                             }
-                            placeholder={t("search_users_placeholder")}
+                            placeholder={t('search_users_placeholder')}
                             getOptionLabel={(option) => option.label}
-                            loadingMessage={() => t("loading")}
-                            noOptionsMessage={() => t("user_search_no_results")}
+                            loadingMessage={() => t('loading')}
+                            noOptionsMessage={() => t('user_search_no_results')}
                             openMenuOnFocus={false}
                             openMenuOnClick={false}
                             components={{
@@ -125,7 +122,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                     </button>
                 </div>
                 <div>
-                    <h1 className="my-4">{t("give_chat_name")}</h1>
+                    <h1 className="my-4">{t('give_chat_name')}</h1>
                     <input
                         type="text"
                         className="border border-gray-300 rounded-md w-full px-2 py-1"
@@ -141,18 +138,18 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
                     }
                     onClick={closeDialogCallback}
                 >
-                    <span>{t("cancel")}</span>
+                    <span>{t('cancel')}</span>
                 </button>
                 <button
                     className={
-                        'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                        'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                     }
                     onClick={(e) => {
                         createNewRoom();
                         closeDialogCallback();
                     }}
                 >
-                    <span>{t("create")}</span>
+                    <span>{t('create')}</span>
                 </button>
             </div>
         </div>

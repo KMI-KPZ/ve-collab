@@ -23,6 +23,9 @@ import { FaEye, FaMedal } from 'react-icons/fa';
 import { Trans, useTranslation } from 'next-i18next';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 import { HiOutlineCheckCircle } from 'react-icons/hi';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
+import { Tooltip } from '../common/Tooltip';
 
 interface Props {
     plan: PlanPreview;
@@ -48,6 +51,7 @@ export default function PlansBrowserItem({
     const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
     const [planSummary, setPlanSummary] = useState<IPlan>();
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportDialogOpen, setReportDialogOpen] = useState<boolean>(false);
 
     // BACKLOG: remember this cool useSWRMutation to trigger changes
     // const getPlanById = async (url: string, { arg }: { arg: string }) => {
@@ -62,17 +66,18 @@ export default function PlansBrowserItem({
         await refetchPlansCallback();
     };
 
-    const stepsToProgress =
-        Object.keys(initialSideProgressBarStates).filter((a) => a !== 'steps').length +
-        plan.steps.length;
+    const stepsDone = Object.keys(plan.progress).filter(
+        (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
+    ).length;
+    const stepsTotal = Object.keys(initialSideProgressBarStates).filter(
+        (a) => a !== 'steps'
+    ).length;
+    const phasesDone = plan.progress.steps.filter(
+        (a) => a[Object.keys(a)[0]] == ProgressState.completed
+    ).length;
+    const phasesTotal = plan.steps.length;
 
-    const completedSteps =
-        Object.keys(plan.progress).filter(
-            (k) => plan.progress[k as keyof ISideProgressBarStates] == ProgressState.completed
-        ).length +
-        plan.progress.steps.filter((a) => a[Object.keys(a)[0]] == ProgressState.completed).length;
-
-    const isPlanProgressCompleted = () => completedSteps == stepsToProgress;
+    const isPlanProgressCompleted = () => stepsDone + phasesDone == stepsTotal + phasesTotal;
 
     const openPlanSummary = () => {
         setSummaryOpen(true);
@@ -173,7 +178,7 @@ export default function PlansBrowserItem({
             }}
         >
             <div>
-                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t">
+                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t border-gray-200">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
@@ -214,7 +219,7 @@ export default function PlansBrowserItem({
 
     const DeleteButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setAskDeletion(true);
@@ -226,7 +231,7 @@ export default function PlansBrowserItem({
 
     const ShareButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 setIsShareDialogOpen(true);
@@ -251,13 +256,25 @@ export default function PlansBrowserItem({
 
     const CopyButton = () => (
         <button
-            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700"
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
             onClick={(e) => {
                 e.stopPropagation();
                 createCopy(plan._id);
             }}
         >
             <MdOutlineCopyAll title={t('create_copy')} />
+        </button>
+    );
+
+    const ReportButton = () => (
+        <button
+            className="p-2 rounded-full hover:bg-ve-collab-blue-light hover:text-gray-700 cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation();
+                setReportDialogOpen(true);
+            }}
+        >
+            <GoAlert title={t('report.report_title')} />
         </button>
     );
 
@@ -322,26 +339,60 @@ export default function PlansBrowserItem({
 
     return (
         <>
-            <div className="basis-1/12 flex justify-center">
+            <div className="basis-1/12 flex justify-center text-center hidden md:block">
                 {isPlanProgressCompleted() ? (
-                    <span className="cursor-pointer" title={t('plans_title_all_steps_completed')}>
-                        <HiOutlineCheckCircle size={23} />
-                    </span>
-                ) : (
-                    <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap cursor-pointer"
-                        title={t('plans_title_partial_steps_completed', {
-                            count: completedSteps,
-                            total: stepsToProgress,
-                        })}
+                    <Tooltip
+                        tooltipsText={
+                            <Trans
+                                i18nKey="plans_title_all_steps_completed"
+                                components={{
+                                    br: <br />,
+                                    italic: <i />,
+                                    checkMark: <HiOutlineCheckCircle className="inline" />,
+                                }}
+                                values={{
+                                    stepsTotal,
+                                    phasesTotal,
+                                }}
+                            />
+                        }
+                        position="bottom-right"
+                        className="text-left"
                     >
-                        {completedSteps} / {stepsToProgress}
-                    </span>
+                        <HiOutlineCheckCircle size={23} />
+                    </Tooltip>
+                ) : (
+                    <Tooltip
+                        tooltipsText={
+                            <Trans
+                                i18nKey="plans_title_partial_steps_completed"
+                                ns="common"
+                                components={{
+                                    br: <br />,
+                                    bold: <strong />,
+                                    italic: <i />,
+                                    checkMark: <HiOutlineCheckCircle className="inline" />,
+                                }}
+                                values={{
+                                    stepsDone,
+                                    stepsTotal,
+                                    phasesDone,
+                                    phasesTotal,
+                                }}
+                            />
+                        }
+                        position="bottom-right"
+                        className="text-left"
+                    >
+                        <span className="text-center text-sm text-slate-800 whitespace-nowrap cursor-pointer">
+                            {stepsDone + phasesDone} / {stepsTotal + phasesTotal}
+                        </span>
+                    </Tooltip>
                 )}
             </div>
 
             <div
-                className="grow md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
+                className="grow basis-5/6 sm:basis-4/6 md:basis-5/12 font-normal text-base group hover:cursor-pointer truncate"
                 onClick={(e) => {
                     e.stopPropagation();
                     if (plan.write_access.includes(username)) {
@@ -353,7 +404,7 @@ export default function PlansBrowserItem({
             >
                 <div className="flex items-center flex-wrap">
                     <div className="flex order-1 truncate xl:max-w-[60%] items-center">
-                        <div className="grow mr-2 py-1 font-bold whitespace-nowrap truncate">
+                        <div className="grow mr-2 font-bold whitespace-nowrap truncate">
                             <Link href={`/plan/${plan._id}`} onClick={(e) => e.preventDefault()}>
                                 {plan.name}
                             </Link>
@@ -364,8 +415,13 @@ export default function PlansBrowserItem({
                             </div>
                         )}
                     </div>
+                    {plan.abstract && (
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm truncate">
+                            {plan.abstract}
+                        </div>
+                    )}
                     {plan.topics.length > 0 && (
-                        <div className="w-full order-2 xl:order-3 mr-2 py-1 text-gray-700 truncate">
+                        <div className="w-full order-2 xl:order-3 mr-2 text-gray-700 text-sm italic truncate">
                             {plan.topics.join(' / ')}
                         </div>
                     )}
@@ -383,6 +439,7 @@ export default function PlansBrowserItem({
                                 <DeleteButton />
                             </>
                         )}
+                        <ReportButton />
                     </div>
                 </div>
             </div>
@@ -404,7 +461,7 @@ export default function PlansBrowserItem({
                 )}
             </div>
 
-            <div className="basis-1/6 hidden md:block">
+            <div className="basis-1/6 hidden sm:block">
                 <Timestamp
                     timestamp={plan.last_modified}
                     className="text-sm"
@@ -430,6 +487,16 @@ export default function PlansBrowserItem({
                     callback={(proceed) => {
                         if (proceed) deletePlan(plan._id);
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={plan._id}
+                    reportedItemType="plan"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
                     }}
                 />
             )}
@@ -464,7 +531,7 @@ function PlansBrowserItemNoAuthPreview(plan: PlanPreview) {
                     </span>
                 ) : (
                     <span
-                        className="w-[72px] text-center rounded-full border px-2 py-1 -m-1 whitespace-nowrap"
+                        className="w-[72px] text-center rounded-full border border-gray-200 px-2 py-1 -m-1 whitespace-nowrap"
                         title={t('plans_title_partial_steps_completed', {
                             count: completedSteps,
                             total: stepsToProgress,

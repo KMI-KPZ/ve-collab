@@ -213,7 +213,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                         onChange={onChange}
                         onBlur={onBlur}
                         value={value}
-                        options={options}
+                        options={options.sort((a, b) => a.label.localeCompare(b.label))}
                         isClearable={true}
                         isMulti
                         closeMenuOnSelect={false}
@@ -245,7 +245,11 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                         })}
                                     />
                                 </div>
-                                <button type="button" onClick={() => removeTopic(index)}>
+                                <button
+                                    type="button"
+                                    onClick={() => removeTopic(index)}
+                                    className="cursor-pointer"
+                                >
                                     <RxMinus size={20} />
                                 </button>
                             </div>
@@ -257,7 +261,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 </div>
                 <div className="">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer"
                         type="button"
                         onClick={() => {
                             appendTopic({
@@ -300,7 +304,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                     <div className="flex flex-wrap">
                         {fieldsLearnings.map((individualLearningGoalPerPartner, index) => (
                             <div key={individualLearningGoalPerPartner.id} className="flex mx-2">
-                                <div className="shadow rounded p-2 w-fit h-fit">
+                                <div className="shadow-sm rounded-sm p-2 w-fit h-fit">
                                     <div className="flex flex-col">
                                         <div className="font-bold text-lg mb-4 text-center">
                                             {findPartnerFirstAndLastName(
@@ -343,7 +347,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                             <Link
                                 target="_blank"
                                 href={'/learning-material/top-bubble/Potenziale'}
-                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
                                 <PiBookOpenText size={30} color="#00748f" />
                             </Link>
@@ -371,7 +375,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                                 href={
                                     '/learning-material/top-bubble/Beispiele%20aus%20der%20Praxis'
                                 }
-                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
                                 <PiBookOpenText size={30} color="#00748f" />
                             </Link>
@@ -433,7 +437,7 @@ export function LearningGoalsNoAuthPreview() {
                             .fill(null)
                             .map((_, index) => (
                                 <div key={index} className="flex mx-2">
-                                    <div className="shadow rounded p-2 w-fit h-fit">
+                                    <div className="shadow-sm rounded-sm p-2 w-fit h-fit">
                                         <div className="flex flex-col">
                                             <div className="font-bold text-lg mb-4 text-center">
                                                 {index === 0
@@ -510,7 +514,7 @@ export function LearningGoalsNoAuthPreview() {
                         </div>
                         <div className="">
                             <button
-                                className="p-2 m-2 bg-white rounded-full shadow"
+                                className="p-2 m-2 bg-white rounded-full shadow-sm"
                                 type="button"
                                 onClick={() => {}}
                                 disabled
@@ -521,7 +525,7 @@ export function LearningGoalsNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
         </div>
     );
 }

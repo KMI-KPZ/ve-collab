@@ -27,20 +27,6 @@ export interface PhysicalMobility {
     timestamp_to: string;
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return (
-//         formValues.learningEnv === '' &&
-//         formValues.courseFormat === '' &&
-//         formValues.physicalMobilities.every((mobility) => {
-//             return (
-//                 mobility.location === '' &&
-//                 mobility.timestamp_from === '' &&
-//                 mobility.timestamp_to === ''
-//             );
-//         })
-//     );
-// };
-
 interface Props {
     socket: Socket;
 }
@@ -194,7 +180,11 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                     </p>
                 </div>
 
-                <button className="ml-3" type="button" onClick={() => handleDelete(index)}>
+                <button
+                    className="ml-3 cursor-pointer"
+                    type="button"
+                    onClick={() => handleDelete(index)}
+                >
                     <RxTrash size={20} />
                 </button>
             </div>
@@ -295,7 +285,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                                 href={
                                     '/learning-material/right-bubble/Digitale%20Medien%20&%20Werkzeuge'
                                 }
-                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
+                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
                                 <PiBookOpenText size={30} color="#00748f" />
                             </Link>
@@ -325,17 +315,19 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                         </div>
                     </div>
                     <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                        {t('learningEnv.pysicalSupp')}
+                        {t('learningEnv.physicalMeetings')}
                         <div className="flex w-40 justify-end gap-x-5">
                             {radioBooleanInput(methods.control, `usePhysicalMobility`)}
                         </div>
                     </div>
                     {methods.watch('usePhysicalMobility') && (
-                        <div className="mt-4 rounded shadow p-2 w-full lg:w-2/3">
-                            <div className="divide-y my-2">{renderMobilitiesInputs()}</div>
+                        <div className="mt-4 rounded-sm shadow-sm p-2 w-full lg:w-2/3">
+                            <div className="divide-y divide-gray-200 my-2">
+                                {renderMobilitiesInputs()}
+                            </div>
                             <div className="flex justify-center">
                                 <button
-                                    className="p-4 bg-white rounded-full shadow hover:bg-slate-50"
+                                    className="p-4 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         append(emptyPysicalMobility);
@@ -423,8 +415,8 @@ export function LearningEnvNoAuthPreview() {
                             </select>
                         </div>
                     </div>
-                    <div className="mt-4 flex w-full lg:w-2/3 items-center">
-                        {t('learningEnv.pysicalSupp')}
+                    <div className="flex w-full lg:w-2/3 items-center mt-6">
+                        {t('learningEnv.physicalMeetings')}
                         <div className="flex w-40 justify-end gap-x-5">
                             <div className="flex my-1">
                                 <div>
@@ -452,7 +444,7 @@ export function LearningEnvNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/80 to-white pointer-events-none"></div>
         </div>
     );
 }
