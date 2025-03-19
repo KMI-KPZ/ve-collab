@@ -31,6 +31,7 @@ import Dialog from '@/components/profile/Dialog';
 import printUsername from '@/components/common/Username';
 import Link from 'next/link';
 import UserProfileImage from '@/components/network/UserProfileImage';
+import LoadingAnimation from '@/components/common/LoadingAnimation';
 
 export interface FormValues {
     partners: Partner[];
@@ -278,30 +279,39 @@ export default function Partners({ socket }: Props): JSX.Element {
         setAddedExtWarning((prev) => ++prev);
     };
 
+    const [reqDebounce, setReqDebounce] = useState<ReturnType<typeof setTimeout>>();
+
     const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
-        // a little less api queries, only start searching for recommendations from 2 letter inputs
-        // TODO more less api queries if we wait some ms for next keys ...
-        if (inputValue.length > 1) {
-            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
-                (data: BackendSearchResponse) => {
-                    callback(
-                        data.users
-                            .filter(
-                                (user: BackendUserSnippet) =>
-                                    !fieldsPartners.some((a) => a.value == user.username)
-                            )
-                            .map((user) => ({
-                                label:
-                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                                value: user.username,
-                            }))
-                    );
-                }
-            );
-        }
+        if (inputValue.length < 3) return;
+
+        if (reqDebounce) clearTimeout(reqDebounce);
+        setReqDebounce(
+            setTimeout(() => {
+                fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                    (data: BackendSearchResponse) => {
+                        callback(
+                            data.users
+                                .filter(
+                                    (user: BackendUserSnippet) =>
+                                        !fieldsPartners.some((a) => a.value == user.username)
+                                )
+                                .map((user) => ({
+                                    label:
+                                        user.first_name +
+                                        ' ' +
+                                        user.last_name +
+                                        ' - ' +
+                                        user.username,
+                                    value: user.username,
+                                }))
+                        );
+                    }
+                );
+            }, 300)
+        );
     };
 
     function createSelect(control: any, name: any, index: number): JSX.Element {
@@ -314,7 +324,10 @@ export default function Partners({ socket }: Props): JSX.Element {
                         className="grow ml-4 max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
-                        loadOptions={loadUsers}
+                        loadingMessage={(value) => <LoadingAnimation size="small" />}
+                        loadOptions={(value, callback) => {
+                            loadUsers(value, callback);
+                        }}
                         onChange={(target, type) => {
                             onChange(type.action == 'clear' ? { label: '', value: '' } : target);
                         }}
