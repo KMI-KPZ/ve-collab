@@ -11,7 +11,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import { usePathname } from 'next/navigation';
 import { IMainMenuItems, mainMenuData } from '@/data/sideMenuSteps';
-import { Tooltip } from '../common/Tooltip';
+import { Tooltip as Tooltip_ } from '../common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
 import Link from 'next/link';
 import Alert, { AlertState } from '../common/dialogs/Alert';
@@ -32,7 +32,7 @@ interface Props {
     title: string;
     subtitle?: string;
     description?: JSX.Element | string[] | string;
-    tooltip?: { text: string; link: string };
+    tooltip?: { text: string; link: string } | { text: string; link: string }[];
     methods: UseFormReturn<any>;
     children: React.ReactNode;
     prevpage?: string;
@@ -563,6 +563,18 @@ export default function Wrapper({
         );
     };
 
+    const Tooltip = ({ tooltip }: { tooltip: { text: string; link: string } }) => (
+        <Tooltip_ tooltipsText={tooltip.text} position="left" className="text-slate-600">
+            <Link
+                target="_blank"
+                href={tooltip.link}
+                className="rounded-full shadow-sm bg-white hover:bg-gray-50 p-2 mx-2"
+            >
+                <PiBookOpenText size={30} className="inline relative text-ve-collab-blue" />
+            </Link>
+        </Tooltip_>
+    );
+
     if (error) {
         let errorMessage: string;
         switch (error.apiResponse.reason) {
@@ -745,24 +757,18 @@ export default function Wrapper({
 
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
-                                    {typeof tooltip !== 'undefined' && (
-                                        <Tooltip
-                                            tooltipsText={tooltip.text}
-                                            position="left"
-                                            className="text-slate-600"
-                                        >
-                                            <Link
-                                                target="_blank"
-                                                href={tooltip.link}
-                                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
-                                            >
-                                                <PiBookOpenText
-                                                    size={30}
-                                                    className="inline relative text-ve-collab-blue"
-                                                />
-                                            </Link>
-                                        </Tooltip>
-                                    )}
+                                    {typeof tooltip !== 'undefined' &&
+                                        (Array.isArray(tooltip) ? (
+                                            <div className="group/ttw absolute right-0 flex flex-col -space-y-7 hover:space-y-1 px-5 transition ease-in-out delay-150">
+                                                {tooltip.map((a, i) => (
+                                                    <div className={``} style={{}} key={i}>
+                                                        <Tooltip tooltip={a} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <Tooltip tooltip={tooltip} />
+                                        ))}
                                 </div>
                                 {typeof subtitle !== 'undefined' && (
                                     <p className="text-xl text-slate-600">{subtitle}</p>
