@@ -19,6 +19,7 @@ import { expertiseKeys } from './profile/edit';
 import CreatableSelect from 'react-select/creatable';
 import { languageKeys } from '@/data/languages';
 import { MdFilterListAlt } from 'react-icons/md';
+import H2 from '@/components/common/H2';
 
 interface Props {
     isNoAuthPreview?: boolean;
@@ -40,7 +41,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
         isOpen: false,
     });
 
-    const [viewFilterArea, setViewFilterArea] = useState<boolean>(false);
+    const [viewFilterArea, setViewFilterArea] = useState<boolean>(true);
 
     const [filter, setFilter] = useState<{
         expertise: string[];
@@ -98,13 +99,11 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
     };
 
     const FilterArea = () => (
-        <div className="w-1/4 flex flex-col space-y-4">
-            <div className="">
-                <span className="p-2 font-bold">
-                    {t('common:plan_summary_institutions_department')}
-                </span>
+        <div className="w-full lg:w-1/4 flex flex-row lg:flex-col gap-y-4 gap-x-4 pr-4 pb-4">
+            <div className="w-1/3 lg:w-full">
+                <H2>{t('common:plan_summary_institutions_department')}</H2>
                 <CreatableSelect
-                    className="w-full"
+                    className="lg:w-full"
                     classNames={{
                         placeholder: () => 'truncate',
                     }}
@@ -143,8 +142,8 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 />
             </div>
 
-            <div>
-                <span className="p-2 font-bold">{t('common:language')}</span>
+            <div className="w-1/3 lg:w-full">
+                <H2>{t('common:language')}</H2>
                 <CreatableSelect
                     className="w-full"
                     classNames={{
@@ -264,8 +263,8 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
             <div className="mb-4 flex flex-wrap items-center gap-y-2">
                 <div>
                     <ButtonLight
-                        className={`flex items-center !bg-gray-100 !rounded-full mx-2 ${
-                            viewFilterArea ? '' : 'text-gray-400'
+                        className={`flex items-center !rounded-full mx-2 ${
+                            viewFilterArea ? '!bg-white' : '!bg-gray-200'
                         } `}
                         onClick={() => setViewFilterArea(!viewFilterArea)}
                     >
@@ -275,7 +274,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
 
                 <div
                     title={t('filter_show_ve_ready_only_title')}
-                    className={`flex p-2 rounded-full shadow border border-gray-200 ${
+                    className={`flex p-2 rounded-full shadow border border-gray-200 bg-white ${
                         isNoAuthPreview ? '' : 'cursor-pointer'
                     }`}
                     onClick={handleClickShowVeReadyOnly}
@@ -300,7 +299,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 </div>
             </div>
 
-            <div className="flex bg-white rounded-lg shadow-sm py-6 px-4 space-x-4">
+            <div className="flex flex-wrap lg:flex-nowrap bg-white rounded-lg shadow-sm py-6 px-4 space-x-4 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                 {viewFilterArea === true && <FilterArea />}
                 {isLoadingMatching ? (
                     <div className="m-12">
@@ -308,7 +307,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                         {/* {t('loading_users')} */}
                     </div>
                 ) : (
-                    <div className="overflow-scroll md:overflow-auto w-full text-left divide-y divide-gray-200">
+                    <div className="grow mt-4 overflow-scroll md:overflow-auto text-left divide-y divide-gray-200">
                         {result.length === 0 ? (
                             <>{t('no_user_found')}</>
                         ) : (
