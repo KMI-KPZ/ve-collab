@@ -68,6 +68,7 @@
         "description-1": "List all individuals involved in the project by name here. If the individuals are already registered on VE-Collab, they can be found in the drop-down menu. Unregistered partners can be entered manually. Individual steps (e.g. learning objectives, assessment and evaluation) can then be answered for each participant separately.",
         "description-2": "If applicable, also list external participants (e.g. companies or other institutions) who are not directly involved in the planning and execution of the VE.",
         "tooltip": "You can find tips for finding partners in the self-learning materials…",
+        "author": "Author",
         "partners_title": "Participants",
         "externpartners_title": "External participants",
         "search_users": "Enter name oder search user...",

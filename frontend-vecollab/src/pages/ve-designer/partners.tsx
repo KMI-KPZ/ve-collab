@@ -1,7 +1,7 @@
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useState } from 'react';
-import { RxMinus, RxPlus } from 'react-icons/rx';
+import { RxMinus, RxPlus, RxTrash } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -28,6 +28,9 @@ import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { MdOutlineMail } from 'react-icons/md';
 import MailInvitationForm from '@/components/MailInvitationForm';
 import Dialog from '@/components/profile/Dialog';
+import printUsername from '@/components/common/Username';
+import Link from 'next/link';
+import UserProfileImage from '@/components/network/UserProfileImage';
 
 export interface FormValues {
     partners: Partner[];
@@ -60,6 +63,7 @@ export default function Partners({ socket }: Props): JSX.Element {
     const [individualLearningGoals, setIndividualLearningGoals] = useState<
         { username: string; learning_goal: string }[]
     >([]);
+    const [partnerProfiles, setPartnerProfiles] = useState<BackendUserSnippet[]>([]);
     const prevpage = '/ve-designer/name';
     const nextpage = '/ve-designer/institutions';
 
@@ -120,27 +124,14 @@ export default function Partners({ socket }: Props): JSX.Element {
                     { usernames: plan.partners },
                     session?.accessToken
                 );
+                setPartnerProfiles(snippets.user_snippets);
+
                 if (snippets) {
                     partners = plan.partners.map((partner: string): Partner => {
-                        const findFullUsername = snippets.user_snippets.find(
-                            (backendUser: BackendUserSnippet) => backendUser.username === partner
-                        );
-                        if (findFullUsername !== undefined) {
-                            return {
-                                label:
-                                    findFullUsername.first_name +
-                                    ' ' +
-                                    findFullUsername.last_name +
-                                    ' - ' +
-                                    findFullUsername.username,
-                                value: findFullUsername.username,
-                            };
-                        } else {
-                            return {
-                                label: partner,
-                                value: partner,
-                            };
-                        }
+                        return {
+                            label: partner,
+                            value: partner,
+                        };
                     });
                     replacePartners(partners);
                 }
@@ -320,7 +311,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <AsyncCreatableSelect
-                        className="grow max-w-full"
+                        className="grow ml-4 max-w-full"
                         instanceId={index.toString()}
                         isClearable={true}
                         loadOptions={loadUsers}
@@ -358,24 +349,26 @@ export default function Partners({ socket }: Props): JSX.Element {
 
     const renderExternalPartiesInputs = (): JSX.Element[] => {
         return fieldsExternalParties.map((externalParty, index) => (
-            <div key={externalParty.id} className="my-2 w-full lg:w-1/2">
-                <div className="flex">
+            <div key={externalParty.id} className="my-2 px-2 w-full mb-2 gap-x-3 lg:w-1/2">
+                <div className="group flex items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
                     {externalParty.externalParty != '' ? (
-                        <p className="px-4 py-2 min-w-56">{externalParty.externalParty}</p>
+                        <div className="w-full px-4 py-2 min-w-56">
+                            {externalParty.externalParty}
+                        </div>
                     ) : (
                         <input
                             type="text"
                             placeholder={t('designer:partners:enter_ext')}
-                            className="grow border border-gray-300 rounded-lg p-2 mr-2"
+                            className="grow ml-4 border border-gray-300 rounded-lg p-2 mr-2"
                             {...methods.register(`externalParties.${index}.externalParty`)}
                         />
                     )}
 
                     <ButtonLight
                         onClick={() => handleDeleteExternalParties(index)}
-                        className="mx-2 p-2! shadow-sm rounded-full!"
+                        className="shadow-sm rounded-full! invisible group-hover:visible"
                     >
-                        <RxMinus size={18} />
+                        <RxMinus />
                     </ButtonLight>
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
@@ -390,25 +383,44 @@ export default function Partners({ socket }: Props): JSX.Element {
         ));
     };
 
-    const renderPartiesInputt = () => {
-        return fieldsPartners.map((partner, index) => {
+    const renderPartiesInputt = () =>
+        fieldsPartners.map((partner, index) => {
+            const partnerProfile = partnerProfiles.find((a) => a.username == partner.value);
             return (
                 <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-3/4">
-                    {partner.value == planAuthor ? (
-                        <div className="px-4 py-2">{partner.label}</div>
-                    ) : partner.value != '' &&
-                      fieldsPartners.find((a) => a.value == partner.value) ? (
-                        <>
-                            <div className="flex items-center">
-                                <p className="px-4 py-2 min-w-56">{partner.label}</p>
+                    {partner.value != '' && fieldsPartners.find((a) => a.value == partner.value) ? (
+                        <div className="group w-full flex items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                            {partnerProfile ? (
+                                <div className="w-full px-4 py-2 min-w-56 ">
+                                    <Link
+                                        href={`/profile/user/${partner.value}`}
+                                        target="_blank"
+                                        className="flex items-center"
+                                    >
+                                        <UserProfileImage
+                                            profile_pic={partnerProfile.profile_pic}
+                                            chosen_achievement={partnerProfile.chosen_achievement}
+                                        />
+                                        {printUsername(partnerProfile)}
+                                        {partner.value == planAuthor && (
+                                            <span className="italic ml-2">
+                                                ({t('partners.author')})
+                                            </span>
+                                        )}
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="w-full px-4 py-2 min-w-56">{partner.label}</div>
+                            )}
+                            {partner.value != planAuthor && (
                                 <ButtonLight
                                     onClick={() => handleDeletePartners(index)}
-                                    className="h-10 w-10 grow-0 mx-2 p-2! shadow-sm rounded-full!"
+                                    className="shadow-sm !rounded-full invisible group-hover:visible"
                                 >
-                                    <RxMinus size={18} />
+                                    <RxMinus />
                                 </ButtonLight>
-                            </div>
-                        </>
+                            )}
+                        </div>
                     ) : (
                         <>
                             {createSelect(methods.control, `partners.${index}`, index)}
@@ -428,7 +440,6 @@ export default function Partners({ socket }: Props): JSX.Element {
                 </div>
             );
         });
-    };
 
     const openMailInvitationForm = () => {};
 
@@ -464,7 +475,7 @@ export default function Partners({ socket }: Props): JSX.Element {
 
                             <div className="mt-4">
                                 <button
-                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
+                                    className="p-2 ml-4 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         appendPartners({ label: '', value: '' });
@@ -521,7 +532,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                                     </div>
                                 )}
                                 <button
-                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
+                                    className="p-2 ml-4 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                                     type="button"
                                     onClick={() => {
                                         addedExternalPartyWarning();
