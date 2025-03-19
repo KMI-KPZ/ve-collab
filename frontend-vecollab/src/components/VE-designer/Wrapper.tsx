@@ -202,6 +202,7 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (!router.isReady || isLoading || error) return;
+        if (!router.query.plannerId) return;
 
         let willRouteChange: boolean = false;
 
