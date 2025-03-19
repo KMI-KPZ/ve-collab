@@ -71,7 +71,7 @@ export default function Alert({
     // [#159642]/[.90]
     const typedStyles = {
         info: 'bg-gray-100/[.90] border-gray-300',
-        success: 'bg-[rgba(22,150,65,0.9)] border-green-700',
+        success: 'bg-[rgba(112,206,162,0.9)] border-green-700',
         warning: 'bg-ve-collab-orange/[.90] border-orange-700',
         error: 'bg-red-500/[.90] border-red-700',
     };
@@ -116,7 +116,7 @@ export default function Alert({
                 <div className="m-2 font-bold">{_children ? _children : _message}</div>
                 <div className="m-2 ml-auto">
                     <button
-                        className="relative -top-[28px] -right-[28px] text-black top bg-white rounded-full shadow-sm border border-gray-200 p-2 hover:bg-slate-50"
+                        className="relative -top-[28px] -right-[28px] text-black top bg-white rounded-full shadow-sm border border-gray-200 cursor-pointer p-2 hover:bg-slate-50"
                         onClick={handleClose}
                         aria-label="Close"
                     >
