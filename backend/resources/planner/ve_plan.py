@@ -32,6 +32,7 @@ from model import (
 )
 from resources.notifications import NotificationResource
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.profile import Profiles
 import util
 
 
@@ -696,24 +697,29 @@ class VEPlanResource:
         # - the partners will automatically gain write access to the plan
         # - when they are added the first time, a notification will be dispatched to them
         if field_name == "partners":
+            profile_manager = Profiles(self.db)
             plan_state = self.get_plan(plan_id)
 
             # get the partners that are not already in the write_access list
             partners = list(set(value_copy) - set(plan_state.write_access))
 
-            if partners:
+            # remove users that are not real users
+            not_existing_users = list(set(partners) - set(
+                [elem["username"] for elem in profile_manager.get_bulk_profiles(partners)]
+            ))
+            partners_existing  = list(set(partners) - set(not_existing_users))
+
+            if partners_existing:
                 # add the partners to the write_access list
                 self.db.plans.update_one(
                     {"_id": plan_id},
                     {
                         "$addToSet": {
-                            "write_access": {"$each": partners},
-                            "read_access": {"$each": partners},
+                            "write_access": {"$each": partners_existing},
+                            "read_access": {"$each": partners_existing},
                         }
                     },
                 )
-
-                # TODO do not notification if "dummy" user was added as partner!
 
                 # dispatch a notification to the partners
                 async def _notification_send(usernames, payload):
@@ -729,7 +735,7 @@ class VEPlanResource:
                 # everywhere
                 tornado.ioloop.IOLoop.current().add_callback(
                     _notification_send,
-                    partners,
+                    partners_existing,
                     {
                         "plan_id": plan_id,
                         "plan_name": plan_state.name,
