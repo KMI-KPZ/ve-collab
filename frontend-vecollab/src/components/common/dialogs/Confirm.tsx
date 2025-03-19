@@ -46,7 +46,7 @@ export default function ConfirmDialog({ message, callback }: Props) {
             <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 w-80 rounded-lg p-2 bg-white border border-gray-200 shadow-xs">
                 <div className="absolute right-0 top-0 p-2">
                     <button
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-500 hover:text-gray-700 cursor-pointer"
                         onClick={(e) => handleClick(e, false)}
                         aria-label="Close"
                     >
@@ -58,19 +58,19 @@ export default function ConfirmDialog({ message, callback }: Props) {
                     <div className="font-bold">{message}</div>
                     <div className="m-auto mt-2">
                         <button
-                            className="py-2 px-6 m-2 bg-ve-collab-orange rounded-lg text-white"
+                            className="py-2 px-6 m-2 bg-ve-collab-orange rounded-lg text-white cursor-pointer"
                             onClick={(e) => handleClick(e, true)}
                             aria-label="Yes"
                             autoFocus
                         >
-                            {t("yes")}
+                            {t('yes')}
                         </button>
                         <button
-                            className="py-2 px-6 m-2 rounded-lg ring-2 ring-inset ring-ve-collab-orange"
+                            className="py-2 px-6 m-2 rounded-lg ring-2 ring-inset ring-ve-collab-orange cursor-pointer"
                             onClick={(e) => handleClick(e, false)}
                             aria-label="No"
                         >
-                            {t("no")}
+                            {t('no')}
                         </button>
                     </div>
                 </div>

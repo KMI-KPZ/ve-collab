@@ -81,6 +81,7 @@ export default function Wrapper({
     const { t } = useTranslation(['designer', 'common']);
 
     const [loading, setLoading] = useState(true);
+    const [isNewPlan, setIsNewPlan] = useState<boolean>(!router.query.plannerId);
     const [formDataLoaded, setFormDataLoaded] = useState<boolean>(false);
     const [popUp, setPopUp] = useState<{
         isOpen: boolean;
@@ -201,11 +202,6 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (!router.isReady || isLoading || error) return;
-        if (!router.query.plannerId) {
-            // remove loader for blank new plan
-            setLoading(false);
-            return;
-        }
 
         let willRouteChange: boolean = false;
 
@@ -264,11 +260,18 @@ export default function Wrapper({
         isNoAuthPreview,
     ]);
 
+    // fix reload plan after change step
     useEffect(() => {
         if (!router.query.stepId || router.query.stepId == '1') return;
-        // fix reload plan after change step
         setFormDataLoaded(false);
     }, [router.query.stepId]);
+
+    // remove loader for new plans
+    useEffect(() => {
+        if (isNewPlan) {
+            setLoading(false);
+        }
+    }, [isNewPlan]);
 
     const createNewPlan = async (name: string): Promise<string> => {
         const newPlanner = await fetchPOST(
@@ -289,7 +292,7 @@ export default function Wrapper({
                 });
         });
     };
-
+    router;
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
         if (isNoAuthPreview) return;
@@ -308,6 +311,7 @@ export default function Wrapper({
             const newPlanId = await createNewPlan(newName !== undefined ? newName : '');
 
             if (!newPlanId) {
+                setIsNewPlan(false);
                 setAlert({
                     message: t('alert_error_save'),
                     type: 'error',
@@ -344,6 +348,7 @@ export default function Wrapper({
                 { update: fields },
                 session?.accessToken
             );
+
             if (res.success === false) {
                 setAlert({
                     message: t('alert_error_save'),
@@ -673,23 +678,7 @@ export default function Wrapper({
         <div ref={wrapperRef}>
             <WhiteBox>
                 <div className="flex flex-col">
-                    <Alert state={alert} />
                     <FormProvider {...methods}>
-                        {/* TODO implement an PopUp alternative for invalid data */}
-                        <PopupSaveData
-                            isOpen={popUp.isOpen}
-                            type={popUp.type}
-                            handleContinue={async () => {
-                                await handlePopupContinue();
-                            }}
-                            handleCancel={() => {
-                                setPopUp((prev) => {
-                                    return { ...prev, isOpen: false, type: undefined };
-                                });
-                                setLoading(false);
-                            }}
-                        />
-
                         <Header
                             socket={socket}
                             methods={methods}
@@ -872,6 +861,20 @@ export default function Wrapper({
                     </FormProvider>
                 </div>
             </WhiteBox>
+            <Alert state={alert} />
+            <PopupSaveData
+                isOpen={popUp.isOpen}
+                type={popUp.type}
+                handleContinue={async () => {
+                    await handlePopupContinue();
+                }}
+                handleCancel={() => {
+                    setPopUp((prev) => {
+                        return { ...prev, isOpen: false, type: undefined };
+                    });
+                    setLoading(false);
+                }}
+            />
         </div>
     );
 }
