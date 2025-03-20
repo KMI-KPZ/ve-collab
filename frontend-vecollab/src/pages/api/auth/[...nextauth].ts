@@ -189,8 +189,8 @@ export const authOptions = {
                 };
             },
             httpOptions: {
-                timeout: 5000,
-            },
+                timeout: 5000
+            }
         }),
     ],
     callbacks: {
@@ -242,6 +242,9 @@ export const authOptions = {
             const logOutUrl = new URL(`${issuerUrl}/protocol/openid-connect/logout`);
             logOutUrl.searchParams.set('id_token_hint', token.idToken!);
             const res = await fetch(logOutUrl);
+            if (res.status !== 200) {
+                console.log('Single Logout to Keycloak failed');
+            }
         },
 
         // TODO also call etherpad logout endpoint /ep_openid_connect/logout

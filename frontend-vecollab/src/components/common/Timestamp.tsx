@@ -1,4 +1,4 @@
-import { format, formatDistance, parseISO, add } from 'date-fns';
+import { format, formatDistance, parseISO } from 'date-fns';
 import { de, enGB } from 'date-fns/locale';
 import { useRouter } from 'next/router';
 
@@ -19,9 +19,6 @@ export default function Timestamp({
 }: Props) {
     const router = useRouter();
 
-    let isoDate = parseISO(timestamp);
-    isoDate = add(isoDate, { minutes: -1 * isoDate.getTimezoneOffset() });
-
     return (
         <>
             {relative ? (
@@ -29,13 +26,13 @@ export default function Timestamp({
                     className={className}
                     title={
                         showTitle
-                            ? format(isoDate, 'd. MMM yyyy H:mm', {
+                            ? format(parseISO(timestamp), 'd. MMM yyyy H:mm', {
                                   locale: router.locale === 'de' ? de : enGB,
                               })
                             : ''
                     }
                 >
-                    {formatDistance(isoDate, new Date(), {
+                    {formatDistance(parseISO(timestamp), new Date(), {
                         locale: router.locale === 'de' ? de : enGB,
                         addSuffix: true,
                     })}
@@ -46,13 +43,13 @@ export default function Timestamp({
                     dateTime={timestamp}
                     title={
                         showTitle
-                            ? format(isoDate, 'd. MMM yyyy H:mm', {
+                            ? format(parseISO(timestamp), 'd. MMM yyyy H:mm', {
                                   locale: router.locale === 'de' ? de : enGB,
                               })
                             : ''
                     }
                 >
-                    {format(isoDate, dateFormat, {
+                    {format(parseISO(timestamp), dateFormat, {
                         locale: router.locale === 'de' ? de : enGB,
                     })}
                 </time>

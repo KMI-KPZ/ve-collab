@@ -14,7 +14,6 @@ export interface BackendUserSnippet {
     last_name: string;
     profile_pic: string;
     institution: string;
-    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface BackendProfileSnippetsResponse {
@@ -33,27 +32,13 @@ export interface BackendUser {
     spaces: string[];
     profile: BackendProfile;
     profile_pic: string;
-    chosen_achievement?: null | ChosenAchievement;
-}
-
-// TODO Backend should return BackendUser data, but currently does not; eg at /profilinformation
-export interface BackendUser25 {
-    user_id: string;
-    username: string;
-    role: string;
-    followers: string[];
-    follows: string[];
-    spaces: string[];
-    profile: BackendProfile;
 }
 
 export interface BackendProfile {
-    achievements: Achievements;
     address: string;
     bio: string;
     birthday: string;
     chosen_institution_id: string;
-    chosen_achievement: null | ChosenAchievement;
     courses: Course[];
     educations: Education[];
     excluded_from_matching: boolean;
@@ -78,7 +63,6 @@ export interface BackendProfile {
     ve_window: VEWindowItem[];
     work_experience: WorkExperience[];
     notification_settings: NotificationSettings;
-    first_view?: boolean;
 }
 
 export interface BackendSearchResponse {
@@ -87,17 +71,6 @@ export interface BackendSearchResponse {
     users: any[];
     tags: any[];
     posts: any[];
-}
-
-export interface BackendMatchingUser {
-    username: string;
-    first_name: string;
-    last_name: string;
-    profile_pic: string;
-    institution: string;
-    ve_ready: boolean;
-    chosen_achievement?: null | ChosenAchievement;
-    score: number;
 }
 
 export interface BackendChatroomSnippet {
@@ -162,7 +135,6 @@ export interface BackendPostAuthor {
     profile_pic: string;
     first_name: string;
     last_name: string;
-    chosen_achievement: null | ChosenAchievement;
 }
 
 export interface BackendPostComment {
@@ -198,31 +170,4 @@ export interface BackendPost {
     originalCreationDate?: string;
     repostAuthor?: BackendPostAuthor;
     repostText?: string;
-}
-
-export interface Achievements {
-    social: Achievement;
-    ve: Achievement;
-}
-
-export interface Achievement {
-    level: number;
-    progress: number;
-    next_level: number;
-}
-
-export interface ChosenAchievement {
-    type: 'social' | 've' | '';
-    level: number;
-}
-
-export interface Report {
-    _id: string;
-    type: 'post' | 'comment' | 'plan' | 'profile' | 'group' | 'chatroom';
-    item_id: string;
-    reason: string;
-    reporter: string;
-    timestamp: string;
-    state: 'open' | 'closed';
-    item: any;
 }

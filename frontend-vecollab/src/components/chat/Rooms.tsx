@@ -8,7 +8,6 @@ import RoomSnippet from './RoomSnippet';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { MdOutlineAddCircleOutline } from 'react-icons/md';
 import { useTranslation } from 'next-i18next';
-import ButtonLight from '../common/buttons/ButtongLight';
 
 interface Props {
     handleChatSelect: (chat: string) => void;
@@ -37,14 +36,12 @@ export default function Sidebar({
         mutate(); // reload chatrooms
     };
 
-    if (isLoading) return <LoadingAnimation size="small" />;
-
     return (
-        <div className="relative max-h-[80vh]">
-            {roomSnippets.length == 0 ? (
-                <div>{t('no_rooms_yet')}</div>
+        <div className="relative px-4 max-h-[80vh]">
+            {isLoading ? (
+                <LoadingAnimation size="small" />
             ) : (
-                <ul className="flex flex-col overflow-y-auto border-b border-b-gray-200 pb-2">
+                <ul className="flex flex-col  overflow-y-auto">
                     {roomSnippets.map((room) => (
                         <RoomSnippet
                             key={room._id}
@@ -58,17 +55,16 @@ export default function Sidebar({
                     ))}
                 </ul>
             )}
-
-            <ButtonLight
-                className="mt-4 rounded-full!"
-                onClick={() => handleOpenNewChatDialog()}
-                title={t('create_new_chat_title')}
+            <button
+                className="mt-4 p-2 rounded-full cursor-pointer hover:bg-slate-100"
+                onClick={(e) => handleOpenNewChatDialog()}
+                title={t("create_new_chat_title")}
             >
-                <MdOutlineAddCircleOutline size={22} />
-            </ButtonLight>
+                <MdOutlineAddCircleOutline />
+            </button>
             <Dialog
                 isOpen={isNewChatDialogOpen}
-                title={t('new_chat_title')}
+                title={t("new_chat_title")}
                 onClose={handleCloseNewChatDialog}
             >
                 <NewChatForm closeDialogCallback={handleCloseNewChatDialog} />

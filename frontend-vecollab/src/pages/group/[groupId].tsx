@@ -1,4 +1,5 @@
 import { AuthenticatedFile } from '@/components/common/AuthenticatedFile';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
@@ -18,7 +19,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
-import UserProfileImage from '@/components/network/UserProfileImage';
 
 interface Props {
     socket: Socket;
@@ -54,6 +54,7 @@ export default function Group({ socket }: Props): JSX.Element {
         error,
         mutate,
     } = useGetGroup(session!.accessToken, groupId as string);
+    console.log({ group });
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
@@ -62,6 +63,7 @@ export default function Group({ socket }: Props): JSX.Element {
         session!.accessToken,
         groupId as string
     );
+    console.log({ groupACLEntry });
 
     const handleCloseUploadDialog = () => {
         setIsUploadDialogOpen(false);
@@ -98,6 +100,7 @@ export default function Group({ socket }: Props): JSX.Element {
         );
 
         const responseJson = await response.json();
+        console.log(responseJson);
 
         mutate();
         setUploadFile(undefined);
@@ -116,7 +119,6 @@ export default function Group({ socket }: Props): JSX.Element {
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
-                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
             }
@@ -138,7 +140,7 @@ export default function Group({ socket }: Props): JSX.Element {
                                         'bg-ve-collab-orange text-white rounded-lg p-1 flex justify-center items-center ' +
                                         (!groupACLEntry?.write_files
                                             ? 'opacity-50 cursor-not-allowed'
-                                            : 'cursor-pointer')
+                                            : '')
                                     }
                                     disabled={!groupACLEntry?.write_files}
                                     onClick={() => {
@@ -158,7 +160,6 @@ export default function Group({ socket }: Props): JSX.Element {
                                                 key={index}
                                                 url={`/uploads/${file.file_id}`}
                                                 filename={file.file_name}
-                                                className="cursor-pointer"
                                             >
                                                 <div className="flex justify-center">
                                                     <RxFile size={80} />{' '}
@@ -188,10 +189,8 @@ export default function Group({ socket }: Props): JSX.Element {
                         <input type="file" onChange={uploadToClient} />
                         <button
                             className={
-                                'bg-ve-collab-orange border border-gray-200 text-white mx-auto py-2 px-5 rounded-lg shadow-xl ' +
-                                (uploadFile === undefined
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : 'cursor-pointer')
+                                'bg-ve-collab-orange border text-white mx-auto py-2 px-5 rounded-lg shadow-xl ' +
+                                (uploadFile === undefined ? 'opacity-50 cursor-not-allowed' : '')
                             }
                             onClick={uploadToBackend}
                             disabled={!uploadFile}
@@ -217,20 +216,17 @@ export default function Group({ socket }: Props): JSX.Element {
                             onClick={() => router.push(`/profile/user/${admin}`)}
                         >
                             <div className="flex justify-center">
-                                <UserProfileImage
-                                    profile_pic={
+                                <AuthenticatedImage
+                                    imageId={
                                         memberSnippets.find(
                                             (snippet) => snippet.preferredUsername === admin
                                         )!.profilePicUrl
                                     }
-                                    chosen_achievement={
-                                        memberSnippets.find(
-                                            (snippet) => snippet.preferredUsername === admin
-                                        )!.chosen_achievement
-                                    }
+                                    alt={t('profile_picture')}
                                     width={100}
                                     height={100}
-                                />
+                                    className="rounded-full"
+                                ></AuthenticatedImage>
                             </div>
                             <BoxHeadline
                                 title={
@@ -254,20 +250,17 @@ export default function Group({ socket }: Props): JSX.Element {
                                 onClick={() => router.push(`/profile/user/${member}`)}
                             >
                                 <div className="flex justify-center">
-                                    <UserProfileImage
-                                        profile_pic={
+                                    <AuthenticatedImage
+                                        imageId={
                                             memberSnippets.find(
                                                 (snippet) => snippet.preferredUsername === member
                                             )!.profilePicUrl
                                         }
-                                        chosen_achievement={
-                                            memberSnippets.find(
-                                                (snippet) => snippet.preferredUsername === member
-                                            )!.chosen_achievement
-                                        }
+                                        alt={t('profile_picture')}
                                         width={100}
                                         height={100}
-                                    />
+                                        className="rounded-full"
+                                    ></AuthenticatedImage>
                                 </div>
                                 <BoxHeadline
                                     title={
@@ -293,93 +286,94 @@ export default function Group({ socket }: Props): JSX.Element {
         return isGlobalAdmin || group.admins.includes(session?.user?.preferred_username as string);
     }
 
-    if (isLoading) return <LoadingAnimation />;
-
-    if (!(userIsMember() || userIsAdmin()))
-        return (
-            <>
-                <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
-                <AccessDenied />
-            </>
-        );
-
     return (
         <>
-            <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
-
-            <GroupBanner userIsAdmin={userIsAdmin} />
-            <div className={'md:mx-20 mb-2 px-5 pt-[100px] relative'}>
-                <GroupHeader userIsAdmin={userIsAdmin} />
-            </div>
-            <div className={'md:mx-20 flex flex-wrap flex-wrap-reverse'}>
-                <div className={'w-full md:w-3/4 md:pr-4'}>
-                    {(() => {
-                        switch (renderPicker) {
-                            case 'timeline':
-                                return (
-                                    <Timeline
-                                        socket={socket}
-                                        group={group._id}
-                                        userIsAdmin={userIsAdmin()}
-                                        groupACL={groupACLEntry}
-                                    />
-                                );
-                            case 'members':
-                                return members();
-                            case 'files':
-                                return files();
-
-                            default:
-                                return <div></div>;
-                        }
-                    })()}
-                </div>
-                <div className={'w-full md:w-1/4 lg:pl-4'}>
-                    <button
-                        className={
-                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm cursor-pointer ' +
-                            (renderPicker === 'timeline'
-                                ? 'bg-ve-collab-blue text-white'
-                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                        }
-                        onClick={() => setRenderPicker('timeline')}
-                    >
-                        <span>{t('dashboard')}</span>
-                    </button>
-                    <button
-                        className={
-                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm cursor-pointer ' +
-                            (renderPicker === 'members'
-                                ? 'bg-ve-collab-blue text-white'
-                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                        }
-                        onClick={() => setRenderPicker('members')}
-                    >
-                        <span>{t('members')}</span>
-                    </button>
-                    <button
-                        className={
-                            'w-full h-12 mb-2 border border-gray-200 py-3 px-6 rounded-lg shadow-sm cursor-pointer ' +
-                            (renderPicker === 'files'
-                                ? 'bg-ve-collab-blue text-white'
-                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
-                        }
-                        onClick={() => setRenderPicker('files')}
-                    >
-                        <span>{t('fileshare')}</span>
-                    </button>
-                    <WhiteBox>
-                        <BoxHeadline title={t('description')} />
-                        <div className="min-h-[20vh] mx-2 my-4 px-1">
-                            <div className={'text-gray-500'}>
-                                {group?.space_description
-                                    ? group.space_description
-                                    : t('no_description_available')}
+            {isLoading ? (
+                <LoadingAnimation />
+            ) : (
+                <>
+                    <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
+                    {!(userIsMember() || userIsAdmin()) ? (
+                        <AccessDenied />
+                    ) : (
+                        <>
+                            <GroupBanner userIsAdmin={userIsAdmin} />
+                            <div className={'mx-20 mb-2 px-5 relative -mt-16'}>
+                                <GroupHeader userIsAdmin={userIsAdmin} />
                             </div>
-                        </div>
-                    </WhiteBox>
-                </div>
-            </div>
+                            <div className={'mx-20 flex'}>
+                                <div className={'w-3/4  mr-4'}>
+                                    {(() => {
+                                        switch (renderPicker) {
+                                            case 'timeline':
+                                                return (
+                                                    <Timeline
+                                                        socket={socket}
+                                                        group={group._id}
+                                                        userIsAdmin={userIsAdmin()}
+                                                        groupACL={groupACLEntry}
+                                                    />
+                                                );
+                                            case 'members':
+                                                return members();
+                                            case 'files':
+                                                return files();
+
+                                            default:
+                                                return <div></div>;
+                                        }
+                                    })()}
+                                </div>
+                                <div className={'w-1/4  ml-4'}>
+                                    <button
+                                        className={
+                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                            (renderPicker === 'timeline'
+                                                ? 'bg-ve-collab-blue text-white'
+                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                        }
+                                        onClick={() => setRenderPicker('timeline')}
+                                    >
+                                        <span>{t('dashboard')}</span>
+                                    </button>
+                                    <button
+                                        className={
+                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                            (renderPicker === 'members'
+                                                ? 'bg-ve-collab-blue text-white'
+                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                        }
+                                        onClick={() => setRenderPicker('members')}
+                                    >
+                                        <span>{t('members')}</span>
+                                    </button>
+                                    <button
+                                        className={
+                                            'w-full h-12 mb-2 border py-3 px-6 rounded-lg shadow-xl ' +
+                                            (renderPicker === 'files'
+                                                ? 'bg-ve-collab-blue text-white'
+                                                : 'bg-white text-gray-500 hover:border-ve-collab-blue hover:text-ve-collab-blue')
+                                        }
+                                        onClick={() => setRenderPicker('files')}
+                                    >
+                                        <span>{t('fileshare')}</span>
+                                    </button>
+                                    <WhiteBox>
+                                        <BoxHeadline title={t('description')} />
+                                        <div className="min-h-[20vh] mx-2 my-4 px-1">
+                                            <div className={'text-gray-500'}>
+                                                {group?.space_description
+                                                    ? group.space_description
+                                                    : t('no_description_available')}
+                                            </div>
+                                        </div>
+                                    </WhiteBox>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </>
+            )}
         </>
     );
 }

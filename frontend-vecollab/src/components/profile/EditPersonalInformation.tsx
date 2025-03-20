@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent, CSSProperties } from 'react';
+import { Dispatch, FormEvent, SetStateAction, useState, ChangeEvent } from 'react';
 import {
     Institution,
     OptionLists,
@@ -11,6 +11,7 @@ import Dialog from './Dialog';
 import AvatarEditor from './AvatarEditor';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
+import AuthenticatedImage from '@/components/common/AuthenticatedImage';
 import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import CreatableSelect from 'react-select/creatable';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -18,17 +19,6 @@ import { RxTrash } from 'react-icons/rx';
 import { IoIosHelp } from 'react-icons/io';
 import ConfirmDialog from '../common/dialogs/Confirm';
 import { useTranslation } from 'next-i18next';
-import Button from '../common/buttons/Button';
-import { MdCheck } from 'react-icons/md';
-import ButtonLight from '../common/buttons/ButtongLight';
-import { badgeOutlineColors, getBadges, hasAnyAchievement } from '../landingPage/Badge';
-import UserProfileImage from '../network/UserProfileImage';
-import cat from '@/images/defaultProfilPictures/cat.jpg';
-import dog from '@/images/defaultProfilPictures/dog.jpg';
-import fox from '@/images/defaultProfilPictures/fox.jpg';
-import Image from 'next/image';
-import ButtonSecondary from '../common/buttons/ButtonSecondary';
-import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -49,12 +39,6 @@ export default function EditPersonalInformation({
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
-
-    const achievementStyle: CSSProperties = personalInformation.chosen_achievement?.level
-        ? {
-              background: badgeOutlineColors[personalInformation.chosen_achievement.level - 1],
-          }
-        : {};
 
     const [isProfilePicDialogOpen, setIsProfilePicDialogOpen] = useState(false);
     const [profilePicFile, setProfilePicFile] = useState('');
@@ -83,7 +67,7 @@ export default function EditPersonalInformation({
     const [newInstitution, setNewInstitution] = useState<Institution>({
         _id: '',
         name: '',
-        school_type: 'Hochschule/Universität/College',
+        school_type: '',
         department: '',
         country: '',
     });
@@ -117,7 +101,7 @@ export default function EditPersonalInformation({
         reader.onloadend = function () {
             // transform base64 payload via base64 data uri and stripping the
             // pre-information
-            const base64dataUri = reader.result as string;
+            var base64dataUri = reader.result as string;
             const profilePicPayload = base64dataUri.replace(/^data:image\/[a-z]+;base64,/, '');
 
             // send to backend and update state with returned _id to be able
@@ -148,7 +132,7 @@ export default function EditPersonalInformation({
                 institutions: [...personalInformation.institutions, newInstitution],
             },
             session?.accessToken
-        ).then(() => {
+        ).then((data) => {
             fetchGET('/profileinformation', session?.accessToken).then((data) => {
                 setPersonalInformation({
                     ...personalInformation,
@@ -174,8 +158,6 @@ export default function EditPersonalInformation({
             chosen_institution_id: newChosenInstitutionId,
         });
     };
-
-    // const Achievements = <Badges achievements={personalInformation.achievements} />;
 
     return (
         <form onSubmit={updateProfileData}>
@@ -216,100 +198,77 @@ export default function EditPersonalInformation({
                         <EditProfileHeadline name={t('institutions')} />
                         <div className="absolute top-0 left-full">
                             <div className="group relative inline-block">
-                                <div className="inline-flex rounded-sm bg-primary px-[2px] text-base font-semibold">
+                                <div className="inline-flex rounded bg-primary px-[2px] text-base font-semibold">
                                     <IoIosHelp size={30} color="#00748f" />
                                 </div>
-                                <div className="absolute bottom-full left-1/2 w-[20rem] z-20 mb-1 -translate-x-1/2 rounded-sm bg-gray-200 border border-gray-200 shadow-2xl px-4 py-[6px] text-sm font-semibold hidden group-hover:block">
-                                    <span className="absolute bottom-[-3px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-xs bg-gray-200"></span>
+                                <div className="absolute bottom-full left-1/2 w-[20rem] z-20 mb-1 -translate-x-1/2 rounded bg-gray-200 border border-gray-200 shadow-2xl px-4 py-[6px] text-sm font-semibold hidden group-hover:block">
+                                    <span className="absolute bottom-[-3px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm bg-gray-200"></span>
                                     {t('institutions_tooltip')}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {personalInformation.institutions.length > 0 && (
-                        <EditProfilePlusMinusButtons
-                            plusCallback={(e) => {
-                                e.preventDefault();
-                                handleOpenNewInstitutionDialog();
-                            }}
-                        />
-                    )}
+                    <EditProfilePlusMinusButtons
+                        plusCallback={(e) => {
+                            e.preventDefault();
+                            handleOpenNewInstitutionDialog();
+                        }}
+                    />
                 </div>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                     {institutionsLoading ? (
                         <LoadingAnimation />
                     ) : (
                         <>
-                            {personalInformation.institutions.length === 0 ? (
-                                <div className="w-fit">
+                            {personalInformation.institutions.map((institution, index) => (
+                                <div
+                                    key={index}
+                                    className={
+                                        'rounded-xl border p-2 relative ' +
+                                        (personalInformation.chosen_institution_id ===
+                                        institution._id
+                                            ? 'border-slate-900 cursor-default'
+                                            : 'border-[#cccccc] cursor-pointer')
+                                    }
+                                    title={
+                                        personalInformation.chosen_institution_id ===
+                                        institution._id
+                                            ? t('current_institution')
+                                            : t('choose_as_current_institution')
+                                    }
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setPersonalInformation({
+                                            ...personalInformation,
+                                            chosen_institution_id: institution._id,
+                                        });
+                                    }}
+                                >
                                     <button
-                                        className="px-4 py-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
-                                        type="button"
+                                        className="absolute top-2 right-2"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            handleOpenNewInstitutionDialog();
+                                            setAskDeletion(true);
+                                            e.stopPropagation();
                                         }}
                                     >
-                                        {t('common:new')}
+                                        <RxTrash />
                                     </button>
-                                </div>
-                            ) : (
-                                <>
-                                    {personalInformation.institutions.map((institution, index) => (
-                                        <div
-                                            key={index}
-                                            className={
-                                                'rounded-xl border p-2 relative ' +
-                                                (personalInformation.chosen_institution_id ===
-                                                institution._id
-                                                    ? 'border-slate-900 cursor-default'
-                                                    : 'border-[#cccccc] cursor-pointer')
-                                            }
-                                            title={
-                                                personalInformation.chosen_institution_id ===
-                                                institution._id
-                                                    ? t('current_institution')
-                                                    : t('choose_as_current_institution')
-                                            }
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setPersonalInformation({
-                                                    ...personalInformation,
-                                                    chosen_institution_id: institution._id,
-                                                });
+                                    {askDeletion && (
+                                        <ConfirmDialog
+                                            message={t('confirm_delete_institution')}
+                                            callback={(proceed) => {
+                                                if (proceed) deleteInstitution(index);
+                                                setAskDeletion(false);
                                             }}
-                                        >
-                                            <button
-                                                className="absolute top-2 right-2"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setAskDeletion(true);
-                                                    e.stopPropagation();
-                                                }}
-                                            >
-                                                <RxTrash />
-                                            </button>
-                                            {askDeletion && (
-                                                <ConfirmDialog
-                                                    message={t('confirm_delete_institution')}
-                                                    callback={(proceed) => {
-                                                        if (proceed) deleteInstitution(index);
-                                                        setAskDeletion(false);
-                                                    }}
-                                                />
-                                            )}
-                                            <div className="font-bold">{institution.name}</div>
-                                            <div>{institution.department}</div>
-                                            <div className="text-gray-600">
-                                                {institution.school_type}
-                                            </div>
-                                            <div className="text-gray-600">
-                                                {institution.country}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            )}
+                                        />
+                                    )}
+                                    <div className="font-bold">{institution.name}</div>
+                                    <div>{institution.department}</div>
+                                    <div className="text-gray-600">{institution.school_type}</div>
+                                    <div className="text-gray-600">{institution.country}</div>
+                                </div>
+                            ))}
                         </>
                     )}
                 </div>
@@ -318,7 +277,7 @@ export default function EditPersonalInformation({
                     title={t('create_new_institution')}
                     onClose={handleCloseNewInstitutionDialog}
                 >
-                    <div className="h-[19rem] w-[32rem] relative">
+                    <div className="h-[19rem] relative">
                         <div className="mt-4 flex">
                             <div className="w-1/3 flex items-center">
                                 <label htmlFor="name" className="px-2 py-2">
@@ -377,27 +336,22 @@ export default function EditPersonalInformation({
                                             school_type: e.target.value,
                                         })
                                     }
-                                    defaultValue="Hochschule/Universität/College"
                                 >
                                     <option value="Hochschule/Universität/College">
-                                        {t('school_type_options.university')}
+                                        Hochschule/Universität/College
                                     </option>
                                     <option value="Fachhochschule/University of Applied Sciences">
-                                        {t('school_type_options.university_applied')}
+                                        Fachhochschule/University of Applied Sciences
                                     </option>
-                                    <option value="Berufsschule">
-                                        {t('school_type_options.professional_school')}
-                                    </option>
+                                    <option value="Berufsschule">Berufsschule</option>
                                     <option value="Schule – Primärbereich">
-                                        {t('school_type_options.school_primary')}
+                                        Schule – Primärbereich
                                     </option>
                                     <option value="Schule – Sekundarbereich">
-                                        {t('school_type_options.school_secondary')}
+                                        Schule – Sekundarbereich
                                     </option>
 
-                                    <option value="Sonstige">
-                                        {t('school_type_options.other')}
-                                    </option>
+                                    <option value="Sonstige">Sonstige</option>
                                 </select>
                             </div>
                         </div>
@@ -421,18 +375,27 @@ export default function EditPersonalInformation({
                                 />
                             </div>
                         </div>
-                        <div className="flex absolute bottom-0 w-full flex justify-between">
-                            <ButtonSecondary onClick={handleCloseNewInstitutionDialog}>
-                                {t('common:cancel')}
-                            </ButtonSecondary>
-                            <ButtonPrimary
-                                onClick={() => {
+                        <div className="flex absolute bottom-0 w-full">
+                            <button
+                                className={
+                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                }
+                                onClick={handleCloseNewInstitutionDialog}
+                            >
+                                <span>{t('common:cancel')}</span>
+                            </button>
+                            <button
+                                className={
+                                    'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                }
+                                onClick={(e) => {
+                                    e.preventDefault();
                                     uploadNewInstitution();
                                     handleCloseNewInstitutionDialog();
                                 }}
                             >
-                                {t('common:create')}
-                            </ButtonPrimary>
+                                <span>{t('common:create')}</span>
+                            </button>
                         </div>
                     </div>
                 </Dialog>
@@ -453,12 +416,10 @@ export default function EditPersonalInformation({
                 <EditProfileHeadline name={t('expertise')} />
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.expertiseKeys
-                        .map((expertise) => ({
-                            label: t('expertise_options.' + expertise, { defaultValue: expertise }),
-                            value: expertise,
-                        }))
-                        .sort((a, b) => a.label.localeCompare(b.label))}
+                    options={optionLists.expertiseKeys.map((expertise) => ({
+                        label: t('expertise_options.' + expertise, { defaultValue: expertise }),
+                        value: expertise,
+                    }))}
                     onChange={(e) =>
                         setPersonalInformation({ ...personalInformation, expertise: e!.value })
                     }
@@ -495,15 +456,12 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={t('languages')} />
-                <p className="text-gray-600 mb-2">{t('languages_subtitle')}</p>
                 <CreatableSelect
                     className="w-full mb-1"
-                    options={optionLists.languageKeys
-                        .map((language) => ({
-                            label: t('common:languages.' + language, { defaultValue: language }),
-                            value: language,
-                        }))
-                        .sort((a, b) => a.label.localeCompare(b.label))}
+                    options={optionLists.languageKeys.map((language) => ({
+                        label: t('common:languages.' + language, { defaultValue: language }),
+                        value: language,
+                    }))}
                     onChange={(e) =>
                         setPersonalInformation({
                             ...personalInformation,
@@ -534,136 +492,58 @@ export default function EditPersonalInformation({
                 />
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
-                <div className="flex space-x-4">
-                    <div>
-                        <EditProfileHeadline name={t('profile_picture')} />
-                        <div className="w-fit">
-                            <div className="w-fit my-4 mt-[20px] ml-[15px]">
-                                <UserProfileImage
-                                    type="big"
-                                    chosen_achievement={personalInformation.chosen_achievement}
-                                    height={180}
-                                    width={180}
-                                    profile_pic={personalInformation.profilePicId as string}
+                <EditProfileHeadline name={t('profile_picture')} />
+                <div>
+                    <div className="w-fit">
+                        <div className="my-2 rounded-full overflow-hidden w-fit border-black border">
+                            <AuthenticatedImage
+                                imageId={personalInformation.profilePicId as string}
+                                alt={t('profile_picture')}
+                                width={180}
+                                height={180}
+                            />
+                        </div>
+                        <div className="flex justify-center">
+                            <button
+                                className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleOpenProfilePicDialog();
+                                }}
+                            >
+                                {t('common:edit')}
+                            </button>
+                        </div>
+                    </div>
+                    <Dialog
+                        isOpen={isProfilePicDialogOpen}
+                        title={t('upload_profile_picture')}
+                        onClose={handleCloseProfilePicDialog}
+                    >
+                        <div className="my-2 mx-2">{t('upload_profile_picture_description')}</div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="my-2"
+                            onChange={onSelectProfilePicFile}
+                            onClick={(e) => {
+                                e.currentTarget.value = '';
+                            }}
+                        />
+                        {profilePicFile !== '' ? (
+                            <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
+                                <AvatarEditor
+                                    sourceImg={profilePicFile}
+                                    onFinishUpload={(blob) => {
+                                        uploadProfileImage(blob);
+                                        handleCloseProfilePicDialog();
+                                    }}
                                 />
                             </div>
-                            <div className="flex justify-center">
-                                <button
-                                    className={
-                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'
-                                    }
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        handleOpenProfilePicDialog();
-                                    }}
-                                >
-                                    {t('common:edit')}
-                                </button>
-                            </div>
-                        </div>
-
-                        <Dialog
-                            isOpen={isProfilePicDialogOpen}
-                            title={t('upload_profile_picture')}
-                            onClose={handleCloseProfilePicDialog}
-                        >
-                            <div className="my-2 mx-2">
-                                {t('upload_profile_picture_description')}
-                            </div>
-                            <div className="flex space-x-4">
-                                {[cat, dog, fox].map((pic, index) => (
-                                    <Image
-                                        key={index}
-                                        src={pic}
-                                        alt={`default profil picture of option ${index + 1}`}
-                                        className="cursor-pointer"
-                                        height={80}
-                                        onClick={() => {
-                                            setProfilePicFile(pic.src);
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                className="my-2 border border-[#cccccc] rounded-md px-2 py-[6px] cursor-pointer"
-                                onChange={onSelectProfilePicFile}
-                                onClick={(e) => {
-                                    e.currentTarget.value = '';
-                                }}
-                            />
-                            {profilePicFile !== '' ? (
-                                <div className="w-[90vw] max-w-[450px] max-h-[85vh]">
-                                    <AvatarEditor
-                                        sourceImg={profilePicFile}
-                                        onFinishUpload={(blob) => {
-                                            uploadProfileImage(blob);
-                                            handleCloseProfilePicDialog();
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <></>
-                            )}
-                        </Dialog>
-                    </div>
-                    {hasAnyAchievement(personalInformation.achievements) && (
-                        <div>
-                            <EditProfileHeadline name={t('decoration_badge')} />
-                            <p className="text-gray-600 mb-2">{t('decoration_badge_descr')}</p>
-                            <ul className="flex flex-wrap gap-4 items-center">
-                                {getBadges({ achievements: personalInformation.achievements }).map(
-                                    (item, index) => {
-                                        return (
-                                            <li key={index}>
-                                                <Button
-                                                    className={`flex items-center justify-center relative`}
-                                                    onClick={() => {
-                                                        setPersonalInformation({
-                                                            ...personalInformation,
-                                                            chosen_achievement: {
-                                                                type: item.type,
-                                                                level: item.level,
-                                                            },
-                                                        });
-                                                    }}
-                                                >
-                                                    {item.badge}
-                                                    {personalInformation.chosen_achievement?.type ==
-                                                        item.type &&
-                                                        personalInformation.chosen_achievement
-                                                            ?.level == item.level && (
-                                                            <MdCheck
-                                                                size={26}
-                                                                className="text-green-600 m-2 bg-white/75 rounded-full absolute"
-                                                            />
-                                                        )}
-                                                </Button>
-                                            </li>
-                                        );
-                                    }
-                                )}
-                                <li>
-                                    <ButtonLight
-                                        className="rounded-full! flex gap-2 items-center ml-4"
-                                        onClick={() => {
-                                            setPersonalInformation({
-                                                ...personalInformation,
-                                                chosen_achievement: { type: '', level: 0 },
-                                            });
-                                        }}
-                                    >
-                                        Keines
-                                        {(personalInformation.chosen_achievement == null ||
-                                            personalInformation.chosen_achievement.type == '') && (
-                                            <MdCheck size={22} className="text-green-600 mx-2" />
-                                        )}
-                                    </ButtonLight>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
+                        ) : (
+                            <></>
+                        )}
+                    </Dialog>
                 </div>
             </EditProfileVerticalSpacer>
         </form>

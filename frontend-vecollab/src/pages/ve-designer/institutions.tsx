@@ -19,9 +19,6 @@ import { useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { InstitutionsFormSchema } from '../../zod-schemas/institutionsSchema';
 import CustomHead from '@/components/metaData/CustomHead';
-import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
-import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
-import ButtonLight from '@/components/common/buttons/ButtongLight';
 
 export interface Institution {
     name: string;
@@ -111,7 +108,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/3 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('designer:institutions:institution')}
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-2/3">
@@ -269,10 +266,10 @@ export default function Institutions({ socket }: Props): JSX.Element {
         if (!importDialog.institutions.length) {
             return (
                 <div>
-                    <p className="mb-3">{t('institutions.no_inst_in_profile')}</p>
+                    <p>{t('institutions.no_inst_in_profile')}</p>
                     <Link href={'/profile/edit'} target="_blank">
                         <span className="border border-white bg-black/75 text-white rounded-lg px-3 py-1">
-                            {t('common:edit_profile')}
+                            {t('edit_profile')}
                         </span>
                     </Link>
                 </div>
@@ -299,12 +296,14 @@ export default function Institutions({ socket }: Props): JSX.Element {
                         </div>
                     );
                 })}
-                <div className="ml-auto text-right space-x-2">
-                    <ButtonSecondary
+                <div className="ml-auto text-right">
+                    <button
+                        type="button"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
                         onClick={() => setImportDialog((prev) => ({ ...prev, isOpen: false }))}
                     >
                         {t('common:cancel')}
-                    </ButtonSecondary>
+                    </button>
                     <ButtonPrimary label={t('common:import')} onClick={() => handleImport()} />
                 </div>
             </div>
@@ -342,33 +341,40 @@ export default function Institutions({ socket }: Props): JSX.Element {
                 </Dialog>
 
                 <div className={'px-4 w-full lg:w-2/3'}>
-                    <div className="flex space-x-2">
-                        <ButtonLightBlue
-                            onClick={() => openImportDialog()}
+                    <div className="flex">
+                        <button
+                            className="px-4 py-2 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                            type="button"
                             title={t('institutions.import_institutions')}
+                            onClick={() => openImportDialog()}
                         >
                             {t('common:import')}
-                        </ButtonLightBlue>
-                        <ButtonLight
-                            onClick={() => {
-                                append({
-                                    name: '',
-                                    school_type: '',
-                                    country: '',
-                                    department: '',
-                                });
-                            }}
-                        >
-                            {t('common:new')}
-                        </ButtonLight>
+                        </button>
+                        {fields.length == 0 && (
+                            <button
+                                className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    append({
+                                        name: '',
+                                        school_type: '',
+                                        country: '',
+                                        department: '',
+                                    });
+                                }}
+                            >
+                                {t('common:new')}
+                            </button>
+                        )}
                     </div>
 
-                    <div className="divide-y divide-gray-200">{renderInstitutionInputs()}</div>
+                    <div className="divide-y">{renderInstitutionInputs()}</div>
 
                     {fields.length > 0 && (
                         <div className="flex justify-center">
-                            <ButtonLight
-                                className="!rounded-full"
+                            <button
+                                className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
                                 onClick={() => {
                                     append({
                                         name: '',
@@ -379,7 +385,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
                                 }}
                             >
                                 <RxPlus size={25} />
-                            </ButtonLight>
+                            </button>
                         </div>
                     )}
                 </div>
@@ -431,12 +437,12 @@ export function InstitutionsNoAuthPreview() {
                         </button>
                     </div>
 
-                    <div className="divide-y divide-gray-200">
+                    <div className="divide-y">
                         <div className="pt-4 pb-2">
                             <div className="mt-2 flex">
                                 <div className="w-1/3 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('designer:institutions:institution')}
+                                        {t('common:name')}
                                     </label>
                                 </div>
                                 <div className="w-2/3">
@@ -526,7 +532,7 @@ export function InstitutionsNoAuthPreview() {
 
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                            className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -536,7 +542,7 @@ export function InstitutionsNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/70 to-white pointer-events-none"></div>
         </div>
     );
 }

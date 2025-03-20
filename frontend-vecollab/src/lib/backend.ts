@@ -8,8 +8,6 @@ import {
     BackendUser,
     BackendProfile,
     BackendUserACLEntry,
-    BackendUser25,
-    Report,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -20,11 +18,8 @@ import {
     IMaterialNode,
     INode,
     INodeWithLections,
-    ISearchMaterial,
-    ISearchMaterialWP,
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
-import { IplansFilter } from '@/pages/plans';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -63,19 +58,6 @@ const GETfetcher = (relativeUrl: string, accessToken?: string, autoResignin: boo
             throw new APIError('Error from Backend', await res.json());
         }
         return res.json();
-    });
-
-const GETfetcherBlob = (relativeUrl: string, accessToken?: string, autoResignin: boolean = true) =>
-    fetch(BACKEND_BASE_URL + relativeUrl, {
-        headers: { Authorization: 'Bearer ' + accessToken },
-    }).then(async (res) => {
-        if (res.status === 401 && autoResignin) {
-            console.log('forced new signIn by api call');
-            return signIn('keycloak');
-        } else if (res.status > 299) {
-            throw new APIError('Error from Backend', await res.json());
-        }
-        return res.blob();
     });
 
 const POSTfetcher = (
@@ -128,29 +110,6 @@ export function useGetProfileSnippets(
     };
 }
 
-export function useGetProfile(
-    user: string,
-    accessToken: string
-): {
-    data: BackendUser25; // TODO may fix in backend
-    isLoading: boolean;
-    error: any;
-    mutate: KeyedMutator<any>;
-} {
-    const { data, error, isLoading, mutate } = useSWR(
-        accessToken ? [`/profileinformation?username=${user}`, accessToken] : null,
-        ([url, token]) => GETfetcher(url, token),
-        swrConfig
-    );
-
-    return {
-        data: isLoading || error ? {} : data,
-        isLoading,
-        error,
-        mutate,
-    };
-}
-
 export function useGetOwnProfile(accessToken: string): {
     data: BackendUser;
     isLoading: boolean;
@@ -172,7 +131,7 @@ export function useGetOwnProfile(accessToken: string): {
 }
 
 export function useGetUsers(accessToken?: string): {
-    data: { [username: string]: BackendUserSnippet };
+    data: BackendUser[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -191,41 +150,14 @@ export function useGetUsers(accessToken?: string): {
     };
 }
 
-export function useGetAvailablePlans({
-    goodPracticeOnly,
-    owner = 'all',
-    searchQuery = '',
-    limit = 10,
-    offset = 0,
-    sortBy = 'last_modified',
-    order = 'ASC',
-}: IplansFilter): {
+export function useGetAvailablePlans(accessToken: string): {
     data: IPlan[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const { data: session } = useSession();
-    const params: { [key: string]: any } = {
-        // filter_gp: true,
-        filter_access: owner,
-        query: searchQuery,
-        limit,
-        offset,
-        sort_by: sortBy,
-        order: order == 'ASC' ? -1 : 1,
-    };
-    if (goodPracticeOnly) {
-        // hotfix while backend does not work with filter_gp = false
-        params['filter_gp'] = true;
-    }
     const { data, error, isLoading, mutate } = useSWR(
-        [
-            `/planner/get_available?${Object.keys(params)
-                .map((a) => `${a}=${params[a]}&`)
-                .join('')}`,
-            session?.accessToken,
-        ],
+        ['/planner/get_available', accessToken],
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
@@ -262,35 +194,11 @@ export function useGetPlanById(
     };
 }
 
-export function useGetPlanAsScormById(
-    planId: string,
-    shouldFetch: boolean = true
-): {
-    data: any;
-    isLoading: boolean;
-    error: APIError;
-    mutate: KeyedMutator<any>;
-} {
-    const { data: session } = useSession();
-    const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch ? [`/planner/get_scorm_zip?_id=${planId}`, session?.accessToken] : null,
-        ([url, token]) => GETfetcherBlob(url, token, shouldFetch),
-        swrConfig
-    );
-
-    return {
-        data: !shouldFetch ? {} : isLoading || error ? {} : data,
-        isLoading,
-        error,
-        mutate,
-    };
-}
-
-export function useGetPublicPlansUser(
+export function useGetPublicPlansOfCurrentUser(
     accessToken: string,
     username: string
 ): {
-    data: PlanPreview[]; // TODO backend currently gives all plan data which we may never need?!?
+    data: VEPlanSnippet[];
     isLoading: boolean;
     error: any;
     mutate: KeyedMutator<any>;
@@ -308,10 +216,6 @@ export function useGetPublicPlansUser(
                 : data.plans.map((plan: any) => ({
                       _id: plan._id,
                       name: plan.name,
-                      creation_timestamp: plan.creation_timestamp,
-                      last_modified: plan.last_modified,
-                      progress: plan.progress,
-                      is_good_practise: plan.is_good_practise,
                   })),
         isLoading,
         error,
@@ -341,9 +245,6 @@ export function useGetAllPlans(accessToken: string): {
 
 export function useGetMatching(
     shouldFetch: boolean,
-    filter: { [key: string]: string[] },
-    size: number = 10,
-    offset: number = 0,
     accessToken: string
 ): {
     data: BackendUserSnippet[];
@@ -351,14 +252,8 @@ export function useGetMatching(
     error: any;
     mutate: KeyedMutator<any>;
 } {
-    const url_prep_filter = Object.keys(filter).length
-        ? Object.keys(filter).map((f) => `&${f}=${filter[f].length ? filter[f].join(',') : ''}`)
-        : [];
-
     const { data, error, isLoading, mutate } = useSWR(
-        shouldFetch
-            ? [`/matching?size=${size}&offset=${offset}${url_prep_filter.join('')}`, accessToken]
-            : null,
+        shouldFetch ? ['/matching', accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
@@ -709,100 +604,24 @@ export function useGetSearchResults(
     search: string,
     filterBy?: string[]
 ): {
-    data: {
-        posts: BackendPost[];
-        spaces: BackendGroup[];
-        users: BackendProfile[];
-        plans: PlanPreview[];
-    };
+    data: { posts: BackendPost[]; spaces: BackendGroup[]; users: BackendProfile[] };
     isLoading: boolean;
     error: APIError;
     mutate: KeyedMutator<any>;
 } {
     const { data: session } = useSession();
-    const defaultFilter = ['posts', 'users', 'spaces', 'plans'];
+    const defaultFilter = ['posts', 'users', 'spaces'];
     filterBy =
         filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
     const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
     const { data, error, isLoading, mutate } = useSWR(
-        search ? [`/search?query=${search}&${filter}`, session?.accessToken] : null,
+        [`/search?query=${search}&${filter}`, session?.accessToken],
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
 
     return {
-        data: isLoading || !data || error ? { posts: [], spaces: [], users: [], plans: [] } : data,
-        isLoading,
-        error,
-        mutate,
-    };
-}
-
-export function useGetSearchLearningModuls(search: string): {
-    data: ISearchMaterial[];
-    isLoading: boolean;
-    error: APIError;
-    mutate: KeyedMutator<any>;
-} {
-    const baseurl = 'https://soserve.rz.uni-leipzig.de:10001';
-    const fetcher = (url: string) =>
-        fetch(url)
-            .then((res: any) => {
-                return res.json();
-            })
-            .then(async (result: ISearchMaterialWP[]) => {
-                let modulesEnabled: ISearchMaterial[] = [];
-                const taxonomy = await fetchTaxonomy();
-
-                await Promise.all(
-                    result.map(async (resultModule) => {
-                        const moduleInTaxonomy = taxonomy.find(
-                            (node) => node.data?.url == resultModule.url
-                        );
-                        if (moduleInTaxonomy !== undefined) {
-                            const path = await getMaterialNodePath(moduleInTaxonomy.id);
-
-                            modulesEnabled.push({
-                                id: moduleInTaxonomy.id,
-                                text: moduleInTaxonomy.text,
-                                section: path.category,
-                                cluster: path.bubble,
-                            });
-                        }
-                    })
-                );
-
-                return modulesEnabled;
-            })
-            .catch((e) => e);
-
-    const { data, error, isLoading, mutate } = useSWR(
-        search ? `${baseurl}/wp-json/wp/v2/search?search=${search}` : null,
-        fetcher
-    );
-
-    return {
-        data: isLoading || !data || error ? [] : data,
-        isLoading,
-        error,
-        mutate,
-    };
-}
-
-export function useGetOpenReports(accessToken: string): {
-    data: Report[];
-    isLoading: boolean;
-    error: any;
-    mutate: KeyedMutator<any>;
-} {
-    const { data, error, isLoading, mutate } = useSWR(
-        ['/report/get_open', accessToken],
-        ([url, token]) => GETfetcher(url, token),
-        swrConfig
-    );
-
-    return {
-        data: isLoading || error ? [] : data.reports,
+        data: isLoading || error ? {} : data,
         isLoading,
         error,
         mutate,
@@ -930,11 +749,6 @@ export async function getNodeByText(nodeText: string, tax?: INode[]): Promise<IN
     return taxonomy.find((node: any) => node.text === nodeText) as INode;
 }
 
-export async function getNodeById(nodeId: number, tax?: INode[]): Promise<INode> {
-    const taxonomy = tax || (await fetchTaxonomy());
-    return taxonomy.find((node: any) => node.id === nodeId) as INode;
-}
-
 export async function getChildrenOfNode(nodeId: number, tax?: INode[]): Promise<INode[]> {
     const taxonomy = tax || (await fetchTaxonomy());
     return taxonomy.filter((node: any) => node.parent === nodeId);
@@ -952,18 +766,14 @@ export async function getSiblingsOfNodeByText(nodeText: string, tax?: INode[]): 
     return node ? taxonomy.filter((a: any) => a.parent === node.parent) : [];
 }
 
-export async function getMaterialNodesOfNodeByText(
-    nodeText: string,
-    tax?: INode[]
-): Promise<IMaterialNode[]> {
+export async function getMaterialNodesOfNodeByText(nodeText: string, tax?: INode[]): Promise<IMaterialNode[]> {
     const taxonomy = tax || (await fetchTaxonomy());
     const nodeId = taxonomy.find((node: INode) => node.text === nodeText)?.id;
     return taxonomy.filter((node: INode) => node.parent === nodeId) as IMaterialNode[];
 }
 
 export async function getMaterialNodePath(
-    nodeId: number,
-    tax?: INode[]
+    nodeId: number, tax?: INode[]
 ): Promise<{ bubble: ITopLevelNode; category: INode; material: IMaterialNode }> {
     const taxonomy = tax || (await fetchTaxonomy());
     const materialNode = taxonomy.find((node: INode) => node.id === nodeId) as IMaterialNode;
@@ -976,8 +786,7 @@ export async function getMaterialNodePath(
 }
 
 export async function getNodesOfNodeWithLections(
-    node: INode,
-    tax?: INode[]
+    node: INode, tax?: INode[]
 ): Promise<undefined | INodeWithLections[]> {
     if (!node) return [] as INodeWithLections[];
 

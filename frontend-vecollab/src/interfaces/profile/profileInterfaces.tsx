@@ -1,5 +1,3 @@
-import { Achievement, Achievements, ChosenAchievement } from '../api/apiInterfaces';
-
 export interface PersonalInformation {
     firstName: string;
     lastName: string;
@@ -10,8 +8,6 @@ export interface PersonalInformation {
     languages: string[];
     institutions: Institution[];
     chosen_institution_id: string;
-    achievements?: Achievements;
-    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface Institution {
@@ -74,7 +70,6 @@ export interface UserSnippet {
     name: string;
     preferredUsername: string;
     institution: string;
-    chosen_achievement?: null | ChosenAchievement;
 }
 
 export interface UserAccessSnippet {

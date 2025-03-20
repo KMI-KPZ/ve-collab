@@ -1,3 +1,5 @@
+import Image from 'next/image';
+import blueBackground from '@/images/footer/KAVAQ_Footer_rounded.png';
 import Dialog from '../profile/Dialog';
 import { useState } from 'react';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
@@ -5,10 +7,10 @@ import { useSession } from 'next-auth/react';
 import { fetchDELETE, fetchPOST, useGetGroup } from '@/lib/backend';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '../common/LoadingAnimation';
+import AuthenticatedImage from '../common/AuthenticatedImage';
 import BoxHeadline from '../common/BoxHeadline';
 import { RxTrash } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
-import UserProfileImage from './UserProfileImage';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -46,7 +48,6 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                         profilePicUrl: snippet.profile_pic,
                         institution: snippet.institution,
                         preferredUsername: snippet.username,
-                        chosen_achievement: snippet.chosen_achievement,
                     }))
                 );
                 setLoading(false);
@@ -72,38 +73,36 @@ export default function GroupBanner({ userIsAdmin }: Props) {
             mutate();
         });
     };
-
     return (
         <>
-            <div className={'relative'}>
-                <div
-                    className={
-                        'absolute -left-2 w-[calc(100svw-16px)] xl:w-full h-[160px] top-0 xl:rounded-b-md bg-footer-pattern'
-                    }
-                ></div>
-
-                <div className={'flex absolute top-[90px] right-14 divide-x divide-gray-200 z-10'}>
-                    <div className={'flex items-center pr-6 text-lg text-white'}>
-                        <div>
-                            <div className="font-bold">
-                                {group.joinable ? t('public') : t('private')}
-                            </div>
-                            <div className="font-bold">
-                                {group.invisible ? t('invisible') : t('visible')}
+            <div className={'w-full h-72 mt-10 relative rounded-2xl'}>
+                <Image fill src={blueBackground} alt={t('background_picture')} />
+                {isLoading ? (
+                    <LoadingAnimation />
+                ) : (
+                    <div className={'flex absolute bottom-5 right-14 divide-x z-10'}>
+                        <div className={'flex items-center pr-6 text-lg text-white'}>
+                            <div>
+                                <div className="font-bold">
+                                    {group.joinable ? t('public') : t('private')}
+                                </div>
+                                <div className="font-bold">
+                                    {group.invisible ? t('invisible') : t('visible')}
+                                </div>
                             </div>
                         </div>
+                        <div
+                            className={'pl-6 text-lg text-white cursor-pointer'}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenMemberDialog();
+                            }}
+                        >
+                            <div className={'font-bold'}>{group.members.length}</div>
+                            <div>{t('members')}</div>
+                        </div>
                     </div>
-                    <div
-                        className={'pl-6 text-lg text-white cursor-pointer'}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            handleOpenMemberDialog();
-                        }}
-                    >
-                        <div className={'font-bold'}>{group.members.length}</div>
-                        <div>{t('members')}</div>
-                    </div>
-                </div>
+                )}
             </div>
             <Dialog
                 isOpen={isMemberDialogOpen}
@@ -116,11 +115,11 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                             <LoadingAnimation />
                         </div>
                     ) : (
-                        <ul className="px-1 divide-y divide-gray-200">
+                        <ul className="px-1 divide-y">
                             {memberSnippets.map((snippet, index) => (
                                 <li key={index} className="flex py-2">
                                     <div
-                                        className="flex cursor-pointer items-center"
+                                        className="flex cursor-pointer"
                                         onClick={(e) => {
                                             e.preventDefault();
                                             router.push(
@@ -130,12 +129,13 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                                         }}
                                     >
                                         <div>
-                                            <UserProfileImage
-                                                profile_pic={snippet.profilePicUrl}
-                                                chosen_achievement={snippet.chosen_achievement}
+                                            <AuthenticatedImage
+                                                imageId={snippet.profilePicUrl}
+                                                alt={t('profile_picture')}
                                                 width={60}
                                                 height={60}
-                                            />
+                                                className="rounded-full"
+                                            ></AuthenticatedImage>
                                         </div>
                                         <div>
                                             <BoxHeadline title={snippet.name} />

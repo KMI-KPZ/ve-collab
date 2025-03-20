@@ -23,8 +23,8 @@ export default function EditProfileTeachingItem({ course, index, modifyCallbacks
                     label={t("lecture_title")}
                     value={course.title}
                     onChange={(e) => modifyCallbacks.modifyCourseTitle(index, e.target.value)}
-                    labelElementWidth="w-3/12"
-                    inputElemenWidth="w-9/12"
+                    labelElementWidth="w-1/5"
+                    inputElemenWidth="w-4/5"
                     placeholder={t("lecture_title_placeholder")}
                 />
                 <EditProfileItemRow
@@ -41,8 +41,8 @@ export default function EditProfileTeachingItem({ course, index, modifyCallbacks
                     label={t("semester")}
                     value={course.semester}
                     onChange={(e) => modifyCallbacks.modifyCourseSemester(index, e.target.value)}
-                    labelElementWidth="w-3/12"
-                    inputElemenWidth="w-9/12"
+                    labelElementWidth="w-1/5"
+                    inputElemenWidth="w-4/5"
                     placeholder={t("semester_placeholder")}
                 />
             </SlateBox>

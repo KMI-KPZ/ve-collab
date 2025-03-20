@@ -20,14 +20,6 @@ import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PartnersFormSchema } from '../../zod-schemas/partnersSchema';
 import CustomHead from '@/components/metaData/CustomHead';
-import { FaRegQuestionCircle } from 'react-icons/fa';
-import { Tooltip } from '@/components/common/Tooltip';
-import ButtonLight from '@/components/common/buttons/ButtongLight';
-import Button from '@/components/common/buttons/Button';
-import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
-import { MdOutlineMail } from 'react-icons/md';
-import MailInvitationForm from '@/components/MailInvitationForm';
-import Dialog from '@/components/profile/Dialog';
 
 export interface FormValues {
     partners: Partner[];
@@ -53,7 +45,6 @@ export default function Partners({ socket }: Props): JSX.Element {
     const { data: session } = useSession();
     const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
-    const [openMailInvitationDialog, setOpenMailInvitationDialog] = useState<boolean>(false);
 
     const [formalConditions, setFormalConditions] = useState<CheckListPartner[]>([]);
     const [evaluationInfo, setEvaluationInfo] = useState<EvaluationPerPartner[]>([]);
@@ -73,7 +64,6 @@ export default function Partners({ socket }: Props): JSX.Element {
     const {
         fields: fieldsPartners,
         append: appendPartners,
-        prepend: prependPartnes,
         remove: removePartners,
         update: updatePartners,
         replace: replacePartners,
@@ -91,8 +81,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         name: 'externalParties',
         control: methods.control,
     });
-
-    // const [originalExternalParties, setOriginalExternalParties] = useState<string[]>([]);
 
     const setPlanerData = useCallback(
         async (plan: IPlan) => {
@@ -112,7 +100,6 @@ export default function Partners({ socket }: Props): JSX.Element {
             if (plan.involved_parties.length !== 0) {
                 extPartners = plan.involved_parties.map((exp) => ({ externalParty: exp }));
                 replaceExternalParties(extPartners);
-                // setOriginalExternalParties(extPartners.map((a) => a.externalParty));
             }
             if (plan.partners.length !== 0) {
                 const snippets: BackendProfileSnippetsResponse = await fetchPOST(
@@ -155,22 +142,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         },
         [replaceExternalParties, replacePartners, appendPartners, session]
     );
-
-    // const beforeSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
-    //     const extPartners = data.externalParties
-    //         .filter((value) => value.externalParty.trim() != '')
-    //         .map((element) => element.externalParty);
-
-    //     console.log('SUBMIT', { originalExternalParties, extPartners });
-
-    //     // (new) => true
-    //     if (extPartners.some((newPartner) => !originalExternalParties.includes(newPartner))) {
-    //         console.log('found new external oparties!');
-    //         return [];
-    //     }
-
-    //     return onSubmit(data);
-    // };
 
     const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
         const extPartners = data.externalParties
@@ -282,11 +253,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         removeExternalParties(index);
     };
 
-    const [addedExtWarning, setAddedExtWarning] = useState<number>(0);
-    const addedExternalPartyWarning = () => {
-        setAddedExtWarning((prev) => ++prev);
-    };
-
     const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
@@ -329,26 +295,20 @@ export default function Partners({ socket }: Props): JSX.Element {
                         }}
                         onBlur={onBlur}
                         value={value.value == '' ? null : value}
-                        placeholder={t('designer:partners:search_users')}
+                        placeholder={t('common:search_users')}
                         getOptionLabel={(option) => option.label}
                         autoFocus={true}
                         formatCreateLabel={(inputValue) => (
                             <span>
                                 <Trans
-                                    i18nKey="partners.search_users_no_hit"
-                                    ns="designer"
+                                    i18nKey="common:search_users_no_hit"
                                     values={{ value: inputValue }}
-                                    components={{ bold: <strong />, br: <br /> }}
+                                    components={{ bold: <strong /> }}
                                 />
                             </span>
                         )}
                         components={{
                             DropdownIndicator: null,
-                        }}
-                        noOptionsMessage={() => null}
-                        onCreateOption={(value: string) => {
-                            removePartners(fieldsPartners.length - 1);
-                            appendPartners({ label: value, value: value });
                         }}
                     />
                 )}
@@ -360,23 +320,15 @@ export default function Partners({ socket }: Props): JSX.Element {
         return fieldsExternalParties.map((externalParty, index) => (
             <div key={externalParty.id} className="my-2 w-full lg:w-1/2">
                 <div className="flex">
-                    {externalParty.externalParty != '' ? (
-                        <p className="px-4 py-2 min-w-56">{externalParty.externalParty}</p>
-                    ) : (
-                        <input
-                            type="text"
-                            placeholder={t('designer:partners:enter_ext')}
-                            className="grow border border-gray-300 rounded-lg p-2 mr-2"
-                            {...methods.register(`externalParties.${index}.externalParty`)}
-                        />
-                    )}
-
-                    <ButtonLight
-                        onClick={() => handleDeleteExternalParties(index)}
-                        className="mx-2 p-2! shadow-sm rounded-full!"
-                    >
-                        <RxMinus size={18} />
-                    </ButtonLight>
+                    <input
+                        type="text"
+                        placeholder={t('common:enter_name')}
+                        className="grow border border-gray-300 rounded-lg p-2 mr-2"
+                        {...methods.register(`externalParties.${index}.externalParty`)}
+                    />
+                    <button type="button" onClick={() => handleDeleteExternalParties(index)}>
+                        <RxMinus size={20} />
+                    </button>
                 </div>
                 {methods.formState.errors?.externalParties?.[index]?.externalParty?.message && (
                     <p className="text-red-600 pt-2">
@@ -390,48 +342,6 @@ export default function Partners({ socket }: Props): JSX.Element {
         ));
     };
 
-    const renderPartiesInputt = () => {
-        return fieldsPartners.map((partner, index) => {
-            return (
-                <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
-                    {partner.value == planAuthor ? (
-                        <div className="px-4 py-2">{partner.label}</div>
-                    ) : partner.value != '' &&
-                      fieldsPartners.find((a) => a.value == partner.value) ? (
-                        <>
-                            <div className="flex items-center">
-                                <p className="px-4 py-2 min-w-56">{partner.label}</p>
-                                <ButtonLight
-                                    onClick={() => handleDeletePartners(index)}
-                                    className="mx-2 p-2! shadow-sm rounded-full!"
-                                >
-                                    <RxMinus size={18} />
-                                </ButtonLight>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            {createSelect(methods.control, `partners.${index}`, index)}
-                            <ButtonLight
-                                onClick={() => handleDeletePartners(index)}
-                                className="mx-2 p-2! shadow-sm rounded-full!"
-                            >
-                                <RxMinus size={18} />
-                            </ButtonLight>
-                        </>
-                    )}
-                    {methods.formState.errors?.partners?.[index]?.value?.message && (
-                        <p className="text-red-600 pt-2">
-                            {t(methods.formState.errors?.partners?.[index]?.value?.message!)}
-                        </p>
-                    )}
-                </div>
-            );
-        });
-    };
-
-    const openMailInvitationForm = () => {};
-
     return (
         <>
             <CustomHead
@@ -443,7 +353,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 socket={socket}
                 title={t('partners.title')}
                 subtitle={t('partners.subtitle')}
-                description={[t('partners.description-1')]}
+                description={[t('partners.description-1'), t('partners.description-2')]}
                 tooltip={{
                     text: t('partners.tooltip'),
                     link: '/learning-material/2/VA-Planung',
@@ -458,97 +368,62 @@ export default function Partners({ socket }: Props): JSX.Element {
             >
                 <div>
                     <p className="text-xl text-slate-600 mb-2">{t('partners.partners_title')}</p>
-                    <div className="flex flex-wrap">
-                        <div className="grow">
-                            <div className="p-2">{renderPartiesInputt()}</div>
-
-                            <div className="mt-4">
-                                <button
-                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
-                                    type="button"
-                                    onClick={() => {
-                                        appendPartners({ label: '', value: '' });
-                                    }}
-                                >
-                                    <RxPlus size={25} />
-                                </button>
+                    {fieldsPartners.map((partner, index) => {
+                        return (
+                            <div key={partner.id} className="flex w-full mb-2 gap-x-3 lg:w-1/2">
+                                {partner.value == planAuthor ? (
+                                    <div className="p-2">{partner.label}</div>
+                                ) : (
+                                    <>
+                                        {createSelect(methods.control, `partners.${index}`, index)}
+                                        <button onClick={() => handleDeletePartners(index)}>
+                                            <RxMinus size={20} />
+                                        </button>
+                                    </>
+                                )}
+                                {methods.formState.errors?.partners?.[index]?.value?.message && (
+                                    <p className="text-red-600 pt-2">
+                                        {t(
+                                            methods.formState.errors?.partners?.[index]?.value
+                                                ?.message!
+                                        )}
+                                    </p>
+                                )}
                             </div>
-                        </div>
-                        <div className="lg:basis-1/4 text-center p-4 m-2 rounded-lg border border-gray-200 shadow-sm self-start">
-                            <p>{t('common:mail_invitation_form.intro_short')}</p>
-                            <ButtonLightBlue
-                                className="m-2"
-                                onClick={() => setOpenMailInvitationDialog(true)}
-                            >
-                                <MdOutlineMail className="inline" />{' '}
-                                {t('common:mail_invitation_form.open')}
-                            </ButtonLightBlue>
-                        </div>
+                        );
+                    })}
+                    <div className="mt-4">
+                        <button
+                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                            type="button"
+                            onClick={() => {
+                                appendPartners({ label: '', value: '' });
+                            }}
+                        >
+                            <RxPlus size={25} />
+                        </button>
                     </div>
                     <div>
-                        <div className="text-xl text-slate-600 mb-2 mt-10">
+                        <p className="text-xl text-slate-600 mb-2 mt-10">
                             {t('partners.externpartners_title')}
-                            <Tooltip
-                                tooltipsText={
-                                    <Trans
-                                        i18nKey="partners.description-2"
-                                        ns="designer"
-                                        components={{ 1: <br /> }}
-                                    />
-                                }
-                                className="mx-2"
+                        </p>
+                        {renderExternalPartiesInputs()}
+                        <div className="mt-4">
+                            <button
+                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                type="button"
+                                onClick={() => {
+                                    appendExternalParties({
+                                        externalParty: '',
+                                    });
+                                }}
                             >
-                                <FaRegQuestionCircle className="inline m-1 text-ve-collab-blue" />
-                            </Tooltip>
-                        </div>
-                        <div>
-                            <p>{t('partners.description-2')}</p>
-                            {renderExternalPartiesInputs()}
-                            <div className="mt-4">
-                                {addedExtWarning == 1 && (
-                                    <div className="w-full lg:w-1/2 rounded-md mb-4 bg-red-300 border border-red-500 p-2 text-slate-800 relative">
-                                        <Trans
-                                            i18nKey="partners.extparties_warning"
-                                            ns="designer"
-                                            components={{ bold: <strong />, br: <br /> }}
-                                        />
-                                        <Button
-                                            onClick={() => addedExternalPartyWarning()}
-                                            className="mx-2 shadow-sm rounded-full!"
-                                        >
-                                            {t('common:ok')}
-                                        </Button>
-                                    </div>
-                                )}
-                                <button
-                                    className="p-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
-                                    type="button"
-                                    onClick={() => {
-                                        addedExternalPartyWarning();
-                                        appendExternalParties({
-                                            externalParty: '',
-                                        });
-                                    }}
-                                >
-                                    <RxPlus size={25} />
-                                </button>
-                            </div>
+                                <RxPlus size={25} />
+                            </button>
                         </div>
                     </div>
                 </div>
             </Wrapper>
-            <Dialog
-                isOpen={openMailInvitationDialog}
-                title={t('common:mail_invitation_form.title')}
-                onClose={() => setOpenMailInvitationDialog(false)}
-            >
-                <MailInvitationForm
-                    handleFinish={() => {
-                        setOpenMailInvitationDialog(false);
-                    }}
-                    renderAttentionMessage
-                />
-            </Dialog>
         </>
     );
 }
@@ -601,7 +476,7 @@ export function PartnersNoAuthPreview() {
 
                     <div className="mt-4">
                         <button
-                            className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                            className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -618,7 +493,7 @@ export function PartnersNoAuthPreview() {
                         </div>
                         <div className="mt-4">
                             <button
-                                className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                                className="p-2 bg-white rounded-full shadow hover:bg-slate-50"
                                 type="button"
                                 onClick={() => {}}
                                 disabled
@@ -629,7 +504,7 @@ export function PartnersNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
         </div>
     );
 }

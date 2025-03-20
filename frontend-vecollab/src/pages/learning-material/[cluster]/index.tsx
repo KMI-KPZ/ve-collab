@@ -1,10 +1,11 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { fetchTaxonomy, getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
+import { getNodeByText, getNodesOfNodeWithLections } from '@/lib/backend';
 import { INodeWithLections } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { RxDot } from 'react-icons/rx';
+import { getClusterSlugByRouteQuery } from '..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
@@ -56,7 +57,7 @@ export default function BubbleSelected(props: Props) {
                             {props.nodesWithLectionsOfCluster.map((node) => {
                                 return (
                                     <div key={node.id} className="basis-1/4 max-w-96">
-                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b border-b-gray-200 hover:text-ve-collab-orange transition-colors">
+                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b hover:text-ve-collab-orange transition-colors">
                                             <Link
                                                 href={`/learning-material/${router.query.cluster}/${node.text}`}
                                             >
@@ -102,15 +103,14 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
-    const clusterSlug = params?.cluster as string;
+    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
 
     if (!clusterSlug) {
         return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
-    const taxonomy = await fetchTaxonomy();
-    const currentCluster = await getNodeByText(clusterSlug, taxonomy);
-    const nodesWithLectionsOfCluster = await getNodesOfNodeWithLections(currentCluster, taxonomy);
+    const currentCluster = await getNodeByText(clusterSlug);
+    const nodesWithLectionsOfCluster = await getNodesOfNodeWithLections(currentCluster);
 
     return {
         props: {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { HTMLAttributeAnchorTarget } from 'react';
+import React from 'react';
 
 export interface ButtonProps {
     label?: string | JSX.Element;
@@ -8,22 +8,9 @@ export interface ButtonProps {
     link?: string;
     onClick?: () => void;
     className?: string;
-    disabled?: boolean;
-    target?: HTMLAttributeAnchorTarget | undefined;
 }
-export default function Button({
-    label,
-    title,
-    children,
-    link,
-    onClick,
-    className,
-    disabled = false,
-    target,
-}: ButtonProps) {
-    const defaulStyle = `py-2 px-4 rounded-lg transition easy-in-out ${
-        !disabled ? 'hover:cursor-pointer' : ''
-    }`;
+export default function Button({ label, title, children, link, onClick, className }: ButtonProps) {
+    const defaulStyle = 'py-2 px-4 rounded-lg transition easy-in-out';
 
     if (typeof link !== 'undefined') {
         return (
@@ -32,7 +19,6 @@ export default function Button({
                 title={title}
                 onClick={onClick}
                 className={`${defaulStyle} ${className || ''}`}
-                target={target}
             >
                 {children || label}
             </Link>
@@ -46,7 +32,6 @@ export default function Button({
             title={title}
             onClick={onClick}
             className={`${defaulStyle} ${className}`}
-            disabled={disabled}
         >
             {children || label}
         </button>

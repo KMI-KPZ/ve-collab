@@ -28,54 +28,16 @@
     "choose": "Auswählen",
     "choose_option": "Option auswählen...",
     "last_modified": "Zuletzt geändert",
-    "materials": "Lernmaterialien",
+    "materials": "Selbstlernmaterialien",
     "materials_description": "VE-Collab bietet ein wachsendes Angebot interaktiver Selbstlernmaterialien zu Themen rund um virtuelle Austausche, z.B. Potenziale oder Herausforderungen.",
     "materials_welcome": "Herzlich Willkommen zum stetig wachsenden Qualifizierungsangebot von VE-Collab!",
     "materials_intro_text": "Sie interessieren sich für virtuelle Austausche, haben aber noch kein oder wenig Vorwissen zum Thema? Dann helfen Ihnen die Materialien dabei, ins Thema einzutauchen und unterstützen Sie Schritt für Schritt auf dem Weg hin zu Ihrem ersten eigenen virtuellen Austausch. Sie konnten bereits Erfahrung mit VE sammeln? Dann können Sie hier Ihr Wissen in den für Sie relevanten Themengebieten vertiefen, Ihre bisherigen Erfahrungen reflektieren und sich u. a. von aktuellen Links und Artikeln für die eigene Praxis und Forschung inspirieren lassen.",
     "materials_only_german": "",
     "groups": "Gruppen",
-    "your_groups": "Deine Gruppen",
-    "public_groups_of": "Öffentliche Gruppen",
     "chat": "Chat",
     "toggle_chat_window": "Chatfenster ein-/ausblenden",
-    "notifications": {
-        "title": "Benachrichtigungen",
-        "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
-        "achievement_level_up": {
-            "title": "Level up!",
-            "social": "Social",
-            "ve": "VE",
-            "text1": "Herzlichen Glückwunsch, dein ",
-            "text2": "-Achievement Level hat sich erhöht!",
-            "text3": "Du bist jetzt ",
-            "level_x": "Level {{level}}"
-        },
-        "plan_access_granted": {
-            "title": "Zugriff auf VE-Plan erhalten",
-            "text1": " hat dir ",
-            "read": "Lese-",
-            "write": "Lese- und Schreib",
-            "text2": "zugriff auf den VE-Plan ",
-            "text3": " gewährt.",
-            "text4": "Du findest diesen Plan ab sofort in deinem Dashboard, oder direkt ",
-            "text5": "."
-        },
-        "plan_added_as_partner": {
-            "title": "Als Partner:in in VE-Plan hinzugefügt",
-            "text1": " hat dich als Partner:in im VE-Plan ",
-            "text2": " hinzugefügt.",
-            "text3": "Du hast automatisch Zugriff auf diesen VE-Plan bekommen und findest ihn ab sofort in deinem Dashboard, oder direkt ",
-            "text4": "."
-        },
-        "report_submitted": {
-            "title": "neue Meldung",
-            "text1": "Ein neuer Inhalt wurde gemeldet. Klicke hier zu moderieren."
-        },
-        "content_deleted_due_to_report": {
-            "title": "Inhalt gelöscht",
-            "text1": "Einer deiner Inhalte wurde aufgrund einer Meldung gelöscht. Falls du E-Mail-Benachrichtigungen aktiviert hast, erhältst du darüber detailiertere Informationen."
-        }
-    },
+    "notifications": "Benachrichtigungen",
+    "toggle_notification_window": "Benachrichtigungen ein-/ausblenden",
     "profile": "Profil",
     "profile_title": "eigenes Profil öffnen",
     "profile_description": "Stelle persönliche Informationen zu dir, deinen VE-Interessen und -Erfahrungen für andere Personen in der Community zur Verfügung.",
@@ -85,22 +47,17 @@
     "logout": "Abmelden",
     "redirect": "Weiterleitung...",
     "profile_pic": "Profilbild",
-    "home": "Home",
     "search": "Suche",
-    "search_placeholder": "Suche Pläne, Personen, Gruppen oder Beiträge...",
-    "search_placeholder_caroussel": "Suche Pläne...;Suche Lernmaterial...;Suche Personen...;Suche Gruppe...;Suche Beitrag...",
+    "search_placeholder": "Suche Benutzer, Gruppe oder Beitrag ...",
     "search_title": "Suchen",
-    "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Plänen, Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
-    "search_instructions": "Suche nach Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
+    "search_description": "Suche nach Inhalten auf VE-Collab, wie z.B. Personen, Gruppen, Posts, Lernmaterialien oder Plänen",
+    "search_instructions": "Suche nach Nutzer:innen, Gruppen, Plänen, etc.",
     "search_no_results": "Keine Ergebnisse",
-    "search_result_show_more": "Weitere Ergebnisse",
     "search_result_users": "Nutzer:innen",
     "search_result_groups": "Gruppen",
     "search_result_posts": "Beiträge",
-    "search_result_plans": "VE Pläne",
-    "search_result_learning_modules": "Lernmaterialien",
+    "search_result_show_more_posts": "weitere Beiträge anzeigen",
     "chats": "Chats",
-    "no_rooms_yet": "Es ist noch kein Chat vorhanden",
     "type_message_placeholder": "Nachricht eingeben...",
     "no_messages_yet": "Noch keine Nachrichten",
     "create_new_chat_title": "Neuen Chat erstellen",
@@ -111,15 +68,11 @@
     "give_chat_name": "Gib dem Chat einen Namen (optional)",
     "create": "Erstellen",
     "btn_new_ve": "Neuen VE planen",
-    "plan": "Plan",
     "plans": "Pläne",
-    "your_plans": "Deine Pläne",
-    "gp_plans_of": "\"Good Practice\" Pläne",
-    "last_change": "Letzte Änderung",
-    "plans_description": "Der VE-Designer von VE-Collab ist ein digitales Planungstool, das VE-Partner:innen Schritt für Schritt durch die Planung eines virtuellen Austauschs leitet.",
+    "plans_description": "Der VE-Designer von VE-Collab ist ein digitales Planungstool, das VE-Partner*innen Schritt für Schritt durch die Planung eines virtuellen Austauschs leitet.",
     "plans_overview_subtitle": "Übersicht deiner und mit dir geteilter Pläne",
     "matching": "Partner Suche",
-    "matching_description": "Passend zu den eigenen Profilinformationen und weiteren einstellbaren Filtern werden dir Vorschläge für potenzielle VE-Partner:innen gemacht.",
+    "matching_description": "Passend zu den eigenen Profilinformationen und weiteren einstellbaren Filtern werden dir Vorschläge für potenzielle VE-Partner*innen gemacht.",
     "matching_question": "Noch auf der Suche nach neuen Partner:innen für deinen nächsten VE?",
     "go_matching": "zum Matching",
     "find_ve_partners": "VE Partner:innen finden",
@@ -130,19 +83,18 @@
     "plans_filter_title_placeholder": "Nach Titel filtern ...",
     "plans_filter_good_practice_examples": "ist \"Good Practice\"",
     "plans_btn_new_plan": "Neuen Plan starten",
-    "show_good_practice_plans": "\"Good Practice\" Pläne anzeigen",
     "loading_plans": "Lade Pläne...",
-    "prev_page": "Vorherige",
-    "next_page": "Nächste",
     "plans_table_progress": "Progress",
     "plans_table_name": "Name",
-    "plans_table_author": "Autor:in",
+    "plans_table_author": "Autor*in",
     "plans_table_last_modified": "Geändert",
     "plans_table_created": "Erstellt",
-    "plans_title_all_steps_completed": "Alle Schritte als <checkMark /> <i>erledigt</i> markiert<br />({{stepsTotal}} Schritte und {{phasesTotal}} Phasen)",
-    "plans_title_partial_steps_completed": "{{stepsDone}} von {{stepsTotal}} Schritten als <checkMark /> <i>erledigt</i> markiert<br />{{phasesDone}} von {{phasesTotal}} Phasen als <checkMark /> <i>erledigt</i> markiert",
+    "plans_title_all_steps_completed": "Alle Schritte als 'erledigt' markiert",
+    "plans_title_partial_steps_completed": "{{count}} von {{total}} Schritten als 'erledigt' markiert",
+    "plans_no_good_practise_plan_shared": "Es wurde noch kein Good Practice Plan mit Dir geteilt.",
+    "plans_no_plan_shared": "Es wurde noch kein Plan mit Dir geteilt.",
+    "plans_no_good_practise_plan_created": "Du hast noch keinen Good Practice Plan erstellt.",
     "plans_no_plan_created": "Du hast noch keinen Plan erstellt.",
-    "plans_nothing_matches": "Keinen passenden Plan gefunden",
     "plans_share_dialog_title": "Teilen",
     "plans_share_dialog_tabname_new": "Neu",
     "plans_share_dialog_tabname_manage": "Verwalten",
@@ -165,7 +117,6 @@
     "download": "Herunterladen",
     "delete_plan": "Plan löschen",
     "share_plan": "Plan teilen",
-    "save_first": "Der Plan muss erst gespeichert werden",
     "plans_shared_with_1_user": "Plan geteilt mit 1 Nutzer:in",
     "plans_shared_with_x_users": "Plan geteilt mit {{count}} Nutzer:innen",
     "create_copy": "Kopie erstellen",
@@ -177,7 +128,7 @@
     "plans_alert_open_insufficient_permission": "Du hast keine Berechtigung, um diesen Plan zu öffnen",
     "plans_alert_open_unexpected_error": "ein unerwarteter Fehler ist aufgetreten",
     "plans_alert_step_doesnt_exist": "Diese Etappe existiert nicht",
-    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' veröffentlicht",
+    "plans_marked_as_good_practise": "Plan ist als 'Good Practice Beispiel' markiert",
     "plans_shared_by": "Plan geteilt von {{name}}",
     "plans_confirm_delete": "Plan löschen?",
     "max_5_mb": "max. 5 MB erlaubt",
@@ -265,7 +216,7 @@
     "plan_summary_tools": "Tools",
     "plan_summary_imported_from": "Phase import aus:",
     "plan_summary_plan_no_longer_available": "Plan nicht mehr verfügbar",
-    "plan_summary_author_original_plan": "Autor:in des originalen Plans:",
+    "plan_summary_author_original_plan": "Autor*in des originalen Plans:",
     "plan_summary_gpb_documentation": "Good-Practice Dokumentation",
     "plan_summary_is_good_practise": "Als Good-Practice Beispiel veröffentlicht:",
     "plan_summary_underlying_ve_model": "Zugrundeliegendes VE-Modell:",
@@ -283,8 +234,6 @@
     "plan_summary_evaluation_before": "vor dem VE:",
     "plan_summary_evaluation_while": "während des VE (formativ):",
     "plan_summary_evaluation_after": "nach dem VE (summativ):",
-    "plan_summary_download_scorm_title": "Exportiere Plan",
-    "plan_summary_download_scorm_text": "Diese Datei kann auf eine andere Lernplattform hochgeladen werden (z.B. Moodle).",
     "type": "Typ",
     "show_all": "Alles anzeigen",
     "show_less": "Weniger anzeigen",
@@ -396,12 +345,12 @@
                 "text": "Wollen Sie Ihre Lehre kooperativer, digitaler und internationaler machen? VE-Collab bietet Ihnen vielfältige Qualifizierungsangebote und gibt Hilfestellungen bei der Initialisierung, Planung und Durchführung internationaler und nationaler virtueller Austausche (engl. virtual exchanges)."
             },
             "slide2": {
-                "title": "Finden Sie geeignete Partner:innen und vernetzen Sie sich",
-                "text": "Finden Sie in unserer virtual Community of Practice VE-Partner:innen, teilen Sie Good-Practice-Beispiele und vernetzen Sie sich international."
+                "title": "Finden Sie geeignete Partner*innen und vernetzen Sie sich",
+                "text": "Finden Sie in unserer virtual Community of Practice VE-Partner*innen, teilen Sie Good-Practice-Beispiele und vernetzen Sie sich international."
             },
             "slide3": {
                 "title": "Wir helfen Ihnen Schritt für Schritt bei der Planung",
-                "text": "Mit unserem “VE-Designer” ermöglichen wir Noviz:innen einen leichten Einstieg in die VE-Planung und Expert:innen eine individuell anpassbare Maske für die ko-kreative Planung der gemeinsamen virtuellen Austausche."
+                "text": "Mit unserem “VE-Designer” ermöglichen wir Noviz*innen einen leichten Einstieg in die VE-Planung und Expert*innen eine individuell anpassbare Maske für die ko-kreative Planung der gemeinsamen virtuellen Austausche."
             },
             "slide4": {
                 "title": "Mehrwerte für Institutionen",
@@ -428,7 +377,7 @@
             },
             "vcop": {
                 "title": "Virtual Community of Practice",
-                "text": "VE-Partner:innen finden, Good-Practice-Beispiele teilen, (international) vernetzen",
+                "text": "VE-Partner*innen finden, Good-Practice-Beispiele teilen, (international) vernetzen",
                 "image_alt": "Netzwerk von Personen"
             }
         },
@@ -464,7 +413,6 @@
             }
         }
     },
-    "dashboard_description": "Deine Startseite der VE-Collab Plattform zeigt eine Übersicht von Aktivitäten und wichtigen Neuigkeiten des Netzwerkes.",
     "show_more": "Mehr erfahren",
     "access_denied": "Zugriff verweigert",
     "qualification": "Qualifikation",
@@ -500,11 +448,11 @@
         "ve_content2": "Ethnische Fragestellungen",
         "ve_experience1": "1x VE mit spanischer Universität",
         "group_name1": "VE Fremdsprachen",
-        "group_description1": "Austausch und Treff für VEs im Fremdsprachenbereich",
+        "group_description1": "Austausch und Treff für VE's im Fremdsprachenbereich",
         "group_name2": "Klimawandel",
         "plan_name": "Planung VE Sommersemester 2025",
-        "partner1": "Partner:in 1",
-        "partner2": "Partner:in 2",
+        "partner1": "Partner*in 1",
+        "partner2": "Partner*in 2",
         "step1": "Kennenlernen",
         "step2": "Arbeitsphase",
         "step3": "Evaluation"
@@ -512,11 +460,11 @@
     "about-ve-designer": {
         "title": "VE-Planungstool \"VE-Designer\"",
         "text": [
-            "Tool, das VE-Partner:innen Schritt für Schritt durch die Planung eines VE leitet",
+            "Tool, das VE-Partner*innen Schritt für Schritt durch die Planung eines VE leitet",
             "zusätzliche Hilfestellungen zu fast allen Aspekten der Planung, u. a. durch Verweise auf die Selbstlernmaterialien ",
             "Möglichkeit, erarbeitete und durchgeführte VE-Pläne als Good-Practice-Beispiele der Community zur Verfügung zu stellen",
             "Möglichkeit, Inhalte veröffentlichter Good-Practice-Beispiele in die eigene Planung zu importieren",
-            "exklusiv für registrierte Nutzer:innen"
+            "exklusiv für registrierte Nutzer*innen"
         ],
         "image_alt": "Gruppe von Personen"
     },
@@ -525,10 +473,10 @@
         "text": [
             "Profil erstellen, Gruppen beitreten (oder auch selbst gründen), Status posten, Interessantes teilen oder Fragen stellen…",
             "Informiert bleiben durch Notifications",
-            "VE-spezifische Profil-Informationen als Grundlage für das Partner:innen-Matching",
-            "Möglichkeit, auch interdisziplinär Partner:innen zu finden ",
+            "VE-spezifische Profil-Informationen als Grundlage für das Partner*innen-Matching",
+            "Möglichkeit, auch interdisziplinär Partner*innen zu finden ",
             "persönliches Schaufenster für aktuelle und vergangene VE-Projekte",
-            "exklusiv für registrierte Nutzer:innen"
+            "exklusiv für registrierte Nutzer*innen"
         ]
     },
     "learning_materials_descriptions": {
@@ -551,46 +499,5 @@
         "learning-material/2": "Eine Sammlung interaktiver Lehrmodule zur konkreten Planung von VEs und der Evaluation.",
         "learning-material/3": "Eine Sammlung interaktiver Lehrmodule zu nützlichen Tools für VEs, Datenschutzfragen, digitalen Medien und Open Educational Resources (OER).",
         "learning-material/4": "Eine Sammlung interaktiver Lehrmodule zu kulturellen & sprachlichen Aspekten, Interaktion und Kollaboration und einem Methodenkoffer für digitale Lehre."
-    },
-    "mail_invitation_form": {
-        "share": "Einladen",
-        "intro_short": "VE Partner:innen via E-Mail einladen",
-        "intro": "Lade Personen per E-Mail ein, VE-Collab beizutreten.",
-        "intro_attention": "<bold>Achtung:</bold> Die eingeladene Person wird nicht automatisch als VE-Partner:in hinzugefügt, nachdem sie sich registriert hat. Diesen Schritt müsst ihr leider manuell machen.",
-        "open": "öffnen",
-        "title": "VE-Einladung via E-Mail",
-        "name_placeholder": "Name",
-        "no_valid_name": "Dieser Name ist nicht gültig",
-        "send_ok": "Einladung verschickt.",
-        "send_error": "Es ist ein Fehler aufgetreten. Bitte probiere es später erneut.",
-        "mail_placeholder": "E-Mail",
-        "no_valid_mail": "Diese E-Mail ist nicht gültig",
-        "message_placeholder": "Nachricht"
-    },
-    "report": {
-        "report_title": "Melden",
-        "report_reason_placeholder": "z.B. Spam, unangemessener Inhalt, Belästigung, etc.",
-        "report_dialog_titles": {
-            "post": "Diesen Post melden",
-            "comment": "Diesen Kommentar melden",
-            "plan": "Diesen VE-Plan melden",
-            "group": "Diese Gruppe melden",
-            "profile": "Dieses Profil melden",
-            "chatroom": "Diesen Chatverlauf melden"
-        },
-        "report_descriptions": {
-            "post": "Bitte beschreibe kurz, warum du diesen Post melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "comment": "Bitte beschreibe kurz, warum du diesen Kommentar melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "plan": "Bitte beschreibe kurz, warum du diesen VE-Plan melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "group": "Bitte beschreibe kurz, warum du diese Gruppe melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "profile": "Bitte beschreibe kurz, warum du dieses Profil melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen.",
-            "chatroom": "Bitte beschreibe kurz, warum du diesen Chatverlauf melden möchtest. Das hilft uns, die richtigen Maßnahmen zu ergreifen."
-        }
-    },
-    "help": {
-        "title": "Hilfe",
-        "description": "Hilfsangebote für die VE-Collab Plattform",
-        "instructions": "Hilfsangebote für die VE-Collab Plattform.",
-        "video_tutorials": "Video-Tutorials"
     }
 }

@@ -1,23 +1,19 @@
 import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bson.objectid import ObjectId
+import gridfs
+from pymongo.database import Database
+
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
-import gridfs
-from pymongo.database import Database
 
-from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
-from model import VEPlan
-from resources.planner.ve_plan import VEPlanResource
 import util
 
-# import logging
-# logger = logging.getLogger(__name__)
 
 class Posts:
     """
@@ -78,19 +74,6 @@ class Posts:
         post = self.db.posts.find_one({"_id": post_id}, projection=projection)
         if not post:
             raise PostNotExistingException()
-
-
-        # may add plans information
-        if "plans" in post and post["plans"] != []:
-            plan_ids = post["plans"].copy()
-            with util.get_mongodb() as db:
-                plan_manager = VEPlanResource(db)
-                plans = plan_manager.get_bulk_plans(plan_ids)
-                post["plans"] = []
-                for plan in plans:
-                    if isinstance(plan, VEPlan):
-                        plan = plan.to_dict()
-                    post["plans"].append(plan)
 
         return post
 
@@ -162,12 +145,6 @@ class Posts:
 
         result = self.db.posts.insert_one(post)
 
-        # the post is viable for the achievement "create_posts", when the
-        # text ist not empty
-        if post["text"] and post["text"] != "":
-            profile_manager = Profiles(self.db)
-            profile_manager.achievement_count_up(post["author"], "create_posts")
-
         return result.inserted_id
 
     def update_post_text(self, post_id: str | ObjectId, text: str) -> ObjectId:
@@ -182,44 +159,9 @@ class Posts:
             {"_id": post_id}, {"$set": {"text": text}}
         )
 
-        # if no documents matched the update, raise error
-        if update_result.matched_count != 1:
-            raise PostNotExistingException()
-        return post_id
-
-    def update_post_plans(self, post_id: str | ObjectId, plan_ids: List[str | ObjectId]) -> ObjectId:
-        """
-        update the plans of an existing post
-        """
-
-        post_id = util.parse_object_id(post_id)
-        for plan_id in plan_ids:
-            plan_id = util.parse_object_id(plan_id)
-
-        # try to do the update
-        update_result = self.db.posts.update_one(
-            {"_id": post_id}, {"$set": {"plans": plan_ids}}
-        )
-
-        # if no documents matched the update, raise error
-        if update_result.matched_count != 1:
-            raise PostNotExistingException()
-        return post_id
-
-    def update_post_files(self, post_id: str | ObjectId, files: List[Dict]) -> ObjectId:
-        """
-        update the files of an existing post
-        """
-
-        post_id = util.parse_object_id(post_id)
-
-        # try to do the update
-        update_result = self.db.posts.update_one(
-            {"_id": post_id}, {"$set": {"files": files}}
-        )
-
-        # if no documents matched the update, raise error
-        if update_result.matched_count != 1:
+        # if no documents have been modified by the update
+        # we know that there was no post with the given _id
+        if update_result.modified_count != 1:
             raise PostNotExistingException()
         return post_id
 
@@ -235,10 +177,23 @@ class Posts:
         except PostNotExistingException:
             raise
 
-        # delete post.files from gridfs and may the space
+        # delete files from gridfs and - if post was in a space,
+        # from the space's repository
         if post["files"]:
+            fs = gridfs.GridFS(self.db)
             for file_obj in post["files"]:
-                self.delete_post_file(post_id, file_obj["file_id"])
+                fs.delete(file_obj["file_id"])
+            if post["space"]:
+                space_manager = Spaces(self.db)
+                for file_obj in post["files"]:
+                    try:
+                        space_manager.remove_post_file(
+                            post["space"], file_obj["file_id"]
+                        )
+                    except SpaceDoesntExistError:
+                        pass
+                    except FileDoesntExistError:
+                        pass
 
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
@@ -274,18 +229,6 @@ class Posts:
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
-
-        # count towards the achievement "give_likes" for the liking user,
-        # since all previous checks have succeeded
-        profile_manager = Profiles(self.db)
-        profile_manager.achievement_count_up(username, "give_likes")
-
-        # count towards the achievement "posts_liked" of the post auther,
-        # since all previous checks have succeeded, but only if the
-        # liker is different than the author (liking own post doesnt count)
-        post = self.get_post(post_id, projection={"author": True})
-        if post["author"] != username:
-            profile_manager.achievement_count_up(post["author"], "posts_liked")
 
     def unlike_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -333,12 +276,6 @@ class Posts:
         # we know that there was no post with the given post_id
         if update_result.matched_count != 1:
             raise PostNotExistingException()
-
-        # the comment is viable for the achievement "create_comments", when the
-        # text ist not empty
-        if comment["text"] and comment["text"] != "":
-            profile_manager = Profiles(self.db)
-            profile_manager.achievement_count_up(comment["author"], "create_comments")
 
         return comment["_id"]
 
@@ -511,35 +448,6 @@ class Posts:
         )
 
         return _id
-
-    def delete_post_file(self, post_id: str | ObjectId, file_id: str | ObjectId) -> None:
-        """
-        delete a file from uploads directory gridfs
-        and if post was in a space from the space's repository
-        """
-
-        fs = gridfs.GridFS(self.db)
-        post_id = util.parse_object_id(post_id)
-        file_id = util.parse_object_id(file_id)
-
-        try:
-            post = self.get_post(post_id, projection={"space": True, "files": True})
-        except PostNotExistingException:
-            raise
-
-        fs.delete(file_id)
-
-        if post["space"]:
-            space_manager = Spaces(self.db)
-            try:
-                space_manager.remove_post_file(
-                    post["space"], file_id
-                )
-            except SpaceDoesntExistError:
-                pass
-            except FileDoesntExistError:
-                pass
-
 
     def get_full_timeline(
         self, time_to: datetime.datetime, limit: int = 10

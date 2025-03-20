@@ -107,21 +107,6 @@ class ProfileInformationHandler(BaseHandler):
                                 "description": "<string>",
                             }
                         ],
-                        "notification_settings": {
-                            "messages": "email|push",
-                            "ve_invite": "email|push|none",
-                            "group_invite": "email|push|none",
-                            "system": "email|push",
-                        },
-                        "achievements" : {
-                            "social": { level: <number>, progress: <number>, next_level: <number> },
-                            "ve": { level: <number>, progress: <number>, next_level: <number> },
-                        },
-                        "chosen_achievement": {
-                            "type": "<string>",           --> one of achievement types above
-                            "level": "<number>"
-                        },
-                        "first_view": <boolean>
                     },
                     "spaces": [<string1>, <string2>, ...],
                     "follows": [<string1>, <string2>, ...],
@@ -275,16 +260,6 @@ class ProfileInformationHandler(BaseHandler):
                             "description": "<string>",
                         }
                     ],
-                    "notification_settings": {
-                        "messages": "email|push",
-                        "ve_invite": "email|push|none",
-                        "group_invite": "email|push|none",
-                        "system": "email|push",
-                    },
-                    "chosen_achievement": {
-                        "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                        "level": "<number>"
-                    },
                     "profile_pic": {
                         "payload": "<base64_encoded_image>",
                         "type": "<image/jpeg|image/png|...>"
@@ -309,10 +284,6 @@ class ProfileInformationHandler(BaseHandler):
                 401 Unauthorized
                 {"status": 401,
                  "reason": "no_logged_in_user"}
-
-                409 Conflict
-                {"status": 409,
-                 "reason": "user_doesnt_exist"}
         """
 
         updated_attribute_dict = json.loads(self.request.body)
@@ -328,25 +299,12 @@ class ProfileInformationHandler(BaseHandler):
                 updated_attribute_dict["profile_pic"] = "avatar_{}".format(
                     self.current_user.username
                 )
-                try:
-                    profile_pic_id = profile_manager.update_profile_information(
-                        self.current_user.username,
-                        updated_attribute_dict,
-                        profile_pic_obj["body"],
-                        profile_pic_obj["content_type"],
-                    )
-                except ProfileDoesntExistException:
-                    self.set_status(409)
-                    self.write({"status": 409, "reason": USER_DOESNT_EXIST})
-                    return
-                except TypeError as e:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": str(e)})
-                    return
-                except ValueError as e:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": str(e)})
-                    return
+                profile_pic_id = profile_manager.update_profile_information(
+                    self.current_user.username,
+                    updated_attribute_dict,
+                    profile_pic_obj["body"],
+                    profile_pic_obj["content_type"],
+                )
 
                 self.set_status(200)
                 self.write(
@@ -358,25 +316,12 @@ class ProfileInformationHandler(BaseHandler):
                 )
                 return
             else:
-                try:
-                    profile_manager.update_profile_information(
-                        self.current_user.username, updated_attribute_dict
-                    )
-                except ProfileDoesntExistException:
-                    self.set_status(409)
-                    self.write({"status": 409, "reason": USER_DOESNT_EXIST})
-                    return
-                except TypeError as e:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": str(e)})
-                    return
-                except ValueError as e:
-                    self.set_status(400)
-                    self.write({"status": 400, "reason": str(e)})
-                    return
+                profile_manager.update_profile_information(
+                    self.current_user.username, updated_attribute_dict
+                )
 
-                self.set_status(200)
-                self.write({"status": 200, "success": True})
+            self.set_status(200)
+            self.write({"status": 200, "success": True})
 
 
 class BulkProfileSnippets(BaseHandler):
@@ -385,8 +330,8 @@ class BulkProfileSnippets(BaseHandler):
         """
         POST /profile_snippets
             request profile snippets, i.e. username, first_name, last_name,
-            institution, profile_pic and chosen_achievement for a list of users.
-            Specify this list of usernames in the body.
+            institution and profile_pic for a list of users. Specify
+            this list of usernames in the body.
             The profile_pic is an identifier that can be exchanged for the actual
             profile image at the /uploads endpoint. See the documentation for
             `GridFSStaticFileHandler` for reference.
@@ -408,11 +353,16 @@ class BulkProfileSnippets(BaseHandler):
                         "first_name": "<string>",
                         "last_name": "<string>",
                         "profile_pic": "<string>",
-                        "institution": "<string>",
-                        "chosen_achievement": {
-                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                            "level": <number>
-                        }
+                        "institutions": [
+                            {
+                                "_id": <string>,
+                                "name": <string>,
+                                "school_type": <string>,
+                                "department": <string>,
+                                "country": <string>,
+                            }
+                        ],
+                        "chosen_institution_id": <string>,
                     }
                  ]
                 }
@@ -1110,46 +1060,6 @@ class MatchingExclusionHandler(BaseHandler):
 class MatchingHandler(BaseHandler):
     @auth_needed
     def get(self):
-        """
-        GET /matching
-
-            trigger the matching algorithm to find matching users
-            based on the profile information of the current user.
-
-            query params:
-                `size`: optional, number of hits to return, default is 10
-                `offset`: optional, offset to start from (used for pagination), default is 0
-
-            returns:
-                200 OK
-                {"success": True,
-                 "matching_hits": [
-                    {
-                        "username": "<string>",
-                        "first_name": "<string>",
-                        "last_name": "<string>",
-                        "institution": "<string>",
-                        "profile_pic": "<string>",
-                        "chosen_achievement": {
-                            "type": "<string>",           --> one of ACHIEVEMENT_TYPES in class `Profiles`
-                            "level": <number>
-                        },
-                        "ve_ready": "<boolean>",
-                        "score": <float>
-                    },
-                    ...
-                 ]}
-
-                401 Unauthorized
-                {"success": False,
-                 "reason": "no_logged_in_user"}
-        """
-
-        query_lang = self.get_argument("languages", None)
-        query_expertise = self.get_argument("expertise", None)
-        size = self.get_argument("size", None)
-        offset = self.get_argument("offset", None)
-
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
             current_user_profile = profile_manager.ensure_profile_exists(
@@ -1157,11 +1067,7 @@ class MatchingHandler(BaseHandler):
             )
 
             matching_users = ElasticsearchConnector().search_profile_match(
-                current_user_profile,
-                query_expertise,
-                query_lang,
-                size,
-                offset
+                current_user_profile
             )
 
             # get profile snippets of matched users and add the score to the snippet

@@ -71,7 +71,7 @@ export default function Name({ socket }: Props): JSX.Element {
                     <input
                         type="text"
                         placeholder={t('name.placeholder')}
-                        className="border border-gray-300 rounded-md p-2 w-full md:w-1/2"
+                        className="border border-gray-300 rounded-md p-2 w-1/2"
                         autoComplete="off"
                         autoFocus={true}
                         {...methods.register('name')}
@@ -123,7 +123,7 @@ export function NameNoAuthPreview() {
                     />
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
         </div>
     );
 }

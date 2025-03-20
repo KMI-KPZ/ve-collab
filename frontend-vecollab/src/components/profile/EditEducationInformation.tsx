@@ -44,6 +44,7 @@ export default function EditEducationInformation({
     };
 
     const modifyEducationTimestampFrom = (index: number, value: string) => {
+        console.log(value);
         let newEducations = [...educations];
         newEducations[index].timestamp_from = value;
         setEducations(newEducations);
@@ -101,8 +102,10 @@ export default function EditEducationInformation({
         <form onSubmit={updateProfileData}>
             <EditProfileHeader orcid={orcid} importOrcidProfile={importOrcidProfile} />
             <EditProfileVerticalSpacer>
-                <EditProfileHeadline name={t('education')} />
-                <div className="mb-2 text-sm">{t('education_question')}</div>
+                <EditProfileHeadline name={t("education")} />
+                <div className="mb-2 text-sm">
+                    {t("education_question")}
+                </div>
                 {educations.map((education, index) => (
                     <Swapper
                         key={index}

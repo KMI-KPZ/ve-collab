@@ -49,7 +49,7 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                 <button
                     type="submit"
                     className={
-                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'
+                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40'
                     }
                     onClick={(e) => triggerOrcidAccountLink(e)}
                 >
@@ -60,13 +60,13 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    {t('link_orcid_account')}
+                    {t("link_orcid_account")}
                 </button>
             ) : (
                 <button
                     type="submit"
                     className={
-                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer'
+                        'flex items-center bg-ve-collab-orange text-white py-2 px-5 rounded-lg disabled:cursor-not-allowed disabled:opacity-40'
                     }
                     onClick={(e) => importOrcidProfile(e)}
                 >
@@ -77,26 +77,21 @@ export default function EditProfileHeader({ orcid, importOrcidProfile }: Props) 
                         height={24}
                         alt={''}
                     ></Image>
-                    {t('import_orcid_profile')}
+                    {t("import_orcid_profile")}
                 </button>
             )}
 
             <div className="flex justify-end">
-                {/* TODO go back to previous page */}
                 <Link href={'/profile'}>
-                    <button
-                        className={
-                            'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer'
-                        }
-                    >
-                        {t('common:cancel')}
+                    <button className={'mx-4 py-2 px-5 border border-ve-collab-orange rounded-lg'}>
+                        {t("common:cancel")}
                     </button>
                 </Link>
                 <button
                     type="submit"
-                    className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'}
+                    className={'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'}
                 >
-                    {t('common:save')}
+                    {t("common:save")}
                 </button>
             </div>
         </div>

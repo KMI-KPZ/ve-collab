@@ -50,6 +50,7 @@ function Auth({
         return showLoader ? <LoadingAnimation /> : <></>;
     } else if (!session || session?.error === 'RefreshAccessTokenError') {
         if (autoForward === true) {
+            console.log('forced new signIn');
             signIn('keycloak');
         }
         if (wrapsPopupComponent) {
@@ -71,7 +72,7 @@ function Auth({
                         </button>
                         <button
                             className={
-                                'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
+                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={() => signIn('keycloak')}
                         >
@@ -91,7 +92,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     const [messageEvents, setMessageEvents] = useState<any[]>([]);
     const [chatOpen, setChatOpen] = useState<boolean>(false);
     const [notifOpen, setNotifOpen] = useState<boolean>(false);
-    const [openOrCreateChatWith, setOpenOrCreateChatWith] = useState<string[]>([]);
 
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
@@ -126,6 +126,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                 (notification) => notification._id === value._id
             );
             if (alreadyExisting === undefined) {
+                // console.log('new notification:', {value});
                 setNotificationEvents([value, ...notificationEvents]);
             }
         }
@@ -134,6 +135,8 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
             // nextjs always sends 2 requests in dev mode, prevent any message from appearing twice
             const alreadyExisting = messageEvents.find((message) => message._id === value._id);
             if (alreadyExisting === undefined) {
+                console.log('new message:');
+                console.log(value);
                 setMessageEvents([...messageEvents, value]);
                 setMessageEventsHeaderBar((prev) => [...prev, value]);
             }
@@ -151,7 +154,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     const toggleChatWindow = () => {
         setNotifOpen(false);
         setChatOpen(!chatOpen);
-        setOpenOrCreateChatWith([]);
     };
 
     const toggleNotifWindow = () => {
@@ -188,7 +190,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                 }
                                                 open={chatOpen}
                                                 toggleChatWindow={toggleChatWindow}
-                                                prop_openOrCreateChatWith={openOrCreateChatWith}
                                             />
                                             <NotificationsWindow
                                                 socket={socket}
@@ -220,11 +221,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                     setMessageEventsHeaderBar
                                                 }
                                                 toggleNotifWindow={toggleNotifWindow}
-                                                toggleChatWindow={toggleChatWindow}
-                                                openOrCreateChatWith={(users: string[]) => {
-                                                    setChatOpen(true);
-                                                    setOpenOrCreateChatWith(users);
-                                                }}
                                             />
                                         </Auth>
                                     ) : (
