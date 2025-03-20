@@ -165,7 +165,6 @@ export default function PageCategoryNotSelected(props: Props) {
 
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     const taxonomy = await fetchTaxonomy();
-    console.log(taxonomy)
 
     const cluster = await getTopLevelNodes(taxonomy);
     const nodes: { [key: string]: INode[] } = {};
