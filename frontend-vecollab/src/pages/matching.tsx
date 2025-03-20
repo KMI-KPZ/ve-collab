@@ -99,8 +99,35 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
     };
 
     const FilterArea = () => (
-        <div className="w-full lg:w-1/4 flex flex-row lg:flex-col gap-y-4 gap-x-4 pr-4 pb-4">
-            <div className="w-1/3 lg:w-full">
+        <div className="w-full lg:w-1/4 flex flex-row flex-wrap md:flex-nowrap lg:flex-col gap-y-4 gap-x-4 pr-4 pb-4">
+            <div className="w-fit">
+                <div
+                    title={t('filter_show_ve_ready_only_title')}
+                    className={`flex p-2 my-2 rounded-full shadow border border-gray-200 bg-white ${
+                        isNoAuthPreview ? '' : 'cursor-pointer'
+                    }`}
+                    onClick={handleClickShowVeReadyOnly}
+                >
+                    <div className="relative w-[32px] flex items-center ">
+                        <div
+                            className={`absolute w-[32px] h-[14px] left-0 rounded-md ${
+                                veReadyOnly ? 'bg-green-800' : 'bg-gray-500'
+                            }`}
+                        ></div>
+                        <div
+                            className={`absolute rounded-full h-[20px] w-[20px] ${
+                                veReadyOnly
+                                    ? 'right-0 bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]'
+                                    : 'left-0 bg-gray-200'
+                            }`}
+                        ></div>
+                    </div>
+                    <span className={`mx-2 ${veReadyOnly ? '' : 'text-gray-600'}   `}>
+                        {t('filter_show_ve_ready_only')}
+                    </span>
+                </div>
+            </div>
+            <div className="w-full md:w-1/3 lg:w-full">
                 <H2>{t('common:plan_summary_institutions_department')}</H2>
                 <CreatableSelect
                     className="lg:w-full"
@@ -142,7 +169,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 />
             </div>
 
-            <div className="w-1/3 lg:w-full">
+            <div className="w-full md:w-1/3 lg:w-full">
                 <H2>{t('common:language')}</H2>
                 <CreatableSelect
                     className="w-full"
@@ -195,16 +222,16 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                     {user.ve_ready ? (
                         <span
                             title={t('ve_ready_true')}
-                            className="w-3 h-3 m-2 rounded-full bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]"
+                            className="grow-0 flex-none w-3 h-3 m-2 rounded-full bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]"
                         ></span>
                     ) : (
                         <span
                             title={t('ve_ready_false')}
-                            className="w-3 h-3 m-2 rounded-full bg-red-600 drop-shadow-[0_0_3px_rgba(239,68,68,1)]"
+                            className="grow-0 flex-none w-3 h-3 m-2 rounded-full bg-red-600 drop-shadow-[0_0_3px_rgba(239,68,68,1)]"
                         ></span>
                     )}
 
-                    <div className="m-2">
+                    <div className="m-2 grow-0 flex-none">
                         <UserProfileImage
                             profile_pic={user.profile_pic}
                             chosen_achievement={user.chosen_achievement}
@@ -212,9 +239,6 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                     </div>
                     <Link href={`/profile/user/${user.username}`} className="py-2 w-full">
                         {printUsername(user)}
-                        {/* <span className="mx-2 italic text-gray-500">
-                            (Score: {user.score.toFixed(2)})
-                        </span> */}
                     </Link>
                 </div>
 
@@ -260,7 +284,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                 </div>
             </div>
 
-            <div className="mb-4 flex flex-wrap items-center gap-y-2">
+            {/* <div className="mb-4 flex flex-wrap items-center gap-y-2">
                 <div>
                     <ButtonLight
                         className={`flex items-center !rounded-full mx-2 ${
@@ -271,33 +295,7 @@ export default function Matching({ isNoAuthPreview = false, openOrCreateChatWith
                         <MdFilterListAlt /> {t('filter')}
                     </ButtonLight>
                 </div>
-
-                <div
-                    title={t('filter_show_ve_ready_only_title')}
-                    className={`flex p-2 rounded-full shadow border border-gray-200 bg-white ${
-                        isNoAuthPreview ? '' : 'cursor-pointer'
-                    }`}
-                    onClick={handleClickShowVeReadyOnly}
-                >
-                    <div className="relative w-[32px] flex items-center ">
-                        <div
-                            className={`absolute w-[32px] h-[14px] left-0 rounded-md ${
-                                veReadyOnly ? 'bg-green-800' : 'bg-gray-500'
-                            }`}
-                        ></div>
-                        <div
-                            className={`absolute rounded-full h-[20px] w-[20px] ${
-                                veReadyOnly
-                                    ? 'right-0 bg-green-500 drop-shadow-[0_0_3px_rgba(34,197,94,1)]'
-                                    : 'left-0 bg-gray-200'
-                            }`}
-                        ></div>
-                    </div>
-                    <span className={`mx-2 ${veReadyOnly ? '' : 'text-gray-600'}   `}>
-                        {t('filter_show_ve_ready_only')}
-                    </span>
-                </div>
-            </div>
+            </div> */}
 
             <div className="flex flex-wrap lg:flex-nowrap bg-white rounded-lg shadow-sm py-6 px-4 space-x-4 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
                 {viewFilterArea === true && <FilterArea />}
