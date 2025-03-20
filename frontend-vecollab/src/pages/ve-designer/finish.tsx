@@ -54,7 +54,7 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                             rel="noreferrer"
                         >
                             {t('common:here')}
-                        </a>{' '}
+                        </a>
                         {t('finish.feedback_2')}
                     </div>
                 )}
