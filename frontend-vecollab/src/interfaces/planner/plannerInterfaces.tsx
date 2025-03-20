@@ -21,7 +21,6 @@ export interface PlanPreview {
     is_good_practise: boolean;
     topics: string[];
     steps: IFineStep[];
-    abstract: string | null;
 }
 
 export interface IPlan {

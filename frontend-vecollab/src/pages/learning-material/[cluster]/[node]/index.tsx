@@ -1,7 +1,6 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import {
-    fetchTaxonomy,
     getChildrenOfNodeByText,
     getMaterialNodesOfNodeByText,
     getNodeByText,
@@ -9,6 +8,7 @@ import {
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import { useRouter } from 'next/router';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
+import { getClusterSlugByRouteQuery } from '../..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import CustomHead from '@/components/metaData/CustomHead';
 import React from 'react';
@@ -68,17 +68,15 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
-    const taxonomy = await fetchTaxonomy();
-
-    const clusterSlug = params?.cluster as string;
-    const currentNode = await getNodeByText(params?.node as string, taxonomy);
+    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
+    const currentNode = await getNodeByText(params?.node as string);
 
     if (!clusterSlug || !currentNode) {
         return { notFound: true, ...(await serverSideTranslations(locale ?? 'en', ['common'])) };
     }
 
-    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);
-    const lectionsOfNode = await getMaterialNodesOfNodeByText(currentNode.text, taxonomy);
+    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
+    const lectionsOfNode = await getMaterialNodesOfNodeByText(currentNode.text);
 
     if (lectionsOfNode.length > 0) {
         return {

@@ -31,7 +31,6 @@ export default function Swapper({
                             swapCallback(e, index - 1, index);
                         }}
                         title={t("move_up")}
-                        className='cursor-pointer'
                     >
                         <RxArrowUp size={20} color="gray" />
                     </button>
@@ -44,7 +43,6 @@ export default function Swapper({
                                 swapCallback(e, index, index + 1);
                             }}
                             title={t("move_down")}
-                            className='cursor-pointer'
                         >
                             <RxArrowDown size={20} color="gray" />
                         </button>
@@ -55,7 +53,6 @@ export default function Swapper({
                         deleteCallback(e, index);
                     }}
                     title={t("delete")}
-                    className='cursor-pointer'
                 >
                     <RxTrash size={20} color="gray" />
                 </button>

@@ -25,7 +25,6 @@ from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHa
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
-from handlers.mail_invitation import EmailInvitationHandler
 from handlers.material_taxonomy import (
     MBRSyncHandler,
     MBRTestHandler,
@@ -51,7 +50,6 @@ from resources.network.space import Spaces
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
-from handlers.report import ReportHandler
 from handlers.template_debug_handler import TemplateDebugHandler
 from resources.notifications import (
     new_message_mail_notification_dispatch,
@@ -134,10 +132,8 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/notifications", NotificationHandler),
             (r"/chatroom/(.*)", RoomHandler),
             (r"/material_taxonomy", MaterialTaxonomyHandler),
-            (r"/mail_invitation", EmailInvitationHandler),
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
-            (r"/report/(.+)", ReportHandler),
             (r"/mbr_sync", MBRSyncHandler),
             (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
@@ -251,7 +247,7 @@ def create_initial_admin() -> None:
                     If you really wish to elevate his/her role, remove the corresponding
                     entry from the profiles collection manually and restart (warning: loss of profile data)
                     or simply set the value manually in a mongoshell.
-                    For now, this operation is ignored.
+                    For now, this operation is ignored. 
                     """
                 )
             return
@@ -275,28 +271,22 @@ def create_initial_admin() -> None:
         )
 
 
-def load_default_taxonomy_if_exists(overwrite_existing: bool) -> None:
+def load_default_taxonomy_if_exists() -> None:
     """
-    Load the default taxonomy from the assets folder
-
-    :param overwrite_existing: boolean load taxonomy even if it already exists in DB
+    If the db does not currently hold a taxonomy, load the default taxonomy from the assets folder
     """
 
     with util.get_mongodb() as db:
         # db already has one, skip
-        if not overwrite_existing and db.material_taxonomy.count_documents({}) > 0:
+        if db.material_taxonomy.count_documents({}) > 0:
             return
 
-        # no default taxonomy file exists, skip
+        # db is empty, but no default taxonomy file exists, skip
         if not os.path.isfile("assets/default_taxonomy.json"):
             logger.warning(
                 "tried to load default taxonomy from assets folder, but no file found"
             )
             return
-
-        if overwrite_existing and db.material_taxonomy.count_documents({}) > 0:
-            logger.info("Deleted existing taxonomy")
-            db.material_taxonomy.delete_many({})
 
         # db is empty and default taxonomy file exists, load it
         with open("assets/default_taxonomy.json", "r") as f:
@@ -577,12 +567,6 @@ def main():
         type=bool,
         help="Prevent the tornado access logger from logging to stdout, only log file instead",
     )
-    define(
-        "load_taxonomy",
-        default=False,
-        type=bool,
-        help="Load default taxonomy even if it already exists in DB",
-    )
 
     parse_command_line()
 
@@ -602,7 +586,7 @@ def main():
     init_default_pictures()
 
     # load default taxonomy if none exists
-    load_default_taxonomy_if_exists(options.load_taxonomy)
+    load_default_taxonomy_if_exists()
 
     # load those good practise examples that dont already exist
     load_default_good_practise_examples_if_exists()

@@ -3,7 +3,6 @@ import AuthenticatedImage from '../common/AuthenticatedImage';
 import Link from 'next/link';
 import Timestamp from '@/components/common/Timestamp';
 import { useTranslation } from 'react-i18next';
-import UserProfileImage from './UserProfileImage';
 
 interface Props {
     author: BackendPostAuthor;
@@ -13,17 +12,18 @@ interface Props {
 export default function PostHeader({ author, date }: Props) {
     const { t } = useTranslation(['community', 'common']);
 
-    // console.log({ author });
-
     const authorName =
         author.first_name != '' ? `${author.first_name} ${author.last_name}` : author.username;
 
     return (
         <>
-            <UserProfileImage
-                profile_pic={author.profile_pic}
-                chosen_achievement={author.chosen_achievement}
-            />
+            <AuthenticatedImage
+                imageId={author.profile_pic}
+                alt={t('profile_picture')}
+                width={40}
+                height={40}
+                className="rounded-full mr-3"
+            ></AuthenticatedImage>
             <div className="flex flex-col">
                 <Link href={`/profile/user/${author.username}`} className="font-bold">
                     {authorName}

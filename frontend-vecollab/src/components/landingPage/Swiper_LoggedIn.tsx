@@ -6,7 +6,7 @@ import H2 from '../common/H2';
 import Link from 'next/link';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import { BackendUser } from '@/interfaces/api/apiInterfaces';
-import { MdClose, MdEdit, MdPlayCircle } from 'react-icons/md';
+import { MdClose, MdEdit } from 'react-icons/md';
 
 import { Swiper as SwiperJS, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -15,7 +15,7 @@ import 'swiper/css/navigation';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
-const COOKIE = 'firstvisit-home';
+const FIRST_VISIT = 'first_visit';
 
 interface Props {
     className?: string;
@@ -27,9 +27,9 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
     const { t } = useTranslation(['community', 'common']);
     const router = useRouter();
 
-    const [cookies, setCookie] = useCookies([COOKIE]);
+    const [cookies, setCookie] = useCookies([FIRST_VISIT]);
     const [firstVisit, setFirstVisit] = useState(
-        cookies[COOKIE] === undefined || cookies[COOKIE] === true
+        cookies[FIRST_VISIT] === undefined || cookies[FIRST_VISIT] === true
     );
 
     const onClick = (e: MouseEvent<HTMLButtonElement>) => {
@@ -39,7 +39,7 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
         const expiryTomorrow = new Date();
         expiryTomorrow.setDate(expiryTomorrow.getDate() + 1);
 
-        setCookie(COOKIE, 'false', { expires: expiryTomorrow });
+        setCookie(FIRST_VISIT, 'false', { expires: expiryTomorrow });
         setFirstVisit(false);
     };
 
@@ -48,39 +48,10 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
     hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300
     hover:-translate-y-105 hover:scale-110`;
 
-    const getProfilePropertiesToComplete = () => (
-        <>
-            {profileInformation.profile.institutions.length == 0 && <li>{t('institutions')}</li>}
-
-            {profileInformation.profile.bio == '' && <li>{t('bio')}</li>}
-
-            {(profileInformation.profile.ve_contents.length == 0 ||
-                profileInformation.profile.ve_contents.every((a) => a == '')) && (
-                <li>{t('ve_contents')}</li>
-            )}
-
-            {(profileInformation.profile.ve_goals.length == 0 ||
-                profileInformation.profile.ve_goals.every((a) => a == '')) && (
-                <li>{t('ve_goals')}</li>
-            )}
-
-            {(profileInformation.profile.ve_interests.length == 0 ||
-                profileInformation.profile.ve_interests.every((a) => a == '')) && (
-                <li>{t('ve_topics')}</li>
-            )}
-        </>
-    );
-
-    const hasIncompleteProfile = (): boolean => {
-        return (
-            getProfilePropertiesToComplete().props.children.findIndex((a: any) => a !== false) > -1
-        );
-    };
-
     if (firstVisit === false) return null;
 
     return (
-        <div className="w-11/12 py-2 m-auto mb-8 bg-white rounded-md relative drop-shadow-sm">
+        <div className="w-11/12 min-w-96 py-2 m-auto mb-8 bg-white rounded-md relative">
             <div className="w-fit absolute top-3 right-3 z-10">
                 <button onClick={onClick}>
                     <MdClose size={20} />
@@ -92,47 +63,57 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                 navigation
                 spaceBetween={25}
                 slidesPerView={1}
-                loop={true}
             >
-                {hasIncompleteProfile() && (
-                    <SwiperSlide>
-                        <div className="min-h-64 mx-12 my-2">
-                            <H2 className="mb-4">{t('complete_profile')}</H2>
+                <SwiperSlide>
+                    <div className="min-h-64 mx-12 my-2">
+                        <H2 className="mb-4">{t('complete_profile')}</H2>
 
-                            <p className="mb-1">{t('complete_profile_text')}</p>
+                        <p className="mb-1">{t('complete_profile_text')}</p>
 
-                            <ul className="ml-6 mb-6 flex *:p-2 *:shadow-sm *:rounded-md *:m-2">
-                                {getProfilePropertiesToComplete()}
-                            </ul>
+                        <ul className="ml-6 mb-6 flex *:p-2 *:shadow *:rounded-md *:m-2">
+                            {profileInformation.profile.institutions.length == 0 && (
+                                <li>{t('institutions')}</li>
+                            )}
 
-                            <Link href={'/profile/edit'} className="absolute bottom-0">
-                                <ButtonSecondary onClick={() => {}}>
-                                    <MdEdit className="inline mr-1" /> {t('common:edit')}
-                                </ButtonSecondary>
-                            </Link>
-                        </div>
-                    </SwiperSlide>
-                )}
+                            {profileInformation.profile.bio == '' && <li>{t('bio')}</li>}
+
+                            {(profileInformation.profile.ve_contents.length == 0 ||
+                                profileInformation.profile.ve_contents.every((a) => a == '')) && (
+                                <li>{t('ve_contents')}</li>
+                            )}
+
+                            {(profileInformation.profile.ve_goals.length == 0 ||
+                                profileInformation.profile.ve_goals.every((a) => a == '')) && (
+                                <li>{t('ve_goals')}</li>
+                            )}
+
+                            {(profileInformation.profile.ve_interests.length == 0 ||
+                                profileInformation.profile.ve_interests.every((a) => a == '')) && (
+                                <li>{t('ve_topics')}</li>
+                            )}
+                        </ul>
+
+                        <Link href={'/profile/edit'} className="absolute bottom-0">
+                            <ButtonSecondary onClick={() => {}}>
+                                <MdEdit className="inline mr-1" /> {t('common:edit')}
+                            </ButtonSecondary>
+                        </Link>
+                    </div>
+                </SwiperSlide>
 
                 <SwiperSlide>
                     <div className="mb-4 mx-12 my-2">
-                        <H2>{t('common:help.video_tutorials')}</H2>
-                        <Link
-                            href={'/help'}
-                            className={`mx-auto group m-4 w-[320px] h-[280px] rounded-md shadow relative flex items-center justify-center cursor-pointer absolute transition ease-in-out hover:scale-105`}
+                        <H2>{t('common:platform_tour')}</H2>
+                        <video
+                            width="320"
+                            height="240"
+                            controls
+                            preload="none"
+                            className="w-full h-auto m-auto rounded-md"
                         >
-                            <Image
-                                src={'/images/video-thumbnails/screencast-intro.png'}
-                                alt={t('common:video_tutorials')}
-                                width={320}
-                                height={144}
-                                className="w-full h-auto absolute rounded-md"
-                            />
-                            <MdPlayCircle
-                                className="absolute text-gray-500 hover:text-gray-800"
-                                size={32}
-                            />
-                        </Link>
+                            <source src="/videos/screencast-web.webm" type="video/webm" />
+                            {t('common:video_not_supported')}
+                        </video>
                     </div>
                 </SwiperSlide>
 

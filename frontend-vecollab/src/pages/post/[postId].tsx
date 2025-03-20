@@ -11,7 +11,7 @@ import {
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { MdOutlineDeleteForever } from 'react-icons/md';
 import { GiSadCrab } from 'react-icons/gi';
 import { Socket } from 'socket.io-client';
@@ -20,7 +20,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import CustomHead from '@/components/metaData/CustomHead';
 import { useTranslation } from 'next-i18next';
-import Custom404 from '../404';
 
 /**
  * Single post view
@@ -37,7 +36,7 @@ export default function Post({ socket }: Props): JSX.Element {
     const router = useRouter();
     const { postId } = router.query;
     const [deleted, setDeleted] = useState<boolean>(false);
-    const { t } = useTranslation(['community', 'common']);
+    const { t } = useTranslation(['common']);
 
     const {
         data: post,
@@ -75,7 +74,7 @@ export default function Post({ socket }: Props): JSX.Element {
 
     const BackToStart = () => (
         <button className="px-6 py-2 m-4 bg-ve-collab-orange rounded-lg text-white">
-            <Link href="/">{t('common:back_to_start')}</Link>
+            <Link href="/">Zurück zur Startseite</Link>
         </button>
     );
 
@@ -102,7 +101,7 @@ export default function Post({ socket }: Props): JSX.Element {
             <Wrapper>
                 <div className="flex items-center justify-center font-bold">
                     <MdOutlineDeleteForever size={50} />
-                    <div className="text-xl text-slate-900">{t('post_deleted')}</div>
+                    <div className="text-xl text-slate-900">Beitrag gelöscht.</div>
                     <BackToStart />
                 </div>
             </Wrapper>
@@ -110,12 +109,24 @@ export default function Post({ socket }: Props): JSX.Element {
     }
 
     if (!post) {
-        return <Custom404 />;
+        return (
+            <Wrapper>
+                <div className="flex flex-col items-center justify-center font-bold">
+                    <div className="flex items-center">
+                        <GiSadCrab size={60} className="m-4" />
+                        <div className="text-xl text-slate-900">
+                            Dieser Beitrag wurde nicht gefunden.
+                        </div>
+                    </div>
+                    <BackToStart />
+                </div>
+            </Wrapper>
+        );
     }
 
     return (
         <>
-            <CustomHead pageTitle={t('community:post')} pageSlug={`post/${postId}`} />
+            <CustomHead pageTitle={t('search_result_posts')} pageSlug={`post/${postId}`} />
             <Wrapper>
                 <TimelinePost
                     socket={socket}
@@ -142,7 +153,7 @@ export default function Post({ socket }: Props): JSX.Element {
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     return {
         props: {
-            ...(await serverSideTranslations(locale ?? 'en', ['community', 'common'])),
+            ...(await serverSideTranslations(locale ?? 'en', ['common'])),
         },
     };
 }

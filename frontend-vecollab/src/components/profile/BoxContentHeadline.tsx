@@ -4,5 +4,5 @@ interface Props {
 }
 
 export default function BoxContentHeadline({ text, className }: Props) {
-    return <div className={`font-bold text-slate-900 ${className}`}>{text}</div>;
+    return <div className={`font-bold text-slate-900 text-2xl ${className}`}>{text}</div>;
 }

@@ -1,7 +1,6 @@
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import { useCookies } from 'react-cookie';
-import ButtonPrimary from './common/buttons/ButtonPrimary';
 
 const USER_CONSENT_COOKIE_KEY = 'cookie-consent';
 
@@ -9,6 +8,7 @@ export default function Disclaimer() {
     const { t } = useTranslation('common');
 
     const [cookies, setCookie] = useCookies([USER_CONSENT_COOKIE_KEY]);
+
     const [cookieConsent, setCookieConsent] = useState(false);
 
     useEffect(() => {
@@ -16,7 +16,9 @@ export default function Disclaimer() {
         setCookieConsent(consentIsTrue);
     }, [cookies]);
 
-    const onClick = () => {
+    const onClick = (e: MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+
         // determine tomorrows Date for cookie expires attribute
         const expiryTomorrow = new Date();
         expiryTomorrow.setDate(expiryTomorrow.getDate() + 1);
@@ -33,11 +35,16 @@ export default function Disclaimer() {
         return (
             <div className="fixed bottom-0 left-0 w-full z-40">
                 <div className="flex flex-col items-start px-5 py-3 bg-gray-300 md:flex-row md:space-y-0 md:items-stretch md:space-x-2">
-                    <div className="flex items-center grow">
+                    <div className="flex items-center flex-grow">
                         <p className="text-sm font-medium text-black">{t('cookie_banner')}</p>
                     </div>
                     <div className="flex items-center">
-                        <ButtonPrimary onClick={onClick}>{t('accept')}</ButtonPrimary>
+                        <button
+                            className="py-2 pr-6 pl-5 bg-ve-collab-orange rounded-lg text-white"
+                            onClick={onClick}
+                        >
+                            {t('accept')}
+                        </button>
                     </div>
                 </div>
             </div>

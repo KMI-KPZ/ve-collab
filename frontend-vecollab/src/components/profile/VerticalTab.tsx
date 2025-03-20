@@ -23,8 +23,10 @@ class Tab extends Component<TabProps, {}> {
 
         return activeTab == tabid ? (
             <div
-                className={`px-3 mx-1 py-2 font-bold text-ve-collab-blue ${
-                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 bg-ve-collab-orange-light ${
+                    isNoAuthPreview
+                        ? 'cursor-default'
+                        : 'cursor-pointer hover:border-ve-collab-orange'
                 }`}
                 onClick={onClick}
             >
@@ -32,8 +34,10 @@ class Tab extends Component<TabProps, {}> {
             </div>
         ) : (
             <div
-                className={`px-3 mx-1 py-2 text-slate-900 ${
-                    isNoAuthPreview ? 'cursor-default' : 'cursor-pointer'
+                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 ${
+                    isNoAuthPreview
+                        ? 'cursor-default'
+                        : 'cursor-pointer hover:border-ve-collab-orange'
                 }`}
                 onClick={onClick}
             >

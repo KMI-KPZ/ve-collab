@@ -27,7 +27,6 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticPropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
-import { languageKeys } from '@/data/languages';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -126,12 +125,12 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
         defaultNotificationSettings
     );
 
-    const { data: session } = useSession();
-    const [loading] = useState(false);
+    const { data: session, status } = useSession();
+    const [loading, setLoading] = useState(false);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
     const router = useRouter();
 
-    const { data: userInfo, isLoading, mutate } = useGetOwnProfile(session!.accessToken);
+    const { data: userInfo, isLoading, error, mutate } = useGetOwnProfile(session!.accessToken);
 
     useEffect(() => {
         if (isLoading) return;
@@ -158,8 +157,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
             languages: userInfo.profile.languages,
             institutions: userInfo.profile.institutions,
             chosen_institution_id: userInfo.profile.chosen_institution_id,
-            achievements: userInfo.profile.achievements,
-            chosen_achievement: userInfo.profile.chosen_achievement,
         });
         setVeReady(userInfo.profile.ve_ready);
         setExcludedFromMatching(userInfo.profile.excluded_from_matching);
@@ -244,14 +241,13 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 })),
                 excluded_from_matching: excludedFromMatching,
                 notification_settings: notificationSettings,
-                chosen_achievement: personalInformation.chosen_achievement,
             },
             session?.accessToken
         );
         setSuccessPopupOpen(true);
 
         // trigger a re-fetch of the user's profile data to reflect the changes
-        await mutate();
+        mutate();
 
         // if excludedFromMatching has changed from the previously saved state,
         // reload the page to reflect the changes to the parent (LayoutSection.tsx)
@@ -271,6 +267,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
 
         await fetchGET('/orcid', session?.accessToken).then((data) => {
             let profile = data.suggested_profile;
+            console.log(profile);
             setPersonalInformation({
                 firstName: profile.first_name,
                 lastName: profile.last_name,
@@ -280,8 +277,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 languages: personalInformation.languages,
                 institutions: personalInformation.institutions,
                 chosen_institution_id: personalInformation.chosen_institution_id,
-                achievements: personalInformation.achievements,
-                chosen_achievement: personalInformation.chosen_achievement,
             });
             setResearchAndTeachingInformation({
                 researchTags: profile.research_tags,
@@ -303,13 +298,8 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                         {loading ? (
                             <LoadingAnimation />
                         ) : (
-                            <VerticalTabs
-                                onClickTabItem={(tab) => {
-                                    window.location.href =
-                                        document.URL.split('#')[0] + '#tab' + tab;
-                                }}
-                            >
-                                <div tabid="General" tabname={t('general')}>
+                            <VerticalTabs>
+                                <div tabid="Stammdaten" tabname={t('general')}>
                                     <EditPersonalInformation
                                         personalInformation={personalInformation}
                                         setPersonalInformation={setPersonalInformation}
@@ -331,10 +321,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         optionLists={optionLists}
                                     />
                                 </div>
-                                <div
-                                    tabid="ResearchAndTeaching"
-                                    tabname={t('research_and_teaching')}
-                                >
+                                <div tabid="Lehre & Forschung" tabname={t('research_and_teaching')}>
                                     <EditResearchAndTeachingInformation
                                         researchAndTeachingInformation={
                                             researchandTeachingInformation
@@ -347,7 +334,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="Education" tabname={t('education')}>
+                                <div tabid="Ausbildung" tabname={t('education')}>
                                     <EditEducationInformation
                                         educations={educations}
                                         setEducations={setEducations}
@@ -356,7 +343,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                <div tabid="WorkExperience" tabname={t('work_experience')}>
+                                <div tabid="Berufserfahrung" tabname={t('work_experience')}>
                                     <EditWorkExperienceInformation
                                         workExperience={workExperience}
                                         setWorkExperience={setWorkExperience}
@@ -365,7 +352,7 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
-                                {/* <div tabid="VEWindow" tabname={t('ve_window')}>
+                                <div tabid="VE-Schaufenster" tabname={t('ve_window')}>
                                     <EditProfileVeWindow
                                         items={veWindowItems}
                                         setItems={setVeWindowItems}
@@ -373,8 +360,8 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         orcid={session?.user.orcid}
                                         importOrcidProfile={importOrcidProfile}
                                     />
-                                </div> */}
-                                <div tabid="Settings" tabname={t('settings')}>
+                                </div>
+                                <div tabid="Einstellungen" tabname={t('settings')}>
                                     <EditSettings
                                         updateProfileData={updateProfileData}
                                         orcid={session?.user.orcid}
@@ -391,7 +378,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                 </WhiteBox>
                 {successPopupOpen && (
                     <Alert
-                        type="success"
                         message={t('saved')}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}
@@ -401,72 +387,6 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
         </>
     );
 }
-
-export const expertiseKeys = [
-    'Agricultural and Forestry Sciences',
-    'General Natural Sciences',
-    'American Studies',
-    'English Studies',
-    'Archaeology',
-    'Architecture, Civil Engineering and Surveying',
-    'Non-European Languages and Literatures',
-    'Educational Sciences',
-    'Biology',
-    'Biotechnology',
-    'Book and Library Science',
-    'Chemistry',
-    'German as a Foreign and Second Language',
-    'Electrical Engineering, Electronics, Communications Engineering',
-    'Energy Engineering',
-    'Nutritional and Household Sciences',
-    'Ethnology',
-    'Subject-specific English Didactics',
-    'Subject-specific Romance Languages Didactics',
-    'Horticulture',
-    'Geography',
-    'Earth Sciences',
-    'German Studies',
-    'History',
-    'Health Sciences',
-    'Indo-Germanic Studies',
-    'Engineering',
-    'Computer Science',
-    'Information Science',
-    'Classical Philology, Medieval Latin and Modern Greek Philology',
-    'Communication Design',
-    'Cultural Studies',
-    'Art History and Art History',
-    'Literary Studies',
-    'Mechanical Engineering',
-    'Mathematics',
-    'Media and Communication Sciences',
-    'Medicine',
-    'Military Science',
-    'Museology',
-    'Musicology',
-    'Nature and Environmental Protection',
-    'Dutch Studies',
-    'Pedagogy',
-    'Pharmacy',
-    'Philosophy',
-    'Physics',
-    'Political Science',
-    'Psychology',
-    'Law',
-    'Romance Studies',
-    'Scandinavian Studies',
-    'Slavic Studies',
-    'Sociology, Empirical Social Research, Social Work',
-    'Sports Science',
-    'Linguistics',
-    'Speech Science',
-    'Technology',
-    'Theology and Religious Studies',
-    'Translation and Interpreting (Translation Studies)',
-    'Materials Science and Manufacturing Engineering',
-    'Industrial Engineering',
-    'Economics (Business Administration and Economics)',
-];
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
     // prepare select dropdown options
@@ -492,8 +412,145 @@ export async function getStaticProps({ locale }: GetStaticPropsContext) {
             'International Cooperation',
         ],
         preferredFormatKeys: ['synchronous', 'asynchronous', 'synchronous and asynchronous'],
-        expertiseKeys,
-        languageKeys: languageKeys,
+        expertiseKeys: [
+            'Agricultural and Forestry Sciences',
+            'General Natural Sciences',
+            'American Studies',
+            'English Studies',
+            'Archaeology',
+            'Architecture, Civil Engineering and Surveying',
+            'Non-European Languages and Literatures',
+            'Educational Sciences',
+            'Biology',
+            'Biotechnology',
+            'Book and Library Science',
+            'Chemistry',
+            'German as a Foreign and Second Language',
+            'Electrical Engineering, Electronics, Communications Engineering',
+            'Energy Engineering',
+            'Nutritional and Household Sciences',
+            'Ethnology',
+            'Subject-specific English Didactics',
+            'Subject-specific Romance Languages Didactics',
+            'Horticulture',
+            'Geography',
+            'Earth Sciences',
+            'German Studies',
+            'History',
+            'Health Sciences',
+            'Indo-Germanic Studies',
+            'Engineering',
+            'Computer Science',
+            'Information Science',
+            'Classical Philology, Medieval Latin and Modern Greek Philology',
+            'Communication Design',
+            'Cultural Studies',
+            'Art History and Art History',
+            'Literary Studies',
+            'Mechanical Engineering',
+            'Mathematics',
+            'Media and Communication Sciences',
+            'Medicine',
+            'Military Science',
+            'Museology',
+            'Musicology',
+            'Nature and Environmental Protection',
+            'Dutch Studies',
+            'Pedagogy',
+            'Pharmacy',
+            'Philosophy',
+            'Physics',
+            'Political Science',
+            'Psychology',
+            'Law',
+            'Romance Studies',
+            'Scandinavian Studies',
+            'Slavic Studies',
+            'Sociology, Empirical Social Research, Social Work',
+            'Sports Science',
+            'Linguistics',
+            'Speech Science',
+            'Technology',
+            'Theology and Religious Studies',
+            'Translation and Interpreting (Translation Studies)',
+            'Materials Science and Manufacturing Engineering',
+            'Industrial Engineering',
+            'Economics (Business Administration and Economics)',
+        ],
+        languageKeys: [
+            'Afrikaans',
+            'Albanian',
+            'Arabic',
+            'Armenian',
+            'Basque',
+            'Bengali',
+            'Bulgarian',
+            'Catalan',
+            'Cambodian',
+            'Chinese (Mandarin)',
+            'Croatian',
+            'Czech',
+            'Danish',
+            'Dutch',
+            'English',
+            'Estonian',
+            'Fiji',
+            'Finnish',
+            'French',
+            'Georgian',
+            'German',
+            'Greek',
+            'Gujarati',
+            'Hebrew',
+            'Hindi',
+            'Hungarian',
+            'Icelandic',
+            'Indonesian',
+            'Irish',
+            'Italian',
+            'Japanese',
+            'Javanese',
+            'Korean',
+            'Latin',
+            'Latvian',
+            'Lithuanian',
+            'Macedonian',
+            'Malay',
+            'Malayalam',
+            'Maltese',
+            'Maori',
+            'Marathi',
+            'Mongolian',
+            'Nepali',
+            'Norwegian',
+            'Persian',
+            'Polish',
+            'Portuguese',
+            'Punjabi',
+            'Quechua',
+            'Romanian',
+            'Russian',
+            'Samoan',
+            'Serbian',
+            'Slovak',
+            'Slovenian',
+            'Spanish',
+            'Swahili',
+            'Swedish',
+            'Tamil',
+            'Tatar',
+            'Telugu',
+            'Thai',
+            'Tibetan',
+            'Tonga',
+            'Turkish',
+            'Ukrainian',
+            'Urdu',
+            'Uzbek',
+            'Vietnamese',
+            'Welsh',
+            'Xhosa',
+        ],
     };
 
     return {

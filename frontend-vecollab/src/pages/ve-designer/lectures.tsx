@@ -102,7 +102,7 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('designer:lectures:lecture')}
+                            {t('common:name')}
                         </label>
                     </div>
                     <div className="w-3/4">
@@ -221,11 +221,11 @@ export default function Lectures({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <div className={'mt-4 rounded-sm shadow-sm px-4 w-full lg:w-2/3'}>
-                    <div className="divide-y divide-gray-200">{renderLecturesInputs()}</div>
+                <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
+                    <div className="divide-y">{renderLecturesInputs()}</div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-3 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
+                            className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {
                                 append({
@@ -273,13 +273,13 @@ export function LecturesNoAuthPreview() {
                 submitCallback={() => {}}
                 isNoAuthPreview={true}
             >
-                <div className={'mt-4 rounded-sm shadow-sm px-4 w-full lg:w-2/3'}>
-                    <div className="divide-y divide-gray-200">
+                <div className={'mt-4 rounded shadow px-4 w-full lg:w-2/3'}>
+                    <div className="divide-y">
                         <div className="pt-4 pb-2">
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('designer:lectures:lecture')}
+                                        {t('common:name')}
                                     </label>
                                 </div>
                                 <div className="w-3/4">
@@ -364,7 +364,7 @@ export function LecturesNoAuthPreview() {
                     </div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-3 bg-white rounded-full shadow-sm hover:bg-slate-50"
+                            className="p-2 m-3 bg-white rounded-full shadow hover:bg-slate-50"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -374,7 +374,7 @@ export function LecturesNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/90 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/90 to-white pointer-events-none"></div>
         </div>
     );
 }

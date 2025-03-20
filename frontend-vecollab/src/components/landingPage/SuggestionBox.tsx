@@ -2,21 +2,19 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
-import { fetchGET, fetchTaxonomy, getTopLevelNodes } from '@/lib/backend';
+import { fetchGET, fetchTaxonomy } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import { getClusterRouteBySlug } from '@/pages/learning-material';
 import LocalStorage from '@/lib/storage';
-import UserProfileImage from '../network/UserProfileImage';
-import printUsername from '../common/Username';
 
-interface ISuggestedModul {
+interface ISuggestedLection {
     id: number;
     text: string;
     path: string;
 }
-
-const ttl = 24 * 60 * 60 * 1000;
 
 SuggestionBox.auth = true;
 export default function SuggestionBox() {
@@ -33,56 +31,59 @@ export default function SuggestionBox() {
         );
     };
 
-    const SuggestedModules = () => {
-        const [modul, setModuls] = useState<ISuggestedModul[]>([]);
+    const SuggestedLections = () => {
+        const [lections, setLections] = useState<ISuggestedLection[]>([]);
 
-        const getSuggestedModules = async () => {
-            let allModules: ISuggestedModul[] = [];
+        const getSuggestedLection = async () => {
+            let allLections: ISuggestedLection[] = [];
             const taxonomy = await fetchTaxonomy();
-            const cluster = await getTopLevelNodes();
-            const clusterIds = cluster.map((a) => a.id);
 
-            taxonomy.map((node) => {
-                if (clusterIds.includes(node.parent)) {
-                    const parent = cluster.find((a) => a.id == node.parent);
-                    allModules.push({
-                        id: node.id,
-                        text: node.text,
-                        path: `/learning-material/${parent?.text!}/${node?.text}`,
-                    });
-                }
+            taxonomy.map((lection) => {
+                if (!Object.hasOwn(lection, 'data')) return;
+
+                const node = taxonomy.find((a) => a.id == lection.parent);
+                const cluster = taxonomy.find((a) => a.id == node!.parent);
+                allLections.push({
+                    id: lection.id,
+                    text: lection.text,
+                    path: `/learning-material/${getClusterRouteBySlug(cluster?.text!)}/${
+                        node?.text
+                    }/${lection.text}`,
+                });
             });
 
-            return allModules.sort(() => 0.5 - Math.random()).slice(0, 5);
+            const randomLections = allLections.sort(() => 0.5 - Math.random());
+            return randomLections.slice(0, 5);
         };
 
         useEffect(() => {
-            if (modul.length) return;
-            const storedModules = LocalStorage.getItem('suggested_modules');
-            if (storedModules) {
-                setModuls(storedModules);
+            const ttl = 24 * 60 * 60 * 1000;
+            if (lections.length) return;
+            const storedLections = LocalStorage.getItem('suggested_lections');
+            if (storedLections) {
+                setLections(storedLections);
                 return;
             }
-            getSuggestedModules()
-                .then((moduls) => {
-                    setModuls(moduls);
-                    LocalStorage.addItem('suggested_modules', moduls, ttl);
+            getSuggestedLection()
+                .then((lections) => {
+                    setLections(lections);
+                    LocalStorage.addItem('suggested_lections', lections, ttl);
                 })
                 .catch(console.error);
-        }, [modul]);
+        }, [lections]);
 
-        if (!modul.length) return <></>;
+        if (!lections.length) return <></>;
 
         return (
             <Wrapper>
                 <H2>{t('suggested_materials')}</H2>
 
-                <ul className="*:px-4 *:py-2 *:my-3 *:text-ve-collab-blue">
-                    {modul.map((lection, index) => {
+                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
+                    {lections.map((lection, index) => {
                         return (
                             <li
                                 key={index}
-                                className="hover:text-ve-collab-orange transition ease-in-out"
+                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
                             >
                                 <Link href={`${lection.path}`}>{lection.text}</Link>
                             </li>
@@ -122,10 +123,13 @@ export default function SuggestionBox() {
         };
 
         useEffect(() => {
+            const ttl = 24 * 60 * 60 * 1000;
             if (suggestedUsers.length) return;
 
             const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');
             if (cachedSuggestedUsers) {
+                console.log({ cachedSuggestedUsers });
+
                 setSuggestedUsers(cachedSuggestedUsers);
                 return;
             }
@@ -138,28 +142,41 @@ export default function SuggestionBox() {
                 .catch(console.error);
         }, [suggestedUsers]);
 
+        const printUsername = (user: BackendUserSnippet) => {
+            if (user.first_name) {
+                return (
+                    <>
+                        {user.first_name} {user.last_name}
+                    </>
+                );
+            }
+            return <>{user.username.replaceAll('_', ' ')}</>;
+        };
+
         if (!suggestedUsers) return <></>;
 
         return (
             <Wrapper>
                 <H2>{t('suggested_users')}</H2>
-                <ul className="*:px-2 *:rounded-full *:my-3 *:text-ve-collab-blue">
+                <ul className="divide-y *:px-4 *:py-2 *:rounded-full *:shadow *:my-3 *:text-ve-collab-blue">
                     {suggestedUsers.map((user, i) => {
                         return (
-                            <li key={i} className="@container">
+                            <li
+                                key={i}
+                                className="hover:bg-slate-50 hover:text-ve-collab-orange transition ease-in-out"
+                            >
                                 <Link
-                                    className="flex items-center justify-center flex-wrap @[230px]:flex-nowrap @[230px]:justify-start truncate p-2"
+                                    className="flex items-center truncate"
                                     href={`/profile/user/${user.username}`}
                                 >
-                                    <span className="shrink-0">
-                                        <UserProfileImage
-                                            profile_pic={user.profile_pic}
-                                            chosen_achievement={user.chosen_achievement}
-                                            height={40}
-                                            width={40}
-                                        />
-                                    </span>
-                                    <span className="text-slate-900 capitalize truncate inline-block w-full @[230px]:w-fit text-center @[230px]:text-start hover:text-ve-collab-orange">
+                                    <AuthenticatedImage
+                                        imageId={user.profile_pic}
+                                        alt={t('profile_picture')}
+                                        width={50}
+                                        height={50}
+                                        className="rounded-full mr-2"
+                                    ></AuthenticatedImage>
+                                    <span className="text-slate-900 capitalize truncate">
                                         {printUsername(user)}
                                     </span>
                                 </Link>
@@ -168,7 +185,7 @@ export default function SuggestionBox() {
                     })}
                 </ul>
                 <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                    <Link href={`/matching`}>
+                    <Link href={`/matching`} onClick={(e) => e.preventDefault()}>
                         {t('common:more')} <MdArrowRight size={24} className="inline mx-1" />
                     </Link>
                 </div>
@@ -178,7 +195,7 @@ export default function SuggestionBox() {
 
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
-        const modules = [<SuggestedModules key={0} />, <SuggestedUsers key={1} />];
+        const modules = [<SuggestedLections key={0} />, <SuggestedUsers key={1} />];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
         );

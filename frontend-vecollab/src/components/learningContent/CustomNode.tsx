@@ -164,7 +164,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                     {hover && (
                         <div className="flex ml-10">
                             {/* the bubbles are immutable in the taxonomy, because changing their names or deleting them crashes the structure*/}
-                            {!['Grundlagen', 'Zusammen Lernen', 'Digitales', 'Zusammen Planen'].includes(
+                            {!['top-bubble', 'left-bubble', 'bottom-bubble', 'right-bubble'].includes(
                                 text
                             ) && (
                                 <>
@@ -449,7 +449,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                         </button>
                         <button
                             className={
-                                'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
+                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={(e) => {
                                 handleEditMaterial();

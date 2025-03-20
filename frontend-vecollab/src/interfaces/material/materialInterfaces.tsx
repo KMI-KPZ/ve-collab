@@ -10,6 +10,7 @@ export interface INode {
 
 export type ITopLevelNode = Overwrite<INode, { parent: 0; droppable: false }>;
 
+
 export interface IMaterialNode extends INode {
     droppable: false;
     data: {
@@ -18,19 +19,7 @@ export interface IMaterialNode extends INode {
     };
 }
 
+
 export interface INodeWithLections extends INode {
     lections: INode[];
-}
-
-export interface ISearchMaterialWP {
-    id: number;
-    title: string;
-    url: string;
-}
-
-export interface ISearchMaterial {
-    id: number;
-    text: string;
-    section: INode;
-    cluster: INode;
 }

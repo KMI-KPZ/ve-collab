@@ -6,8 +6,6 @@ import { AlertState } from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
 import AsyncSelect from 'react-select/async';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import ButtonSecondary from '../common/buttons/ButtonSecondary';
-import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     closeDialogCallback: () => void;
@@ -26,7 +24,7 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
     >([]);
 
     const sharePlan = async () => {
-        if (!shareUsername) return;
+        if (!shareUsername) return
 
         const payload = {
             plan_id: plan._id,
@@ -37,7 +35,7 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
 
         await fetchPOST('/planner/grant_access', payload, session?.accessToken).then((data) => {
             setAlert({
-                message: t('plans_share_dialog_alert_set'),
+                message: t("plans_share_dialog_alert_set"),
                 autoclose: 2000,
                 onClose: () => setAlert({ open: false }),
             });
@@ -54,17 +52,15 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
                 (data: BackendSearchResponse) => {
                     callback(
                         data.users
-                            .filter(
-                                (user) =>
-                                    !plan.read_access.includes(user.username) &&
-                                    !plan.write_access.includes(user.username)
-                            )
-                            .filter((user) => user.username !== session!.user.preferred_username)
-                            .map((user) => ({
-                                label:
-                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
-                                value: user.username,
-                            }))
+                        .filter(user =>
+                            !plan.read_access.includes(user.username)
+                            && !plan.write_access.includes(user.username)
+                        )
+                        .filter(user => user.username !== session!.user.preferred_username)
+                        .map((user) => ({
+                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                            value: user.username,
+                        }))
                     );
                     setSearchResultProfileSnippets(data.users);
                 }
@@ -74,32 +70,32 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
 
     return (
         <>
-            <p className="my-2">{t('plans_share_dialog_text')}</p>
+            <p className="my-2">{t("plans_share_dialog_text")}</p>
             <AsyncSelect
                 className="grow max-w-full"
                 loadOptions={loadOptions}
                 onChange={(e) => setShareUsername(e!.value)}
                 value={
                     shareUsername
-                        ? {
-                              label: searchResultProfileSnippets.find(
+                    ? {
+                    label: searchResultProfileSnippets.find(
+                        (user) => user.username === shareUsername
+                    )
+                        ? `${
+                              searchResultProfileSnippets.find(
                                   (user) => user.username === shareUsername
-                              )
-                                  ? `${
-                                        searchResultProfileSnippets.find(
-                                            (user) => user.username === shareUsername
-                                        )?.first_name
-                                    } ${
-                                        searchResultProfileSnippets.find(
-                                            (user) => user.username === shareUsername
-                                        )?.last_name
-                                    } - ${shareUsername}`
-                                  : `${shareUsername}`,
-                              value: shareUsername,
-                          }
-                        : null
+                              )?.first_name
+                          } ${
+                              searchResultProfileSnippets.find(
+                                  (user) => user.username === shareUsername
+                              )?.last_name
+                          } - ${shareUsername}`
+                        : `${shareUsername}`,
+                    value: shareUsername,
+                    }
+                    : null
                 }
-                placeholder={t('plans_share_dialog_select_placeholder')}
+                placeholder={t("plans_share_dialog_select_placeholder")}
                 getOptionLabel={(option) => option.label}
                 loadingMessage={() => t('loading')}
                 noOptionsMessage={() => t('nothing_found')}
@@ -121,7 +117,7 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
                             defaultChecked={shareAccessRight === 'read'}
                             onChange={(e) => setShareAccessRight(e.target.value)}
                         />
-                        {t('plans_share_dialog_radio_btn_read')}
+                        {t("plans_share_dialog_radio_btn_read")}
                     </label>
                 </div>
                 <div>
@@ -135,22 +131,30 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
                             defaultChecked={shareAccessRight === 'write'}
                             onChange={(e) => setShareAccessRight(e.target.value)}
                         />
-                        {t('plans_share_dialog_radio_btn_read_and_write')}
+                        {t("plans_share_dialog_radio_btn_read_and_write")}
                     </label>
                 </div>
             </div>
-            <div className="flex absolute bottom-0 w-full flex justify-between">
-                <ButtonSecondary onClick={closeDialogCallback}>
-                    {t('plans_share_dialog_btn_cancel')}
-                </ButtonSecondary>
-                <ButtonPrimary
-                    onClick={() => {
+            <div className="flex absolute bottom-0 w-full">
+                <button
+                    className={
+                        'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                    }
+                    onClick={closeDialogCallback}
+                >
+                    <span>{t("plans_share_dialog_btn_cancel")}</span>
+                </button>
+                <button
+                    className={
+                        'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                    }
+                    onClick={(e) => {
                         sharePlan();
                         closeDialogCallback();
                     }}
                 >
-                    {t('plans_share_dialog_btn_confirm')}
-                </ButtonPrimary>
+                    <span>{t("plans_share_dialog_btn_confirm")}</span>
+                </button>
             </div>
         </>
     );

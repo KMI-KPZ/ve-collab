@@ -1,7 +1,7 @@
 import datetime
 import json
 import logging
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -35,16 +35,9 @@ import global_vars
 from handlers.base_handler import auth_needed, BaseHandler
 from model import Evaluation, IndividualLearningGoal, Step, VEPlan
 from resources.network.profile import Profiles
-from resources.notifications import NotificationResource
 from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
-from xml.etree.ElementTree import ElementTree
 import util
-
-import os
-import zipfile
-from io import BytesIO
-import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +67,12 @@ class VEPlanHandler(BaseHandler):
         # check if the username of the lock holder matches the current user
         # and if so, the lock has to be not yet expired
         if (
-                global_vars.plan_write_lock_map[plan_id]["username"]
-                == self.current_user.username
+            global_vars.plan_write_lock_map[plan_id]["username"]
+            == self.current_user.username
         ):
             return (
-                    global_vars.plan_write_lock_map[plan_id]["expires"]
-                    > datetime.datetime.now()
+                global_vars.plan_write_lock_map[plan_id]["expires"]
+                > datetime.datetime.now()
             )
 
     def _get_lock_holder(self, plan_id: str | ObjectId) -> str | None:
@@ -177,14 +170,6 @@ class VEPlanHandler(BaseHandler):
             (read only).
 
             query params:
-                filter_gp: <true|false>, if true, only return good practise examples
-                filter_access: <all|own|shared>, if "all", return all plans that i have access to (default),
-                    if "own", return only my own plans, if "shared", return only plans that i have gotten read/write access to
-                query: <str>, if given, only return plans that contain the query in their name, topics or abstract
-                limit: <int>, if given, limit the amount of returned plans to this number (default 10)
-                offset: <int>, if given, skip this amount of plans before returning the results (default 0)
-                sort: <name|last_modified|creation_timestamp> sort by given proerty
-                order: <-1|1> order DESC or ASC
 
             http body:
 
@@ -242,26 +227,6 @@ class VEPlanHandler(BaseHandler):
                 (you are not an admin)
                 {"success": False,
                  "reason": "insufficient_permissions"}
-
-        GET /planner/get_scorm_zip
-            request plan in scorm format compressed as zip
-
-            query params:
-                _id: the _id of the plan as str (24 bit hex str)
-
-            http body:
-
-            returns:
-                200 OK,
-                (the plan in scorm format zipped
-                (= product of `to_dict()` of `VEPlan` instance))
-                {"success": True,
-                 "zip": FileResponse(zipfile)}
-
-                400 Bad Request
-                (the request misses the _id query parameter)
-                {"success": False,
-                 "reason": "missing_key:_id"}
         """
 
         with util.get_mongodb() as db:
@@ -277,26 +242,7 @@ class VEPlanHandler(BaseHandler):
                 return
 
             elif slug == "get_available":
-                filter_good_practice_only = self.get_argument("filter_gp", False)
-                filter_access = self.get_argument("filter_access", "all")
-                if filter_access not in ["all", "own", "shared"]:
-                    self.set_status(400)
-                    self.write(
-                        {
-                            "success": False,
-                            "reason": "invalid_filter_access_value",
-                        }
-                    )
-                    return
-                query = self.get_argument("query", None)
-                limit = int(self.get_argument("limit", 10))
-                offset = int(self.get_argument("offset", 0))
-                sort = self.get_argument("sort_by", 'last_modified')
-                order = int(self.get_argument("order", -1))
-
-                self.get_available_plans_for_user(
-                    db, filter_good_practice_only, filter_access, query, limit, offset, sort, order
-                )
+                self.get_available_plans_for_user(db)
                 return
 
             elif slug == "get_good_practise":
@@ -320,21 +266,11 @@ class VEPlanHandler(BaseHandler):
                 self.get_all_plans(db)
                 return
 
-            elif slug == "get_scorm_zip":
-                try:
-                    _id = self.get_argument("_id")
-                except tornado.web.MissingArgumentError:
-                    self.set_status(400)
-                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "_id"})
-                    return
-                self.get_scorm_files(_id)
-                return
-
             else:
                 self.set_status(404)
 
     @auth_needed
-    async def post(self, slug):
+    def post(self, slug):
         """
         POST /planner/insert
             insert a new plan into the db. To do this, the safest approach is
@@ -1387,8 +1323,8 @@ class VEPlanHandler(BaseHandler):
                     )
                     return
                 if (
-                        "file" not in self.request.files
-                        or not self.request.files["file"][0]
+                    "file" not in self.request.files
+                    or not self.request.files["file"][0]
                 ):
                     self.set_status(400)
                     self.write({"success": False, "reason": "missing_file:file"})
@@ -1416,8 +1352,8 @@ class VEPlanHandler(BaseHandler):
                     )
                     return
                 if (
-                        "file" not in self.request.files
-                        or not self.request.files["file"][0]
+                    "file" not in self.request.files
+                    or not self.request.files["file"][0]
                 ):
                     self.set_status(400)
                     self.write({"success": False, "reason": "missing_file:file"})
@@ -1476,7 +1412,7 @@ class VEPlanHandler(BaseHandler):
                 if not isinstance(http_body["write"], bool):
                     http_body["write"] = True if http_body["write"] == "true" else False
 
-                await self.grant_acces_right(
+                self.grant_acces_right(
                     db,
                     http_body["plan_id"],
                     http_body["username"],
@@ -1813,7 +1749,7 @@ class VEPlanHandler(BaseHandler):
     ##############################################################################
 
     def load_plan_from_http_body_or_write_error(
-            self, http_body: dict
+        self, http_body: dict
     ) -> Optional[VEPlan]:
         """
         helper function to parse a VEPlan from the dict (should be http body of the request)
@@ -1898,40 +1834,7 @@ class VEPlanHandler(BaseHandler):
 
         self.serialize_and_write({"success": True, "plan": plan_dict})
 
-    def find_available_plans_for_user_by_slug(self, slug: str, db: Database) -> None:
-        """
-        This function is invoked by the handler when the correspoding endpoint
-        is requested. It just de-crowds the handler function and should therefore
-        not be called manually anywhere else.
-
-        Search for all available plans (name, topics, abstract) of the current user by given slug
-
-        Responses:
-            200 OK --> contains all found plans in a list of dictionaries
-        """
-
-        planner = VEPlanResource(db)
-        plans = [
-            plan.to_dict()
-            for plan in planner.find_plans_for_user_by_slug(
-                self.current_user.username, slug
-            )
-        ]
-        plans = self.add_profile_information_to_author(plans)
-
-        self.serialize_and_write({"success": True, "plans": plans})
-
-    def get_available_plans_for_user(
-            self,
-            db: Database,
-            filter_good_practice_only: bool,
-            filter_access: Literal["all", "own", "shared"],
-            search_query: str | None,
-            limit: int = 10,
-            offset: int = 0,
-            sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
-            order: int = -1
-    ) -> None:
+    def get_available_plans_for_user(self, db: Database) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
         is requested. It just de-crowds the handler function and should therefore
@@ -1941,20 +1844,6 @@ class VEPlanHandler(BaseHandler):
         those that he/she has read/write access to and those that are marked as
         good practise examples (read only).
 
-        Optionally, apply the following filters and searches:
-        - `filter_good_practice_only`: only return good practise plans
-        - `filter_access`:
-            - all: return all plans that the user has access to, i.e. own plans,
-                   read/write access and good practise plans
-            - own: return only the user's own plans
-            - shared: return only plans that the user has read/write access to
-        - `search_query`: a string to search for in the plans' names, topics and abstracts
-
-        `filter_access` and `search_query` are first combined with an AND operator and afterwards
-        the `filter_good_practice_only` is applied on top of this result.
-
-        `limit` and `offset` are used for pagination.
-
         Responses:
             200 OK --> contains all available plans in a list of dictionaries
         """
@@ -1962,16 +1851,7 @@ class VEPlanHandler(BaseHandler):
         planner = VEPlanResource(db)
         plans = [
             plan.to_dict()
-            for plan in planner.get_plans_for_user(
-                self.current_user.username,
-                filter_good_practice_only,
-                filter_access,
-                search_query,
-                limit,
-                offset,
-                sort,
-                order
-            )
+            for plan in planner.get_plans_for_user(self.current_user.username)
         ]
         plans = self.add_profile_information_to_author(plans)
 
@@ -2106,23 +1986,10 @@ class VEPlanHandler(BaseHandler):
         except Exception:
             logger.warn("etherpad is possibly down")
 
-        # count towards the achievements "ve_plans" and
-        # conditionally count towards the "good_practice_plans" and
-        # "unique_partners" achievements (obeying their constraints)
-        profile_manager = Profiles(db)
-        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-        profile_manager.achievement_count_up_check_constraint_unique_partners(
-            self.current_user.username, plan.partners
-        )
-        if plan.is_good_practise:
-            profile_manager.achievement_count_up_check_constraint_good_practice(
-                self.current_user.username, plan._id
-            )
-
         self.serialize_and_write({"success": True, "inserted_id": _id})
 
     def update_full_plan(
-            self, db: Database, plan: VEPlan, upsert: bool = False
+        self, db: Database, plan: VEPlan, upsert: bool = False
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2184,28 +2051,15 @@ class VEPlanHandler(BaseHandler):
             except Exception:
                 logger.warn("etherpad is possibly down")
 
-        # count towards the achievement "ve_plans" since update was successfull
-        # conditionally count towards the "good_practice_plans" and
-        # "unique_partners" achievements (obeying their constraints)
-        profile_manager = Profiles(db)
-        profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-        profile_manager.achievement_count_up_check_constraint_unique_partners(
-            self.current_user.username, plan.partners
-        )
-        if plan.is_good_practise:
-            profile_manager.achievement_count_up_check_constraint_good_practice(
-                self.current_user.username, plan._id
-            )
-
         self.serialize_and_write({"success": True, "updated_id": _id})
 
     def update_field_in_plan(
-            self,
-            db: Database,
-            plan_id: str | ObjectId,
-            field_name: str,
-            field_value: Any,
-            upsert: bool = False,
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        field_name: str,
+        field_value: Any,
+        upsert: bool = False,
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2309,20 +2163,6 @@ class VEPlanHandler(BaseHandler):
                 except Exception:
                     logger.warn("etherpad is possibly down")
 
-            # count towards the achievement "ve_plans" since update was successfull
-            # conditionally count towards the "good_practice_plans" and
-            # "unique_partners" achievements (obeying their constraints)
-            profile_manager = Profiles(db)
-            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-            if field_name == "is_good_practise" and field_value is True:
-                profile_manager.achievement_count_up_check_constraint_good_practice(
-                    self.current_user.username, plan_id
-                )
-            if field_name == "partners":
-                profile_manager.achievement_count_up_check_constraint_unique_partners(
-                    self.current_user.username, field_value
-                )
-
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def bulk_update_fields_in_plan(self, db: Database, update_instructions: List[Dict]):
@@ -2345,7 +2185,6 @@ class VEPlanHandler(BaseHandler):
         """
 
         planner = VEPlanResource(db)
-        profile_manager = Profiles(db)
         errors = []
 
         for update_instruction in update_instructions:
@@ -2371,20 +2210,6 @@ class VEPlanHandler(BaseHandler):
                     )
                     # after a successful update, extend the lock expiry
                     self._extend_lock(plan_id)
-
-                    # conditionally count towards the "good_practice_plans" and
-                    # "unique_partners" achievements (obeying their constraints)
-                    if (
-                            update_instruction["field_name"] == "is_good_practise"
-                            and update_instruction["value"] is True
-                    ):
-                        profile_manager.achievement_count_up_check_constraint_good_practice(
-                            self.current_user.username, plan_id
-                        )
-                    if update_instruction["field_name"] == "partners":
-                        profile_manager.achievement_count_up_check_constraint_unique_partners(
-                            self.current_user.username, update_instruction["value"]
-                        )
                 else:
                     error_reason = PLAN_LOCKED
                     error_status_code = 403
@@ -2432,13 +2257,10 @@ class VEPlanHandler(BaseHandler):
                 {"success": False, "reason": "operation_errors", "errors": errors}
             )
         else:
-            # count towards the achievement "ve_plans" since update was successfull
-            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-
             self.serialize_and_write({"success": True})
 
     def append_step_to_plan(
-            self, db: Database, plan_id: str | ObjectId, step: dict | Step
+        self, db: Database, plan_id: str | ObjectId, step: dict | Step
     ):
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2518,18 +2340,14 @@ class VEPlanHandler(BaseHandler):
         if error_reason:
             self.write({"success": False, "reason": error_reason})
         else:
-            # count towards the achievement "ve_plans" since update was successfull
-            profile_manager = Profiles(db)
-            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-
             self.serialize_and_write({"success": True, "updated_id": _id})
 
     def put_evaluation_file(
-            self,
-            plan_id: str | ObjectId,
-            file_name: str,
-            file_content: bytes,
-            content_type: str,
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
     ) -> None:
         """
         add a new file to the plan, resembling the evaluation.
@@ -2582,19 +2400,15 @@ class VEPlanHandler(BaseHandler):
                 self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                 return
 
-            # count towards the achievement "ve_plans" since update was successfull
-            profile_manager = Profiles(db)
-            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
 
     def put_literature_file(
-            self,
-            plan_id: str | ObjectId,
-            file_name: str,
-            file_content: bytes,
-            content_type: str,
+        self,
+        plan_id: str | ObjectId,
+        file_name: str,
+        file_content: bytes,
+        content_type: str,
     ) -> None:
         """
         add a new literature file to the plan.
@@ -2654,20 +2468,16 @@ class VEPlanHandler(BaseHandler):
                 self.write({"success": False, "reason": MAXIMUM_FILES_EXCEEDED})
                 return
 
-            # count towards the achievement "ve_plans" since update was successfull
-            profile_manager = Profiles(db)
-            profile_manager.achievement_count_up(self.current_user.username, "ve_plans")
-
         self.set_status(200)
         self.serialize_and_write({"success": True, "inserted_file_id": file_id})
 
-    async def grant_acces_right(
-            self,
-            db: Database,
-            plan_id: str | ObjectId,
-            username: str,
-            read: bool,
-            write: bool,
+    def grant_acces_right(
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        username: str,
+        read: bool,
+        write: bool,
     ):
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2710,20 +2520,6 @@ class VEPlanHandler(BaseHandler):
             if read is True and write is False:
                 planner.set_read_permissions(plan_id, username)
 
-            plan_name = planner.get_plan(plan_id).name
-            notification_resource = NotificationResource(db)
-            await notification_resource.send_notification(
-                username,
-                "plan_access_granted",
-                {
-                    "plan_id": plan_id,
-                    "plan_name": plan_name,
-                    "author": self.current_user.username,
-                    "read": read,
-                    "write": write,
-                },
-            )
-
         except PlanDoesntExistError:
             self.set_status(409)
             self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
@@ -2732,12 +2528,12 @@ class VEPlanHandler(BaseHandler):
         self.write({"success": True})
 
     def revoke_access_rights(
-            self,
-            db: Database,
-            plan_id: str | ObjectId,
-            username: str,
-            read: bool,
-            write: bool,
+        self,
+        db: Database,
+        plan_id: str | ObjectId,
+        username: str,
+        read: bool,
+        write: bool,
     ):
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2868,7 +2664,7 @@ class VEPlanHandler(BaseHandler):
         self.write({"success": True})
 
     def delete_step_by_id(
-            self, db: Database, plan_id: str | ObjectId, step_id: str | ObjectId
+        self, db: Database, plan_id: str | ObjectId, step_id: str | ObjectId
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2921,7 +2717,7 @@ class VEPlanHandler(BaseHandler):
         self.write({"success": True})
 
     def delete_step_by_name(
-            self, db: Database, plan_id: str | ObjectId, step_name: str
+        self, db: Database, plan_id: str | ObjectId, step_name: str
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -2973,7 +2769,7 @@ class VEPlanHandler(BaseHandler):
         self.write({"success": True})
 
     def remove_evaluation_file(
-            self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
+        self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -3034,7 +2830,7 @@ class VEPlanHandler(BaseHandler):
         self.write({"success": True})
 
     def remove_literature_file(
-            self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
+        self, db: Database, plan_id: str | ObjectId, file_id: str | ObjectId
     ) -> None:
         """
         This function is invoked by the handler when the correspoding endpoint
@@ -3093,126 +2889,3 @@ class VEPlanHandler(BaseHandler):
             return
 
         self.write({"success": True})
-
-    def get_scorm_files(self, _id: str | ObjectId) -> None:
-        """
-        This function is invoked by the handler when the corresponding endpoint
-        is requested. It reads the planning steps, fills the step data into the
-        imsmanifest.xml file and HTML files, and returns the SCORM files compressed as ZIP file.
-
-        Responses:
-           200 OK --> ZIP file contains the SCORM files (xml, xsd, js and html files)
-           400 missing plan_id --> no plan_id was provided
-        """
-
-        with util.get_mongodb() as db:
-            plan_db = VEPlanResource(db)
-            plan = plan_db.get_plan(_id)
-
-            steps = plan.steps
-            project_title = plan.name
-
-            step_scorm = []
-            for i, step in enumerate(steps, start=1):
-                step_data = {
-                    "step_name": step.name,
-                    "ressource_id": f"resource_{i}",
-                    "item_id": f"item_id_{i}",
-                    "filename": f"filename{i}.html"
-                }
-                step_scorm.append(step_data)
-
-            zipFile = BytesIO()  # temporary file in memory
-            with zipfile.ZipFile(zipFile, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-                # Fill the step data into the imsmanifest.xml file & write it to zip stream
-                imsmanifest_content = self.fill_imsmanifest(step_scorm, project_title)
-                zf.writestr("imsmanifest.xml", ET.tostring(imsmanifest_content, encoding='utf-8'))
-
-                # Fill the step data into the html files & copy xsd files ->  write it to zip stream
-                self.fill_html_files(step_scorm, zf)
-                self.copy_xsd_files(zf)
-
-            # Set headers for file download
-            self.set_status(200)
-            self.set_header("Content-Type", "application/zip")
-            self.set_header("Content-Disposition", 'attachment; filename="ve_collab_scorm.zip"')
-            self.set_header("Content-Length", str(len(zipFile.getvalue())))  # FIXED VARIABLE NAME
-
-            # Send the file as a response
-            self.write(zipFile.getvalue())
-            self.finish()
-
-    @staticmethod
-    def fill_imsmanifest(steps: List, project_title: str) -> ET.Element:
-        # Implement the logic to fill the imsmanifest.xml content with the steps data
-        manifest = ET.Element("manifest", {
-            "identifier": "com.scorm.golfsamples.contentpackaging.singlesco.12",
-            "version": "1",
-            "xmlns": "http://www.imsproject.org/xsd/imscp_rootv1p1p2",
-            "xmlns:adlcp": "http://www.adlnet.org/xsd/adlcp_rootv1p2",
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:schemaLocation": "http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd "
-                                  "http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd "
-                                  "http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd"
-        })
-
-        # Metadata
-        metadata = ET.SubElement(manifest, "metadata")
-        ET.SubElement(metadata, "schema").text = "ADL SCORM"
-        ET.SubElement(metadata, "schemaversion").text = "1.2"
-
-        # Organizations
-        organizations = ET.SubElement(manifest, "organizations", {"default": "test_structure"})
-        organization = ET.SubElement(organizations, "organization", {"identifier": "test_structure"})
-
-        # Project title
-        ET.SubElement(organization, "title").text = project_title
-
-        # Items
-        for item in steps:
-            item_element = ET.SubElement(organization, "item",
-                                         {"identifier": item["item_id"], "identifierref": item["ressource_id"]})
-            ET.SubElement(item_element, "title").text = item["step_name"]
-
-        # Ressources
-        resources = ET.SubElement(manifest, "resources")
-        for res in steps:
-            resource = ET.SubElement(resources, "resource", {
-                "identifier": res["ressource_id"],
-                "type": "webcontent",
-                "adlcp:scormtype": "asset",
-                "href": f"{res['filename']}"
-            })
-            ET.SubElement(resource, "file", {"href": f"{res['filename']}"})
-
-        return manifest
-
-    @staticmethod
-    def fill_html_files(steps: List, zf: zipfile.ZipFile) -> None:
-        # Implement the logic to fill the HTML files content with the steps data
-        html_template = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-                    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-                <html xmlns='http://www.w3.org/1999/xhtml' dir='ltr' lang='en-US'>
-                <head>
-                    <title>{title}</title>
-                    <!--to include SCORM-specific functions-->
-                    <script type='text/javascript' src='../shared/scormfunctions.js'></script>
-                </head>
-                <body>
-                <p> Your custom course {title} </p>
-                </body>
-                </html>"""
-
-        for step in steps:
-            html_content = html_template.format(title=step["step_name"])
-            zf.writestr(step["filename"], html_content.encode("utf-8"))
-
-    @staticmethod
-    def copy_xsd_files(zf: zipfile.ZipFile) -> None:
-        source_folder = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'scorm_copy_files')
-
-        for filename in os.listdir(source_folder):
-            source_file = os.path.join(source_folder, filename)
-            if os.path.isfile(source_file):
-                with open(source_file, "rb") as f:
-                    zf.writestr(filename, f.read())

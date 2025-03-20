@@ -181,7 +181,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
             <div key={evaluationPerPartner.id} className="flex mx-2">
-                <div className="rounded-sm shadow-sm px-3 py-4 h-fit w-fit">
+                <div className="rounded shadow px-3 py-4 h-fit w-fit">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
                             {partnerProfileSnippets[evaluationPerPartner.username]
@@ -383,7 +383,7 @@ export function EvaluationNoAuthPreview() {
                         .fill(null)
                         .map((_, index) => (
                             <div key={index} className="flex mx-2">
-                                <div className="rounded-sm shadow-sm px-3 py-4 h-fit w-fit">
+                                <div className="rounded shadow px-3 py-4 h-fit w-fit">
                                     <div className="flex flex-col">
                                         <div className="font-bold text-lg mb-4 text-center">
                                             {index === 0
@@ -464,7 +464,7 @@ export function EvaluationNoAuthPreview() {
                         ))}
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
         </div>
     );
 }

@@ -14,7 +14,6 @@ import { useRouter } from 'next/router';
 import { Socket } from 'socket.io-client';
 import GeneralError from '../common/GeneralError';
 import { useTranslation } from 'next-i18next';
-import { add } from 'date-fns';
 
 interface Props {
     /** User is global admin or admin of current group */
@@ -24,7 +23,6 @@ interface Props {
     user?: string | undefined;
     adminDashboard?: boolean;
     socket: Socket;
-    hideForm?: boolean;
 }
 
 Timeline.auth = true;
@@ -35,16 +33,11 @@ export default function Timeline({
     user,
     adminDashboard,
     socket,
-    hideForm = false,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
     const router = useRouter();
-
-    // hotfix for date issue #570
-    // let isoDate = new Date();
-    // isoDate = add(isoDate, { minutes: -1 * isoDate.getTimezoneOffset() });
     const [toDate, setToDate] = useState<Date>(new Date());
     const [postToRepost, setPostToRepost] = useState<BackendPost | null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
@@ -52,7 +45,7 @@ export default function Timeline({
     const [pinnedPostsExpanded, setPinnedPostsExpanded] = useState<boolean>(false);
     const [fetchCount, setFetchCount] = useState<number>(0);
     const perFetchLimit = 10;
-    const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(true);
+    const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
 
     const datePillColors: { vg: string; bg: string }[] = [
         { vg: '#00748f', bg: '#d8f2f9' }, // blue
@@ -75,6 +68,7 @@ export default function Timeline({
     );
 
     const { data: allGroups } = useGetAllGroups(session!.accessToken);
+    // console.log({allGroups});
 
     const { data: pinnedPosts, mutate: mutatePinnedPosts } = useGetPinnedPosts(
         session!.accessToken,
@@ -82,23 +76,19 @@ export default function Timeline({
     );
 
     useEffect(() => {
-        if (isFetchingNewPosts) {
-            return;
-        } else if (!newFetchedPosts.length) {
-            setIsLoadingTimeline(false);
-            return;
-        }
+        if (!newFetchedPosts.length) return;
         if (allPosts.some((a) => newFetchedPosts.some((b) => b._id == a._id))) return;
         setIsLoadingTimeline(true);
 
         setFetchCount((prev) => ++prev);
         setAllPosts((prev) => {
             const allPosts = [...prev, ...newFetchedPosts];
+            // console.log({newFetchedPosts, allPosts});
             setPostsByDate(groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')));
             setIsLoadingTimeline(false);
             return allPosts;
         });
-    }, [newFetchedPosts, isFetchingNewPosts, allPosts]);
+    }, [newFetchedPosts, allPosts]);
 
     // may get repost from request query: ?repost=...
     useEffect(() => {
@@ -177,7 +167,7 @@ export default function Timeline({
     }
 
     return (
-        <div className="mb-5">
+        <>
             {pinnedPosts.length > 0 && (
                 <>
                     <div className="mx-2 my-10 px-4 pb-4 rounded-md border-2 border-gray-600 outline outline-1 outline-gray-400 outline-offset-4">
@@ -215,7 +205,7 @@ export default function Timeline({
                                     onClick={(e) => {
                                         setPinnedPostsExpanded(true);
                                     }}
-                                    className="absolute bottom-0 left-0 w-full h-full bg-linear-to-t to-50% from-[#e5e7eb]"
+                                    className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t to-50% from-[#e5e7eb]"
                                 ></div>
                             )}
                         </div>
@@ -227,7 +217,7 @@ export default function Timeline({
                                     setPinnedPostsExpanded(false);
                                 }}
                                 title={t('show_less')}
-                                className="shadow-sm px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
+                                className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
                             >
                                 <MdKeyboardDoubleArrowUp />
                             </button>
@@ -237,7 +227,7 @@ export default function Timeline({
                                     setPinnedPostsExpanded(true);
                                 }}
                                 title={t('show_all')}
-                                className="shadow-sm px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
+                                className="shadow px-6 py-2 -mt-2 rounded-full bg-white hover:bg-slate-100"
                             >
                                 <MdKeyboardDoubleArrowDown />
                             </button>
@@ -246,8 +236,8 @@ export default function Timeline({
                 </>
             )}
 
-            {!hideForm && (!groupACL || groupACL.post) ? (
-                <div className={'p-4 my-8 bg-white rounded-sm shadow-sm '}>
+            {(!groupACL || groupACL.post) && (
+                <div className={'p-4 my-8 bg-white rounded shadow '}>
                     <TimelinePostForm
                         group={group}
                         postToRepost={postToRepost}
@@ -256,8 +246,6 @@ export default function Timeline({
                         socket={socket}
                     />
                 </div>
-            ) : (
-                <div className="h-6"></div>
             )}
 
             {Object.keys(postsByDate).map((date, i) => {
@@ -266,7 +254,7 @@ export default function Timeline({
                     <div
                         key={date}
                         style={{ borderColor: datePill.vg }}
-                        className="-ml-7 pl-7 pb-4 border-l border-gray-200"
+                        className="-ml-7 pl-7 pb-4 border-l"
                     >
                         <div className="relativ sticky z-20 -ml-[47px] top-[17px] mb-4 flex items-center font-bold">
                             <div
@@ -275,13 +263,13 @@ export default function Timeline({
                                     borderColor: datePill.vg,
                                     backgroundColor: datePill.bg,
                                 }}
-                                className="rounded-full border border-gray-200 p-[2px] -mt-[11px] shadow-sm"
+                                className="rounded-full border p-[2px] -mt-[11px] shadow"
                             >
                                 <HiOutlineCalendar className="m-2" />
                             </div>
                             <div
                                 style={{ color: datePill.vg, backgroundColor: datePill.bg }}
-                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow-sm"
+                                className="relative px-4 py-2 ml-2 -mt-[11px] rounded-full shadow"
                             >
                                 <Timestamp timestamp={date} dateFormat="d. MMM" />
                             </div>
@@ -335,6 +323,6 @@ export default function Timeline({
                     {group ? t('no_posts_in_group_yet') : t('no_posts_in_your_timeline_yet')}
                 </div>
             )}
-        </div>
+        </>
     );
 }

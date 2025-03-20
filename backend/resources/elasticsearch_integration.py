@@ -1,4 +1,3 @@
-from typing import Optional
 from bson import ObjectId
 import json
 import requests
@@ -41,10 +40,8 @@ class ElasticsearchConnector:
         # ObjectIds also get returned as str representation
         elif isinstance(doc, ObjectId):
             result_str = str(doc)
-        # ints and floats get returned as str representation
+        # ints get returned as str representation
         elif isinstance(doc, int):
-            result_str = str(doc)
-        elif isinstance(doc, float):
             result_str = str(doc)
         # lists get flattened, if values are str, they remain str,
         # dicts or nested lists get flattened recursively
@@ -149,29 +146,10 @@ class ElasticsearchConnector:
             ),
         )
 
-    def search_profile_match(
-        self,
-        profile: dict,
-        query_expertise: Optional[str],
-        query_lang: Optional[str],
-        size: Optional[int] = 10,
-        offset: Optional[int] = 0
-    ) -> list[dict]:
+    def search_profile_match(self, profile: dict) -> list[dict]:
         """
         Search for a matching partner to `profile` in Elasticsearch.
-
-        `profile` is a dictionary containing the profile information of the user
-
-        `query_expertise` set must query of expertises
-        `query_lang` set must query of languages
-        `size` is the number of results to return, default 10
-        `offset` is the number of results to skip (used for pagination), default 0
         """
-
-        if size is None:
-            size = 10
-        if offset is None:
-            offset = 0
 
         # TODO assert expected keys in profile
 
@@ -183,121 +161,69 @@ class ElasticsearchConnector:
             if isinstance(value, (dict, list)):
                 profile[key] = self._dict_or_list_values_to_str(value)
 
-        should_query = [
-            {
-                "match": {
-                    "bio": {"query": profile["bio"], "fuzziness": "AUTO"},
-                }
-            },
-            {
-                "match": {
-                    "experience": {
-                        "query": profile["experience"],
-                        "fuzziness": "AUTO",
-                    },
-                }
-            },
-            {
-                "match": {
-                    "expertise": {
-                        "query": profile["expertise"],
-                        "fuzziness": "AUTO",
-                        "boost": 1.5,
-                    },
-                }
-            },
-            {
-                "match": {
-                    "languages": {
-                        "query": profile["languages"],
-                        "fuzziness": "AUTO",
-                    },
-                }
-            },
-            {
-                "match": {
-                    "ve_interests": {
-                        "query": profile["ve_interests"],
-                        "fuzziness": "AUTO",
-                        "boost": 2,
-                    },
-                }
-            },
-            {
-                "match": {
-                    "ve_goals": {
-                        "query": profile["ve_goals"],
-                        "fuzziness": "AUTO",
-                        "boost": 2,
-                    },
-                }
-            },
-            {
-                "match": {
-                    "preferred_format": {
-                        "query": profile["preferred_format"],
-                        "fuzziness": "AUTO",
-                    },
-                }
-            },
-            {
-                "match": {
-                    "research_tags": {
-                        "query": profile["research_tags"],
-                        "fuzziness": "AUTO",
-                    },
-                }
-            },
-            {
-                "match": {
-                    "courses": {
-                        "query": json.dumps(profile["courses"]),
-                        "fuzziness": "AUTO",
-                    },
-                }
-            },
-        ]
-
-        must_query = []
-
-        if query_expertise and query_expertise != "":
-            must_query.append({
-                "match": {
-                    "expertise": {
-                        "query": query_expertise,
-                        "fuzziness": "AUTO"
-                    }
-                }
-            })
-
-        if query_lang and query_lang != "":
-            must_query.append({
-                "match": {
-                    "languages": {
-                        "query": query_lang,
-                        "fuzziness": "AUTO"
-                    }
-                }
-            })
-
-        if not must_query:
-            must_query = []
-
         query = {
-            "from": offset,
-            "size": size,
+            "size": 5,
             "query": {
                 "bool": {
                     # exclude the user itself from the search results
                     "must_not": [
-                        {"match": {"username": profile["username"]}}
+                        {"match": {"username": {"query": profile["username"]}}},
                     ],
-                    "filter": [
-                        {"match": {"excluded_from_matching": False}},
+                    "should": [
+                        {
+                            "match": {
+                                "bio": {"query": profile["bio"]},
+                            }
+                        },
+                        {
+                            "match": {
+                                "experience": {"query": profile["experience"]},
+                            }
+                        },
+                        {
+                            "match": {
+                                "expertise": {
+                                    "query": profile["expertise"],
+                                    "boost": 1.5,
+                                },
+                            }
+                        },
+                        {
+                            "match": {
+                                "languages": {"query": profile["languages"]},
+                            }
+                        },
+                        {
+                            "match": {
+                                "ve_interests": {
+                                    "query": profile["ve_interests"],
+                                    "boost": 2,
+                                },
+                            }
+                        },
+                        {
+                            "match": {
+                                "ve_goals": {"query": profile["ve_goals"], "boost": 2},
+                            }
+                        },
+                        {
+                            "match": {
+                                "preferred_format": {
+                                    "query": profile["preferred_format"]
+                                },
+                            }
+                        },
+                        {
+                            "match": {
+                                "research_tags": {"query": profile["research_tags"]},
+                            }
+                        },
+                        {
+                            "match": {
+                                "courses": {"query": json.dumps(profile["courses"])},
+                            }
+                        },
                     ],
-                    "must": must_query,
-                    "should": should_query,
-                    "minimum_should_match": 0
                 }
             },
         }
@@ -311,8 +237,8 @@ class ElasticsearchConnector:
             json=query,
         )
 
-        # import pprint
-        # pprint.pprint(response.json())
-        # print(len(response.json()["hits"]["hits"]))
+        import pprint
+
+        pprint.pprint(response.json())
 
         return response.json()["hits"]["hits"]

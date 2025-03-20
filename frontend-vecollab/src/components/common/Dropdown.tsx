@@ -12,7 +12,6 @@ interface Props {
           }[]
         | JSX.Element[];
     icon?: JSX.Element;
-    wrapperClassNames?: string;
     ulClasses?: string;
     onSelect?: (value: string) => void;
     isNoAuthPreview?: boolean;
@@ -21,7 +20,6 @@ interface Props {
 export default function Dropdown({
     options,
     icon = <HiDotsHorizontal />,
-    wrapperClassNames = '',
     ulClasses = '',
     onSelect,
     isNoAuthPreview = false,
@@ -54,9 +52,9 @@ export default function Dropdown({
     };
 
     return (
-        <div className={`${wrapperClassNames} inline relative`} ref={wrapperRef}>
+        <div className="inline relative" ref={wrapperRef}>
             <button
-                className="p-2 cursor-pointer"
+                className="p-2"
                 type="button"
                 onClick={() => setOpen(!open)}
                 disabled={isNoAuthPreview}
@@ -66,7 +64,7 @@ export default function Dropdown({
 
             {open && (
                 <ul
-                    className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow-sm border border-gray-200`}
+                    className={`${ulClasses} absolute z-40 right-0 left-auto p-2 rounded-md bg-white shadow border`}
                 >
                     {options.map((element, i) => {
                         return 'value' in element ? (

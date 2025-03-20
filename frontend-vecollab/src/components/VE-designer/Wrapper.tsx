@@ -81,7 +81,6 @@ export default function Wrapper({
     const { t } = useTranslation(['designer', 'common']);
 
     const [loading, setLoading] = useState(true);
-    const [formDataLoaded, setFormDataLoaded] = useState<boolean>(false);
     const [popUp, setPopUp] = useState<{
         isOpen: boolean;
         continueLink: string;
@@ -107,17 +106,13 @@ export default function Wrapper({
         isLoading,
         error,
         mutate: mutateGetPlanById,
-    } = useGetPlanById(
-        router.query.plannerId as string,
-        !isNoAuthPreview && router.query.plannerId !== undefined
-    );
+    } = useGetPlanById(router.query.plannerId as string, !isNoAuthPreview);
 
     // detect window close or a click outside of planer
     useEffect(() => {
         if (isNoAuthPreview) return;
 
         if (!router.isReady) return;
-        if (!router.query.plannerId) return;
         let clickedOutside: boolean = false;
 
         const handleClickOutside = (e: MouseEvent) => {
@@ -157,7 +152,11 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (isLoading || !session || error) return;
-        if (!router.query.plannerId) return;
+
+        if (!router.query.plannerId) {
+            router.push('/plans');
+            return;
+        }
 
         getPlanLock(socket!, router.query.plannerId).catch((response) => {
             if (response.reason === 'plan_locked') {
@@ -200,12 +199,7 @@ export default function Wrapper({
     useEffect(() => {
         if (isNoAuthPreview) return;
 
-        if (!router.isReady || isLoading || error) return;
-        if (!router.query.plannerId) {
-            // remove loader for blank new plan
-            setLoading(false);
-            return;
-        }
+        if (!plan || isLoading || error) return;
 
         let willRouteChange: boolean = false;
 
@@ -223,21 +217,17 @@ export default function Wrapper({
         };
 
         (async () => {
-            // hotfix: only reset form if not already done
-            //  otherwise we loose changes in <Select />-Components on browser tab-change (see #549)
-            if (!formDataLoaded) {
-                const data = await planerDataCallback(plan);
-                if (Object.keys(data).length) {
-                    // reset form default values for isDirty check
-                    methods.reset(data);
-                }
-                setFormDataLoaded(true);
+            const data = await planerDataCallback(plan);
+            if (Object.keys(data).length) {
+                // reset form default values for isDirty check
+                methods.reset(data);
             }
             if (idOfProgress) {
                 const progress = getProgressOfCurrentStep(plan.progress);
                 setProgressOfPlan(plan.progress);
                 if (progress) setProgressOfCurrent(progress);
             }
+            // console.log({plan});
 
             // fix: do not remove loader if we'll change the route
             setTimeout(() => {
@@ -256,33 +246,12 @@ export default function Wrapper({
         plan,
         isLoading,
         error,
-        formDataLoaded,
         planerDataCallback,
         stageInMenu,
         idOfProgress,
         methods,
         isNoAuthPreview,
     ]);
-
-    const createNewPlan = async (name: string): Promise<string> => {
-        const newPlanner = await fetchPOST(
-            '/planner/insert_empty',
-            { name: name.length > 0 ? name : t('default_new_plan_name') },
-            session?.accessToken
-        );
-
-        if (!newPlanner.inserted_id) return Promise.reject(false);
-
-        return new Promise((resolve, reject) => {
-            getPlanLock(socket!, newPlanner.inserted_id)
-                .then((response) => {
-                    resolve(newPlanner.inserted_id);
-                })
-                .catch((response) => {
-                    reject(false);
-                });
-        });
-    };
 
     // submit formdata & reload plan
     const handleSubmit = async (data: any) => {
@@ -295,39 +264,10 @@ export default function Wrapper({
             value: any;
         }[];
 
-        let plannerId = router.query.plannerId;
-
-        if (!router.query.plannerId) {
-            const newName = fields.find((a) => a.field_name == 'name')?.value;
-            const newPlanId = await createNewPlan(newName !== undefined ? newName : '');
-
-            if (!newPlanId) {
-                setAlert({
-                    message: t('alert_error_save'),
-                    type: 'error',
-                    onClose: () => {
-                        setAlert({ open: false });
-                        setLoading(false);
-                    },
-                });
-                return;
-            }
-            plannerId = newPlanId;
-            fields.map((field) => {
-                field.plan_id = plannerId as string;
-                return field;
-            });
-
-            router.query.plannerId = newPlanId;
-            await router.replace({
-                query: { plannerId: newPlanId },
-            });
-        }
-
         if (fields && Object.keys(fields).length > 0) {
             if (typeof idOfProgress === 'string') {
                 fields.push({
-                    plan_id: plannerId as string,
+                    plan_id: router.query.plannerId as string,
                     field_name: 'progress',
                     value: progressOfPlan,
                 });
@@ -339,6 +279,7 @@ export default function Wrapper({
                 session?.accessToken
             );
             if (res.success === false) {
+                console.log({ res });
                 setAlert({
                     message: t('alert_error_save'),
                     type: 'error',
@@ -363,8 +304,8 @@ export default function Wrapper({
         if (isNoAuthPreview) return;
 
         if (popUp.continueLink && popUp.continueLink != '') {
-            // user leaves the designer
             if (!popUp.continueLink.startsWith('/ve-designer')) {
+                // release plan if we leave designer
                 await dropPlanLock(socket!, router.query.plannerId);
                 // update all plans SWR to update /plans list
                 await router.push({
@@ -372,26 +313,11 @@ export default function Wrapper({
                     query: {},
                 });
             } else {
-                let plannerId = router.query.plannerId;
-                if (!router.query.plannerId) {
-                    const newPlanId = await createNewPlan('');
-                    if (!newPlanId) {
-                        setAlert({
-                            message: t('alert_error_save'),
-                            type: 'error',
-                            onClose: () => {
-                                setAlert({ open: false });
-                                setLoading(false);
-                            },
-                        });
-                        return;
-                    }
-                    plannerId = newPlanId;
-                }
-                // go to next planer-page
                 await router.push({
                     pathname: popUp.continueLink,
-                    query: { plannerId },
+                    query: popUp.continueLink.startsWith('/ve-designer')
+                        ? { plannerId: router.query.plannerId }
+                        : {},
                 });
             }
         } else {
@@ -445,11 +371,12 @@ export default function Wrapper({
     };
 
     const Breadcrumb = () => {
+        if (!plan || !plan.steps) return <></>;
         const mainMenuItem = mainMenuData[stageInMenu];
         let subMenuItem = mainMenuItem.submenu.find((a) => a.link == currentPath);
 
         if (stageInMenu == 'steps') {
-            const currentStep = plan.steps?.find((a) => currentPath.endsWith(a._id!));
+            const currentStep = plan.steps.find((a) => currentPath.endsWith(a._id!));
 
             subMenuItem = currentStep
                 ? {
@@ -461,7 +388,7 @@ export default function Wrapper({
         }
 
         return (
-            <div className="ml-10 mt-1 md:ml-0 md:mt-0 text-normale py-2 flex items-center text-slate-500">
+            <div className="text-normale py-2 flex items-center text-slate-500">
                 <MdArrowForwardIos size={15} /> {t(mainMenuItem.text)}
                 {subMenuItem && 'text' in subMenuItem && (
                     <>
@@ -485,7 +412,7 @@ export default function Wrapper({
         if (nextpage === 'undefined') return <></>;
 
         return (
-            <div className="shadow-sm flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
+            <div className="shadow flex text-white rounded-full ring-4 ring-inset ring-ve-collab-orange/50">
                 {typeof idOfProgress !== 'undefined' && (
                     <span
                         className={`group px-4 py-2 flex items-center text-slate-700 ${
@@ -517,7 +444,7 @@ export default function Wrapper({
                 <button
                     type="button"
                     title={t('save_and_continue')}
-                    className={`px-4 py-2 shadow text-white bg-ve-collab-orange cursor-pointer ${
+                    className={`px-4 py-2 shadow text-white bg-ve-collab-orange ${
                         typeof idOfProgress !== 'undefined' ? 'rounded-r-full' : 'rounded-full'
                     } ${isNoAuthPreview ? 'cursor-default' : ''}`}
                     disabled={isNoAuthPreview}
@@ -590,7 +517,7 @@ export default function Wrapper({
                         isNoAuthPreview={isNoAuthPreview}
                     />
 
-                    <div className="flex flex-row md:divide-x divide-gray-200 gap-1">
+                    <div className="flex flex-row divide-x gap-1">
                         <Sidebar
                             methods={methods}
                             submitCallback={async () => {}}
@@ -602,7 +529,7 @@ export default function Wrapper({
                         />
 
                         <form
-                            className="relative w-full px-6 pt-1 max-w-(--breakpoint-2xl) flex flex-col gap-x-4"
+                            className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
                             onSubmit={() => {}}
                         >
                             <Breadcrumb />
@@ -635,7 +562,7 @@ export default function Wrapper({
 
                             {(typeof prevpage !== 'undefined' ||
                                 typeof nextpage !== 'undefined') && (
-                                <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between">
+                                <div className="my-8 border-t py-3 flex justify-between">
                                     <div>
                                         {typeof prevpage !== 'undefined' && (
                                             <button
@@ -692,7 +619,6 @@ export default function Wrapper({
                                 const res = await handleSubmit(data);
                                 if (res) {
                                     setAlert({
-                                        type: 'success',
                                         message: t('alert_saved'),
                                         autoclose: 2000,
                                         onClose: () => setAlert({ open: false }),
@@ -708,7 +634,7 @@ export default function Wrapper({
                             }}
                         />
 
-                        <div className="relative flex flex-row md:divide-x md:divide-gray-200 gap-1">
+                        <div className="flex flex-row divide-x gap-1">
                             <Sidebar
                                 methods={methods}
                                 submitCallback={async (data) => {
@@ -724,7 +650,7 @@ export default function Wrapper({
                             />
 
                             <form
-                                className="relative w-full px-6 pt-1 max-w-(--breakpoint-2xl) flex flex-col gap-x-4"
+                                className="relative w-full px-6 pt-1 max-w-screen-2xl flex flex-col gap-x-4"
                                 onSubmit={methods.handleSubmit(
                                     // valid
                                     async (data: any) => {
@@ -755,7 +681,7 @@ export default function Wrapper({
                                             <Link
                                                 target="_blank"
                                                 href={tooltip.link}
-                                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
+                                                className="rounded-full shadow hover:bg-gray-50 p-2 mx-2"
                                             >
                                                 <PiBookOpenText
                                                     size={30}
@@ -800,13 +726,13 @@ export default function Wrapper({
 
                                 {(typeof prevpage !== 'undefined' ||
                                     typeof nextpage !== 'undefined') && (
-                                    <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between">
+                                    <div className="my-8 border-t py-3 flex justify-between">
                                         <div>
                                             {typeof prevpage !== 'undefined' && (
                                                 <button
                                                     type="button"
                                                     title={t('common:back')}
-                                                    className="px-4 py-2 shadow-sm bg-ve-collab-orange text-white rounded-full cursor-pointer hover:bg-ve-collab-orange"
+                                                    className="px-4 py-2 shadow bg-ve-collab-orange text-white rounded-full hover:bg-ve-collab-orange"
                                                     onClick={methods.handleSubmit(
                                                         // valid
                                                         async (data: any) => {
@@ -835,7 +761,7 @@ export default function Wrapper({
                                         </div>
 
                                         <div className="flex tex-center">
-                                            {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r border-gray-200'>
+                                            {/* <div className='mx-2 mr-4 px-2 pr-4 text-slate-800 text-sm flex flex-col text-right border-r'>
                                                 <span>{t("editing_state")}:</span>
 
                                                 <span className=' hover:cursor-pointer' title={t("toggle_state_hover")} onClick={e => handleClickToggleProgress()}>
