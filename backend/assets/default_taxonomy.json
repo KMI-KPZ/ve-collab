@@ -1,16 +1,6 @@
 {
     "taxonomy": [
         {
-            "parent": 58,
-            "droppable": false,
-            "text": "KoKoN Methodenkoffer",
-            "data": {
-                "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/12-methodenkoffer-kokon/"
-            },
-            "id": 59
-        },
-        {
             "parent": 33,
             "droppable": true,
             "text": "Game-based Learning",
@@ -33,6 +23,22 @@
             "droppable": true,
             "text": "Methodenkoffer",
             "id": 58
+        },
+        {
+            "parent": 33,
+            "droppable": true,
+            "text": "Controversiality in VE",
+            "id": 164
+        },
+        {
+            "parent": 58,
+            "droppable": false,
+            "text": "KoKoN Methodenkoffer",
+            "data": {
+                "description": "",
+                "url": "https://soserve.rz.uni-leipzig.de:10001/12-methodenkoffer-kokon/"
+            },
+            "id": 59
         },
         {
             "parent": 29,

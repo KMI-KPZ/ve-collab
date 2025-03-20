@@ -113,10 +113,11 @@ export default function PageCategoryNotSelected(props: Props) {
 
             {/* 4 BUBBLE */}
             {Bubble('Zusammen Lernen', 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
-                '-bottom-[.5rem] -left-[10.5rem]', // game based learning
+                '-bottom-[-2.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
-                '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
+                '-bottom-[-0.5rem] -right-[10rem]', // sprachliche aspekte
                 '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
+                '-bottom-[4rem] -left-[3rem]', // controversiality
             ])}
         </>
     );
@@ -164,6 +165,7 @@ export default function PageCategoryNotSelected(props: Props) {
 
 export async function getServerSideProps({ locale }: GetServerSidePropsContext) {
     const taxonomy = await fetchTaxonomy();
+    console.log(taxonomy)
 
     const cluster = await getTopLevelNodes(taxonomy);
     const nodes: { [key: string]: INode[] } = {};
