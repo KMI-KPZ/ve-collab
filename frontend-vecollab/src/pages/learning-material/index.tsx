@@ -108,7 +108,6 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Digitales', 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
                 '-bottom-[1rem] -right-[3.5rem]', // tools
                 '-top-[1.5rem] -left-[3rem]', // oer
-                //'top-0 -right-[4rem]', // oer
             ])}
 
             {/* 4 BUBBLE */}
