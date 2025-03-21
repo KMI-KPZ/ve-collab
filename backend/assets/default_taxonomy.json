@@ -158,12 +158,6 @@
         {
             "parent": 32,
             "droppable": true,
-            "text": "Datenschutz und Urheberrecht",
-            "id": 16
-        },
-        {
-            "parent": 32,
-            "droppable": true,
             "text": "Tools",
             "id": 34
         },
@@ -176,7 +170,7 @@
         {
             "parent": 31,
             "droppable": true,
-            "text": "VA-Planung",
+            "text": "Planning a VE",
             "id": 14
         },
         {
