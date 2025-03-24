@@ -24,7 +24,6 @@ import { dropPlanLock, getPlanLock } from '../VE-designer/PlanSocket';
 import { useTranslation } from 'next-i18next';
 import PlanIcon from '../plans/PlanIcon';
 import { FaMedal } from 'react-icons/fa';
-import { useRouter } from 'next/router';
 
 interface Props {
     plan: IPlan;
@@ -60,9 +59,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         [...plan.partners, plan.author.username],
         session!.accessToken
     );
-    const router = useRouter();
-    const planId = router.query.plannerId as string;
-    const { data: zipPlan, isLoading: isLoadingScorm } = useGetPlanAsScormById(planId);
+    const { data: zipPlan, isLoading: isLoadingScorm } = useGetPlanAsScormById(plan._id);
 
     useEffect(() => {
         if (!partnerUserSnippets?.length) return;
