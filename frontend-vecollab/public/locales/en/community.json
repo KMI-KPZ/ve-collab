@@ -366,5 +366,11 @@
         "Materials Science and Manufacturing Engineering": "Materials Science and Manufacturing Engineering",
         "Industrial Engineering": "Industrial Engineering",
         "Economics (Business Administration and Economics)": "Economics (Business Administration and Economics)"
+    },
+    "delete_profile": {
+        "title": "Delete profile",
+        "delete": "Delete now",
+        "description": "<bold>ATTENTION: If you delete your VE-Collab profile, all your data will also be deleted!</bold><br /><br />This includes all your:<br />Plans<br />Posts<br />Groups<br />Chats<br />etc.<br /><br />This cannot be undone.",
+        "confirmation": "Are you sure you want your profile and all your data to be deleted?"
     }
 }

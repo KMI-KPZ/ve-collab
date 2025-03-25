@@ -28,6 +28,7 @@ import { GetStaticPropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 import { languageKeys } from '@/data/languages';
+import EditProfileDelete from '@/components/profile/EditProfileDelete';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -383,6 +384,13 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         setExcludedFromMatching={setExcludedFromMatching}
                                         notificationSettings={notificationSettings}
                                         setNotificationSettings={setNotificationSettings}
+                                    />
+                                </div>
+                                <div tabid="DeleteProfile" tabname={t('delete_profile.title')}>
+                                    <EditProfileDelete
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
                             </VerticalTabs>

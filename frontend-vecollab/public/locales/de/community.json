@@ -367,5 +367,11 @@
         "Materials Science and Manufacturing Engineering": "Werkstoffwissenschaft und Fertigungstechnik",
         "Industrial Engineering": "Wirtschaftsingenieurwesen",
         "Economics (Business Administration and Economics)": "Wirtschaftswissenschaften (BWL und VWL)"
+    },
+    "delete_profile": {
+        "title": "Profil löschen",
+        "delete": "Jetzt löschen",
+        "description": "<bold>ACHTUNG: wenn du dein VE-Collab Profil löschst werden auch alle deine Daten gelöscht!</bold><br /><br />Dazu gehören alle deine:<br />Pläne<br />Beiträge<br />Gruppen<br />Chats<br />etc.<br /><br />Dies kann nicht rückgängig gemacht werden.",
+        "confirmation": "Bist du sicher, dass dein Profil und all deine Daten gelöscht werden sollen?"
     }
 }
