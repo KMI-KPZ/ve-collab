@@ -29,7 +29,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
         prevState: Readonly<{ activeTab: string }>,
         snapshot?: any
     ): void {
-        console.log('update ...');
+        // console.log('update ...');
     }
 
     getTabFromURL = () => {
