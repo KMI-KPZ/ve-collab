@@ -1,18 +1,12 @@
-import { Education } from '@/interfaces/profile/profileInterfaces';
-import { Dispatch, FormEvent, SetStateAction, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import EditProfileHeader from './EditProfileHeader';
 import EditProfileVerticalSpacer from './EditProfileVerticalSpacer';
-import EditProfilePlusMinusButtons from './EditProfilePlusMinusButtons';
 import EditProfileHeadline from './EditProfileHeadline';
-import EditProfileEducationItem from './EditProfileEducationItem';
-import Swapper from './Swapper';
 import { Trans, useTranslation } from 'next-i18next';
-import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
-import { getAuthOptions } from '@/pages/api/auth/[...nextauth]';
+import { signOut, useSession } from 'next-auth/react';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
 import ConfirmDialog from '../common/dialogs/Confirm';
-import Dialog from './Dialog';
-import { fetchDELETE, fetchGET } from '@/lib/backend';
+import { fetchDELETE } from '@/lib/backend';
 import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
