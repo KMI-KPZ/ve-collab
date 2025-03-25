@@ -161,7 +161,7 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-svw ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
+            <div className="w-[99svw] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
                 <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-(--breakpoint-xl) flex justify-center rounded-md drop-shadow-lg">
                     <video
                         width="320"
@@ -175,7 +175,7 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-svw ml-[50%] -translate-x-1/2 bg-white -mb-12">
+            <div className="w-[99svw] ml-[50%] -translate-x-1/2 bg-white -mb-12">
                 <div
                     className="w-5/6 mx-auto my-10 max-w-(--breakpoint-xl)"
                     id="institutional-values"
