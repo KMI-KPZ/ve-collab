@@ -1104,21 +1104,26 @@ class UserHandler(BaseHandler):
                 plans_manager.revoke_read_permissions(plan["_id"], username)
 
         def delete_posts(db):
-            # delete users posts and comments
+            # delete reposts, posts and comments of user
             # remove from likers
+            # TODO maybe delete referenzes of post in other posts should be done in Posts.delete_post() ?
             posts_manager = Posts(db)
+
+            # remove as repost
+            db.posts.update_many({"author": username, "isRepost": True}, {"$set": {
+                "author": "",
+                "text": ""
+            }})
+
+            posts = db.posts.find({"$or": [ {"author": username}, {"repostAuthor": username} ]})
+            for post in posts:
+                posts_manager.delete_post(post["_id"])
+
             db.posts.update_many({"comments.author": username}, {"$pull": {"comments": {"author": username}}})
             db.posts.update_many({"likers": {"$in": [username]}}, {"$pull": {"likers": username}})
 
-            posts = db.posts.find(({"author": username}))
-            for post in posts:
-                # TODO maybe delete referenzes of post in other posts should be done in Posts.delete_post() ?
-                posts_manager.delete_post(post["_id"])
-
-            # TODO delete re-posts?!
-
         def delete_spaces(db):
-            # delete spaces where only username is admin
+            # delete spaces of username (if only admin) and all its data
             # remove as member, admin and invites or requests from all other spaces
             space_manager = Spaces(db)
             spaces = db.spaces.find({"admins": { "$in": [username], "$size": 1} })
@@ -1138,6 +1143,8 @@ class UserHandler(BaseHandler):
             for file in files:
                 # TODO may delete file references?!
                 fs.delete(file["_id"])
+
+            # TODO may delete from space
 
         def delete_chats(db):
             # delete all messages from user and remove from members list, and may remove empty chatro0ms
