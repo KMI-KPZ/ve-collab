@@ -187,7 +187,7 @@ export default function LearningContentView(props: Props) {
                             <iframe
                                 style={{ height: frameHeight }}
                                 className="rounded-xl overflow-hidden"
-                                src={props.currentNode.data.url}
+                                src={props.currentNode.data.urls.de}
                                 ref={iframeRef}
                                 scrolling="no"
                             ></iframe>

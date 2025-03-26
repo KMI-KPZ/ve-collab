@@ -5,6 +5,7 @@ import { RxDropdownMenu } from 'react-icons/rx';
 import { FaFile } from 'react-icons/fa';
 import Dialog from '../profile/Dialog';
 import BoxHeadline from '../common/BoxHeadline';
+import { set } from 'date-fns';
 
 export type Metadata = {
     name: string;
@@ -23,7 +24,10 @@ export type Metadata = {
 
 export type CustomData = {
     description: string;
-    url: string;
+    urls: {
+        de: string;
+        en: string;
+    };
     metadata?: Metadata;
     mbr_id?: string;
 };
@@ -57,7 +61,8 @@ export const CustomNode: React.FC<Props> = (props) => {
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
+    const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
+    const [currentMaterialInputLinkEn, setCurrentMaterialInputLinkEn] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -68,7 +73,8 @@ export const CustomNode: React.FC<Props> = (props) => {
     const handleOpenMaterialDialog = () => {
         setCurrentMaterialInputName(text);
         setCurrentMaterialInputDescription(data?.description || '');
-        setCurrentMaterialInputLink(data?.url || '');
+        setCurrentMaterialInputLinkDe(data?.urls.de || '');
+        setCurrentMaterialInputLinkEn(data?.urls.en || '');
         setCurrentMaterialMetadata(data?.metadata || { name: '' });
         setIsMaterialDialogOpen(true);
     };
@@ -99,14 +105,18 @@ export const CustomNode: React.FC<Props> = (props) => {
         setLabelText(currentMaterialInputName);
         props.onChange(id, currentMaterialInputName, {
             description: currentMaterialInputDescription,
-            url: currentMaterialInputLink,
+            urls:{
+                de: currentMaterialInputLinkDe,
+                en: currentMaterialInputLinkEn,
+            },
             metadata: currentMaterialMetadata,
             mbr_id: data?.mbr_id,
         });
 
         setCurrentMaterialInputName('');
         setCurrentMaterialInputDescription('');
-        setCurrentMaterialInputLink('');
+        setCurrentMaterialInputLinkDe('');
+        setCurrentMaterialInputLinkEn('');
         setCurrentMaterialMetadata({ name: '' });
     };
 
@@ -220,14 +230,24 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink'} />
+                        <BoxHeadline title={'Einbettungslink - deutsch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
-                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLink}
-                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                                placeholder="Link zum deutschen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkDe}
+                                onChange={(e) => setCurrentMaterialInputLinkDe(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Einbettungslink - englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
+                                placeholder="Link zum englischen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkEn}
+                                onChange={(e) => setCurrentMaterialInputLinkEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />

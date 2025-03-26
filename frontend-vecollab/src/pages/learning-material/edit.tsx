@@ -38,7 +38,10 @@ export type Metadata = {
 
 export type CustomData = {
     description: string;
-    url: string;
+    urls: {
+        de: string;
+        en: string;
+    };
     metadata?: Metadata;
     mbr_id?: string;
 };
@@ -92,7 +95,10 @@ export default function Edit() {
             text: 'Material 1',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -102,7 +108,10 @@ export default function Edit() {
             text: 'Material 2',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -112,7 +121,10 @@ export default function Edit() {
             text: 'Material 3',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -128,7 +140,10 @@ export default function Edit() {
             text: 'Material 4',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
     ]);
@@ -145,7 +160,8 @@ export default function Edit() {
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
+    const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
+    const [currentMaterialInputLinkEn, setCurrentMaterialInputLinkEn] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -208,12 +224,16 @@ export default function Edit() {
             text: currentMaterialInputName,
             data: {
                 description: currentMaterialInputDescription,
-                url: currentMaterialInputLink,
+                urls: {
+                    de: currentMaterialInputLinkDe,
+                    en: currentMaterialInputLinkEn,
+                },
             },
         });
         setCurrentMaterialInputName('');
         setCurrentMaterialInputDescription('');
-        setCurrentMaterialInputLink('');
+        setCurrentMaterialInputLinkDe('');
+        setCurrentMaterialInputLinkEn('');
     };
 
     const handleSaveToBackend = () => {
@@ -380,14 +400,24 @@ export default function Edit() {
                                 onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink'} />
+                        <BoxHeadline title={'Einbettungslink - deutsch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLink}
-                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                                placeholder="Link zum deutschen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkDe}
+                                onChange={(e) => setCurrentMaterialInputLinkDe(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Einbettungslink - englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Link zum englischen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkEn}
+                                onChange={(e) => setCurrentMaterialInputLinkEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />

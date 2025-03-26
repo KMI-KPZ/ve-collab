@@ -1,6 +1,136 @@
 {
     "taxonomy": [
         {
+            "parent": 14,
+            "droppable": false,
+            "text": "Introduction",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/16-1-planning-a-ve-introduction/",
+                    "en": ""
+                }
+            },
+            "id": 171
+        },
+        {
+            "parent": 14,
+            "droppable": false,
+            "text": "Goals and learning outcomes in a VE",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/16-2-planning-a-ve-goals-and-learning-outcomes-in-a-ve/",
+                    "en": ""
+                }
+            },
+            "id": 172
+        },
+        {
+            "parent": 14,
+            "droppable": false,
+            "text": "Designing the Virtual Exchange",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/16-3-planning-a-ve-designing-the-virtual-exchange/",
+                    "en": ""
+                }
+            },
+            "id": 173
+        },
+        {
+            "parent": 14,
+            "droppable": false,
+            "text": "Summary",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/16-4-planning-a-ve-summary/",
+                    "en": ""
+                }
+            },
+            "id": 174
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "Introduction",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/tackling-tough-topics-and-controversiality-through-ve-crafting-brave-virtual-spaces/",
+                    "en": ""
+                }
+            },
+            "id": 165
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "Ambiguity Tolerance",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/14-1-ambiguity-tolerance/",
+                    "en": ""
+                }
+            },
+            "id": 166
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "(De-)Constructing Stereotypes",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/14-2-de-constructing-stereotypes/",
+                    "en": ""
+                }
+            },
+            "id": 167
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "Crafting Third Spaces with Literature",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/14-3-crafting-third-spaces-with-literature/",
+                    "en": ""
+                }
+            },
+            "id": 168
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "Crafting Brave Spaces for Respectful Discourse",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/crafting-brave-spaces-for-respectful-discourse/",
+                    "en": ""
+                }
+            },
+            "id": 169
+        },
+        {
+            "parent": 164,
+            "droppable": false,
+            "text": "Summary",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/14-6-summary-references/",
+                    "en": ""
+                }
+            },
+            "id": 170
+        },
+        {
             "parent": 33,
             "droppable": true,
             "text": "Game-based Learning",
@@ -36,7 +166,10 @@
             "text": "KoKoN Methodenkoffer",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/12-methodenkoffer-kokon/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/12-methodenkoffer-kokon/",
+                    "en": ""
+                }
             },
             "id": 59
         },
@@ -46,9 +179,12 @@
             "text": "Einstieg",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung-2/",
                 "metadata": {
                     "name": ""
+                },
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung-2/",
+                    "en": ""
                 }
             },
             "id": 53
@@ -59,7 +195,10 @@
             "text": "Ziele, Funktionen, Formen und Schwerpunkte",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte/",
+                    "en": ""
+                }
             },
             "id": 54
         },
@@ -69,7 +208,10 @@
             "text": "Evaluationsmethoden",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation/",
+                    "en": ""
+                }
             },
             "id": 55
         },
@@ -79,7 +221,10 @@
             "text": "Auswertung und Ergebnisse",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke/",
+                    "en": ""
+                }
             },
             "id": 56
         },
@@ -89,7 +234,10 @@
             "text": "Reflexion",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion/",
+                    "en": ""
+                }
             },
             "id": 57
         },
@@ -99,7 +247,10 @@
             "text": "Toolliste für virtuelle Austausche",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/8-1-liste-der-tools-fur-ve/#"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/8-1-liste-der-tools-fur-ve/#",
+                    "en": ""
+                }
             },
             "id": 49
         },
@@ -109,9 +260,12 @@
             "text": "Kontakt und Organisation",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/8-2-tools-kontakte-und-organisation/",
                 "metadata": {
                     "name": ""
+                },
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/8-2-tools-kontakte-und-organisation/",
+                    "en": ""
                 }
             },
             "id": 50
@@ -122,9 +276,12 @@
             "text": "Kollaboratives Arbeiten",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/8-3-tools-kollaboratives/",
                 "metadata": {
                     "name": ""
+                },
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/8-3-tools-kollaboratives/",
+                    "en": ""
                 }
             },
             "id": 51
@@ -135,9 +292,12 @@
             "text": "Interaktive Lernbausteine",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/8-4-tools-spielerisches/",
                 "metadata": {
                     "name": ""
+                },
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/8-4-tools-spielerisches/",
+                    "en": ""
                 }
             },
             "id": 52
@@ -148,9 +308,12 @@
             "text": "Open Educational Resources",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/9-datenschutz-und-urheberrecht/",
                 "metadata": {
                     "name": ""
+                },
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/9-datenschutz-und-urheberrecht/",
+                    "en": ""
                 }
             },
             "id": 48
@@ -209,8 +372,10 @@
             "text": "VE-Beispiele aus der Praxis",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/",
-                "mbr_id": "9d141248-b21f-40f4-a03c-71691284a39d"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/beispiele-aus-der-praxis/",
+                    "en": ""
+                }
             },
             "id": 27
         },
@@ -220,7 +385,10 @@
             "text": "VA in Englisch",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/6-3-beispiele-aus-der-praxis-lehramt-englisch/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/6-3-beispiele-aus-der-praxis-lehramt-englisch/",
+                    "en": ""
+                }
             },
             "id": 44
         },
@@ -230,7 +398,10 @@
             "text": "VA in Biologie",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/6-2-beispiele-aus-der-praxis-biologie/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/6-2-beispiele-aus-der-praxis-biologie/",
+                    "en": ""
+                }
             },
             "id": 45
         },
@@ -240,7 +411,10 @@
             "text": "VA in Ingenieurwesen",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/6-4-beispiele-aus-der-praxis-ingenieurwesen/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/6-4-beispiele-aus-der-praxis-ingenieurwesen/",
+                    "en": ""
+                }
             },
             "id": 46
         },
@@ -250,7 +424,10 @@
             "text": "VA in Global Health",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/6-1-beispiele-aus-der-praxis/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/6-1-beispiele-aus-der-praxis/",
+                    "en": ""
+                }
             },
             "id": 47
         },
@@ -260,7 +437,10 @@
             "text": "Good-Practice-Beispiele in VE-Collab",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/6-5-beispiele-aus-der-praxis-gpb/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/6-5-beispiele-aus-der-praxis-gpb/",
+                    "en": ""
+                }
             },
             "id": 61
         },
@@ -270,8 +450,10 @@
             "text": "Was ist ein Virtueller Austausch",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/",
-                "mbr_id": "2ddf3b74-2784-41a2-9e6b-96d695cdadb5"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/3-was-ist-ein-virtueller-austausch/",
+                    "en": ""
+                }
             },
             "id": 26
         },
@@ -281,7 +463,10 @@
             "text": "Merkmale virtueller Austausche",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-2-merkmale-ve/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/3-2-merkmale-ve/",
+                    "en": ""
+                }
             },
             "id": 36
         },
@@ -291,7 +476,10 @@
             "text": "Begriffsabgrenzung",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-3-begriffsabgrenzung/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/3-3-begriffsabgrenzung/",
+                    "en": ""
+                }
             },
             "id": 37
         },
@@ -301,7 +489,10 @@
             "text": "Zusammenfassung",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/3-4-va-zusammenfassung/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/3-4-va-zusammenfassung/",
+                    "en": ""
+                }
             },
             "id": 38
         },
@@ -311,11 +502,13 @@
             "text": "Einstieg",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/potenziale/",
                 "metadata": {
                     "name": ""
                 },
-                "mbr_id": "4f9e40f8-e0fe-40a3-9264-13e01d314ea8"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/potenziale/",
+                    "en": ""
+                }
             },
             "id": 21
         },
@@ -325,7 +518,10 @@
             "text": "Mehrwerte virtueller Austausche",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-potenziale-allgemeines/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/2-2-potenziale-allgemeines/",
+                    "en": ""
+                }
             },
             "id": 60
         },
@@ -335,7 +531,10 @@
             "text": "Kompetenzmodelle",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/2-2-21st-century-skills/",
+                    "en": ""
+                }
             },
             "id": 41
         },
@@ -345,7 +544,10 @@
             "text": "Reflexionsaufgabe zum Abschluss",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/2-4-potenziale-schlussreflexion/",
+                    "en": ""
+                }
             },
             "id": 43
         },
@@ -356,11 +558,13 @@
             "text": "Erfahrungsberichte zum Einstieg",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/",
                 "metadata": {
                     "name": ""
                 },
-                "mbr_id": "0f3a1cc1-8e5e-4c0f-a09b-66a8090c2711"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/herausforderungen-in-virtuellen-austauschen/",
+                    "en": ""
+                }
             }
         },
         {
@@ -369,11 +573,13 @@
             "text": "Herausforderungen als Chance - Tipps und Tricks",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/",
                 "metadata": {
                     "name": ""
                 },
-                "mbr_id": "dfb0b9bf-7eae-42da-ad0d-97fa022f5260"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/1-2-herausforderungen-in-va/",
+                    "en": ""
+                }
             },
             "id": 25
         },
@@ -407,7 +613,10 @@
             "text": "Herausforderungen - Fazit",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/1-3-herausforderungen-fazit/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/1-3-herausforderungen-fazit/",
+                    "en": ""
+                }
             },
             "id": 124
         },
@@ -417,7 +626,10 @@
             "text": "Weiterführende Literatur",
             "data": {
                 "description": "",
-                "url": "https://soserve.rz.uni-leipzig.de:10001/1-3-herausforderungen-weiterfuhrende-literatur/"
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/1-3-herausforderungen-weiterfuhrende-literatur/",
+                    "en": ""
+                }
             },
             "id": 163
         }

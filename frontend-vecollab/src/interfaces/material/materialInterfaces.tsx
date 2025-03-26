@@ -14,7 +14,10 @@ export interface IMaterialNode extends INode {
     droppable: false;
     data: {
         description: string;
-        url: string;
+        urls: {
+            de: string;
+            en: string;
+        }
     };
 }
 
