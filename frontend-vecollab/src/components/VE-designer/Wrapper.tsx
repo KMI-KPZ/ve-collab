@@ -792,15 +792,6 @@ export default function Wrapper({
                                     </>
                                 )}
 
-                                {loading && (
-                                    <>
-                                        <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
-                                        <div className="absolute left-1/2 translate-x-1/2 top-10">
-                                            <LoadingAnimation />
-                                        </div>
-                                    </>
-                                )}
-
                                 {children}
 
                                 {(typeof prevpage !== 'undefined' ||
@@ -866,6 +857,14 @@ export default function Wrapper({
                             </form>
                         </div>
                     </FormProvider>
+                    {loading && (
+                        <>
+                            <div className="absolute w-full h-full -ml-6 bg-slate-50/75 blur-lg"></div>
+                            <div className="absolute left-1/2 translate-x-1/2 top-10">
+                                <LoadingAnimation />
+                            </div>
+                        </>
+                    )}
                 </div>
             </WhiteBox>
             <Alert state={alert} />
