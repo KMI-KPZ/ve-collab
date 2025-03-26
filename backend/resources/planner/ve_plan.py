@@ -9,6 +9,11 @@ from pymongo.errors import DuplicateKeyError
 from typing import Any, Dict, List, Literal
 import tornado
 
+import logging
+import logging.handlers
+logger = logging.getLogger(__name__)
+
+
 from exceptions import (
     FileDoesntExistError,
     InvitationDoesntExistError,
@@ -1240,12 +1245,25 @@ class VEPlanResource:
         error but as a neat way to provide response feedback to an end user.
         """
 
+        # TODO may we should delete also assocciated files here?!
+        # TODO may delete assocciated invitations?!
+
         # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
         # since there logically can't be any matching plan
         try:
             _id = util.parse_object_id(_id)
         except InvalidId:
             raise PlanDoesntExistError()
+
+        fs = gridfs.GridFS(self.db)
+        plan = self.get_plan(_id)
+        if plan.evaluation_file and plan.evaluation_file["file_id"]:
+            fs.delete(plan.evaluation_file["file_id"])
+            # for file in plan.evaluation_file:
+
+        if plan.literature_files:
+            for file in plan.literature_files:
+                fs.delete(file["file_id"])
 
         result = self.db.plans.delete_one({"_id": _id})
 
