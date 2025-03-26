@@ -1135,16 +1135,16 @@ class UserHandler(BaseHandler):
             db.spaces.update_many({"members": {"$in": [username]}}, {"$pull": {"members": username}})
             db.spaces.update_many({"requests": {"$in": [username]}}, {"$pull": {"requests": username}})
             db.spaces.update_many({"invites": {"$in": [username]}}, {"$pull": {"invites": username}})
-
+            db.spaces.update_many({"files.author": username}, {"$pull": {"files": {"author": username}}})
 
         def delete_files(db):
+            # delete all files uploaded by user
+            #   the're already deleted from space!
+            # TODO may delete file references?!
             files = db.fs.files.find({"metadata.uploader": username})
             fs = gridfs.GridFS(db)
             for file in files:
-                # TODO may delete file references?!
                 fs.delete(file["_id"])
-
-            # TODO may delete from space
 
         def delete_chats(db):
             # delete all messages from user and remove from members list, and may remove empty chatro0ms
