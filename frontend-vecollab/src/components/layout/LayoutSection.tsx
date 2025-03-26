@@ -45,7 +45,7 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main
-                className={`flex-1 min-h-96 ${
+                className={`flex-1 z-[1] min-h-96 ${
                     isFrontpage ? ' bg-ve-collab-blue' : ' bg-pattern-left-blue bg-no-repeat'
                 }`}
             >
