@@ -1115,6 +1115,8 @@ class UserHandler(BaseHandler):
                 # TODO maybe delete referenzes of post in other posts should be done in Posts.delete_post() ?
                 posts_manager.delete_post(post["_id"])
 
+            # TODO delete re-posts?!
+
         def delete_spaces(db):
             # delete spaces where only username is admin
             # remove as member, admin and invites or requests from all other spaces
@@ -1170,7 +1172,7 @@ class UserHandler(BaseHandler):
             db.profiles.update_many(
                 {}, {"$pull": {"follows": username}}
             )
-            # db.profiles.delete_one({"username": username})
+            db.profiles.delete_one({"username": username})
 
         with util.get_mongodb() as db:
             delete_plans(db)
