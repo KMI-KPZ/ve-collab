@@ -1245,7 +1245,6 @@ class VEPlanResource:
         error but as a neat way to provide response feedback to an end user.
         """
 
-        # TODO may we should delete also assocciated files here?!
         # TODO may delete assocciated invitations?!
 
         # if supplied _id is no valid ObjectId, we can also raise the PlanDoesntExistError,
@@ -1259,7 +1258,6 @@ class VEPlanResource:
         plan = self.get_plan(_id)
         if plan.evaluation_file and plan.evaluation_file["file_id"]:
             fs.delete(plan.evaluation_file["file_id"])
-            # for file in plan.evaluation_file:
 
         if plan.literature_files:
             for file in plan.literature_files:
