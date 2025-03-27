@@ -104,6 +104,7 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Zusammen Planen', 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
                 '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
+                '-bottom-[.5rem] -left-[10rem]' // leitfragen Aushandlungsphase
             ])}
 
             {/* 3 BUBBLE */}

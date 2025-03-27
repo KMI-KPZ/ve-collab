@@ -1,6 +1,27 @@
 {
     "taxonomy": [
         {
+            "parent": 31,
+            "droppable": true,
+            "text": "VE-Planung",
+            "text_en": "Planning a VE",
+            "id": 14
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Evaluation",
+            "text_en": "Evaluation",
+            "id": 29
+        },
+        {
+            "parent": 31,
+            "droppable": true,
+            "text": "Leitfragen für die Aushandlungsphase",
+            "text_en": "Guiding Questions for Negiotiation Phase",
+            "id": 175
+        },
+        {
             "parent": 14,
             "droppable": false,
             "text": "Introduction",
@@ -357,20 +378,6 @@
             "text": "OER",
             "text_en": "OER",
             "id": 35
-        },
-        {
-            "parent": 31,
-            "droppable": true,
-            "text": "VE-Planung",
-            "text_en": "Planning a VE",
-            "id": 14
-        },
-        {
-            "parent": 31,
-            "droppable": true,
-            "text": "Evaluation",
-            "text_en": "Evaluation",
-            "id": 29
         },
         {
             "id": 8,
