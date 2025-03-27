@@ -391,7 +391,7 @@ export default function Edit() {
                         handleCloseMaterialDialog();
                     }}
                 >
-                    <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
+                    <div className="w-[40rem] h-[50rem] overflow-y-auto content-scrollbar relative">
                         <BoxHeadline title={'Name'} />
                         <div className="mb-10">
                             <input
