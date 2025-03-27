@@ -37,7 +37,7 @@ export default function BubbleSelected(props: Props) {
                 contentChildren={
                     <>
                         <div className="my-6 -mx-4 px-6 text-3xl font-semibold text-slate-600">
-                            Module & Kapitel
+                            {t('modules_and_chapters')}
                         </div>
 
                         {/* <div className='my-6 -mx-4 text-3xl font-semibold text-slate-600 underline decoration-ve-collab-blue decoration-3 underline-offset-6'>
@@ -60,14 +60,15 @@ export default function BubbleSelected(props: Props) {
                                             <Link
                                                 href={`/learning-material/${router.query.cluster}/${node.text}`}
                                             >
-                                                {node.text}
+                                                {router.locale === 'en' && node.text_en
+                                                    ? node.text_en
+                                                    : node.text}
                                             </Link>
                                         </div>
                                         <ul className="">
                                             {node.lections.length == 0 && (
                                                 <div className="italic my-2 text-wrap">
-                                                    Leider gibt es noch keine Inhalte für dieses
-                                                    Modul
+                                                    {t('no_content_yet')}
                                                 </div>
                                             )}
                                             {node.lections.map((lection) => (
@@ -81,7 +82,10 @@ export default function BubbleSelected(props: Props) {
                                                     >
                                                         <RxDot />
                                                         <div className="mx-3 py-1 max-w-full truncate">
-                                                            {lection.text}
+                                                            {router.locale === 'en' &&
+                                                            lection.text_en
+                                                                ? lection.text_en
+                                                                : lection.text}
                                                         </div>
                                                     </Link>
                                                 </li>

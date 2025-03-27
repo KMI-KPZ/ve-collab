@@ -5,6 +5,7 @@ export interface INode {
     parent: number;
     droppable: boolean;
     text: string;
+    text_en: string;
     data?: Record<string, any>;
 }
 
@@ -14,7 +15,10 @@ export interface IMaterialNode extends INode {
     droppable: false;
     data: {
         description: string;
-        url: string;
+        urls: {
+            de: string;
+            en: string;
+        }
     };
 }
 
