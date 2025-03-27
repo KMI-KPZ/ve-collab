@@ -79,7 +79,9 @@ export default function PageCategoryNotSelected(props: Props) {
                                 href={`/learning-material/${querySlug}/${props.nodes[querySlug][i]?.text}`}
                                 className={`${styleBubbleLeaf} ${style}`}
                             >
-                                {props.nodes[querySlug][i]?.text}
+                                {router.locale === 'en' && props.nodes[querySlug][i]?.text_en
+                                    ? props.nodes[querySlug][i]?.text_en
+                                    : props.nodes[querySlug][i]?.text}
                             </Link>
                         )}
                     </div>

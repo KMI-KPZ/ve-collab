@@ -4,6 +4,7 @@
             "parent": 14,
             "droppable": false,
             "text": "Introduction",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -17,6 +18,7 @@
             "parent": 14,
             "droppable": false,
             "text": "Goals and learning outcomes in a VE",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -30,6 +32,7 @@
             "parent": 14,
             "droppable": false,
             "text": "Designing the Virtual Exchange",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -43,6 +46,7 @@
             "parent": 14,
             "droppable": false,
             "text": "Summary",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -56,6 +60,7 @@
             "parent": 164,
             "droppable": false,
             "text": "Introduction",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -69,6 +74,7 @@
             "parent": 164,
             "droppable": false,
             "text": "Ambiguity Tolerance",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -82,6 +88,7 @@
             "parent": 164,
             "droppable": false,
             "text": "(De-)Constructing Stereotypes",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -95,6 +102,7 @@
             "parent": 164,
             "droppable": false,
             "text": "Crafting Third Spaces with Literature",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -108,6 +116,7 @@
             "parent": 164,
             "droppable": false,
             "text": "Crafting Brave Spaces for Respectful Discourse",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -121,6 +130,7 @@
             "parent": 164,
             "droppable": false,
             "text": "Summary",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -134,36 +144,42 @@
             "parent": 33,
             "droppable": true,
             "text": "Game-based Learning",
+            "text_en": "Game-based Learning",
             "id": 17
         },
         {
             "parent": 33,
             "droppable": true,
             "text": "kulturelle Aspekte",
+            "text_en": "Cultural Aspects",
             "id": 19
         },
         {
             "parent": 33,
             "droppable": true,
             "text": "sprachliche Aspekte",
+            "text_en": "Linguistic Aspects",
             "id": 20
         },
         {
             "parent": 33,
             "droppable": true,
             "text": "Methodenkoffer",
+            "text_en": "Method Box",
             "id": 58
         },
         {
             "parent": 33,
             "droppable": true,
-            "text": "Controversiality in VE",
+            "text": "Kontroverses in VE",
+            "text_en": "Controversiality in VE",
             "id": 164
         },
         {
             "parent": 58,
             "droppable": false,
             "text": "KoKoN Methodenkoffer",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -177,6 +193,7 @@
             "parent": 29,
             "droppable": false,
             "text": "Einstieg",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -193,6 +210,7 @@
             "parent": 29,
             "droppable": false,
             "text": "Ziele, Funktionen, Formen und Schwerpunkte",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -206,6 +224,7 @@
             "parent": 29,
             "droppable": false,
             "text": "Evaluationsmethoden",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -219,6 +238,7 @@
             "parent": 29,
             "droppable": false,
             "text": "Auswertung und Ergebnisse",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -232,6 +252,7 @@
             "parent": 29,
             "droppable": false,
             "text": "Reflexion",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -245,6 +266,7 @@
             "parent": 34,
             "droppable": false,
             "text": "Toolliste für virtuelle Austausche",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -258,6 +280,7 @@
             "parent": 34,
             "droppable": false,
             "text": "Kontakt und Organisation",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -274,6 +297,7 @@
             "parent": 34,
             "droppable": false,
             "text": "Kollaboratives Arbeiten",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -290,6 +314,7 @@
             "parent": 34,
             "droppable": false,
             "text": "Interaktive Lernbausteine",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -306,6 +331,7 @@
             "parent": 35,
             "droppable": false,
             "text": "Open Educational Resources",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -322,54 +348,63 @@
             "parent": 32,
             "droppable": true,
             "text": "Tools",
+            "text_en": "Tools",
             "id": 34
         },
         {
             "parent": 32,
             "droppable": true,
             "text": "OER",
+            "text_en": "OER",
             "id": 35
         },
         {
             "parent": 31,
             "droppable": true,
-            "text": "Planning a VE",
+            "text": "VE-Planung",
+            "text_en": "Planning a VE",
             "id": 14
         },
         {
             "parent": 31,
             "droppable": true,
             "text": "Evaluation",
+            "text_en": "Evaluation",
             "id": 29
         },
         {
             "id": 8,
             "parent": 30,
             "droppable": true,
-            "text": "Einführung"
+            "text": "Einführung",
+            "text_en": "Introduction"
         },
         {
             "parent": 30,
             "droppable": true,
             "text": "Potenziale",
+            "text_en": "Potentials",
             "id": 11
         },
         {
             "id": 1,
             "parent": 30,
             "droppable": true,
-            "text": "Herausforderungen"
+            "text": "Herausforderungen",
+            "text_en": "Challenges"
         },
         {
             "parent": 30,
             "droppable": true,
             "text": "Beispiele aus der Praxis",
+            "text_en": "Practical Examples",
             "id": 12
         },
         {
             "parent": 12,
             "droppable": false,
             "text": "VE-Beispiele aus der Praxis",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -383,6 +418,7 @@
             "parent": 12,
             "droppable": false,
             "text": "VA in Englisch",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -396,6 +432,7 @@
             "parent": 12,
             "droppable": false,
             "text": "VA in Biologie",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -409,6 +446,7 @@
             "parent": 12,
             "droppable": false,
             "text": "VA in Ingenieurwesen",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -422,6 +460,7 @@
             "parent": 12,
             "droppable": false,
             "text": "VA in Global Health",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -435,6 +474,7 @@
             "parent": 12,
             "droppable": false,
             "text": "Good-Practice-Beispiele in VE-Collab",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -448,6 +488,7 @@
             "parent": 8,
             "droppable": false,
             "text": "Was ist ein Virtueller Austausch",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -461,6 +502,7 @@
             "parent": 8,
             "droppable": false,
             "text": "Merkmale virtueller Austausche",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -474,6 +516,7 @@
             "parent": 8,
             "droppable": false,
             "text": "Begriffsabgrenzung",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -487,6 +530,7 @@
             "parent": 8,
             "droppable": false,
             "text": "Zusammenfassung",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -500,6 +544,7 @@
             "parent": 11,
             "droppable": false,
             "text": "Einstieg",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -516,6 +561,7 @@
             "parent": 11,
             "droppable": false,
             "text": "Mehrwerte virtueller Austausche",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -529,6 +575,7 @@
             "parent": 11,
             "droppable": false,
             "text": "Kompetenzmodelle",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -542,6 +589,7 @@
             "parent": 11,
             "droppable": false,
             "text": "Reflexionsaufgabe zum Abschluss",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -556,6 +604,7 @@
             "parent": 1,
             "droppable": false,
             "text": "Erfahrungsberichte zum Einstieg",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -571,6 +620,7 @@
             "parent": 1,
             "droppable": false,
             "text": "Herausforderungen als Chance - Tipps und Tricks",
+            "text_en": "",
             "data": {
                 "description": "",
                 "metadata": {
@@ -587,30 +637,35 @@
             "parent": 0,
             "droppable": true,
             "text": "Grundlagen",
+            "text_en": "Basic",
             "id": 30
         },
         {
             "parent": 0,
             "droppable": true,
             "text": "Zusammen Planen",
+            "text_en": "Plan together",
             "id": 31
         },
         {
             "parent": 0,
             "droppable": true,
             "text": "Digitales",
+            "text_en": "Digital",
             "id": 32
         },
         {
             "parent": 0,
             "droppable": true,
             "text": "Zusammen Lernen",
+            "text_en": "Learn together",
             "id": 33
         },
         {
             "parent": 1,
             "droppable": false,
             "text": "Herausforderungen - Fazit",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {
@@ -624,6 +679,7 @@
             "parent": 1,
             "droppable": false,
             "text": "Weiterführende Literatur",
+            "text_en": "",
             "data": {
                 "description": "",
                 "urls": {

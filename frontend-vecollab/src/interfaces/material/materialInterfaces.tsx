@@ -5,6 +5,7 @@ export interface INode {
     parent: number;
     droppable: boolean;
     text: string;
+    text_en: string;
     data?: Record<string, any>;
 }
 

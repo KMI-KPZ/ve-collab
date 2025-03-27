@@ -5,7 +5,6 @@ import { RxDropdownMenu } from 'react-icons/rx';
 import { FaFile } from 'react-icons/fa';
 import Dialog from '../profile/Dialog';
 import BoxHeadline from '../common/BoxHeadline';
-import { set } from 'date-fns';
 
 export type Metadata = {
     name: string;
@@ -37,6 +36,7 @@ export type NodeModel<T = unknown> = {
     parent: number;
     droppable?: boolean;
     text: string;
+    text_en: string;
     data?: T;
 };
 
@@ -47,18 +47,19 @@ type Props = {
     onToggle: (id: NodeModel['id']) => void;
     onDelete: (id: NodeModel['id']) => void;
     onCopy: (id: NodeModel['id']) => void;
-    onChange: (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => void;
+    onChange: (id: NodeModel['id'], textUpdate: string, textEnUpdate: string, dataUpdate?: CustomData) => void;
 };
 
 export const CustomNode: React.FC<Props> = (props) => {
     const [hover, setHover] = useState<boolean>(false);
-    const { id, parent, droppable, text, data } = props.node;
+    const { id, parent, droppable, text, text_en, data } = props.node;
     const [visibleInput, setVisibleInput] = useState(false);
     const [labelText, setLabelText] = useState(text);
     const indent = props.depth * 24;
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputNameEn, setCurrentMaterialInputNameEn] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
     const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
@@ -72,6 +73,7 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleOpenMaterialDialog = () => {
         setCurrentMaterialInputName(text);
+        setCurrentMaterialInputNameEn(text_en);
         setCurrentMaterialInputDescription(data?.description || '');
         setCurrentMaterialInputLinkDe(data?.urls.de || '');
         setCurrentMaterialInputLinkEn(data?.urls.en || '');
@@ -103,7 +105,7 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleEditMaterial = () => {
         setLabelText(currentMaterialInputName);
-        props.onChange(id, currentMaterialInputName, {
+        props.onChange(id, currentMaterialInputName, currentMaterialInputNameEn, {
             description: currentMaterialInputDescription,
             urls:{
                 de: currentMaterialInputLinkDe,
@@ -114,6 +116,7 @@ export const CustomNode: React.FC<Props> = (props) => {
         });
 
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputNameEn('');
         setCurrentMaterialInputDescription('');
         setCurrentMaterialInputLinkDe('');
         setCurrentMaterialInputLinkEn('');
@@ -122,7 +125,7 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleSubmit = () => {
         setVisibleInput(false);
-        props.onChange(id, labelText);
+        props.onChange(id, labelText, text_en);
     };
 
     const dragOverProps = useDragOver(id, props.isOpen, props.onToggle as any);
@@ -218,6 +221,16 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 placeholder="Name des Lehrinhalts"
                                 value={currentMaterialInputName}
                                 onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Name - Englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
+                                placeholder="Name des englischen Lehrinhalts"
+                                value={currentMaterialInputNameEn}
+                                onChange={(e) => setCurrentMaterialInputNameEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Kurzbeschreibung'} />

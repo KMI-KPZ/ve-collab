@@ -42,19 +42,18 @@ export default function PageCategorySelected(props: Props) {
                             <>
                                 <LoadingAnimation />
                                 <p className="mt-8">
-                                    Sie werden automatisch zum 1. Kapitel weitergeleitet, falls dies
-                                    nicht funktioniert, klicken Sie bitte{' '}
+                                    {t('redirecting_to_first_chapter')}
                                     <a
                                         className="underline text-ve-collab-blue"
                                         href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
                                     >
-                                        hier
+                                        {t("here")}
                                     </a>
                                 </p>
                             </>
                         ) : (
                             <div className="italic">
-                                Leider gibt es noch keine Inhalte für dieses Modul
+                                {t("no_content_yet")}
                             </div>
                         )}
                     </div>
