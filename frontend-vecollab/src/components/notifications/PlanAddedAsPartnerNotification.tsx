@@ -67,7 +67,10 @@ export default function PlanAddedAsPartnerNotification({
                     </p>
                     <p>
                         {t('notifications.plan_added_as_partner.text3')}
-                        <Link href={`/plan/${notification.payload.plan_id}`} className="underline">
+                        <Link
+                            href={`/ve-designer/name?plannerId=${notification.payload.plan_id}`}
+                            className="underline"
+                        >
                             {t('here')}
                         </Link>
                         {t('notifications.plan_added_as_partner.text4')}

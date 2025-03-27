@@ -30,6 +30,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 import CustomHead from '@/components/metaData/CustomHead';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -246,9 +247,9 @@ export default function StepNames({ socket }: Props): JSX.Element {
                         .map((plan, i) => (
                             <div key={i}>
                                 <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
-                                    <MdNewspaper />
+                                    <PlanIcon />
                                     <Link
-                                        className="text-xl font-bold grow-0 group"
+                                        className="text-xl font-bold grow-0 group truncate"
                                         href={`/plan/${plan._id}`}
                                         target="_blank"
                                     >
@@ -296,7 +297,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <div className="ml-auto text-right pt-4">
                     <button
                         type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg cursor-pointer"
                         onClick={() => setIsImportStepsDialogOpen(false)}
                     >
                         {t('common:cancel')}
@@ -318,7 +319,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <div className="shadow rounded px-2 py-4 my-4">
+                        <div className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -402,7 +403,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
                                             }}
@@ -456,7 +457,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 </div>
                                 <div className="flex items-center mr-6">
                                     <Image
-                                        className="mx-2"
+                                        className="mx-2 cursor-grab"
                                         {...provided.dragHandleProps}
                                         src={iconUpAndDown}
                                         width={20}
@@ -507,16 +508,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Dialog
-                    isOpen={isImportStepsDialogOpen}
-                    title={t('step-names.import_phases')}
-                    onClose={() => setIsImportStepsDialogOpen(false)}
-                >
-                    <div className="w-[40vw]">
-                        <ImportStepsDialog />
-                    </div>
-                </Dialog>
-
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="stepNames-items">
                         {(provided: DroppableProvided) => (
@@ -529,7 +520,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 </DragDropContext>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {
@@ -540,7 +531,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
 
                     <button
-                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue cursor-pointer hover:bg-ve-collab-blue/20"
                         type="button"
                         title={t('step-names.import_phases')}
                         onClick={() => openStepsImportDialog()}
@@ -549,6 +540,15 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
                 </div>
             </Wrapper>
+            <Dialog
+                isOpen={isImportStepsDialogOpen}
+                title={t('step-names.import_phases')}
+                onClose={() => setIsImportStepsDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
+            </Dialog>
         </>
     );
 }
@@ -584,7 +584,7 @@ export function StepNamesNoAuthPreview() {
                 {Array(3)
                     .fill(null)
                     .map((_, index) => (
-                        <div key={index} className="shadow rounded px-2 py-4 my-4">
+                        <div key={index} className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -633,7 +633,7 @@ export function StepNamesNoAuthPreview() {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={() => {}}
                                         />
                                     </div>
@@ -661,7 +661,7 @@ export function StepNamesNoAuthPreview() {
 
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {}}
@@ -681,7 +681,7 @@ export function StepNamesNoAuthPreview() {
                     </button>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
         </div>
     );
 }

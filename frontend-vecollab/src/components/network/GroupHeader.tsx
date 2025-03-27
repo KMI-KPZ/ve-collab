@@ -16,7 +16,7 @@ import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
 import Dropdown from '../common/Dropdown';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import VerticalTabs from '../profile/VerticalTabs';
 
 interface Props {
@@ -321,7 +321,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                         <div className="flex flex-nowrap">
                             <div
                                 className={
-                                    'flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow w-[180px] h-[180px]'
+                                    'flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow-sm w-[180px] h-[180px]'
                                 }
                             >
                                 <AuthenticatedImage
@@ -412,7 +412,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 <></>
                                             )}
                                         </Dialog>
-                                        <div className="mx-6 flex flex-grow items-center">
+                                        <div className="mx-6 flex grow items-center">
                                             <div className="w-full">
                                                 <div
                                                     className={
@@ -482,7 +482,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             {t('no_requests')}
                                         </div>
                                     )}
-                                    <div className="divide-y">
+                                    <div className="divide-y divide-gray-200">
                                         {group.requests.map((requestUser, index) => (
                                             <div key={index} className="flex py-2 justify-between">
                                                 <div className="flex cursor-pointer">
@@ -526,7 +526,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 <div className="flex items-center">
                                                     <button
                                                         className={
-                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                            'h-10 bg-transparent border border-green-600 text-green-600 px-4 mx-2 rounded-lg shadow-xl cursor-pointer'
                                                         }
                                                         onClick={(e) => acceptRequest(requestUser)}
                                                     >
@@ -534,7 +534,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     </button>
                                                     <button
                                                         className={
-                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl'
+                                                            'h-10 bg-transparent border border-red-600 text-red-600 px-4 mx-2 rounded-lg shadow-xl cursor-pointer'
                                                         }
                                                         onClick={(e) => declineRequest(requestUser)}
                                                     >
@@ -555,11 +555,11 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             placeholder={t('common:search_users')}
                                             getOptionLabel={(option) => option.label}
                                             formatCreateLabel={(inputValue) => (
-                                                <span>
-                                                    {t('common:search_users_no_hit', {
-                                                        value: inputValue,
-                                                    })}
-                                                </span>
+                                                <Trans
+                                                    i18nKey="common:search_users_no_hit"
+                                                    components={{ bold: <strong /> }}
+                                                    values={{ value: inputValue }}
+                                                />
                                             )}
                                         />
                                         <div className="flex w-1/4 justify-center">
@@ -585,7 +585,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 {t('no_pending_invitations')}
                                             </div>
                                         )}
-                                        <div className="divide-y">
+                                        <div className="divide-y divide-gray-200">
                                             {group.invites.map((inviteUser, index) => (
                                                 <div
                                                     key={index}
@@ -829,7 +829,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                                 </div>
                                                                 <button
                                                                     className={
-                                                                        'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                                                        'mt-2 bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'
                                                                     }
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
@@ -853,7 +853,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 {t('message_last_user_in_space')}
                                             </p>
                                             <button
-                                                className={`h-12 border text-white py-3 px-6 rounded-lg shadow ${
+                                                className={`h-12 border border-gray-200 text-white py-3 px-6 rounded-lg shadow cursor-pointer ${
                                                     group.members.length == 1
                                                         ? 'bg-orange-300'
                                                         : 'bg-orange-600'
@@ -878,7 +878,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                 </p>
                                                 <button
                                                     className={
-                                                        'h-12 bg-red-500 border text-white py-3 px-6 rounded-lg shadow'
+                                                        'h-12 bg-red-500 border  border-gray-200 text-white py-3 px-6 rounded-lg shadow-sm cursor-pointer'
                                                     }
                                                     onClick={(e) => {
                                                         e.preventDefault();

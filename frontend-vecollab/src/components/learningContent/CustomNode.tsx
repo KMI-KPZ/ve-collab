@@ -23,7 +23,10 @@ export type Metadata = {
 
 export type CustomData = {
     description: string;
-    url: string;
+    urls: {
+        de: string;
+        en: string;
+    };
     metadata?: Metadata;
     mbr_id?: string;
 };
@@ -33,6 +36,7 @@ export type NodeModel<T = unknown> = {
     parent: number;
     droppable?: boolean;
     text: string;
+    text_en: string;
     data?: T;
 };
 
@@ -43,21 +47,23 @@ type Props = {
     onToggle: (id: NodeModel['id']) => void;
     onDelete: (id: NodeModel['id']) => void;
     onCopy: (id: NodeModel['id']) => void;
-    onChange: (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => void;
+    onChange: (id: NodeModel['id'], textUpdate: string, textEnUpdate: string, dataUpdate?: CustomData) => void;
 };
 
 export const CustomNode: React.FC<Props> = (props) => {
     const [hover, setHover] = useState<boolean>(false);
-    const { id, parent, droppable, text, data } = props.node;
+    const { id, parent, droppable, text, text_en, data } = props.node;
     const [visibleInput, setVisibleInput] = useState(false);
     const [labelText, setLabelText] = useState(text);
     const indent = props.depth * 24;
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputNameEn, setCurrentMaterialInputNameEn] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
+    const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
+    const [currentMaterialInputLinkEn, setCurrentMaterialInputLinkEn] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -67,8 +73,10 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleOpenMaterialDialog = () => {
         setCurrentMaterialInputName(text);
+        setCurrentMaterialInputNameEn(text_en);
         setCurrentMaterialInputDescription(data?.description || '');
-        setCurrentMaterialInputLink(data?.url || '');
+        setCurrentMaterialInputLinkDe(data?.urls.de || '');
+        setCurrentMaterialInputLinkEn(data?.urls.en || '');
         setCurrentMaterialMetadata(data?.metadata || { name: '' });
         setIsMaterialDialogOpen(true);
     };
@@ -97,22 +105,27 @@ export const CustomNode: React.FC<Props> = (props) => {
 
     const handleEditMaterial = () => {
         setLabelText(currentMaterialInputName);
-        props.onChange(id, currentMaterialInputName, {
+        props.onChange(id, currentMaterialInputName, currentMaterialInputNameEn, {
             description: currentMaterialInputDescription,
-            url: currentMaterialInputLink,
+            urls:{
+                de: currentMaterialInputLinkDe,
+                en: currentMaterialInputLinkEn,
+            },
             metadata: currentMaterialMetadata,
             mbr_id: data?.mbr_id,
         });
 
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputNameEn('');
         setCurrentMaterialInputDescription('');
-        setCurrentMaterialInputLink('');
+        setCurrentMaterialInputLinkDe('');
+        setCurrentMaterialInputLinkEn('');
         setCurrentMaterialMetadata({ name: '' });
     };
 
     const handleSubmit = () => {
         setVisibleInput(false);
-        props.onChange(id, labelText);
+        props.onChange(id, labelText, text_en);
     };
 
     const dragOverProps = useDragOver(id, props.isOpen, props.onToggle as any);
@@ -210,6 +223,16 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 onChange={(e) => setCurrentMaterialInputName(e.target.value)}
                             />
                         </div>
+                        <BoxHeadline title={'Name - Englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
+                                placeholder="Name des englischen Lehrinhalts"
+                                value={currentMaterialInputNameEn}
+                                onChange={(e) => setCurrentMaterialInputNameEn(e.target.value)}
+                            />
+                        </div>
                         <BoxHeadline title={'Kurzbeschreibung'} />
                         <div className="mb-10">
                             <textarea
@@ -220,14 +243,24 @@ export const CustomNode: React.FC<Props> = (props) => {
                                 onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink'} />
+                        <BoxHeadline title={'Einbettungslink - deutsch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
-                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLink}
-                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                                placeholder="Link zum deutschen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkDe}
+                                onChange={(e) => setCurrentMaterialInputLinkDe(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Einbettungslink - englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1 mx-2"
+                                placeholder="Link zum englischen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkEn}
+                                onChange={(e) => setCurrentMaterialInputLinkEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />
@@ -449,7 +482,7 @@ export const CustomNode: React.FC<Props> = (props) => {
                         </button>
                         <button
                             className={
-                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={(e) => {
                                 handleEditMaterial();

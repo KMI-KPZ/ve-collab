@@ -32,7 +32,7 @@ export default function PersonalData({ profile, isOwnProfile }: Props) {
                 </div>
             )}
             {!hasBio && !hasExpertise && !hasBirthday && !hasLanguage && <NoItemAvailable />}
-            <ul className={'mx-2 px-1 divide-y'}>
+            <ul className={'mx-2 px-1 divide-y divide-gray-200'}>
                 {hasBio && (
                     <li className={'pb-4'}>
                         <div className={'text-sm my-1'}>{profile.bio}</div>

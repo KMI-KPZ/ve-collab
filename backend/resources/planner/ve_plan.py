@@ -32,6 +32,7 @@ from model import (
 )
 from resources.notifications import NotificationResource
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.profile import Profiles
 import util
 
 
@@ -635,16 +636,6 @@ class VEPlanResource:
                             "checklist",
                         )
 
-                    # ensure that the username is also a partner of the plan
-                    if not self._check_user_is_author_or_partner(
-                        plan_id, checklist_item["username"]
-                    ):
-                        raise ValueError(
-                            "username '{}' in checklist is not a partner of the plan".format(
-                                checklist_item["username"]
-                            )
-                        )
-
                     # ensure that any other values are of type bool or None
                     for attr, value in checklist_item.items():
                         if attr != "username":
@@ -706,19 +697,26 @@ class VEPlanResource:
         # - the partners will automatically gain write access to the plan
         # - when they are added the first time, a notification will be dispatched to them
         if field_name == "partners":
+            profile_manager = Profiles(self.db)
             plan_state = self.get_plan(plan_id)
 
             # get the partners that are not already in the write_access list
             partners = list(set(value_copy) - set(plan_state.write_access))
 
-            if partners:
+            # remove users that are not real users
+            not_existing_users = list(set(partners) - set(
+                [elem["username"] for elem in profile_manager.get_bulk_profiles(partners)]
+            ))
+            partners_existing  = list(set(partners) - set(not_existing_users))
+
+            if partners_existing:
                 # add the partners to the write_access list
                 self.db.plans.update_one(
                     {"_id": plan_id},
                     {
                         "$addToSet": {
-                            "write_access": {"$each": partners},
-                            "read_access": {"$each": partners},
+                            "write_access": {"$each": partners_existing},
+                            "read_access": {"$each": partners_existing},
                         }
                     },
                 )
@@ -737,7 +735,7 @@ class VEPlanResource:
                 # everywhere
                 tornado.ioloop.IOLoop.current().add_callback(
                     _notification_send,
-                    partners,
+                    partners_existing,
                     {
                         "plan_id": plan_id,
                         "plan_name": plan_state.name,
@@ -1042,6 +1040,7 @@ class VEPlanResource:
         plan_copy.author = new_author if new_author is not None else plan.author
         plan_copy.read_access = [plan_copy.author]
         plan_copy.write_access = [plan_copy.author]
+        plan_copy.is_good_practise = False
 
         # insert the copy into the db
         return self.insert_plan(plan_copy)
@@ -1164,6 +1163,66 @@ class VEPlanResource:
             raise PlanDoesntExistError()
 
         # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
+
+    def add_partner(self, plan_id: str | ObjectId, username: str) -> None:
+        """
+        Add username as partner to a plan, set readt/write access, add user in checklist, avaluation, individual_learning_goals
+        """
+
+        try:
+            plan_id = util.parse_object_id(plan_id)
+        except InvalidId:
+            raise PlanDoesntExistError()
+
+        try:
+            plan = self.get_plan(plan_id)
+        except:
+            raise PlanDoesntExistError()
+
+        partners = plan.partners
+        partners.append(username)
+        self.update_field(
+            plan_id,
+            "partners",
+            partners
+        )
+
+        individual_learning_goals = [a.to_dict() for a in plan.individual_learning_goals]
+        individual_learning_goals.append({
+            'username': username,
+            'learning_goal': None
+        })
+        self.update_field(
+            plan_id,
+            "individual_learning_goals",
+            individual_learning_goals
+        )
+
+        checklist = plan.checklist
+        checklist.append({'username': username})
+        self.update_field(
+            plan_id,
+            "checklist",
+            checklist
+        )
+
+        evaluation = [a.to_dict() for a in plan.evaluation]
+        evaluation.append({
+            'username': 'test_user',
+            'is_graded': False,
+            'task_type': None,
+            'assessment_type': None,
+            'evaluation_before': '',
+            'evaluation_while': None,
+            'evaluation_after': None
+        })
+        self.update_field(
+            plan_id,
+            "evaluation",
+            evaluation
+        )
+
         self._update_elastic_plan(plan_id)
 
     def delete_plan(

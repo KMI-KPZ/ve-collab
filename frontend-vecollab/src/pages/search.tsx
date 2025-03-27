@@ -17,10 +17,9 @@ import useDynamicPlaceholder from '@/components/common/useDynamicPlaceholder';
 import H2 from '@/components/common/H2';
 import Link from 'next/link';
 import { FaMedal } from 'react-icons/fa';
-import { TbFileText } from 'react-icons/tb';
 import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
 import { useSession } from 'next-auth/react';
-import { INode } from '@/interfaces/material/materialInterfaces';
+import PlanIcon from '@/components/plans/PlanIcon';
 
 SearchResult.auth = true;
 SearchResult.autoForward = true;
@@ -148,7 +147,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_plans')} ({data.plans.length})
                             </H2>
-                            <div className="m-2">
+                            <div className="m-2 max-w-[90vw]">
                                 {data.plans.map((plan, i) => {
                                     if (i > plansPagination) return;
                                     if (i == plansPagination) {
@@ -172,22 +171,21 @@ export default function SearchResult() {
                                     return (
                                         <div
                                             key={plan._id}
-                                            className="flex flex-col p-4 mb-4 bg-white rounded shadow hover:bg-slate-50"
+                                            className="flex flex-col p-4 mb-4 bg-white rounded-sm shadow-sm hover:bg-slate-50"
                                         >
                                             <Timestamp
                                                 timestamp={plan.last_modified}
                                                 className="text-sm text-slate-650 italic"
                                             />
-                                            <div className="flex flex-row items-center my-1">
+                                            <div className="flex flex-row flex-wrap items-center my-1 truncate">
                                                 <div className="grow flex items-center truncate">
                                                     <Link
                                                         href={`/plan/${plan._id}`}
                                                         className="group/ve-item flex items-center font-bold text-lg truncate"
                                                     >
-                                                        <TbFileText
-                                                            className="flex-none inline mr-2 p-1 border border-gray-600 rounded-full"
-                                                            size={30}
-                                                        />{' '}
+                                                        <span className="mr-1 mb-1 group-hover/ve-item:text-ve-collab-orange">
+                                                            <PlanIcon />
+                                                        </span>
                                                         <span className="flex flex-col truncate">
                                                             <span className="flex items-center">
                                                                 <span className="truncate group-hover/ve-item:text-ve-collab-orange">
@@ -243,7 +241,7 @@ export default function SearchResult() {
                                             href={`/learning-material/${
                                                 (learningModule.cluster.id % 10) + 1
                                             }`}
-                                            className="relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow"
+                                            className="relative h-14 w-14 px-2 flex items-center justify-center rounded-full bg-footer-pattern bg-center shadow-sm"
                                         >
                                             {getClusterIconBySlug(learningModule.cluster.text)({
                                                 size: 30,
@@ -308,7 +306,7 @@ export default function SearchResult() {
                             <H2>
                                 {t('search_result_groups')} ({data.spaces.length})
                             </H2>
-                            <div className="flex m-2">
+                            <div className="flex flex-wrap m-2">
                                 {data.spaces.map((space, i) => {
                                     return (
                                         <a
@@ -353,7 +351,7 @@ export default function SearchResult() {
                                     return (
                                         <div
                                             key={i}
-                                            className="p-4 mb-4 bg-white rounded shadow hover:cursor-pointer hover:bg-slate-50"
+                                            className="p-4 mb-4 bg-white rounded-sm shadow-sm hover:cursor-pointer hover:bg-slate-50"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 router.push(`/post/${post._id}`);

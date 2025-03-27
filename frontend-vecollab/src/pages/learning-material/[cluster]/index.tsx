@@ -37,7 +37,7 @@ export default function BubbleSelected(props: Props) {
                 contentChildren={
                     <>
                         <div className="my-6 -mx-4 px-6 text-3xl font-semibold text-slate-600">
-                            Module & Kapitel
+                            {t('modules_and_chapters')}
                         </div>
 
                         {/* <div className='my-6 -mx-4 text-3xl font-semibold text-slate-600 underline decoration-ve-collab-blue decoration-3 underline-offset-6'>
@@ -56,18 +56,19 @@ export default function BubbleSelected(props: Props) {
                             {props.nodesWithLectionsOfCluster.map((node) => {
                                 return (
                                     <div key={node.id} className="basis-1/4 max-w-96">
-                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b hover:text-ve-collab-orange transition-colors">
+                                        <div className="py-2 text-xl font-konnect truncate text-ve-collab-blue border-b border-b-gray-200 hover:text-ve-collab-orange transition-colors">
                                             <Link
                                                 href={`/learning-material/${router.query.cluster}/${node.text}`}
                                             >
-                                                {node.text}
+                                                {router.locale === 'en' && node.text_en
+                                                    ? node.text_en
+                                                    : node.text}
                                             </Link>
                                         </div>
                                         <ul className="">
                                             {node.lections.length == 0 && (
                                                 <div className="italic my-2 text-wrap">
-                                                    Leider gibt es noch keine Inhalte für dieses
-                                                    Modul
+                                                    {t('no_content_yet')}
                                                 </div>
                                             )}
                                             {node.lections.map((lection) => (
@@ -81,7 +82,10 @@ export default function BubbleSelected(props: Props) {
                                                     >
                                                         <RxDot />
                                                         <div className="mx-3 py-1 max-w-full truncate">
-                                                            {lection.text}
+                                                            {router.locale === 'en' &&
+                                                            lection.text_en
+                                                                ? lection.text_en
+                                                                : lection.text}
                                                         </div>
                                                     </Link>
                                                 </li>

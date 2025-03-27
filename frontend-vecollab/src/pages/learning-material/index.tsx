@@ -34,14 +34,14 @@ const BubbleIcons: { [id: string]: (attr: { [key: string]: any }) => JSX.Element
 
 export const getClusterIconBySlug = (slug: string) => BubbleIcons[slug] || (() => <></>);
 
-const styleBubbleWrapper = 'relative w-48 max-xl:mx-auto max-xl:my-24';
+const styleBubbleWrapper = 'relative w-48 mx-auto my-24 xl:mx-0 xl:my-0';
 const styleBubbleMain = `group block relative h-48 w-48 z-10 rounded-full
-    bg-footer-pattern bg-center drop-shadow-lg opacity-85 flex justify-center items-center #
+    bg-footer-pattern bg-center shadow-lg opacity-85 flex justify-center items-center
     transition ease-in-out delay-150 duration-300 hover:-translate-y-1 hover:scale-110`;
 const styleBubbleLeaf = `block absolute px-6 py-3 min-w-24 max-w-48 rounded-full bg-white
-    flex font-konnect items-center justify-center text-center text-ve-collab-blue drop-shadow-lg
+    flex font-konnect items-center justify-center text-center text-ve-collab-blue shadow-lg
     hover:text-ve-collab-orange hover:border-ve-collab-orange transition ease-in-out delay-150 duration-300
-    hover:-translate-y-105 hover:scale-110`;
+    hover:scale-110`;
 
 interface Props {
     nodes: { [key: string]: INode[] };
@@ -79,7 +79,9 @@ export default function PageCategoryNotSelected(props: Props) {
                                 href={`/learning-material/${querySlug}/${props.nodes[querySlug][i]?.text}`}
                                 className={`${styleBubbleLeaf} ${style}`}
                             >
-                                {props.nodes[querySlug][i]?.text}
+                                {router.locale === 'en' && props.nodes[querySlug][i]?.text_en
+                                    ? props.nodes[querySlug][i]?.text_en
+                                    : props.nodes[querySlug][i]?.text}
                             </Link>
                         )}
                     </div>
@@ -91,7 +93,7 @@ export default function PageCategoryNotSelected(props: Props) {
     const Bubbles = () => (
         <>
             {/* 1 BUBBLE */}
-            {Bubble('Grundlagen', 'xl:left-[37%] xl:-translate-x-1/1', [
+            {Bubble('Grundlagen', 'xl:left-[50%] xl:-translate-x-full', [
                 '-top-[1.5rem] -left-[5rem]', //einfuehrung
                 'top-[.5rem] -right-[6.5rem]', // potenziale
                 '-bottom-[2.2rem] -right-[7rem]', // herausforderungen
@@ -102,21 +104,22 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Zusammen Planen', 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
                 '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
+                '-bottom-[.5rem] -left-[10rem]' // leitfragen Aushandlungsphase
             ])}
 
             {/* 3 BUBBLE */}
             {Bubble('Digitales', 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
-                '-bottom-[3.5rem] -right-[7rem]', // datenschutz
-                '-top-[1rem] -left-[3rem]', // tools
-                'top-0 -right-[4rem]', // oer
+                '-bottom-[1rem] -right-[3.5rem]', // tools
+                '-top-[1.5rem] -left-[3rem]', // oer
             ])}
 
             {/* 4 BUBBLE */}
             {Bubble('Zusammen Lernen', 'xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
-                '-bottom-[.5rem] -left-[10.5rem]', // game based learning
+                '-bottom-[-2.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
-                '-bottom-[2.5rem] -right-[8rem]', // sprachliche aspekte
+                '-bottom-[-0.5rem] -right-[10rem]', // sprachliche aspekte
                 '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
+                '-bottom-[4rem] -left-[3rem]', // controversiality
             ])}
         </>
     );

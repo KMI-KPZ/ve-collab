@@ -262,12 +262,7 @@ class ElasticsearchConnector:
 
         if query_expertise and query_expertise != "":
             must_query.append({
-                "match": {
-                    "expertise": {
-                        "query": query_expertise,
-                        "fuzziness": "AUTO"
-                    }
-                }
+                "match_phrase": { "expertise": query_expertise}
             })
 
         if query_lang and query_lang != "":

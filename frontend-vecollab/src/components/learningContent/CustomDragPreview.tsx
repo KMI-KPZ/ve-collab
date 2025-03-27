@@ -7,7 +7,10 @@ type Props = {
 };
 
 export type CustomData = {
-    url: string;
+    urls: {
+        de: string;
+        en: string;
+    };
 };
 
 export const CustomDragPreview: React.FC<Props> = (props) => {

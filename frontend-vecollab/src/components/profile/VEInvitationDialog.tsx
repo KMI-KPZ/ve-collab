@@ -3,9 +3,11 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Dialog from './Dialog';
-import PublicPlansSelect from './PublicPlansSelect';
 import Alert from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
+import PlansSelector from './PlansSelector';
 
 interface Props {
     userid: string;
@@ -27,15 +29,17 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
     };
 
     const [appendPlanCheckboxChecked, setAppendPlanCheckboxChecked] = useState(false);
-    const [chosenPlanId, setChosenPlanId] = useState('');
+    const [chosenPlanId, setChosenPlanId] = useState<string>();
     const [veInvitationMessage, setVeInvitationMessage] = useState('');
 
     const sendVeInvitation = () => {
         const payload = {
             message: veInvitationMessage,
-            plan_id: chosenPlanId === '' ? null : chosenPlanId,
+            plan_id: chosenPlanId,
             username: userid,
         };
+
+        console.log({ sendVeInvitation: payload });
 
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             setSuccessPopupOpen(true);
@@ -71,7 +75,7 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
                     </div>
                     {appendPlanCheckboxChecked && (
                         <>
-                            <PublicPlansSelect
+                            <PlansSelector
                                 chosenPlanId={chosenPlanId}
                                 setChosenPlanId={setChosenPlanId}
                             />
@@ -79,26 +83,18 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
                         </>
                     )}
 
-                    <div className="flex absolute bottom-0 w-full">
-                        <button
-                            className={
-                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                            }
-                            onClick={handleCloseInvitationDialog}
-                        >
-                            <span>{t('common:cancel')}</span>
-                        </button>
-                        <button
-                            className={
-                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                            }
-                            onClick={(e) => {
+                    <div className="flex absolute bottom-0 w-full flex justify-between">
+                        <ButtonSecondary onClick={handleCloseInvitationDialog}>
+                            {t('common:cancel')}
+                        </ButtonSecondary>
+                        <ButtonPrimary
+                            onClick={() => {
                                 sendVeInvitation();
                                 handleCloseInvitationDialog();
                             }}
                         >
-                            <span>{t('common:send')}</span>
-                        </button>
+                            {t('common:send')}
+                        </ButtonPrimary>
                     </div>
                 </div>
             </Dialog>

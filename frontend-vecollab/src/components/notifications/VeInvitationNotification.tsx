@@ -77,8 +77,12 @@ export default function VeInvitationNotification({
                 >
                     <p className="mb-1 underline decoration-ve-collab-blue">VE-Einladung</p>
                     <p>
-                        Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen:{' '}
-                        <b>{invitedVePlan?.name}</b>
+                        Du wurdest von <b>{invitedFromUser?.name}</b> zu einem VE eingeladen
+                        {invitedVePlan && (
+                            <>
+                                : <b>{invitedVePlan.name}</b>
+                            </>
+                        )}
                     </p>
                     <Timestamp
                         className="text-sm text-gray-500"
@@ -111,7 +115,7 @@ export default function VeInvitationNotification({
                             hat dich eingeladen:
                         </p>
                     </div>
-                    <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
+                    <div className="my-4 p-2 border-2 border-gray-200 rounded-xl max-h-[15rem] overflow-y-auto">
                         <p className="text-slate-700">{notification.payload.message}</p>
                     </div>
                     {invitedVePlan !== undefined && (
@@ -123,10 +127,9 @@ export default function VeInvitationNotification({
                                 hat bereits vorgearbeitet, sieh dir den zugehörigen Plan an:
                             </p>
                             <div className="flex my-4 justify-center text-slate-900 text-xl font-bold">
-                                {/* todo this should link to a read-only view of the plan*/}
                                 <Link
                                     target="_blank"
-                                    href={`/ve-designer/name?plannerId=${notification.payload.plan_id}`}
+                                    href={`/plan/${notification.payload.plan_id}`}
                                 >
                                     {invitedVePlan?.name}
                                 </Link>
@@ -148,7 +151,7 @@ export default function VeInvitationNotification({
                         </button>
                         <button
                             className={
-                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);

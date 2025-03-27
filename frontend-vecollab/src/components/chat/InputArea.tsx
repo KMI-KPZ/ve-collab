@@ -36,7 +36,7 @@ export default function InputArea({ roomID, socket }: Props) {
         <div className="my-2">
             <div className="border border-[#cccccc] bg-white rounded-md ">
                 <textarea
-                    className="w-full h-16 p-2 border-b rounded-t-md resize-none"
+                    className="w-full h-16 p-2 border-b border-b-gray-200 rounded-t-md resize-none"
                     placeholder={t('type_message_placeholder')}
                     value={sendingMessage}
                     onChange={(e) => setSendingMessage(e.target.value)}

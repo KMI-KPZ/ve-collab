@@ -93,9 +93,9 @@ export default function LearningContentView(props: Props) {
     }, [router]);
 
     const ListOfLectionsSidebar = ({ lections }: { lections: IMaterialNode[] }) => (
-        <ul className="flex flex-col divide-y gap-1 bg-white">
+        <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
             <li>
-                <div className="font-konnect text-xl pb-2">Kapitel</div>
+                <div className="font-konnect text-xl pb-2">{t('chapter')}</div>
             </li>
             {lections.map((node) => (
                 <li key={node.id}>
@@ -106,7 +106,7 @@ export default function LearningContentView(props: Props) {
                         scroll={false}
                         href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${node.text}`}
                     >
-                        {node.text}
+                        {router.locale === 'en' && node.text_en ? node.text_en : node.text}
                     </Link>
                 </li>
             ))}
@@ -119,7 +119,7 @@ export default function LearningContentView(props: Props) {
             <Dropdown
                 icon={
                     <div className="flex items-center">
-                        Kapitel
+                        {t('chapter')}
                         <MdMenu className="mx-2 my-0.5" />
                     </div>
                 }
@@ -131,12 +131,12 @@ export default function LearningContentView(props: Props) {
                 options={lections.map((node) => {
                     return {
                         key: node.id,
-                        label: node.text,
+                        label: router.locale === 'en' && node.text_en ? node.text_en : node.text,
                         value: node.text,
                         liClasses: `${router.query.slug == node.text ? 'font-bold' : ''}`,
                     };
                 })}
-                ulClasses="!left-0 !right-auto max-w-96 w-fit"
+                ulClasses="left-0! right-auto! max-w-96 w-fit"
             />
         </div>
     );
@@ -168,7 +168,7 @@ export default function LearningContentView(props: Props) {
                     </>
                 }
                 contentChildren={
-                    <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
+                    <div className="md:mt-6 md:flex md:flex-row md:divide-x divide-gray-200 md:gap-1">
                         {props.lectionsOfNode.length && (
                             <div className="w-80 hidden md:block">
                                 <ListOfLectionsSidebar lections={props.lectionsOfNode} />
@@ -177,7 +177,7 @@ export default function LearningContentView(props: Props) {
 
                         <div className="w-full md:pl-6 pt-1 relative">
                             {loading && (
-                                <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                <div className="absolute bg-white/50 backdrop-blur-xs md:-ml-6 inset-0">
                                     <span className="m-2">
                                         <LoadingAnimation />
                                     </span>
@@ -187,14 +187,19 @@ export default function LearningContentView(props: Props) {
                             <iframe
                                 style={{ height: frameHeight }}
                                 className="rounded-xl overflow-hidden"
-                                src={props.currentNode.data.url}
+                                src={
+                                    props.currentNode.data.urls[router.locale as 'de' | 'en'] ||
+                                    (router.locale === 'de'
+                                        ? props.currentNode.data.urls.en
+                                        : props.currentNode.data.urls.de)
+                                }
                                 ref={iframeRef}
                                 scrolling="no"
                             ></iframe>
 
                             {(props.prevNode || props.nextNode) && (
-                                <div className="flex my-4 pt-4 border-t">
-                                    {/* <div className="my-8 border-t py-3 flex justify-between"> */}
+                                <div className="flex my-4 pt-4 border-t border-gray-200">
+                                    {/* <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between"> */}
                                     {props.prevNode && (
                                         <Link
                                             className="mr-auto"
@@ -205,7 +210,10 @@ export default function LearningContentView(props: Props) {
                                                     'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
                                                 }
                                             >
-                                                zurück zu: {props.prevNode.text}
+                                                {t('back_to')}
+                                                {router.locale === 'en' && props.prevNode.text_en
+                                                    ? props.prevNode.text_en
+                                                    : props.prevNode.text}
                                             </button>
                                         </Link>
                                     )}
@@ -219,7 +227,10 @@ export default function LearningContentView(props: Props) {
                                                     'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
                                                 }
                                             >
-                                                weiter zu: {props.nextNode.text}
+                                                {t('forward_to')}{' '}
+                                                {router.locale === 'en' && props.nextNode.text_en
+                                                    ? props.nextNode.text_en
+                                                    : props.nextNode.text}
                                             </button>
                                         </Link>
                                     )}

@@ -38,7 +38,10 @@ export type Metadata = {
 
 export type CustomData = {
     description: string;
-    url: string;
+    urls: {
+        de: string;
+        en: string;
+    };
     metadata?: Metadata;
     mbr_id?: string;
 };
@@ -48,6 +51,7 @@ export type NodeModel<T = unknown> = {
     parent: number;
     droppable?: boolean;
     text: string;
+    text_en: string;
     data?: T;
 };
 
@@ -84,15 +88,20 @@ export default function Edit() {
             parent: 0,
             droppable: true,
             text: 'VE Planen',
+            text_en: 'Plan a VE',
         },
         {
             id: 2,
             parent: 1,
             droppable: false,
             text: 'Material 1',
+            text_en: 'Material 1',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -100,9 +109,13 @@ export default function Edit() {
             parent: 1,
             droppable: false,
             text: 'Material 2',
+            text_en: 'Material 2',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -110,9 +123,13 @@ export default function Edit() {
             parent: 1,
             droppable: false,
             text: 'Material 3',
+            text_en: 'Material 3',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
         {
@@ -120,15 +137,20 @@ export default function Edit() {
             parent: 0,
             droppable: true,
             text: 'Was ist ein VE?',
+            text_en: 'What is a VE?',
         },
         {
             id: 6,
             parent: 5,
             droppable: false,
             text: 'Material 4',
+            text_en: 'Material 4',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                url: 'http://localhost/dummy',
+                urls: {
+                    de: 'http://localhost/dummy',
+                    en: 'http://localhost/dummy',
+                },
             },
         },
     ]);
@@ -143,9 +165,11 @@ export default function Edit() {
 
     // TODO, for now these are separate state vars, but it should be a Material object including the link and metadata
     const [currentMaterialInputName, setCurrentMaterialInputName] = useState<string>('');
+    const [currentMaterialInputNameEn, setCurrentMaterialInputNameEn] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
-    const [currentMaterialInputLink, setCurrentMaterialInputLink] = useState<string>('');
+    const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
+    const [currentMaterialInputLinkEn, setCurrentMaterialInputLinkEn] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -206,14 +230,20 @@ export default function Edit() {
             parent: 0,
             droppable: false,
             text: currentMaterialInputName,
+            text_en: currentMaterialInputNameEn,
             data: {
                 description: currentMaterialInputDescription,
-                url: currentMaterialInputLink,
+                urls: {
+                    de: currentMaterialInputLinkDe,
+                    en: currentMaterialInputLinkEn,
+                },
             },
         });
         setCurrentMaterialInputName('');
+        setCurrentMaterialInputNameEn('');
         setCurrentMaterialInputDescription('');
-        setCurrentMaterialInputLink('');
+        setCurrentMaterialInputLinkDe('');
+        setCurrentMaterialInputLinkEn('');
     };
 
     const handleSaveToBackend = () => {
@@ -222,12 +252,13 @@ export default function Edit() {
         setSuccessPopupOpen(true);
     };
 
-    const handleNodeChange = (id: NodeModel['id'], textUpdate: string, dataUpdate?: CustomData) => {
+    const handleNodeChange = (id: NodeModel['id'], textUpdate: string, textEnUpdate: string, dataUpdate?: CustomData) => {
         const newTree = treeData.map((node) => {
             if (node.id === id) {
                 return {
                     ...node,
                     text: textUpdate,
+                    text_en: textEnUpdate,
                     data: dataUpdate,
                 };
             }
@@ -291,6 +322,7 @@ export default function Edit() {
                                                                 parent: 0,
                                                                 droppable: true,
                                                                 text: 'neue Ebene',
+                                                                text_en: '',
                                                             })
                                                         }
                                                     >
@@ -316,7 +348,7 @@ export default function Edit() {
                                                     Metadaten mit MeinBildungsraum synchronisieren
                                                 </button>
                                             </div>
-                                            <div className="h-[3/4] px-1 mx-2 my-1">
+                                            <div className="h-3/4 px-1 mx-2 my-1">
                                                 <Tree
                                                     tree={treeData}
                                                     rootId={0}
@@ -359,7 +391,7 @@ export default function Edit() {
                         handleCloseMaterialDialog();
                     }}
                 >
-                    <div className="w-[40rem] h-[40rem] overflow-y-auto content-scrollbar relative">
+                    <div className="w-[40rem] h-[50rem] overflow-y-auto content-scrollbar relative">
                         <BoxHeadline title={'Name'} />
                         <div className="mb-10">
                             <input
@@ -368,6 +400,16 @@ export default function Edit() {
                                 placeholder="Name des Lehrinhalts"
                                 value={currentMaterialInputName}
                                 onChange={(e) => setCurrentMaterialInputName(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Name - Englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Name des englischen Lehrinhalts"
+                                value={currentMaterialInputNameEn}
+                                onChange={(e) => setCurrentMaterialInputNameEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Kurzbeschreibung'} />
@@ -380,14 +422,24 @@ export default function Edit() {
                                 onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink'} />
+                        <BoxHeadline title={'Einbettungslink - deutsch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Link zum Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLink}
-                                onChange={(e) => setCurrentMaterialInputLink(e.target.value)}
+                                placeholder="Link zum deutschen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkDe}
+                                onChange={(e) => setCurrentMaterialInputLinkDe(e.target.value)}
+                            />
+                        </div>
+                        <BoxHeadline title={'Einbettungslink - englisch'} />
+                        <div className="mb-10">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
+                                placeholder="Link zum englischen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputLinkEn}
+                                onChange={(e) => setCurrentMaterialInputLinkEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />
@@ -403,7 +455,7 @@ export default function Edit() {
                             </button>
                             <button
                                 className={
-                                    'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                    'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                                 }
                                 onClick={() => {
                                     handleCreateNewMaterial();

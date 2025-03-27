@@ -2,13 +2,7 @@ import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from 'react';
 import { IoIosSend, IoMdClose } from 'react-icons/io';
-import AuthenticatedImage from '../common/AuthenticatedImage';
-import {
-    BackendPost,
-    BackendPostAuthor,
-    BackendPostFile,
-    BackendUserSnippet,
-} from '@/interfaces/api/apiInterfaces';
+import { BackendPost, BackendPostAuthor, BackendPostFile } from '@/interfaces/api/apiInterfaces';
 import { useRef } from 'react';
 import PostHeader from './PostHeader';
 import {
@@ -18,8 +12,6 @@ import {
     MdFormatClear,
     MdInsertLink,
     MdLinkOff,
-    MdNewspaper,
-    MdPublic,
 } from 'react-icons/md';
 import { RxFile } from 'react-icons/rx';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -38,7 +30,7 @@ import TimelinePostText from './TimelinePostText';
 import { sanitizedText } from './sanitizedText';
 import Dialog from '../profile/Dialog';
 import Dropdown from '../common/Dropdown';
-import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
 import { Socket } from 'socket.io-client';
@@ -46,9 +38,9 @@ import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import UserProfileImage from './UserProfileImage';
 
-import iconVeDocument from '@/images/icons/ve-document.svg';
 import { FaMedal } from 'react-icons/fa';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -405,7 +397,7 @@ export default function TimelinePostForm({
 
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                <div className="mb-2 pb-2 border-b">{t('add_your_gp_plans')}</div>
+                <div className="mb-2 pb-2 border-b border-gray-200">{t('add_your_gp_plans')}</div>
                 {plans
                     .sort((a, b) => {
                         return (
@@ -422,16 +414,9 @@ export default function TimelinePostForm({
                                 addPlanAttachment(plan);
                             }}
                         >
-                            {/* <MdNewspaper /> */}
-                            <span className="shrink-0 grow-0 w-[16px]">
-                                <Image
-                                    src={iconVeDocument}
-                                    alt={'ve_document'}
-                                    className="h-[24px]"
-                                />
-                            </span>
+                            <PlanIcon />
 
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
+                            <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
                             {plan.is_good_practise && (
                                 <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
                                     <FaMedal title={t('common:plans_marked_as_good_practise')} />
@@ -474,7 +459,7 @@ export default function TimelinePostForm({
                     />
                     <button
                         type="submit"
-                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
+                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white cursor-pointer"
                     >
                         {t('common:ok')}
                     </button>
@@ -509,7 +494,7 @@ export default function TimelinePostForm({
                             left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
                             top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow-sm border border-gray-200 text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
                         <a
                             href={cursorInLink.getAttribute('href') as string}
@@ -564,7 +549,7 @@ export default function TimelinePostForm({
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                    <div className="my-5 ml-[50px] p-3 rounded-sm bg-slate-100">
                         <div className="flex items-center mb-6">
                             {postToRepost.isRepost ? (
                                 <PostHeader
@@ -579,7 +564,7 @@ export default function TimelinePostForm({
                             )}
                             <button
                                 onClick={onCancelRepost}
-                                className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="ml-auto self-start p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             >
                                 <IoMdClose />
                             </button>
@@ -615,7 +600,7 @@ export default function TimelinePostForm({
                                         e.preventDefault();
                                         removeStoredFile(index);
                                     }}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_file')}
                                 >
                                     <IoMdClose />
@@ -633,7 +618,7 @@ export default function TimelinePostForm({
                                         className="m-1 rounded-md"
                                     />
                                 ) : (
-                                    <RxFile size={30} className="m-1" />
+                                    <RxFile size={30} className="m-1 cursor-pointer" />
                                 )}
                                 <div className="truncate py-2">{file.name}</div>
                                 <button
@@ -641,7 +626,7 @@ export default function TimelinePostForm({
                                         e.preventDefault();
                                         removeSelectedFile(index);
                                     }}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_file')}
                                 >
                                     <IoMdClose />
@@ -658,7 +643,7 @@ export default function TimelinePostForm({
                                 className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden"
                                 key={index}
                             >
-                                <MdNewspaper size={20} className="flex-none" />
+                                <PlanIcon />
                                 <div className="truncate font-bold grow">{plan.name}</div>
                                 <div className="text-sm text-gray-500 flex-none">
                                     {plan.author.first_name} {plan.author.last_name}
@@ -669,7 +654,7 @@ export default function TimelinePostForm({
                                 />
                                 <button
                                     onClick={() => removePlanAttachment(plan)}
-                                    className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="flex-none p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_plan')}
                                 >
                                     <IoMdClose />
@@ -684,7 +669,7 @@ export default function TimelinePostForm({
                         !postToEdit && !postToRepost && !formHadFocus ? 'hidden' : ''
                     }`}
                 >
-                    <div className="ml-auto text-right space-x-4">
+                    <div className="ml-auto text-right space-x-4 space-y-2">
                         {!postToRepost && (
                             <>
                                 <div
@@ -720,7 +705,7 @@ export default function TimelinePostForm({
                         )}
                         {postToEdit && (
                             <button
-                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg`}
+                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer`}
                                 onClick={onCancel}
                                 type="button"
                             >
@@ -729,8 +714,10 @@ export default function TimelinePostForm({
                         )}
                         <button
                             type="submit"
-                            className={`relative py-2 px-5 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${
-                                text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''
+                            className={`relative py-2 px-5 rounded-lg text-white overflow-hidden ${
+                                text.trim() == ''
+                                    ? 'cursor-default bg-ve-collab-orange/75'
+                                    : 'cursor-pointer bg-ve-collab-orange'
                             }`}
                         >
                             {postToEdit ? (

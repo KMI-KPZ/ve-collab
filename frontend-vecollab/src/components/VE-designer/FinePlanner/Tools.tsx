@@ -19,7 +19,7 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
             <input
                 type="text"
                 {...register(`tasks.${taskIndex}.tools.${toolIndex}.name`)}
-                placeholder={t("step-data.tools_placeholder")}
+                placeholder={t('step-data.tools_placeholder')}
                 className="w-full border border-gray-400 rounded-lg p-2"
             />
             <button
@@ -27,6 +27,7 @@ export default function Tools({ toolIndex, taskIndex, removeItem }: Props) {
                 onClick={() => {
                     removeItem(toolIndex);
                 }}
+                className="cursior-pointer"
             >
                 <RxMinus size={20} />
             </button>

@@ -112,7 +112,7 @@ export default function VeInvitationReplyNotification({
                                     {invitedUser?.name}
                                 </Link>{' '}
                                 hat deine folgende Anfrage angenommen:
-                                <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
+                                <div className="my-4 p-2 border-2 border-gray-200 rounded-xl max-h-[15rem] overflow-y-auto">
                                     <p className="text-slate-700">{notification.payload.message}</p>
                                 </div>
                                 <div className="my-2">
@@ -161,7 +161,7 @@ export default function VeInvitationReplyNotification({
                                 </Link>{' '}
                                 hat deine folgende Anfrage abgelehnt:
                             </p>
-                            <div className="my-4 p-2 border-2 rounded-xl max-h-[15rem] overflow-y-auto">
+                            <div className="my-4 p-2 border-2 border-gray-200 rounded-xl max-h-[15rem] overflow-y-auto">
                                 <p className="text-slate-700">{notification.payload.message}</p>
                             </div>
                             <p>Beim nächsten Mal klappt es bestimmt!</p>
@@ -177,7 +177,7 @@ export default function VeInvitationReplyNotification({
                     <div className="flex absolute bottom-0 w-full justify-center">
                         <button
                             className={
-                                'bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={(e) => {
                                 removeNotificationCallback(notification._id);

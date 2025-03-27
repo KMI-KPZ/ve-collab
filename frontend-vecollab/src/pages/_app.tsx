@@ -71,7 +71,7 @@ function Auth({
                         </button>
                         <button
                             className={
-                                'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
+                                'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
                             }
                             onClick={() => signIn('keycloak')}
                         >

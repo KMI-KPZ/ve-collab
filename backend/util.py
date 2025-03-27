@@ -54,8 +54,8 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
         return ObjectId(obj_id)
     else:
         raise TypeError(
-            """invalid object_id type, 
-            can either be 'str' or 'bson.ObjectId', 
+            """invalid object_id type,
+            can either be 'str' or 'bson.ObjectId',
             got: '{}'
             """.format(
                 type(obj_id)
@@ -217,6 +217,7 @@ def _append_msg_text(
         "plan_access_granted.html",
         "plan_added_as_partner.html",
         "email_invitation.html",
+        "email_invitation_with_plan.html",
         "report_submitted.html",
         "content_deleted_due_to_report.html",
     ],
@@ -388,8 +389,19 @@ def _append_msg_text(
                 author=payload["author"],
             )
 
-    elif template == "email_invitation.html":
-        with open("assets/email_templates/email_invitation.txt", "r") as f:
+    elif template == "email_invitation_with_plan.html":
+        with open("assets/email_templates/email_invitation_with_plan.txt", "r") as f:
+            text = f.read()
+            text = text.format(
+                recipient_name=display_name,
+                sender=payload["sender"],
+                message=payload["message"],
+                invitation_id=payload["invitation_id"],
+                plan_name=payload["plan_name"]
+            )
+
+    elif template == "email_invitation_with_plan.html":
+        with open("assets/email_templates/email_invitation_with_plan.txt", "r") as f:
             text = f.read()
             text = text.format(
                 recipient_name=display_name,
@@ -432,6 +444,7 @@ def send_email(
         "plan_access_granted.html",
         "plan_added_as_partner.html",
         "email_invitation.html",
+        "email_invitation_with_plan.html",
         "report_submitted.html",
         "content_deleted_due_to_report.html",
     ],

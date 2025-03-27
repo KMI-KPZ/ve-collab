@@ -27,6 +27,8 @@ import cat from '@/images/defaultProfilPictures/cat.jpg';
 import dog from '@/images/defaultProfilPictures/dog.jpg';
 import fox from '@/images/defaultProfilPictures/fox.jpg';
 import Image from 'next/image';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import ButtonPrimary from '../common/buttons/ButtonPrimary';
 
 interface Props {
     personalInformation: PersonalInformation;
@@ -214,11 +216,11 @@ export default function EditPersonalInformation({
                         <EditProfileHeadline name={t('institutions')} />
                         <div className="absolute top-0 left-full">
                             <div className="group relative inline-block">
-                                <div className="inline-flex rounded bg-primary px-[2px] text-base font-semibold">
+                                <div className="inline-flex rounded-sm bg-primary px-[2px] text-base font-semibold">
                                     <IoIosHelp size={30} color="#00748f" />
                                 </div>
-                                <div className="absolute bottom-full left-1/2 w-[20rem] z-20 mb-1 -translate-x-1/2 rounded bg-gray-200 border border-gray-200 shadow-2xl px-4 py-[6px] text-sm font-semibold hidden group-hover:block">
-                                    <span className="absolute bottom-[-3px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm bg-gray-200"></span>
+                                <div className="absolute bottom-full left-1/2 w-[20rem] z-20 mb-1 -translate-x-1/2 rounded-sm bg-gray-200 border border-gray-200 shadow-2xl px-4 py-[6px] text-sm font-semibold hidden group-hover:block">
+                                    <span className="absolute bottom-[-3px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-xs bg-gray-200"></span>
                                     {t('institutions_tooltip')}
                                 </div>
                             </div>
@@ -241,7 +243,7 @@ export default function EditPersonalInformation({
                             {personalInformation.institutions.length === 0 ? (
                                 <div className="w-fit">
                                     <button
-                                        className="px-4 py-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                                        className="px-4 py-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                                         type="button"
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -419,27 +421,18 @@ export default function EditPersonalInformation({
                                 />
                             </div>
                         </div>
-                        <div className="flex absolute bottom-0 w-full">
-                            <button
-                                className={
-                                    'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                                }
-                                onClick={handleCloseNewInstitutionDialog}
-                            >
-                                <span>{t('common:cancel')}</span>
-                            </button>
-                            <button
-                                className={
-                                    'w-40 h-12 bg-ve-collab-orange border text-white py-3 px-6 rounded-lg shadow-xl'
-                                }
-                                onClick={(e) => {
-                                    e.preventDefault();
+                        <div className="flex absolute bottom-0 w-full flex justify-between">
+                            <ButtonSecondary onClick={handleCloseNewInstitutionDialog}>
+                                {t('common:cancel')}
+                            </ButtonSecondary>
+                            <ButtonPrimary
+                                onClick={() => {
                                     uploadNewInstitution();
                                     handleCloseNewInstitutionDialog();
                                 }}
                             >
-                                <span>{t('common:create')}</span>
-                            </button>
+                                {t('common:create')}
+                            </ButtonPrimary>
                         </div>
                     </div>
                 </Dialog>
@@ -502,7 +495,7 @@ export default function EditPersonalInformation({
             </EditProfileVerticalSpacer>
             <EditProfileVerticalSpacer>
                 <EditProfileHeadline name={t('languages')} />
-                <p className='text-gray-600 mb-2'>{t("languages_subtitle")}</p>
+                <p className="text-gray-600 mb-2">{t('languages_subtitle')}</p>
                 <CreatableSelect
                     className="w-full mb-1"
                     options={optionLists.languageKeys
@@ -557,7 +550,7 @@ export default function EditPersonalInformation({
                             <div className="flex justify-center">
                                 <button
                                     className={
-                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
+                                        'bg-ve-collab-orange text-white py-2 px-5 rounded-lg cursor-pointer'
                                     }
                                     onClick={(e) => {
                                         e.preventDefault();
@@ -594,7 +587,7 @@ export default function EditPersonalInformation({
                             <input
                                 type="file"
                                 accept="image/*"
-                                className="my-2"
+                                className="my-2 border border-[#cccccc] rounded-md px-2 py-[6px] cursor-pointer"
                                 onChange={onSelectProfilePicFile}
                                 onClick={(e) => {
                                     e.currentTarget.value = '';
@@ -618,7 +611,7 @@ export default function EditPersonalInformation({
                     {hasAnyAchievement(personalInformation.achievements) && (
                         <div>
                             <EditProfileHeadline name={t('decoration_badge')} />
-                            <p className='text-gray-600 mb-2'>{t('decoration_badge_descr')}</p>
+                            <p className="text-gray-600 mb-2">{t('decoration_badge_descr')}</p>
                             <ul className="flex flex-wrap gap-4 items-center">
                                 {getBadges({ achievements: personalInformation.achievements }).map(
                                     (item, index) => {
@@ -653,7 +646,7 @@ export default function EditPersonalInformation({
                                 )}
                                 <li>
                                     <ButtonLight
-                                        className="!rounded-full flex gap-2 items-center ml-4"
+                                        className="rounded-full! flex gap-2 items-center ml-4"
                                         onClick={() => {
                                             setPersonalInformation({
                                                 ...personalInformation,

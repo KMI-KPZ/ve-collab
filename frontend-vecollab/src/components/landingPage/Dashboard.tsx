@@ -25,7 +25,8 @@ import SuggestionBox from './SuggestionBox';
 import UserInfoBox from './UserInfoBox';
 import ButtonLight from '../common/buttons/ButtongLight';
 import Error from '@/pages/_error';
-import { TbFileText } from 'react-icons/tb';
+import PlanIcon from '../plans/PlanIcon';
+import LoadingAnimation from '../common/LoadingAnimation';
 
 interface Props {
     notificationEvents: Notification[];
@@ -72,11 +73,11 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
             <ButtonNewPlan
                 socket={socket}
                 label={t('common:btn_new_ve')}
-                className="bg-none w-full !px-0 !py-4"
+                className="bg-none rounded-none w-full px-0! py-4!"
             >
                 <div className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105">
                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                             <Image src={btnNewVe} alt={'form_image'} className="h-[36px]" />
                         </span>
                     </div>
@@ -92,7 +93,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     className=" flex flex-wrap @[230px]:flex-nowrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
                 >
                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                             <Image src={btnSearchUser} alt={'form_image'} className="h-[32px]" />
                         </span>
                     </div>
@@ -112,7 +113,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     return (
                         <div
                             key={plan._id}
-                            className="flex flex-col px-1 py-3 border-b border-bg-gray-300 bg-white/50 hover:bg-gray-100/50"
+                            className="flex flex-col px-1 py-3 border-b border-b-gray-300 bg-white/50 hover:bg-gray-100/50"
                         >
                             <Timestamp
                                 timestamp={plan.last_modified}
@@ -125,7 +126,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                                             href={`/plan/${plan._id}`}
                                             className="hover:text-ve-collab-orange"
                                         >
-                                            <TbFileText className="inline mr-1" size={20} />
+                                            <PlanIcon className="inline h-[20px] w-fit mr-1 mb-1" />
                                             {plan.name}
                                         </Link>
                                     </div>
@@ -147,7 +148,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 })}
             </div>
             <div className="mt-6 ml-auto py-2 px-4 w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                <ButtonLight link="/plans" className="!rounded-full">
+                <ButtonLight link="/plans" className="rounded-full!">
                     {t('common:all')} {t('common:plans')}
                     <MdArrowRight size={24} className="inline mx-1" />
                 </ButtonLight>
@@ -156,24 +157,22 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
     );
 
     const NotificationWidget = () => (
-        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow">
+        <div className="w-full m-6 rounded-md bg-white p-6 relative overflow-hidden drop-shadow-sm">
             <div className="bg-ve-collab-orange-light w-[272px] h-[272px] -bottom-[136px] -right-[136px] absolute -z-10 rotate-45"></div>
             <div className="bg-ve-collab-orange/75 w-[232px] h-[232px] -bottom-[116px] -right-[116px] absolute -z-10 rotate-45"></div>
-            <H2>{t('common:notifications.title')}</H2>
+            <H2 className="break-words">{t('common:notifications.title')}</H2>
 
             <div className="flex  items-center ">
                 <span className="flex items-center p-2 mr-2 rounded-full bg-ve-collab-blue/25">
                     <IoMdNotificationsOutline size={30} className="" />
                 </span>
-                {notificationEvents.length == 1 ? (
-                    <span>{t('one_new_notification')}</span>
-                ) : (
-                    <span>
-                        {t('multiple_new_notifications', {
-                            count: notificationEvents.length,
-                        })}
-                    </span>
-                )}
+                <span className="w-2/3 break-words">
+                    {notificationEvents.length == 1
+                        ? t('one_new_notification')
+                        : t('multiple_new_notifications', {
+                              count: notificationEvents.length,
+                          })}
+                </span>
             </div>
             <div className="mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
                 <Button
@@ -188,7 +187,12 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
         </div>
     );
 
-    if (isLoadingProfile) return <></>;
+    if (isLoadingProfile)
+        return (
+            <>
+                <LoadingAnimation />
+            </>
+        );
     if (errorLoadingProfile) return <Error />;
 
     return (
@@ -201,20 +205,20 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 <div className="order-3 lg:order-2  w-full lg:w-1/2 basis-full lg:basis-1/2 z-10">
                     <Swiper_LoggedIn profileInformation={profileInformation} />
 
-                    <div className="w-11/12 min-w-96 px-6 py-6 m-auto bg-white rounded-md shadow">
+                    <div className="w-11/12 px-6 py-6 m-auto bg-white rounded-md shadow">
                         <div className="text-2xl text-left">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
                         </div>
-                        <div className="flex sm:hidden flex-row items-center mb-6 pb-2 border-b-2 border-b-ve-collab-orange">
+                        <div className="flex sm:hidden flex-row items-start mb-6 border-b-2 border-b-ve-collab-orange">
                             <VeDesignerButtons />
 
                             <Link
                                 href={'/plans'}
-                                className="flex flex-wrap items-center justify-center"
+                                className="flex flex-wrap items-center justify-center py-4"
                             >
-                                <span className="self-center text-ve-collab-blue rounded-full p-2 my-2 mx-4 border border-ve-collab-blue">
-                                    <FaMedal size={18} className="" />
+                                <span className="w-[64px] h-[64px] flex items-center justify-center shrink-0 self-center text-ve-collab-blue rounded-full p-2 mx-4 border-2 border-ve-collab-blue">
+                                    <FaMedal size={24} className="" />
                                 </span>
                                 <span className="text-center text-wrap xl:w-2/3 font-bold">
                                     {t('common:show_good_practice_plans')}
@@ -234,7 +238,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                 </div>
 
                 <div className="@container order-2 hidden sm:flex lg:order-3 w-full sm:w-1/2 lg:w-1/4 basis-full sm:basis-1/2 lg:basis-1/4 flex-col items-center gap-6 px-6">
-                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow rounded-md">
+                    <div className="w-full px-2 @[320px]:px-6 py-2 flex flex-col bg-white drop-shadow-sm rounded-md">
                         <div className="text-2xl mx-2 mt-1">
                             <span className="text-ve-collab-orange">VE</span>{' '}
                             <span className="text-ve-collab-blue">Designer</span>
@@ -248,7 +252,7 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                                     className="flex flex-wrap @[230px]:flex-nowrap items-center justify-center transition ease-in-out hover:scale-105"
                                 >
                                     <div className="w-1/3 shrink-0 flex items-center justify-center">
-                                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border border-2 border-ve-collab-blue">
+                                        <span className="shrink-0 flex items-center justify-center w-[64px] h-[64px] text-ve-collab-blue rounded-full border-2 border-ve-collab-blue">
                                             <Image
                                                 src={btnGPPlans}
                                                 alt={'form_image'}
@@ -265,19 +269,6 @@ export default function Dashboard({ notificationEvents, toggleNotifWindow }: Pro
                     </div>
 
                     {notificationEvents.length > 0 && <NotificationWidget />}
-
-                    {/* <div className="w-full px-2 xl:px-6 py-2 flex flex-col bg-white drop-shadow-lg rounded-md mt-[55px] ">
-                        <div className="flex">
-                            <span className="mx-2 self-center text-ve-collab-blue rounded-full p-2  border border-ve-collab-blue">
-                                <FaMedal size={18} />
-                            </span>
-                            <H2>{t('common:good_practice_plans')}</H2>
-                        </div>
-
-                        <div>Gesamt: 123</div>
-
-                        <div>Zuletzt: 12.03.2025</div>
-                    </div> */}
 
                     <SuggestionBox />
                 </div>

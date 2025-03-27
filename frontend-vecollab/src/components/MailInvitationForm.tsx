@@ -15,12 +15,12 @@ const FormSchema = z.object({
 
 export default function MailInvitationForm({
     handleFinish,
-    renderAttentionMessage,
+    planId,
 }: {
     handleFinish?: () => void;
-    renderAttentionMessage?: boolean;
+    planId?: string;
 }): JSX.Element {
-    const { t } = useTranslation(['common']);
+    const { t } = useTranslation(['common', 'community']);
     const { data: session, status } = useSession();
 
     // const [success, setSuccess] = useState<AlertState>({ open: false });
@@ -55,11 +55,12 @@ export default function MailInvitationForm({
 
         setSending(true);
         fetchPOST(
-            '/mail_invitation',
+            '/mail_invitation/send',
             {
                 recipient_mail: mail,
                 recipient_name: name,
                 message: message,
+                plan_id: planId,
             },
             session?.accessToken
         )
@@ -86,7 +87,7 @@ export default function MailInvitationForm({
     }
 
     return (
-        <div>
+        <div className="max-w-4xl">
             {success ? (
                 <>
                     <p className="mb-4">{t('mail_invitation_form.send_ok')}</p>
@@ -94,18 +95,8 @@ export default function MailInvitationForm({
                 </>
             ) : (
                 <>
-                    <p className={`${renderAttentionMessage ? 'mb-1' : 'mb-4'}`}>
-                        {t('mail_invitation_form.intro')}
-                    </p>
-                    {renderAttentionMessage && (
-                        <p className="mb-4">
-                            <Trans
-                                i18nKey="mail_invitation_form.intro_attention"
-                                ns="common"
-                                components={{ bold: <strong /> }}
-                            />
-                        </p>
-                    )}
+                    <p className="mb-4">{t('mail_invitation_form.intro')}</p>
+                    {planId && <p className="mb-4">{t('mail_invitation_form.intro_attention')}</p>}
                     <div>
                         <div className="mb-4">
                             <input
@@ -128,7 +119,7 @@ export default function MailInvitationForm({
                         <div className="mb-4">
                             <input
                                 type="email"
-                                className="w-full border border-gray-500 rounded-md px-2 py-1 invalid:!border-red-500"
+                                className="w-full border border-gray-500 rounded-md px-2 py-1 invalid:border-red-500!"
                                 placeholder={t('mail_invitation_form.mail_placeholder')}
                                 value={mail}
                                 onChange={(e) => {
@@ -158,6 +149,7 @@ export default function MailInvitationForm({
                             sending || name == '' || mail == '' || !isValidName || !isValidMail
                         }
                         onClick={handleSend}
+                        className="ml-auto block"
                     >
                         {t('send')} {sending && <>...</>}
                     </ButtonPrimary>

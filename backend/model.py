@@ -2003,19 +2003,6 @@ class VEPlan:
                         "checklist",
                     )
 
-                # ensure that the username is also a partner of the plan
-                if "author" not in params:
-                    params["author"] = None
-                if not (
-                    checklist_item["username"] in params["partners"]
-                    or checklist_item["username"] == params["author"]
-                ):
-                    raise ValueError(
-                        "username '{}' in checklist is not a partner of the plan".format(
-                            checklist_item["username"]
-                        )
-                    )
-
                 # ensure that any other values are of type bool or None
                 for attr, value in checklist_item.items():
                     if attr != "username":

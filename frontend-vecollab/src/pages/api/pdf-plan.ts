@@ -34,6 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!token) {
         return res.status(401).send('Unauthorized');
     }
+    if (!planId) {
+        return res.status(404).send('Not-Found');
+    }
 
     // generate pdf via a headless chrome browser that opens the pdf summary page
     // using puppeteer

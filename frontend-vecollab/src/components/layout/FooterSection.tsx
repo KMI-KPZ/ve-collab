@@ -8,20 +8,28 @@ import { usePathname } from 'next/navigation';
 import { useTranslation } from 'next-i18next';
 
 export default function FooterSection() {
-    const isFrontpage = usePathname() == '/';
+    const isIndex = usePathname() == '/';
+    const isHome = usePathname() == '/home';
     const { t } = useTranslation('common');
 
     return (
         <footer
             className={`pb-4 z-0 shadow-inner ${
-                isFrontpage
-                    ? 'bg-white text-black border-t border-gray-400/50 border-0.5'
-                    : 'bg-footer-pattern text-white'
+                isIndex
+                    ? 'text-slate-50'
+                    : isHome
+                    ? 'bg-slate-50 text-black border-t border-gray-400/50 border-0.5'
+                    : 'bg-footer-pattern text-slate-50'
             }`}
         >
-            <div className="flex flex-wrap items-center max-w-screen-2xl md:w-8/12 mx-auto py-4 md:py-10">
+            <div className="flex flex-wrap items-center max-w-(--breakpoint-2xl) md:w-8/12 mx-auto py-4 md:py-10">
                 <div className="flex-none mx-2">
-                    <Image src={bmbfLogo} height={100} alt="BMBF Logo" className='sm:-mt-12'></Image>
+                    <Image
+                        src={bmbfLogo}
+                        height={100}
+                        alt="BMBF Logo"
+                        className="sm:-mt-12"
+                    ></Image>
                 </div>
                 <div className="flex-none">
                     <Image src={euFundingLogo} height={100} alt="NextGenerationEU Logo"></Image>

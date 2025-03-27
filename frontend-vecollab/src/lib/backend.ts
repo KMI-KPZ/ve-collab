@@ -65,6 +65,19 @@ const GETfetcher = (relativeUrl: string, accessToken?: string, autoResignin: boo
         return res.json();
     });
 
+const GETfetcherBlob = (relativeUrl: string, accessToken?: string, autoResignin: boolean = true) =>
+    fetch(BACKEND_BASE_URL + relativeUrl, {
+        headers: { Authorization: 'Bearer ' + accessToken },
+    }).then(async (res) => {
+        if (res.status === 401 && autoResignin) {
+            console.log('forced new signIn by api call');
+            return signIn('keycloak');
+        } else if (res.status > 299) {
+            throw new APIError('Error from Backend', await res.json());
+        }
+        return res.blob();
+    });
+
 const POSTfetcher = (
     relativeUrl: string,
     data?: Record<string, any>,
@@ -243,6 +256,30 @@ export function useGetPlanById(
 
     return {
         data: !shouldFetch ? {} : isLoading || error ? {} : data.plan,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetPlanAsScormById(
+    planId: string,
+    shouldFetch: boolean = true
+): {
+    data: any;
+    isLoading: boolean;
+    error: APIError;
+    mutate: KeyedMutator<any>;
+} {
+    const { data: session } = useSession();
+    const { data, error, isLoading, mutate } = useSWR(
+        shouldFetch ? [`/planner/get_scorm_zip?_id=${planId}`, session?.accessToken] : null,
+        ([url, token]) => GETfetcherBlob(url, token, shouldFetch),
+        swrConfig
+    );
+
+    return {
+        data: !shouldFetch ? {} : isLoading || error ? {} : data,
         isLoading,
         error,
         mutate,
@@ -688,13 +725,13 @@ export function useGetSearchResults(
         filterBy && filterBy.every((f) => defaultFilter.includes(f)) ? filterBy : defaultFilter;
     const filter = filterBy.reduce((acc, cur) => `${acc}${cur}=true&`, '');
     const { data, error, isLoading, mutate } = useSWR(
-        [`/search?query=${search}&${filter}`, session?.accessToken],
+        search ? [`/search?query=${search}&${filter}`, session?.accessToken] : null,
         ([url, token]) => GETfetcher(url, token),
         swrConfig
     );
 
     return {
-        data: isLoading || error ? {} : data,
+        data: isLoading || !data || error ? { posts: [], spaces: [], users: [], plans: [] } : data,
         isLoading,
         error,
         mutate,
@@ -740,12 +777,12 @@ export function useGetSearchLearningModuls(search: string): {
             .catch((e) => e);
 
     const { data, error, isLoading, mutate } = useSWR(
-        `${baseurl}/wp-json/wp/v2/search?search=${search}`,
+        search ? `${baseurl}/wp-json/wp/v2/search?search=${search}` : null,
         fetcher
     );
 
     return {
-        data: isLoading || error ? {} : data,
+        data: isLoading || !data || error ? [] : data,
         isLoading,
         error,
         mutate,
