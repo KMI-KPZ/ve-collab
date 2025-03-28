@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { FaMedal } from 'react-icons/fa';
 import Dropdown from '../common/Dropdown';
+import requestDebounce from '../common/requestDebounce';
 
 interface Props {
     filterByCallback: (filter: IplansFilter) => void;
@@ -26,8 +27,6 @@ export function PlansBrowserFilter({
 
         filterByCallback({ goodPracticeOnly: !showGoodPracticeOnly });
     };
-
-    const [reqDebounce, setReqDebounce] = useState<ReturnType<typeof setTimeout>>();
 
     const handleSwitchAuthorChange = (value: string) => {
         if (isNoAuthPreview) return;
@@ -55,13 +54,7 @@ export function PlansBrowserFilter({
 
     const handleSearch = (value: string) => {
         setSearch(value);
-
-        if (reqDebounce) clearTimeout(reqDebounce);
-        setReqDebounce(
-            setTimeout(() => {
-                filterByCallback({ searchQuery: value });
-            }, 300)
-        );
+        requestDebounce(() => filterByCallback({ searchQuery: value }));
     };
 
     return (
