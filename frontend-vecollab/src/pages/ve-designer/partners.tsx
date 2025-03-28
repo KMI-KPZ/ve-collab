@@ -32,6 +32,7 @@ import printUsername from '@/components/common/Username';
 import Link from 'next/link';
 import UserProfileImage from '@/components/network/UserProfileImage';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
+import requestDebounce from '@/components/common/requestDebounce';
 
 export interface FormValues {
     partners: Partner[];
@@ -279,39 +280,29 @@ export default function Partners({ socket }: Props): JSX.Element {
         setAddedExtWarning((prev) => ++prev);
     };
 
-    const [reqDebounce, setReqDebounce] = useState<ReturnType<typeof setTimeout>>();
-
     const loadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
         if (inputValue.length < 3) return;
-
-        if (reqDebounce) clearTimeout(reqDebounce);
-        setReqDebounce(
-            setTimeout(() => {
-                fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
-                    (data: BackendSearchResponse) => {
-                        callback(
-                            data.users
-                                .filter(
-                                    (user: BackendUserSnippet) =>
-                                        !fieldsPartners.some((a) => a.value == user.username)
-                                )
-                                .map((user) => ({
-                                    label:
-                                        user.first_name +
-                                        ' ' +
-                                        user.last_name +
-                                        ' - ' +
-                                        user.username,
-                                    value: user.username,
-                                }))
-                        );
-                    }
-                );
-            }, 300)
-        );
+        requestDebounce(() => {
+            fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
+                (data: BackendSearchResponse) => {
+                    callback(
+                        data.users
+                            .filter(
+                                (user: BackendUserSnippet) =>
+                                    !fieldsPartners.some((a) => a.value == user.username)
+                            )
+                            .map((user) => ({
+                                label:
+                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                                value: user.username,
+                            }))
+                    );
+                }
+            );
+        });
     };
 
     function createSelect(control: any, name: any, index: number): JSX.Element {
