@@ -37,7 +37,7 @@ export default function LayoutSection({
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-100">
+        <div className="flex flex-col min-h-screen">
             <HeaderSection
                 notificationEvents={notificationEvents}
                 headerBarMessageEvents={headerBarMessageEvents}
@@ -45,14 +45,16 @@ export default function LayoutSection({
                 toggleNotifWindow={toggleNotifWindow}
             />
             <main
-                className={`flex-1 z-[1] min-h-96 ${
+                className={`flex-1 min-h-96 ${
                     isFrontpage ? ' bg-ve-collab-blue' : ' bg-pattern-left-blue bg-no-repeat'
                 }`}
             >
                 {excludedFromMatching === true && <ExcludedFromMatchingBanner />}
                 <FeedbackBanner />
                 <IntroTutorial />
-                <div className="container mx-auto max-w-(--breakpoint-2xl) px-2">{children}</div>
+                <div className="container relative mx-auto max-w-(--breakpoint-2xl) px-2">
+                    {children}
+                </div>
             </main>
             <FooterSection />
         </div>
