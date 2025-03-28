@@ -6,7 +6,7 @@ import NewChatForm from './NewChatForm';
 import { useSession } from 'next-auth/react';
 import RoomSnippet from './RoomSnippet';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { MdOutlineAddCircleOutline } from 'react-icons/md';
+import { MdAdd } from 'react-icons/md';
 import { useTranslation } from 'next-i18next';
 import ButtonLight from '../common/buttons/ButtongLight';
 
@@ -64,7 +64,7 @@ export default function Sidebar({
                 onClick={() => handleOpenNewChatDialog()}
                 title={t('create_new_chat_title')}
             >
-                <MdOutlineAddCircleOutline size={22} />
+                <MdAdd size={22} />
             </ButtonLight>
             <Dialog
                 isOpen={isNewChatDialogOpen}
