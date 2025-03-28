@@ -173,33 +173,6 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                 toggleNotifWindow={toggleNotifWindow}
                             >
                                 <>
-                                    <Auth
-                                        showLoader={false}
-                                        autoForward={false}
-                                        wrapsPopupComponent={true}
-                                    >
-                                        <>
-                                            <ChatWindow
-                                                socket={socket}
-                                                messageEvents={messageEvents}
-                                                headerBarMessageEvents={messageEventsHeaderBar}
-                                                setHeaderBarMessageEvents={
-                                                    setMessageEventsHeaderBar
-                                                }
-                                                open={chatOpen}
-                                                toggleChatWindow={toggleChatWindow}
-                                                prop_openOrCreateChatWith={openOrCreateChatWith}
-                                            />
-                                            <NotificationsWindow
-                                                socket={socket}
-                                                notificationEvents={notificationEvents}
-                                                setNotificationEvents={setNotificationEvents}
-                                                open={notifOpen}
-                                                toggleNotifWindow={toggleNotifWindow}
-                                            />
-                                        </>
-                                    </Auth>
-
                                     {Component.auth ? (
                                         <Auth
                                             autoForward={Component.autoForward ?? false}
@@ -242,6 +215,26 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                     )}
                                 </>
                             </LayoutSection>
+                            <Auth showLoader={false} autoForward={false} wrapsPopupComponent={true}>
+                                <>
+                                    <ChatWindow
+                                        socket={socket}
+                                        messageEvents={messageEvents}
+                                        headerBarMessageEvents={messageEventsHeaderBar}
+                                        setHeaderBarMessageEvents={setMessageEventsHeaderBar}
+                                        open={chatOpen}
+                                        toggleChatWindow={toggleChatWindow}
+                                        prop_openOrCreateChatWith={openOrCreateChatWith}
+                                    />
+                                    <NotificationsWindow
+                                        socket={socket}
+                                        notificationEvents={notificationEvents}
+                                        setNotificationEvents={setNotificationEvents}
+                                        open={notifOpen}
+                                        toggleNotifWindow={toggleNotifWindow}
+                                    />
+                                </>
+                            </Auth>
                         </SocketContext.Provider>
                     </SocketAuthenticationProvider>
                 </CookiesProvider>
