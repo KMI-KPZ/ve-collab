@@ -138,6 +138,7 @@ export default function Groups() {
     };
 
     const createNewGroup = () => {
+        if (!newInput) return;
         fetchPOST(
             `/spaceadministration/create?name=${newInput}&invisible=${newGroupInvisibleCheckboxChecked}&joinable=${!newGroupJoinableCheckboxChecked}`,
             {},
@@ -636,26 +637,19 @@ export default function Groups() {
                             {t('private')}
                         </label>
                     </div>
-                    <div className="flex w-full mt-4">
-                        <button
-                            className={
-                                'w-40 h-12 bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
-                            }
-                            onClick={handleCloseNewDialog}
-                        >
-                            <span>{t('common:cancel')}</span>
-                        </button>
-                        <button
-                            className={
-                                'w-40 h-12 bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
-                            }
+                    <div className="flex justify-between w-full mt-4">
+                        <ButtonSecondary onClick={handleCloseNewDialog}>
+                            {t('common:cancel')}
+                        </ButtonSecondary>
+                        <ButtonPrimary
                             onClick={() => {
                                 createNewGroup();
                                 handleCloseNewDialog();
                             }}
+                            disabled={!newInput}
                         >
-                            <span>{t('common:create')}</span>
-                        </button>
+                            {t('common:create')}
+                        </ButtonPrimary>
                     </div>
                 </div>
             </Dialog>
