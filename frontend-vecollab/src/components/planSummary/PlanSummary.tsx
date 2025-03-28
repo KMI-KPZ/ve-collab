@@ -54,6 +54,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         isOpen: false,
     });
     const [loadingExport, setLoadingExport] = useState<boolean>(false);
+    // TODO add filter and load more
     const { data: availablePlans } = useGetAvailablePlans({});
     const { data: partnerUserSnippets, isLoading } = useGetProfileSnippets(
         [...plan.partners, plan.author.username],
@@ -125,6 +126,8 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
             setLoadingExport(false);
             return;
         }
+
+        step.original_plan = plan._id;
 
         const res = await fetchPOST(
             '/planner/append_step',
@@ -360,7 +363,7 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                     <Link
                         className="mx-2 px-4 py-2 shadow-sm border border-ve-collab-orange text-ve-collab-orange rounded-full"
                         href={{
-                            pathname: '/ve-designer/step-names',
+                            pathname: `/ve-designer/steps`,
                             query: { plannerId: exportStep2Plan.plan?._id },
                         }}
                     >

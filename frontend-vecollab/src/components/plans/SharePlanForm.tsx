@@ -1,13 +1,15 @@
 import { BackendSearchResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useState } from 'react';
-import { AlertState } from '../common/dialogs/Alert';
 import { useTranslation } from 'next-i18next';
+import { Dispatch, SetStateAction, useState } from 'react';
 import AsyncSelect from 'react-select/async';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
-import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
+import ButtonSecondary from '../common/buttons/ButtonSecondary';
+import { AlertState } from '../common/dialogs/Alert';
+import printUsername from '../common/Username';
+import requestDebounce from '../common/requestDebounce';
 
 interface Props {
     closeDialogCallback: () => void;
@@ -48,10 +50,11 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
-        // a little less api queries, only start searching for recommendations from 2 letter inputs
-        if (inputValue.length > 1) {
+        if (inputValue.length < 3) return;
+        requestDebounce(() => {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
+                    if (!data.users) return;
                     callback(
                         data.users
                             .filter(
@@ -61,15 +64,14 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
                             )
                             .filter((user) => user.username !== session!.user.preferred_username)
                             .map((user) => ({
-                                label:
-                                    user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                                label: printUsername(user, false) as string,
                                 value: user.username,
                             }))
                     );
                     setSearchResultProfileSnippets(data.users);
                 }
             );
-        }
+        });
     };
 
     return (
@@ -78,6 +80,7 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
             <AsyncSelect
                 className="grow max-w-full"
                 loadOptions={loadOptions}
+                // isClearable={true}
                 onChange={(e) => setShareUsername(e!.value)}
                 value={
                     shareUsername
@@ -101,7 +104,7 @@ export default function SharePlanForm({ closeDialogCallback, plan, setAlert }: P
                 }
                 placeholder={t('plans_share_dialog_select_placeholder')}
                 getOptionLabel={(option) => option.label}
-                loadingMessage={() => t('loading')}
+                loadingMessage={(value) => (value.inputValue.length > 2 ? t('loading') : null)}
                 noOptionsMessage={() => t('nothing_found')}
                 openMenuOnFocus={false}
                 openMenuOnClick={false}

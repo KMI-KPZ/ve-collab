@@ -3,29 +3,29 @@
 @plugin '@tailwindcss/container-queries';
 
 @theme {
-  --color-ve-collab-orange: #c4560b;
-  --color-ve-collab-orange-light: #f7a670;
-  --color-ve-collab-blue: #00748f;
-  --color-ve-collab-blue-light: #d8f2f9;
+    --color-ve-collab-orange: #c4560b;
+    --color-ve-collab-orange-light: #f7a670;
+    --color-ve-collab-blue: #00748f;
+    --color-ve-collab-blue-light: #d8f2f9;
 
-  --text-5xl: 2.5rem;
-  --text-6xl: 2.75rem;
-  --text-7xl: 4.5rem;
-  --text-8xl: 6.25rem;
+    --text-5xl: 2.5rem;
+    --text-6xl: 2.75rem;
+    --text-7xl: 4.5rem;
+    --text-8xl: 6.25rem;
 
-  --background-image-footer-pattern: url('/images/footer/KAVAQ_Footer.png');
-  --background-image-footer-pattern-rounded: url('/images/footer/KAVAQ_Footer_rounded.png');
-  --background-image-pattern-left-blue: url('/images/logoPattern/vecollab_KAVAQ_pattern_left_blue.png');
-  --background-image-pattern-left-blue-small: url('/images/logoPattern/vecollab_pattern_left_blue_small.png');
-  --background-image-pattern-right-grey: url('/images/logoPattern/vecollab_pattern_grey.png');
-  --background-image-pattern-bottom-left-blue: url('/images/logoPattern/vecollab_pattern_bottom_left_blue.png');
-  --background-image-pattern-bottom-left-orange: url('/images/logoPattern/vecollab_pattern_left_orange.png');
+    --background-image-footer-pattern: url('/images/footer/KAVAQ_Footer.png');
+    --background-image-footer-pattern-rounded: url('/images/footer/KAVAQ_Footer_rounded.png');
+    --background-image-pattern-left-blue: url('/images/logoPattern/vecollab_KAVAQ_pattern_left_blue.png');
+    --background-image-pattern-left-blue-small: url('/images/logoPattern/vecollab_pattern_left_blue_small.png');
+    --background-image-pattern-right-grey: url('/images/logoPattern/vecollab_pattern_grey.png');
+    --background-image-pattern-bottom-left-blue: url('/images/logoPattern/vecollab_pattern_bottom_left_blue.png');
+    --background-image-pattern-bottom-left-orange: url('/images/logoPattern/vecollab_pattern_left_orange.png');
 
-  --font-konnect: Konnect;
+    --font-konnect: Konnect;
 
-  --shadow-round-box: 0px 6px 18px 12px rgba(0, 0, 0, 0.3);
-  --shadow-button-primary: inset 0 -5px 0 rgba(146, 45, 10, 1);
-  --shadow-button-blue-light: inset 0 -5px 0 rgba(0, 116, 143, 1);
+    --shadow-round-box: 0px 6px 18px 12px rgba(0, 0, 0, 0.3);
+    --shadow-button-primary: inset 0 -5px 0 rgba(146, 45, 10, 1);
+    --shadow-button-blue-light: inset 0 -5px 0 rgba(0, 116, 143, 1);
 }
 
 /*
@@ -37,22 +37,22 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
 }
 
 @utility no-scrollbar {
-  /* Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+    /* Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 @layer base {
@@ -62,72 +62,72 @@
 }
 
 @layer utilities {
-  .wp-block-image img {
-    @apply max-w-full mt-2;
-  }
-  .wp-block-image.aligncenter {
-    @apply text-center;
-  }
-  .wp-block-image.alignfull img,
-  .wp-block-image.alignwide img {
-    @apply w-full;
-  }
-  .wp-block-image .alignleft,
-  .wp-block-image .alignright,
-  .wp-block-image .aligncenter,
-  .wp-block-image.is-resized {
-    @apply table ml-0 mr-0;
-  }
-  .wp-block-image .alignleft > figcaption,
-  .wp-block-image .alignright > figcaption,
-  .wp-block-image .aligncenter > figcaption,
-  .wp-block-image.is-resized > figcaption {
-    @apply table-caption;
+    .wp-block-image img {
+        @apply max-w-full mt-2;
+    }
+    .wp-block-image.aligncenter {
+        @apply text-center;
+    }
+    .wp-block-image.alignfull img,
+    .wp-block-image.alignwide img {
+        @apply w-full;
+    }
+    .wp-block-image .alignleft,
+    .wp-block-image .alignright,
+    .wp-block-image .aligncenter,
+    .wp-block-image.is-resized {
+        @apply table ml-0 mr-0;
+    }
+    .wp-block-image .alignleft > figcaption,
+    .wp-block-image .alignright > figcaption,
+    .wp-block-image .aligncenter > figcaption,
+    .wp-block-image.is-resized > figcaption {
+        @apply table-caption;
 
-    caption-side: bottom;
-  }
+        caption-side: bottom;
+    }
 
-  .wp-block-image .alignleft {
-    @apply float-left mr-4;
-  }
-  .wp-block-image .alignright {
-    @apply float-right ml-4;
-  }
-  .wp-block-image .aligncenter {
-    @apply m-auto;
-  }
+    .wp-block-image .alignleft {
+        @apply float-left mr-4;
+    }
+    .wp-block-image .alignright {
+        @apply float-right ml-4;
+    }
+    .wp-block-image .aligncenter {
+        @apply m-auto;
+    }
 
-  .wp-block-button a,
-  .wp-block-file a.wp-block-file__button {
-    @apply bg-blue-500 text-white no-underline py-2 px-4;
-  }
+    .wp-block-button a,
+    .wp-block-file a.wp-block-file__button {
+        @apply bg-blue-500 text-white no-underline py-2 px-4;
+    }
 
-  .wp-block-button a:hover,
-  .wp-block-file a.wp-block-file__button:hover {
-    @apply bg-blue-400 cursor-pointer;
-  }
+    .wp-block-button a:hover,
+    .wp-block-file a.wp-block-file__button:hover {
+        @apply bg-blue-400 cursor-pointer;
+    }
 
-  .wp-block-file a:first-of-type {
-    @apply mr-4;
-  }
+    .wp-block-file a:first-of-type {
+        @apply mr-4;
+    }
 
-  .wp-block-cover {
-    @apply flex flex-wrap justify-center items-center bg-cover bg-center overflow-hidden;
+    .wp-block-cover {
+        @apply flex flex-wrap justify-center items-center bg-cover bg-center overflow-hidden;
 
-    min-height: 430px;
-  }
+        min-height: 430px;
+    }
 
-  .wp-block-verse {
-    @apply font-sans;
-  }
+    .wp-block-verse {
+        @apply font-sans;
+    }
 
-  .wp-block-media-text {
-    @apply grid grid-cols-2 gap-4;
-  }
+    .wp-block-media-text {
+        @apply grid grid-cols-2 gap-4;
+    }
 
-  iframe {
-    @apply w-full h-auto mt-2 aspect-video;
-  }
+    iframe {
+        @apply w-full h-auto mt-2 aspect-video;
+    }
 }
 
 @layer base {
@@ -231,7 +231,7 @@
 
 @layer base {
     body {
-        @apply bg-gray-200;
+        @apply bg-slate-100;
     }
 }
 

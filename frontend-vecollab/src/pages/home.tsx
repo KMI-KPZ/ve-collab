@@ -33,7 +33,7 @@ export default function Home({ notificationEvents, toggleNotifWindow }: Props): 
             />
             <div className="">
                 <div>
-                    <BackgroundAnimation className="-z-10" enable={true} />
+                    <BackgroundAnimation className="relative -z-10" enable={true} />
                 </div>
                 <div className="flex flex-col m-auto py-6 sm:p-12 max-w-(--breakpoint-2xl) z-0 relative gap-y-12">
                     {status != 'loading' && (

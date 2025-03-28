@@ -39,6 +39,7 @@ export default function ViewFinestep({
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
+    // TODO BUG available plan has a default limit of 10
     const originalPlan = availablePlans.find((a) => a._id == fineStep.original_plan);
 
     const canExport =

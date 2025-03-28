@@ -124,7 +124,7 @@ export default function ChatWindow({
             <div className="absolute -top-[16px] -left-[16px]">
                 <button
                     onClick={(e) => toggleChatWindow()}
-                    className="bg-white rounded-full shadow-sm p-2 hover:bg-slate-50"
+                    className="bg-white rounded-full shadow-sm p-2 hover:bg-slate-50 cursor-pointer"
                 >
                     <MdClose size={20} />
                 </button>

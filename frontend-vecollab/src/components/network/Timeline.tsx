@@ -15,6 +15,8 @@ import { Socket } from 'socket.io-client';
 import GeneralError from '../common/GeneralError';
 import { useTranslation } from 'next-i18next';
 import { add } from 'date-fns';
+import ButtonLight from '../common/buttons/ButtongLight';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     /** User is global admin or admin of current group */
@@ -311,22 +313,18 @@ export default function Timeline({
                 );
             })}
 
-            {isLoadingTimeline && <LoadingAnimation />}
+            {isLoadingTimeline && <LoadingAnimation size="small" />}
 
             {!isLoadingTimeline &&
                 allPosts.length > 0 &&
                 newFetchedPosts.length >= perFetchLimit && (
                     <div className="text-center">
-                        <button
-                            onClick={(e) => {
-                                fetchNextPosts(true);
-                            }}
-                            type="button"
+                        <ButtonLightBlue
+                            onClick={() => fetchNextPosts(true)}
                             title={t('load_more_posts')}
-                            className="py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
                         >
                             {t('show_more_posts')}
-                        </button>
+                        </ButtonLightBlue>
                     </div>
                 )}
 

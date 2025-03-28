@@ -601,12 +601,11 @@ export default function PostProcess({ socket }: Props) {
                                 <Link
                                     className="underline text-ve-collab-blue"
                                     href={{
-                                        pathname: '/ve-designer/step-names',
+                                        pathname: '/ve-designer/steps',
                                         query: {
                                             plannerId: router.query.plannerId,
                                         },
                                     }}
-                                    target="_blank"
                                 >
                                     {t('common:here')}
                                 </Link>
@@ -892,7 +891,7 @@ export function PostProcessNoAuthPreview() {
                                 <Link
                                     className="underline text-ve-collab-blue"
                                     href={{
-                                        pathname: '/ve-designer/step-names',
+                                        pathname: '/ve-designer/steps',
                                     }}
                                     target="_blank"
                                     aria-disabled

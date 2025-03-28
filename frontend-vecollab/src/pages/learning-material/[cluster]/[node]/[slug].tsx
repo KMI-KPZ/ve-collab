@@ -15,6 +15,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import CustomHead from '@/components/metaData/CustomHead';
 import { useTranslation } from 'next-i18next';
+import requestDebounce from '@/components/common/requestDebounce';
 
 interface Props {
     nodesOfCluster: INode[];
@@ -58,16 +59,12 @@ export default function LearningContentView(props: Props) {
     };
 
     useEffect(() => {
-        let reqDebounce: ReturnType<typeof setTimeout>;
         setFrameHeight('100%');
         setLoading(true);
 
         const resizedWindow = () => {
             setFrameHeight('100%');
-            if (reqDebounce) clearTimeout(reqDebounce);
-            reqDebounce = setTimeout(() => {
-                framesizeRequest();
-            }, 50);
+            requestDebounce(() => framesizeRequest());
         };
 
         window.addEventListener('message', handleFramesizeRespond);
@@ -85,7 +82,6 @@ export default function LearningContentView(props: Props) {
         }, 3000);
 
         return () => {
-            if (reqDebounce) clearTimeout(reqDebounce);
             window.removeEventListener('message', handleFramesizeRespond);
             window.removeEventListener('resize', resizedWindow);
             setFrameHeight('100%');

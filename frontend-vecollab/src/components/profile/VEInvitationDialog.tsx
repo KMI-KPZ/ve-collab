@@ -39,8 +39,6 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
             username: userid,
         };
 
-        console.log({ sendVeInvitation: payload });
-
         fetchPOST('/ve_invitation/send', payload, session?.accessToken).then((response) => {
             setSuccessPopupOpen(true);
         });
@@ -65,13 +63,16 @@ export default function VEInvitationDialog({ userid, username, isOpen, callbackD
                     <div className="flex mb-2 mt-4">
                         <input
                             type="checkbox"
-                            className="mr-2"
+                            id="appendPlanCheckboxChecked"
+                            className="mr-2 cursor-pointer"
                             checked={appendPlanCheckboxChecked}
                             onChange={(e) =>
                                 setAppendPlanCheckboxChecked(!appendPlanCheckboxChecked)
                             }
                         />
-                        <p>{t('append_existing_plan')}</p>
+                        <label htmlFor="appendPlanCheckboxChecked" className="cursor-pointer">
+                            {t('append_existing_plan')}
+                        </label>
                     </div>
                     {appendPlanCheckboxChecked && (
                         <>

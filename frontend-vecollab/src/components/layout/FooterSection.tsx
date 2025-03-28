@@ -14,11 +14,11 @@ export default function FooterSection() {
 
     return (
         <footer
-            className={`pb-4 z-0 shadow-inner ${
+            className={`pb-4 shadow-inner ${
                 isIndex
-                    ? 'text-slate-50'
+                    ? 'z-0 text-slate-50'
                     : isHome
-                    ? 'bg-slate-50 text-black border-t border-gray-400/50 border-0.5'
+                    ? 'z-0 bg-slate-50 text-black border-t border-gray-400/50 border-0.5'
                     : 'bg-footer-pattern text-slate-50'
             }`}
         >
