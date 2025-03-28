@@ -10,14 +10,16 @@ import BoxHeadline from '../common/BoxHeadline';
 import AvatarEditor from '../profile/AvatarEditor';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import LoadingAnimation from '../common/LoadingAnimation';
-import AsyncCreatableSelect from 'react-select/async-creatable';
 import Select from 'react-select';
-import { BackendSearchResponse } from '@/interfaces/api/apiInterfaces';
+import { BackendSearchResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import Dropdown from '../common/Dropdown';
 import ButtonSecondary from '../common/buttons/ButtonSecondary';
 import ButtonPrimary from '../common/buttons/ButtonPrimary';
-import { Trans, useTranslation } from 'next-i18next';
+import { useTranslation } from 'next-i18next';
 import VerticalTabs from '../profile/VerticalTabs';
+import printUsername from '../common/Username';
+import AsyncSelect from 'react-select/async';
+import requestDebounce from '../common/requestDebounce';
 
 interface Props {
     userIsAdmin: () => boolean;
@@ -209,23 +211,23 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         });
     }
 
-    const loadOptions = (
+    const invitesLoadUsers = (
         inputValue: string,
         callback: (options: { label: string; value: string }[]) => void
     ) => {
-        // a little less api queries, only start searching for recommendations from 2 letter inputs
-        if (inputValue.length > 1) {
+        if (inputValue.length < 3) return;
+        requestDebounce(() => {
             fetchGET(`/search?users=true&query=${inputValue}`, session?.accessToken).then(
                 (data: BackendSearchResponse) => {
                     callback(
-                        data.users.map((user) => ({
-                            label: user.first_name + ' ' + user.last_name + ' - ' + user.username,
+                        data.users.map((user: BackendUserSnippet) => ({
+                            label: printUsername(user, false) as string,
                             value: user.username,
                         }))
                     );
                 }
             );
-        }
+        });
     };
 
     function inviteUserToGroup(value: string) {
@@ -442,7 +444,7 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 </div>
                                 <div tabid="visibility" tabname={t('visibility')}>
                                     <div className="flex mx-4 my-4">
-                                        <div className="mx-4">{t('public')}</div>
+                                        <div className="mx-4">{t('private')}</div>
                                         <div
                                             className="md:w-14 md:h-7 w-12 h-6 flex items-center border border-gray-400 rounded-full p-1 cursor-pointer"
                                             onClick={toggleJoinability}
@@ -450,13 +452,13 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                             <div
                                                 className={
                                                     'bg-gray-400 md:w-6 md:h-6 h-5 w-5 rounded-full shadow-md transform duration-300 ease-in-out ' +
-                                                    (toggleJoinable
+                                                    (!toggleJoinable
                                                         ? null
-                                                        : 'transform translate-x-6')
+                                                        : 'transform translate-x-6 bg-green-400')
                                                 }
                                             ></div>
                                         </div>
-                                        <div className="mx-4">{t('private')}</div>
+                                        <div className="mx-4">{t('public')}</div>
                                     </div>
                                     <div className="flex mx-4 my-4">
                                         <div className="mx-4">{t('invisible')}</div>
@@ -547,33 +549,29 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 </div>
                                 <div tabid="invites" tabname={t('invitations')}>
                                     <div className="flex">
-                                        <AsyncCreatableSelect
+                                        <AsyncSelect
                                             className="w-3/4"
-                                            loadOptions={loadOptions}
+                                            loadingMessage={(value) =>
+                                                value.inputValue.length > 3 ? (
+                                                    <LoadingAnimation size="small" />
+                                                ) : null
+                                            }
+                                            loadOptions={(value, callback) => {
+                                                invitesLoadUsers(value, callback);
+                                            }}
                                             onChange={(e) => setInvitedUser(e!)}
                                             value={invitedUser}
                                             placeholder={t('common:search_users')}
                                             getOptionLabel={(option) => option.label}
-                                            formatCreateLabel={(inputValue) => (
-                                                <Trans
-                                                    i18nKey="common:search_users_no_hit"
-                                                    components={{ bold: <strong /> }}
-                                                    values={{ value: inputValue }}
-                                                />
-                                            )}
+                                            noOptionsMessage={(value) =>
+                                                !value.inputValue ? null : t('no_user_found')
+                                            }
                                         />
                                         <div className="flex w-1/4 justify-center">
-                                            <button
-                                                className={
-                                                    'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
-                                                }
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    inviteUserToGroup(invitedUser.value);
-                                                }}
-                                            >
-                                                {t('invite')}
-                                            </button>
+                                            <ButtonPrimary
+                                                onClick={() => inviteUserToGroup(invitedUser.value)}
+                                                label={t('invite')}
+                                            />
                                         </div>
                                     </div>
                                     <div className="my-4">
@@ -675,12 +673,13 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         onChange={(e) =>
                                                             setChosenPermissionUser(e!)
                                                         }
+                                                        noOptionsMessage={() => null}
                                                         value={chosenPermissionUser}
                                                         placeholder={t('common:search_users')}
                                                         getOptionLabel={(option) => option.label}
                                                     />
                                                 </div>
-                                                <div className="my-4">
+                                                <div className="mb-4 mt-20">
                                                     <div
                                                         className={
                                                             'mb-1 font-bold text-slate-900 text-lg'
@@ -849,23 +848,15 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                 <div tabid="leave_group" tabname={t('leave_group')}>
                                     <div className="flex">
                                         <div>
-                                            <p className="my-2">
+                                            <p className="my-2 italic">
                                                 {t('message_last_user_in_space')}
                                             </p>
-                                            <button
-                                                className={`h-12 border border-gray-200 text-white py-3 px-6 rounded-lg shadow cursor-pointer ${
-                                                    group.members.length == 1
-                                                        ? 'bg-orange-300'
-                                                        : 'bg-orange-600'
-                                                }`}
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    leaveGroup();
-                                                }}
-                                                disabled={group.members.length == 1}
-                                            >
-                                                <span>{t('leave_group')}</span>
-                                            </button>
+                                            {group.members.length > 1 && (
+                                                <ButtonPrimary
+                                                    onClick={leaveGroup}
+                                                    label={t('leave_group')}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 </div>
