@@ -1,10 +1,18 @@
-import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
-import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from 'react';
-import { IoIosSend, IoMdClose } from 'react-icons/io';
 import { BackendPost, BackendPostAuthor, BackendPostFile } from '@/interfaces/api/apiInterfaces';
-import { useRef } from 'react';
-import PostHeader from './PostHeader';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { fetchPOST, useGetAvailablePlans, useGetOwnProfile } from '@/lib/backend';
+import { useSession } from 'next-auth/react';
+import { useTranslation } from 'next-i18next';
+import Image from 'next/image';
+import React, {
+    FormEvent,
+    MouseEvent,
+    MouseEventHandler,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import { IoIosSend, IoMdClose } from 'react-icons/io';
 import {
     MdArrowDropDown,
     MdAttachFile,
@@ -14,33 +22,33 @@ import {
     MdLinkOff,
 } from 'react-icons/md';
 import { RxFile } from 'react-icons/rx';
-import LoadingAnimation from '../common/LoadingAnimation';
 import {
     BtnBold,
-    BtnItalic,
-    BtnUnderline,
     BtnBulletList,
+    BtnItalic,
     BtnNumberedList,
+    BtnUnderline,
     Editor,
     EditorProvider,
     Toolbar,
     createButton,
 } from 'react-simple-wysiwyg';
-import TimelinePostText from './TimelinePostText';
-import { sanitizedText } from './sanitizedText';
-import Dialog from '../profile/Dialog';
+import { Socket } from 'socket.io-client';
 import Dropdown from '../common/Dropdown';
-import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import LoadingAnimation from '../common/LoadingAnimation';
 import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
-import { Socket } from 'socket.io-client';
-import { useTranslation } from 'next-i18next';
-import Image from 'next/image';
+import Dialog from '../profile/Dialog';
+import PostHeader from './PostHeader';
+import TimelinePostText from './TimelinePostText';
 import UserProfileImage from './UserProfileImage';
+import { sanitizedText } from './sanitizedText';
 
 import { FaMedal } from 'react-icons/fa';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
 import PlanIcon from '../plans/PlanIcon';
+import { IplansFilter } from '@/pages/plans';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -85,8 +93,6 @@ export default function TimelinePostForm({
     const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false);
     const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false);
-    const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
-    const [plans, setPlans] = useState<PlanPreview[]>([]);
     const [plansToAttach, setPlansToAttach] = useState<PlanPreview[]>([]);
     const domParser = new DOMParser();
 
@@ -253,25 +259,12 @@ export default function TimelinePostForm({
                 break;
 
             case 'plan':
-                openPlanDialog();
+                setIsPlanDialogOpen(true);
                 break;
 
             default:
                 break;
         }
-    };
-
-    const openPlanDialog = () => {
-        setIsPlanDialogOpen(true);
-
-        if (plans.length) return;
-        setLoadingPlans(true);
-        fetchGET(
-            `/planner/get_public_of_user?username=${session?.user.preferred_username}`,
-            session?.accessToken
-        )
-            .then((data) => setPlans(data.plans))
-            .finally(() => setLoadingPlans(false));
     };
 
     const addPlanAttachment = (plan: PlanPreview) => {
@@ -381,61 +374,86 @@ export default function TimelinePostForm({
     };
 
     const PlansDialog = () => {
-        if (loadingPlans) return <LoadingAnimation />;
+        const pageLength = 5;
+        const [filterBy, setFilterBy] = useState<IplansFilter>({
+            goodPracticeOnly: true,
+            owner: 'own',
+            limit: pageLength,
+            offset: 0,
+        });
+        const { data: plans, mutate, isLoading } = useGetAvailablePlans(filterBy);
 
-        if (!plans.length)
+        if (!isLoading && !plans.length)
             return (
                 <>
-                    {t('no_plans_yet')}{' '}
+                    <p>{t('no_plans_yet')}</p>
                     <ButtonNewPlan socket={socket} label={t('create_new_plan')} />
                 </>
             );
 
         // TODO add simple filter input
-
-        // TODO layout (GP icon etc) like current PlansBrowser
-
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
                 <div className="mb-2 pb-2 border-b border-gray-200">{t('add_your_gp_plans')}</div>
-                {plans
-                    .sort((a, b) => {
-                        return (
-                            new Date(b.last_modified).getTime() -
-                            new Date(a.last_modified).getTime()
-                        );
-                    })
-                    .map((plan) => (
-                        <div
-                            key={plan._id}
-                            className="p-2 flex items-center justify-start gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                            title={t('common:choose')}
-                            onClick={(e) => {
-                                addPlanAttachment(plan);
-                            }}
-                        >
-                            <PlanIcon />
+                <div className="flex flex-col max-h-96 overflow-y-auto content-scrollbar">
+                    {plans
+                        .sort((a, b) => {
+                            return (
+                                new Date(b.last_modified).getTime() -
+                                new Date(a.last_modified).getTime()
+                            );
+                        })
+                        .map((plan) => (
+                            <div
+                                key={plan._id}
+                                className="p-2 flex items-center justify-start gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                                title={t('common:choose')}
+                                onClick={(e) => {
+                                    addPlanAttachment(plan);
+                                }}
+                            >
+                                <PlanIcon />
 
-                            <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
-                            {plan.is_good_practise && (
-                                <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
-                                    <FaMedal title={t('common:plans_marked_as_good_practise')} />
-                                </div>
-                            )}
-                            {plan.steps.length > 1 && (
-                                <div className="text-nowrap">({plan.steps.length} Etappen)</div>
-                            )}
-                            {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
-                            {session?.user.preferred_username != plan.author.username && (
-                                <div className="text-sm text-gray-500">
-                                    von {plan.author.first_name} {plan.author.last_name}
-                                </div>
-                            )}
-                            <span className="grow text-right" title="zuletzt geändert">
-                                <Timestamp timestamp={plan.last_modified} className="text-sm" />
-                            </span>
-                        </div>
-                    ))}
+                                <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
+                                {plan.is_good_practise && (
+                                    <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
+                                        <FaMedal
+                                            title={t('common:plans_marked_as_good_practise')}
+                                        />
+                                    </div>
+                                )}
+                                {plan.steps.length > 1 && (
+                                    <div className="text-nowrap">({plan.steps.length} Etappen)</div>
+                                )}
+                                {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
+                                {session?.user.preferred_username != plan.author.username && (
+                                    <div className="text-sm text-gray-500">
+                                        von {plan.author.first_name} {plan.author.last_name}
+                                    </div>
+                                )}
+                                <span className="grow text-right" title="zuletzt geändert">
+                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                </span>
+                            </div>
+                        ))}
+                </div>
+                {isLoading && <LoadingAnimation size="small" />}
+                {plans.length >= filterBy.limit! ? (
+                    <div className="mx-auto mt-4">
+                        <ButtonLightBlue
+                            label={t('common:more')}
+                            onClick={() => {
+                                setFilterBy((prev) => ({
+                                    ...prev,
+                                    limit: prev.limit! + pageLength,
+                                }));
+                                mutate();
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <></>
+                )}
             </div>
         );
     };
