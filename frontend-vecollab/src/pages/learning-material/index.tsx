@@ -96,7 +96,9 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Grundlagen', 'xl:left-[50%] xl:-translate-x-full', [
                 '-top-[1.5rem] -left-[5rem]', //einfuehrung
                 'top-[.5rem] -right-[6.5rem]', // potenziale
-                '-bottom-[2.2rem] -right-[7rem]', // herausforderungen
+                router.locale === 'de'
+                    ? '-bottom-[2.2rem] -right-[7rem]'
+                    : '-bottom-[0.7rem] -right-[6rem]', // herausforderungen
                 '-bottom-[.5rem] -left-[10rem]', // beispiele aus der praxis
             ])}
 
@@ -104,12 +106,12 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Zusammen Planen', 'xl:top-[3rem] xl:left-[17%] xl:-translate-x-1/2', [
                 '-top-[2rem] -left-[5rem]', // va-planung
                 '-bottom-[1.5rem] -right-[5rem]', // evaluation
-                '-bottom-[.5rem] -left-[10rem]' // leitfragen Aushandlungsphase
+                '-bottom-[.5rem] -left-[10rem]', // leitfragen Aushandlungsphase
             ])}
 
             {/* 3 BUBBLE */}
             {Bubble('Digitales', 'xl:-top-[13rem] xl:left-[77%] xl:-translate-x-1/2', [
-                '-bottom-[3.5rem] -right-[6.5rem]', // tools
+                '-bottom-[1rem] -right-[3.5rem]', // tools
                 '-top-[1.5rem] -left-[3rem]', // oer
             ])}
 
@@ -118,7 +120,9 @@ export default function PageCategoryNotSelected(props: Props) {
                 '-bottom-[-2.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
                 '-bottom-[-0.5rem] -right-[10rem]', // sprachliche aspekte
-                '-top-[1.5rem] -left-[6.5rem]', //methodenkoffer
+                router.locale === 'de'
+                    ? '-top-[1.5rem] -left-[6.5rem]'
+                    : '-top-[1rem] -left-[5.5rem]', //methodenkoffer
                 '-bottom-[4rem] -left-[3rem]', // controversiality
             ])}
         </>
