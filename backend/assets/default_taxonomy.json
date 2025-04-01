@@ -1,9 +1,163 @@
 {
     "taxonomy": [
         {
+            "parent": 20,
+            "droppable": false,
+            "text": "Kommunikation und Sprache im VA",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-1-sprachliche-aspekte-in-virtuellen-austauschen/",
+                    "en": ""
+                }
+            },
+            "id": 181
+        },
+        {
+            "parent": 20,
+            "droppable": false,
+            "text": "Sprachauswahl und -gebrauch im VA",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-2-sprachwahl-und-gebrauch-im-va/",
+                    "en": ""
+                }
+            },
+            "id": 182
+        },
+        {
+            "parent": 20,
+            "droppable": false,
+            "text": "Sprachliche Aspekte bei der Planung eines VA",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-3-va-planung-unterstutzung-umgang-mit-sprachlichen-herausforderungen/",
+                    "en": ""
+                }
+            },
+            "id": 183
+        },
+        {
+            "parent": 20,
+            "droppable": false,
+            "text": "Herausforderungen in Bezug auf sprachliche Aspekte",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-4-herausforderungen-in-bezug-auf-sprachliche-aspekte-im-va/",
+                    "en": ""
+                }
+            },
+            "id": 184
+        },
+        {
+            "parent": 20,
+            "droppable": false,
+            "text": "Umgang mit sprachlichen Herausforderungen",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-5-sprachliche-aspekte/",
+                    "en": ""
+                }
+            },
+            "id": 185
+        },
+        {
+            "parent": 20,
+            "droppable": false,
+            "text": "Zusammenfassung",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/15-5-literatur/",
+                    "en": ""
+                }
+            },
+            "id": 186
+        },
+        {
+            "parent": 17,
+            "droppable": false,
+            "text": "Einstieg",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/13-1-neu-game-based-learning-einstieg/",
+                    "en": ""
+                }
+            },
+            "id": 176
+        },
+        {
+            "parent": 17,
+            "droppable": false,
+            "text": "Spielerisch lernen",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/13-2-game-based-learning-spielerisch-lernen/",
+                    "en": ""
+                }
+            },
+            "id": 177
+        },
+        {
+            "parent": 17,
+            "droppable": false,
+            "text": "Game-based Learning in VA",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/13-3-neu-game-based-learning-umsetzung/",
+                    "en": ""
+                }
+            },
+            "id": 178
+        },
+        {
+            "parent": 17,
+            "droppable": false,
+            "text": "Fallbeispiel",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/13-4-neu-game-based-learning/",
+                    "en": ""
+                }
+            },
+            "id": 179
+        },
+        {
+            "parent": 17,
+            "droppable": false,
+            "text": "Abschlussreflexion",
+            "text_en": "",
+            "data": {
+                "description": "",
+                "urls": {
+                    "de": "https://soserve.rz.uni-leipzig.de:10001/13-5-game-based-learning-reflektion-literatur/",
+                    "en": ""
+                }
+            },
+            "id": 180
+        },
+        {
             "parent": 31,
             "droppable": true,
-            "text": "VE-Planung",
+            "text": "VE-Planung (EN)",
             "text_en": "Planning a VE",
             "id": 14
         },
@@ -18,19 +172,22 @@
             "parent": 31,
             "droppable": true,
             "text": "Leitfragen für die Aushandlungsphase",
-            "text_en": "Guiding Questions for Negiotiation Phase",
+            "text_en": "Guiding Questions for Negotiation Phase",
             "id": 175
         },
         {
             "parent": 14,
             "droppable": false,
             "text": "Introduction",
-            "text_en": "",
+            "text_en": "Introduction",
             "data": {
                 "description": "",
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/16-1-planning-a-ve-introduction/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/16-1-planning-a-ve-introduction/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 171
@@ -171,14 +328,14 @@
         {
             "parent": 33,
             "droppable": true,
-            "text": "kulturelle Aspekte",
+            "text": "Kulturelle Aspekte",
             "text_en": "Cultural Aspects",
             "id": 19
         },
         {
             "parent": 33,
             "droppable": true,
-            "text": "sprachliche Aspekte",
+            "text": "Sprachliche Aspekte",
             "text_en": "Linguistic Aspects",
             "id": 20
         },
@@ -186,13 +343,13 @@
             "parent": 33,
             "droppable": true,
             "text": "Methodenkoffer",
-            "text_en": "Method Box",
+            "text_en": "Method Kit",
             "id": 58
         },
         {
             "parent": 33,
             "droppable": true,
-            "text": "Kontroverses in VE",
+            "text": "Kontroversität in VE (EN)",
             "text_en": "Controversiality in VE",
             "id": 164
         },
@@ -214,15 +371,15 @@
             "parent": 29,
             "droppable": false,
             "text": "Einstieg",
-            "text_en": "",
+            "text_en": "Introduction",
             "data": {
                 "description": "",
-                "metadata": {
-                    "name": ""
-                },
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung-2/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/7-evaluation-in-virtuellen-austauschen-einfuhrung/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 53
@@ -231,12 +388,15 @@
             "parent": 29,
             "droppable": false,
             "text": "Ziele, Funktionen, Formen und Schwerpunkte",
-            "text_en": "",
+            "text_en": "Objectives, Functions, Forms and Focal Points",
             "data": {
                 "description": "",
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/7-1-evaluation-ziele-funktionen-formen-schwerpunkte-en/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 54
@@ -245,12 +405,15 @@
             "parent": 29,
             "droppable": false,
             "text": "Evaluationsmethoden",
-            "text_en": "",
+            "text_en": "Evaluation Methods",
             "data": {
                 "description": "",
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/7-2-methoden-der-evaluation-2/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 55
@@ -259,12 +422,15 @@
             "parent": 29,
             "droppable": false,
             "text": "Auswertung und Ergebnisse",
-            "text_en": "",
+            "text_en": "Analysis and Evaluation Results",
             "data": {
                 "description": "",
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/7-3-ergebnisse-und-fallstricke-en/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 56
@@ -273,12 +439,15 @@
             "parent": 29,
             "droppable": false,
             "text": "Reflexion",
-            "text_en": "",
+            "text_en": "Reflexion",
             "data": {
                 "description": "",
                 "urls": {
                     "de": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion/",
-                    "en": ""
+                    "en": "https://soserve.rz.uni-leipzig.de:10001/7-4-evaluation-reflexion-en/"
+                },
+                "metadata": {
+                    "name": ""
                 }
             },
             "id": 57
@@ -369,7 +538,7 @@
             "parent": 32,
             "droppable": true,
             "text": "Tools",
-            "text_en": "Tools",
+            "text_en": "Tool Kit",
             "id": 34
         },
         {
@@ -644,7 +813,7 @@
             "parent": 0,
             "droppable": true,
             "text": "Grundlagen",
-            "text_en": "Basic",
+            "text_en": "Basics",
             "id": 30
         },
         {
