@@ -290,7 +290,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
                 description={t('goals.description')}
                 tooltip={{
                     text: t('goals.tooltip'),
-                    link: '/learning-material/Zusammen%20Planen/VA-Planung',
+                    link: '/learning-material/Zusammen%20Planen/VE-Planung%20(EN)',
                 }}
                 stageInMenu="generally"
                 idOfProgress="learning_goals"

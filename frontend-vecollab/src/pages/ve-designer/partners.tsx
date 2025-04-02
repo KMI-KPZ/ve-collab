@@ -461,7 +461,7 @@ export default function Partners({ socket }: Props): JSX.Element {
                 description={[t('partners.description-1')]}
                 tooltip={{
                     text: t('partners.tooltip'),
-                    link: '/learning-material/2/VA-Planung',
+                    link: '/learning-material/Zusammen%20Planen/VE-Planung%20(EN)',
                 }}
                 stageInMenu="generally"
                 idOfProgress="partners"

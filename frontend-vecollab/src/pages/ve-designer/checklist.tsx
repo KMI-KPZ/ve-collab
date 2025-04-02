@@ -348,7 +348,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 description={t('checklist.description')}
                 tooltip={{
                     text: t('checklist.tooltip'),
-                    link: '/learning-material/Zusammen%20Planen/Aushandlungsphase',
+                    link: '/learning-material/Zusammen%20Planen/Leitfragen%20für%20die%20Aushandlungsphase',
                 }}
                 stageInMenu="generally"
                 idOfProgress="checklist"

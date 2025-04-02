@@ -38,7 +38,7 @@ export type Metadata = {
 
 export type CustomData = {
     description: string;
-    urls: {
+    pages: {
         de: string;
         en: string;
     };
@@ -98,9 +98,9 @@ export default function Edit() {
             text_en: 'Material 1',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                urls: {
-                    de: 'http://localhost/dummy',
-                    en: 'http://localhost/dummy',
+                pages: {
+                    de: '123',
+                    en: '123',
                 },
             },
         },
@@ -112,9 +112,9 @@ export default function Edit() {
             text_en: 'Material 2',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                urls: {
-                    de: 'http://localhost/dummy',
-                    en: 'http://localhost/dummy',
+                pages: {
+                    de: '123',
+                    en: '123',
                 },
             },
         },
@@ -126,9 +126,9 @@ export default function Edit() {
             text_en: 'Material 3',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                urls: {
-                    de: 'http://localhost/dummy',
-                    en: 'http://localhost/dummy',
+                pages: {
+                    de: '123',
+                    en: '123',
                 },
             },
         },
@@ -147,9 +147,9 @@ export default function Edit() {
             text_en: 'Material 4',
             data: {
                 description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                urls: {
-                    de: 'http://localhost/dummy',
-                    en: 'http://localhost/dummy',
+                pages: {
+                    de: '123',
+                    en: '123',
                 },
             },
         },
@@ -168,8 +168,8 @@ export default function Edit() {
     const [currentMaterialInputNameEn, setCurrentMaterialInputNameEn] = useState<string>('');
     const [currentMaterialInputDescription, setCurrentMaterialInputDescription] =
         useState<string>('');
-    const [currentMaterialInputLinkDe, setCurrentMaterialInputLinkDe] = useState<string>('');
-    const [currentMaterialInputLinkEn, setCurrentMaterialInputLinkEn] = useState<string>('');
+    const [currentMaterialInputIdDe, setCurrentMaterialInputIdDe] = useState<string>('');
+    const [currentMaterialInputIdEn, setCurrentMaterialInputIdEn] = useState<string>('');
 
     const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
 
@@ -233,17 +233,17 @@ export default function Edit() {
             text_en: currentMaterialInputNameEn,
             data: {
                 description: currentMaterialInputDescription,
-                urls: {
-                    de: currentMaterialInputLinkDe,
-                    en: currentMaterialInputLinkEn,
+                pages: {
+                    de: currentMaterialInputIdDe,
+                    en: currentMaterialInputIdEn,
                 },
             },
         });
         setCurrentMaterialInputName('');
         setCurrentMaterialInputNameEn('');
         setCurrentMaterialInputDescription('');
-        setCurrentMaterialInputLinkDe('');
-        setCurrentMaterialInputLinkEn('');
+        setCurrentMaterialInputIdDe('');
+        setCurrentMaterialInputIdEn('');
     };
 
     const handleSaveToBackend = () => {
@@ -252,7 +252,12 @@ export default function Edit() {
         setSuccessPopupOpen(true);
     };
 
-    const handleNodeChange = (id: NodeModel['id'], textUpdate: string, textEnUpdate: string, dataUpdate?: CustomData) => {
+    const handleNodeChange = (
+        id: NodeModel['id'],
+        textUpdate: string,
+        textEnUpdate: string,
+        dataUpdate?: CustomData
+    ) => {
         const newTree = treeData.map((node) => {
             if (node.id === id) {
                 return {
@@ -310,13 +315,13 @@ export default function Edit() {
                                             <div className="flex px-1 justify-between">
                                                 <div className="flex">
                                                     <button
-                                                        className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                                        className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white cursor-pointer"
                                                         onClick={handleSaveToBackend}
                                                     >
                                                         Änderungen speichern
                                                     </button>
                                                     <button
-                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange cursor-pointer"
                                                         onClick={() =>
                                                             handleSubmit({
                                                                 parent: 0,
@@ -332,7 +337,7 @@ export default function Edit() {
                                                         </div>
                                                     </button>
                                                     <button
-                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange"
+                                                        className="flex justify-center items-center border border-ve-collab-orange rounded-md px-2 py-1 mx-2 text-ve-collab-orange cursor-pointer"
                                                         onClick={handleOpenMaterialDialog}
                                                     >
                                                         <RxPlus />
@@ -340,7 +345,7 @@ export default function Edit() {
                                                     </button>
                                                 </div>
                                                 <button
-                                                    className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white"
+                                                    className="flex justify-center items-center bg-ve-collab-orange rounded-md px-2 py-1 mx-2 text-white cursor-pointer"
                                                     onClick={() => {
                                                         triggerMBRSync();
                                                     }}
@@ -422,24 +427,24 @@ export default function Edit() {
                                 onChange={(e) => setCurrentMaterialInputDescription(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink - deutsch'} />
+                        <BoxHeadline title={'Page-ID - deutsch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Link zum deutschen Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLinkDe}
-                                onChange={(e) => setCurrentMaterialInputLinkDe(e.target.value)}
+                                placeholder="Page-ID zum deutschen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputIdDe}
+                                onChange={(e) => setCurrentMaterialInputIdDe(e.target.value)}
                             />
                         </div>
-                        <BoxHeadline title={'Einbettungslink - englisch'} />
+                        <BoxHeadline title={'Page-ID - englisch'} />
                         <div className="mb-10">
                             <input
                                 type="text"
                                 className="w-full border border-gray-500 rounded-lg px-2 py-1 my-1"
-                                placeholder="Link zum englischen Lehrinhalt, um ihn einzubetten"
-                                value={currentMaterialInputLinkEn}
-                                onChange={(e) => setCurrentMaterialInputLinkEn(e.target.value)}
+                                placeholder="Page-ID zum englischen Lehrinhalt, um ihn einzubetten"
+                                value={currentMaterialInputIdEn}
+                                onChange={(e) => setCurrentMaterialInputIdEn(e.target.value)}
                             />
                         </div>
                         <BoxHeadline title={'Metadaten'} />
@@ -447,7 +452,7 @@ export default function Edit() {
                         <div className="flex absolute bottom-0 w-full">
                             <button
                                 className={
-                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg'
+                                    'bg-transparent border border-gray-500 py-3 px-6 mr-auto rounded-lg shadow-lg cursor-pointer'
                                 }
                                 onClick={handleCloseMaterialDialog}
                             >
@@ -455,7 +460,7 @@ export default function Edit() {
                             </button>
                             <button
                                 className={
-                                    'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl'
+                                    'bg-ve-collab-orange border border-gray-200 text-white py-3 px-6 rounded-lg shadow-xl cursor-pointer'
                                 }
                                 onClick={() => {
                                     handleCreateNewMaterial();

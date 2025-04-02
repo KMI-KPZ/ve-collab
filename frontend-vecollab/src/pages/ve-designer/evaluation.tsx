@@ -27,18 +27,6 @@ interface FormValues {
     evaluationPerPartner: EvaluationPerPartner[];
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return formValues.evaluationPerPartner.every((partner) => {
-//         return (
-//             !partner.is_graded &&
-//             (partner.task_type === '' || partner.task_type === null) &&
-//             (partner.assessment_type === '' || partner.assessment_type === null) &&
-//             (partner.evaluation_while === '' || partner.evaluation_while === null) &&
-//             (partner.evaluation_after === '' || partner.evaluation_after === null)
-//         );
-//     });
-// };
-
 interface Props {
     socket: Socket;
 }
@@ -329,7 +317,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 description={t('evaluation.description')}
                 tooltip={{
                     text: t('evaluation.tooltip'),
-                    link: '/learning-material/2/Evaluation',
+                    link: '/learning-material/Zusammen%20Planen/Evaluation/Einstieg',
                 }}
                 stageInMenu="generally"
                 idOfProgress="evaluation"

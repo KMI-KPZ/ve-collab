@@ -50,7 +50,7 @@ class MaterialTaxonomyHandler(BaseHandler):
                             "text_en": "<str>",
                             "data": {
                                 "description": "<str>",
-                                "urls": {
+                                "pages": {
                                     "de": "<str>",
                                     "en": "<str>"
                                 }

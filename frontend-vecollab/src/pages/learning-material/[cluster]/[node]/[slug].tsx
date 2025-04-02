@@ -18,6 +18,7 @@ import { useTranslation } from 'next-i18next';
 import requestDebounce from '@/components/common/requestDebounce';
 
 interface Props {
+    baseUrl: string;
     nodesOfCluster: INode[];
     lectionsOfNode: IMaterialNode[];
     currentNode: IMaterialNode;
@@ -145,6 +146,11 @@ export default function LearningContentView(props: Props) {
         t(translateAttribute) !== translateAttribute
             ? t(translateAttribute)
             : t('frontpage.description');
+    const pageUrl = `${props.baseUrl}?p=${
+        props.currentNode.data.pages[router.locale as 'de' | 'en'] ||
+        (router.locale === 'de' ? props.currentNode.data.pages.en : props.currentNode.data.pages.de)
+    }`;
+
     return (
         <>
             <CustomHead
@@ -179,20 +185,13 @@ export default function LearningContentView(props: Props) {
                                     </span>
                                 </div>
                             )}
-
                             <iframe
                                 style={{ height: frameHeight }}
                                 className="rounded-xl overflow-hidden"
-                                src={
-                                    props.currentNode.data.urls[router.locale as 'de' | 'en'] ||
-                                    (router.locale === 'de'
-                                        ? props.currentNode.data.urls.en
-                                        : props.currentNode.data.urls.de)
-                                }
+                                src={pageUrl}
                                 ref={iframeRef}
                                 scrolling="no"
                             ></iframe>
-
                             {(props.prevNode || props.nextNode) && (
                                 <div className="flex my-4 pt-4 border-t border-gray-200">
                                     {/* <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between"> */}
@@ -262,6 +261,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
     return {
         props: {
+            baseUrl: process.env.MATERIAL_BASE_URL,
             nodesOfCluster,
             lectionsOfNode,
 

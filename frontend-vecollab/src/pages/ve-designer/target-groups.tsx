@@ -332,7 +332,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 description={t('target.description')}
                 tooltip={{
                     text: t('target.tooltip-1'),
-                    link: '/learning-material/Zusammen%20Planen/VA-Planung',
+                    link: '/learning-material/Zusammen%20Planen/VE-Planung%20(EN)',
                 }}
                 stageInMenu="generally"
                 idOfProgress="target_groups"
@@ -372,7 +372,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                         >
                             <Link
                                 target="_blank"
-                                href="/learning-material/Zusammen%20Lernen/sprachliche%20Aspekte"
+                                href="/learning-material/Zusammen%20Lernen/Sprachliche%20Aspekte/Sprachliche%20Aspekte%20bei%20der%20Planung%20eines%20VA"
                                 className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
                             >
                                 <PiBookOpenText
