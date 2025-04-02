@@ -250,7 +250,7 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                 description={t('learningEnv.description')}
                 tooltip={{
                     text: t('learningEnv.tooltip'),
-                    link: '/learning-material/Digitales/Tools',
+                    link: '/learning-material/Digitales/Tools/Toolliste%20für%20virtuelle%20Austausche',
                 }}
                 stageInMenu="generally"
                 idOfProgress="learning_env"
