@@ -16,6 +16,12 @@ from resources.network.profile import Profiles
 from resources.network.space import Spaces
 import util
 
+import global_vars
+from model import VEPlan
+from resources.network.post import Posts
+from resources.network.space import Spaces
+import gridfs
+
 
 class ProfileInformationHandler(BaseHandler):
     @auth_needed
@@ -948,6 +954,7 @@ class UserHandler(BaseHandler):
         self.set_status(200)
         self.finish()
 
+
     @auth_needed
     async def get(self, slug):
         """
@@ -1047,6 +1054,145 @@ class UserHandler(BaseHandler):
 
         else:
             self.set_status(404)
+
+    @auth_needed
+    async def delete(self, slug):
+        """
+        DELETE /users/delete
+        Delete all user data and profile
+        """
+
+        if not self.current_user:
+            self.write({"status": 400, "reason": "no current user"})
+            return
+
+        if self.is_current_user_lionet_admin():
+            self.write({"status": 400, "reason": "admin cannot delete themself"})
+            return
+
+        username = self.current_user.username
+        if slug == "delete":
+            try:
+                keycloak_info = self.get_keycloak_user(username)
+                self._delete_all_of(username)
+                global_vars.keycloak_admin.delete_user(keycloak_info["id"])
+            except KeycloakGetError as e:
+                error_response = json.loads(e.error_message.decode())
+                self.set_status(400)
+                self.write({"status": 400, "reason": str(error_response["error"])})
+                return
+            self.write({"status": 200, "success": True, "redirect_suggestions": ["/"]})
+        else:
+            self.set_status(404)
+
+    def _delete_all_of(self, username: str):
+        """
+        Delete all user data and profile:
+            plans, posts, comments, files, spaces, chats, invitations, notifications, profile
+        """
+
+        def delete_plans(db):
+            # delete users plans
+            # remove from rw list
+            plans_manager = VEPlanResource(db)
+            plans = db.plans.find({ "author": username })
+            for plan in plans:
+                # TODO maybe delete referenzes of plan in plans_manager.delete_plan() ?
+                plans_manager.delete_plan(plan["_id"])
+            plans_rw = db.plans.find({"$or": [{ "read_access": { "$in": [username]} }, { "write_access": { "$in": [username]} }]})
+            for plan in plans_rw:
+                plans_manager.revoke_read_permissions(plan["_id"], username)
+
+        def delete_posts(db):
+            # delete reposts, posts and comments of user
+            # remove from likers
+            # TODO maybe delete referenzes of post in other posts should be done in Posts.delete_post() ?
+            posts_manager = Posts(db)
+
+            # remove as repost
+            db.posts.update_many({"author": username, "isRepost": True}, {"$set": {
+                "author": "",
+                "text": ""
+            }})
+
+            posts = db.posts.find({"$or": [ {"author": username}, {"repostAuthor": username} ]})
+            for post in posts:
+                posts_manager.delete_post(post["_id"])
+
+            db.posts.update_many({"comments.author": username}, {"$pull": {"comments": {"author": username}}})
+            db.posts.update_many({"likers": {"$in": [username]}}, {"$pull": {"likers": username}})
+
+        def delete_spaces(db):
+            # delete spaces of username (if only admin) and all its data
+            # remove as member, admin and invites or requests from all other spaces
+            space_manager = Spaces(db)
+            spaces = db.spaces.find({"admins": { "$in": [username], "$size": 1} })
+            for space in spaces:
+                # TODO remove user as member from all groups
+                space_manager.delete_space(space["_id"])
+
+            db.spaces.update_many({"admins": {"$in": [username]}}, {"$pull": {"admins": username}})
+            db.spaces.update_many({"members": {"$in": [username]}}, {"$pull": {"members": username}})
+            db.spaces.update_many({"requests": {"$in": [username]}}, {"$pull": {"requests": username}})
+            db.spaces.update_many({"invites": {"$in": [username]}}, {"$pull": {"invites": username}})
+            db.spaces.update_many({"files.author": username}, {"$pull": {"files": {"author": username}}})
+
+        def delete_files(db):
+            # delete all files uploaded by user
+            #   the're already deleted from space!
+            # TODO may delete file references?!
+            files = db.fs.files.find({"metadata.uploader": username})
+            fs = gridfs.GridFS(db)
+            for file in files:
+                fs.delete(file["_id"])
+
+        def delete_chats(db):
+            # delete all messages from user and remove from members list, and may remove empty chatro0ms
+            chats = db.chatrooms.find({"members": { "$in": [username] } })
+            for chat in chats:
+                db.chatrooms.update_one(
+                    {"_id": chat["_id"]}, {"$pull": {"messages": {"sender": username}}}
+                )
+                db.chatrooms.update_one(
+                    {"_id": chat["_id"]}, {"$pull": {"send_states": {"username": username}}}
+                )
+                db.chatrooms.update_one(
+                    {"_id": chat["_id"]},
+                    {"$pull": {"members": username }},
+                )
+                db.chatrooms.delete_many({"members": { "$size": 0 }})
+
+        def delete_invitations(db):
+            # delete invitations sended by user; remove user as recipient
+            # but do not dlete invitations sended by other users
+            db.invitations.delete_many({"sender": username})
+            db.invitations.update_many({"recipient": username}, {"$set": {"recipient": ""}})
+            db.mail_invitations.delete_many({"sender": username})
+
+        def delete_notifications(db):
+            # delete all notifications to and from user
+            db.notifications.delete_many({"payload.from": username})
+            db.notifications.delete_many({"to": username})
+
+        def delete_profile(db):
+            # remove followings, delete profile
+            db.profiles.update_many(
+                {}, {"$pull": {"follows": username}}
+            )
+            db.profiles.delete_one({"username": username})
+
+        with util.get_mongodb() as db:
+            delete_plans(db)
+            delete_posts(db)
+            delete_spaces(db)
+            delete_files(db)
+            delete_chats(db)
+            delete_invitations(db)
+            delete_notifications(db)
+            delete_profile(db)
+
+        return True
+
 
 
 class MatchingExclusionHandler(BaseHandler):

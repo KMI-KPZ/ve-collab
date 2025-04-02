@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Timestamp from '@/components/common/Timestamp';
 import { useTranslation } from 'react-i18next';
 import UserProfileImage from './UserProfileImage';
+import printUsername from '../common/Username';
 
 interface Props {
     author: BackendPostAuthor;
@@ -11,12 +12,11 @@ interface Props {
 }
 
 export default function PostHeader({ author, date }: Props) {
-    const { t } = useTranslation(['community', 'common']);
+    const { t } = useTranslation(['community']);
 
-    // console.log({ author });
-
-    const authorName =
-        author.first_name != '' ? `${author.first_name} ${author.last_name}` : author.username;
+    if (!author) {
+        return <div className="italic">{t('post_was_deleted')}</div>;
+    }
 
     return (
         <>
@@ -26,7 +26,7 @@ export default function PostHeader({ author, date }: Props) {
             />
             <div className="flex flex-col">
                 <Link href={`/profile/user/${author.username}`} className="font-bold">
-                    {authorName}
+                    {printUsername(author)}
                 </Link>
                 {date && (
                     <Timestamp
