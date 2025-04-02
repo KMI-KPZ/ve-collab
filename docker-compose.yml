@@ -86,6 +86,7 @@ services:
         NEXT_PUBLIC_SOCKETIO_BASE_URL: "http://localhost:${BACKEND_PORT}"
         NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
         NEXT_PUBLIC_FEEDBACK_FORM_URL: ${FEEDBACK_FORM_URL}
+        MATERIAL_BASE_URL: ${MATERIAL_BASE_URL}
     network_mode: host
     logging:
       driver: "json-file"
