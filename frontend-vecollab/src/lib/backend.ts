@@ -744,7 +744,6 @@ export function useGetSearchLearningModuls(search: string): {
     error: APIError;
     mutate: KeyedMutator<any>;
 } {
-    const baseurl = 'https://soserve.rz.uni-leipzig.de:10001';
     const fetcher = (url: string) =>
         fetch(url)
             .then((res: any) => {
@@ -777,7 +776,7 @@ export function useGetSearchLearningModuls(search: string): {
             .catch((e) => e);
 
     const { data, error, isLoading, mutate } = useSWR(
-        search ? `${baseurl}/wp-json/wp/v2/search?search=${search}` : null,
+        search ? `${process.env.MATERIAL_BASE_URL}wp-json/wp/v2/search?search=${search}` : null,
         fetcher
     );
 
