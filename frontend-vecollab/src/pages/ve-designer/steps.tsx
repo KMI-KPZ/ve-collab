@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
 import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
@@ -18,10 +18,10 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import Dialog from '@/components/profile/Dialog';
-import { fetchGET } from '@/lib/backend';
+import { useGetAvailablePlans } from '@/lib/backend';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Timestamp from '@/components/common/Timestamp';
-import { MdArrowOutward, MdNewspaper } from 'react-icons/md';
+import { MdArrowOutward } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
 import Link from 'next/link';
@@ -30,6 +30,10 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { StepNamesFormSchema } from '../../zod-schemas/stepNamesSchema';
 import CustomHead from '@/components/metaData/CustomHead';
+import PlanIcon from '@/components/plans/PlanIcon';
+import { IplansFilter } from '../plans';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 
 interface FormValues {
     stepNames: IFineStep[];
@@ -74,9 +78,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = yesterdayDate.toISOString().split('T')[0];
-
-    const [loadingAvailPlans, setLoadingAvailPlans] = useState<boolean>(true);
-    const [availPlans, setAvailPlans] = useState<IPlan[]>([]);
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
@@ -158,10 +159,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
     };
 
     const handleDelete = (index: number): void => {
-        // if (fields.length > 1) {
-        // } else {
-        //     update(index, emptyStepData);
-        // }
         remove(index);
     };
 
@@ -171,20 +168,44 @@ export default function StepNames({ socket }: Props): JSX.Element {
         }
     };
 
-    const openStepsImportDialog = () => {
-        setIsImportStepsDialogOpen(true);
-        if (availPlans.length) return;
-        setLoadingAvailPlans(true);
-
-        fetchGET('/planner/get_available', session?.accessToken)
-            .then((data) => {
-                setAvailPlans(data.plans as IPlan[]);
-            })
-            .finally(() => setLoadingAvailPlans(false));
-    };
-
     const ImportStepsDialog = () => {
         const [stepsToImport, setStepsToImport] = useState<IFineStep[]>([]);
+
+        const pageLength = 7;
+        const [filterBy, setFilterBy] = useState<IplansFilter>({
+            goodPracticeOnly: true,
+            limit: pageLength,
+            offset: 0,
+        });
+
+        // TODO BUG: /get_available endpoint does not support filter_has_steps=true
+        const [plans, setPlans] = useState<IPlan[]>([]);
+        const { data: _plans, isLoading, error, mutate } = useGetAvailablePlans(filterBy);
+
+        useEffect(() => {
+            if (!_plans.length) return;
+            // show good practice plans if:
+            //  - they have steps
+            //  - they are not "read_only" OR I have write access
+            setPlans(
+                _plans
+                    .filter(
+                        (plan) =>
+                            plan.steps.length &&
+                            plan._id != router.query.plannerId &&
+                            (!plan.is_good_practise_ro ||
+                                plan.write_access.includes(
+                                    session?.user.preferred_username as string
+                                ))
+                    )
+                    .sort((a, b) => {
+                        return (
+                            new Date(b.last_modified).getTime() -
+                            new Date(a.last_modified).getTime()
+                        );
+                    })
+            );
+        }, [_plans]);
 
         const toggleStepToImport = (plan: IPlan, step: IFineStep) => {
             if (stepsToImport.some((s) => s._id == step._id)) {
@@ -214,21 +235,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             setStepsToImport([]);
         };
 
-        // show good practice plans if:
-        //  - they have steps
-        //  - they are not "read_only" OR I have write access
-        const plans = availPlans.filter(
-            (plan) =>
-                plan.is_good_practise &&
-                plan.steps.length &&
-                plan._id != router.query.plannerId &&
-                (!plan.is_good_practise_ro ||
-                    plan.write_access.includes(session?.user.preferred_username as string))
-        );
-
-        if (loadingAvailPlans) return <LoadingAnimation />;
-        if (!plans.length) return <>{t('step-names.no_good_practice_plans')}</>;
-
+        if (!isLoading && !plans.length) return <>{t('step-names.no_good_practice_plans')}</>;
         // TODO add simple filter input?
 
         return (
@@ -236,71 +243,76 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 <div className="flex flex-col max-h-96 overflow-y-auto content-scrollbar">
                     <div>{t('step-names.select_steps_to_import')}</div>
 
-                    {plans
-                        .sort((a, b) => {
-                            return (
-                                new Date(b.last_modified).getTime() -
-                                new Date(a.last_modified).getTime()
-                            );
-                        })
-                        .map((plan, i) => (
-                            <div key={i}>
-                                <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
-                                    <MdNewspaper />
-                                    <Link
-                                        className="text-xl font-bold grow-0 group"
-                                        href={`/plan/${plan._id}`}
-                                        target="_blank"
-                                    >
-                                        {plan.name}
-                                        <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
-                                    </Link>
-                                    {session?.user.preferred_username != plan.author.username && (
-                                        <div className="text-sm text-gray-500">
-                                            {t('step-names.by')} {plan.author.first_name}{' '}
-                                            {plan.author.last_name}
-                                        </div>
-                                    )}
-                                    <span
-                                        className="grow text-right"
-                                        title={t('step-names.last_modified')}
-                                    >
-                                        <Timestamp
-                                            timestamp={plan.last_modified}
-                                            className="text-sm"
-                                        />
-                                    </span>
-                                </div>
-                                {plan.steps.map((step, j) => (
-                                    <div
-                                        key={j}
-                                        className="ml-10 hover:cursor-pointer flex"
-                                        onClick={() => toggleStepToImport(plan, step)}
-                                        title={t('step-names.add_remove')}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            // BUGFIX: compare name and _id, because we had some finesteps with duplicated _ids ...
-                                            checked={stepsToImport.some(
-                                                (s) => s._id == step._id && s.name == step.name
-                                            )}
-                                            readOnly
-                                        />
-                                        {step.name} ({step.workload} h)
+                    {plans.map((plan, i) => (
+                        <div key={i}>
+                            <div className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md">
+                                <PlanIcon />
+                                <Link
+                                    className="text-xl font-bold grow-0 group truncate"
+                                    href={`/plan/${plan._id}`}
+                                    target="_blank"
+                                >
+                                    {plan.name}
+                                    <MdArrowOutward className="hidden text-slate-500 group-hover:inline" />
+                                </Link>
+                                {session?.user.preferred_username != plan.author.username && (
+                                    <div className="text-sm text-gray-500">
+                                        {t('step-names.by')} {plan.author.first_name}{' '}
+                                        {plan.author.last_name}
                                     </div>
-                                ))}
+                                )}
+                                <span
+                                    className="grow text-right"
+                                    title={t('step-names.last_modified')}
+                                >
+                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                </span>
                             </div>
-                        ))}
+                            {plan.steps.map((step, j) => (
+                                <div
+                                    key={j}
+                                    className="ml-10 hover:cursor-pointer flex"
+                                    onClick={() => toggleStepToImport(plan, step)}
+                                    title={t('step-names.add_remove')}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="mr-2"
+                                        // BUGFIX: compare name and _id, because we had some finesteps with duplicated _ids ...
+                                        checked={stepsToImport.some(
+                                            (s) => s._id == step._id && s.name == step.name
+                                        )}
+                                        readOnly
+                                    />
+                                    {step.name} ({step.workload} h)
+                                </div>
+                            ))}
+                        </div>
+                    ))}
                 </div>
-                <div className="ml-auto text-right pt-4">
-                    <button
-                        type="button"
-                        className="py-2 px-5 mr-2 border border-ve-collab-orange rounded-lg"
+                {isLoading && <LoadingAnimation size="small" />}
+                {_plans.length >= filterBy.limit! ? (
+                    <div className="mx-auto mt-4">
+                        <ButtonLightBlue
+                            label={t('common:more')}
+                            onClick={() => {
+                                setFilterBy((prev) => ({
+                                    ...prev,
+                                    limit: prev.limit! + pageLength,
+                                }));
+                                mutate();
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <></>
+                )}
+
+                <div className="ml-auto text-right pt-4 space-x-4">
+                    <ButtonSecondary
+                        label={t('common:cancel')}
                         onClick={() => setIsImportStepsDialogOpen(false)}
-                    >
-                        {t('common:cancel')}
-                    </button>
+                    />
                     <ButtonPrimary label={t('common:import')} onClick={() => handleStepsImport()} />
                 </div>
             </div>
@@ -318,7 +330,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
             <Draggable key={`stepNames.${index}`} draggableId={`step-${index}`} index={index}>
                 {(provided: DraggableProvided) => (
                     <div key={step.id} {...provided.draggableProps} ref={provided.innerRef}>
-                        <div className="shadow rounded px-2 py-4 my-4">
+                        <div className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -381,6 +393,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             <label>{t('step-names.time')}</label>
                                             <input
                                                 type="number"
+                                                min={0}
                                                 {...methods.register(
                                                     `stepNames.${index}.workload`,
                                                     { valueAsNumber: true }
@@ -401,7 +414,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={(e) => {
                                                 adjustTextareaSize(e.currentTarget);
                                             }}
@@ -455,7 +468,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                                 </div>
                                 <div className="flex items-center mr-6">
                                     <Image
-                                        className="mx-2"
+                                        className="mx-2 cursor-grab"
                                         {...provided.dragHandleProps}
                                         src={iconUpAndDown}
                                         width={20}
@@ -493,7 +506,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 description={t('step-names.description')}
                 tooltip={{
                     text: t('step-names.tooltip_text'),
-                    link: '/learning-material/2/VA-Planung',
+                    link: '/learning-material/Zusammen%20Planen/VE-Planung%20(EN)',
                 }}
                 methods={methods}
                 nextpage={
@@ -506,16 +519,6 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <Dialog
-                    isOpen={isImportStepsDialogOpen}
-                    title={t('step-names.import_phases')}
-                    onClose={() => setIsImportStepsDialogOpen(false)}
-                >
-                    <div className="w-[40vw]">
-                        <ImportStepsDialog />
-                    </div>
-                </Dialog>
-
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="stepNames-items">
                         {(provided: DroppableProvided) => (
@@ -528,7 +531,7 @@ export default function StepNames({ socket }: Props): JSX.Element {
                 </DragDropContext>
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {
@@ -539,15 +542,24 @@ export default function StepNames({ socket }: Props): JSX.Element {
                     </button>
 
                     <button
-                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                        className="px-4 m-2 rounded-full bg-[#d8f2f9] text-ve-collab-blue cursor-pointer hover:bg-ve-collab-blue/20"
                         type="button"
                         title={t('step-names.import_phases')}
-                        onClick={() => openStepsImportDialog()}
+                        onClick={() => setIsImportStepsDialogOpen(true)}
                     >
                         {t('common:import')}
                     </button>
                 </div>
             </Wrapper>
+            <Dialog
+                isOpen={isImportStepsDialogOpen}
+                title={t('step-names.import_phases')}
+                onClose={() => setIsImportStepsDialogOpen(false)}
+            >
+                <div className="w-[40vw]">
+                    <ImportStepsDialog />
+                </div>
+            </Dialog>
         </>
     );
 }
@@ -583,7 +595,7 @@ export function StepNamesNoAuthPreview() {
                 {Array(3)
                     .fill(null)
                     .map((_, index) => (
-                        <div key={index} className="shadow rounded px-2 py-4 my-4">
+                        <div key={index} className="shadow-sm rounded-sm px-2 py-4 my-4">
                             <div className="flex justify-between items-center">
                                 <div className="ml-6">
                                     <div className="flex flex-wrap gap-y-2 gap-x-2 items-center">
@@ -632,7 +644,7 @@ export function StepNamesNoAuthPreview() {
                                             placeholder={t(
                                                 'step-names.learning_objectives_placeholder'
                                             )}
-                                            className="border border-gray-400 rounded-lg p-2 mx-2 flex-grow"
+                                            className="border border-gray-400 rounded-lg p-2 mx-2 grow"
                                             onChange={() => {}}
                                         />
                                     </div>
@@ -660,7 +672,7 @@ export function StepNamesNoAuthPreview() {
 
                 <div className="flex justify-center">
                     <button
-                        className="p-2 m-2 bg-white rounded-full shadow hover:bg-slate-50"
+                        className="p-2 m-2 bg-white rounded-full shadow-sm hover:bg-slate-50"
                         type="button"
                         title={t('step-names.new_phase')}
                         onClick={() => {}}
@@ -680,7 +692,7 @@ export function StepNamesNoAuthPreview() {
                     </button>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/65 to-white pointer-events-none"></div>
         </div>
     );
 }

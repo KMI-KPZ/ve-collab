@@ -30,7 +30,7 @@ class Tabs extends Component<TabsProps, { activeTab: string }> {
 
         return (
             <div className={'w-full'}>
-                <ol className={'flex pb-2 border-b'}>
+                <ol className={'flex border-b border-b-gray-200 divide-x divide-gray-200'}>
                     {children.map((child) => {
                         return (
                             <Tab

@@ -27,18 +27,6 @@ interface FormValues {
     evaluationPerPartner: EvaluationPerPartner[];
 }
 
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean => {
-//     return formValues.evaluationPerPartner.every((partner) => {
-//         return (
-//             !partner.is_graded &&
-//             (partner.task_type === '' || partner.task_type === null) &&
-//             (partner.assessment_type === '' || partner.assessment_type === null) &&
-//             (partner.evaluation_while === '' || partner.evaluation_while === null) &&
-//             (partner.evaluation_after === '' || partner.evaluation_after === null)
-//         );
-//     });
-// };
-
 interface Props {
     socket: Socket;
 }
@@ -181,7 +169,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
     function renderEvaluationInfoBox(): JSX.Element[] {
         return fields.map((evaluationPerPartner, index) => (
             <div key={evaluationPerPartner.id} className="flex mx-2">
-                <div className="rounded shadow px-3 py-4 h-fit w-fit">
+                <div className="rounded-sm shadow-sm px-3 py-4 h-fit w-fit">
                     <div className="flex flex-col">
                         <div className="font-bold text-lg mb-4 text-center">
                             {partnerProfileSnippets[evaluationPerPartner.username]
@@ -329,7 +317,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
                 description={t('evaluation.description')}
                 tooltip={{
                     text: t('evaluation.tooltip'),
-                    link: '/learning-material/2/Evaluation',
+                    link: '/learning-material/Zusammen%20Planen/Evaluation/Einstieg',
                 }}
                 stageInMenu="generally"
                 idOfProgress="evaluation"
@@ -383,7 +371,7 @@ export function EvaluationNoAuthPreview() {
                         .fill(null)
                         .map((_, index) => (
                             <div key={index} className="flex mx-2">
-                                <div className="rounded shadow px-3 py-4 h-fit w-fit">
+                                <div className="rounded-sm shadow-sm px-3 py-4 h-fit w-fit">
                                     <div className="flex flex-col">
                                         <div className="font-bold text-lg mb-4 text-center">
                                             {index === 0
@@ -464,7 +452,7 @@ export function EvaluationNoAuthPreview() {
                         ))}
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/75 to-white pointer-events-none"></div>
         </div>
     );
 }

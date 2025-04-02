@@ -28,10 +28,10 @@ class BaseTimelineHandler(BaseHandler):
         """
 
         time_from = self.get_argument(
-            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+            "from", (datetime.now() - timedelta(days=1)).isoformat()
         )  # default value is 24h ago
         time_to = self.get_argument(
-            "to", datetime.utcnow().isoformat()
+            "to", datetime.now().isoformat()
         )  # default value is now
 
         # parse time strings into datetime objects (dateutil is able to guess format)
@@ -125,8 +125,6 @@ class BaseTimelineHandler(BaseHandler):
         However, if no matching plan is found (e.g. it got deleted), the plan_id is returned back.
         """
 
-        from pprint import pprint
-        #pprint(posts)
 
         # collect all plan_ids without duplicates
         plan_ids = []
@@ -400,44 +398,6 @@ class PersonalTimelineHandler(BaseTimelineHandler):
         self.write(self.json_serialize_response({"success": True, "posts": posts}))
 
 
-class LegacyPersonalTimelineHandler(BaseTimelineHandler):
-    """
-    FOR BACKWARDS COMPATIBILITY ONLY
-    the timeline of the currently authenticated user.
-    i.e. your posts, posts of users you follow, posts in spaces you are in
-    """
-
-    @auth_needed
-    def get(self):
-        """
-        GET /legacy/timeline/you
-            query params:
-                "from" : ISO timestamp string (fetch posts not older than this), default: now-24h
-                "to" : ISO timestamp string (fetch posts younger than this), default: now
-            return:
-                200 OK,
-                {"posts": [post1, post2,...]}
-
-                401 Unauthorized
-                {"status": 401,
-                 "reason": "no_logged_in_user"}
-        """
-
-        time_from, time_to = self.parse_timeframe_args()
-
-        # query personal timeline
-        with util.get_mongodb() as db:
-            post_manager = Posts(db)
-            result = post_manager.get_personal_timeline_legacy(
-                self.current_user.username, time_from, time_to
-            )
-
-        posts = self.add_profile_information_to_author(result)
-
-        self.set_status(200)
-        self.write(self.json_serialize_response({"success": True, "posts": posts}))
-
-
 class NewPostsSinceTimestampHandler(BaseHandler):
     """
     check if new posts have appeared since a certain timestamp
@@ -456,7 +416,7 @@ class NewPostsSinceTimestampHandler(BaseHandler):
         """
 
         timestamp = self.get_argument(
-            "from", (datetime.utcnow() - timedelta(days=1)).isoformat()
+            "from", (datetime.now() - timedelta(days=1)).isoformat()
         )
         timestamp = dateutil.parser.parse(timestamp)
 

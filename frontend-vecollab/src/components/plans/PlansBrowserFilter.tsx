@@ -1,42 +1,31 @@
 import { MdArrowDropDown, MdClose } from 'react-icons/md';
-import { useSession } from 'next-auth/react';
-import { IfilterBy } from '@/pages/plans';
+import { IplansFilter } from '@/pages/plans';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
 import { FaMedal } from 'react-icons/fa';
 import Dropdown from '../common/Dropdown';
+import requestDebounce from '../common/requestDebounce';
 
 interface Props {
-    filterBy: IfilterBy[];
-    filterByCallback: ({ compare, id }: IfilterBy) => void;
+    filterByCallback: (filter: IplansFilter) => void;
+    filterBy: IplansFilter;
     isNoAuthPreview?: boolean;
 }
 
-export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview = false }: Props) {
-    const { data: session } = useSession();
+export function PlansBrowserFilter({
+    filterBy,
+    filterByCallback: filterByCallback,
+    isNoAuthPreview = false,
+}: Props) {
     const { t } = useTranslation('common');
     const [search, setSearch] = useState<string>('');
-    const showGoodPracticeOnly = filterBy.some((f) => f.id == 'isGoodPractice' && f.value == true);
-
-    // filterBy.find((f) => f.id == 'author' && f.value === undefined)
+    const showGoodPracticeOnly = filterBy['goodPracticeOnly'] === true;
     const [currentAuthorFilter, setCurrentAuthorFilter] = useState<string>(t('plans_filter_all'));
 
     const handleClickShowGoodPracticeOnly = () => {
         if (isNoAuthPreview) return;
 
-        if (showGoodPracticeOnly) {
-            filterByCallback({
-                compare: undefined,
-                id: 'isGoodPractice',
-                value: undefined,
-            });
-        } else {
-            filterByCallback({
-                compare: (plan) => plan.is_good_practise === true,
-                id: 'isGoodPractice',
-                value: true,
-            });
-        }
+        filterByCallback({ goodPracticeOnly: !showGoodPracticeOnly });
     };
 
     const handleSwitchAuthorChange = (value: string) => {
@@ -45,35 +34,17 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
         switch (value) {
             case 'all':
                 setCurrentAuthorFilter(t('plans_filter_all'));
-                filterByCallback({
-                    compare: () => true,
-                    id: 'author',
-                    value: undefined,
-                });
-
+                filterByCallback({ owner: 'all' });
                 break;
 
-            case 'my':
+            case 'own':
                 setCurrentAuthorFilter(t('plans_filter_my'));
-                filterByCallback({
-                    compare: (plan) => plan.author.username == session?.user.preferred_username,
-                    id: 'author',
-                    value: 'me',
-                });
+                filterByCallback({ owner: 'own' });
                 break;
 
             case 'shared':
                 setCurrentAuthorFilter(t('plans_filter_shared'));
-                filterByCallback({
-                    compare: (plan) => {
-                        return (
-                            plan.read_access.includes(session?.user.preferred_username as string) &&
-                            plan.author.username != session?.user.preferred_username
-                        );
-                    },
-                    id: 'author',
-                    value: 'other',
-                });
+                filterByCallback({ owner: 'shared' });
                 break;
 
             default:
@@ -81,10 +52,15 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
         }
     };
 
+    const handleSearch = (value: string) => {
+        setSearch(value);
+        requestDebounce(() => filterByCallback({ searchQuery: value }));
+    };
+
     return (
         <div className="mb-4 flex flex-wrap items-center gap-y-2">
             <div
-                className={`flex p-2 rounded-full shadow border ${
+                className={`flex p-2 rounded-full shadow border border-gray-200 ${
                     isNoAuthPreview ? '' : 'cursor-pointer'
                 }`}
                 onClick={handleClickShowGoodPracticeOnly}
@@ -118,7 +94,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                             label: t('plans_filter_all'),
                         },
                         {
-                            value: 'my',
+                            value: 'own',
                             label: t('plans_filter_my'),
                         },
                         {
@@ -130,7 +106,6 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                         if (isNoAuthPreview) return;
 
                         // handleSelectOption(value, comment);
-                        console.log({ value });
                         handleSwitchAuthorChange(value);
                     }}
                     icon={
@@ -142,14 +117,14 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                             <MdArrowDropDown />
                         </span>
                     }
-                    ulClasses="!left-16 !right-auto"
+                    ulClasses="left-16! right-auto!"
                     isNoAuthPreview={isNoAuthPreview}
                 />
             </div>
 
             <div className="flex items-center">
                 <input
-                    className={'border border-[#cccccc] rounded-l px-2 py-1'}
+                    className={'border border-[#cccccc] bg-white rounded-l px-2 py-1'}
                     type="text"
                     placeholder={t('plans_filter_title_placeholder')}
                     name="search"
@@ -158,17 +133,8 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                     disabled={isNoAuthPreview}
                     onChange={(event) => {
                         if (isNoAuthPreview) return;
-
                         const value = (event.target as HTMLInputElement).value;
-                        setSearch(value);
-                        filterByCallback({
-                            compare: (plan) => {
-                                if (!plan.name) return false;
-                                return plan.name.toLocaleLowerCase().includes(value.toLowerCase());
-                            },
-                            id: 'searchByName',
-                            value: value,
-                        });
+                        handleSearch(value);
                     }}
                 />
                 <div
@@ -176,11 +142,7 @@ export function PlansBrowserFilter({ filterBy, filterByCallback, isNoAuthPreview
                         if (isNoAuthPreview) return;
 
                         setSearch('');
-                        filterByCallback({
-                            compare: undefined,
-                            id: 'searchByName',
-                            value: null,
-                        });
+                        handleSearch('');
                     }}
                     className={`text-slate-600 inline relative -left-[22px] ${
                         isNoAuthPreview ? '' : 'hover:cursor-pointer'

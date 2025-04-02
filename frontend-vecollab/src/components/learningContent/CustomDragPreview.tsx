@@ -7,7 +7,10 @@ type Props = {
 };
 
 export type CustomData = {
-    url: string;
+    pages: {
+        de: string;
+        en: string;
+    };
 };
 
 export const CustomDragPreview: React.FC<Props> = (props) => {
@@ -15,9 +18,7 @@ export const CustomDragPreview: React.FC<Props> = (props) => {
 
     return (
         <div className="inline-grid grid-cols-[auto_auto] items-center gap-2 bg-[#1967d2] rounded-md shadow-md text-sm py-1 px-2 pointer-events-none">
-            {!item.droppable && (
-                <FaFile />
-            )}
+            {!item.droppable && <FaFile />}
             <div className="flex items-center">{item.text}</div>
         </div>
     );

@@ -39,6 +39,7 @@ export default function ViewFinestep({
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
+    // TODO BUG available plan has a default limit of 10
     const originalPlan = availablePlans.find((a) => a._id == fineStep.original_plan);
 
     const canExport =
@@ -88,14 +89,14 @@ export default function ViewFinestep({
 
                         <hr
                             className={`mt-10 -mb-5 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
-                                isLastStep ? '!h-0' : ''
+                                isLastStep ? 'h-0!' : ''
                             }`}
                         />
 
                         <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity ease-in-out">
                             <ButtonLight
                                 onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                className="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                                className="mx-2 rounded-full! flex items-center text-slate-800 print:hidden"
                             >
                                 {t('show_all')}
                                 <MdKeyboardDoubleArrowDown className="inline ml-2" />
@@ -242,13 +243,13 @@ export default function ViewFinestep({
                         <div className="my-2 col-span-4">
                             <hr
                                 className={`mt-6 -mb-4 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
-                                    isLastStep ? '!h-0' : ''
+                                    isLastStep ? 'h-0!' : ''
                                 }`}
                             />
                             <div className="flex justify-center">
                                 <ButtonLight
                                     onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    className="mx-2 !rounded-full flex items-center text-slate-800 print:hidden"
+                                    className="mx-2 rounded-full! flex items-center text-slate-800 print:hidden"
                                 >
                                     {t('show_less')}
                                     <MdKeyboardDoubleArrowUp className="inline ml-2" />

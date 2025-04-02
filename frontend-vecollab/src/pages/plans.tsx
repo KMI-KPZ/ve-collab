@@ -1,5 +1,4 @@
 import { useGetAvailablePlans } from '@/lib/backend';
-import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -15,24 +14,32 @@ import CustomHead from '@/components/metaData/CustomHead';
 import ButtonNewPlan from '@/components/plans/ButtonNewPlan';
 import Image from 'next/image';
 
-import handsPuzzleImg from '@/images/puzzle_hands_web.jpg';
-import newFormImg from '@/images/newForm_sm.jpg';
+import btnNewVe from '@/images/btn_new_ve.svg';
+import btnSearchUser from '@/images/btn_search_user.svg';
 import { ProgressState } from '@/interfaces/ve-designer/sideProgressBar';
+import { useRouter } from 'next/router';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { MdArrowBackIos, MdArrowForwardIos } from 'react-icons/md';
 
-export interface IfilterBy {
-    /** compare function
-     * If compare is undefined the filter (id) will removed  */
-    compare: undefined | ((plan: PlanPreview) => boolean);
-    /** id of the filter function (used in filterBy array) */
-    id: string;
-    /** value of the filter, required to recognise current filter  */
-    value: any;
+export interface IplansFilter {
+    goodPracticeOnly?: boolean;
+    owner?: 'all' | 'own' | 'shared';
+    searchQuery?: string;
+    limit?: number;
+    offset?: number;
+    sortBy?: keyof PlanPreview;
+    order?: 'ASC' | 'DESC';
 }
 
-export interface IsortBy {
-    key: keyof PlanPreview;
-    order: 'ASC' | 'DESC';
-}
+const defaultFilter: IplansFilter = {
+    goodPracticeOnly: false,
+    owner: 'all',
+    searchQuery: '',
+    limit: 10,
+    offset: 0,
+    sortBy: 'last_modified',
+    order: 'ASC',
+};
 
 interface Props {
     socket: Socket;
@@ -42,64 +49,53 @@ Plans.auth = true;
 Plans.noAuthPreview = <PlansNoAuthPreview />;
 
 export default function Plans({ socket }: Props) {
-    const { data: session } = useSession();
+    const router = useRouter();
     const { t } = useTranslation('common');
-    const [sortedPlans, setSortedPlans] = useState<PlanPreview[]>([]);
-    const [filterBy, setFilterBy] = useState<IfilterBy[]>([
-        {
-            compare: () => true,
-            id: 'author',
-            value: undefined,
-        },
-    ]);
-    const [sortBy, setSortBy] = useState<IsortBy>({ key: 'last_modified', order: 'ASC' });
 
-    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(session!.accessToken);
+    const [filterBy, setFilterBy] = useState<IplansFilter>(defaultFilter);
+    const pageLength = 10;
 
+    const { data: plans, isLoading, error, mutate } = useGetAvailablePlans(filterBy);
+    const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
+
+    // may initial only show GP plans
     useEffect(() => {
-        if (isLoading || !plans.length) return;
-
-        let sortedPlans = plans.sort((a, b) => {
-            let av = a[sortBy.key]?.toString() || '';
-            let bv = b[sortBy.key]?.toString() || '';
-
-            return sortBy.order == 'DESC' ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
-
-        if (filterBy && filterBy.length) {
-            filterBy.forEach((filter) => {
-                sortedPlans = sortedPlans.filter((p) =>
-                    typeof filter.compare !== 'undefined' ? filter.compare(p) : true
-                );
-            });
+        if (router.query.isGP && router.query.isGP === 'true') {
+            setFilterBy((prev) => ({ ...prev, goodPracticeOnly: true }));
         }
 
-        setSortedPlans([...sortedPlans]);
-    }, [plans, isLoading, sortBy, filterBy]);
-
-    const handleSortBy = (key: keyof PlanPreview) => {
-        setSortBy((prev) => {
-            return {
-                key: key,
-                order: prev.order == 'ASC' ? 'DESC' : 'ASC',
-            };
-        });
-    };
+        if (router.query.page) {
+            const page = parseInt(router.query.page as string) - 1;
+            setFilterBy((prev) => ({
+                ...prev,
+                offset: page * pageLength,
+            }));
+            setIsLoadingPage(false);
+        }
+    }, [router.query]);
 
     /**
      * Add/Remove/Update filter method
-     * Usage: See description in IfilterBy
+     * Usage: See description in IplansFilter
      */
-    const handleFilterBy = ({ compare, id, value }: IfilterBy) => {
-        if (typeof compare === 'undefined') {
-            setFilterBy((prev) => prev.filter((f) => f.id != id));
+    const handleFilterBy = (filter: IplansFilter) => {
+        if (filter.sortBy) {
+            setFilterBy((prev) => ({ ...prev, ...filter }));
         } else {
-            if (filterBy.find((f) => f.id == id)) {
-                setFilterBy((prev) => prev.map((f) => (f.id == id ? { id, compare, value } : f)));
-            } else {
-                setFilterBy((prev) => [...prev, { id, compare, value }]);
-            }
+            // reset offset; avoids also double requests in useEffect!
+            setFilterBy((prev) => ({ ...prev, ...filter, offset: 0 }));
+            setTimeout(() => {
+                gotoPage(1);
+            }, 1);
         }
+    };
+
+    const gotoPage = (number: number) => {
+        setIsLoadingPage(true);
+        router.push(`?page=${number}`, undefined, {
+            shallow: true,
+        });
+        window.scrollTo({ behavior: 'smooth', top: 0 });
     };
 
     return (
@@ -110,43 +106,38 @@ export default function Plans({ socket }: Props) {
                 pageDescription={t('plans_description')}
             />
 
-            <div className="flex flex-wrap justify-between items-center mb-10 mt-12">
+            <div className="@container flex flex-wrap justify-between items-center mb-10 mt-12">
                 <div>
                     <div className={'font-bold text-4xl mb-2'}>{t('plans')}</div>
                     <div className={'text-gray-500 text-xl'}>{t('plans_overview_subtitle')}</div>
                 </div>
 
                 <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
-                    <Link
-                        href={'/matching'}
-                        className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center cursor-pointer transition ease-in-out hover:scale-105"
-                    >
-                        <Image
-                            src={handsPuzzleImg}
-                            alt={t('find_ve_partners')}
-                            className="w-[96px] rounded-full"
-                        />
-                        <div className="font-bold text-center text-wrap xl:w-1/2">
-                            {t('find_ve_partners')}
-                        </div>
-                    </Link>
-
                     <ButtonNewPlan
                         socket={socket}
-                        label={t('btn_new_ve')}
-                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-pointer transition ease-in-out hover:scale-105"
+                        label={t('common:btn_new_ve')}
+                        className="min-h-[50px] bg-none px-4! py-2! rounded-full! cursor-pointer shadow-sm border border-gray-200 bg-white hover:bg-gray-50"
                     >
-                        <div className="flex flex-wrap items-center justify-center ">
-                            <Image
-                                src={newFormImg}
-                                alt={t('btn_new_ve')}
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="font-bold text-center text-wrap xl:w-1/2">
-                                {t('btn_new_ve')}
-                            </div>
+                        <div className="flex items-center justify-center text-wrap font-bold">
+                            <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
+                            {t('common:btn_new_ve')}
                         </div>
                     </ButtonNewPlan>
+
+                    <div className="px-2">
+                        <Link
+                            href={'/matching'}
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow-sm border border-gray-200 hover:bg-gray-50"
+                        >
+                            <Image
+                                src={btnSearchUser}
+                                alt={'form_image'}
+                                width={32}
+                                className="mr-2"
+                            />
+                            {t('find_ve_partners')}
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -156,18 +147,46 @@ export default function Plans({ socket }: Props) {
                 <Alert type="error" message={'Error loading plans. See console for details.'} />
             )}
 
-            {isLoading ? (
-                <div className="m-12">
-                    <LoadingAnimation size="small" /> {t('loading_plans')}
+            {isLoading || isLoadingPage ? (
+                <div className="m-12 flex">
+                    <LoadingAnimation className="inline-block! w-fit!" />
+                    <span className="ml-6">{t('loading_plans')}</span>
                 </div>
             ) : (
-                <PlansBrowser
-                    plans={sortedPlans}
-                    sortBy={sortBy}
-                    filterBy={filterBy}
-                    sortByCallback={handleSortBy}
-                    refetchPlansCallback={mutate}
-                />
+                <>
+                    <PlansBrowser
+                        plans={plans}
+                        filterBy={filterBy}
+                        filterByCallback={handleFilterBy}
+                        refetchPlansCallback={mutate}
+                    />
+                    {plans.length >= pageLength || filterBy.offset! > 0 ? (
+                        <div className="flex items-center justify-center -mt-6 mb-12 space-x-4">
+                            <ButtonLightBlue
+                                onClick={() => {
+                                    gotoPage((filterBy.offset! - pageLength) / pageLength + 1);
+                                }}
+                                disabled={filterBy.offset! == 0}
+                                className="rounded-full!"
+                            >
+                                <MdArrowBackIos className="inline mr-2" />
+                                {t('prev_page')}
+                            </ButtonLightBlue>
+                            <ButtonLightBlue
+                                onClick={() => {
+                                    gotoPage((pageLength + filterBy.offset!) / pageLength + 1);
+                                }}
+                                disabled={plans.length < pageLength}
+                                className="rounded-full!"
+                            >
+                                {t('next_page')}
+                                <MdArrowForwardIos className="inline ml-2" />
+                            </ButtonLightBlue>
+                        </div>
+                    ) : (
+                        <></>
+                    )}
+                </>
             )}
         </>
     );
@@ -175,15 +194,7 @@ export default function Plans({ socket }: Props) {
 
 function PlansNoAuthPreview() {
     const { t } = useTranslation('common');
-
-    const filterBy = [
-        {
-            compare: () => true,
-            id: 'author',
-            value: undefined,
-        },
-    ];
-    const sortBy: IsortBy = { key: 'last_modified', order: 'ASC' };
+    const [filterBy, setFilterBy] = useState<IplansFilter>(defaultFilter);
     const examplePlans: PlanPreview[] = [
         {
             _id: '1',
@@ -200,6 +211,7 @@ function PlansNoAuthPreview() {
             creation_timestamp: new Date(Date.now() - 24 * 2525 * 1000).toISOString(),
             last_modified: new Date(Date.now() - 2000 * 1000).toISOString(),
             is_good_practise: true,
+            abstract: '',
             steps: [],
             topics: [],
             progress: {
@@ -232,6 +244,7 @@ function PlansNoAuthPreview() {
             creation_timestamp: new Date(Date.now() - 24 * 1620 * 1000).toISOString(), // yesterday
             last_modified: new Date(Date.now() - 3430 * 1000).toISOString(), // one hour age
             is_good_practise: false,
+            abstract: '',
             steps: [],
             topics: [],
             progress: {
@@ -266,33 +279,31 @@ function PlansNoAuthPreview() {
                 </div>
 
                 <div className="w-full md:w-1/2 mt-2 md:m-0 flex content-center justify-end">
-                    <div className="w-1/2 shadow border bg-white rounded-full mx-4 px-4 flex flex-wrap items-center justify-center">
-                        <Image
-                            src={handsPuzzleImg}
-                            alt={t('find_ve_partners')}
-                            className="w-[96px] rounded-full"
-                        />
-                        <div className="font-bold text-center text-wrap xl:w-1/2">
-                            {t('find_ve_partners')}
-                        </div>
-                    </div>
-
                     <ButtonNewPlan
-                        label={t('btn_new_va')}
-                        className="w-1/2 bg-white border shadow !rounded-full mx-4 cursor-default"
                         isNoAuthPreview={true}
+                        label={t('common:btn_new_ve')}
+                        className="min-h-[50px] bg-none px-4! py-2! rounded-full! cursor-pointer shadow-sm border border-gray-200 bg-white hover:bg-gray-50"
                     >
-                        <div className="flex flex-wrap items-center justify-center ">
-                            <Image
-                                src={newFormImg}
-                                alt={t('btn_new_va')}
-                                className="w-[96px] rounded-full"
-                            />
-                            <div className="font-bold text-center text-wrap xl:w-1/2">
-                                {t('btn_new_va')}
-                            </div>
+                        <div className="flex items-center justify-center text-wrap font-bold">
+                            <Image src={btnNewVe} alt={'form_image'} width={24} className="mr-2" />
+                            {t('common:btn_new_ve')}
                         </div>
                     </ButtonNewPlan>
+
+                    <div className="px-2">
+                        <Link
+                            href={'/matching'}
+                            className="min-h-[50px] flex px-4 py-2 items-center justify-center text-wrap font-bold bg-white rounded-full cursor-pointer shadow-sm border border-gray-200 hover:bg-gray-50"
+                        >
+                            <Image
+                                src={btnSearchUser}
+                                alt={'form_image'}
+                                width={32}
+                                className="mr-2"
+                            />
+                            {t('find_ve_partners')}
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -304,13 +315,12 @@ function PlansNoAuthPreview() {
 
             <PlansBrowser
                 plans={examplePlans}
-                sortBy={sortBy}
                 filterBy={filterBy}
-                sortByCallback={() => {}}
+                filterByCallback={() => {}}
                 refetchPlansCallback={async () => {}}
                 isNoAuthPreview={true}
             />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-slate-100 to-slate-100 pointer-events-none"></div>
         </div>
     );
 }

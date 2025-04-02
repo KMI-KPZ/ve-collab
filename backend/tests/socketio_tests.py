@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 import pymongo
 import socketio
-import tornado
 from tornado.options import options
 from tornado.testing import AsyncHTTPTestCase
 from tornado.testing import gen_test
@@ -42,7 +41,6 @@ def setUpModule():
 
     global_vars.port = int(os.getenv("PORT", "8888"))
     global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
-    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
     global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
@@ -175,12 +173,12 @@ class SocketIOHandlerTest(AsyncHTTPTestCase):
             @socketio_client.on("notification")
             def test(data):
                 print("notification event recognized")
-                print(data)
+                
 
             @socketio_client.on("message")
             def message(data):
                 print("message event recognized")
-                print(data)
+                
 
             try:
                 # emit event to server and wait for response (i.e. return value from server handler function)

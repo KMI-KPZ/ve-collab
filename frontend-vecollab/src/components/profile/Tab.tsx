@@ -23,10 +23,10 @@ class Tab extends Component<TabProps, {}> {
 
         return activeTab == tabid ? (
             <button
-                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 bg-ve-collab-orange-light ${
+                className={`px-4 py-2 -mr-1 font-bold border-b-2 border-b-ve-collab-orange -mb-[1px] text-slate-900 text-lg ${
                     isNoAuthPreview
                         ? 'cursor-default'
-                        : 'cursor-pointer hover:border-ve-collab-orange'
+                        : 'cursor-pointer hover:text-ve-collab-orange'
                 }`}
                 onClick={onClick}
             >
@@ -34,10 +34,10 @@ class Tab extends Component<TabProps, {}> {
             </button>
         ) : (
             <button
-                className={`px-3 mx-1 py-2 rounded-xl border border-white font-bold text-slate-900 ${
+                className={`px-3 mx-1 py-2 text-slate-900 text-lg ${
                     isNoAuthPreview
                         ? 'cursor-default'
-                        : 'cursor-pointer hover:border-ve-collab-orange'
+                        : 'cursor-pointer hover:text-ve-collab-orange'
                 }`}
                 onClick={onClick}
             >

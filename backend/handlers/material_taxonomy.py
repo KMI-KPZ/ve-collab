@@ -27,8 +27,6 @@ class MaterialTaxonomyHandler(BaseHandler):
             overwrite the existing taxonomy with a new one
             (i.e. an update has to contain the entire hierarchy)
 
-            TODO data has to extended to contain the relevant metadata
-
             query params:
                 None
 
@@ -47,12 +45,17 @@ class MaterialTaxonomyHandler(BaseHandler):
                         {
                             "id": "<integer>",
                             "parent": "<integer>",
-                            "droppable": "<boolean>",
+                            "droppable": "<bool>",
                             "text": "<str>",
+                            "text_en": "<str>",
                             "data": {
-                                "url": "<str>"
-                            }
-                        },
+                                "description": "<str>",
+                                "pages": {
+                                    "de": "<str>",
+                                    "en": "<str>"
+                                }
+                            },
+                        }
                         {...},
                     ]
                 }

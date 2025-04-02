@@ -2003,19 +2003,6 @@ class VEPlan:
                         "checklist",
                     )
 
-                # ensure that the username is also a partner of the plan
-                if "author" not in params:
-                    params["author"] = None
-                if not (
-                    checklist_item["username"] in params["partners"]
-                    or checklist_item["username"] == params["author"]
-                ):
-                    raise ValueError(
-                        "username '{}' in checklist is not a partner of the plan".format(
-                            checklist_item["username"]
-                        )
-                    )
-
                 # ensure that any other values are of type bool or None
                 for attr, value in checklist_item.items():
                     if attr != "username":
@@ -2086,22 +2073,6 @@ class VEPlan:
                 to_timestamps.append(step.timestamp_to)
         params["timestamp_from"] = min(from_timestamps, default=None)
         params["timestamp_to"] = max(to_timestamps, default=None)
-
-        # duration was calculated as sum of step durations and
-        # the start/end timestamp as min/max of step timestamps.
-        # if they are not the same timedelta, there might have been some
-        # semantic error at the step timestamps, e.g. end before start
-
-        # if params["timestamp_to"] and params["timestamp_from"]:
-        #   if params["duration"] != (
-        #      params["timestamp_to"] - params["timestamp_from"]
-        # ):
-        #    raise ValueError(
-        #       """
-        #      duration and min/max timestamps do not match,
-        #     maybe mixed up Step timestamps?
-        #    """
-        # )
 
         # build VEPlan and set remaining values
         instance = cls(

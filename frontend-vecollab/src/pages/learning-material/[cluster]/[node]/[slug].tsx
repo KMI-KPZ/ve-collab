@@ -1,19 +1,24 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getChildrenOfNodeByText, getMaterialNodesOfNodeByText } from '@/lib/backend';
+import {
+    fetchTaxonomy,
+    getChildrenOfNodeByText,
+    getMaterialNodesOfNodeByText,
+} from '@/lib/backend';
 import { IMaterialNode, INode } from '@/interfaces/material/materialInterfaces';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
 import { MdMenu } from 'react-icons/md';
 import { useRouter } from 'next/router';
-import { getClusterSlugByRouteQuery } from '../..';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import CustomHead from '@/components/metaData/CustomHead';
 import { useTranslation } from 'next-i18next';
+import requestDebounce from '@/components/common/requestDebounce';
 
 interface Props {
+    baseUrl: string;
     nodesOfCluster: INode[];
     lectionsOfNode: IMaterialNode[];
     currentNode: IMaterialNode;
@@ -55,16 +60,12 @@ export default function LearningContentView(props: Props) {
     };
 
     useEffect(() => {
-        let reqDebounce: ReturnType<typeof setTimeout>;
         setFrameHeight('100%');
         setLoading(true);
 
         const resizedWindow = () => {
             setFrameHeight('100%');
-            if (reqDebounce) clearTimeout(reqDebounce);
-            reqDebounce = setTimeout(() => {
-                framesizeRequest();
-            }, 50);
+            requestDebounce(() => framesizeRequest());
         };
 
         window.addEventListener('message', handleFramesizeRespond);
@@ -82,7 +83,6 @@ export default function LearningContentView(props: Props) {
         }, 3000);
 
         return () => {
-            if (reqDebounce) clearTimeout(reqDebounce);
             window.removeEventListener('message', handleFramesizeRespond);
             window.removeEventListener('resize', resizedWindow);
             setFrameHeight('100%');
@@ -90,9 +90,9 @@ export default function LearningContentView(props: Props) {
     }, [router]);
 
     const ListOfLectionsSidebar = ({ lections }: { lections: IMaterialNode[] }) => (
-        <ul className="flex flex-col divide-y gap-1 bg-white">
+        <ul className="flex flex-col divide-y divide-gray-200 gap-1 bg-white">
             <li>
-                <div className="font-konnect text-xl pb-2">Kapitel</div>
+                <div className="font-konnect text-xl pb-2">{t('chapter')}</div>
             </li>
             {lections.map((node) => (
                 <li key={node.id}>
@@ -103,7 +103,7 @@ export default function LearningContentView(props: Props) {
                         scroll={false}
                         href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${node.text}`}
                     >
-                        {node.text}
+                        {router.locale === 'en' && node.text_en ? node.text_en : node.text}
                     </Link>
                 </li>
             ))}
@@ -116,7 +116,7 @@ export default function LearningContentView(props: Props) {
             <Dropdown
                 icon={
                     <div className="flex items-center">
-                        Kapitel
+                        {t('chapter')}
                         <MdMenu className="mx-2 my-0.5" />
                     </div>
                 }
@@ -128,12 +128,12 @@ export default function LearningContentView(props: Props) {
                 options={lections.map((node) => {
                     return {
                         key: node.id,
-                        label: node.text,
+                        label: router.locale === 'en' && node.text_en ? node.text_en : node.text,
                         value: node.text,
                         liClasses: `${router.query.slug == node.text ? 'font-bold' : ''}`,
                     };
                 })}
-                ulClasses="!left-0 !right-auto max-w-96 w-fit"
+                ulClasses="left-0! right-auto! max-w-96 w-fit"
             />
         </div>
     );
@@ -146,6 +146,11 @@ export default function LearningContentView(props: Props) {
         t(translateAttribute) !== translateAttribute
             ? t(translateAttribute)
             : t('frontpage.description');
+    const pageUrl = `${props.baseUrl}?p=${
+        props.currentNode.data.pages[router.locale as 'de' | 'en'] ||
+        (router.locale === 'de' ? props.currentNode.data.pages.en : props.currentNode.data.pages.de)
+    }`;
+
     return (
         <>
             <CustomHead
@@ -165,7 +170,7 @@ export default function LearningContentView(props: Props) {
                     </>
                 }
                 contentChildren={
-                    <div className="md:mt-6 md:flex md:flex-row md:divide-x md:gap-1">
+                    <div className="md:mt-6 md:flex md:flex-row md:divide-x divide-gray-200 md:gap-1">
                         {props.lectionsOfNode.length && (
                             <div className="w-80 hidden md:block">
                                 <ListOfLectionsSidebar lections={props.lectionsOfNode} />
@@ -174,24 +179,22 @@ export default function LearningContentView(props: Props) {
 
                         <div className="w-full md:pl-6 pt-1 relative">
                             {loading && (
-                                <div className="absolute bg-white/50 backdrop-blur-sm md:-ml-6 inset-0">
+                                <div className="absolute bg-white/50 backdrop-blur-xs md:-ml-6 inset-0">
                                     <span className="m-2">
                                         <LoadingAnimation />
                                     </span>
                                 </div>
                             )}
-
                             <iframe
                                 style={{ height: frameHeight }}
                                 className="rounded-xl overflow-hidden"
-                                src={props.currentNode.data.url}
+                                src={pageUrl}
                                 ref={iframeRef}
                                 scrolling="no"
                             ></iframe>
-
                             {(props.prevNode || props.nextNode) && (
-                                <div className="flex my-4 pt-4 border-t">
-                                    {/* <div className="my-8 border-t py-3 flex justify-between"> */}
+                                <div className="flex my-4 pt-4 border-t border-gray-200">
+                                    {/* <div className="my-8 border-t border-t-gray-200 py-3 flex justify-between"> */}
                                     {props.prevNode && (
                                         <Link
                                             className="mr-auto"
@@ -202,7 +205,10 @@ export default function LearningContentView(props: Props) {
                                                     'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
                                                 }
                                             >
-                                                zurück zu: {props.prevNode.text}
+                                                {t('back_to')}
+                                                {router.locale === 'en' && props.prevNode.text_en
+                                                    ? props.prevNode.text_en
+                                                    : props.prevNode.text}
                                             </button>
                                         </Link>
                                     )}
@@ -216,7 +222,10 @@ export default function LearningContentView(props: Props) {
                                                     'bg-ve-collab-orange text-white py-2 px-5 rounded-lg'
                                                 }
                                             >
-                                                weiter zu: {props.nextNode.text}
+                                                {t('forward_to')}{' '}
+                                                {router.locale === 'en' && props.nextNode.text_en
+                                                    ? props.nextNode.text_en
+                                                    : props.nextNode.text}
                                             </button>
                                         </Link>
                                     )}
@@ -234,11 +243,13 @@ export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
 }: GetServerSidePropsContext) => {
-    const clusterSlug = getClusterSlugByRouteQuery(parseInt(params?.cluster as string));
+    const taxonomy = await fetchTaxonomy();
+
+    const clusterSlug = params?.cluster as string;
     if (!clusterSlug) return { notFound: true };
 
-    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug);
-    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string);
+    const nodesOfCluster = await getChildrenOfNodeByText(clusterSlug, taxonomy);
+    const lectionsOfNode = await getMaterialNodesOfNodeByText(params?.node as string, taxonomy);
     const currentNode = lectionsOfNode.find((node) => node.text === params?.slug);
     if (!currentNode) return { notFound: true };
 
@@ -250,6 +261,7 @@ export const getServerSideProps: GetServerSideProps = async ({
 
     return {
         props: {
+            baseUrl: process.env.MATERIAL_BASE_URL,
             nodesOfCluster,
             lectionsOfNode,
 

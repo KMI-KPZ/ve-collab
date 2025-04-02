@@ -6,6 +6,11 @@ import VeInvitationReplyNotification from './VeInvitationReplyNotification';
 import GroupInvitationNotification from './GroupInvitationNotification';
 import GroupJoinRequestNotification from './GroupJoinRequestNotification';
 import ReminderNotification from './ReminderNotification';
+import AchievementLevelUpNotification from './AchievementLevelUpNotification';
+import PlanAccessGrantedNotification from './PlanAccessGrantedNotification';
+import PlanAddedAsPartnerNotification from './PlanAddedAsPartnerNotification';
+import ReportSubmittedNotification from './ReportSubmittedNotification';
+import ContentDeletedDueToReportNotification from './ContentDeletedDueToReportNotification';
 
 interface Props {
     socket: Socket;
@@ -21,8 +26,6 @@ export default function AllNotifications({ socket }: Props) {
         error,
         mutate,
     } = useGetNotifications(session!.accessToken);
-
-    console.log(notifications);
 
     // TODO probably dont need socket and also not the remove callback here, refactor component structure
     // or create a new one
@@ -80,12 +83,67 @@ export default function AllNotifications({ socket }: Props) {
                                     ): void {}}
                                 />
                             )}
+                            {notification.type === 'achievement_level_up' && (
+                                <AchievementLevelUpNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
                             {[
                                 'reminder_evaluation',
                                 'reminder_good_practise_examples',
                                 'reminder_icebreaker',
                             ].includes(notification.type) && (
                                 <ReminderNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'plan_access_granted' && (
+                                <PlanAccessGrantedNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'plan_added_as_partner' && (
+                                <PlanAddedAsPartnerNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'report_submitted' && (
+                                <ReportSubmittedNotification
+                                    notification={notification}
+                                    acknowledgeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                    removeNotificationCallback={function (
+                                        notificationId: string
+                                    ): void {}}
+                                />
+                            )}
+                            {notification.type === 'content_deleted_due_to_report' && (
+                                <ContentDeletedDueToReportNotification
                                     notification={notification}
                                     acknowledgeNotificationCallback={function (
                                         notificationId: string

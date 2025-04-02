@@ -22,7 +22,6 @@ export default function OrcidAccountLinkCallback() {
             return;
         }
         if (router.query.logout === 'true') {
-            console.log('trying logout');
             setTryingRelog(true);
             signOut({
                 callbackUrl: `/orcidAccountLinkCallback?login=true&fwd=${router.query.fwd}`,

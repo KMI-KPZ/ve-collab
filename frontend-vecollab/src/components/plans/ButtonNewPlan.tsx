@@ -24,19 +24,9 @@ export default function ButtonNewPlan({
     const createAndForwardNewPlanner = async () => {
         if (isNoAuthPreview) return;
 
-        const newPlanner = await fetchPOST('/planner/insert_empty', {}, session?.accessToken);
-
-        getPlanLock(socket!, newPlanner.inserted_id)
-            .then((response) => {
-                router.push({
-                    pathname: '/ve-designer/name',
-                    query: { plannerId: newPlanner.inserted_id },
-                });
-            })
-            .catch((response) => {
-                // TODO print error
-                console.log({ response });
-            });
+        router.push({
+            pathname: '/ve-designer/name',
+        });
     };
 
     const defaulStyle =

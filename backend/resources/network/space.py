@@ -13,13 +13,13 @@ from exceptions import (
     NotRequestedJoinError,
     OnlyAdminError,
     PostFileNotDeleteableError,
-    SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
     UserNotInvitedError,
     UserNotMemberError,
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.network.profile import Profiles
 from model import Space
 import util
 
@@ -237,8 +237,6 @@ class Spaces:
         if not space_ids:
             return []
 
-        print(space_ids)
-
         if member:
             return list(
                 self.db.spaces.find(
@@ -301,6 +299,20 @@ class Spaces:
 
         # finally, create it
         result = self.db.spaces.insert_one(space)
+
+        # for each admin, count towards the achievement "join_groups" and
+        # "admin_groups"
+        for admin in space["admins"]:
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(admin, "join_groups")
+            profile_manager.achievement_count_up(admin, "admin_groups")
+
+        # for regular members, count towards the achievement "join_groups"
+        # but only if they are not already an admin --> otherwise they would
+        # count twice
+        for member in space["members"]:
+            if member not in space["admins"]:
+                profile_manager.achievement_count_up(member, "join_groups")
 
         # replicate the insert to elasticsearch
         ElasticsearchConnector().on_insert(
@@ -383,6 +395,10 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyMemberError()
+        
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
 
     def join_space_request(self, space_id: str | ObjectId, username: str) -> None:
         """
@@ -428,6 +444,10 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyAdminError()
+        
+        # since all checks have passed, count towards the achievement "admin_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "admin_groups")
 
     def set_space_picture(
         self, space_id: str | ObjectId, filename: str, picture: bytes, content_type: str
@@ -536,6 +556,10 @@ class Spaces:
             },
         )
 
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
+
     def _remove_user_from_invite_list(
         self, space_id: str | ObjectId, username: str
     ) -> None:
@@ -601,6 +625,10 @@ class Spaces:
             {"_id": space_id},
             {"$addToSet": {"members": username}, "$pull": {"requests": username}},
         )
+
+        # since all checks have passed, count towards the achievement "join_groups"
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "join_groups")
 
     def _remove_user_from_requests_list(
         self, space_id: str | ObjectId, username: str
@@ -767,39 +795,6 @@ class Spaces:
 
         # remove user from spaces admins list
         self.db.spaces.update_one({"_id": space_id}, {"$pull": {"admins": username}})
-
-    def create_or_join_discussion_space(self, wp_post: dict, username: str) -> str:
-        """
-        the given user joins the discussion space about the given wordpress post.
-        If this space doesnt exist, create one and let the user join
-        :param wp_post: the wordpress from the wordpress api (needs at least id and title keys)
-        :param username: the user who wants to create or join the space
-        :return: the name of the space
-        """
-
-        self.db.spaces.update_one(
-            {"wp_post_id": wp_post["id"]},
-            {
-                "$addToSet": {"members": username},
-                # in case the wordpress post name was changed, simply always update the name
-                "$set": {"name": "Discussion: {}".format(wp_post["title"]["rendered"])},
-                # only when inserting a new space, those additional parameters will be set
-                "$setOnInsert": {
-                    "invisible": True,
-                    "joinable": True,
-                    "admins": [],
-                    "invites": [],
-                    "requests": [],
-                    "files": [],
-                    "is_discussion": True,
-                    "wp_post_id": wp_post["id"],
-                },
-            },
-            upsert=True,
-        )
-
-        # return name of the space
-        return "Discussion: {}".format(wp_post["title"]["rendered"])
 
     def get_files(self, space_id: str | ObjectId) -> List[Dict]:
         """

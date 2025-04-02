@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { i18n } = require('./next-i18next.config')
+const { i18n } = require('./next-i18next.config');
 
 if (!process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID) {
     throw new Error(`
@@ -20,6 +20,11 @@ if (!process.env.NEXT_PUBLIC_KEYCLOAK_REALM) {
     throw new Error(`
   Please provide a valid NEXT_PUBLIC_KEYCLOAK_REALM in .env.local .
 `);
+}
+if (!process.env.MATERIAL_BASE_URL) {
+    throw new Error(`
+      Please provide a valid MATERIAL_BASE_URL in .env.local .
+    `);
 }
 
 /** @type {import('next').NextConfig} */

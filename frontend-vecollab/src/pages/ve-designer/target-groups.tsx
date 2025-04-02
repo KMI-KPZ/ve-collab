@@ -8,11 +8,15 @@ import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { Trans, useTranslation } from 'next-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TargetGroupsFormSchema } from '../../zod-schemas/targetGroupsSchema';
 import CreatableSelect from 'react-select/creatable';
 import CustomHead from '@/components/metaData/CustomHead';
+import { languageKeys } from '@/data/languages';
+import { Tooltip } from '@/components/common/Tooltip';
+import Link from 'next/link';
+import { PiBookOpenText } from 'react-icons/pi';
 
 export interface TargetGroup {
     name: string;
@@ -39,19 +43,6 @@ interface FormValues {
     targetGroups: TargetGroupWithLanguageOptions[];
     languages: Language[];
 }
-
-// const areAllFormValuesEmpty = (formValues: FormValues): boolean =>
-//     formValues.languages.every((languageObject) => languageObject.language === '') &&
-//     formValues.targetGroups.every((targetGroup) => {
-//         return (
-//             targetGroup.name === '' &&
-//             targetGroup.age_min === 0 &&
-//             targetGroup.age_max === 0 &&
-//             targetGroup.experience === '' &&
-//             targetGroup.academic_course === '' &&
-//             targetGroup.languages === ''
-//         );
-//     });
 
 interface Props {
     socket: Socket;
@@ -150,14 +141,14 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 <div className="mt-2 flex">
                     <div className="w-1/4 flex items-center">
                         <label htmlFor="name" className="px-2 py-2">
-                            {t('common:name')}
+                            {t('designer:target:target_group')}
                         </label>
                     </div>
                     <div className="w-3/4">
                         <input
                             type="text"
                             {...methods.register(`targetGroups.${index}.name`)}
-                            placeholder={t('common:enter_name')}
+                            placeholder={t('designer:target:target_group_placeholder')}
                             className="border border-gray-400 rounded-lg w-full p-2"
                         />
                         <p className="text-red-600 pt-2">
@@ -241,10 +232,15 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                                     onBlur={onBlur}
                                     value={value}
                                     options={
-                                        languageKeys.map((language) => ({
-                                            value: language,
-                                            label: t('common:languages.' + language),
-                                        })) as { value: string; label: string }[]
+                                        languageKeys
+                                            .map((language) => ({
+                                                value: language,
+                                                label: t('common:languages.' + language),
+                                            }))
+                                            .sort((a, b) => a.label.localeCompare(b.label)) as {
+                                            value: string;
+                                            label: string;
+                                        }[]
                                     }
                                     isClearable={true}
                                     isMulti
@@ -263,19 +259,6 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                                         </p>
                                     )
                             )}
-                        {/*}
-                        <input
-                            type="text"
-                            {...methods.register(`targetGroups.${index}.languages`)}
-                            placeholder={t('target.languages_placeholder')}
-                            className="border border-gray-400 rounded-lg w-full p-2"
-                        />
-                        <p className="text-red-600 pt-2">
-                            {t(
-                                methods.formState.errors?.targetGroups?.[index]?.languages?.message!
-                            )}
-                        </p>
-                        */}
                     </div>
                 </div>
                 <div className="flex justify-end items-center">
@@ -304,10 +287,15 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                             onBlur={onBlur}
                             value={value}
                             options={
-                                languageKeys.map((language) => ({
-                                    value: language,
-                                    label: t('common:languages.' + language),
-                                })) as { value: string; label: string }[]
+                                languageKeys
+                                    .map((language) => ({
+                                        value: language,
+                                        label: t('common:languages.' + language),
+                                    }))
+                                    .sort((a, b) => a.label.localeCompare(b.label)) as {
+                                    value: string;
+                                    label: string;
+                                }[]
                             }
                             isClearable={true}
                             isMulti
@@ -343,8 +331,8 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 subtitle={t('target.subtitle')}
                 description={t('target.description')}
                 tooltip={{
-                    text: t('target.tooltip'),
-                    link: '/learning-material/2/VA-Planung',
+                    text: t('target.tooltip-1'),
+                    link: '/learning-material/Zusammen%20Planen/VE-Planung%20(EN)',
                 }}
                 stageInMenu="generally"
                 idOfProgress="target_groups"
@@ -354,11 +342,11 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 planerDataCallback={setPlanerData}
                 submitCallback={onSubmit}
             >
-                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
-                    <div className="divide-y">{renderTargetGroupsInputs()}</div>
+                <div className={'rounded-sm shadow-sm px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y divide-gray-200">{renderTargetGroupsInputs()}</div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm cursor-pointer"
                             type="button"
                             onClick={() => {
                                 appendTg(emptyTG);
@@ -370,7 +358,30 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
                 </div>
 
                 <div className="">
-                    <div className="text-xl text-slate-600">{t('target.language_title')}</div>
+                    <div className="text-xl text-slate-600 flex justify-between items-center">
+                        {t('target.language_title')}
+                        <Tooltip
+                            tooltipsText={
+                                <Trans
+                                    i18nKey="target.tooltip-2"
+                                    ns="designer"
+                                    components={{ 1: <br /> }}
+                                />
+                            }
+                            position="left"
+                        >
+                            <Link
+                                target="_blank"
+                                href="/learning-material/Zusammen%20Lernen/Sprachliche%20Aspekte/Sprachliche%20Aspekte%20bei%20der%20Planung%20eines%20VA"
+                                className="rounded-full shadow-sm hover:bg-gray-50 p-2 mx-2"
+                            >
+                                <PiBookOpenText
+                                    size={30}
+                                    className="inline relative text-ve-collab-blue"
+                                />
+                            </Link>
+                        </Tooltip>
+                    </div>
                     <div className="mb-8">{t('target.language_description')}</div>
                     <div className="mt-2 items-center">{renderLanguagesInputs()}</div>
                 </div>
@@ -411,20 +422,20 @@ export function TargetGroupsNoAuthPreview() {
                 submitCallback={() => {}}
                 isNoAuthPreview
             >
-                <div className={'rounded shadow px-4 mb-6 w-full lg:w-2/3'}>
-                    <div className="divide-y">
+                <div className={'rounded-sm shadow-sm px-4 mb-6 w-full lg:w-2/3'}>
+                    <div className="divide-y divide-gray-200">
                         <div className="pt-4 pb-2">
                             <div className="mt-2 flex">
                                 <div className="w-1/4 flex items-center">
                                     <label htmlFor="name" className="px-2 py-2">
-                                        {t('common:name')}
+                                        {t('designer:target:target_group')}
                                     </label>
                                 </div>
                                 <div className="w-3/4">
                                     <input
                                         type="text"
                                         disabled
-                                        placeholder={t('common:enter_name')}
+                                        placeholder={t('designer:target:target_group_placeholder')}
                                         className="border border-gray-400 rounded-lg w-full p-2"
                                     />
                                 </div>
@@ -506,7 +517,7 @@ export function TargetGroupsNoAuthPreview() {
                     </div>
                     <div className="flex justify-center">
                         <button
-                            className="p-2 m-2 bg-white rounded-full shadow"
+                            className="p-2 m-2 bg-white rounded-full shadow-sm"
                             type="button"
                             onClick={() => {}}
                             disabled
@@ -533,87 +544,12 @@ export function TargetGroupsNoAuthPreview() {
                     </div>
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/50 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/50 to-white pointer-events-none"></div>
         </div>
     );
 }
 
 export async function getStaticProps({ locale }: { locale: any }) {
-    const languageKeys = [
-        'Afrikaans',
-        'Albanian',
-        'Arabic',
-        'Armenian',
-        'Basque',
-        'Bengali',
-        'Bulgarian',
-        'Catalan',
-        'Cambodian',
-        'Chinese (Mandarin)',
-        'Croatian',
-        'Czech',
-        'Danish',
-        'Dutch',
-        'English',
-        'Estonian',
-        'Fiji',
-        'Finnish',
-        'French',
-        'Georgian',
-        'German',
-        'Greek',
-        'Gujarati',
-        'Hebrew',
-        'Hindi',
-        'Hungarian',
-        'Icelandic',
-        'Indonesian',
-        'Irish',
-        'Italian',
-        'Japanese',
-        'Javanese',
-        'Korean',
-        'Latin',
-        'Latvian',
-        'Lithuanian',
-        'Macedonian',
-        'Malay',
-        'Malayalam',
-        'Maltese',
-        'Maori',
-        'Marathi',
-        'Mongolian',
-        'Nepali',
-        'Norwegian',
-        'Persian',
-        'Polish',
-        'Portuguese',
-        'Punjabi',
-        'Quechua',
-        'Romanian',
-        'Russian',
-        'Samoan',
-        'Serbian',
-        'Slovak',
-        'Slovenian',
-        'Spanish',
-        'Swahili',
-        'Swedish',
-        'Tamil',
-        'Tatar',
-        'Telugu',
-        'Thai',
-        'Tibetan',
-        'Tonga',
-        'Turkish',
-        'Ukrainian',
-        'Urdu',
-        'Uzbek',
-        'Vietnamese',
-        'Welsh',
-        'Xhosa',
-    ];
-
     return {
         props: {
             languageKeys,

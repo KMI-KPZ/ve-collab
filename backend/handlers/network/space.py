@@ -8,18 +8,15 @@ import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
-from resources.network.profile import Profiles
 from resources.network.space import (
     AlreadyAdminError,
     OnlyAdminError,
     PostFileNotDeleteableError,
     Spaces,
-    SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
     UserNotMemberError,
 )
-from resources.network.wordpress import Wordpress
 from resources.notifications import NotificationResource
 import util
 
@@ -168,18 +165,6 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
-        GET /spaceadministration/join_discussion
-            start or join the space that discusses about a wordpress post
-            and get redirected directly to the space.
-            use this endpoint only as an incoming request from wordpress, because
-            it suppresses error messages.
-            if you are already in the network, use the equivalent POST request instead
-            query param:
-                "wp_post_id": id of wordpress post to discuss about
-
-            returns:
-                redirect to the freshly created or joined space
-
         GET /spaceadministration/files
             get the file metadata of the files uploaded to the given space
             use the static file handler on /uploads to retrieve the actual file
@@ -259,17 +244,6 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.get_invites_for_space(space_id)
-            return
-
-        elif slug == "join_discussion":
-            try:
-                wp_post_id = self.get_argument("wp_post_id")
-            except tornado.web.MissingArgumentError:
-                self.set_status(400)
-                self.write({"success": False, "reason": "missing_key:wp_post_id"})
-                return
-
-            self.create_or_join_discussion_space_redirect(wp_post_id)
             return
 
         elif slug == "files":
@@ -694,23 +668,6 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
-        POST /spaceadministration/join_discussion
-            start or join the space that discusses about a wordpress post
-            query param:
-                "wp_post_id": id of wordpress post to discuss about
-
-            returns:
-                200 OK,
-                {"success": True}
-
-                400 Bad Request
-                {"success": False,
-                 "reason": missing_key:wp_post_id}
-
-                401 Unauthorized
-                {"success": False,
-                 "reason": "no_logged_in_user"}
-
         POST /spaceadministration/put_file
             add a new file to the space's repository
             query param:
@@ -751,7 +708,7 @@ class SpaceHandler(BaseHandler):
         # join_discussion and create route doesnt need space id, so only
         # throw 400 for missing space name
         # if request is not towards this route
-        if slug != "join_discussion" and slug != "create":
+        if slug != "create":
             try:
                 space_id = self.get_argument("id")
             except tornado.web.MissingArgumentError:
@@ -885,17 +842,6 @@ class SpaceHandler(BaseHandler):
 
         elif slug == "toggle_joinability":
             self.toggle_space_joinability(space_id)
-            return
-
-        elif slug == "join_discussion":
-            try:
-                wp_post_id = self.get_argument("wp_post_id")
-            except tornado.web.MissingArgumentError:
-                self.set_status(400)
-                self.write({"success": False, "reason": "missing_key:wp_post_id"})
-                return
-
-            self.create_or_join_discussion_space_messages(wp_post_id)
             return
 
         elif slug == "put_file":
@@ -1962,77 +1908,6 @@ class SpaceHandler(BaseHandler):
 
             self.set_status(200)
             self.write({"success": True})
-
-    def _create_or_join_discussion_space(self, wordpress_post_id: str) -> None:
-        """
-        helper function the create or join the discussion space about the wordpress post.
-        do not use directly, user provided wrappers `create_or_join_discussion_space_messages`
-        or `create_or_join_discussion_space_redirect` instead.
-        """
-
-        # get the post data from wordpress
-        # at the same time, abort with error if wordpress api gives an error
-        try:
-            wp_post = Wordpress().get_wordpress_post(wordpress_post_id)
-        except Exception:
-            raise
-
-        with util.get_mongodb() as db:
-            space_manager = Spaces(db)
-            acl = ACL(db)
-
-            space_name = space_manager.create_or_join_discussion_space(
-                wp_post, self.current_user.username
-            )
-
-            if self.is_current_user_lionet_admin():
-                acl.space_acl.insert_admin(self.current_user.username, space_name)
-            else:
-                acl.space_acl.insert_default_discussion(
-                    self.current_user.username, space_name
-                )
-
-        return space_name
-
-    def create_or_join_discussion_space_redirect(self, wordpress_post_id: str):
-        """
-        current user joins the discussion space about a wordpress post. If it does not already
-        exist, create it as an invisible space that everybody is allowed to join.
-        Instead of a success message, redirects you to the space. use this for endpoints
-        coming from wordpress
-        """
-
-        try:
-            space_name = self._create_or_join_discussion_space(wordpress_post_id)
-        except Exception as e:
-            logger.error(e)
-            self.redirect("/main")
-            return
-
-        self.redirect("/space/{}".format(space_name))
-
-    def create_or_join_discussion_space_messages(self, wordpress_post_id: str):
-        """
-        current user joins the discussion space about a wordpress post. If it does not already
-        exist, create it as an invisible space that everybody is allowed to join.
-        Answers of this endpoint are reqular success/error messages.
-        use this function for endpoints that come from within the network
-        """
-
-        try:
-            space_name = self._create_or_join_discussion_space(wordpress_post_id)
-        except ValueError as e:
-            self.set_status(404)
-            self.write({"success": False, "reason": str(e)})
-            return
-        except Exception as e:
-            logger.error(e)
-            self.set_status(500)
-            self.write({"success": False, "reason": "wordpress_error"})
-            return
-
-        self.set_status(200)
-        self.write({"success": True, "space_name": space_name})
 
     def put_new_file(
         self,

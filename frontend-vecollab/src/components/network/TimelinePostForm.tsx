@@ -1,11 +1,18 @@
-import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
+import { BackendPost, BackendPostAuthor, BackendPostFile } from '@/interfaces/api/apiInterfaces';
+import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
+import { fetchPOST, useGetAvailablePlans, useGetOwnProfile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import React, { MouseEvent, FormEvent, MouseEventHandler, useState, useEffect } from 'react';
+import { useTranslation } from 'next-i18next';
+import Image from 'next/image';
+import React, {
+    FormEvent,
+    MouseEvent,
+    MouseEventHandler,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import { IoIosSend, IoMdClose } from 'react-icons/io';
-import AuthenticatedImage from '../common/AuthenticatedImage';
-import { BackendPost, BackendPostAuthor, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { useRef } from 'react';
-import PostHeader from './PostHeader';
 import {
     MdArrowDropDown,
     MdAttachFile,
@@ -13,32 +20,35 @@ import {
     MdFormatClear,
     MdInsertLink,
     MdLinkOff,
-    MdNewspaper,
-    MdPublic,
 } from 'react-icons/md';
 import { RxFile } from 'react-icons/rx';
-import LoadingAnimation from '../common/LoadingAnimation';
 import {
     BtnBold,
-    BtnItalic,
-    BtnUnderline,
     BtnBulletList,
+    BtnItalic,
     BtnNumberedList,
+    BtnUnderline,
     Editor,
     EditorProvider,
     Toolbar,
     createButton,
 } from 'react-simple-wysiwyg';
-import TimelinePostText from './TimelinePostText';
-import { sanitizedText } from './sanitizedText';
-import Dialog from '../profile/Dialog';
+import { Socket } from 'socket.io-client';
 import Dropdown from '../common/Dropdown';
-import { IPlan } from '@/interfaces/planner/plannerInterfaces';
+import LoadingAnimation from '../common/LoadingAnimation';
 import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
-import { Socket } from 'socket.io-client';
-import { useTranslation } from 'next-i18next';
-import Image from 'next/image';
+import Dialog from '../profile/Dialog';
+import PostHeader from './PostHeader';
+import TimelinePostText from './TimelinePostText';
+import UserProfileImage from './UserProfileImage';
+import { sanitizedText } from './sanitizedText';
+
+import { FaMedal } from 'react-icons/fa';
+import { AuthenticatedFile } from '../common/AuthenticatedFile';
+import PlanIcon from '../plans/PlanIcon';
+import { IplansFilter } from '@/pages/plans';
+import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
     post?: BackendPost | undefined;
@@ -68,6 +78,7 @@ export default function TimelinePostForm({
     const ref = useRef<HTMLFormElement>(null);
     const fileUploadRef = useRef<HTMLInputElement>(null);
     const [filesToAttach, setFilesToAttach] = useState<File[] | null>(null);
+    const [storedFiles, setStoredFiles] = useState<BackendPostFile[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
@@ -82,9 +93,7 @@ export default function TimelinePostForm({
     const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false);
     const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false);
-    const [loadingPlans, setLoadingPlans] = useState<boolean>(true);
-    const [plans, setPlans] = useState<IPlan[]>([]);
-    const [plansToAttach, setPlansToAttach] = useState<IPlan[]>([]);
+    const [plansToAttach, setPlansToAttach] = useState<PlanPreview[]>([]);
     const domParser = new DOMParser();
 
     const { data: userProfileSnippet } = useGetOwnProfile(session!.accessToken);
@@ -92,6 +101,8 @@ export default function TimelinePostForm({
     useEffect(() => {
         if (postToEdit) {
             setText(postToEdit.isRepost ? (postToEdit.repostText as string) : postToEdit.text);
+            setPlansToAttach(postToEdit.isRepost ? [] : postToEdit.plans);
+            setStoredFiles(postToEdit.isRepost ? [] : postToEdit.files);
             setFocus();
         }
     }, [postToEdit]);
@@ -121,7 +132,34 @@ export default function TimelinePostForm({
         const updatePost = async (id: string) => {
             return await fetchPOST(
                 '/posts',
-                Object.assign({}, { _id: id }, { text }),
+                Object.assign(
+                    {},
+                    { _id: id },
+                    { text },
+                    storedFiles
+                        ? {
+                              files: JSON.stringify(
+                                  storedFiles.map((file) => file.file_id.toString())
+                              ),
+                          }
+                        : {},
+                    filesToAttach
+                        ? {
+                              file_amount: filesToAttach.length,
+                              ...filesToAttach.reduce(
+                                  (o, file, i) => ({ ...o, [`file${i}`]: file }),
+                                  {}
+                              ),
+                          }
+                        : {},
+                    plansToAttach.length
+                        ? {
+                              plans: JSON.stringify(
+                                  plansToAttach.map((plan) => plan._id.toString())
+                              ),
+                          }
+                        : {}
+                ),
                 session?.accessToken,
                 true
             );
@@ -221,7 +259,7 @@ export default function TimelinePostForm({
                 break;
 
             case 'plan':
-                openPlanDialog();
+                setIsPlanDialogOpen(true);
                 break;
 
             default:
@@ -229,22 +267,12 @@ export default function TimelinePostForm({
         }
     };
 
-    const openPlanDialog = () => {
-        setIsPlanDialogOpen(true);
-
-        if (plans.length) return;
-        setLoadingPlans(true);
-        fetchGET('/planner/get_available', session?.accessToken)
-            .then((data) => setPlans(data.plans))
-            .finally(() => setLoadingPlans(false));
-    };
-
-    const addPlanAttachment = (plan: IPlan) => {
+    const addPlanAttachment = (plan: PlanPreview) => {
         setPlansToAttach((prev) => [...prev, plan]);
         setIsPlanDialogOpen(false);
     };
 
-    const removePlanAttachment = (plan: IPlan) => {
+    const removePlanAttachment = (plan: PlanPreview) => {
         setPlansToAttach((prev) => (prev ? prev.filter((a, i) => a._id != plan._id) : []));
     };
 
@@ -261,6 +289,10 @@ export default function TimelinePostForm({
 
     const removeSelectedFile = (fileId: any) => {
         setFilesToAttach((prev) => (prev ? prev.filter((a, i) => i != fileId) : null));
+    };
+
+    const removeStoredFile = (fileId: any) => {
+        setStoredFiles((prev) => (prev ? prev.filter((a, i) => i != fileId) : null));
     };
 
     var BtnClearFormatting = createButton(
@@ -342,56 +374,86 @@ export default function TimelinePostForm({
     };
 
     const PlansDialog = () => {
-        if (loadingPlans) return <LoadingAnimation />;
+        const pageLength = 5;
+        const [filterBy, setFilterBy] = useState<IplansFilter>({
+            goodPracticeOnly: true,
+            owner: 'own',
+            limit: pageLength,
+            offset: 0,
+        });
+        const { data: plans, mutate, isLoading } = useGetAvailablePlans(filterBy);
 
-        if (!plans.length)
+        if (!isLoading && !plans.length)
             return (
                 <>
-                    {t('no_plans_yet')}{' '}
+                    <p>{t('no_plans_yet')}</p>
                     <ButtonNewPlan socket={socket} label={t('create_new_plan')} />
                 </>
             );
 
         // TODO add simple filter input
-        // TODO order by date
-
         return (
             <div className="flex flex-col max-h-96 overflow-y-auto">
-                {plans
-                    .sort((a, b) => {
-                        return (
-                            new Date(b.last_modified).getTime() -
-                            new Date(a.last_modified).getTime()
-                        );
-                    })
-                    .map((plan) => (
-                        <div
-                            key={plan._id}
-                            className="p-2 flex items-center gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
-                            title={t('common:choose')}
-                            onClick={(e) => {
-                                addPlanAttachment(plan);
+                <div className="mb-2 pb-2 border-b border-gray-200">{t('add_your_gp_plans')}</div>
+                <div className="flex flex-col max-h-96 overflow-y-auto content-scrollbar">
+                    {plans
+                        .sort((a, b) => {
+                            return (
+                                new Date(b.last_modified).getTime() -
+                                new Date(a.last_modified).getTime()
+                            );
+                        })
+                        .map((plan) => (
+                            <div
+                                key={plan._id}
+                                className="p-2 flex items-center justify-start gap-x-4 gap-y-6 rounded-md hover:bg-ve-collab-blue/25 hover:cursor-pointer"
+                                title={t('common:choose')}
+                                onClick={(e) => {
+                                    addPlanAttachment(plan);
+                                }}
+                            >
+                                <PlanIcon />
+
+                                <div className="text-xl font-bold grow-0 truncate">{plan.name}</div>
+                                {plan.is_good_practise && (
+                                    <div className="mx-2 text-ve-collab-blue rounded-full p-1 border border-ve-collab-blue">
+                                        <FaMedal
+                                            title={t('common:plans_marked_as_good_practise')}
+                                        />
+                                    </div>
+                                )}
+                                {plan.steps.length > 1 && (
+                                    <div className="text-nowrap">({plan.steps.length} Etappen)</div>
+                                )}
+                                {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
+                                {session?.user.preferred_username != plan.author.username && (
+                                    <div className="text-sm text-gray-500">
+                                        von {plan.author.first_name} {plan.author.last_name}
+                                    </div>
+                                )}
+                                <span className="grow text-right" title="zuletzt geändert">
+                                    <Timestamp timestamp={plan.last_modified} className="text-sm" />
+                                </span>
+                            </div>
+                        ))}
+                </div>
+                {isLoading && <LoadingAnimation size="small" />}
+                {plans.length >= filterBy.limit! ? (
+                    <div className="mx-auto mt-4">
+                        <ButtonLightBlue
+                            label={t('common:more')}
+                            onClick={() => {
+                                setFilterBy((prev) => ({
+                                    ...prev,
+                                    limit: prev.limit! + pageLength,
+                                }));
+                                mutate();
                             }}
-                        >
-                            <MdNewspaper />
-                            <div className="text-xl font-bold grow-0">{plan.name}</div>
-                            {plan.is_good_practise && (
-                                <div className="text-slate-700">
-                                    <MdPublic title={t('common:plans_marked_as_good_practise')} />
-                                </div>
-                            )}
-                            {plan.steps.length > 1 && <div>({plan.steps.length} Etappen)</div>}
-                            {plan.steps.length == 1 && <div>({plan.steps.length} Etappe)</div>}
-                            {session?.user.preferred_username != plan.author.username && (
-                                <div className="text-sm text-gray-500">
-                                    von {plan.author.first_name} {plan.author.last_name}
-                                </div>
-                            )}
-                            <span className="grow text-right" title="zuletzt geändert">
-                                <Timestamp timestamp={plan.last_modified} className="text-sm" />
-                            </span>
-                        </div>
-                    ))}
+                        />
+                    </div>
+                ) : (
+                    <></>
+                )}
             </div>
         );
     };
@@ -404,26 +466,22 @@ export default function TimelinePostForm({
                 title={t('link')}
                 onClose={() => setIsLinkDialogOpen(false)}
             >
-                <div className="w-[20vw]">
-                    <div>
-                        <form onSubmit={submitNewLinkDialog}>
-                            <input
-                                type="url"
-                                name="url"
-                                defaultValue={cursorInLink ? cursorInLink.href : ''}
-                                autoComplete="off"
-                                autoFocus
-                                className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
-                            />
-                            <button
-                                type="submit"
-                                className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white"
-                            >
-                                {t('common:ok')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                <form onSubmit={submitNewLinkDialog}>
+                    <input
+                        type="url"
+                        name="url"
+                        defaultValue={cursorInLink ? cursorInLink.href : ''}
+                        autoComplete="off"
+                        autoFocus
+                        className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
+                    />
+                    <button
+                        type="submit"
+                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white cursor-pointer"
+                    >
+                        {t('common:ok')}
+                    </button>
+                </form>
             </Dialog>
 
             {/* VE plan dialog */}
@@ -454,7 +512,7 @@ export default function TimelinePostForm({
                             left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
                             top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
                         }}
-                        className={`absolute p-2 rounded-md bg-white shadow border text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
+                        className={`absolute p-2 rounded-md bg-white shadow-sm border border-gray-200 text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
                     >
                         <a
                             href={cursorInLink.getAttribute('href') as string}
@@ -477,17 +535,10 @@ export default function TimelinePostForm({
 
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
-                        <AuthenticatedImage
-                            imageId={
-                                userProfileSnippet
-                                    ? userProfileSnippet?.profile?.profile_pic
-                                    : 'default_profile_pic.jpg'
-                            }
-                            alt={t('profile_picture')}
-                            width={40}
-                            height={40}
-                            className="rounded-full mr-3 mt-5 self-start"
-                        ></AuthenticatedImage>
+                        <UserProfileImage
+                            profile_pic={userProfileSnippet?.profile?.profile_pic}
+                            chosen_achievement={userProfileSnippet?.profile?.chosen_achievement}
+                        />
                     )}
 
                     <div className="w-full">
@@ -516,7 +567,7 @@ export default function TimelinePostForm({
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded bg-slate-100">
+                    <div className="my-5 ml-[50px] p-3 rounded-sm bg-slate-100">
                         <div className="flex items-center mb-6">
                             {postToRepost.isRepost ? (
                                 <PostHeader
@@ -531,7 +582,7 @@ export default function TimelinePostForm({
                             )}
                             <button
                                 onClick={onCancelRepost}
-                                className="ml-auto self-start p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="ml-auto self-start p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             >
                                 <IoMdClose />
                             </button>
@@ -546,9 +597,35 @@ export default function TimelinePostForm({
                     </div>
                 )}
 
-                {filesToAttach && filesToAttach.length > 0 && (
+                {((storedFiles && storedFiles.length > 0) ||
+                    (filesToAttach && filesToAttach.length > 0)) && (
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
-                        {filesToAttach.map((file, index) => (
+                        {storedFiles?.map((file, index) => (
+                            <div className="max-w-[250px] mr-4 flex items-center" key={index}>
+                                <AuthenticatedFile
+                                    key={index}
+                                    url={`/uploads/${file.file_id}`}
+                                    filename={file.file_name}
+                                    title={t('common:download')}
+                                >
+                                    <div className="flex justify-center">
+                                        <RxFile size={30} className="m-1" />
+                                    </div>
+                                </AuthenticatedFile>
+                                <div className="truncate py-2">{file.file_name}</div>
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        removeStoredFile(index);
+                                    }}
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
+                                    title={t('remove_file')}
+                                >
+                                    <IoMdClose />
+                                </button>
+                            </div>
+                        ))}
+                        {filesToAttach?.map((file, index) => (
                             <div className="max-w-[250px] mr-4 flex items-center" key={index}>
                                 {file.type.startsWith('image/') ? (
                                     <Image
@@ -559,12 +636,15 @@ export default function TimelinePostForm({
                                         className="m-1 rounded-md"
                                     />
                                 ) : (
-                                    <RxFile size={30} className="m-1" />
+                                    <RxFile size={30} className="m-1 cursor-pointer" />
                                 )}
                                 <div className="truncate py-2">{file.name}</div>
                                 <button
-                                    onClick={() => removeSelectedFile(index)}
-                                    className="ml-2 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        removeSelectedFile(index);
+                                    }}
+                                    className="ml-2 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_file')}
                                 >
                                     <IoMdClose />
@@ -581,8 +661,8 @@ export default function TimelinePostForm({
                                 className="mr-4 flex flex-row flex-wrap items-center justify-center gap-x-2 overflow-x-hidden"
                                 key={index}
                             >
-                                <MdNewspaper size={20} className="flex-none" />
-                                <div className="truncate font-bold grow w-1/2">{plan.name}</div>
+                                <PlanIcon />
+                                <div className="truncate font-bold grow">{plan.name}</div>
                                 <div className="text-sm text-gray-500 flex-none">
                                     {plan.author.first_name} {plan.author.last_name}
                                 </div>
@@ -592,7 +672,7 @@ export default function TimelinePostForm({
                                 />
                                 <button
                                     onClick={() => removePlanAttachment(plan)}
-                                    className="flex-none p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="flex-none p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     title={t('remove_plan')}
                                 >
                                     <IoMdClose />
@@ -607,21 +687,12 @@ export default function TimelinePostForm({
                         !postToEdit && !postToRepost && !formHadFocus ? 'hidden' : ''
                     }`}
                 >
-                    <div className="ml-auto text-right">
-                        {postToEdit && (
-                            <button
-                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg`}
-                                onClick={onCancel}
-                                type="button"
-                            >
-                                {t('common:cancel')}
-                            </button>
-                        )}
-                        {!postToEdit && !postToRepost && (
+                    <div className="ml-auto text-right space-x-4 space-y-2">
+                        {!postToRepost && (
                             <>
                                 <div
                                     title={t('add_file_or_plan')}
-                                    className="mt-2 px-5 py-2 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                    className="px-2 py-2.5 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
                                 >
                                     <Dropdown
                                         options={[
@@ -650,10 +721,21 @@ export default function TimelinePostForm({
                                 />
                             </>
                         )}
+                        {postToEdit && (
+                            <button
+                                className={`py-2 px-5 border border-ve-collab-orange rounded-lg cursor-pointer`}
+                                onClick={onCancel}
+                                type="button"
+                            >
+                                {t('common:cancel')}
+                            </button>
+                        )}
                         <button
                             type="submit"
-                            className={`relative py-2 px-5 ml-2 mt-2 rounded-lg bg-ve-collab-orange text-white overflow-hidden ${
-                                text == '' ? 'cursor-default bg-ve-collab-orange/75' : ''
+                            className={`relative py-2 px-5 rounded-lg text-white overflow-hidden ${
+                                text.trim() == ''
+                                    ? 'cursor-default bg-ve-collab-orange/75'
+                                    : 'cursor-pointer bg-ve-collab-orange'
                             }`}
                         >
                             {postToEdit ? (

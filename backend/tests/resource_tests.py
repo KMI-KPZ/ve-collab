@@ -34,11 +34,11 @@ from exceptions import (
     OnlyAdminError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    ReportDoesntExistError,
     RoomDoesntExistError,
     PostFileNotDeleteableError,
     PostNotExistingException,
     ProfileDoesntExistException,
-    SpaceAlreadyExistsError,
     SpaceDoesntExistError,
     UserNotAdminError,
     UserNotInvitedError,
@@ -59,12 +59,14 @@ from model import (
     VEPlan,
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.mail_invitation import MailInvitation
 from resources.network.acl import ACL
 from resources.network.chat import Chat
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
+from resources.reports import Reports
 import util
 
 # don't change, these values match with the ones in BaseHandler
@@ -129,6 +131,14 @@ class BaseResourceTestCase(TestCase):
         # initialize mongodb connection
         self.client = self.__class__._client
         self.db = self.__class__._db
+
+        # multiplier values for achievements
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
 
     def tearDown(self) -> None:
         self.client = None
@@ -1022,34 +1032,92 @@ class PostResourceTest(BaseResourceTestCase):
         }
         self.db.posts.insert_one(self.default_post)
 
-        # insert a default profile for CURRENT_ADMIN (needed for timeline)
-        self.db.profiles.insert_one(
-            {
-                "username": CURRENT_ADMIN.username,
-                "role": "admin",
-                "follows": [],
-                "bio": "",
-                "institution": "",
-                "profile_pic": "default_profile_pic.jpg",
-                "first_name": "",
-                "last_name": "",
-                "gender": "",
-                "address": "",
-                "birthday": "",
-                "experience": [""],
-                "expertise": "",
-                "languages": [],
-                "ve_ready": True,
-                "excluded_from_matching": False,
-                "ve_interests": [""],
-                "ve_goals": [""],
-                "preferred_formats": [""],
-                "research_tags": [],
-                "courses": [],
-                "educations": [],
-                "work_experience": [],
-                "ve_window": [],
-            }
+        # insert a default profiles
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+                {
+                    "username": CURRENT_USER.username,
+                    "role": "user",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+            ]
         )
 
     def tearDown(self) -> None:
@@ -1254,6 +1322,41 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["comments"], new_post["comments"])
         self.assertEqual(post["likers"], new_post["likers"])
 
+        # check if post counted towards "create_posts" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
+        )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
+
+        # add one more post with empty text that should not count towards achievement
+        new_post = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        post_id = post_manager.insert_post(new_post)
+
+        # check if post was inserted, but not counted towards achievement
+        self.assertIsNotNone(self.db.posts.find_one({"_id": post_id}))
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            prev_achievement_progress_counter,
+        )
+
     def test_insert_post_error_missing_attributes(self):
         """
         expect: ValueError is raised because post dict is missing an attribute
@@ -1319,6 +1422,13 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["plans"], new_post["plans"])
         self.assertEqual(post["files"], new_post["files"])
         self.assertEqual(post["likers"], new_post["likers"])
+
+        # since it was an update, the post should not count towards "social" achievement
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            0,
+        )
 
     def test_insert_post_update_instead_error_missing_attribute(self):
         """
@@ -1559,12 +1669,32 @@ class PostResourceTest(BaseResourceTestCase):
         """
 
         post_manager = Posts(self.db)
-        post_manager.like_post(self.post_id, CURRENT_USER.username)
+        post_manager.like_post(self.post_id, CURRENT_ADMIN.username)
 
         # check if post was liked
         post = self.db.posts.find_one({"_id": self.post_id})
         self.assertIsNotNone(post)
-        self.assertIn(CURRENT_USER.username, post["likers"])
+        self.assertIn(CURRENT_ADMIN.username, post["likers"])
+
+        # check if "give_likes" counted towards "social" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
+
+        post_manager.like_post(self.post_id, CURRENT_USER.username)
+
+        # now check if "posts_liked" counted towards "social" achievement
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            prev_achievement_progress_counter
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["posts_liked"],
+        )
 
     def test_like_post_error_post_doesnt_exist(self):
         """
@@ -1662,6 +1792,34 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIn(comment["text"], comment_text)
         self.assertIn(comment_id, comment_ids)
 
+        # check if comment counted towards "social" achievement of user
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_comments"],
+        )
+        prev_achievement_progress_counter = profile["achievements"]["social"][
+            "progress"
+        ]
+
+        # try another comment with empty text that should not count towards achievement
+        comment = {
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 5, 0),
+            "text": "",
+            "pinned": False,
+        }
+
+        post_manager.add_comment(self.post_id, comment)
+
+        # check if comment was added, but not counted towards achievement
+        self.assertIsNotNone(self.db.posts.find_one({"_id": self.post_id}))
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            prev_achievement_progress_counter,
+        )
+
     def test_add_comment_error_post_doesnt_exist(self):
         """
         expect: PostNotExistingException is raised because no post with this _id
@@ -1678,6 +1836,14 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         self.assertRaises(
             PostNotExistingException, post_manager.add_comment, ObjectId(), comment
+        )
+
+        # since the post didnt exist, the comment should also not count towards
+        # "social" achievement
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            0,
         )
 
     def test_add_comment_error_missing_attributes(self):
@@ -2344,133 +2510,6 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertIn(post5["_id"], post_ids)
         self.assertIn(self.post_id, post_ids)
 
-    def test_get_personal_timeline_legacy(self):
-        """
-        expect: successfully get all posts that are in the time frame and match the criteria (OR match):
-        - from people that the user follows,
-        - in spaces that the user is a member of
-        - the users own posts
-        """
-
-        # follow CURRENT_USER.username
-        self.db.profiles.update_one(
-            {"username": CURRENT_ADMIN.username},
-            {"$push": {"follows": CURRENT_USER.username}},
-        )
-
-        # add one post of CURRENT_USER.username and one of a different username
-        post1 = {
-            "_id": ObjectId(),
-            "author": CURRENT_USER.username,
-            "creation_date": datetime.now(),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-        post2 = {
-            "_id": ObjectId(),
-            "author": "non_following_user",
-            "creation_date": datetime.now(),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        # create space test_space
-        space_id = ObjectId()
-        space = {
-            "_id": space_id,
-            "name": "test_space",
-            "invisible": False,
-            "joinable": True,
-            "members": [CURRENT_ADMIN.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": [],
-            "files": [],
-        }
-        self.db.spaces.insert_one(space)
-
-        # add one post in a space that CURRENT_USER.username is a member of and one in a space that
-        # he is not a member of
-        post3 = {
-            "_id": ObjectId(),
-            "author": "doesnt_matter",
-            "creation_date": datetime.now(),
-            "text": "testgydfgdfg",
-            "space": space_id,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-        post4 = {
-            "_id": ObjectId(),
-            "author": "doesnt_matter",
-            "creation_date": datetime.now(),
-            "text": "test",
-            "space": ObjectId(),
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        # add one post by the user himself
-        post5 = {
-            "_id": ObjectId(),
-            "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        self.db.posts.insert_many([post1, post2, post3, post4, post5])
-
-        post_manager = Posts(self.db)
-        # this should include post1 because it is from a user that the user follows,
-        # post3 because it is from a space that the user is a member of,
-        # and post5 because it is the users own post
-        # but not the default post because it is out of time frame
-        posts = post_manager.get_personal_timeline_legacy(
-            CURRENT_ADMIN.username, datetime.now() - timedelta(days=1), datetime.now()
-        )
-        self.assertEqual(len(posts), 3)
-        post_ids = [post["_id"] for post in posts]
-        self.assertIn(post1["_id"], post_ids)
-        self.assertIn(post3["_id"], post_ids)
-        self.assertIn(post5["_id"], post_ids)
-
     def test_check_new_posts_since_timestamp(self):
         """
         expect: successfully query for new posts within a timeframe
@@ -2486,6 +2525,71 @@ class PostResourceTest(BaseResourceTestCase):
             post_manager.check_new_posts_since_timestamp(datetime(2023, 1, 2))
         )
 
+    def test_update_post_plans(self):
+        """
+        expect: successfully change the attached plans of a post
+        """
+
+        plan_ids = [ObjectId(), ObjectId(), ObjectId()]
+
+        post_manager = Posts(self.db)
+        post_manager.update_post_plans(self.post_id, plan_ids)
+
+        # check if plans were updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["plans"], plan_ids)
+
+    def test_update_post_plans_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.update_post_plans, ObjectId(), []
+        )
+
+    def test_update_post_files(self):
+        """
+        expect: successfully change the attached files of a post
+        """
+
+        new_files = [
+            {
+                "file_id": ObjectId(),
+                "file_name": "test.txt",
+                "file_type": "text/plain",
+                "author": CURRENT_ADMIN.username,
+            },
+            {
+                "file_id": ObjectId(),
+                "file_name": "test2.txt",
+                "file_type": "text/plain",
+                "author": CURRENT_ADMIN.username,
+            },
+        ]
+
+        post_manager = Posts(self.db)
+        post_manager.update_post_files(self.post_id, new_files)
+
+        # check if files were updated
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertIsNotNone(post)
+        self.assertEqual(post["files"], new_files)
+
+    def test_update_post_files_error_post_doesnt_exist(self):
+        """
+        expect: PostNotExistingException is raised because no post with this _id
+        exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            PostNotExistingException, post_manager.update_post_files, ObjectId(), []
+        )
+
 
 class ProfileResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -2497,6 +2601,13 @@ class ProfileResourceTest(BaseResourceTestCase):
         )
         self.default_profile["follows"] = [CURRENT_USER.username]
         self.db.profiles.insert_one(self.default_profile)
+
+        self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
+        self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS = Profiles(
+            self.db
+        ).VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -2601,6 +2712,15 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "group_invite": "push",
                 "system": "push",
             },
+            "achievements": {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+            "chosen_achievement": {"type": "", "level": 0},
         }
 
     def test_get_profile(self):
@@ -2659,6 +2779,12 @@ class ProfileResourceTest(BaseResourceTestCase):
             profile["notification_settings"],
             self.default_profile["notification_settings"],
         )
+        self.assertNotIn("tracking", profile["achievements"])
+        del self.default_profile["achievements"]["tracking"]
+        self.assertEqual(profile["achievements"], self.default_profile["achievements"])
+        self.assertEqual(
+            profile["chosen_achievement"], self.default_profile["chosen_achievement"]
+        )
 
         # test again, but specify a projection of only first_name, last_name and expertise
         profile = profile_manager.get_profile(
@@ -2696,6 +2822,8 @@ class ProfileResourceTest(BaseResourceTestCase):
         self.assertNotIn("work_experience", profile)
         self.assertNotIn("ve_window", profile)
         self.assertNotIn("notification_settings", profile)
+        self.assertNotIn("achievements", profile)
+        self.assertNotIn("chosen_achievement", profile)
         self.assertEqual(profile["first_name"], self.default_profile["first_name"])
         self.assertEqual(profile["last_name"], self.default_profile["last_name"])
         self.assertEqual(profile["expertise"], self.default_profile["expertise"])
@@ -2720,6 +2848,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile2 = self.create_profile("test2", ObjectId())
         self.db.profiles.insert_many([profile1, profile2])
 
+        # remove achievement tracking information from the profiles, because it
+        # should not be included in the response (easier check for equality)
+        del self.default_profile["achievements"]["tracking"]
+        del profile1["achievements"]["tracking"]
+        del profile2["achievements"]["tracking"]
+
         profile_manager = Profiles(self.db)
         profiles = profile_manager.get_all_profiles()
         self.assertEqual(len(profiles), 3)
@@ -2736,6 +2870,12 @@ class ProfileResourceTest(BaseResourceTestCase):
         profile1 = self.create_profile("test1", ObjectId())
         profile2 = self.create_profile("test2", ObjectId())
         self.db.profiles.insert_many([profile1, profile2])
+
+        # remove achievement tracking information from the profiles, because it
+        # should not be included in the response (easier check for equality)
+        del self.default_profile["achievements"]["tracking"]
+        del profile1["achievements"]["tracking"]
+        del profile2["achievements"]["tracking"]
 
         # request profiles of CURRENT_ADMIN.username and test1
         profile_manager = Profiles(self.db)
@@ -2805,6 +2945,18 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+        )
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2869,6 +3021,18 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+        )
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # check that the profile was also replicated to elasticsearch
         response = requests.get(
@@ -2933,6 +3097,18 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            result["achievements"],
+            {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+        )
+        self.assertEqual(result["chosen_achievement"], None)
 
         # also test that in this case an acl entry for "guest" was created if it not
         # already existed
@@ -3177,6 +3353,18 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "system": "email",
             },
         )
+        self.assertEqual(
+            profile["achievements"],
+            {
+                "social": {"level": 0, "progress": 0, "next_level": 20},
+                "ve": {"level": 0, "progress": 0, "next_level": 40},
+                "tracking": {
+                    "good_practice_plans": [],
+                    "unique_partners": [],
+                },
+            },
+        )
+        self.assertEqual(profile["chosen_achievement"], None)
 
         # also check that the "test1" profile was replicated to elasticsearch
         response = requests.get(
@@ -3278,6 +3466,29 @@ class ProfileResourceTest(BaseResourceTestCase):
         fs_file = fs.get(profile_pic_id)
         self.assertIsNotNone(fs_file)
 
+        # try again with updating the achievements manually, expecting that they
+        # will be ignored because they are auto-tracked
+        profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"achievements": {"social": {"level": 1, "progress": 5, "next_level": 10}}},
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"],
+            self.default_profile["achievements"],
+        )
+
+        # try again choosing a new achievement, expecting that it will be set
+        profile_manager.update_profile_information(
+            CURRENT_ADMIN.username,
+            {"chosen_achievement": {"type": "ve", "level": 0}},
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["chosen_achievement"],
+            {"type": "ve", "level": 0},
+        )
+
     def test_update_profile_information_upsert(self):
         """
         expect: successfully upsert if no profile exists yet
@@ -3320,10 +3531,36 @@ class ProfileResourceTest(BaseResourceTestCase):
             {"bio": 123},
         )
 
+    def test_update_profile_information_error_not_earned_achievement(self):
+        """
+        expect: ValueError is raised because the achievement level is not yet earned
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "social", "level": 1}},
+        )
+
+    def test_update_profile_information_error_invalid_achievement(self):
+        """
+        expect: ValueError is raised because the achievement type or level is invalid
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.update_profile_information,
+            self.default_profile["username"],
+            {"chosen_achievement": {"type": "not_existing", "level": 0}},
+        )
+
     def test_get_profile_snippets(self):
         """
         expect: successfully get snippets
-        (username, first_name, last_name, institution, profile_pic)
+        (username, first_name, last_name, institution, profile_pic, chosen_achievement)
         of the supplied users
         """
 
@@ -3353,6 +3590,8 @@ class ProfileResourceTest(BaseResourceTestCase):
                     None,
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
+                "chosen_achievement": self.default_profile["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
@@ -3363,6 +3602,8 @@ class ProfileResourceTest(BaseResourceTestCase):
                 "last_name": profile1["last_name"],
                 "institution": "",
                 "profile_pic": profile1["profile_pic"],
+                "chosen_achievement": profile1["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
@@ -3387,6 +3628,8 @@ class ProfileResourceTest(BaseResourceTestCase):
                     None,
                 ),
                 "profile_pic": self.default_profile["profile_pic"],
+                "chosen_achievement": self.default_profile["chosen_achievement"],
+                "ve_ready": self.default_profile["ve_ready"],
             },
             snippets,
         )
@@ -3501,6 +3744,221 @@ class ProfileResourceTest(BaseResourceTestCase):
             "non_existing",
         )
 
+    def test_achievement_count_up(self):
+        """
+        expect: successfully increase the progress of an achievement
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts")
+
+        # expect the progress to be increased by 1 for "social" achievement
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
+        )
+
+    def test_achievement_count_up_arbitrary_amount(self):
+        """
+        expect: successfully increase the progress of an achievement by an arbitrary amount
+        """
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "create_posts", 5)
+
+        # expect the progress to be increased by 5 for "social" achievement
+        # when executing it 5 times
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"]
+            + 5 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["create_posts"],
+        )
+
+    def test_achievement_count_up_level_up(self):
+        """
+        expect: successfully increase the progress of an achievement and level up
+        """
+
+        profile_manager = Profiles(self.db)
+
+        # count up
+        profile_manager.achievement_count_up(CURRENT_ADMIN.username, "admin_groups")
+
+        # determine what level the user should be at (based on assumption that
+        # the first level is reached at 20 progress points, check at profile resource)
+        FIRST_LEVEL_THRESHOLD = 20
+
+        def compute_level(progress):
+            level = 0
+            threshold = FIRST_LEVEL_THRESHOLD
+            while progress >= threshold:
+                level += 1
+                threshold += threshold * 2
+            return level
+
+        # expect the level to be upped and next_level increased exponentially
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["social"]["level"],
+            compute_level(result["achievements"]["social"]["progress"]),
+        )
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profile["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
+        )
+        next_threshold = FIRST_LEVEL_THRESHOLD
+        for i in range(1, result["achievements"]["social"]["level"] + 1):
+            next_threshold += next_threshold * 2
+        self.assertEqual(result["achievements"]["social"]["next_level"], next_threshold)
+
+    def test_achievement_count_up_error_invalid_achievement(self):
+        """
+        expect: ValueError is raised because the achievement type is invalid
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ValueError,
+            profile_manager.achievement_count_up,
+            CURRENT_ADMIN.username,
+            "non_existing",
+        )
+
+    def test_achievement_count_up_error_profile_doesnt_exist(self):
+        """
+        expect: ProfileDoesntExistException is raised because no
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up,
+            "non_existing",
+            "create_posts",
+        )
+
+    def test_achievement_count_up_constraint_good_practice_plans(self):
+        """
+        expect: successfully increase the progress of an achievement
+        that satisfies the constraint of good_practice_plans
+        """
+
+        plan_id = ObjectId()
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up_check_constraint_good_practice(
+            CURRENT_ADMIN.username, plan_id
+        )
+
+        # expect the progress to be increased
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"]
+            + self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"],
+        )
+
+        # expect the plan_id to be added to the tracking list
+        self.assertIn(
+            plan_id, result["achievements"]["tracking"]["good_practice_plans"]
+        )
+
+        # using the same plan_id again should not increase the progress any further
+        profile_manager.achievement_count_up_check_constraint_good_practice(
+            CURRENT_ADMIN.username, plan_id
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"]
+            + self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["good_practice_plans"],
+        )
+
+    def test_achievement_count_up_constraint_good_practice_plans_error_profile_doesnt_exist(
+        self,
+    ):
+        """
+        expect: ProfileDoesntExistException is raised because no
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up_check_constraint_good_practice,
+            "non_existing",
+            ObjectId(),
+        )
+
+    def test_achievement_count_up_constraint_unique_partners(self):
+        """
+        expect: successfully increase the progress of an achievement
+        that satisfies the constraint of unique_partners
+        """
+
+        partners = ["test", "test2", CURRENT_ADMIN.username]
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, partners
+        )
+
+        # expect the progress to be increased 2 times (one for each partner, except the user self)
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
+        )
+
+        # expect the partners to be added to the tracking list
+        self.assertEqual(
+            result["achievements"]["tracking"]["unique_partners"], ["test", "test2"]
+        )
+
+        # using any of the same partners again should not increase the progress any further
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, ["test"]
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
+        )
+
+        # empty partners list should not increase the progress
+        profile_manager.achievement_count_up_check_constraint_unique_partners(
+            CURRENT_ADMIN.username, []
+        )
+        result = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            result["achievements"]["ve"]["progress"],
+            self.default_profile["achievements"]["ve"]["progress"]
+            + 2 * self.VE_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["unique_partners"],
+        )
+
+    def test_achievement_count_up_constraint_unique_partners_error_profile_doesnt_exist(
+        self,
+    ):
+        """
+        expect: ProfileDoesntExistException is raised because no
+        profile with this username exists
+        """
+
+        profile_manager = Profiles(self.db)
+        self.assertRaises(
+            ProfileDoesntExistException,
+            profile_manager.achievement_count_up_check_constraint_unique_partners,
+            "non_existing",
+            ["test"],
+        )
+
 
 class SpaceResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -3522,12 +3980,100 @@ class SpaceResourceTest(BaseResourceTestCase):
             "space_description": "test",
         }
 
+        # insert default profiles
+        self.default_profiles = [
+            {
+                "username": CURRENT_ADMIN.username,
+                "role": "admin",
+                "follows": [],
+                "bio": "",
+                "institution": "",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "",
+                "last_name": "",
+                "gender": "",
+                "address": "",
+                "birthday": "",
+                "experience": [""],
+                "expertise": "",
+                "languages": [],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": [""],
+                "ve_goals": [""],
+                "preferred_formats": [""],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
+                "notification_settings": {
+                    "messages": "email",
+                    "ve_invite": "email",
+                    "group_invite": "email",
+                    "system": "email",
+                },
+                "achievements": {
+                    "social": {"level": 0, "progress": 0, "next_level": 10},
+                    "ve": {"level": 0, "progress": 0, "next_level": 10},
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
+                },
+                "chosen_achievement": {"type": "", "level": 0},
+            },
+            {
+                "username": CURRENT_USER.username,
+                "role": "user",
+                "follows": [],
+                "bio": "",
+                "institution": "",
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "",
+                "last_name": "",
+                "gender": "",
+                "address": "",
+                "birthday": "",
+                "experience": [""],
+                "expertise": "",
+                "languages": [],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": [""],
+                "ve_goals": [""],
+                "preferred_formats": [""],
+                "research_tags": [],
+                "courses": [],
+                "educations": [],
+                "work_experience": [],
+                "ve_window": [],
+                "notification_settings": {
+                    "messages": "email",
+                    "ve_invite": "email",
+                    "group_invite": "email",
+                    "system": "email",
+                },
+                "achievements": {
+                    "social": {"level": 0, "progress": 0, "next_level": 10},
+                    "ve": {"level": 0, "progress": 0, "next_level": 10},
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
+                },
+                "chosen_achievement": {"type": "", "level": 0},
+            },
+        ]
+        self.db.profiles.insert_many(self.default_profiles)
+
         self.db.spaces.insert_one(self.default_space)
 
     def tearDown(self) -> None:
         super().tearDown()
 
         self.db.spaces.delete_many({})
+        self.db.profiles.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
@@ -3937,7 +4483,7 @@ class SpaceResourceTest(BaseResourceTestCase):
             "name": "new_space",
             "invisible": False,
             "joinable": True,
-            "members": [CURRENT_ADMIN.username],
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
@@ -3977,6 +4523,23 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+        # check count towards achievements:
+        # admin user twice towards "social" (join_groups and admin_groups)
+        # normal user once towards "social" (join_groups)
+        result_admin = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        result_user = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result_admin["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
+        )
+        self.assertEqual(
+            result_user["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
+        )
+
     def test_create_space_failure_invalid_attributes(self):
         """
         expect: a) ValueError is raised because space is missing an attribute,
@@ -3999,9 +4562,23 @@ class SpaceResourceTest(BaseResourceTestCase):
         space_manager = Spaces(self.db)
         self.assertRaises(ValueError, space_manager.create_space, new_space, "test")
 
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"],
+        )
+
         # invisible has wrong type
         new_space["invisible"] = "test"
         self.assertRaises(TypeError, space_manager.create_space, new_space, "test")
+
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[0]["achievements"]["social"]["progress"],
+        )
 
     def test_delete_space(self):
         """
@@ -4060,6 +4637,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that join counted towards achievements "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
+        )
+
     def test_join_space_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4074,6 +4659,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
+        )
+
     def test_join_space_error_already_member(self):
         """
         expect: AlreadyMemberError is raised because is already a member of
@@ -4086,6 +4678,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.join_space,
             self.space_id,
             CURRENT_ADMIN.username,
+        )
+
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_join_space_request(self):
@@ -4147,6 +4746,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertIn(CURRENT_USER.username, space["admins"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the admin-set counted towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["admin_groups"],
+        )
+
     def test_add_space_admin_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4161,6 +4768,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
+        )
+
     def test_add_space_admin_error_already_admin(self):
         """
         expect: AlreadyAdminError is raised because user is already an admin in this space
@@ -4172,6 +4786,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.add_space_admin,
             self.space_id,
             CURRENT_ADMIN.username,
+        )
+
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_set_space_picture(self):
@@ -4290,6 +4911,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["invites"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the join counted towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
+        )
+
     def test_accept_space_invite_error_user_not_invited(self):
         """
         expect: UserNotInvitedError is raised because user is not invited to the space
@@ -4304,6 +4933,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
+        )
+
     def test_accept_space_invite_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4316,6 +4952,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.accept_space_invite,
             ObjectId(),
             CURRENT_USER.username,
+        )
+
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_decline_space_invite(self):
@@ -4402,6 +5045,14 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertNotIn(CURRENT_USER.username, space["requests"])
         self.assertIn(CURRENT_USER.username, space["members"])
 
+        # check that the join counted towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["join_groups"],
+        )
+
     def test_accept_join_request_error_space_doesnt_exist(self):
         """
         expect: SpaceDoesntExistError is raised because no
@@ -4416,6 +5067,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_USER.username,
         )
 
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
+        )
+
     def test_accept_join_request_error_not_request_to_join(self):
         """
         expect: NotRequestedJoinError is raised because user didnt request
@@ -4428,6 +5086,13 @@ class SpaceResourceTest(BaseResourceTestCase):
             space_manager.accept_join_request,
             self.space_id,
             CURRENT_USER.username,
+        )
+
+        # check that the join didnt count towards achievement "social"
+        result = self.db.profiles.find_one({"username": CURRENT_USER.username})
+        self.assertEqual(
+            result["achievements"]["social"]["progress"],
+            self.default_profiles[1]["achievements"]["social"]["progress"],
         )
 
     def test_reject_join_request(self):
@@ -5154,12 +5819,101 @@ class PlanResourceTest(BaseResourceTestCase):
         }
         self.db.plans.insert_one(self.default_plan)
 
+        # insert default profiles
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "role": "admin",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+                {
+                    "username": CURRENT_USER.username,
+                    "role": "user",
+                    "follows": [],
+                    "bio": "",
+                    "institution": "",
+                    "profile_pic": "default_profile_pic.jpg",
+                    "first_name": "",
+                    "last_name": "",
+                    "gender": "",
+                    "address": "",
+                    "birthday": "",
+                    "experience": [""],
+                    "expertise": "",
+                    "languages": [],
+                    "ve_ready": True,
+                    "excluded_from_matching": False,
+                    "ve_interests": [""],
+                    "ve_goals": [""],
+                    "preferred_formats": [""],
+                    "research_tags": [],
+                    "courses": [],
+                    "educations": [],
+                    "work_experience": [],
+                    "ve_window": [],
+                    "notification_settings": {
+                        "messages": "email",
+                        "ve_invite": "email",
+                        "group_invite": "email",
+                        "system": "email",
+                    },
+                    "achievements": {
+                        "social": {"level": 0, "progress": 0, "next_level": 10},
+                        "ve": {"level": 0, "progress": 0, "next_level": 10},
+                        "tracking": {
+                            "good_practice_plans": [],
+                            "unique_partners": [],
+                        },
+                    },
+                    "chosen_achievement": {"type": "", "level": 0},
+                },
+            ]
+        )
+
         # initialize planner
         self.planner = VEPlanResource(self.db)
 
     def tearDown(self) -> None:
         # delete all plans
         self.db.plans.delete_many({})
+        self.db.profiles.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
@@ -8150,3 +8904,475 @@ class ElasticsearchIntegrationTest(BaseResourceTestCase):
 
 class NotificationIntegrationTest(BaseResourceTestCase):
     pass
+
+
+class MailInvitationResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # create default invitation:
+        self.default_invitation = {
+            "_id": ObjectId(),
+            "sender": CURRENT_ADMIN.username,
+            "recipient_name": "invitation_receiver",
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "timestamp": datetime.now(),
+        }
+        self.db.mail_invitations.insert_one(self.default_invitation)
+
+        self.invitation_manager = MailInvitation(self.db)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.mail_invitations.delete_many({})
+
+    def test_check_within_rate_limit(self):
+        """
+        expect: successfully check if the user is within the rate limit
+        """
+
+        # expect True because the user has sent less than 10 invitations in the last 24 hours
+        self.assertTrue(
+            self.invitation_manager.check_within_rate_limit(CURRENT_ADMIN.username)
+        )
+
+        # add 10 more invitations
+        for i in range(10):
+            self.db.mail_invitations.insert_one(
+                {
+                    "_id": ObjectId(),
+                    "sender": CURRENT_ADMIN.username,
+                    "recipient_name": "invitation_receiver",
+                    "recipient_mail": "invitation_receiver@mail.com",
+                    "message": "test",
+                    "timestamp": datetime.now() - timedelta(hours=i),
+                }
+            )
+
+        # expect False because the user has now sent more than 10 invitations in the last 24 hours
+        self.assertFalse(
+            self.invitation_manager.check_within_rate_limit(CURRENT_ADMIN.username)
+        )
+
+    def test_insert_invitation(self):
+        """
+        expect: successfully insert an invitation
+        """
+
+        invitation = {
+            "sender": CURRENT_ADMIN.username,
+            "recipient_name": "invitation_receiver",
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "plan_id": None,
+            "replied": False,
+            "timestamp": datetime.now(),
+        }
+
+        inserted_id = self.invitation_manager.insert_invitation(invitation)
+
+        # expect the invitation to be in the db
+        db_state = self.db.mail_invitations.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["sender"], invitation["sender"])
+        self.assertEqual(db_state["recipient_name"], invitation["recipient_name"])
+        self.assertEqual(db_state["recipient_mail"], invitation["recipient_mail"])
+        self.assertEqual(db_state["message"], invitation["message"])
+        self.assertIsNotNone(db_state["timestamp"])
+
+    def test_insert_invitation_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because the invitation is missing required attributes
+        """
+
+        # recipient_name missing
+        invitation = {
+            "sender": CURRENT_ADMIN.username,
+            "recipient_mail": "invitation_receiver@mail.com",
+            "message": "test",
+            "timestamp": datetime.now(),
+        }
+
+        self.assertRaises(
+            ValueError, self.invitation_manager.insert_invitation, invitation
+        )
+
+
+class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.report_manager = Reports(self.db)
+
+        self.report_id = ObjectId()
+        self.reported_item_id = ObjectId()
+
+        self.default_report = {
+            "_id": self.report_id,
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+            "reason": "test",
+            "state": "open",
+            "timestamp": datetime.now(),
+        }
+        self.db.reports.insert_one(self.default_report)
+
+        self.reported_post = {
+            "_id": self.reported_item_id,
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+            "text": "test",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": ["test"],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(self.reported_post)
+
+        self.db.profiles.insert_one(
+            {
+                "_id": ObjectId(),
+                "username": CURRENT_ADMIN.username,
+                "role": "guest",
+                "follows": [],
+                "bio": "test",
+                "institutions": [
+                    {
+                        "_id": ObjectId(),
+                        "name": "test",
+                        "department": "test",
+                        "school_type": "test",
+                        "country": "test",
+                    }
+                ],
+                "chosen_institution_id": None,
+                "profile_pic": "default_profile_pic.jpg",
+                "first_name": "Test",
+                "last_name": "Admin",
+                "gender": "male",
+                "address": "test",
+                "birthday": "2023-01-01",
+                "experience": ["test", "test"],
+                "expertise": "test",
+                "languages": ["german", "english"],
+                "ve_ready": True,
+                "excluded_from_matching": False,
+                "ve_interests": ["test", "test"],
+                "ve_contents": ["test", "test"],
+                "ve_goals": ["test", "test"],
+                "interdisciplinary_exchange": True,
+                "preferred_format": "test",
+                "research_tags": ["test"],
+                "courses": [
+                    {"title": "test", "academic_course": "test", "semester": "test"}
+                ],
+                "lms": ["test"],
+                "tools": ["test"],
+                "educations": [
+                    {
+                        "institution": "test",
+                        "degree": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "additional_info": "test",
+                    }
+                ],
+                "work_experience": [
+                    {
+                        "position": "test",
+                        "institution": "test",
+                        "department": "test",
+                        "timestamp_from": "2023-01-01",
+                        "timestamp_to": "2023-02-01",
+                        "city": "test",
+                        "country": "test",
+                        "additional_info": "test",
+                    }
+                ],
+                "ve_window": [
+                    {
+                        "plan_id": ObjectId(),
+                        "title": "test",
+                        "description": "test",
+                    }
+                ],
+                "notification_settings": {
+                    "messages": "push",
+                    "ve_invite": "push",
+                    "group_invite": "push",
+                    "system": "push",
+                },
+                "achievements": {
+                    "social": {"level": 0, "progress": 0, "next_level": 20},
+                    "ve": {"level": 0, "progress": 0, "next_level": 40},
+                    "tracking": {
+                        "good_practice_plans": [],
+                        "unique_partners": [],
+                    },
+                },
+                "chosen_achievement": {"type": "", "level": 0},
+            }
+        )
+
+    def tearDown(self) -> None:
+        super().tearDown()
+
+        self.db.reports.delete_many({})
+        self.db.posts.delete_many({})
+        self.db.profiles.delete_many({})
+        self.report_manager = None
+
+    def test_get_report(self):
+        """
+        expect: successfully get a report
+        """
+
+        report = self.report_manager.get_report(self.report_id)
+
+        self.assertIsNotNone(report)
+        self.assertEqual(report["type"], self.default_report["type"])
+        self.assertEqual(report["item_id"], self.reported_item_id)
+        self.assertEqual(report["item"]["_id"], self.reported_item_id)
+        self.assertEqual(report["reason"], self.default_report["reason"])
+        self.assertEqual(report["reporter"], self.default_report["reporter"])
+        self.assertEqual(report["state"], self.default_report["state"])
+
+    def test_get_report_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        self.assertRaises(
+            ReportDoesntExistError, self.report_manager.get_report, ObjectId()
+        )
+
+    def test_get_report_item_none(self):
+        """
+        expect: get the report, but the item inside doesn't exist --> should be None
+        instead of raising an errror
+        """
+
+        # add a report with an item that doesn't exist
+        report_id = ObjectId()
+        self.db.reports.insert_one(
+            {
+                "_id": report_id,
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "test",
+                "state": "open",
+                "timestamp": datetime.now(),
+            }
+        )
+
+        report = self.report_manager.get_report(report_id)
+
+        self.assertIsNotNone(report)
+        self.assertIsNone(report["item"])
+
+    def test_get_open_reports(self):
+        """
+        expect: get all reports with state "open"
+        """
+
+        # add one more report with state "open" and one with state "closed"
+        self.db.reports.insert_many(
+            [
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "open",
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "closed",
+                    "timestamp": datetime.now(),
+                },
+            ]
+        )
+
+        reports = self.report_manager.get_open_reports()
+
+        self.assertEqual(len(reports), 2)
+        self.assertIsNotNone(reports[0])
+        self.assertIsNotNone(reports[1])
+        self.assertEqual(reports[0]["state"], "open")
+        self.assertEqual(reports[1]["state"], "open")
+
+    def test_get_all_reports(self):
+        """
+        expect: successfully get all reports
+        """
+
+        # add one more report with state "open" and one with state "closed"
+        self.db.reports.insert_many(
+            [
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "open",
+                    "timestamp": datetime.now(),
+                },
+                {
+                    "_id": ObjectId(),
+                    "reporter": CURRENT_ADMIN.username,
+                    "type": "post",
+                    "item_id": ObjectId(),
+                    "reason": "test",
+                    "state": "closed",
+                    "timestamp": datetime.now(),
+                },
+            ]
+        )
+
+        reports = self.report_manager.get_all_reports()
+
+        self.assertEqual(len(reports), 3)
+        # two reports with state "open" and one with state "closed"
+        self.assertEqual(len(list(filter(lambda r: r["state"] == "open", reports))), 2)
+        self.assertEqual(
+            len(list(filter(lambda r: r["state"] == "closed", reports))), 1
+        )
+
+    def test_get_reported_item(self):
+        """
+        expect: successfully get the reported item
+        """
+
+        reported_item = self.report_manager.get_reported_item(
+            self.reported_item_id, "post"
+        )
+
+        self.assertIsNotNone(reported_item)
+        self.assertEqual(reported_item["_id"], self.reported_item_id)
+        self.assertEqual(reported_item["author"], self.reported_post["author"])
+        self.assertEqual(reported_item["text"], self.reported_post["text"])
+        self.assertEqual(
+            reported_item["creation_date"], self.reported_post["creation_date"]
+        )
+
+    def test_get_reported_item_item_none(self):
+        """
+        expect: get the reported item, but the item doesn't exist --> should be None
+        instead of raising an errror
+        """
+
+        # add a report with an item that doesn't exist
+        report_id = ObjectId()
+        self.db.reports.insert_one(
+            {
+                "_id": report_id,
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "test",
+                "state": "open",
+                "timestamp": datetime.now(),
+            }
+        )
+
+        reported_item = self.report_manager.get_reported_item(ObjectId(), "post")
+
+        self.assertIsNone(reported_item)
+
+    def test_insert_report(self):
+        """
+        expect: successfully insert a report
+        """
+
+        report = {
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+            "reason": "another_report",
+        }
+
+        inserted_id = self.report_manager.insert_report(report)
+
+        # expect the report to be in the db
+        db_state = self.db.reports.find_one({"_id": inserted_id})
+        self.assertIsNotNone(db_state)
+
+        self.assertEqual(db_state["reporter"], report["reporter"])
+        self.assertEqual(db_state["type"], report["type"])
+        self.assertEqual(db_state["item_id"], report["item_id"])
+        self.assertEqual(db_state["reason"], report["reason"])
+        self.assertEqual(db_state["state"], "open")
+        self.assertIsNotNone(db_state["timestamp"])
+
+    def test_insert_report_error_missing_attributes(self):
+        """
+        expect: ValueError is raised because the report is missing required attributes
+        """
+
+        # reason missing
+        report = {
+            "reporter": CURRENT_ADMIN.username,
+            "type": "post",
+            "item_id": self.reported_item_id,
+        }
+
+        self.assertRaises(ValueError, self.report_manager.insert_report, report)
+
+    def test_close_report(self):
+        """
+        expect: successfully set a report's state to closed
+        """
+
+        self.report_manager.close_report(self.report_id)
+
+        # expect the report to be in the db with state "closed"
+        db_state = self.db.reports.find_one({"_id": self.report_id})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["state"], "closed")
+
+    def test_close_report_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        self.assertRaises(
+            ReportDoesntExistError, self.report_manager.close_report, ObjectId()
+        )
+
+    @gen_test
+    async def test_delete_reported_item(self):
+        """
+        expect: successfully delete the reported item
+        """
+
+        await self.report_manager.delete_reported_item(self.report_id)
+
+        # expect the reported item to be deleted
+        db_state = self.db.posts.find_one({"_id": self.reported_item_id})
+        self.assertIsNone(db_state)
+
+    @gen_test
+    async def test_delete_reported_item_error_report_doesnt_exist(self):
+        """
+        expect: ReportDoesntExistError is raised because no report with this _id exists
+        """
+
+        with self.assertRaises(ReportDoesntExistError):
+            await self.report_manager.delete_reported_item(ObjectId())

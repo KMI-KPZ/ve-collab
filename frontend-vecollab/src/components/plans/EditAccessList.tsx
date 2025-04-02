@@ -112,7 +112,7 @@ export default function EditAccessList({
                     <LoadingAnimation />
                 </div>
             ) : (
-                <ul className="px-1 divide-y">
+                <ul className="px-1 divide-y divide-gray-200">
                     {userSnippets.length > 0 ? (
                         <>
                             {userSnippets.map((snippet, index) => (

@@ -17,6 +17,7 @@ interface Props {
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
     toggleChatWindow: () => void;
     open: boolean;
+    prop_openOrCreateChatWith: string[];
 }
 
 ChatWindow.auth = true;
@@ -27,6 +28,7 @@ export default function ChatWindow({
     setHeaderBarMessageEvents,
     toggleChatWindow,
     open,
+    prop_openOrCreateChatWith,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
@@ -34,6 +36,9 @@ export default function ChatWindow({
     const [selectedRoom, setSelectedRoom] = useState<BackendChatroomSnippet>();
     const [profileSnippets, setProfileSnippets] = useState<UserSnippet[]>([]);
     const [profileSnippetsLoading, setProfileSnippetsLoading] = useState<boolean>(true);
+
+    const [openOrCreateChatWith, setOpenOrCreateChatWith] =
+        useState<string[]>(prop_openOrCreateChatWith);
 
     const {
         data: rooms,
@@ -74,6 +79,36 @@ export default function ChatWindow({
         );
     }, [loadingRooms, open, profileSnippets, rooms, session]);
 
+    useEffect(() => {
+        if (loadingRooms || !prop_openOrCreateChatWith.length) return;
+
+        // find a room with these users
+        const existingRoom = rooms.find(
+            (room) =>
+                room.members.length == prop_openOrCreateChatWith.length &&
+                room.members.every((a) => prop_openOrCreateChatWith.includes(a))
+        );
+        if (existingRoom) {
+            setSelectedRoom(existingRoom);
+            setOpenOrCreateChatWith([]);
+        } else {
+            fetchPOST(
+                '/chatroom/create_or_get',
+                {
+                    members: prop_openOrCreateChatWith, // current user will be added by backend
+                    name: null,
+                },
+                session?.accessToken
+            )
+                .then((res) => {
+                    console.log('/chatroom/create_or_get', { res });
+                })
+                .finally(() => {
+                    setOpenOrCreateChatWith([]);
+                });
+        }
+    }, [prop_openOrCreateChatWith, loadingRooms, rooms, session?.accessToken]);
+
     const handleChatSelect = (chat: string) => {
         setSelectedRoom(rooms.find((room) => room._id === chat));
     };
@@ -84,17 +119,19 @@ export default function ChatWindow({
 
     return (
         <div
-            className={`absolute z-50 right-0 top-24 w-1/5 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border`}
+            className={`absolute z-40 left-[16px] sm:left-auto right-[16px] sm:right-0 w-auto sm:w-1/4 md:w-1/5 top-24 min-w-[15rem] min-h-[18rem] px-2 py-4 shadow rounded-l bg-white border border-gray-200`}
         >
             <div className="absolute -top-[16px] -left-[16px]">
                 <button
                     onClick={(e) => toggleChatWindow()}
-                    className="bg-white rounded-full shadow p-2 hover:bg-slate-50"
+                    className="bg-white rounded-full shadow-sm p-2 hover:bg-slate-50 cursor-pointer"
                 >
                     <MdClose size={20} />
                 </button>
             </div>
-            <div className="font-bold text-center mb-2">{t("chats")}</div>
+            <div className="font-bold text-center mb-2">
+                {selectedRoom ? t('chat') : t('chats')}
+            </div>
 
             {selectedRoom ? (
                 <div className="h-[60vh] min-h-[16rem] flex flex-col">

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Hallo {{ name|default("Nutzer:in") }},</p>
+<p>Aufgrund einer Meldung haben wir einen deiner Inhalte gelöscht.</p>
+<p>Es handelte sich dabei um folgenden Inhalt:</p>
+<div style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;">
+    {{ item|e }}
+</div>
+<p>Diese Entscheidung wurde von den Administratoren getroffen, ist final und kann nicht angefochten werden, die
+    unwiderrufliche Löschung wurde bereits durchgeführt.</p>
+<p>Diese Nachricht dient lediglich als Information.</p>
+
+<p style="margin-top: 30px;">Viele Grüße!</p>
+<p>Dein VE-Collab Team</p>
+
+{% endblock %}

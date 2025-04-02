@@ -50,9 +50,9 @@ export default function Frontpage() {
 
             {image}
 
-            <span className="block mb-4 text-xl font-bold">{title}</span>
+            <span className="block mb-4 text-xl font-bold break-words">{title}</span>
 
-            <p className="mb-[56px]">{text}</p>
+            <p className="mb-[56px] break-words">{text}</p>
 
             {link && (
                 <Link
@@ -91,7 +91,7 @@ export default function Frontpage() {
 
     return (
         <>
-            <div className="m-auto w-full max-w-screen-2xl text-black bg-white/75 rounded-md">
+            <div className="m-auto w-full max-w-(--breakpoint-2xl) text-black bg-white/75 rounded-md">
                 <div className="p-6 lg:px-12 lg:py-6">
                     <Swiper />
                 </div>
@@ -114,12 +114,12 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-full sm:w-5/6 mx-auto md:my-10 max-w-screen-xl" id="features">
-                <H2 className="mb-8 font-bold !text-2xl md:!text-3xl text-center">
+            <div className="w-full lg:w-5/6 mx-auto md:my-10 max-w-(--breakpoint-xl)" id="features">
+                <H2 className="mb-8 font-bold text-2xl! md:text-3xl! text-center">
                     {t('frontpage.features.title')}
                 </H2>
 
-                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-12">
+                <div className="grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-6 lg:gap-12">
                     <FeatureBox
                         title={t('frontpage.features.learning_material.title')}
                         text={t('frontpage.features.learning_material.text')}
@@ -161,18 +161,26 @@ export default function Frontpage() {
                 </div>
             </div>
 
-            <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
-                <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-screen-xl flex justify-center rounded-md drop-shadow-lg">
-                    <video width="320" height="240" controls className="w-full h-auto rounded-md">
-                        <source src="/videos/ve-collab-promo.mp4" type="video/mp4" />
+            <div className="w-[calc(100svw-16px)] ml-[50%] -translate-x-1/2 bg-white/75 -mb-12">
+                <div className="w-full md:w-5/6 m-auto py-12 px-6 sm:px-10 max-w-(--breakpoint-xl) flex justify-center rounded-md drop-shadow-lg">
+                    <video
+                        width="320"
+                        height="240"
+                        controls
+                        className="w-full h-auto rounded-md"
+                        src={`/videos/ve-collab-promo-${router.locale === 'en' ? 'en' : 'de'}.mp4`}
+                    >
                         {t('video_not_supported')}
                     </video>
                 </div>
             </div>
 
-            <div className="w-[calc(100svw-1rem)] ml-[50%] -translate-x-1/2 bg-white -mb-12">
-                <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="institutional-values">
-                    <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
+            <div className="w-[calc(100svw-16px)] ml-[50%] -translate-x-1/2 bg-white -mb-12">
+                <div
+                    className="w-5/6 mx-auto my-10 max-w-(--breakpoint-xl)"
+                    id="institutional-values"
+                >
+                    <H2 className="mb-12 font-bold text-2xl! md:text-3xl! text-center">
                         {t('frontpage.institutional_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">
@@ -202,8 +210,8 @@ export default function Frontpage() {
                     </div>
                 </div>
 
-                <div className="w-5/6 mx-auto my-10 max-w-screen-xl" id="teachers-values">
-                    <H2 className="mb-12 font-bold !text-2xl md:!text-3xl text-center">
+                <div className="w-5/6 mx-auto my-10 max-w-(--breakpoint-xl)" id="teachers-values">
+                    <H2 className="mb-12 font-bold text-2xl! md:text-3xl! text-center">
                         {t('frontpage.teachers_values.title')}
                     </H2>
                     <div className="mx-auto my-4 flex gap-x-12 lg:w-5/6 justify-center text-center flex-wrap">

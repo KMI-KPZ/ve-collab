@@ -1,17 +1,19 @@
 import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from bson.objectid import ObjectId
-import gridfs
-from pymongo.database import Database
-
 from exceptions import (
     AlreadyLikerException,
     NotLikerException,
     PostNotExistingException,
 )
+import gridfs
+from pymongo.database import Database
 
+from resources.network.profile import Profiles
 from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+from model import VEPlan
+from resources.planner.ve_plan import VEPlanResource
 import util
 
 
@@ -74,6 +76,19 @@ class Posts:
         post = self.db.posts.find_one({"_id": post_id}, projection=projection)
         if not post:
             raise PostNotExistingException()
+
+
+        # may add plans information
+        if "plans" in post and post["plans"] != []:
+            plan_ids = post["plans"].copy()
+            with util.get_mongodb() as db:
+                plan_manager = VEPlanResource(db)
+                plans = plan_manager.get_bulk_plans(plan_ids)
+                post["plans"] = []
+                for plan in plans:
+                    if isinstance(plan, VEPlan):
+                        plan = plan.to_dict()
+                    post["plans"].append(plan)
 
         return post
 
@@ -145,6 +160,12 @@ class Posts:
 
         result = self.db.posts.insert_one(post)
 
+        # the post is viable for the achievement "create_posts", when the
+        # text ist not empty
+        if post["text"] and post["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(post["author"], "create_posts")
+
         return result.inserted_id
 
     def update_post_text(self, post_id: str | ObjectId, text: str) -> ObjectId:
@@ -159,9 +180,44 @@ class Posts:
             {"_id": post_id}, {"$set": {"text": text}}
         )
 
-        # if no documents have been modified by the update
-        # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+        return post_id
+
+    def update_post_plans(self, post_id: str | ObjectId, plan_ids: List[str | ObjectId]) -> ObjectId:
+        """
+        update the plans of an existing post
+        """
+
+        post_id = util.parse_object_id(post_id)
+        for plan_id in plan_ids:
+            plan_id = util.parse_object_id(plan_id)
+
+        # try to do the update
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"plans": plan_ids}}
+        )
+
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
+            raise PostNotExistingException()
+        return post_id
+
+    def update_post_files(self, post_id: str | ObjectId, files: List[Dict]) -> ObjectId:
+        """
+        update the files of an existing post
+        """
+
+        post_id = util.parse_object_id(post_id)
+
+        # try to do the update
+        update_result = self.db.posts.update_one(
+            {"_id": post_id}, {"$set": {"files": files}}
+        )
+
+        # if no documents matched the update, raise error
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
         return post_id
 
@@ -177,23 +233,10 @@ class Posts:
         except PostNotExistingException:
             raise
 
-        # delete files from gridfs and - if post was in a space,
-        # from the space's repository
+        # delete post.files from gridfs and may the space
         if post["files"]:
-            fs = gridfs.GridFS(self.db)
             for file_obj in post["files"]:
-                fs.delete(file_obj["file_id"])
-            if post["space"]:
-                space_manager = Spaces(self.db)
-                for file_obj in post["files"]:
-                    try:
-                        space_manager.remove_post_file(
-                            post["space"], file_obj["file_id"]
-                        )
-                    except SpaceDoesntExistError:
-                        pass
-                    except FileDoesntExistError:
-                        pass
+                self.delete_post_file(post_id, file_obj["file_id"])
 
         # finally delete the post itself
         self.db.posts.delete_one({"_id": post_id})
@@ -229,6 +272,18 @@ class Posts:
         # the user already had liked the post before
         if update_result.modified_count != 1:
             raise AlreadyLikerException()
+
+        # count towards the achievement "give_likes" for the liking user,
+        # since all previous checks have succeeded
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "give_likes")
+
+        # count towards the achievement "posts_liked" of the post auther,
+        # since all previous checks have succeeded, but only if the
+        # liker is different than the author (liking own post doesnt count)
+        post = self.get_post(post_id, projection={"author": True})
+        if post["author"] != username:
+            profile_manager.achievement_count_up(post["author"], "posts_liked")
 
     def unlike_post(self, post_id: str | ObjectId, username: str) -> None:
         """
@@ -276,6 +331,12 @@ class Posts:
         # we know that there was no post with the given post_id
         if update_result.matched_count != 1:
             raise PostNotExistingException()
+
+        # the comment is viable for the achievement "create_comments", when the
+        # text ist not empty
+        if comment["text"] and comment["text"] != "":
+            profile_manager = Profiles(self.db)
+            profile_manager.achievement_count_up(comment["author"], "create_comments")
 
         return comment["_id"]
 
@@ -448,6 +509,35 @@ class Posts:
         )
 
         return _id
+
+    def delete_post_file(self, post_id: str | ObjectId, file_id: str | ObjectId) -> None:
+        """
+        delete a file from uploads directory gridfs
+        and if post was in a space from the space's repository
+        """
+
+        fs = gridfs.GridFS(self.db)
+        post_id = util.parse_object_id(post_id)
+        file_id = util.parse_object_id(file_id)
+
+        try:
+            post = self.get_post(post_id, projection={"space": True, "files": True})
+        except PostNotExistingException:
+            raise
+
+        fs.delete(file_id)
+
+        if post["space"]:
+            space_manager = Spaces(self.db)
+            try:
+                space_manager.remove_post_file(
+                    post["space"], file_id
+                )
+            except SpaceDoesntExistError:
+                pass
+            except FileDoesntExistError:
+                pass
+
 
     def get_full_timeline(
         self, time_to: datetime.datetime, limit: int = 10
@@ -757,202 +847,6 @@ class Posts:
                 {"$sort": {"creation_date": -1}},
                 # only include the last `limit` posts
                 {"$limit": limit},
-                # last step, cleanup all the extra fields we had to use along
-                {
-                    "$unset": [
-                        "curr_user",
-                        "flattened_follows",
-                        "profile_obj",
-                        "space_obj",
-                    ]
-                },
-            ]
-        )
-
-        return list(pipeline)
-
-    def get_personal_timeline_legacy(
-        self, username: str, time_from: datetime.datetime, time_to: datetime.datetime
-    ) -> List[Dict]:
-        """
-        FOR BACKWARDS COMPATIBILITY ONLY
-
-        get the "personal" or rather frontpage timeline of a user, i.e.
-        - your own posts
-        - posts of people that you follow,
-        - posts in spaces that you are a member of
-        within the specified time frame. Usually this function is designed for the user
-        requesting his own landing page
-        :param username: the name of the user whose personal timeline is requested
-        :param time_from: the starting datetime of the window in utc time
-        :param time_to: the end datetime of the window in utc time
-        """
-
-        pipeline = self.db.posts.aggregate(
-            [
-                # pre-filter for the time-frame (further operations are expensive
-                # thats why it's smart to sort out as many as possible)
-                {"$match": {"creation_date": {"$gte": time_from, "$lte": time_to}}},
-                # add the current_user as a field,
-                # we need this because looksups have to be on fields
-                {"$addFields": {"curr_user": username}},
-                # join with the space collection on the space name
-                {
-                    "$lookup": {
-                        "from": "spaces",
-                        "localField": "space",
-                        "foreignField": "_id",
-                        "as": "space_obj",
-                    }
-                },
-                # join with the follows collection on the current user
-                {
-                    "$lookup": {
-                        "from": "profiles",
-                        "localField": "curr_user",
-                        "foreignField": "username",
-                        "as": "profile_obj",
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one space and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$space_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one follow-record
-                # and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$profile_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # to make our lives easier with matching later
-                # we extract the list of users the current_user follows from the dict
-                # and also append the current_user himself to it
-                # (that way we can simply match "author in flattened_follows").
-                # this is rather complex, because if the lookup doesnt find any match,
-                # the result is missing (instead of None or []), so we have to check for that
-                {
-                    "$addFields": {
-                        "flattened_follows": {
-                            "$cond": {
-                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
-                                "then": {
-                                    "$concatArrays": [
-                                        "$profile_obj.follows",
-                                        [username],
-                                    ]
-                                },
-                                "else": {
-                                    "$concatArrays": [
-                                        [],
-                                        [username],
-                                    ]
-                                },
-                            }
-                        }
-                    }
-                },
-                # now the actual filtering begins:
-                # - the time-frame was already checked above, so no need to do that here
-                # we now have to check for the 3 cases described on top of the pipeline,
-                # that allow for the post to be in the timeline
-                {
-                    "$match": {
-                        "$or": [
-                            # this catches the first and the second case
-                            # (being either the author yourself or you are following
-                            # the author of the post)
-                            {"$expr": {"$in": ["$author", "$flattened_follows"]}},
-                            # this catches the third case, being a member of the space
-                            # the post was put into
-                            # same story as for the flattened_follows:
-                            # this is rather complex, because if the lookup doesnt find anything
-                            # the expected dict is not present (instead of None or []),
-                            # so we have to check existence, and only if it exists, if current_user
-                            # is really a member of the space
-                            {
-                                "$expr": {
-                                    "$in": [
-                                        username,
-                                        {
-                                            "$cond": {
-                                                "if": {
-                                                    "$ne": [
-                                                        {"$type": "$space_obj"},
-                                                        "missing",
-                                                    ]
-                                                },
-                                                "then": "$space_obj.members",
-                                                "else": [],
-                                            }
-                                        },
-                                    ]
-                                }
-                            },
-                        ],
-                        # the matches above actually cover all relevant cases, but one single detail is missing:
-                        # they include posts from user that i follow, that they have posted into spaces
-                        # where i am not a member.
-                        # since i am not a member of that space, i shouldnt be allowed to view that post,
-                        # so we have to filter those out as well by checking:
-                        #   author is not current_user
-                        #   AND post is in a space
-                        #   AND current_user is not member of that space
-                        # if that is true, we leave out the post
-                        "$expr": {
-                            "$eq": [
-                                False,
-                                {
-                                    "$cond": {
-                                        "if": {
-                                            "$and": [
-                                                # check author != cur_user
-                                                {
-                                                    "$ne": [
-                                                        "$author",
-                                                        "$curr_user",
-                                                    ]
-                                                },
-                                                # check space not None
-                                                {"$ne": ["$space", None]},
-                                                # check cur_user not member of space
-                                                {
-                                                    "$not": {
-                                                        "$in": [
-                                                            username,
-                                                            {
-                                                                "$cond": {
-                                                                    "if": {
-                                                                        "$ne": [
-                                                                            {
-                                                                                "$type": "$space_obj"
-                                                                            },
-                                                                            "missing",
-                                                                        ]
-                                                                    },
-                                                                    "then": "$space_obj.members",
-                                                                    "else": [],
-                                                                }
-                                                            },
-                                                        ]
-                                                    }
-                                                },
-                                            ]
-                                        },
-                                        "then": True,
-                                        "else": False,
-                                    }
-                                },
-                            ]
-                        },
-                    }
-                },
                 # last step, cleanup all the extra fields we had to use along
                 {
                     "$unset": [

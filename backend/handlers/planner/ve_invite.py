@@ -1,7 +1,4 @@
-import datetime
 import json
-
-from bson import ObjectId
 
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
@@ -9,7 +6,6 @@ from error_reasons import (
     INVITATION_DOESNT_EXIST,
 )
 from exceptions import InvitationDoesntExistError
-import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.notifications import NotificationResource
 from resources.planner.ve_plan import VEPlanResource
@@ -208,11 +204,11 @@ class VeInvitationHandler(BaseHandler):
 
         with util.get_mongodb() as db:
             plan_manager = VEPlanResource(db)
+            notification_manager = NotificationResource(db)
 
             # grant user read access to plan if one was appended to the invitation
             if plan_id is not None:
                 # reject if the user is not the author of the plan --> cannot
-                # set read permissions
                 if not plan_manager._check_user_is_author(
                     plan_id, self.current_user.username
                 ):
@@ -220,7 +216,27 @@ class VeInvitationHandler(BaseHandler):
                     self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                     return
 
+                # set read permissions to invited user
                 plan_manager.set_read_permissions(plan_id, username)
+
+                # save plan invitation in db
+                # invitation_id = plan_manager.insert_plan_invitation(
+                #     plan_id,
+                #     message,
+                #     self.current_user.username,
+                #     username,
+                # )
+                # # trigger notification dispatch
+                # notification_payload = {
+                #     "author": self.current_user.username,
+                #     "message": message,
+                #     "plan_id": plan_id,
+                #     "plan_name": plan.name,
+                #     "invitation_id": invitation_id,
+                # }
+                # await notification_manager.send_notification(
+                #     username, "plan_added_as_partner", notification_payload
+                # )
 
             # save plan invitation in db
             invitation_id = plan_manager.insert_plan_invitation(
@@ -229,7 +245,6 @@ class VeInvitationHandler(BaseHandler):
                 self.current_user.username,
                 username,
             )
-
             # trigger notification dispatch
             notification_payload = {
                 "from": self.current_user.username,
@@ -237,7 +252,7 @@ class VeInvitationHandler(BaseHandler):
                 "plan_id": plan_id,
                 "invitation_id": invitation_id,
             }
-            notification_manager = NotificationResource(db)
+
             await notification_manager.send_notification(
                 username, "ve_invitation", notification_payload
             )
@@ -288,6 +303,11 @@ class VeInvitationHandler(BaseHandler):
                     plan_manager.revoke_read_permissions(
                         invitation["plan_id"], self.current_user.username
                     )
+            else:
+                if invitation["plan_id"] is not None:
+                    # add as partner, set write/read access, add checklist etc
+                    plan_manager.set_write_permissions(invitation["plan_id"], self.current_user.username)
+                    # plan_manager.add_partner(invitation["plan_id"], self.current_user.username)
 
             # trigger notification to the original ve invitation sender
             # to notify him/her about the decision that the invited user

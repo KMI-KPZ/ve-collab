@@ -19,7 +19,6 @@ import {
     MdDeleteOutline,
     MdDoubleArrow,
     MdModeEdit,
-    MdOutlineDocumentScanner,
     MdOutlineKeyboardDoubleArrowDown,
     MdShare,
     MdThumbUp,
@@ -38,6 +37,9 @@ import ConfirmDialog from '../common/dialogs/Confirm';
 import { PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
+import { GoAlert } from 'react-icons/go';
+import ReportDialog from '../common/dialogs/Report';
+import PlanIcon from '../plans/PlanIcon';
 
 interface Props {
     post: BackendPost;
@@ -84,6 +86,11 @@ export default function TimelinePost({
     const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
     const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
+    const [reportPostDialogOpen, setReportPostDialogOpen] = useState<boolean>(false);
+    const [reportCommentDialogOpen, setReportCommentDialogOpen] = useState<boolean>(false);
+    const [reportedComment, setReportedComment] = useState<BackendPostComment | undefined>(
+        undefined
+    );
 
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
     const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
@@ -112,8 +119,8 @@ export default function TimelinePost({
         if (ref.current && post.isRepost) {
             // TODO update on resize window ?!
             setTimeout(() => {
-                const repostEl = ref.current.querySelector('.repost-text');
-                setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
+                const repostEl = ref.current?.querySelector('.repost-text');
+                if (repostEl) setRepostExpand(repostEl.scrollHeight <= repostEl.clientHeight);
             }, 1);
         }
     });
@@ -214,6 +221,13 @@ export default function TimelinePost({
             case 'remove-comment':
                 deleteComment(rest[0]);
                 break;
+            case 'report-post':
+                setReportPostDialogOpen(true);
+                break;
+            case 'report-comment':
+                setReportedComment(rest[0]);
+                setReportCommentDialogOpen(true);
+                break;
             default:
                 break;
         }
@@ -286,7 +300,7 @@ export default function TimelinePost({
             >
                 <MdThumbUp className="" size={20} />
                 &nbsp;{post.likers.length}
-                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:!opacity-100 transition-opacity opacity-0 rounded-md bg-white shadow border">
+                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:opacity-100! transition-opacity opacity-0 rounded-md bg-white shadow-sm border border-gray-200">
                     {likers.map((liker, i) => (
                         <Link key={i} href={`/profile/user/${liker.username}`} className="truncate">
                             <AuthenticatedImage
@@ -321,7 +335,7 @@ export default function TimelinePost({
                 >
                     {userIsAdmin || comment.author.username == session?.user.preferred_username ? (
                         <button
-                            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             onClick={(e) => pinComment(comment)}
                             title={comment.pinned ? t('unpin_comment') : t('pin_comment')}
                         >
@@ -348,6 +362,12 @@ export default function TimelinePost({
                             value: 'remove-comment',
                             label: t('common:delete'),
                             icon: <MdDeleteOutline />,
+                        },
+                        {
+                            value: 'report-comment',
+                            label: t('common:report.report_title'),
+                            icon: <GoAlert />,
+                            liClasses: 'text-red-500',
                         },
                     ]}
                     onSelect={(value) => {
@@ -388,7 +408,15 @@ export default function TimelinePost({
     };
 
     const PostHeaderDropdown = ({ post }: { post: BackendPost }) => {
-        let options = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
+        let options: [
+            {
+                value: string;
+                label: string | JSX.Element;
+                title?: string;
+                liClasses?: string;
+                icon?: JSX.Element;
+            }
+        ] = [{ value: 'share', label: t('copy_link'), icon: <MdShare /> }];
         if (
             (!post.isRepost && post.author.username == session?.user.preferred_username) ||
             (post.isRepost && post.repostAuthor?.username == session?.user.preferred_username)
@@ -400,6 +428,12 @@ export default function TimelinePost({
         } else if (userIsAdmin) {
             options.push({ value: 'remove', label: t('common:delete'), icon: <MdDeleteOutline /> });
         }
+        options.push({
+            value: 'report-post',
+            label: t('common:report.report_title'),
+            icon: <GoAlert />,
+            liClasses: 'text-red-500',
+        });
 
         return <Dropdown options={options} onSelect={handleSelectOption} />;
     };
@@ -418,6 +452,25 @@ export default function TimelinePost({
                     callback={(proceed) => {
                         if (proceed) deletePost();
                         setAskDeletion(false);
+                    }}
+                />
+            )}
+            {reportPostDialogOpen && (
+                <ReportDialog
+                    reportedItemId={post._id}
+                    reportedItemType="post"
+                    closeCallback={() => {
+                        setReportPostDialogOpen(false);
+                    }}
+                />
+            )}
+            {reportCommentDialogOpen && (
+                <ReportDialog
+                    reportedItemId={reportedComment!._id}
+                    reportedItemType="comment"
+                    closeCallback={() => {
+                        setReportedComment(undefined);
+                        setReportCommentDialogOpen(false);
                     }}
                 />
             )}
@@ -450,14 +503,14 @@ export default function TimelinePost({
                     <div className="ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity">
                         {post.likers.includes(session?.user.preferred_username as string) ? (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickLikeBtn}
                             >
                                 <HiHeart />
                             </button>
                         ) : (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickLikeBtn}
                             >
                                 <HiOutlineHeart />
@@ -465,7 +518,7 @@ export default function TimelinePost({
                         )}
                         {group && userIsAdmin && (
                             <button
-                                className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                 onClick={onClickPin}
                                 title={post.pinned ? t('unpin_post') : t('pin_post')}
                             >
@@ -473,7 +526,7 @@ export default function TimelinePost({
                             </button>
                         )}
                         <button
-                            className="p-2 rounded-full hover:bg-ve-collab-blue-light"
+                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                             onClick={onClickRepostBtn}
                             title={t('cite_post')}
                         >
@@ -484,7 +537,7 @@ export default function TimelinePost({
                 </div>
 
                 {post.isRepost && (
-                    <div className="my-5 ml-5 p-4 rounded bg-slate-100">
+                    <div className="my-5 ml-5 p-4 rounded-sm bg-slate-100">
                         <div className="flex items-center">
                             <PostHeader
                                 author={post.author as BackendPostAuthor}
@@ -500,10 +553,10 @@ export default function TimelinePost({
                             <span
                                 className={`${
                                     repostExpand ? 'hidden' : ''
-                                } absolute left-0 bottom-0 w-full h-20 bg-gradient-to-b from-transparent to-[#e5f1f4]`}
+                                } absolute left-0 bottom-0 w-full h-20 bg-linear-to-b from-transparent to-[#e5f1f4]`}
                             >
                                 <button
-                                    className="absolute bottom-0 left-10 mx-4 p-2 rounded-full hover:bg-ve-collab-blue-light"
+                                    className="absolute bottom-0 left-10 mx-4 p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                     onClick={() => setRepostExpand(true)}
                                     title={t('expand')}
                                 >
@@ -531,7 +584,7 @@ export default function TimelinePost({
                     )}
                 </div>
 
-                {attachedImages.length > 0 && (
+                {!editPost && attachedImages.length > 0 && (
                     <div className="my-4">
                         <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
                             {attachedImages.map((file, index) => (
@@ -548,7 +601,7 @@ export default function TimelinePost({
                                             alt={file.file_name}
                                             width={250}
                                             height={250}
-                                            className="rounded-md drop-shadow"
+                                            className="rounded-md drop-shadow-sm"
                                         ></AuthenticatedImage>
                                     </div>
                                 </AuthenticatedFile>
@@ -557,7 +610,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {attachedFiles.length > 0 && (
+                {!editPost && attachedFiles.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('files')}</div>
                         <div className="mb-8 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
@@ -580,7 +633,7 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                {post.plans !== undefined && post.plans.length > 0 && (
+                {!editPost && post.plans !== undefined && post.plans.length > 0 && (
                     <div className="my-4">
                         <div className="mb-2 text-slate-900 font-bold">{t('plans')}</div>
                         <div className="mb-8 flex flex-wrap space-x-4 max-h-[40vh] overflow-y-auto content-scrollbar">
@@ -591,7 +644,7 @@ export default function TimelinePost({
                                     title="Open plan"
                                 >
                                     <div className="flex justify-center">
-                                        <MdOutlineDocumentScanner size={50} />
+                                        <PlanIcon className="h-[36px]" />
                                     </div>
                                     <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
                                         {plan.name}
@@ -608,7 +661,7 @@ export default function TimelinePost({
                     <div className="mt-4 mb-2">
                         <button
                             onClick={openCommentForm}
-                            className="px-2 py-[6px] w-1/3 rounded-md border text-gray-400 text-left text-nowrap overflow-hidden truncate"
+                            className="px-2 py-[6px] w-1/3 rounded-md border border-gray-200 text-gray-400 text-left text-nowrap overflow-hidden truncate cursor-pointer"
                         >
                             {t('write_comment')}
                         </button>
@@ -634,7 +687,11 @@ export default function TimelinePost({
                                     name="text"
                                     autoComplete="off"
                                 />
-                                <button className="p-2" type="submit" title={t('send')}>
+                                <button
+                                    className="p-2 cursor-pointer"
+                                    type="submit"
+                                    title={t('send')}
+                                >
                                     <IoIosSend />
                                 </button>
                             </form>
@@ -661,7 +718,7 @@ export default function TimelinePost({
                                                 comments.filter((c) => !c.pinned).length >
                                                     showXComments && (
                                                     <button
-                                                        className="py-2 px-5 rounded-full hover:bg-ve-collab-blue-light"
+                                                        className="py-2 px-5 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
                                                         onClick={() =>
                                                             setShowXComments(showXComments + 5)
                                                         }

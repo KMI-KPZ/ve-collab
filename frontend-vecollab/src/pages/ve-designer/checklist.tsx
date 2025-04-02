@@ -157,7 +157,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
         return (
             <>
-                <div className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                <div className="group w-full flex justify-start border-t border-t-gray-200 items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
                     <div className="grow">
                         <label className="w-fit pr-4 truncate font-konnect cursor-pointer py-2 flex items-center">
                             <input
@@ -211,7 +211,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
         return (
             <>
-                <div className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
+                <div className="group w-full flex justify-start border-t border-t-gray-200 items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2">
                     <div className="grow">
                         <label className="w-fit truncate font-konnect cursor-pointer py-2 flex items-center">
                             <input
@@ -348,7 +348,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                 description={t('checklist.description')}
                 tooltip={{
                     text: t('checklist.tooltip'),
-                    link: '/learning-material/1/Herausforderungen',
+                    link: '/learning-material/Zusammen%20Planen/Leitfragen%20für%20die%20Aushandlungsphase',
                 }}
                 stageInMenu="generally"
                 idOfProgress="checklist"
@@ -362,7 +362,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                     {usersChecklist.map((userCheckForm, index) => (
                         <div
                             key={userCheckForm.id}
-                            className="min-w-80 flex basis-1/3 h-fit justify-center shadow rounded"
+                            className="min-w-80 flex basis-1/3 h-fit justify-center shadow-sm rounded-sm"
                         >
                             <div className="w-full px-4 py-8 flex flex-col">
                                 <div className="flex justify-start items-center font-bold text-lg pb-4">
@@ -373,7 +373,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
                                 {renderUserDefinedCheckBoxes(index)}
 
                                 <ButtonLight
-                                    className="w-fit !rounded-full mx-auto mt-2"
+                                    className="w-fit rounded-full! mx-auto mt-2"
                                     title={t('checklist.add_userdefined_title')}
                                     onClick={() => {
                                         updateUserChecklist(index, {
@@ -433,7 +433,7 @@ export function ChecklistNoAuthPreview() {
                 description={t('checklist.description')}
                 tooltip={{
                     text: t('checklist.tooltip'),
-                    link: '/learning-material/1/Herausforderungen',
+                    link: '/learning-material/Zusammen%20Planen/Aushandlungsphase',
                 }}
                 stageInMenu="generally"
                 idOfProgress="checklist"
@@ -450,7 +450,7 @@ export function ChecklistNoAuthPreview() {
                         .map((_, index) => (
                             <div
                                 key={index}
-                                className="min-w-80 flex basis-1/3 h-fit justify-center shadow rounded"
+                                className="min-w-80 flex basis-1/3 h-fit justify-center shadow-sm rounded-sm"
                             >
                                 <div className="w-full px-4 py-8 flex flex-col">
                                     <div className="flex justify-start items-center font-bold text-lg pb-4">
@@ -461,7 +461,7 @@ export function ChecklistNoAuthPreview() {
                                     {defaultCheckboxes.map((v, i) => (
                                         <div
                                             key={i}
-                                            className="group w-full flex justify-start border-t items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2"
+                                            className="group w-full flex justify-start border-t border-t-gray-200 items-center transition ease-in-out hover:bg-gray-50 pt-2 pb-1 px-2"
                                         >
                                             <div className="grow">
                                                 <label className="w-fit pr-4 truncate font-konnect cursor-pointer py-2 flex items-center">
@@ -484,7 +484,7 @@ export function ChecklistNoAuthPreview() {
                                     ))}
 
                                     <ButtonLight
-                                        className="w-fit !rounded-full mx-auto mt-2"
+                                        className="w-fit rounded-full! mx-auto mt-2"
                                         title={t('checklist.add_userdefined_title')}
                                         onClick={() => {}}
                                     >
@@ -495,7 +495,7 @@ export function ChecklistNoAuthPreview() {
                         ))}
                 </div>
             </Wrapper>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-transparent via-white/60 to-white pointer-events-none"></div>
         </div>
     );
 }

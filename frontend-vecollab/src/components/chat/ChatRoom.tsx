@@ -8,6 +8,11 @@ import ChatMessage from './ChatMessage';
 import InputArea from './InputArea';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { MdArrowBackIosNew, MdOutlineGroup } from 'react-icons/md';
+import AuthenticatedImage from '../common/AuthenticatedImage';
+import { useTranslation } from 'next-i18next';
+import { GoAlert } from 'react-icons/go';
+import Dropdown from '../common/Dropdown';
+import ReportDialog from '../common/dialogs/Report';
 
 interface Props {
     socket: Socket;
@@ -29,6 +34,7 @@ export default function ChatRoom({
     memberProfileSnippets,
 }: Props) {
     const { data: session, status } = useSession();
+    const { t } = useTranslation(['community', 'common']);
     const messageBottomRef = useRef<HTMLLIElement>(null);
     const messageContainerRef = useRef<HTMLDivElement>(null);
     const [displayMessages, setDisplayMessages] = useState<any[]>([]);
@@ -67,6 +73,32 @@ export default function ChatRoom({
         );
     };
 
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+
+    const handleSelectOption = (value: string) => {
+        switch (value) {
+            case 'report':
+                setReportDialogOpen(true);
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    const ChatRoomDropdown = () => {
+        const options = [
+            {
+                value: 'report',
+                label: t('common:report.report_title'),
+                icon: <GoAlert />,
+                liClasses: 'text-red-500',
+            },
+        ];
+
+        return <Dropdown options={options} onSelect={handleSelectOption} />;
+    };
+
     useEffect(() => {
         // wait till message history is loaded
         if (isLoading) return;
@@ -92,32 +124,44 @@ export default function ChatRoom({
 
     return (
         <div className="w-full h-full flex flex-col">
-            <div className="flex flex-nowrap text-nowrap items-center mb-2">
+            <div className="flex flex-nowrap text-nowrap items-center justify-between mb-2 px-2">
                 <button
                     onClick={closeRoom}
-                    className="flex rounded-full items-center px-1 mr-1 hover:bg-slate-100"
+                    className="flex rounded-full items-center hover:bg-slate-100"
                 >
                     <MdArrowBackIosNew />
                     &nbsp;
                 </button>
-                {room.name ? (
-                    <>
-                        <span className="font-bold">{room.name}</span>&nbsp;|&nbsp;
-                        <div
-                            className="flex items-center"
-                            title={memberProfileSnippets.map((profile) => profile.name).join(', ')}
-                        >
-                            {room.members.length}&nbsp;
-                            <MdOutlineGroup />
-                        </div>
-                    </>
-                ) : (
-                    <>{memberProfileSnippets.map((member) => member.name).join(', ')}</>
+                {typeof room.name === 'string' && (
+                    <span className="font-bold max-w-1/2 m-x-2 truncate" title={room.name}>
+                        {room.name}
+                    </span>
                 )}
+                <div className="flex items-center">
+                    <div className="group/members text-sm flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible">
+                        {room.members.length}&nbsp;
+                        <MdOutlineGroup size={20} />
+                        <div className="absolute w-40 xl:w-60 overflow-y-auto truncate max-h-32 right-0 p-2 mt-5 group-hover/members:opacity-100 hover:opacity-100! transition-opacity opacity-0 rounded-md bg-white shadow-sm border border-gray-200 z-10">
+                            {memberProfileSnippets.map((member, i) => (
+                                <div key={i} className="truncate my-1">
+                                    <AuthenticatedImage
+                                        imageId={member.profilePicUrl}
+                                        alt={t('profile_picture')}
+                                        width={20}
+                                        height={20}
+                                        className="rounded-full mr-3 inline"
+                                    />
+                                    <span className="truncate">{member.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <ChatRoomDropdown />
+                </div>
             </div>
             <div
                 ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border"
+                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border-gray-200"
             >
                 {/* Chat messages */}
                 {isLoading ? (
@@ -136,6 +180,15 @@ export default function ChatRoom({
                 )}
             </div>
             <InputArea roomID={room._id} socket={socket} />
+            {reportDialogOpen && (
+                <ReportDialog
+                    reportedItemId={room._id}
+                    reportedItemType="chatroom"
+                    closeCallback={() => {
+                        setReportDialogOpen(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
