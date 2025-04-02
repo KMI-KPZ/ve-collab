@@ -397,7 +397,6 @@ def new_message_mail_notification_dispatch() -> None:
 
         # list of unread rooms and messages within the last 24 hours
         rooms_with_unread_msg = chat_manager.get_rooms_with_unacknowledged_messages()
-        from pprint import pprint
 
         # for each user, count the number of unread messages and rooms with unread messages
         username_to_unread_msg_count = {}

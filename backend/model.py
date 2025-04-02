@@ -2074,22 +2074,6 @@ class VEPlan:
         params["timestamp_from"] = min(from_timestamps, default=None)
         params["timestamp_to"] = max(to_timestamps, default=None)
 
-        # duration was calculated as sum of step durations and
-        # the start/end timestamp as min/max of step timestamps.
-        # if they are not the same timedelta, there might have been some
-        # semantic error at the step timestamps, e.g. end before start
-
-        # if params["timestamp_to"] and params["timestamp_from"]:
-        #   if params["duration"] != (
-        #      params["timestamp_to"] - params["timestamp_from"]
-        # ):
-        #    raise ValueError(
-        #       """
-        #      duration and min/max timestamps do not match,
-        #     maybe mixed up Step timestamps?
-        #    """
-        # )
-
         # build VEPlan and set remaining values
         instance = cls(
             steps=steps,

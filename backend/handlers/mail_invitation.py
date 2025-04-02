@@ -4,9 +4,9 @@ import json
 from error_reasons import (
     MISSING_KEY_IN_HTTP_BODY_SLUG,
     INVITATION_DOESNT_EXIST,
-    INSUFFICIENT_PERMISSIONS
+    INSUFFICIENT_PERMISSIONS,
 )
-from exceptions import InvitationDoesntExistError, PlanDoesntExistError
+from exceptions import InvitationDoesntExistError
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.mail_invitation import MailInvitation
 from resources.planner.ve_plan import VEPlanResource
@@ -16,6 +16,7 @@ import util
 
 import logging
 import logging.handlers
+
 logger = logging.getLogger(__name__)
 
 
@@ -158,10 +159,13 @@ class EmailInvitationHandler(BaseHandler):
         else:
             self.set_status(404)
 
-
     async def send_mail_invitation(
-            self, recipient_mail: str, recipient_name: str, message: str | None, plan_id: str | None
-        ):
+        self,
+        recipient_mail: str,
+        recipient_name: str,
+        message: str | None,
+        plan_id: str | None,
+    ):
 
         # logger.info("send_mail_invitation, planId={}".format(plan_id))
 
@@ -217,7 +221,7 @@ class EmailInvitationHandler(BaseHandler):
                             self.current_user.username, mongodb
                         ),
                         "invitation_id": invitation_id,
-                        "plan_name": plan.name
+                        "plan_name": plan.name,
                     },
                 )
             else:
@@ -230,7 +234,7 @@ class EmailInvitationHandler(BaseHandler):
                         "message": message,
                         "sender": util._exchange_username_for_display_name(
                             self.current_user.username, mongodb
-                        )
+                        ),
                     },
                 )
 
@@ -263,10 +267,12 @@ class EmailInvitationHandler(BaseHandler):
 
                 # give read access (required for the notification)
                 try:
-                    plan_manager.set_read_permissions(plan_id, self.current_user.username)
+                    plan_manager.set_read_permissions(
+                        plan_id, self.current_user.username
+                    )
                 except:
                     self.set_status(409)
-                    self.write( {"success": False, "reason": INVITATION_DOESNT_EXIST})
+                    self.write({"success": False, "reason": INVITATION_DOESNT_EXIST})
                     return
 
                 # save normal plan invitation in db

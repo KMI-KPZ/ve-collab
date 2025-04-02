@@ -551,10 +551,6 @@ class Profiles:
         update of profile data) None is returned.
         """
 
-        # verify profile has all the necessary attributes
-        # if not all(attr in updated_profile for attr in self.profile_attributes.keys()):
-        #    raise ValueError("Profile misses required attribute")
-
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:

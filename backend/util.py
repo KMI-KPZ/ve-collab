@@ -1,7 +1,5 @@
 from contextlib import contextmanager
 from email.message import EmailMessage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from email.utils import make_msgid
 import logging

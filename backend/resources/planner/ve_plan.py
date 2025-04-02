@@ -11,6 +11,7 @@ import tornado
 
 import logging
 import logging.handlers
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,7 +150,7 @@ class VEPlanResource:
         limit: int = 10,
         offset: int = 0,
         sort: Literal["name", "last_modified", "creation_timestamp"] = "last_modified",
-        order: int = -1
+        order: int = -1,
     ) -> List[VEPlan]:
         """
         Request all plans that are avaible to the user determined by their `username`,
@@ -178,19 +179,21 @@ class VEPlanResource:
             access_filters = {
                 "$and": [
                     {"author": {"$ne": username}},
-                    {"$or": [
-                        {"read_access": username},
-                        {"write_access": username},
-                    ]}
+                    {
+                        "$or": [
+                            {"read_access": username},
+                            {"write_access": username},
+                        ]
+                    },
                 ]
             }
         elif filter_access == "all":
             access_filters = {
                 "$or": [
-                        {"author": username},
-                        {"read_access": username},
-                        {"write_access": username},
-                        {"is_good_practise": True},
+                    {"author": username},
+                    {"read_access": username},
+                    {"write_access": username},
+                    {"is_good_practise": True},
                 ]
             }
 
@@ -709,10 +712,16 @@ class VEPlanResource:
             partners = list(set(value_copy) - set(plan_state.write_access))
 
             # remove users that are not real users
-            not_existing_users = list(set(partners) - set(
-                [elem["username"] for elem in profile_manager.get_bulk_profiles(partners)]
-            ))
-            partners_existing  = list(set(partners) - set(not_existing_users))
+            not_existing_users = list(
+                set(partners)
+                - set(
+                    [
+                        elem["username"]
+                        for elem in profile_manager.get_bulk_profiles(partners)
+                    ]
+                )
+            )
+            partners_existing = list(set(partners) - set(not_existing_users))
 
             if partners_existing:
                 # add the partners to the write_access list
@@ -798,7 +807,7 @@ class VEPlanResource:
         if step.name in step_names:
             raise NonUniqueStepsError()
 
-        update_result = self.db.plans.update_one(
+        self.db.plans.update_one(
             {"_id": plan_id},
             {
                 "$push": {"steps": step.to_dict()},
@@ -1075,7 +1084,8 @@ class VEPlanResource:
         if update_result.matched_count != 1:
             raise PlanDoesntExistError()
 
-        # TODO update elastic
+        # Update Elasticsearch
+        self._update_elastic_plan(plan_id)
 
     def set_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
@@ -1172,7 +1182,8 @@ class VEPlanResource:
 
     def add_partner(self, plan_id: str | ObjectId, username: str) -> None:
         """
-        Add username as partner to a plan, set readt/write access, add user in checklist, avaluation, individual_learning_goals
+        Add username as partner to a plan, set readt/write access,
+        add user in checklist, evaluation, individual_learning_goals
         """
 
         try:
@@ -1187,46 +1198,33 @@ class VEPlanResource:
 
         partners = plan.partners
         partners.append(username)
-        self.update_field(
-            plan_id,
-            "partners",
-            partners
-        )
+        self.update_field(plan_id, "partners", partners)
 
-        individual_learning_goals = [a.to_dict() for a in plan.individual_learning_goals]
-        individual_learning_goals.append({
-            'username': username,
-            'learning_goal': None
-        })
+        individual_learning_goals = [
+            a.to_dict() for a in plan.individual_learning_goals
+        ]
+        individual_learning_goals.append({"username": username, "learning_goal": None})
         self.update_field(
-            plan_id,
-            "individual_learning_goals",
-            individual_learning_goals
+            plan_id, "individual_learning_goals", individual_learning_goals
         )
 
         checklist = plan.checklist
-        checklist.append({'username': username})
-        self.update_field(
-            plan_id,
-            "checklist",
-            checklist
-        )
+        checklist.append({"username": username})
+        self.update_field(plan_id, "checklist", checklist)
 
         evaluation = [a.to_dict() for a in plan.evaluation]
-        evaluation.append({
-            'username': 'test_user',
-            'is_graded': False,
-            'task_type': None,
-            'assessment_type': None,
-            'evaluation_before': '',
-            'evaluation_while': None,
-            'evaluation_after': None
-        })
-        self.update_field(
-            plan_id,
-            "evaluation",
-            evaluation
+        evaluation.append(
+            {
+                "username": "test_user",
+                "is_graded": False,
+                "task_type": None,
+                "assessment_type": None,
+                "evaluation_before": "",
+                "evaluation_while": None,
+                "evaluation_after": None,
+            }
         )
+        self.update_field(plan_id, "evaluation", evaluation)
 
         self._update_elastic_plan(plan_id)
 

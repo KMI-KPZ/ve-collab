@@ -57,8 +57,6 @@ class LoginCallbackHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
                 token_info["family_name"],
             )
 
-        print(token)
-
         # dump token dict to str and store it in a secure cookie (BaseHandler will decode it later to validate a user is logged in)
         self.set_secure_cookie("access_token", json.dumps(token["access_token"]))
 

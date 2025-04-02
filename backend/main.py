@@ -44,7 +44,6 @@ from handlers.network.search import SearchHandler
 from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
-from handlers.network.wordpress import WordpressCollectionHandler, WordpressPostHandler
 from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
@@ -115,7 +114,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
             (r"/timeline/you", PersonalTimelineHandler),
-            (r"/legacy/timeline/you", LegacyPersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
             (r"/profile_snippets", BulkProfileSnippets),
             (r"/users/(.+)", UserHandler),
@@ -123,8 +121,6 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/global_acl/(.+)", GlobalACLHandler),
             (r"/space_acl/(.+)", SpaceACLHandler),
             (r"/search", SearchHandler),
-            (r"/wordpress/posts", WordpressCollectionHandler),
-            (r"/wordpress/posts/([0-9]+)", WordpressPostHandler),
             (r"/planner/(.+)", VEPlanHandler),
             (r"/orcid", OrcidProfileHandler),
             (r"/matching_exclusion_info", MatchingExclusionHandler),
@@ -612,20 +608,6 @@ def main():
 
     # schedule periodic tasks (new message and reminder notifications)
     schedule_periodic_tasks()
-
-    # for testing purposes, delete when done
-    """
-    tornado.ioloop.IOLoop.current().run_sync(
-        lambda: periodic_notification_dispatch(
-            "reminder_icebreaker",
-            {
-                "material_link": "http://localhost:3000/learning-material/1/Beispiele%20aus%20der%20Praxis/VE-Beispiele%20aus%20der%20Praxis",
-                "designer_dashboard": "http://localhost:3000/plans",
-            },
-            "Lass dich inspirieren!",
-        )
-    )
-    """
 
     # periodically schedule acl entry cleanup
     # cleanup happens every  3,600,000 ms = 1 hour

@@ -467,26 +467,6 @@ class SearchHandler(BaseHandler):
         else:
             return []
 
-    def _search_plans_old(self, query: str) -> List[Dict]:
-        """
-        suggestion search on public and own plans on plan name, topics and abstract
-        :param query: search query
-        :return: any plans matching the query
-        """
-
-        with util.get_mongodb() as db:
-            plans_manager = VEPlanResource(db)
-            matched_plans = [
-                plan.to_dict()
-                for plan in plans_manager.find_plans_for_user_by_slug(self.current_user.username, query)
-            ]
-            matched_plans = self.add_authors_profile(matched_plans)
-
-        if matched_plans:
-            return matched_plans
-        else:
-            return []
-
     def add_authors_profile(self, assets: List[Dict]) -> List[Dict]:
         """
         Add author profile information like first_name, last_name profile_pic to any list with "author" property

@@ -1,7 +1,4 @@
-import datetime
 import json
-
-from bson import ObjectId
 
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
@@ -9,7 +6,6 @@ from error_reasons import (
     INVITATION_DOESNT_EXIST,
 )
 from exceptions import InvitationDoesntExistError
-import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.notifications import NotificationResource
 from resources.planner.ve_plan import VEPlanResource

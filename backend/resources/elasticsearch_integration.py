@@ -306,8 +306,4 @@ class ElasticsearchConnector:
             json=query,
         )
 
-        # import pprint
-        # pprint.pprint(response.json())
-        # print(len(response.json()["hits"]["hits"]))
-
         return response.json()["hits"]["hits"]

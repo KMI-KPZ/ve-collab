@@ -102,7 +102,6 @@ def setUpModule():
 
     global_vars.port = int(os.getenv("PORT", "8888"))
     global_vars.cookie_secret = os.getenv("COOKIE_SECRET")
-    global_vars.wordpress_url = os.getenv("WORDPRESS_URL")
     global_vars.mongodb_host = os.getenv("MONGODB_HOST", "localhost")
     global_vars.mongodb_port = int(os.getenv("MONGODB_PORT", "27017"))
     global_vars.mongodb_username = os.getenv("MONGODB_USERNAME")
