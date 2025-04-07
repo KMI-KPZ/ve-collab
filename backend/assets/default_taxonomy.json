@@ -1,6 +1,76 @@
 {
   "taxonomy": [
     {
+      "parent": 19,
+      "droppable": false,
+      "text": "Einstieg",
+      "text_en": "",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "4227",
+          "en": ""
+        }
+      },
+      "id": 191
+    },
+    {
+      "parent": 19,
+      "droppable": false,
+      "text": "Was heißt \"Kultur\"",
+      "text_en": "",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "4233",
+          "en": ""
+        }
+      },
+      "id": 190
+    },
+    {
+      "parent": 19,
+      "droppable": false,
+      "text": "Interkulturalität vs. kulturelle Kompetenz",
+      "text_en": "",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "4242",
+          "en": ""
+        }
+      },
+      "id": 189
+    },
+    {
+      "parent": 19,
+      "droppable": false,
+      "text": "Methodisch-didaktische Anregungen",
+      "text_en": "",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "4248",
+          "en": ""
+        }
+      },
+      "id": 188
+    },
+    {
+      "parent": 19,
+      "droppable": false,
+      "text": "Reflexion",
+      "text_en": "",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "4266",
+          "en": ""
+        }
+      },
+      "id": 187
+    },
+    {
       "parent": 20,
       "droppable": false,
       "text": "Kommunikation und Sprache im VA",
