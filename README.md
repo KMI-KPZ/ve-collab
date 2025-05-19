@@ -141,7 +141,7 @@ nano etherpad_config.json
 
 #### Services
 
-Run `MongoDB`, `Elasticsearch`, and `Etherpad` through Docker. They need the `.env` file as if the application was run via Docker in full (see [Getting Started](#getting-started)):
+Run `MongoDB`, `Elasticsearch`, and `Etherpad` through Docker. They need the `.env` file as if the application was run via Docker in full (see [Getting Started](#-getting-started)):
 
 ```bash
 docker compose up -d mongodb elasticsearch etherpad
