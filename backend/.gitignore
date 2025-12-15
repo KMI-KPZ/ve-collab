@@ -3,6 +3,7 @@ log_info.md
 .idea
 .env/*
 .env
+.pyenv
 
 
 # Byte-compiled / optimized / DLL files
