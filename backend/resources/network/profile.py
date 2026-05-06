@@ -551,6 +551,12 @@ class Profiles:
         update of profile data) None is returned.
         """
 
+        # silently forbid updating the username and role
+        if "username" in updated_profile:
+            del updated_profile["username"]
+        if "role" in updated_profile:
+            del updated_profile["role"]
+
         # verify types of attributes
         for attr_key in updated_profile:
             if attr_key in self.profile_attributes:
