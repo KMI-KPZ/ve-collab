@@ -55,6 +55,7 @@ interface Props {
           >;
     socket?: Socket;
     isNoAuthPreview?: boolean;
+    headerAction?: React.ReactNode;
 }
 
 export default function Wrapper({
@@ -73,6 +74,7 @@ export default function Wrapper({
     preventToLeave = true,
     planerDataCallback,
     submitCallback,
+    headerAction,
     socket,
     isNoAuthPreview = false,
 }: Props): JSX.Element {
@@ -633,6 +635,7 @@ export default function Wrapper({
 
                             <div className={'flex justify-between items-start mt-2 mb-2'}>
                                 <h2 className="font-bold text-2xl">{title}</h2>
+                                {headerAction}
                             </div>
                             {typeof subtitle !== 'undefined' && (
                                 <p className="text-xl text-slate-600">{subtitle}</p>
@@ -758,6 +761,7 @@ export default function Wrapper({
 
                                 <div className={'flex justify-between items-start mt-2 mb-2'}>
                                     <h2 className="font-bold text-2xl">{title}</h2>
+                                    {headerAction}
                                     {typeof tooltip !== 'undefined' &&
                                         (Array.isArray(tooltip) ? (
                                             <div className="group/ttw absolute right-0 flex flex-col -space-y-7 hover:space-y-1 px-5 transition ease-in-out delay-150">

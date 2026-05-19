@@ -8,6 +8,9 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
+import ButtonLightBlue from '@/components/common/buttons/ButtonLightBlue';
+import { useRouter } from 'next/router';
+import { MdOutlineFileDownload } from 'react-icons/md';
 
 interface Props {
     socket: Socket;
@@ -17,6 +20,7 @@ interface Props {
 Finished.auth = true;
 Finished.noAuthPreview = <FinishedNoAuthPreview />;
 export default function Finished({ socket, feedbackFormURL }: Props): JSX.Element {
+    const router = useRouter();
     const { t } = useTranslation(['designer', 'common']);
 
     const [plan, setPlanData] = useState<IPlan>();
@@ -42,6 +46,21 @@ export default function Finished({ socket, feedbackFormURL }: Props): JSX.Elemen
                     return {};
                 }}
                 submitCallback={() => {}}
+                headerAction={
+                    <ButtonLightBlue
+                        className="text-nowrap"
+                        onClick={() => {
+                            window.open(
+                                `/api/pdf-plan?planId=${encodeURIComponent(
+                                    plan?._id ?? ''
+                                )}&locale=${encodeURIComponent(router.locale ?? 'en')}`,
+                                '_blank'
+                            );
+                        }}
+                    >
+                        <MdOutlineFileDownload className="inline" /> {t('common:download')}
+                    </ButtonLightBlue>
+                }
             >
                 {typeof plan !== 'undefined' ? <PlanSummary plan={plan} /> : <LoadingAnimation />}
                 {feedbackFormURL && (
