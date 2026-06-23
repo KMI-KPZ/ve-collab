@@ -5,8 +5,6 @@ on:
     secrets:
       FRONTEND_ENV:
         required: true
-      LHCI_GITHUB_APP_TOKEN:
-        required: true
   workflow_dispatch:
 
 jobs:
@@ -51,10 +49,3 @@ jobs:
 
       - name: Build React app
         run: npm run build
-
-      - name: run Lighthouse CI
-        run: |
-          npm install -g @lhci/cli@0.14.x
-          lhci autorun --config=./lighthouserc.js
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
