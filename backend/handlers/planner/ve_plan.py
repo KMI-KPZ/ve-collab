@@ -2104,7 +2104,7 @@ class VEPlanHandler(BaseHandler):
         try:
             er.initiate_etherpad_for_plan(_id)
         except Exception:
-            logger.warn("etherpad is possibly down")
+            logger.warning("etherpad is possibly down")
 
         # count towards the achievements "ve_plans" and
         # conditionally count towards the "good_practice_plans" and
@@ -2182,7 +2182,7 @@ class VEPlanHandler(BaseHandler):
             try:
                 er.initiate_etherpad_for_plan(_id)
             except Exception:
-                logger.warn("etherpad is possibly down")
+                logger.warning("etherpad is possibly down")
 
         # count towards the achievement "ve_plans" since update was successfull
         # conditionally count towards the "good_practice_plans" and
@@ -2307,7 +2307,7 @@ class VEPlanHandler(BaseHandler):
                 try:
                     er.initiate_etherpad_for_plan(_id)
                 except Exception:
-                    logger.warn("etherpad is possibly down")
+                    logger.warning("etherpad is possibly down")
 
             # count towards the achievement "ve_plans" since update was successfull
             # conditionally count towards the "good_practice_plans" and
