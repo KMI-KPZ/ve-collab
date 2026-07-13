@@ -12854,3 +12854,190 @@ class ReportHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class DataDownloadHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # create baseline data
+        self.base_permission_environment_setUp()
+
+        # chatroom with messages
+        self.chatroom_id = ObjectId()
+        self.db.chatrooms.insert_one(
+            {
+                "_id": self.chatroom_id,
+                "name": "dl_room",
+                "members": [CURRENT_ADMIN.username],
+                "messages": [
+                    {
+                        "_id": ObjectId(),
+                        "message": "hi",
+                        "sender": CURRENT_ADMIN.username,
+                        "creation_date": datetime.now(),
+                        "send_states": [
+                            {
+                                "username": CURRENT_ADMIN.username,
+                                "send_state": "acknowledged",
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        # notification
+        self.db.notifications.insert_one(
+            {
+                "_id": ObjectId(),
+                "type": "new_messages",
+                "to": CURRENT_ADMIN.username,
+                "receive_state": "pending",
+                "creation_timestamp": datetime.now(),
+                "payload": {},
+            }
+        )
+
+        # posts and comments
+        self.db.posts.insert_one(
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(),
+                "text": "p1",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [],
+                "likers": [],
+            }
+        )
+        self.db.posts.insert_one(
+            {
+                "_id": ObjectId(),
+                "author": "someone",
+                "creation_date": datetime.now(),
+                "text": "p2",
+                "space": None,
+                "pinned": False,
+                "isRepost": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [
+                    {
+                        "_id": ObjectId(),
+                        "author": CURRENT_ADMIN.username,
+                        "creation_date": datetime.now(),
+                        "text": "c",
+                        "pinned": False,
+                    }
+                ],
+                "likers": [],
+            }
+        )
+
+        # space
+        self.space_id = ObjectId()
+        self.db.spaces.insert_one(
+            {
+                "_id": self.space_id,
+                "name": "dl_space",
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "invisible": False,
+                "joinable": True,
+                "invites": [],
+                "requests": [],
+                "files": [],
+            }
+        )
+
+        # plans
+        self.db.plans.insert_one(VEPlan().to_dict())
+
+        # invitations
+        self.db.invitations.insert_one(
+            {
+                "_id": ObjectId(),
+                "plan_id": ObjectId(),
+                "message": "inv",
+                "sender": CURRENT_ADMIN.username,
+                "recipient": CURRENT_USER.username,
+                "accepted": None,
+            }
+        )
+
+        # mail invitations
+        self.db.mail_invitations.insert_one(
+            {
+                "_id": ObjectId(),
+                "sender": CURRENT_ADMIN.username,
+                "recipient_mail": "x@mail.com",
+                "recipient_name": "x",
+                "message": "m",
+                "plan_id": None,
+                "replied": False,
+                "timestamp": datetime.now(),
+            }
+        )
+
+        # reports
+        self.db.reports.insert_one(
+            {
+                "_id": ObjectId(),
+                "reporter": CURRENT_ADMIN.username,
+                "type": "post",
+                "item_id": ObjectId(),
+                "reason": "r",
+                "state": "open",
+                "timestamp": datetime.now(),
+            }
+        )
+
+    def tearDown(self) -> None:
+        # cleanup created collections
+        self.db.chatrooms.delete_many({})
+        self.db.notifications.delete_many({})
+        self.db.posts.delete_many({})
+        self.db.spaces.delete_many({})
+        self.db.plans.delete_many({})
+        self.db.invitations.delete_many({})
+        self.db.mail_invitations.delete_many({})
+        self.db.reports.delete_many({})
+        return super().tearDown()
+
+    def test_get_userdata(self):
+        """
+        expect: successfully download aggregated user data
+        """
+
+        response = self.base_checks("GET", "/userdata", True, 200)
+
+        # ensure expected top-level keys
+        for key in [
+            "user_data",
+            "profile_data",
+            "chatrooms",
+            "notifications",
+            "posts",
+            "comments",
+            "spaces",
+            "ve_plans",
+            "ve_plan_invitations",
+            "mail_invitations",
+            "reports",
+        ]:
+            self.assertIn(key, response["data"])
+
+        # basic content checks
+        self.assertIsInstance(response["data"]["chatrooms"], list)
+        self.assertIsInstance(response["data"]["notifications"], list)
+        self.assertIsInstance(response["data"]["posts"], list)
+        self.assertIsInstance(response["data"]["spaces"], list)

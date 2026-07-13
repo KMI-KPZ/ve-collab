@@ -250,6 +250,25 @@ class Posts:
 
         self.db.posts.delete_many({"space": space_id})
 
+    def get_posts_of_user(self, username: str) -> List[Dict]:
+        """
+        Retrieve all posts authored by the given username.
+
+        Returns a list of post dicts, or an empty list if none exist.
+        """
+
+        return list(self.db.posts.find({"author": username}))
+
+    def get_posts_with_comments_of_user(self, username: str) -> List[Dict]:
+        """
+        Retrieve all posts that contain comments authored by the given username.
+
+        Returns a list of post dicts (the posts containing such comments), or
+        an empty list if none exist.
+        """
+
+        return list(self.db.posts.find({"comments.author": username}))
+
     def like_post(self, post_id: str | ObjectId, username: str) -> None:
         """
         Let the given user like a post given by its id

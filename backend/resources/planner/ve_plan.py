@@ -145,7 +145,7 @@ class VEPlanResource:
         self,
         username: str,
         filter_good_practice_only: bool | None = None,
-        filter_access: Literal["all", "own", "shared"] = "all",
+        filter_access: Literal["all", "own", "shared", "access"] = "all",
         search_query: str | None = None,
         limit: int = 10,
         offset: int = 0,
@@ -160,8 +160,9 @@ class VEPlanResource:
         Optionally, apply the following filters (including combinations):
         - `filter_good_practice_only`: if set to True, only plans that are marked as good practise
            are returned
-        - `filter_access`: filter the plans by their access level, i.e. "all" (default), "own"
-        (plans where i am the author) or "shared" (plans where i have received read/write access from external)
+        - `filter_access`: filter the plans by their access level, i.e. "all" (default, including good practice plans),
+        "own" (plans where i am the author), "shared" (plans where i have received read/write access from external,
+        but are not author) and "access" (plans where i am either author or have read/write access, but not good practice plans)
         - `search_query`: a search query to filter plans by their `name` attribute
 
         The `limit` and `offset` parameters can be used to paginate the results.
@@ -185,6 +186,14 @@ class VEPlanResource:
                             {"write_access": username},
                         ]
                     },
+                ]
+            }
+        elif filter_access == "access":
+            access_filters = {
+                "$or": [
+                    {"author": username},
+                    {"read_access": username},
+                    {"write_access": username},
                 ]
             }
         elif filter_access == "all":
@@ -1430,6 +1439,15 @@ class VEPlanResource:
             raise InvitationDoesntExistError()
 
         return result
+
+    def get_invitations_sent_by(self, sender_username: str) -> List[Dict]:
+        """
+        Retrieve all VE plan invitations where `sender` equals `sender_username`.
+
+        Returns a list of invitation dicts.
+        """
+
+        return list(self.db.invitations.find({"sender": sender_username}))
 
     def set_invitation_reply(
         self, invitation_id: str | ObjectId, accepted: bool

@@ -433,6 +433,16 @@ class Chat:
             )
         )
 
+    def get_rooms_of_user(self, username: str) -> List[Dict]:
+        """
+        Retrieve the full chatroom documents the given user is a member of.
+
+        Returns a list of chatroom dicts (including messages), or an empty list
+        if the user is not a member of any room.
+        """
+
+        return list(self.db.chatrooms.find({"members": username}))
+
     def bulk_set_message_sent_state(
         self,
         room_ids: List[str | ObjectId],

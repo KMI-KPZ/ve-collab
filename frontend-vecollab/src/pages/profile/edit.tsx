@@ -21,7 +21,6 @@ import {
     WorkExperience,
 } from '@/interfaces/profile/profileInterfaces';
 import EditSettings from '@/components/profile/EditSettings';
-import EditProfileVeWindow from '@/components/profile/EditProfileVeWindow';
 import Alert from '@/components/common/dialogs/Alert';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetStaticPropsContext } from 'next';
@@ -29,6 +28,7 @@ import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 import { languageKeys } from '@/data/languages';
 import EditProfileDelete from '@/components/profile/EditProfileDelete';
+import EditProfileDownloadData from '@/components/profile/EditProfileDownloadData';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -384,6 +384,13 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         setExcludedFromMatching={setExcludedFromMatching}
                                         notificationSettings={notificationSettings}
                                         setNotificationSettings={setNotificationSettings}
+                                    />
+                                </div>
+                                <div tabid="DownloadData" tabname={t('download_data.title')}>
+                                    <EditProfileDownloadData
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
                                     />
                                 </div>
                                 <div tabid="DeleteProfile" tabname={t('delete_profile.title')}>
