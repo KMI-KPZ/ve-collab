@@ -1,6 +1,88 @@
 {
   "taxonomy": [
     {
+      "parent": 8,
+      "droppable": false,
+      "text": "Was ist ein Virtueller Austausch",
+      "text_en": "Virtual Exchange - A Short Introduction",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "653",
+          "en": "10944"
+        },
+        "metadata": {
+          "name": ""
+        }
+      },
+      "id": 26
+    },
+    {
+      "parent": 8,
+      "droppable": false,
+      "text": "Merkmale virtueller Austausche",
+      "text_en": "Features of Virtual Exchanges",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "1415",
+          "en": "10949"
+        },
+        "metadata": {
+          "name": ""
+        }
+      },
+      "id": 36
+    },
+    {
+      "parent": 8,
+      "droppable": false,
+      "text": "Begriffsabgrenzung",
+      "text_en": "Definition of Terms",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "1422",
+          "en": "10971"
+        },
+        "metadata": {
+          "name": ""
+        }
+      },
+      "id": 37
+    },
+    {
+      "parent": 8,
+      "droppable": false,
+      "text": "Zusammenfassung",
+      "text_en": "Summary",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "2180",
+          "en": "10963"
+        },
+        "metadata": {
+          "name": ""
+        }
+      },
+      "id": 38
+    },
+    {
+      "parent": 8,
+      "droppable": false,
+      "text": "\u00dcberblick \u00fcber die Selbstlernmaterialien",
+      "text_en": "Overview of Self-Study Materials",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "2246",
+          "en": "10973"
+        }
+      },
+      "id": 192
+    },
+    {
       "parent": 19,
       "droppable": false,
       "text": "Einstieg",
@@ -17,7 +99,7 @@
     {
       "parent": 19,
       "droppable": false,
-      "text": "Was heißt \"Kultur\"",
+      "text": "Was hei\u00dft \"Kultur\"",
       "text_en": "",
       "data": {
         "description": "",
@@ -31,7 +113,7 @@
     {
       "parent": 19,
       "droppable": false,
-      "text": "Interkulturalität vs. kulturelle Kompetenz",
+      "text": "Interkulturalit\u00e4t vs. kulturelle Kompetenz",
       "text_en": "",
       "data": {
         "description": "",
@@ -241,7 +323,7 @@
     {
       "parent": 31,
       "droppable": true,
-      "text": "Leitfragen für die Aushandlungsphase",
+      "text": "Leitfragen f\u00fcr die Aushandlungsphase",
       "text_en": "Guiding Questions for Negotiation Phase",
       "id": 175
     },
@@ -419,7 +501,7 @@
     {
       "parent": 33,
       "droppable": true,
-      "text": "Kontroversität in VE (EN)",
+      "text": "Kontroversit\u00e4t in VE (EN)",
       "text_en": "Controversiality in VE",
       "id": 164
     },
@@ -525,7 +607,7 @@
     {
       "parent": 34,
       "droppable": false,
-      "text": "Toolliste für virtuelle Austausche",
+      "text": "Toolliste f\u00fcr virtuelle Austausche",
       "text_en": "",
       "data": {
         "description": "",
@@ -622,7 +704,7 @@
       "id": 8,
       "parent": 30,
       "droppable": true,
-      "text": "Einführung",
+      "text": "Einf\u00fchrung",
       "text_en": "Introduction"
     },
     {
@@ -650,12 +732,15 @@
       "parent": 12,
       "droppable": false,
       "text": "VE-Beispiele aus der Praxis",
-      "text_en": "",
+      "text_en": "Practical Examples",
       "data": {
         "description": "",
         "pages": {
           "de": "1158",
-          "en": ""
+          "en": "10857"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 27
@@ -664,12 +749,15 @@
       "parent": 12,
       "droppable": false,
       "text": "VA in Englisch",
-      "text_en": "",
+      "text_en": "VE in an English Language Teaching Degree",
       "data": {
         "description": "",
         "pages": {
           "de": "1549",
-          "en": ""
+          "en": "10860"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 44
@@ -678,12 +766,15 @@
       "parent": 12,
       "droppable": false,
       "text": "VA in Biologie",
-      "text_en": "",
+      "text_en": "VE in Biology",
       "data": {
         "description": "",
         "pages": {
           "de": "1511",
-          "en": ""
+          "en": "10858"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 45
@@ -692,12 +783,15 @@
       "parent": 12,
       "droppable": false,
       "text": "VA in Ingenieurwesen",
-      "text_en": "",
+      "text_en": "VE in Engineering",
       "data": {
         "description": "",
         "pages": {
           "de": "1623",
-          "en": ""
+          "en": "10861"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 46
@@ -706,12 +800,15 @@
       "parent": 12,
       "droppable": false,
       "text": "VA in Global Health",
-      "text_en": "",
+      "text_en": "VE in Global Health",
       "data": {
         "description": "",
         "pages": {
           "de": "1202",
-          "en": ""
+          "en": "10859"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 47
@@ -720,85 +817,32 @@
       "parent": 12,
       "droppable": false,
       "text": "Good-Practice-Beispiele in VE-Collab",
-      "text_en": "",
+      "text_en": "Good Practice Examples of the VE-Collab Community",
       "data": {
         "description": "",
         "pages": {
           "de": "4653",
-          "en": ""
+          "en": "10862"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 61
     },
     {
-      "parent": 8,
-      "droppable": false,
-      "text": "Was ist ein Virtueller Austausch",
-      "text_en": "",
-      "data": {
-        "description": "",
-        "pages": {
-          "de": "653",
-          "en": ""
-        }
-      },
-      "id": 26
-    },
-    {
-      "parent": 8,
-      "droppable": false,
-      "text": "Merkmale virtueller Austausche",
-      "text_en": "",
-      "data": {
-        "description": "",
-        "pages": {
-          "de": "1415",
-          "en": ""
-        }
-      },
-      "id": 36
-    },
-    {
-      "parent": 8,
-      "droppable": false,
-      "text": "Begriffsabgrenzung",
-      "text_en": "",
-      "data": {
-        "description": "",
-        "pages": {
-          "de": "1422",
-          "en": ""
-        }
-      },
-      "id": 37
-    },
-    {
-      "parent": 8,
-      "droppable": false,
-      "text": "Zusammenfassung",
-      "text_en": "",
-      "data": {
-        "description": "",
-        "pages": {
-          "de": "2180",
-          "en": ""
-        }
-      },
-      "id": 38
-    },
-    {
       "parent": 11,
       "droppable": false,
       "text": "Einstieg",
-      "text_en": "",
+      "text_en": "Introduction",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "575",
-          "en": ""
+          "en": "11185"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 21
@@ -807,12 +851,15 @@
       "parent": 11,
       "droppable": false,
       "text": "Mehrwerte virtueller Austausche",
-      "text_en": "",
+      "text_en": "Benefits of Virtual Exchanges",
       "data": {
         "description": "",
         "pages": {
           "de": "1467",
-          "en": ""
+          "en": "11196"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 60
@@ -821,12 +868,15 @@
       "parent": 11,
       "droppable": false,
       "text": "Kompetenzmodelle",
-      "text_en": "",
+      "text_en": "Competence Models",
       "data": {
         "description": "",
         "pages": {
           "de": "585",
-          "en": ""
+          "en": "11207"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 41
@@ -835,12 +885,15 @@
       "parent": 11,
       "droppable": false,
       "text": "Reflexionsaufgabe zum Abschluss",
-      "text_en": "",
+      "text_en": "Final reflection task",
       "data": {
         "description": "",
         "pages": {
           "de": "908",
-          "en": ""
+          "en": "11169"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 43
@@ -850,15 +903,15 @@
       "parent": 1,
       "droppable": false,
       "text": "Erfahrungsberichte zum Einstieg",
-      "text_en": "",
+      "text_en": "Experience Reports as an Introduction",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "545",
-          "en": ""
+          "en": "10884"
+        },
+        "metadata": {
+          "name": ""
         }
       }
     },
@@ -866,15 +919,15 @@
       "parent": 1,
       "droppable": false,
       "text": "Herausforderungen als Chance - Tipps und Tricks",
-      "text_en": "",
+      "text_en": "Challenges as an Opportunity \u2013 Tips and Tricks",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "711",
-          "en": ""
+          "en": "10914"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 25
@@ -911,12 +964,15 @@
       "parent": 1,
       "droppable": false,
       "text": "Herausforderungen - Fazit",
-      "text_en": "",
+      "text_en": "Summary and Conclusion",
       "data": {
         "description": "",
         "pages": {
           "de": "7314",
-          "en": ""
+          "en": "11014"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 124
@@ -924,13 +980,16 @@
     {
       "parent": 1,
       "droppable": false,
-      "text": "Weiterführende Literatur",
-      "text_en": "",
+      "text": "Weiterf\u00fchrende Literatur",
+      "text_en": "Further reading",
       "data": {
         "description": "",
         "pages": {
           "de": "996",
-          "en": ""
+          "en": "11031"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 163
