@@ -368,7 +368,6 @@ export default function EditPersonalInformation({
                             </div>
                             <div className="w-2/3">
                                 <select
-                                    placeholder={t('school_type_placeholder')}
                                     className="border border-gray-400 rounded-lg w-full px-1 py-2"
                                     value={newInstitution.school_type}
                                     onChange={(e) =>

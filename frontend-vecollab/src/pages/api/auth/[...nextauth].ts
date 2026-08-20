@@ -1,7 +1,7 @@
 import NextAuth, { Account, Session, User } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import KeycloakProvider, { KeycloakProfile } from 'next-auth/providers/keycloak';
-import { type OAuthConfig } from 'next-auth/providers';
+import { type OAuthConfig } from 'next-auth/providers/oauth';
 import { AdapterUser } from 'next-auth/adapters';
 import { fetchGET } from '@/lib/backend';
 
