@@ -372,6 +372,15 @@ class NotificationResource:
         else:
             raise NotificationDoesntExistError()
 
+    def get_notifications_of_user(self, username: str) -> List[Dict]:
+        """
+        Retrieve all notifications addressed to `username`.
+
+        Returns a list of notification dicts, or an empty list if none exist.
+        """
+
+        return list(self.db.notifications.find({"to": username}))
+
 
 async def periodic_notification_dispatch(
     periodic_notification_type: str, payload: Dict, email_subject: str

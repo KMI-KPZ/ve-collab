@@ -22,6 +22,7 @@ import tornado.web
 
 import global_vars
 from handlers.authentication import LoginHandler, LoginCallbackHandler, LogoutHandler
+from handlers.data_download import DataDownloadHandler
 from handlers.db_static_files import GridFSStaticFileHandler
 from handlers.healthcheck import HealthCheckHandler
 from handlers.import_personas import ImportDummyPersonasHandler
@@ -134,6 +135,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/import_personas", ImportDummyPersonasHandler),
             (r"/admin_check", AdminCheckHandler),
             (r"/report/(.+)", ReportHandler),
+            (r"/userdata", DataDownloadHandler),
             (r"/mbr_sync", MBRSyncHandler),
             (r"/mbr_test", MBRTestHandler),
             (r"/css/(.*)", tornado.web.StaticFileHandler, {"path": "./css/"}),
@@ -241,15 +243,13 @@ def create_initial_admin() -> None:
         try:
             existing_role = profile_manager.get_role(username)
             if existing_role != "admin":
-                logger.warning(
-                    """
+                logger.warning("""
                     The user already exists with a non-admin role.
                     If you really wish to elevate his/her role, remove the corresponding
                     entry from the profiles collection manually and restart (warning: loss of profile data)
                     or simply set the value manually in a mongoshell.
                     For now, this operation is ignored.
-                    """
-                )
+                    """)
             return
         except ProfileDoesntExistException:
             pass

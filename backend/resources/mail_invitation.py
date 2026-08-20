@@ -102,3 +102,12 @@ class MailInvitation:
         )
 
         return count < 10
+
+    def get_invitations_sent_by(self, sender_username: str) -> list:
+        """
+        Retrieve all mail invitations sent by `sender_username`.
+
+        Returns a list of invitation dicts.
+        """
+
+        return list(self.db.mail_invitations.find({"sender": sender_username}))

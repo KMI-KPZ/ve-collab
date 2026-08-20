@@ -374,5 +374,10 @@
         "delete": "Jetzt löschen",
         "description": "<bold>ACHTUNG: wenn du dein VE-Collab Profil löschst werden auch alle deine Daten gelöscht!</bold><br /><br />Dazu gehören alle deine:<br />Pläne<br />Beiträge<br />Gruppen<br />Chats<br />etc.<br /><br />Dies kann nicht rückgängig gemacht werden.",
         "confirmation": "Bist du sicher, dass dein Profil und all deine Daten gelöscht werden sollen?"
+    },
+    "download_data": {
+        "title": "Daten herunterladen",
+        "description": "Wir stellen dir eine Datei mit all deinen Daten zur Verfügung, die wir über dich besitzen. Bitte beachte, dass dies u.U. einige Zeit in Anspruch nehmen kann.",
+        "download_now": "Jetzt herunterladen"
     }
 }

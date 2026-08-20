@@ -67,6 +67,7 @@ from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
 from resources.reports import Reports
+from resources.notifications import NotificationResource
 import util
 
 # don't change, these values match with the ones in BaseHandler
@@ -1208,6 +1209,91 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertEqual(post["files"], self.default_post["files"])
         self.assertEqual(post["comments"], self.default_post["comments"])
         self.assertEqual(post["likers"], self.default_post["likers"])
+
+    def test_get_posts_of_user(self):
+        """
+        expect: get all posts authored by a given user
+        """
+
+        post_manager = Posts(self.db)
+
+        # insert another post by CURRENT_ADMIN and one more not
+        other_post = {
+            "_id": ObjectId(),
+            "author": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "another",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": [],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        other_post2 = {
+            "_id": ObjectId(),
+            "author": CURRENT_USER.username,
+            "creation_date": datetime(2023, 1, 2, 9, 0, 0),
+            "text": "another",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": [],
+            "plans": [],
+            "files": [],
+            "comments": [],
+            "likers": [],
+        }
+        self.db.posts.insert_one(other_post)
+        self.db.posts.insert_one(other_post2)
+
+        posts = post_manager.get_posts_of_user(CURRENT_ADMIN.username)
+        self.assertIsInstance(posts, list)
+        self.assertEqual(len(posts), 2)
+        self.assertTrue(any(p for p in posts if p["_id"] == self.post_id))
+        self.assertTrue(any(p for p in posts if p["_id"] == other_post["_id"]))
+
+    def test_get_posts_with_comments_of_user(self):
+        """
+        expect: get posts that contain comments authored by the given user
+        """
+
+        post_manager = Posts(self.db)
+
+        # create a post with a comment authored by CURRENT_USER
+        post_with_comment = {
+            "_id": ObjectId(),
+            "author": "someone",
+            "creation_date": datetime(2023, 1, 3, 9, 0, 0),
+            "text": "post with comment",
+            "space": None,
+            "pinned": False,
+            "isRepost": False,
+            "wordpress_post_id": None,
+            "tags": [],
+            "plans": [],
+            "files": [],
+            "comments": [
+                {
+                    "_id": ObjectId(),
+                    "author": CURRENT_USER.username,
+                    "creation_date": datetime(2023, 1, 3, 9, 5, 0),
+                    "text": "c",
+                    "pinned": False,
+                }
+            ],
+            "likers": [],
+        }
+        self.db.posts.insert_one(post_with_comment)
+
+        posts = post_manager.get_posts_with_comments_of_user(CURRENT_USER.username)
+        self.assertIsInstance(posts, list)
+        # expect the inserted post to be present
+        self.assertTrue(any(p for p in posts if p["_id"] == post_with_comment["_id"]))
 
         # again with _id as str
         post = post_manager.get_post_by_comment_id(str(self.comment_id))
@@ -8087,6 +8173,60 @@ class PlanResourceTest(BaseResourceTestCase):
             True,
         )
 
+    def test_get_all_plans_for_user(self):
+        """
+        expect: retrieve all plans accessible to a given user
+        """
+
+        # create another plan authored by CURRENT_ADMIN, one shared via read_access,
+        # and one not associated at all with CURRENT_ADMIN
+        plan_by_admin = self.default_plan.copy()
+        plan_by_admin["_id"] = ObjectId()
+        plan_by_admin["author"] = CURRENT_ADMIN.username
+        self.db.plans.insert_one(plan_by_admin)
+
+        shared_plan = self.default_plan.copy()
+        shared_plan["_id"] = ObjectId()
+        shared_plan["author"] = "someone"
+        shared_plan["read_access"] = [CURRENT_ADMIN.username]
+        self.db.plans.insert_one(shared_plan)
+
+        unrelated_plan = self.default_plan.copy()
+        unrelated_plan["_id"] = ObjectId()
+        unrelated_plan["author"] = "someone_else"
+        unrelated_plan["read_access"] = ["another_user"]
+        unrelated_plan["write_access"] = ["another_user"]
+        self.db.plans.insert_one(unrelated_plan)
+
+        plans = self.planner.get_plans_for_user(
+            CURRENT_ADMIN.username, filter_access="access"
+        )
+        self.assertIsInstance(plans, list)
+        self.assertEqual(len(plans), 3)
+        ids = [p._id for p in plans]
+        self.assertIn(plan_by_admin["_id"], ids)
+        self.assertIn(shared_plan["_id"], ids)
+        self.assertIn(self.default_plan["_id"], ids)
+
+    def test_get_invitations_sent_by(self):
+        """
+        expect: retrieve invitations sent by given sender
+        """
+
+        inv = {
+            "_id": ObjectId(),
+            "plan_id": self.plan_id,
+            "message": "invite",
+            "sender": CURRENT_ADMIN.username,
+            "recipient": CURRENT_USER.username,
+            "accepted": None,
+        }
+        self.db.invitations.insert_one(inv)
+
+        result = self.planner.get_invitations_sent_by(CURRENT_ADMIN.username)
+        self.assertIsInstance(result, list)
+        self.assertGreaterEqual(len(result), 1)
+
 
 class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
     def setUp(self) -> None:
@@ -8606,6 +8746,35 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             )[0]["send_states"],
         )
 
+    def test_get_rooms_of_user(self):
+        """
+        expect: get full chatroom documents the user is a member of
+        """
+
+        # create another room where CURRENT_ADMIN is a member
+        room_extra = {
+            "_id": ObjectId(),
+            "name": "extra_room",
+            "members": [CURRENT_ADMIN.username, "someone_else"],
+            "messages": [],
+        }
+        # create a room the user is not member of
+        room_other = {
+            "_id": ObjectId(),
+            "name": "other_room",
+            "members": ["user_a", "user_b"],
+            "messages": [],
+        }
+        self.db.chatrooms.insert_many([room_extra, room_other])
+
+        rooms = self.chat_manager.get_rooms_of_user(CURRENT_ADMIN.username)
+        self.assertIsInstance(rooms, list)
+        self.assertEqual(len(rooms), 2)
+        # expect default room and extra room
+        ids = [r["_id"] for r in rooms]
+        self.assertIn(self.room_id, ids)
+        self.assertIn(room_extra["_id"], ids)
+
 
 class ElasticsearchIntegrationTest(BaseResourceTestCase):
     def setUp(self) -> None:
@@ -8903,7 +9072,56 @@ class ElasticsearchIntegrationTest(BaseResourceTestCase):
 
 
 class NotificationIntegrationTest(BaseResourceTestCase):
-    pass
+    def setUp(self) -> None:
+        super().setUp()
+
+        # insert some notifications
+        self.notifications = [
+            {
+                "_id": ObjectId(),
+                "type": "new_messages",
+                "to": CURRENT_ADMIN.username,
+                "receive_state": "pending",
+                "creation_timestamp": datetime.now(),
+                "payload": {},
+            },
+            {
+                "_id": ObjectId(),
+                "type": "space_invitation",
+                "to": CURRENT_ADMIN.username,
+                "receive_state": "sent",
+                "creation_timestamp": datetime.now(),
+                "payload": {},
+            },
+            {
+                "_id": ObjectId(),
+                "type": "new_messages",
+                "to": CURRENT_USER.username,
+                "receive_state": "pending",
+                "creation_timestamp": datetime.now(),
+                "payload": {},
+            },
+        ]
+        self.db.notifications.insert_many(self.notifications)
+
+        self.notification_manager = NotificationResource(self.db)
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        self.db.notifications.delete_many({})
+        self.notification_manager = None
+
+    def test_get_notifications_of_user(self):
+        """
+        expect: retrieve all notifications for a user
+        """
+
+        res = self.notification_manager.get_notifications_of_user(
+            CURRENT_ADMIN.username
+        )
+        self.assertIsInstance(res, list)
+        # expect at least the two notifications targeted at CURRENT_ADMIN
+        self.assertGreaterEqual(len(res), 2)
 
 
 class MailInvitationResourceTest(BaseResourceTestCase):
@@ -8998,6 +9216,40 @@ class MailInvitationResourceTest(BaseResourceTestCase):
         self.assertRaises(
             ValueError, self.invitation_manager.insert_invitation, invitation
         )
+
+    def test_get_invitations_sent_by(self):
+        """
+        expect: retrieve invitations sent by given sender
+        """
+
+        # insert a few invitations and one fron another user
+        for i in range(2):
+            inv = {
+                "_id": ObjectId(),
+                "sender": CURRENT_ADMIN.username,
+                "recipient_name": f"r{i}",
+                "recipient_mail": f"r{i}@mail.com",
+                "message": "hi",
+                "plan_id": None,
+                "replied": False,
+                "timestamp": datetime.now(),
+            }
+            self.db.mail_invitations.insert_one(inv)
+        other_inv = {
+            "_id": ObjectId(),
+            "sender": "other_user",
+            "recipient_name": "other_recipient",
+            "recipient_mail": "other_recipient@mail.com",
+            "message": "hi",
+            "plan_id": None,
+            "replied": False,
+            "timestamp": datetime.now(),
+        }
+        self.db.mail_invitations.insert_one(other_inv)
+
+        result = self.invitation_manager.get_invitations_sent_by(CURRENT_ADMIN.username)
+        self.assertIsInstance(result, list)
+        self.assertGreaterEqual(len(result), 3)
 
 
 class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):

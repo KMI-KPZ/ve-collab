@@ -100,6 +100,20 @@ class Reports:
 
         return reports
 
+    def get_reports_by_reporter(self, reporter_username: str) -> list[dict]:
+        """
+        Retrieve all reports submitted by `reporter_username`.
+
+        Returns a list of report dicts.
+        """
+
+        reports = list(self.db.reports.find({"reporter": reporter_username}))
+
+        for report in reports:
+            report["item"] = self.get_reported_item(report["item_id"], report["type"])
+
+        return reports
+
     def insert_report(self, report: dict) -> ObjectId:
         """
         Insert a new report into the database.
