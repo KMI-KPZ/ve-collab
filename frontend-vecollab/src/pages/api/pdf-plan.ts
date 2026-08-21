@@ -45,5 +45,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Content-Disposition', `attachment; filename="Zusammenfassung.pdf"`);
     res.setHeader('Content-Type', 'application/pdf');
 
-    return res.send(pdf);
+    return res.send(Buffer.from(pdf));
 }
