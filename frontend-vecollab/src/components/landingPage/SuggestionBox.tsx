@@ -57,7 +57,6 @@ export default function SuggestionBox() {
         };
 
         useEffect(() => {
-            if (modul.length) return;
             const storedModules = LocalStorage.getItem('suggested_modules');
             if (storedModules) {
                 setModuls(storedModules);
@@ -69,7 +68,8 @@ export default function SuggestionBox() {
                     LocalStorage.addItem('suggested_modules', moduls, ttl);
                 })
                 .catch(console.error);
-        }, [modul]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []);
 
         if (!modul.length) return <></>;
 
@@ -122,8 +122,6 @@ export default function SuggestionBox() {
         };
 
         useEffect(() => {
-            if (suggestedUsers.length) return;
-
             const cachedSuggestedUsers = LocalStorage.getItem('suggested_users');
             if (cachedSuggestedUsers) {
                 setSuggestedUsers(cachedSuggestedUsers);
@@ -136,7 +134,8 @@ export default function SuggestionBox() {
                     LocalStorage.addItem('suggested_users', users, ttl);
                 })
                 .catch(console.error);
-        }, [suggestedUsers]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []);
 
         if (!suggestedUsers) return <></>;
 

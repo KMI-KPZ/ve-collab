@@ -147,7 +147,6 @@ export default function Lectures({ socket }: Props): JSX.Element {
                     <div className="w-3/4">
                         <select
                             {...methods.register(`lectures.${index}.lecture_format`)}
-                            placeholder="z.B. online, hybrid, präsenz"
                             className="border border-gray-400 rounded-lg w-full px-1 py-2"
                         >
                             <option value={t('lectures.face2face')}>
@@ -320,7 +319,6 @@ export function LecturesNoAuthPreview() {
                                 <div className="w-3/4">
                                     <select
                                         disabled
-                                        placeholder="z.B. online, hybrid, präsenz"
                                         className="border border-gray-400 rounded-lg w-full px-1 py-2"
                                     >
                                         <option value={t('lectures.face2face')}>

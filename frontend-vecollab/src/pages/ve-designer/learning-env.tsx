@@ -298,7 +298,6 @@ export default function LearningEnv({ socket }: Props): JSX.Element {
                                 {t('learningEnv.format')}:
                             </label>
                             <select
-                                placeholder={`${t('common:choose')}...`}
                                 className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
                                 {...methods.register(`courseFormat`)}
                             >
@@ -399,7 +398,6 @@ export function LearningEnvNoAuthPreview() {
                                 {t('learningEnv.format')}:
                             </label>
                             <select
-                                placeholder={`${t('common:choose')}...`}
                                 className="bg-white border border-gray-400 rounded-lg p-2 w-1/3"
                                 disabled
                             >

@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from 'react';
 const PLACEHOLDER_UPDATE_INTERVAL = 3000;
 const CHARACTER_WRITE_DELAY = 50;
 
-const useDynamicPlaceholder = (searchInputRef: React.RefObject<HTMLInputElement>) => {
+const useDynamicPlaceholder = (searchInputRef: React.RefObject<HTMLInputElement | null>) => {
     const intervalId = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
