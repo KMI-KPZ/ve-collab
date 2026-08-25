@@ -1,4 +1,4 @@
-FROM node:18-slim AS base
+FROM node:22-slim AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -69,6 +69,7 @@ COPY --from=builder /app/public ./public
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/next-i18next.config.js ./next-i18next.config.js
 
 # install google chrome manually on the runner
 # because copying it from puppeteer cache crashes for some reason

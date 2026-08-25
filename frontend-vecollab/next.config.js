@@ -40,6 +40,7 @@ const nextConfig = {
                 pathname: '/uploads/**',
             },
         ],
+        qualities: [75, 100],
     },
     transpilePackages: ['@jitsi/react-sdk'], // workaround for https://github.com/jitsi/jitsi-meet-react-sdk/issues/12
     i18n,

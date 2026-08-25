@@ -1,6 +1,6 @@
 import { useTranslation } from 'next-i18next';
-import { useState, useCallback, useRef } from 'react';
-import ReactCrop, { Crop } from 'react-image-crop';
+import { useState, useCallback, useRef, SyntheticEvent } from 'react';
+import ReactCrop, { centerCrop, makeAspectCrop, convertToPixelCrop, Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
 /*
@@ -63,6 +63,8 @@ interface Props {
     onFinishUpload: (blob: Blob) => void;
 }
 
+const ASPECT = 1;
+
 /*
 the cropping overlay that is rendered and draggable over the image
 */
@@ -70,42 +72,36 @@ function AvatarEditor({ sourceImg, onFinishUpload }: Props) {
     const { t } = useTranslation('community');
 
     const imgRef = useRef<HTMLImageElement | null>(null);
-    const [crop, setCrop] = useState<Crop>({
-        unit: '%',
-        width: 0,
-        height: 100,
-        x: 25,
-        y: 0,
-        aspect: 1,
-    });
+    const [crop, setCrop] = useState<Crop>();
 
-    // callback when the image is loaded to set the crop
-    // atop of it.
-    const onLoad = useCallback((img: HTMLImageElement) => {
-        imgRef.current = img;
-        setCrop({ height: 100, unit: '%', width: 0, aspect: 1, x: 25, y: 0 });
-        return false; // necessary as per ReactCrop docu because crop is modified in this callback
+    // once the image has loaded and its rendered dimensions are known,
+    // center a square crop selection on top of it
+    const onLoad = useCallback((e: SyntheticEvent<HTMLImageElement>) => {
+        const { width, height } = e.currentTarget;
+        setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 90 }, ASPECT, width, height), width, height));
     }, []);
 
     // callback of the button that fires the image cropping,
     // and passes the finished upload to the parent callback
     const uploadImage = async () => {
-        const blobImg = await getCroppedImg(imgRef.current, crop);
+        if (!imgRef.current || !crop) return;
+        const pixelCrop = convertToPixelCrop(crop, imgRef.current.width, imgRef.current.height);
+        const blobImg = await getCroppedImg(imgRef.current, pixelCrop);
         onFinishUpload(blobImg);
     };
 
     return (
         <div className="my-2">
             <ReactCrop
-                src={sourceImg}
-                onImageLoaded={onLoad}
                 crop={crop}
-                onChange={(c: Crop) => setCrop(c)}
-                onComplete={(c: Crop) => setCrop(c)}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                aspect={ASPECT}
                 circularCrop={true}
                 keepSelection={true}
                 minWidth={100}
-            />
+            >
+                <img ref={imgRef} src={sourceImg} onLoad={onLoad} alt="" />
+            </ReactCrop>
             <div className="mt-2">
                 <button
                     type="button"
