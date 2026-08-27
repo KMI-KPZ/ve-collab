@@ -291,10 +291,6 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
                 socket={socket}
                 title={t('step-data.title', { name: currentFineStep.name })}
                 description={description}
-                tooltip={{
-                    text: t('step-data.tooltip_text'),
-                    link: '/learning-material/2/VA-Planung',
-                }}
                 methods={methods}
                 prevpage={prevpage}
                 nextpage={nextpage}
@@ -332,10 +328,6 @@ export function FinePlannerNoAuthPreview() {
                         <p className="mb-8">{t('step-data.description')}</p>
                     </>
                 }
-                tooltip={{
-                    text: t('step-data.tooltip_text'),
-                    link: '/learning-material/2/VA-Planung',
-                }}
                 methods={methods}
                 prevpage={prevpage}
                 nextpage={nextpage}
