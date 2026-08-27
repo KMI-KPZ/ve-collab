@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useTranslation } from 'react-i18next';
 import { MdArrowRight } from 'react-icons/md';
 import H2 from '../common/H2';
@@ -13,6 +14,7 @@ import printUsername from '../common/Username';
 interface ISuggestedModul {
     id: number;
     text: string;
+    text_en: string;
     path: string;
 }
 
@@ -22,6 +24,7 @@ SuggestionBox.auth = true;
 export default function SuggestionBox() {
     const { t } = useTranslation(['community', 'common']);
     const { data: session } = useSession();
+    const router = useRouter();
 
     const Wrapper = ({ children }: { children: React.ReactNode }) => {
         return (
@@ -48,6 +51,7 @@ export default function SuggestionBox() {
                     allModules.push({
                         id: node.id,
                         text: node.text,
+                        text_en: node.text_en,
                         path: `/learning-material/${parent?.text!}/${node?.text}`,
                     });
                 }
@@ -84,13 +88,17 @@ export default function SuggestionBox() {
                                 key={index}
                                 className="hover:text-ve-collab-orange transition ease-in-out"
                             >
-                                <Link href={`${lection.path}`}>{lection.text}</Link>
+                                <Link href={`${lection.path}`}>
+                                    {router.locale === 'en' && lection.text_en
+                                        ? lection.text_en
+                                        : lection.text}
+                                </Link>
                             </li>
                         );
                     })}
                 </ul>
                 <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
-                    <Link href={`/learning-material`} onClick={(e) => e.preventDefault()}>
+                    <Link href={`/learning-material`}>
                         {t('common:all')} <MdArrowRight size={24} className="inline mx-1" />
                     </Link>
                 </div>
