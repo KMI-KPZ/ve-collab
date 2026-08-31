@@ -8,9 +8,12 @@ import {
     fetchDELETE,
     fetchPOST,
     useGetAllPlans,
+    useGetMaintenanceBanner,
     useGetOpenReports,
     useIsGlobalAdmin,
 } from '@/lib/backend';
+import ButtonPrimary from '@/components/common/buttons/ButtonPrimary';
+import ButtonSecondary from '@/components/common/buttons/ButtonSecondary';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -46,6 +49,78 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
     const deleteReportedItem = async (reportId: string) => {
         await fetchDELETE(`/report/delete?report_id=${reportId}`, undefined, session!.accessToken);
         mutateReports();
+    };
+
+    const { data: maintenanceBanner, mutate: mutateMaintenanceBanner } = useGetMaintenanceBanner();
+    const [maintenanceMode, setMaintenanceMode] = useState<'date' | 'timeframe' | 'range'>('date');
+    const [maintenanceDate, setMaintenanceDate] = useState<string>('');
+    const [maintenanceStartTime, setMaintenanceStartTime] = useState<string>('');
+    const [maintenanceEndTime, setMaintenanceEndTime] = useState<string>('');
+    const [maintenanceStartDate, setMaintenanceStartDate] = useState<string>('');
+    const [maintenanceEndDate, setMaintenanceEndDate] = useState<string>('');
+    const [maintenanceError, setMaintenanceError] = useState<string>('');
+
+    useEffect(() => {
+        if (!maintenanceBanner || !maintenanceBanner.mode) return;
+        setMaintenanceMode(maintenanceBanner.mode);
+        setMaintenanceDate(maintenanceBanner.date || '');
+        setMaintenanceStartTime(maintenanceBanner.start_time || '');
+        setMaintenanceEndTime(maintenanceBanner.end_time || '');
+        setMaintenanceStartDate(maintenanceBanner.start_date || '');
+        setMaintenanceEndDate(maintenanceBanner.end_date || '');
+    }, [maintenanceBanner]);
+
+    const buildMaintenancePayload = () => {
+        if (maintenanceMode === 'date') {
+            return { mode: 'date', date: maintenanceDate };
+        } else if (maintenanceMode === 'timeframe') {
+            return {
+                mode: 'timeframe',
+                date: maintenanceDate,
+                start_time: maintenanceStartTime,
+                end_time: maintenanceEndTime,
+            };
+        } else {
+            return {
+                mode: 'range',
+                start_date: maintenanceStartDate,
+                end_date: maintenanceEndDate,
+            };
+        }
+    };
+
+    const saveAndShowMaintenanceBanner = async () => {
+        if (maintenanceMode === 'date' && !maintenanceDate) {
+            setMaintenanceError('Bitte ein Datum angeben.');
+            return;
+        }
+        if (
+            maintenanceMode === 'timeframe' &&
+            (!maintenanceDate || !maintenanceStartTime || !maintenanceEndTime)
+        ) {
+            setMaintenanceError('Bitte Datum, Start- und Endzeit angeben.');
+            return;
+        }
+        if (maintenanceMode === 'range' && (!maintenanceStartDate || !maintenanceEndDate)) {
+            setMaintenanceError('Bitte Start- und Enddatum angeben.');
+            return;
+        }
+        setMaintenanceError('');
+        await fetchPOST(
+            '/maintenance_banner',
+            { enabled: true, ...buildMaintenancePayload() },
+            session!.accessToken
+        );
+        mutateMaintenanceBanner();
+    };
+
+    const hideMaintenanceBanner = async () => {
+        await fetchPOST(
+            '/maintenance_banner',
+            { enabled: false, ...buildMaintenancePayload() },
+            session!.accessToken
+        );
+        mutateMaintenanceBanner();
     };
 
     useEffect(() => {
@@ -242,6 +317,134 @@ export default function AdminDashboard({ socket }: Props): JSX.Element {
                                 )}
                             </div>
                         ))}
+                    </div>
+                    <div tabid="maintenance" tabname="Wartungsmodus">
+                        <div className="max-w-md">
+                            <p className="mb-4">
+                                Status:{' '}
+                                {maintenanceBanner?.enabled ? (
+                                    <span className="font-bold text-green-600">
+                                        Banner wird angezeigt
+                                    </span>
+                                ) : (
+                                    <span className="font-bold text-gray-500">
+                                        Banner ausgeblendet
+                                    </span>
+                                )}
+                            </p>
+
+                            <p className="font-bold mb-2">Art der Ankündigung</p>
+                            <div className="flex flex-col gap-2 mb-4">
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        checked={maintenanceMode === 'date'}
+                                        onChange={() => setMaintenanceMode('date')}
+                                    />
+                                    Nur Datum
+                                </label>
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        checked={maintenanceMode === 'timeframe'}
+                                        onChange={() => setMaintenanceMode('timeframe')}
+                                    />
+                                    Datum + Uhrzeit
+                                </label>
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        checked={maintenanceMode === 'range'}
+                                        onChange={() => setMaintenanceMode('range')}
+                                    />
+                                    Zeitraum (mehrere Tage)
+                                </label>
+                            </div>
+
+                            {maintenanceMode === 'date' && (
+                                <div className="flex items-center gap-2 mb-4">
+                                    <p className="mr-2">Datum:</p>
+                                    <input
+                                        type="date"
+                                        className="border border-gray-400 rounded-lg p-2"
+                                        value={maintenanceDate}
+                                        onChange={(e) => setMaintenanceDate(e.target.value)}
+                                    />
+                                </div>
+                            )}
+
+                            {maintenanceMode === 'timeframe' && (
+                                <div className="flex flex-col gap-2 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <p className="mr-2 w-20">Datum:</p>
+                                        <input
+                                            type="date"
+                                            className="border border-gray-400 rounded-lg p-2"
+                                            value={maintenanceDate}
+                                            onChange={(e) => setMaintenanceDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="mr-2 w-20">Von:</p>
+                                        <input
+                                            type="time"
+                                            className="border border-gray-400 rounded-lg p-2"
+                                            value={maintenanceStartTime}
+                                            onChange={(e) =>
+                                                setMaintenanceStartTime(e.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="mr-2 w-20">Bis:</p>
+                                        <input
+                                            type="time"
+                                            className="border border-gray-400 rounded-lg p-2"
+                                            value={maintenanceEndTime}
+                                            onChange={(e) => setMaintenanceEndTime(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {maintenanceMode === 'range' && (
+                                <div className="flex flex-col gap-2 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <p className="mr-2 w-20">Von:</p>
+                                        <input
+                                            type="date"
+                                            className="border border-gray-400 rounded-lg p-2"
+                                            value={maintenanceStartDate}
+                                            onChange={(e) =>
+                                                setMaintenanceStartDate(e.target.value)
+                                            }
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="mr-2 w-20">Bis:</p>
+                                        <input
+                                            type="date"
+                                            className="border border-gray-400 rounded-lg p-2"
+                                            value={maintenanceEndDate}
+                                            onChange={(e) => setMaintenanceEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {maintenanceError && (
+                                <p className="text-red-600 mb-4">{maintenanceError}</p>
+                            )}
+
+                            <div className="flex gap-4">
+                                <ButtonPrimary onClick={saveAndShowMaintenanceBanner}>
+                                    Banner speichern &amp; anzeigen
+                                </ButtonPrimary>
+                                <ButtonSecondary onClick={hideMaintenanceBanner}>
+                                    Banner ausblenden
+                                </ButtonSecondary>
+                            </div>
+                        </div>
                     </div>
                 </VerticalTabs>
             </WhiteBox>

@@ -226,3 +226,13 @@ export interface Report {
     state: 'open' | 'closed';
     item: any;
 }
+
+export interface MaintenanceBanner {
+    enabled: boolean;
+    mode?: 'date' | 'timeframe' | 'range';
+    date?: string;
+    start_time?: string;
+    end_time?: string;
+    start_date?: string;
+    end_date?: string;
+}
