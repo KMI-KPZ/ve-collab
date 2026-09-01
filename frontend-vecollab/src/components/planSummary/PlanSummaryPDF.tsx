@@ -29,11 +29,7 @@ export function PlanSummaryPDF({
 
     return (
         <div className="bg-white rounded-lg p-4 w-full">
-            <ViewAttributes
-                plan={plan}
-                partnerProfileSnippets={partnerProfileSnippets}
-                openAllBoxes={openAllBoxes}
-            />
+            <ViewAttributes plan={plan} partnerProfileSnippets={partnerProfileSnippets} />
             <hr className="h-px my-10 bg-gray-400 border-0" />
             <div className="text-2xl font-semibold mb-4 ml-4">Etappen</div>
             {plan.steps !== undefined && plan.steps.length > 0 ? (
@@ -51,15 +47,7 @@ export function PlanSummaryPDF({
                 <div className="ml-4">{t('plan_summary_no_phases')}</div>
             )}
             <hr className="h-px my-10 bg-gray-400 border-0" />
-            <ViewAfterVE plan={plan} openAllBoxes={openAllBoxes} />
+            <ViewAfterVE plan={plan} />
         </div>
     );
 }
-
-export const showDataOrEmptySign = (data: any) => {
-    if (data === null || data === undefined || data === '') {
-        return '/';
-    } else {
-        return data;
-    }
-};

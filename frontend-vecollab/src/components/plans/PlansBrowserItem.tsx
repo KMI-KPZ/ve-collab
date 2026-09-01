@@ -132,18 +132,15 @@ export default function PlansBrowserItem({
     const SummaryDialog = () => (
         <Dialog
             isOpen={isSummaryOpen}
+            maxWidthClassName="max-w-(--breakpoint-2xl)"
+            fillWidth
             title={
                 <>
-                    <div className="text-2xl font-semibold italic text-slate-900">
-                        <Trans i18nKey="summary">
-                            Summary of the
-                            <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
-                                <span className="relative text-white">plan</span>
-                            </span>
-                        </Trans>
+                    <div className="min-w-0 flex-1 text-2xl font-semibold text-slate-900 truncate">
+                        {plan.name}
                     </div>
 
-                    <div className="flex ml-auto mr-2 gap-x-2">
+                    <div className="flex shrink-0 ml-4 mr-2 gap-x-2">
                         {plan.write_access.includes(username) && (
                             <ButtonLightBlue
                                 className="text-nowrap"
@@ -178,12 +175,12 @@ export default function PlansBrowserItem({
             }}
         >
             <div>
-                <div className="h-[60vh] min-w-[65vw] overflow-y-auto content-scrollbar relative border-t border-gray-200">
+                <div className="h-[72vh] w-full overflow-y-auto content-scrollbar relative">
                     {loadingSummary ? (
                         <LoadingAnimation />
                     ) : (
                         <div className="flex w-full">
-                            <PlanSummary plan={planSummary!} openAllBoxes={true} />
+                            <PlanSummary plan={planSummary!} showTitle={false} />
                         </div>
                     )}
                 </div>

@@ -27,8 +27,7 @@ import { FaMedal } from 'react-icons/fa';
 
 interface Props {
     plan: IPlan;
-    openAllBoxes?: boolean;
-    isSingleView?: boolean;
+    showTitle?: boolean;
 }
 
 interface FormValues {
@@ -36,7 +35,7 @@ interface FormValues {
 }
 
 PlanSummary.auth = true;
-export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.Element {
+export function PlanSummary({ plan, showTitle = true }: Props): JSX.Element {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
@@ -54,6 +53,13 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         isOpen: false,
     });
     const [loadingExport, setLoadingExport] = useState<boolean>(false);
+    const tabs = [
+        { id: 'overview', name: t('plan_summary_characteristics') },
+        { id: 'phases', name: t('plan_summary_phases') },
+        { id: 'followup', name: t('plan_summary_gpb_documentation') },
+        { id: 'download', name: t('plan_summary_download_scorm_title') },
+    ];
+    const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
     // TODO add filter and load more
     const { data: availablePlans } = useGetAvailablePlans({});
     const { data: partnerUserSnippets, isLoading } = useGetProfileSnippets(
@@ -388,36 +394,6 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
         return <LoadingAnimation />;
     }
 
-    const Separator = () => <hr className="h-px w-full mx-auto my-8 bg-slate-300 border-0" />;
-    // const Separator_Fancy = () => (
-    //     <div className="h-2 w-full bg-white my-8 border-0 m-auto"
-    //         style={{
-    //             background: 'repeating-linear-gradient(135deg, #fff, #fff 6px, #7fb9c7 6px, #7fb9c7 12px)'
-    //         }}
-    //     />
-    // )
-
-    const downloadSection = (zipPlan: Blob | undefined) => {
-        return (
-            <div>
-                <div className="col-span-4 mb-6 text-2xl font-semibold underline decoration-ve-collab-blue decoration-4 underline-offset-6">
-                    {t('plan_summary_download_scorm_title')}
-                </div>
-                <p className="mb-6">{t('plan_summary_download_scorm_text')}</p>
-                <button
-                    onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-                        downloadZip(zipPlan, 'plan-scorm.zip');
-                        e.preventDefault();
-                    }}
-                    disabled={isLoadingScorm}
-                    className="bg-white shadow-sm hover:bg-slate-100 rounded-full! px-8! text-slate-800 print:hidden p-2 cursor-pointer"
-                >
-                    Download
-                </button>
-            </div>
-        );
-    };
-
     return (
         <>
             <Alert state={alert} />
@@ -465,110 +441,139 @@ export function PlanSummary({ plan, openAllBoxes, isSingleView }: Props): JSX.El
                 </div>
             </Dialog>
 
-            <div className="bg-white rounded-lg px-6 py-4 xl:px-8 xl:py-6 w-full @container">
-                <ViewAttributes
-                    plan={plan}
-                    partnerProfileSnippets={partnerProfileSnippets}
-                    openAllBoxes={isSingleView || openAllBoxes}
-                    isSingleView={isSingleView}
-                />
-                <Separator />
-                <div className="text-2xl font-semibold mb-4 underline decoration-ve-collab-blue/50 decoration-4 underline-offset-6">
-                    {t('plan_summary_phases')}
-                </div>
-                {plan.steps !== undefined && plan.steps.length > 0 ? (
-                    plan.steps.map((fineStep, index) => (
-                        <ViewFinestep
-                            key={index}
-                            index={index}
-                            openAllBoxes={openAllBoxes}
-                            plan={plan}
-                            fineStep={fineStep}
-                            handleImportStep={openExportDialog}
-                            availablePlans={availablePlans}
-                        />
-                    ))
-                ) : (
-                    <div className="ml-4">{t('plan_summary_no_phases')}</div>
+            <div className="bg-white rounded-lg w-full">
+                {showTitle && (
+                    <div className="px-6 pt-4 xl:px-8 xl:pt-6 font-bold text-2xl">{plan.name}</div>
                 )}
-                <Separator />
-                {downloadSection(zipPlan)}
-                <Separator />
-                <ViewAfterVE
-                    plan={plan}
-                    openAllBoxes={isSingleView || openAllBoxes}
-                    isSingleView={isSingleView}
-                />
+
+                <div className="sticky top-0 z-10 bg-white px-6 xl:px-8 py-3 shadow-[0_2px_6px_-3px_rgba(0,0,0,0.15)]">
+                    <div className="inline-flex flex-wrap gap-1 rounded-full bg-slate-100 p-1">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                                    activeTab === tab.id
+                                        ? 'bg-ve-collab-blue text-white shadow-sm'
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+                                }`}
+                            >
+                                {tab.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="px-6 py-4 xl:px-8 xl:py-6">
+                    {activeTab === 'overview' && (
+                        <ViewAttributes
+                            plan={plan}
+                            partnerProfileSnippets={partnerProfileSnippets}
+                        />
+                    )}
+
+                    {activeTab === 'phases' &&
+                        (plan.steps !== undefined && plan.steps.length > 0 ? (
+                            plan.steps.map((fineStep, index) => (
+                                <ViewFinestep
+                                    key={index}
+                                    index={index}
+                                    plan={plan}
+                                    fineStep={fineStep}
+                                    handleImportStep={openExportDialog}
+                                    availablePlans={availablePlans}
+                                />
+                            ))
+                        ) : (
+                            <div className="ml-4">{t('plan_summary_no_phases')}</div>
+                        ))}
+
+                    {activeTab === 'followup' && <ViewAfterVE plan={plan} />}
+
+                    {activeTab === 'download' && (
+                        <>
+                            <p className="mb-6">{t('plan_summary_download_scorm_text')}</p>
+                            <button
+                                onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+                                    downloadZip(zipPlan, 'plan-scorm.zip');
+                                    e.preventDefault();
+                                }}
+                                disabled={isLoadingScorm}
+                                className="bg-white hover:bg-slate-100 rounded-full! px-8! text-slate-800 print:hidden p-2 cursor-pointer shadow-[0_4px_6px_-1px_rgba(0,0,0,0.35),0_2px_4px_-1px_rgba(0,0,0,0.25)]"
+                            >
+                                Download
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
         </>
     );
 }
 
-export const showDataOrEmptySign = (data: any) => {
-    if (data === null || data === undefined || data === '') {
-        return '/';
-    } else {
-        return data;
-    }
+export const Field = ({
+    label,
+    children,
+    hideIfEmpty = true,
+    compact = false,
+}: {
+    label: string;
+    children: React.ReactNode;
+    hideIfEmpty?: boolean;
+    compact?: boolean;
+}) => {
+    const isEmpty =
+        children === null ||
+        children === undefined ||
+        children === '' ||
+        children === false ||
+        (Array.isArray(children) && children.length === 0);
+
+    if (hideIfEmpty && isEmpty) return null;
+
+    return (
+        <div className={compact ? 'mb-3' : 'mb-6'}>
+            <h3
+                className={
+                    compact
+                        ? 'font-semibold text-slate-700'
+                        : 'font-bold font-konnect tracking-wide text-lg text-slate-800 underline decoration-ve-collab-orange-light decoration-2 underline-offset-2'
+                }
+            >
+                {label}
+            </h3>
+            <div className="mt-1 text-slate-800 leading-relaxed">{children}</div>
+        </div>
+    );
 };
 
-export const GridEntry = ({
+export const FieldGroup = ({
     caption,
     children,
 }: {
     caption: string;
     children: React.ReactNode;
 }) => (
-    <>
-        <div className="col-span-3 lg:col-span-4">
-            <GridEntryCaption>{caption}</GridEntryCaption>
-        </div>
-        <div className="col-span-3 lg:col-span-4 ml-6 -mt-6">{children}</div>
-    </>
+    <div className="mb-6">
+        <h3 className="font-bold font-konnect tracking-wide text-lg text-slate-800 underline decoration-ve-collab-orange-light decoration-2 underline-offset-2 mb-3">
+            {caption}
+        </h3>
+        <div className="flex flex-wrap gap-4">{children}</div>
+    </div>
 );
 
-export const GridEntryCaption = ({ children }: { children: string }) => (
-    <h3 className="font-bold font-konnect tracking-wide text-slate-800 underline decoration-ve-collab-orange-light decoration-2 underline-offset-2">
+export const FieldCard = ({ children }: { children: React.ReactNode }) => (
+    <div className="rounded-lg bg-white shadow-[0_4px_6px_-1px_rgba(0,0,0,0.35),0_2px_4px_-1px_rgba(0,0,0,0.25)] p-4 flex-1 basis-64 min-w-64">
         {children}
-    </h3>
+    </div>
 );
 
-export const Caption4 = ({ children }: { children: string }) => (
-    <h4 className="font-semibold text-slate-700 px-1">{children}</h4>
-);
-
-interface ColProp {
-    caption: string;
-    value: React.ReactNode;
-}
-
-export const GridEntry2Col = ({ col1, col2 }: { col1: ColProp; col2: ColProp }) => (
-    <>
-        <div className="col-span-3 lg:col-span-2">
-            <GridEntryCaption>{col1.caption}</GridEntryCaption>
-            <div className="ml-6 my-2">{col1.value}</div>
-        </div>
-
-        <div className="col-span-3 lg:col-span-2">
-            <GridEntryCaption>{col2.caption}</GridEntryCaption>
-            <div className="ml-6">{col2.value}</div>
-        </div>
-    </>
-);
-
-export const GridEntrySubGrid = ({ children }: { children: React.ReactNode }) => (
-    <div className="grid xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
-);
-
-export const GridEntrySubGridLarge = ({ children }: { children: React.ReactNode }) => (
-    <div className="grid @7xl:grid-cols-2 gap-x-4 gap-y-6">{children}</div>
-);
-
-export const GridEntryList = ({ list }: { list: any[] }) => (
-    <ul className="flex flex-col space-y-2">
+export const FieldList = ({ list }: { list: string[] }) => (
+    <ul className="flex flex-col space-y-1">
         {list.map((value, index) => (
             <li className="before:content-['•'] before:mr-2" key={index}>
-                {showDataOrEmptySign(value)}
+                {value}
             </li>
         ))}
     </ul>

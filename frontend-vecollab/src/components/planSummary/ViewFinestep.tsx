@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
-import {
-    Caption4,
-    GridEntry,
-    GridEntryCaption,
-    GridEntrySubGrid,
-    showDataOrEmptySign,
-} from './PlanSummary';
+import { Field, FieldCard, FieldGroup } from './PlanSummary';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import Link from 'next/link';
 import {
@@ -74,11 +68,9 @@ export default function ViewFinestep({
                             </h3>
                             <div className="ml-4 italic text-slate-800 self-start">
                                 <div className="my-2 text-nowrap">
-                                    {showDataOrEmptySign(
-                                        convertDateToLocal(fineStep.timestamp_from)
-                                    )}
+                                    {convertDateToLocal(fineStep.timestamp_from)}
                                     {' - '}
-                                    {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
+                                    {convertDateToLocal(fineStep.timestamp_to)}
                                 </div>
                             </div>
 
@@ -134,92 +126,57 @@ export default function ViewFinestep({
                         </div>
                     </div>
 
-                    <div className="ml-4 mt-2 grid grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
-                        <div>
-                            <GridEntryCaption>{t('plan_summary_export_from')}</GridEntryCaption>
-                            <div className="ml-6">
-                                {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_from))}
-                            </div>
-                        </div>
+                    <div className="ml-4 mt-2">
+                        <Field label={t('plan_summary_export_from')} compact hideIfEmpty={false}>
+                            {convertDateToLocal(fineStep.timestamp_from)}
+                        </Field>
 
-                        <div>
-                            <GridEntryCaption>{t('plan_summary_export_to')}</GridEntryCaption>
-                            <div className="ml-6">
-                                {showDataOrEmptySign(convertDateToLocal(fineStep.timestamp_to))}
-                            </div>
-                        </div>
+                        <Field label={t('plan_summary_export_to')} compact hideIfEmpty={false}>
+                            {convertDateToLocal(fineStep.timestamp_to)}
+                        </Field>
 
-                        <div>
-                            <GridEntryCaption>{t('plan_summary_duration')}</GridEntryCaption>
-                            <div className="ml-6">
-                                {showDataOrEmptySign(fineStep.workload) + ' Stunden'}
-                            </div>
-                        </div>
+                        <Field label={t('plan_summary_duration')} compact hideIfEmpty={false}>
+                            {fineStep.workload} Stunden
+                        </Field>
 
-                        <GridEntry caption={t('plan_summary_learning_goals')}>
-                            {showDataOrEmptySign(fineStep.learning_goal)}
-                        </GridEntry>
+                        <Field label={t('plan_summary_learning_goals')}>
+                            {fineStep.learning_goal}
+                        </Field>
 
-                        <GridEntry caption={t('plan_summary_learning_activities')}>
-                            {showDataOrEmptySign(fineStep.learning_activity)}
-                        </GridEntry>
+                        <Field label={t('plan_summary_learning_activities')}>
+                            {fineStep.learning_activity}
+                        </Field>
 
-                        <GridEntry caption={t('plan_summary_detailed_learning_activities')}>
-                            {showDataOrEmptySign(fineStep.has_tasks ? 'Ja' : 'Nein')}
-                        </GridEntry>
+                        <Field label={t('plan_summary_detailed_learning_activities')} hideIfEmpty={false}>
+                            {fineStep.has_tasks ? 'Ja' : 'Nein'}
+                        </Field>
 
-                        {fineStep.has_tasks && (
-                            <GridEntry caption={t('plan_summary_tasks')}>
-                                <GridEntrySubGrid>
-                                    {fineStep.tasks.map((task, taskIndex) => (
-                                        <ul className="space-y-1 mr-2" key={taskIndex}>
-                                            <li className="flex">
-                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
-                                                    <Caption4>{t('plan_summary_task')}</Caption4>
-                                                </div>
-                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
-                                                    {showDataOrEmptySign(task.task_formulation)}
-                                                </div>
-                                            </li>
-                                            <li className="flex">
-                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
-                                                    <Caption4>
-                                                        {t('plan_summary_work_mode')}
-                                                    </Caption4>
-                                                </div>
-                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
-                                                    {showDataOrEmptySign(task.work_mode)}
-                                                </div>
-                                            </li>
-                                            <li className="flex">
-                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
-                                                    <Caption4>{t('plan_summary_notes')}</Caption4>
-                                                </div>
-                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
-                                                    {showDataOrEmptySign(task.notes)}
-                                                </div>
-                                            </li>
-                                            <li className="flex">
-                                                <div className="w-1/2 lg:w-1/3 xl:w-1/4">
-                                                    <Caption4>{t('plan_summary_tools')}</Caption4>
-                                                </div>
-                                                <div className="w-1/2 lg:w-2/3 xl:w-3/4">
-                                                    {showDataOrEmptySign(
-                                                        task.tools
-                                                            .filter((element) => element !== '')
-                                                            .join(', ')
-                                                    )}
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    ))}
-                                </GridEntrySubGrid>
-                            </GridEntry>
+                        {fineStep.has_tasks && fineStep.tasks.length > 0 && (
+                            <FieldGroup caption={t('plan_summary_tasks')}>
+                                {fineStep.tasks.map((task, taskIndex) => (
+                                    <FieldCard key={taskIndex}>
+                                        <Field compact label={t('plan_summary_task')}>
+                                            {task.task_formulation}
+                                        </Field>
+                                        <Field compact label={t('plan_summary_work_mode')}>
+                                            {task.work_mode}
+                                        </Field>
+                                        <Field compact label={t('plan_summary_notes')}>
+                                            {task.notes}
+                                        </Field>
+                                        <Field compact label={t('plan_summary_tools')}>
+                                            {task.tools
+                                                .filter((element) => element !== '')
+                                                .join(', ')}
+                                        </Field>
+                                    </FieldCard>
+                                ))}
+                            </FieldGroup>
                         )}
 
                         {fineStep.original_plan && fineStep.original_plan !== '' && (
                             <>
-                                <GridEntry caption={t('plan_summary_imported_from')}>
+                                <Field label={t('plan_summary_imported_from')} hideIfEmpty={false}>
                                     {typeof originalPlan !== 'undefined' ? (
                                         <Link href={`/plan/${originalPlan?._id}`} target="_blank">
                                             {originalPlan?.name}
@@ -228,33 +185,32 @@ export default function ViewFinestep({
                                     ) : (
                                         <>{t('plan_summary_plan_no_longer_available')}</>
                                     )}
-                                </GridEntry>
+                                </Field>
 
                                 {typeof originalPlan !== 'undefined' && (
-                                    <GridEntry caption={t('plan_summary_author_original_plan')}>
-                                        {showDataOrEmptySign(
-                                            `${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`
-                                        )}
-                                    </GridEntry>
+                                    <Field
+                                        label={t('plan_summary_author_original_plan')}
+                                        hideIfEmpty={false}
+                                    >
+                                        {`${originalPlan?.author.first_name} ${originalPlan?.author.last_name}`}
+                                    </Field>
                                 )}
                             </>
                         )}
 
-                        <div className="my-2 col-span-4">
-                            <hr
-                                className={`mt-6 -mb-4 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
-                                    isLastStep ? 'h-0!' : ''
-                                }`}
-                            />
-                            <div className="flex justify-center">
-                                <ButtonLight
-                                    onClick={() => setIsOpenStepSection(!isOpenStepSection)}
-                                    className="mx-2 rounded-full! flex items-center text-slate-800 print:hidden"
-                                >
-                                    {t('show_less')}
-                                    <MdKeyboardDoubleArrowUp className="inline ml-2" />
-                                </ButtonLight>
-                            </div>
+                        <hr
+                            className={`mt-6 -mb-4 h-px w-9/12 bg-ve-collab-blue/50 border-0 m-auto ${
+                                isLastStep ? 'h-0!' : ''
+                            }`}
+                        />
+                        <div className="flex justify-center">
+                            <ButtonLight
+                                onClick={() => setIsOpenStepSection(!isOpenStepSection)}
+                                className="mx-2 rounded-full! flex items-center text-slate-800 print:hidden"
+                            >
+                                {t('show_less')}
+                                <MdKeyboardDoubleArrowUp className="inline ml-2" />
+                            </ButtonLight>
                         </div>
                     </div>
                 </>
