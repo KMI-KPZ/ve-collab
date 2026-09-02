@@ -3,6 +3,19 @@ import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Field, FieldCard, FieldGroup, FieldList } from './PlanSummary';
 import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import { useTranslation } from 'next-i18next';
+import {
+    evaluationPhaseLabelKeys,
+    formatMobilityDate,
+    getFilledEvaluationPhases,
+    getFilledEvaluations,
+    getFilledIndividualLearningGoals,
+    getFilledInstitutions,
+    getFilledLectures,
+    getFilledPhysicalMobilities,
+    getFilledTargetGroups,
+    getFilledTopics,
+    partnerNameOf,
+} from './planContent';
 
 interface Props {
     plan: IPlan;
@@ -11,69 +24,15 @@ interface Props {
 export default function ViewAttributes({ plan, partnerProfileSnippets }: Props): JSX.Element {
     const { t } = useTranslation('common');
 
-    const partnerName = (username: string) =>
-        partnerProfileSnippets[username]
-            ? `${partnerProfileSnippets[username].first_name} ${partnerProfileSnippets[username].last_name}`
-            : username;
+    const partnerName = (username: string) => partnerNameOf(partnerProfileSnippets, username);
 
-    // the VE-designer wizard auto-creates a stub entry for several of these
-    // list fields as soon as their form step is opened (e.g. one target group,
-    // one evaluation/learning-goal per partner), even if the user never fills
-    // anything in. filter those stubs out here so an unfilled section doesn't
-    // render as an empty card in the summary.
-    const hasText = (value?: string | null) => !!value && value.trim() !== '';
-
-    const filledInstitutions = plan.institutions.filter(
-        (institution) =>
-            hasText(institution.name) ||
-            hasText(institution.school_type) ||
-            hasText(institution.country) ||
-            hasText(institution.department)
-    );
-
-    const filledLectures = plan.lectures.filter(
-        (lecture) =>
-            hasText(lecture.name) ||
-            hasText(lecture.lecture_type) ||
-            hasText(lecture.lecture_format) ||
-            !!lecture.participants_amount
-    );
-
-    const filledIndividualLearningGoals = plan.individual_learning_goals.filter((goal) =>
-        hasText(goal.learning_goal)
-    );
-
-    const filledTargetGroups = plan.target_groups.filter(
-        (studyGroup) =>
-            hasText(studyGroup.name) ||
-            hasText(studyGroup.semester) ||
-            hasText(studyGroup.experience) ||
-            hasText(studyGroup.academic_course) ||
-            studyGroup.languages.length > 0
-    );
-
-    const filledTopics = plan.topics.filter(hasText);
-
-    // physical mobility meetings are irrelevant whenever physical mobility
-    // itself wasn't planned, regardless of any stub data left in the list
-    const filledPhysicalMobilities = plan.physical_mobility
-        ? plan.physical_mobilities.filter(
-              (mobility) =>
-                  hasText(mobility.location) ||
-                  hasText(mobility.timestamp_from) ||
-                  hasText(mobility.timestamp_to)
-          )
-        : [];
-
-    const filledEvaluations = plan.evaluation.filter(
-        (evaluation) =>
-            evaluation.is_graded ||
-            hasText(evaluation.task_type) ||
-            hasText(evaluation.assessment_type) ||
-            hasText(evaluation.evaluation_before) ||
-            hasText(evaluation.evaluation_while) ||
-            hasText(evaluation.evaluation_after)
-    );
+    const filledInstitutions = getFilledInstitutions(plan);
+    const filledLectures = getFilledLectures(plan);
+    const filledIndividualLearningGoals = getFilledIndividualLearningGoals(plan);
+    const filledTargetGroups = getFilledTargetGroups(plan);
+    const filledTopics = getFilledTopics(plan);
+    const filledPhysicalMobilities = getFilledPhysicalMobilities(plan);
+    const filledEvaluations = getFilledEvaluations(plan);
 
     return (
         <div>
@@ -219,17 +178,7 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 {mobility.location}
                             </Field>
                             <Field compact label={t('plan_summary_phys_mobility_date')}>
-                                {mobility.timestamp_from || mobility.timestamp_to
-                                    ? `${
-                                          mobility.timestamp_from
-                                              ? mobility.timestamp_from.split('T')[0]
-                                              : ''
-                                      } - ${
-                                          mobility.timestamp_to
-                                              ? mobility.timestamp_to.split('T')[0]
-                                              : ''
-                                      }`
-                                    : ''}
+                                {formatMobilityDate(mobility)}
                             </Field>
                         </FieldCard>
                     ))}
@@ -266,30 +215,17 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                 </>
                             )}
                             {(() => {
-                                const evaluationPhases = [
-                                    {
-                                        key: 'before',
-                                        label: t('plan_summary_evaluation_before'),
-                                        fullLabel: t('plan_summary_evaluation_before_full'),
-                                        value: evaluation.evaluation_before,
-                                    },
-                                    {
-                                        key: 'while',
-                                        label: t('plan_summary_evaluation_while'),
-                                        fullLabel: t('plan_summary_evaluation_while_full'),
-                                        value: evaluation.evaluation_while,
-                                    },
-                                    {
-                                        key: 'after',
-                                        label: t('plan_summary_evaluation_after'),
-                                        fullLabel: t('plan_summary_evaluation_after_full'),
-                                        value: evaluation.evaluation_after,
-                                    },
-                                ].filter((phase) => hasText(phase.value));
+                                const evaluationPhases = getFilledEvaluationPhases(evaluation);
 
                                 if (evaluationPhases.length === 1) {
                                     return (
-                                        <Field compact label={evaluationPhases[0].fullLabel}>
+                                        <Field
+                                            compact
+                                            label={t(
+                                                evaluationPhaseLabelKeys[evaluationPhases[0].key]
+                                                    .full
+                                            )}
+                                        >
                                             {evaluationPhases[0].value}
                                         </Field>
                                     );
@@ -302,7 +238,13 @@ export default function ViewAttributes({ plan, partnerProfileSnippets }: Props):
                                                 {t('plan_summary_evaluation_dot')}
                                             </h4>
                                             {evaluationPhases.map((phase) => (
-                                                <Field compact key={phase.key} label={phase.label}>
+                                                <Field
+                                                    compact
+                                                    key={phase.key}
+                                                    label={t(
+                                                        evaluationPhaseLabelKeys[phase.key].short
+                                                    )}
+                                                >
                                                     {phase.value}
                                                 </Field>
                                             ))}

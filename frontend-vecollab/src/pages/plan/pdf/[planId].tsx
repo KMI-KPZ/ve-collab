@@ -5,9 +5,8 @@ import { GiSadCrab } from 'react-icons/gi';
 import { GetServerSidePropsContext } from 'next';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { PlanSummaryPDF } from '@/components/planSummary/PlanSummaryPDF';
+import { PlanSummaryPrint } from '@/components/planSummary/PlanSummaryPrint';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { Trans } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
 import { useRouter } from 'next/router';
 
@@ -19,11 +18,11 @@ import { useRouter } from 'next/router';
 interface Props {
     plan: IPlan | null;
     partnerProfileSnippets: { [Key: string]: BackendUserSnippet };
-    availablePlans: IPlan[];
+    originalPlanNames: { [planId: string]: string };
     error: string | null;
 }
 
-export default function PDFPlan({ plan, error, partnerProfileSnippets, availablePlans }: Props) {
+export default function PDFPlan({ plan, error, partnerProfileSnippets, originalPlanNames }: Props) {
     const router = useRouter();
     const planId = router.query.planId as string;
 
@@ -65,27 +64,11 @@ export default function PDFPlan({ plan, error, partnerProfileSnippets, available
     return (
         <>
             <CustomHead pageTitle={`PDF ${plan?.name}`} pageSlug={`plan/pdf/${planId}`} />
-            <div className="mb-6">
-                <div className={'flex justify-between font-bold text-4xl mb-2'}>
-                    <h1>{plan!.name}</h1>
-                </div>
-                <div className="text-2xl font-semibold text-slate-500">
-                    <Trans i18nKey="summary">
-                        Summary of the
-                        <span className="ml-2 before:block before:absolute before:-inset-1 before:-skew-y-3 before:bg-ve-collab-orange relative inline-block">
-                            <span className="relative text-white">plan</span>
-                        </span>
-                    </Trans>
-                </div>
-            </div>
-            <div className="flex w-full">
-                <PlanSummaryPDF
-                    plan={plan!}
-                    openAllBoxes={true}
-                    partnerProfileSnippets={partnerProfileSnippets}
-                    availablePlans={availablePlans}
-                />
-            </div>
+            <PlanSummaryPrint
+                plan={plan!}
+                partnerProfileSnippets={partnerProfileSnippets}
+                originalPlanNames={originalPlanNames}
+            />
         </>
     );
 }
@@ -98,7 +81,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     const planResponse = await fetchGET(`/planner/get?_id=${context.params?.planId}`, token);
     if (planResponse.success === true) {
-        const availablePlansResponse = await fetchGET('/planner/get_available', token);
         const userSnippetsResponse: BackendProfileSnippetsResponse = await fetchPOST(
             '/profile_snippets',
             { usernames: [...planResponse.plan.partners, planResponse.plan.author.username] },
@@ -108,11 +90,32 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         userSnippetsResponse.user_snippets.forEach((element: BackendUserSnippet) => {
             partnerSnippets[element.username] = element;
         });
+
+        // resolve the "imported from" reference of a phase.
+        // a plan that was deleted or that this user cannot read simply
+        // stays absent from the map and renders as "no longer available".
+        const originalPlanIds: string[] = Array.from(
+            new Set(
+                ((planResponse.plan.steps as { original_plan?: string }[]) || [])
+                    .map((step) => step.original_plan)
+                    .filter((id): id is string => !!id && id !== '')
+            )
+        );
+        const originalPlanNames: { [planId: string]: string } = {};
+        await Promise.all(
+            originalPlanIds.map(async (id) => {
+                const originalPlanResponse = await fetchGET(`/planner/get?_id=${id}`, token);
+                if (originalPlanResponse.success === true) {
+                    originalPlanNames[id] = originalPlanResponse.plan.name;
+                }
+            })
+        );
+
         return {
             props: {
                 plan: planResponse.plan,
                 partnerProfileSnippets: partnerSnippets,
-                availablePlans: availablePlansResponse.plans,
+                originalPlanNames,
                 error: null,
                 ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
             },
@@ -122,7 +125,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             props: {
                 plan: null,
                 partnerProfileSnippets: {},
-                availablePlans: [],
+                originalPlanNames: {},
                 error: planResponse.reason ? planResponse.reason : 'fetch_failed',
                 ...(await serverSideTranslations(context.locale ?? 'en', ['common'])),
             },

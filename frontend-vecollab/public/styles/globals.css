@@ -280,3 +280,42 @@ body {
 .swiper-pagination-bullet.swiper-pagination-bullet-active {
     background: #525252 !important;
 }
+
+/*
+  Paged media rules for the headless-Chrome PDF export of a plan
+  summary (see src/pages/api/pdf-plan.ts).
+  Page geometry cannot be expressed as a utility class, so it lives here,
+  the rest is tailwind-based
+*/
+@page {
+    size: A4;
+    margin: 20mm 18mm 18mm 18mm;
+}
+
+/* the PDF's cover page carries its own padding and should not repeat the
+   running footer, which Chrome draws into the page margin box */
+@page :first {
+    margin: 0;
+}
+
+@media print {
+    html,
+    body {
+        background: #fff;
+    }
+
+    /* avoid a heading or the last line of a paragraph being stranded alone
+       at a page boundary */
+    h1,
+    h2,
+    h3,
+    h4 {
+        break-after: avoid;
+    }
+
+    p,
+    li {
+        orphans: 3;
+        widows: 3;
+    }
+}
