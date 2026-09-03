@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import Particles, { initParticlesEngine } from '@tsparticles/react';
-import { type ISourceOptions, MoveDirection, OutMode } from '@tsparticles/engine';
+import { useMemo } from 'react';
+import Particles, { ParticlesProvider } from '@tsparticles/react';
+import { type Engine, type ISourceOptions, MoveDirection, OutMode } from '@tsparticles/engine';
 import { loadSlim } from '@tsparticles/slim';
 
 interface IBackgroundAnimationProps {
@@ -8,21 +8,11 @@ interface IBackgroundAnimationProps {
     enable: Boolean;
 }
 
+async function initEngine(engine: Engine) {
+    await loadSlim(engine);
+}
+
 export default function BackgroundAnimation({ className, enable }: IBackgroundAnimationProps) {
-    const [init, setInit] = useState<Boolean>(false);
-
-    // this should be run only once per application lifetime
-    useEffect(() => {
-        initParticlesEngine(async (engine) => {
-            // you can initiate the tsParticles instance (engine) here, adding custom shapes or presets
-            // this loads the tsparticles package bundle, it's the easiest method for getting everything ready
-            // starting from v2 you can add only the features you need reducing the bundle size
-            await loadSlim(engine);
-        }).then(() => {
-            setInit(enable);
-        });
-    }, [enable]);
-
     const options: ISourceOptions = useMemo(
         () => ({
             // if not set -> transparent background
@@ -53,11 +43,14 @@ export default function BackgroundAnimation({ className, enable }: IBackgroundAn
                 },
             },
             particles: {
-                color: {
-                    value: '#93d1e0',
+                paint: {
+                    fill: {
+                        enable: true,
+                        color: { value: '#50686e' },
+                    },
                 },
                 links: {
-                    color: '#93d1e0',
+                    color: '#50686e',
                     distance: 150,
                     enable: true,
                     width: 1,
@@ -90,5 +83,11 @@ export default function BackgroundAnimation({ className, enable }: IBackgroundAn
         []
     );
 
-    return init ? <Particles id="tsparticles" options={options} className={className} /> : <></>;
+    if (!enable) return <></>;
+
+    return (
+        <ParticlesProvider init={initEngine}>
+            <Particles id="tsparticles" options={options} className={className} />
+        </ParticlesProvider>
+    );
 }

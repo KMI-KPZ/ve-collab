@@ -10,6 +10,7 @@ import {
     BackendUserACLEntry,
     BackendUser25,
     Report,
+    MaintenanceBanner,
 } from '@/interfaces/api/apiInterfaces';
 import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
@@ -802,6 +803,26 @@ export function useGetOpenReports(accessToken: string): {
 
     return {
         data: isLoading || error ? [] : data.reports,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetMaintenanceBanner(): {
+    data: MaintenanceBanner;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        ['/maintenance_banner'],
+        ([url]) => GETfetcher(url, '', false),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? { enabled: false } : data.banner,
         isLoading,
         error,
         mutate,

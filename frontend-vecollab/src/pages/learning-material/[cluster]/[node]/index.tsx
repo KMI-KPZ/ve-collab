@@ -1,4 +1,5 @@
 import ContentWrapper from '@/components/learningContent/ContentWrapper';
+import Link from 'next/link';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import {
     fetchTaxonomy,
@@ -43,12 +44,12 @@ export default function PageCategorySelected(props: Props) {
                                 <LoadingAnimation />
                                 <p className="mt-8">
                                     {t('redirecting_to_first_chapter')}
-                                    <a
+                                    <Link
                                         className="underline text-ve-collab-blue"
                                         href={`/learning-material/${router.query.cluster}/${props.nodeSlug}/${props.lectionsOfNode[0].text}`}
                                     >
                                         {t("here")}
-                                    </a>
+                                    </Link>
                                 </p>
                             </>
                         ) : (
@@ -66,6 +67,7 @@ export default function PageCategorySelected(props: Props) {
 export const getServerSideProps: GetServerSideProps = async ({
     params,
     locale,
+    defaultLocale,
 }: GetServerSidePropsContext) => {
     const taxonomy = await fetchTaxonomy();
 
@@ -82,7 +84,9 @@ export const getServerSideProps: GetServerSideProps = async ({
     if (lectionsOfNode.length > 0) {
         return {
             redirect: {
-                destination: `/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
+                destination: `${
+                    locale === defaultLocale ? '' : '/' + locale
+                }/learning-material/${params?.cluster}/${params?.node}/${lectionsOfNode[0].text}`,
                 permanent: false,
                 ...(await serverSideTranslations(locale ?? 'en', ['common'])),
             },

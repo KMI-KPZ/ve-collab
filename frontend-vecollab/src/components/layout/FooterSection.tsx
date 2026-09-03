@@ -45,7 +45,7 @@ export default function FooterSection() {
                     </Link>
                 </p>
                 <p className="mx-2">
-                    <Link target="_blank" href="https://infai.org/datenschutzerklaerung-2/">
+                    <Link target="_blank" href="https://infai.org/datenschutzerklaerung/">
                         {t('privacy')}
                     </Link>
                 </p>
