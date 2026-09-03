@@ -216,7 +216,7 @@
     "plan_summary_export_edit_plan": "Plan bearbeiten",
     "plan_summary_export_choose_plan_title": "Plan auswählen",
     "plan_summary_export_into_title": "Importieren in {{name}}",
-    "plan_summary_characteristics": "Eigenschaften",
+    "plan_summary_characteristics": "Rahmenbedingungen",
     "plan_summary_name": "Name:",
     "plan_summary_print_subtitle": "Zusammenfassung des VE-Plans",
     "plan_summary_print_generated": "Stand: {{date}}",

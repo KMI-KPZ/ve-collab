@@ -216,7 +216,7 @@
     "plan_summary_export_edit_plan": "Edit plan",
     "plan_summary_export_choose_plan_title": "Choose a plan",
     "plan_summary_export_into_title": "Import into {{name}}",
-    "plan_summary_characteristics": "Attributes",
+    "plan_summary_characteristics": "Context",
     "plan_summary_name": "Name:",
     "plan_summary_print_subtitle": "Virtual Exchange plan summary",
     "plan_summary_print_generated": "As of {{date}}",
