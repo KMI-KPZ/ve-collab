@@ -40,32 +40,39 @@ export default function Sidebar({
     if (isLoading) return <LoadingAnimation size="small" />;
 
     return (
-        <div className="relative max-h-[80vh]">
-            {roomSnippets.length == 0 ? (
-                <div>{t('no_rooms_yet')}</div>
-            ) : (
-                <ul className="flex flex-col overflow-y-auto border-b border-b-gray-200 pb-2">
-                    {roomSnippets.map((room) => (
-                        <RoomSnippet
-                            key={room._id}
-                            room={room}
-                            handleChatSelect={handleChatSelect}
-                            headerBarMessageEvents={headerBarMessageEvents}
-                            memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
-                                room.members.includes(profileSnippet.preferredUsername)
-                            )}
-                        />
-                    ))}
-                </ul>
-            )}
+        <div className="relative flex flex-col h-full">
+            {/* fixed, non-scrolling header so the "new chat" button stays reachable
+            regardless of how many rooms are in the list below */}
+            <div className="flex justify-end shrink-0 mb-2">
+                <ButtonLight
+                    className="rounded-full!"
+                    onClick={() => handleOpenNewChatDialog()}
+                    title={t('create_new_chat_title')}
+                >
+                    <MdAdd size={22} />
+                </ButtonLight>
+            </div>
 
-            <ButtonLight
-                className="mt-4 rounded-full!"
-                onClick={() => handleOpenNewChatDialog()}
-                title={t('create_new_chat_title')}
-            >
-                <MdAdd size={22} />
-            </ButtonLight>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+                {roomSnippets.length == 0 ? (
+                    <div>{t('no_rooms_yet')}</div>
+                ) : (
+                    <ul className="flex flex-col border-b border-b-gray-200 pb-2">
+                        {roomSnippets.map((room) => (
+                            <RoomSnippet
+                                key={room._id}
+                                room={room}
+                                handleChatSelect={handleChatSelect}
+                                headerBarMessageEvents={headerBarMessageEvents}
+                                memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
+                                    room.members.includes(profileSnippet.preferredUsername)
+                                )}
+                            />
+                        ))}
+                    </ul>
+                )}
+            </div>
+
             <Dialog
                 isOpen={isNewChatDialogOpen}
                 title={t('new_chat_title')}
