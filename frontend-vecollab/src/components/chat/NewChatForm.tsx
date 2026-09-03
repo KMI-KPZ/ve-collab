@@ -72,7 +72,7 @@ export default function NewChatForm({ closeDialogCallback }: Props) {
         fetchPOST(
             '/chatroom/create_or_get',
             {
-                members: members, // current user will be added by backend
+                members: members.map((member) => member.value), // current user will be added by backend
                 name: optionalRoomName !== '' ? optionalRoomName : null,
             },
             session?.accessToken

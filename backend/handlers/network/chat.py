@@ -199,6 +199,12 @@ class RoomHandler(BaseHandler):
                 {"success": False,
                  "reason": "missing_key:members"}
 
+                400 Bad Request
+                (members is not a list of usernames, e.g. not a list at all,
+                empty, or contains non-string elements)
+                {"success": False,
+                 "reason": "members_not_list_of_str"}
+
                 401 Unauthorized
                 (access token is not valid)
                 {"success": False,
@@ -220,6 +226,21 @@ class RoomHandler(BaseHandler):
                     {
                         "success": False,
                         "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "members",
+                    }
+                )
+                return
+
+            # members has to be a non-empty list of usernames (str)
+            if not (
+                isinstance(http_body["members"], list)
+                and len(http_body["members"]) > 0
+                and all(isinstance(member, str) for member in http_body["members"])
+            ):
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": "members_not_list_of_str",
                     }
                 )
                 return

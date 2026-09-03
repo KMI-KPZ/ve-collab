@@ -76,6 +76,7 @@ REPORT_DOESNT_EXIST_ERROR = "report_doesnt_exist"
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
 ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
+MEMBERS_NOT_LIST_OF_STR_ERROR = "members_not_list_of_str"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -12491,7 +12492,7 @@ class ChatHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state4["messages"], [self.default_message])
         self.assertEqual(db_state4["_id"], self.room_id)
 
-    def test_post_create_or_get_eroror_missing_key(self):
+    def test_post_create_or_get_error_missing_key(self):
         """
         expect: fail message because members is missing
         """
@@ -12503,6 +12504,39 @@ class ChatHandlerTest(BaseApiTestCase):
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
         )
 
+    def test_post_create_or_get_error_members_not_list_of_str(self):
+        """
+        expect: fail message because members is not a list of usernames (str),
+        e.g. a list of dicts, an empty list,
+        or not a list at all
+        """
+
+        # regression case: members as a list of dicts (e.g. react-select
+        # {label, value} options) instead of plain username strings
+        payload_dicts = {
+            "members": [
+                {"label": "Other User", "value": "other_user"},
+                {"label": "Another Other User", "value": "another_other_user"},
+            ],
+        }
+        response_dicts = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_dicts
+        )
+        self.assertEqual(response_dicts["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        # empty list
+        payload_empty = {"members": []}
+        response_empty = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_empty
+        )
+        self.assertEqual(response_empty["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        # not a list at all
+        payload_not_list = {"members": "other_user"}
+        response_not_list = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_not_list
+        )
+        self.assertEqual(response_not_list["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
 
 class ReportHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
