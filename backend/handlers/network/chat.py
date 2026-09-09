@@ -1,17 +1,23 @@
 import json
-from typing import List
+from typing import List, Optional
 
+from bson.errors import InvalidId
 import tornado.web
-from exceptions import RoomDoesntExistError
+from exceptions import RoomDoesntExistError, UserNotMemberError
 
 from error_reasons import (
     INSUFFICIENT_PERMISSIONS,
+    INVALID_OBJECT_ID,
+    MEMBERS_NOT_LIST_OF_STR,
     MISSING_KEY_IN_HTTP_BODY_SLUG,
     MISSING_KEY_SLUG,
+    NAME_NOT_STR,
     ROOM_DOESNT_EXIST,
+    USER_DOESNT_EXIST,
 )
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.chat import Chat
+from resources.network.profile import Profiles
 import util
 
 
@@ -209,6 +215,123 @@ class RoomHandler(BaseHandler):
                 (access token is not valid)
                 {"success": False,
                  "reason": "no_logged_in_user"}
+
+        POST /chatroom/add_members
+            Add further users to an already existing chatroom.
+            Users that already are members of the room are skipped, making the request
+            idempotent.
+
+            query params:
+                None
+
+            http body:
+                example:
+                    {
+                        "room_id": "<room_id>",
+                        "members": ["user1", "user2"]   // the users that should be added
+                    }
+
+            returns:
+                200 OK
+                (successful, contains the resulting member list of the room)
+                {"success": True,
+                 "members": [str, ...]}
+
+                400 Bad Request
+                (the request body is not valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the request body misses the room_id or the members key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<key>"}
+
+                400 Bad Request
+                (members is not a list of usernames, e.g. not a list at all,
+                empty, or contains non-string elements)
+                {"success": False,
+                 "reason": "members_not_list_of_str"}
+
+                400 Bad Request
+                (the room_id is not a valid ObjectId)
+                {"success": False,
+                 "reason": "invalid_object_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (the current user is not a member of the room)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (the room does not exist)
+                {"success": False,
+                 "reason": "room_doesnt_exist"}
+
+                409 Conflict
+                (at least one of the users that should be added has no profile)
+                {"success": False,
+                 "reason": "user_doesnt_exist"}
+
+        POST /chatroom/rename
+            Set (or remove) the name of an already existing chatroom.
+            Any member of the room may rename it.
+
+            query params:
+                None
+
+            http body:
+                example:
+                    {
+                        "room_id": "<room_id>",
+                        "name": "new room name"     // an empty string (or null) removes the name
+                    }
+
+            returns:
+                200 OK
+                (successful, contains the name the room now has)
+                {"success": True,
+                 "name": str | None}
+
+                400 Bad Request
+                (the request body is not valid json)
+                {"success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                (the request body misses the room_id or the name key)
+                {"success": False,
+                 "reason": "missing_key_in_http_body:<key>"}
+
+                400 Bad Request
+                (the name is neither a string nor null)
+                {"success": False,
+                 "reason": "name_not_str"}
+
+                400 Bad Request
+                (the room_id is not a valid ObjectId)
+                {"success": False,
+                 "reason": "invalid_object_id"}
+
+                401 Unauthorized
+                (access token is not valid)
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+
+                403 Forbidden
+                (the current user is not a member of the room)
+                {"success": False,
+                 "reason": "insufficient_permission"}
+
+                409 Conflict
+                (the room does not exist)
+                {"success": False,
+                 "reason": "room_doesnt_exist"}
         """
 
         try:
@@ -231,16 +354,12 @@ class RoomHandler(BaseHandler):
                 return
 
             # members has to be a non-empty list of usernames (str)
-            if not (
-                isinstance(http_body["members"], list)
-                and len(http_body["members"]) > 0
-                and all(isinstance(member, str) for member in http_body["members"])
-            ):
+            if not util._is_list_of_str(http_body["members"]):
                 self.set_status(400)
                 self.write(
                     {
                         "success": False,
-                        "reason": "members_not_list_of_str",
+                        "reason": MEMBERS_NOT_LIST_OF_STR,
                     }
                 )
                 return
@@ -253,6 +372,63 @@ class RoomHandler(BaseHandler):
             )
 
             self.create_or_get_room_id(http_body["members"], name)
+            return
+
+        elif slug == "add_members":
+            # ensure necessary keys are present
+            for key in ["room_id", "members"]:
+                if key not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + key,
+                        }
+                    )
+                    return
+
+            # members has to be a non-empty list of usernames (str)
+            if not util._is_list_of_str(http_body["members"]):
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": MEMBERS_NOT_LIST_OF_STR,
+                    }
+                )
+                return
+
+            self.add_members(http_body["room_id"], http_body["members"])
+            return
+
+        elif slug == "rename":
+            # ensure necessary keys are present
+            for key in ["room_id", "name"]:
+                if key not in http_body:
+                    self.set_status(400)
+                    self.write(
+                        {
+                            "success": False,
+                            "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + key,
+                        }
+                    )
+                    return
+
+            # the name has to be a str, or null to remove the name again
+            if http_body["name"] is not None and not isinstance(http_body["name"], str):
+                self.set_status(400)
+                self.write(
+                    {
+                        "success": False,
+                        "reason": NAME_NOT_STR,
+                    }
+                )
+                return
+
+            # an empty name is the same as no name at all
+            name = http_body["name"] if http_body["name"] != "" else None
+
+            self.rename_room(http_body["room_id"], name)
             return
 
         else:
@@ -303,3 +479,87 @@ class RoomHandler(BaseHandler):
             room_id = chat_manager.get_or_create_room_id(members, name)
 
             self.serialize_and_write({"success": True, "room_id": room_id})
+
+    def add_members(self, room_id: str, new_members: List[str]) -> None:
+        """
+        Add the given users to the room, i.e. from now on they are part of the
+        conversation and receive its messages.
+
+        Returns:
+            200 OK -> contains the resulting member list of the room
+            400 Bad Request -> the room_id is not a valid ObjectId
+            403 Forbidden -> the current user is not a member of the room
+            409 Conflict -> the room does not exist, or one of the users doesn't exist
+        """
+
+        with util.get_mongodb() as db:
+            profile_manager = Profiles(db)
+            chat_manager = Chat(db)
+
+            try:
+                # only members of the room can add new members
+                if not chat_manager.check_is_user_chatroom_member(
+                    room_id, self.current_user.username
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+                # only users that actually have a profile can be added
+                existing_users = [
+                    profile["username"]
+                    for profile in profile_manager.get_bulk_profiles(
+                        new_members, projection={"username": True}
+                    )
+                ]
+                if any(member not in existing_users for member in new_members):
+                    self.set_status(409)
+                    self.write({"success": False, "reason": USER_DOESNT_EXIST})
+                    return
+
+                members = chat_manager.add_members_to_room(room_id, new_members)
+            except InvalidId:
+                self.set_status(400)
+                self.write({"success": False, "reason": INVALID_OBJECT_ID})
+                return
+            except RoomDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": ROOM_DOESNT_EXIST})
+                return
+
+            self.serialize_and_write({"success": True, "members": members})
+
+    def rename_room(self, room_id: str, name: Optional[str]) -> None:
+        """
+        Set the name of the room, or remove it again by passing None as the `name`.
+
+        Returns:
+            200 OK -> contains the name the room now has
+            400 Bad Request -> the room_id is not a valid ObjectId
+            403 Forbidden -> the current user is not a member of the room
+            409 Conflict -> the room does not exist
+        """
+
+        with util.get_mongodb() as db:
+            chat_manager = Chat(db)
+
+            try:
+                # only allow members of the room to rename it
+                if not chat_manager.check_is_user_chatroom_member(
+                    room_id, self.current_user.username
+                ):
+                    self.set_status(403)
+                    self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                    return
+
+                chat_manager.set_room_name(room_id, name)
+            except InvalidId:
+                self.set_status(400)
+                self.write({"success": False, "reason": INVALID_OBJECT_ID})
+                return
+            except RoomDoesntExistError:
+                self.set_status(409)
+                self.write({"success": False, "reason": ROOM_DOESNT_EXIST})
+                return
+
+            self.serialize_and_write({"success": True, "name": name})

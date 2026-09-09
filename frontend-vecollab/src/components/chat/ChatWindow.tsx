@@ -2,7 +2,7 @@ import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetChatrooms } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { MdClose } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -47,6 +47,10 @@ export default function ChatWindow({
         mutate,
     } = useGetChatrooms(session!.accessToken);
 
+    // usernames we already requested snippets for. keeping track of the request instead of
+    // the response prevents a fetch loop in case the backend has no snippet for a username
+    const requestedProfileSnippets = useRef<Set<string>>(new Set());
+
     useEffect(() => {
         if (loadingRooms || !open) return;
 
@@ -57,27 +61,37 @@ export default function ChatWindow({
             return;
         }
 
-        // filter a distinct list of usernames from the room snippets
-        const usernames = Array.from(new Set(rooms.map((room) => room.members).flat()));
+        // filter a distinct list of usernames from the room snippets, skipping those
+        // that were already requested. rooms may be added to the list at any time (e.g. when
+        // somebody starts a new chat with us), so this may well run more than once
+        const usernames = Array.from(new Set(rooms.map((room) => room.members).flat())).filter(
+            (username) => !requestedProfileSnippets.current.has(username)
+        );
 
-        if (profileSnippets.length) return;
+        if (!usernames.length) {
+            setProfileSnippetsLoading(false);
+            return;
+        }
+        usernames.forEach((username) => requestedProfileSnippets.current.add(username));
+
         // fetch profile snippets
         fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
             (data) => {
-                setProfileSnippets(
-                    data.user_snippets.map((snippet: any) => {
+                setProfileSnippets((prev) => [
+                    ...prev,
+                    ...data.user_snippets.map((snippet: any) => {
                         return {
                             profilePicUrl: snippet.profile_pic,
                             name: snippet.first_name + ' ' + snippet.last_name,
                             preferredUsername: snippet.username,
                             institution: snippet.institution,
                         };
-                    })
-                );
+                    }),
+                ]);
                 setProfileSnippetsLoading(false);
             }
         );
-    }, [loadingRooms, open, profileSnippets, rooms, session]);
+    }, [loadingRooms, open, rooms, session]);
 
     useEffect(() => {
         if (loadingRooms || !prop_openOrCreateChatWith.length) return;
@@ -113,6 +127,13 @@ export default function ChatWindow({
         setSelectedRoom(rooms.find((room) => room._id === chat));
     };
 
+    // a room was renamed or got new members: apply the change to the currently opened
+    // room right away and refetch the list, so that the snippets are up to date as well
+    const handleRoomUpdate = (updatedRoom: BackendChatroomSnippet) => {
+        setSelectedRoom(updatedRoom);
+        mutate();
+    };
+
     if (!open) {
         return <></>;
     }
@@ -142,6 +163,7 @@ export default function ChatWindow({
                         socket={socket}
                         room={selectedRoom!}
                         closeRoom={() => setSelectedRoom(undefined)}
+                        roomUpdatedCallback={handleRoomUpdate}
                         memberProfileSnippets={profileSnippets.filter((profile) =>
                             selectedRoom.members.includes(profile.preferredUsername)
                         )}
@@ -154,6 +176,7 @@ export default function ChatWindow({
                     ) : (
                         <Rooms
                             handleChatSelect={handleChatSelect}
+                            socketMessages={messageEvents}
                             headerBarMessageEvents={headerBarMessageEvents}
                             profileSnippets={profileSnippets}
                         />

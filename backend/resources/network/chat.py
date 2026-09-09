@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from bson import ObjectId
 from pymongo import ReturnDocument
@@ -113,6 +113,68 @@ class Chat:
             raise RoomDoesntExistError()
 
         return username in room["members"]
+
+    def add_members_to_room(
+        self, room_id: str | ObjectId, new_members: List[str]
+    ) -> List[str]:
+        """
+        Add the users given by their usernames (`new_members`) to the room identified
+        by the `room_id`.
+        Usernames that already are members of the room are silently skipped, i.e. calling
+        this function repeatedly with the same users has no further effect.
+
+        Note that the already existing messages of the room are deliberately left untouched,
+        i.e. they don't get send states for the newly added members. Those members can read
+        the history of the room, but the messages that were sent before they joined
+        will not appear as unread to them.
+
+        Returns the resulting member list of the room.
+
+        Raises `RoomDoesntExistError` if no room with the given _id was found.
+        """
+
+        room_id = util.parse_object_id(room_id)
+
+        room = self.db.chatrooms.find_one(
+            {"_id": room_id},
+            projection={"members": True},
+        )
+
+        if not room:
+            raise RoomDoesntExistError()
+
+        updated_room = self.db.chatrooms.find_one_and_update(
+            {"_id": room_id},
+            {"$addToSet": {"members": {"$each": new_members}}},
+            return_document=ReturnDocument.AFTER,
+            projection={"members": True},
+        )
+
+        return updated_room["members"]
+
+    def set_room_name(self, room_id: str | ObjectId, name: Optional[str]) -> None:
+        """
+        Set the name of the room identified by the `room_id`.
+        A `name` of None removes the name of the room again, causing the frontend
+        to fall back to displaying the members instead.
+
+        Raises `RoomDoesntExistError` if no room with the given _id was found.
+        """
+
+        room_id = util.parse_object_id(room_id)
+
+        room = self.db.chatrooms.find_one(
+            {"_id": room_id},
+            projection={"members": True},
+        )
+
+        if not room:
+            raise RoomDoesntExistError()
+
+        self.db.chatrooms.update_one(
+            {"_id": room_id},
+            {"$set": {"name": name}},
+        )
 
     def get_all_messages_of_room(self, room_id: str | ObjectId) -> List[Dict]:
         """
