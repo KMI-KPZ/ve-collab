@@ -76,6 +76,9 @@ REPORT_DOESNT_EXIST_ERROR = "report_doesnt_exist"
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
 ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
+MEMBERS_NOT_LIST_OF_STR_ERROR = "members_not_list_of_str"
+NAME_NOT_STR_ERROR = "name_not_str"
+USER_DOESNT_EXIST_ERROR = "user_doesnt_exist"
 
 # don't change, these values match with the ones in BaseHandler
 CURRENT_ADMIN = User(
@@ -12491,7 +12494,7 @@ class ChatHandlerTest(BaseApiTestCase):
         self.assertEqual(db_state4["messages"], [self.default_message])
         self.assertEqual(db_state4["_id"], self.room_id)
 
-    def test_post_create_or_get_eroror_missing_key(self):
+    def test_post_create_or_get_error_missing_key(self):
         """
         expect: fail message because members is missing
         """
@@ -12502,6 +12505,294 @@ class ChatHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
         )
+
+    def test_post_create_or_get_error_members_not_list_of_str(self):
+        """
+        expect: fail message because members is not a list of usernames (str),
+        e.g. a list of dicts, an empty list,
+        or not a list at all
+        """
+
+        # regression case: members as a list of dicts (e.g. react-select
+        # {label, value} options) instead of plain username strings
+        payload_dicts = {
+            "members": [
+                {"label": "Other User", "value": "other_user"},
+                {"label": "Another Other User", "value": "another_other_user"},
+            ],
+        }
+        response_dicts = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_dicts
+        )
+        self.assertEqual(response_dicts["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        # empty list
+        payload_empty = {"members": []}
+        response_empty = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_empty
+        )
+        self.assertEqual(response_empty["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        # not a list at all
+        payload_not_list = {"members": "other_user"}
+        response_not_list = self.base_checks(
+            "POST", "/chatroom/create_or_get", False, 400, body=payload_not_list
+        )
+        self.assertEqual(response_not_list["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+    def test_post_add_members(self):
+        """
+        expect: successfully add another user to the room, skipping users
+        that already are members
+        """
+
+        payload = {
+            "room_id": str(self.room_id),
+            "members": [CURRENT_USER.username],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/add_members", True, 200, body=payload
+        )
+
+        # expect the resulting member list in the response
+        self.assertIn("members", response)
+        self.assertEqual(
+            response["members"],
+            [CURRENT_ADMIN.username, "other_user", CURRENT_USER.username],
+        )
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["members"], response["members"])
+
+        # adding the same user again doesn't duplicate him/her
+        response2 = self.base_checks(
+            "POST", "/chatroom/add_members", True, 200, body=payload
+        )
+        self.assertEqual(
+            response2["members"],
+            [CURRENT_ADMIN.username, "other_user", CURRENT_USER.username],
+        )
+
+        db_state2 = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state2["members"], response2["members"])
+
+    def test_post_add_members_error_missing_key(self):
+        """
+        expect: fail message because room_id or members is missing
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/chatroom/add_members",
+            False,
+            400,
+            body={"members": [CURRENT_USER.username]},
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "room_id"
+        )
+
+        response2 = self.base_checks(
+            "POST",
+            "/chatroom/add_members",
+            False,
+            400,
+            body={"room_id": str(self.room_id)},
+        )
+        self.assertEqual(
+            response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "members"
+        )
+
+    def test_post_add_members_error_members_not_list_of_str(self):
+        """
+        expect: fail message because members is not a list of usernames (str),
+        e.g. a list of dicts, an empty list, or not a list at all
+        """
+
+        payload_dicts = {
+            "room_id": str(self.room_id),
+            "members": [{"label": "Test User", "value": CURRENT_USER.username}],
+        }
+        response_dicts = self.base_checks(
+            "POST", "/chatroom/add_members", False, 400, body=payload_dicts
+        )
+        self.assertEqual(response_dicts["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        payload_empty = {"room_id": str(self.room_id), "members": []}
+        response_empty = self.base_checks(
+            "POST", "/chatroom/add_members", False, 400, body=payload_empty
+        )
+        self.assertEqual(response_empty["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+        payload_not_list = {
+            "room_id": str(self.room_id),
+            "members": CURRENT_USER.username,
+        }
+        response_not_list = self.base_checks(
+            "POST", "/chatroom/add_members", False, 400, body=payload_not_list
+        )
+        self.assertEqual(response_not_list["reason"], MEMBERS_NOT_LIST_OF_STR_ERROR)
+
+    def test_post_add_members_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is no valid ObjectId
+        """
+
+        payload = {
+            "room_id": "definitely_no_object_id",
+            "members": [CURRENT_USER.username],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/add_members", False, 400, body=payload
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_add_members_error_user_doesnt_exist(self):
+        """
+        expect: fail message because the user that should be added has no profile
+        """
+
+        payload = {
+            "room_id": str(self.room_id),
+            "members": [CURRENT_USER.username, "definitely_no_user"],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/add_members", False, 409, body=payload
+        )
+        self.assertEqual(response["reason"], USER_DOESNT_EXIST_ERROR)
+
+        # expect no user to have been added at all
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["members"], self.default_room["members"])
+
+    def test_post_add_members_error_room_doesnt_exist(self):
+        """
+        expect: fail message because no room with this _id exists
+        """
+
+        payload = {
+            "room_id": str(ObjectId()),
+            "members": [CURRENT_USER.username],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/add_members", False, 409, body=payload
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_post_add_members_error_insufficient_permission(self):
+        """
+        expect: fail message because the current user is not a member of the room
+        """
+
+        # explicitely switch to user mode, who is not a member of the default room
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {
+            "room_id": str(self.room_id),
+            "members": [CURRENT_USER.username],
+        }
+        response = self.base_checks(
+            "POST", "/chatroom/add_members", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # expect the members to be unchanged
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["members"], self.default_room["members"])
+
+    def test_post_rename(self):
+        """
+        expect: successfully rename the room, an empty name removes it again
+        """
+
+        payload = {"room_id": str(self.room_id), "name": "renamed_room"}
+        response = self.base_checks("POST", "/chatroom/rename", True, 200, body=payload)
+
+        self.assertIn("name", response)
+        self.assertEqual(response["name"], "renamed_room")
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["name"], "renamed_room")
+
+        # an empty name is the same as no name at all
+        payload2 = {"room_id": str(self.room_id), "name": ""}
+        response2 = self.base_checks(
+            "POST", "/chatroom/rename", True, 200, body=payload2
+        )
+        self.assertEqual(response2["name"], None)
+
+        db_state2 = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state2["name"], None)
+
+    def test_post_rename_error_missing_key(self):
+        """
+        expect: fail message because room_id or name is missing
+        """
+
+        response = self.base_checks(
+            "POST", "/chatroom/rename", False, 400, body={"name": "renamed_room"}
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "room_id"
+        )
+
+        response2 = self.base_checks(
+            "POST", "/chatroom/rename", False, 400, body={"room_id": str(self.room_id)}
+        )
+        self.assertEqual(response2["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "name")
+
+    def test_post_rename_error_name_not_str(self):
+        """
+        expect: fail message because the name is neither a str nor null
+        """
+
+        payload = {"room_id": str(self.room_id), "name": 123}
+        response = self.base_checks(
+            "POST", "/chatroom/rename", False, 400, body=payload
+        )
+        self.assertEqual(response["reason"], NAME_NOT_STR_ERROR)
+
+    def test_post_rename_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is no valid ObjectId
+        """
+
+        payload = {"room_id": "definitely_no_object_id", "name": "renamed_room"}
+        response = self.base_checks(
+            "POST", "/chatroom/rename", False, 400, body=payload
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_rename_error_room_doesnt_exist(self):
+        """
+        expect: fail message because no room with this _id exists
+        """
+
+        payload = {"room_id": str(ObjectId()), "name": "renamed_room"}
+        response = self.base_checks(
+            "POST", "/chatroom/rename", False, 409, body=payload
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_post_rename_error_insufficient_permission(self):
+        """
+        expect: fail message because the current user is not a member of the room
+        """
+
+        # explicitely switch to user mode, who is not a member of the default room
+        options.test_admin = False
+        options.test_user = True
+
+        payload = {"room_id": str(self.room_id), "name": "renamed_room"}
+        response = self.base_checks(
+            "POST", "/chatroom/rename", False, 403, body=payload
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        # expect the name to be unchanged
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["name"], self.default_room["name"])
 
 
 class ReportHandlerTest(BaseApiTestCase):

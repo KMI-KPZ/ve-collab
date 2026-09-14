@@ -7,12 +7,14 @@ import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import ChatMessage from './ChatMessage';
 import InputArea from './InputArea';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { MdArrowBackIosNew, MdOutlineGroup } from 'react-icons/md';
+import { MdArrowBackIosNew, MdOutlineGroup, MdOutlineEdit } from 'react-icons/md';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useTranslation } from 'next-i18next';
 import { GoAlert } from 'react-icons/go';
 import Dropdown from '../common/Dropdown';
 import ReportDialog from '../common/dialogs/Report';
+import Dialog from '../profile/Dialog';
+import EditChatRoomForm from './EditChatRoomForm';
 
 interface Props {
     socket: Socket;
@@ -21,6 +23,7 @@ interface Props {
     setHeaderBarMessageEvents: Dispatch<SetStateAction<any[]>>;
     room: BackendChatroomSnippet;
     closeRoom: () => void;
+    roomUpdatedCallback: (room: BackendChatroomSnippet) => void;
     memberProfileSnippets: UserSnippet[];
 }
 
@@ -31,6 +34,7 @@ export default function ChatRoom({
     setHeaderBarMessageEvents,
     room,
     closeRoom,
+    roomUpdatedCallback,
     memberProfileSnippets,
 }: Props) {
     const { data: session, status } = useSession();
@@ -74,9 +78,14 @@ export default function ChatRoom({
     };
 
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
 
     const handleSelectOption = (value: string) => {
         switch (value) {
+            case 'edit':
+                setEditDialogOpen(true);
+                break;
+
             case 'report':
                 setReportDialogOpen(true);
                 break;
@@ -88,6 +97,11 @@ export default function ChatRoom({
 
     const ChatRoomDropdown = () => {
         const options = [
+            {
+                value: 'edit',
+                label: t('common:edit_chat_title'),
+                icon: <MdOutlineEdit />,
+            },
             {
                 value: 'report',
                 label: t('common:report.report_title'),
@@ -180,6 +194,18 @@ export default function ChatRoom({
                 )}
             </div>
             <InputArea roomID={room._id} socket={socket} />
+            <Dialog
+                isOpen={editDialogOpen}
+                title={t('common:edit_chat_title')}
+                onClose={() => setEditDialogOpen(false)}
+            >
+                <EditChatRoomForm
+                    room={room}
+                    memberProfileSnippets={memberProfileSnippets}
+                    roomUpdatedCallback={roomUpdatedCallback}
+                    closeDialogCallback={() => setEditDialogOpen(false)}
+                />
+            </Dialog>
             {reportDialogOpen && (
                 <ReportDialog
                     reportedItemId={room._id}

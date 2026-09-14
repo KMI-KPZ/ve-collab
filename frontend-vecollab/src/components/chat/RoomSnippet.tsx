@@ -2,33 +2,25 @@ import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
 import { MdOutlineGroup } from 'react-icons/md';
 import UserProfileImage from '../network/UserProfileImage';
 
 interface Props {
     room: BackendChatroomSnippet;
     handleChatSelect: (chat: string) => void;
-    headerBarMessageEvents: any[];
+    unreadCount: number;
     memberProfileSnippets: UserSnippet[];
 }
 
 export default function RoomSnippet({
     room,
     handleChatSelect,
-    headerBarMessageEvents,
+    unreadCount,
     memberProfileSnippets,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
 
-    const [messageEventCount, setMessageEventCount] = useState<number>(0);
-
-    useEffect(() => {
-        setMessageEventCount(
-            headerBarMessageEvents.filter((message) => message.room_id === room._id).length
-        );
-    }, [headerBarMessageEvents, room._id]);
     const otherUser =
         memberProfileSnippets.length == 2
             ? memberProfileSnippets.find(
@@ -80,7 +72,11 @@ export default function RoomSnippet({
                         </div>
                     </div>
 
-                    <p className="text-sm text-gray-500 truncate flex">
+                    <p
+                        className={`text-sm truncate flex ${
+                            unreadCount > 0 ? 'font-semibold text-gray-700' : 'text-gray-500'
+                        }`}
+                    >
                         {room.last_message?.message ? (
                             <>
                                 <span className="inline-block max-w-50 truncate">
@@ -97,13 +93,11 @@ export default function RoomSnippet({
                     </p>
                 </div>
 
-                {/* determine if there are any unread messages in this room,
-                by using the copy of message events that get deleted once they are acknowledged */}
-                {/* {headerBarMessageEvents.filter((message) => message.room_id === room._id).length >
-                    0 && <div className="bg-blue-500 w-2 h-2 rounded-full mr-2"></div>} */}
-                {messageEventCount > 0 && (
-                    <span className="px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
-                        {messageEventCount}
+                {/* the amount of unread messages in this room, determined by the copy of
+                message events that get deleted once they are acknowledged */}
+                {unreadCount > 0 && (
+                    <span className="ml-auto shrink-0 px-2 py-1 rounded-full bg-blue-500/75 text-xs font-semibold">
+                        {unreadCount}
                     </span>
                 )}
             </div>

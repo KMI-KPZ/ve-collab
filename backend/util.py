@@ -51,14 +51,10 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
     elif isinstance(obj_id, str):
         return ObjectId(obj_id)
     else:
-        raise TypeError(
-            """invalid object_id type,
+        raise TypeError("""invalid object_id type,
             can either be 'str' or 'bson.ObjectId',
             got: '{}'
-            """.format(
-                type(obj_id)
-            )
-        )
+            """.format(type(obj_id)))
 
 
 def parse_datetime(timestamp: str | datetime) -> Optional[datetime]:
@@ -75,9 +71,7 @@ def timedelta_to_seconds(timedelta_obj: timedelta) -> float:
     if not isinstance(timedelta_obj, timedelta):
         raise TypeError(
             """expected type `datetime.timedelta` for parameter `timedelta_obj`,
-                got {}""".format(
-                type(timedelta_obj)
-            )
+                got {}""".format(type(timedelta_obj))
         )
 
     return timedelta_obj.total_seconds()
@@ -85,12 +79,8 @@ def timedelta_to_seconds(timedelta_obj: timedelta) -> float:
 
 def seconds_to_timedelta(seconds: float | int) -> timedelta:
     if not isinstance(seconds, (float, int)):
-        raise TypeError(
-            """expected type `float` or `int` for parameter `seconds`,
-                got {}""".format(
-                type(seconds)
-            )
-        )
+        raise TypeError("""expected type `float` or `int` for parameter `seconds`,
+                got {}""".format(type(seconds)))
     return timedelta(seconds=seconds)
 
 
@@ -395,7 +385,7 @@ def _append_msg_text(
                 sender=payload["sender"],
                 message=payload["message"],
                 invitation_id=payload["invitation_id"],
-                plan_name=payload["plan_name"]
+                plan_name=payload["plan_name"],
             )
 
     elif template == "email_invitation_with_plan.html":
@@ -531,3 +521,16 @@ def send_email(
     mailserver.send_message(msg)
 
     mailserver.quit()
+
+
+def _is_list_of_str(value) -> bool:
+    """
+    Returns True if the given value is a non-empty list that contains
+    nothing but strings, or False otherwise.
+    """
+
+    return (
+        isinstance(value, list)
+        and len(value) > 0
+        and all(isinstance(entry, str) for entry in value)
+    )

@@ -8373,6 +8373,133 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             CURRENT_USER.username,
         )
 
+    def test_add_members_to_room(self):
+        """
+        expect: successfully add new members to the room, skipping those
+        that already are members
+        """
+
+        members = self.chat_manager.add_members_to_room(
+            self.room_id, ["new_member", "another_new_member"], CURRENT_USER.username
+        )
+
+        # expect the new members to be appended to the already existing ones
+        self.assertEqual(
+            members,
+            [
+                CURRENT_ADMIN.username,
+                CURRENT_USER.username,
+                "new_member",
+                "another_new_member",
+            ],
+        )
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["members"], members)
+
+        # the already existing messages are left untouched, i.e. they don't
+        # get send states for the new members
+        self.assertEqual(db_state["messages"], [self.default_message])
+
+    def test_add_members_to_room_already_member(self):
+        """
+        expect: adding a user that already is a member doesn't duplicate him/her
+        """
+
+        members = self.chat_manager.add_members_to_room(
+            self.room_id, [CURRENT_USER.username], CURRENT_ADMIN.username
+        )
+
+        self.assertEqual(members, [CURRENT_ADMIN.username, CURRENT_USER.username])
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(
+            db_state["members"], [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+
+    def test_add_members_to_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.add_members_to_room,
+            ObjectId(),
+            ["new_member"],
+            CURRENT_USER.username,
+        )
+
+    def test_add_members_to_room_error_user_not_member(self):
+        """
+        expect: UserNotMemberError is raised because the requesting user
+        is not a member of the room
+        """
+
+        self.assertRaises(
+            UserNotMemberError,
+            self.chat_manager.add_members_to_room,
+            self.room_id,
+            ["new_member"],
+            "non_member_user",
+        )
+
+        # expect the members to be unchanged
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(
+            db_state["members"], [CURRENT_ADMIN.username, CURRENT_USER.username]
+        )
+
+    def test_set_room_name(self):
+        """
+        expect: successfully set the name of the room, and remove it again
+        by setting it to None
+        """
+
+        self.chat_manager.set_room_name(
+            self.room_id, "renamed_room", CURRENT_USER.username
+        )
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["name"], "renamed_room")
+
+        # setting the name to None removes it again
+        self.chat_manager.set_room_name(self.room_id, None, CURRENT_USER.username)
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["name"], None)
+
+    def test_set_room_name_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because no room with this _id exists
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.set_room_name,
+            ObjectId(),
+            "renamed_room",
+            CURRENT_USER.username,
+        )
+
+    def test_set_room_name_error_user_not_member(self):
+        """
+        expect: UserNotMemberError is raised because the requesting user
+        is not a member of the room
+        """
+
+        self.assertRaises(
+            UserNotMemberError,
+            self.chat_manager.set_room_name,
+            self.room_id,
+            "renamed_room",
+            "non_member_user",
+        )
+
+        # expect the name to be unchanged
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["name"], self.default_room["name"])
+
     def test_get_all_messages_of_room(self):
         """
         expect: successfully get all messages of the room
