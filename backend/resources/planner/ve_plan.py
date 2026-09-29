@@ -38,6 +38,7 @@ from model import (
 )
 from resources.notifications import NotificationResource
 from resources.elasticsearch_integration import ElasticsearchConnector
+from resources.planner.etherpad_integration import EtherpadResouce
 from resources.network.profile import Profiles
 import util
 
@@ -1159,6 +1160,9 @@ class VEPlanResource:
         # Update Elasticsearch
         self._update_elastic_plan(plan_id)
 
+        # the user lost write access as well, so he may no longer access the pad
+        self._revoke_etherpad_sessions(plan_id, username)
+
     def revoke_write_permissions(self, plan_id: str | ObjectId, username: str) -> None:
         """
         Revoke write permissions for the user given by `username` for the plan with the
@@ -1188,6 +1192,28 @@ class VEPlanResource:
 
         # Update Elasticsearch
         self._update_elastic_plan(plan_id)
+
+        # pad access is bound to write access, so the user may no longer access the pad
+        self._revoke_etherpad_sessions(plan_id, username)
+
+    def _revoke_etherpad_sessions(self, plan_id: ObjectId, username: str) -> None:
+        """
+        revoke all etherpad sessions of the user for the pad of the plan, locking
+        the user out of the pad immediately.
+        Errors are only logged, since etherpad being down should not break the access
+        management of the plan itself. In this case, the sessions still expire
+        on their own after `SESSION_VALIDITY`.
+        """
+
+        try:
+            EtherpadResouce(self.db).revoke_sessions_of_user_for_plan(username, plan_id)
+        except Exception:
+            logger.warning(
+                "could not revoke etherpad sessions of user {} for plan {}, etherpad is possibly down".format(
+                    username, plan_id
+                ),
+                exc_info=True,
+            )
 
     def add_partner(self, plan_id: str | ObjectId, username: str) -> None:
         """
@@ -1277,6 +1303,18 @@ class VEPlanResource:
 
         # update elastic
         ElasticsearchConnector().on_delete(_id, elasticsearch_collection)
+
+        # the pad of the plan is useless without the plan, so delete it
+        # alongside all sessions for it
+        try:
+            EtherpadResouce(self.db).delete_etherpad_for_plan(_id)
+        except Exception:
+            logger.warning(
+                "could not delete etherpad of plan {}, etherpad is possibly down".format(
+                    _id
+                ),
+                exc_info=True,
+            )
 
     def delete_step_by_id(
         self,

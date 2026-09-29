@@ -11,6 +11,10 @@ from tornado.options import options
 
 import global_vars
 
+# how long a session (i.e. the access to a pad) stays valid after the user opened the pad.
+# etherpad checks the session on every message, so this has to outlast a regular editing session
+SESSION_VALIDITY = datetime.timedelta(hours=12)
+
 
 class EtherpadResouce:
     """
@@ -78,7 +82,11 @@ class EtherpadResouce:
 
         response_content = json.loads(response.text)
 
-        return response_content["data"]["authorID"] if "authorID" in response_content["data"] else None
+        return (
+            response_content["data"]["authorID"]
+            if "authorID" in response_content["data"]
+            else None
+        )
 
     def create_etherpad_group_for_plan_if_not_exists(
         self, plan_id: str | ObjectId
@@ -106,7 +114,11 @@ class EtherpadResouce:
 
         response_content = json.loads(response.text)
 
-        return response_content["data"]["groupID"] if "groupID" in response_content["data"] else None
+        return (
+            response_content["data"]["groupID"]
+            if "groupID" in response_content["data"]
+            else None
+        )
 
     def create_etherpad_group_pad_for_plan(
         self, group_id: str, plan_id: str | ObjectId
@@ -133,17 +145,17 @@ class EtherpadResouce:
         self, group_id: str, author_id: str
     ) -> Optional[str]:
         """
-        Using the etherpad API, create a long-lasting user sessionID that is needed to gain
-        access when opening the pad in the browser. Therefore, this sessionID has to be placed in a cookie.
+        Using the etherpad API, create a user sessionID (valid for `SESSION_VALIDITY`) that is needed
+        to gain access when opening the pad in the browser. Therefore, this sessionID has to be placed
+        in a cookie.
 
         Returns the SessionID (has to be placed in a cookie to be recognizable by etherpad), or None if
         the API did not send the expected data.
         """
-        # tomorrow as unix timestamp in seconds as int
+
+        # unix timestamp in seconds as int
         valid_until = math.floor(
-            time.mktime(
-                (datetime.datetime.now() + datetime.timedelta(minutes=1)).timetuple()
-            )
+            (datetime.datetime.now() + SESSION_VALIDITY).timestamp()
         )
 
         response = self._request(
@@ -155,7 +167,11 @@ class EtherpadResouce:
 
         response_content = json.loads(response.text)
 
-        return response_content["data"]["sessionID"] if "sessionID" in response_content["data"] else None
+        return (
+            response_content["data"]["sessionID"]
+            if "sessionID" in response_content["data"]
+            else None
+        )
 
     def revoke_session(self, session_id: str) -> None:
         """
@@ -193,6 +209,52 @@ class EtherpadResouce:
                     if group_id == session_obj["groupID"]:
                         self.revoke_session(key)
 
+    def revoke_expired_sessions_of_author(self, author_id: str) -> None:
+        """
+        revoke all sessions of the author that are no longer valid (across all groups).
+        Still valid sessions are kept, so that e.g. multiple open tabs don't
+        kick each other out of the pad.
+        """
+
+        all_sessions_response = self._request(
+            global_vars.etherpad_base_url
+            + "/api/1.3.0/listSessionsOfAuthor?authorID={}&apikey={}".format(
+                author_id, global_vars.etherpad_api_key
+            )
+        )
+        all_sessions_of_user = json.loads(all_sessions_response.text)["data"]
+
+        now = time.time()
+        if all_sessions_of_user:
+            for key, session_obj in all_sessions_of_user.items():
+                if session_obj is not None:
+                    if session_obj["validUntil"] <= now:
+                        self.revoke_session(key)
+
+    def revoke_sessions_of_user_for_plan(
+        self, username: str, plan_id: str | ObjectId
+    ) -> None:
+        """
+        revoke all sessions of the user (given by `username`) for the pad of the plan
+        (given by `plan_id`), e.g. because the user lost access to the plan. Since etherpad
+        re-checks the session on every message, the user is locked out of the pad immediately.
+
+        Etherpad authors are mapped to keycloak user ids, which is why the user id is
+        requested from keycloak first.
+        """
+
+        if isinstance(plan_id, ObjectId):
+            plan_id = str(plan_id)
+
+        user_id = global_vars.keycloak_admin.get_user_id(username)
+        author_id = self.create_etherpad_author_for_user_if_not_exists(
+            user_id, username
+        )
+        group_id = self.create_etherpad_group_for_plan_if_not_exists(plan_id)
+
+        if author_id is not None and group_id is not None:
+            self.revoke_all_session_for_user_in_group(author_id, group_id)
+
     def initiate_etherpad_for_plan(self, plan_id: str | ObjectId) -> None:
         """
         Wrapper to initiate a pad that is associated with the plan (given by it`s `plan_id`),
@@ -204,3 +266,23 @@ class EtherpadResouce:
 
         group_id = self.create_etherpad_group_for_plan_if_not_exists(plan_id)
         self.create_etherpad_group_pad_for_plan(group_id, plan_id)
+
+    def delete_etherpad_for_plan(self, plan_id: str | ObjectId) -> None:
+        """
+        Using the etherpad API, delete the group of the plan (given by its `plan_id`).
+        Etherpad deletes the pad and all sessions of the group alongside with it,
+        meaning that all users are locked out immediately.
+        """
+
+        if isinstance(plan_id, ObjectId):
+            plan_id = str(plan_id)
+
+        group_id = self.create_etherpad_group_for_plan_if_not_exists(plan_id)
+
+        if group_id is not None:
+            self._request(
+                global_vars.etherpad_base_url
+                + "/api/1.3.0/deleteGroup?groupID={}&apikey={}".format(
+                    group_id, global_vars.etherpad_api_key
+                )
+            )

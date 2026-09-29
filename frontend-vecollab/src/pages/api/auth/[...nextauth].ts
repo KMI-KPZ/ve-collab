@@ -243,8 +243,6 @@ export const authOptions = {
             logOutUrl.searchParams.set('id_token_hint', token.idToken!);
             const res = await fetch(logOutUrl);
         },
-
-        // TODO also call etherpad logout endpoint /ep_openid_connect/logout
     },
 };
 export default NextAuth(authOptions);

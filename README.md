@@ -73,13 +73,6 @@ Set reasonably secure API key for etherpad in the file `APIKEY.txt`:
 echo "$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 25)" > APIKEY.txt
 ```
 
-Copy Etherpad's configuration into `etherpad_config.json` and fill out the section `ep_openid_connect` at the bottom according to <ins>your</ins> Keycloak instance:
-
-```bash
-mv etherpad_config.json.example etherpad_config.json
-nano etherpad_config.json
-```
-
 ### Running the Application
 
 To run the application, it is highly recommended to use the provided `Docker` containers.
@@ -130,13 +123,6 @@ Set reasonably secure API key for etherpad in the file `APIKEY.txt`:
 
 ```bash
 echo "$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 25)" > APIKEY.txt
-```
-
-Copy Etherpad's configuration into `etherpad_config.json` and fill out the section `ep_openid_connect` at the bottom according to <ins>your</ins> Keycloak instance:
-
-```bash
-mv etherpad_config.json.example etherpad_config.json
-nano etherpad_config.json
 ```
 
 #### Services

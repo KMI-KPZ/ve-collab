@@ -74,7 +74,13 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     );
 
     if (response.success === true) {
-        context.res.setHeader('Set-Cookie', `sessionID=${response.session_id}`);
+        // Path=/ is required: without it, the cookie defaults to the path of this page (/etherpad),
+        // and etherpad's pad page (/p/<padID>) can't read it. Must not be HttpOnly,
+        // since etherpad reads it client-side.
+        context.res.setHeader(
+            'Set-Cookie',
+            `sessionID=${response.session_id}; Path=/; SameSite=Lax`
+        );
 
         return {
             props: {
