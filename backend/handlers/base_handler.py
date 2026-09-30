@@ -1,6 +1,8 @@
+import copy
 import functools
 import logging
-from typing import Awaitable, Callable, Dict, List, Optional
+import time
+from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
 from keycloak.exceptions import KeycloakError
 from tornado.options import options
@@ -12,6 +14,20 @@ from resources.network.profile import ProfileDoesntExistException, Profiles
 import util
 
 logger = logging.getLogger()
+
+# Keycloak user representations are cached per username for a short time
+# to save some round trips to the keycloak api
+KEYCLOAK_USER_CACHE_TTL_SECONDS = 600
+_keycloak_user_cache: Dict[str, Tuple[float, Dict]] = {}
+
+
+def invalidate_keycloak_user_cache(username: str) -> None:
+    """
+    remove the cached Keycloak user representation of `username`, e.g. after the
+    account was deleted, so that the next lookup queries Keycloak again
+    """
+
+    _keycloak_user_cache.pop(username, None)
 
 
 def auth_needed(
@@ -143,18 +159,31 @@ class BaseHandler(tornado.web.RequestHandler):
                 "username": "test_user",
             }
 
+        # serve from cache while the entry is fresh, handing out a copy so that
+        # callers cannot accidentally modify the cached representation
+        cached = _keycloak_user_cache.get(username)
+        if (
+            cached is not None
+            and time.monotonic() - cached[0] < KEYCLOAK_USER_CACHE_TTL_SECONDS
+        ):
+            return copy.deepcopy(cached[1])
+
         try:
             # refresh the token to keycloak admin portal, because it might have timed out (resulting in the following requests not succeeding)
             global_vars.keycloak_admin.connection.refresh_token()
 
             # request user data from keycloak
             user_id = global_vars.keycloak_admin.get_user_id(username)
-            return global_vars.keycloak_admin.get_user(user_id)
+            keycloak_user = global_vars.keycloak_admin.get_user(user_id)
         except KeycloakError as e:
             logger.warn(
                 "Keycloak Error occured while trying to request user data: {}".format(e)
             )
             raise
+
+        # store successful user requests in cache
+        _keycloak_user_cache[username] = (time.monotonic(), keycloak_user)
+        return copy.deepcopy(keycloak_user)
 
     def get_keycloak_user_list(self) -> List[Dict]:
         """

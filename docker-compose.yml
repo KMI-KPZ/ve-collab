@@ -16,6 +16,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -63,6 +64,7 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -88,6 +90,7 @@ services:
         NEXT_PUBLIC_FEEDBACK_FORM_URL: ${FEEDBACK_FORM_URL}
         MATERIAL_BASE_URL: ${MATERIAL_BASE_URL}
     network_mode: host
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
@@ -134,6 +137,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=true
       - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
+    restart: unless-stopped
     logging:
       driver: "json-file"
       options:

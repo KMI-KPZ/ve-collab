@@ -10,6 +10,7 @@ from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
+from resources.elasticsearch_integration import ELASTICSEARCH_TIMEOUT_SECONDS
 
 import util
 
@@ -208,6 +209,7 @@ class SearchHandler(BaseHandler):
                 global_vars.elasticsearch_password,
             ),
             json=query,
+            timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
         )
 
         # map usernames to exchange them for full profiles
@@ -283,6 +285,7 @@ class SearchHandler(BaseHandler):
                 global_vars.elasticsearch_password,
             ),
             json=query,
+            timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
         )
 
         # map _id's to exchange them for full spaces
@@ -448,6 +451,7 @@ class SearchHandler(BaseHandler):
                 global_vars.elasticsearch_password,
             ),
             json=query,
+            timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
         )
 
         # map _id's to exchange them for full plans

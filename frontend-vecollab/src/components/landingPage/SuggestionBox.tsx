@@ -115,8 +115,6 @@ export default function SuggestionBox() {
 
             if (matching.success) {
                 users = matching.matching_hits;
-            } else {
-                users = await fetchGET('/users/list', session?.accessToken);
             }
             if (!users) return [];
 

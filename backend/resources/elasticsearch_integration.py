@@ -8,6 +8,8 @@ from tornado.options import options
 import global_vars
 import util
 
+ELASTICSEARCH_TIMEOUT_SECONDS = 10
+
 
 class ElasticsearchConnector:
     """
@@ -107,6 +109,7 @@ class ElasticsearchConnector:
                     global_vars.elasticsearch_username,
                     global_vars.elasticsearch_password,
                 ),
+                timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
             )
         except Exception as e:
             print(e)
@@ -147,6 +150,7 @@ class ElasticsearchConnector:
                 global_vars.elasticsearch_username,
                 global_vars.elasticsearch_password,
             ),
+            timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
         )
 
     def search_profile_match(
@@ -155,7 +159,7 @@ class ElasticsearchConnector:
         query_expertise: Optional[str],
         query_lang: Optional[str],
         size: Optional[int] = 10,
-        offset: Optional[int] = 0
+        offset: Optional[int] = 0,
     ) -> list[dict]:
         """
         Search for a matching partner to `profile` in Elasticsearch.
@@ -261,19 +265,12 @@ class ElasticsearchConnector:
         must_query = []
 
         if query_expertise and query_expertise != "":
-            must_query.append({
-                "match_phrase": { "expertise": query_expertise}
-            })
+            must_query.append({"match_phrase": {"expertise": query_expertise}})
 
         if query_lang and query_lang != "":
-            must_query.append({
-                "match": {
-                    "languages": {
-                        "query": query_lang,
-                        "fuzziness": "AUTO"
-                    }
-                }
-            })
+            must_query.append(
+                {"match": {"languages": {"query": query_lang, "fuzziness": "AUTO"}}}
+            )
 
         if not must_query:
             must_query = []
@@ -284,15 +281,13 @@ class ElasticsearchConnector:
             "query": {
                 "bool": {
                     # exclude the user itself from the search results
-                    "must_not": [
-                        {"match": {"username": profile["username"]}}
-                    ],
+                    "must_not": [{"match": {"username": profile["username"]}}],
                     "filter": [
                         {"match": {"excluded_from_matching": False}},
                     ],
                     "must": must_query,
                     "should": should_query,
-                    "minimum_should_match": 0
+                    "minimum_should_match": 0,
                 }
             },
         }
@@ -304,6 +299,7 @@ class ElasticsearchConnector:
                 global_vars.elasticsearch_password,
             ),
             json=query,
+            timeout=ELASTICSEARCH_TIMEOUT_SECONDS,
         )
 
         return response.json()["hits"]["hits"]
