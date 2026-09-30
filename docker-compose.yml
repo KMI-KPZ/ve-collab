@@ -113,6 +113,7 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    restart: unless-stopped
     volumes:
       - ./APIKEY.txt:/opt/etherpad-lite/APIKEY.txt # unfortunately the api key cannot be supplied via config (why?!!!!!), so we have to inject it into the container to be able to use it in the rest of the application
     logging:
