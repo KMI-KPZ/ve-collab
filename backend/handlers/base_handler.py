@@ -69,7 +69,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # otherwise, set the current user as per the content of the
         # token
         try:
-            token_info = global_vars.keycloak.decode_token(bearer_token)
+            token_info = util.validate_keycloak_jwt(bearer_token)
         except Exception as e:
             self.current_user = None
             self._access_token = None
