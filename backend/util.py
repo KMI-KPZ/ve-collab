@@ -19,19 +19,21 @@ from resources.network.profile import Profiles
 
 logger = logging.getLogger(__name__)
 
+_mongo_client = None
+
 
 @contextmanager
 def get_mongodb():
-    client = MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    )
-    try:
-        yield client[global_vars.mongodb_db_name]
-    finally:
-        client.close()
+    global _mongo_client
+    if _mongo_client is None:
+        _mongo_client = MongoClient(
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
+
+    yield _mongo_client[global_vars.mongodb_db_name]
 
 
 def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
