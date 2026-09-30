@@ -608,12 +608,15 @@
       "parent": 34,
       "droppable": false,
       "text": "Toolliste f\u00fcr virtuelle Austausche",
-      "text_en": "",
+      "text_en": "List of Tools for Virtual Exchanges",
       "data": {
         "description": "",
         "pages": {
           "de": "1171",
-          "en": ""
+          "en": "11792"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 49
@@ -622,15 +625,15 @@
       "parent": 34,
       "droppable": false,
       "text": "Kontakt und Organisation",
-      "text_en": "",
+      "text_en": "Contact and Organization",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "1589",
-          "en": ""
+          "en": "11794"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 50
@@ -639,15 +642,15 @@
       "parent": 34,
       "droppable": false,
       "text": "Kollaboratives Arbeiten",
-      "text_en": "",
+      "text_en": "Collaborative Work",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "1594",
-          "en": ""
+          "en": "11796"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 51
@@ -656,15 +659,15 @@
       "parent": 34,
       "droppable": false,
       "text": "Interaktive Lernbausteine",
-      "text_en": "",
+      "text_en": "Interactive Learning Modules",
       "data": {
         "description": "",
-        "metadata": {
-          "name": ""
-        },
         "pages": {
           "de": "1601",
-          "en": ""
+          "en": "11798"
+        },
+        "metadata": {
+          "name": ""
         }
       },
       "id": 52
