@@ -218,6 +218,19 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
+        # ascending index on "follows" field in profiles
+        if "profiles_follows" not in db.profiles.index_information() or force_rebuild:
+            try:
+                db.profiles.drop_index("profiles_follows")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.profiles.create_index("follows", name="profiles_follows")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "profiles_follows", "profiles"
+                )
+            )
+
         # ascending index on "name" field in spaces
         if "space_name" not in db.spaces.index_information() or force_rebuild:
             try:
@@ -227,6 +240,22 @@ def init_indexes(force_rebuild: bool) -> None:
             db.spaces.create_index("name", name="space_name")
             logger.info(
                 "Built index named {} on collection {}".format("space_name", "spaces")
+            )
+
+        # ascending index on "to" field in notifications
+        if (
+            "notifications_to" not in db.notifications.index_information()
+            or force_rebuild
+        ):
+            try:
+                db.notifications.drop_index("notifications_to")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.notifications.create_index("to", name="notifications_to")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "notifications_to", "notifications"
+                )
             )
 
 
