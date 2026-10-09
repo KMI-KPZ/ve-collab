@@ -1,6 +1,65 @@
 {
   "taxonomy": [
     {
+      "parent": 193,
+      "droppable": false,
+      "text": "VE with Young Language Learners",
+      "text_en": "VE with Young Language Learners",
+      "data": {
+        "description": "",
+        "pages": {
+          "de": "11824",
+          "en": "11824"
+        },
+        "metadata": {
+          "name": ""
+        }
+      },
+      "id": 194
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "Game-based Learning",
+      "text_en": "Game-based Learning",
+      "id": 17
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "Kulturelle Aspekte",
+      "text_en": "Cultural Aspects",
+      "id": 19
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "Sprachliche Aspekte",
+      "text_en": "Linguistic Aspects",
+      "id": 20
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "Methodenkoffer",
+      "text_en": "Method Kit",
+      "id": 58
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "Kontroversit\u00e4t in VE (EN)",
+      "text_en": "Controversiality in VE",
+      "id": 164
+    },
+    {
+      "parent": 33,
+      "droppable": true,
+      "text": "VE mit jungen Sprachlernenden (EN)",
+      "text_en": "VE with Young Language Learners",
+      "id": 193
+    },
+    {
       "parent": 8,
       "droppable": false,
       "text": "Was ist ein Virtueller Austausch",
@@ -469,41 +528,6 @@
         }
       },
       "id": 170
-    },
-    {
-      "parent": 33,
-      "droppable": true,
-      "text": "Game-based Learning",
-      "text_en": "Game-based Learning",
-      "id": 17
-    },
-    {
-      "parent": 33,
-      "droppable": true,
-      "text": "Kulturelle Aspekte",
-      "text_en": "Cultural Aspects",
-      "id": 19
-    },
-    {
-      "parent": 33,
-      "droppable": true,
-      "text": "Sprachliche Aspekte",
-      "text_en": "Linguistic Aspects",
-      "id": 20
-    },
-    {
-      "parent": 33,
-      "droppable": true,
-      "text": "Methodenkoffer",
-      "text_en": "Method Kit",
-      "id": 58
-    },
-    {
-      "parent": 33,
-      "droppable": true,
-      "text": "Kontroversit\u00e4t in VE (EN)",
-      "text_en": "Controversiality in VE",
-      "id": 164
     },
     {
       "parent": 58,
