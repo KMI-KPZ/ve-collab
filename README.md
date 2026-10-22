@@ -155,7 +155,7 @@ python3 main.py
 
 Optional Command Line Arguments:
 
-- `--build_indexes`: Force the application to (re)build the full text search index
+- `--build_indexes`: Force the application to (re)build the full text search indexes (MongoDB and Elasticsearch). The Elasticsearch indexes are also rebuilt from MongoDB automatically whenever their mapping changes
 - `--debug`: Run the application in debug mode (hot reload). Obviously, don't use debug mode in production
 - `--load_taxonomy`: (Re)load the default taxonomy of learning material
   >**Caution:** This operation performs a full overwrite discarding any previous taxonomy.

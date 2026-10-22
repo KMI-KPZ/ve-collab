@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from email.message import EmailMessage
 from datetime import datetime, timedelta
@@ -5,7 +6,7 @@ from email.utils import make_msgid
 import logging
 import mimetypes
 import smtplib
-from typing import Dict, Literal, Optional
+from typing import Any, Awaitable, Callable, Dict, Literal, Optional
 
 from bson import ObjectId
 import dateutil.parser
@@ -14,6 +15,7 @@ from jwcrypto import jwk
 from pymongo import MongoClient
 from pymongo.database import Database
 import time
+import tornado.ioloop
 
 from exceptions import ProfileDoesntExistException
 import global_vars
@@ -22,6 +24,10 @@ from resources.network.profile import Profiles
 logger = logging.getLogger(__name__)
 
 _mongo_client = None
+
+# sending an email (smtp and the keycloak lookup of the address) blocks for
+# quite a while, so it is done in this thread pool instead of on the event loop
+_email_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="email")
 
 
 @contextmanager
@@ -427,6 +433,20 @@ def _append_msg_text(
     # set msg text and return
     msg.set_content(text)
     return msg
+
+
+def run_in_email_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:
+    """
+    Run the blocking `func` (e.g. `send_email`) with the given `args` in the email
+    thread pool, so that the event loop is not blocked while the mail is sent.
+
+    Returns an awaitable that resolves to the result of `func`, or raises
+    its exception.
+    """
+
+    return tornado.ioloop.IOLoop.current().run_in_executor(
+        _email_executor, func, *args
+    )
 
 
 def send_email(

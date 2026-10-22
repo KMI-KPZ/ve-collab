@@ -3,9 +3,15 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
+    # by default, mongodb sizes its cache by the RAM of the host, not the container limit
+    command: ["--wiredTigerCacheSizeGB", "0.75"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
     volumes:
       - mongodb_data:/data/db
     ports:
@@ -60,6 +66,10 @@ services:
       SMTP_PORT:
       SMTP_USERNAME:
       SMTP_PASSWORD:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     network_mode: host
     depends_on:
       mongodb:
@@ -89,6 +99,11 @@ services:
         NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
         NEXT_PUBLIC_FEEDBACK_FORM_URL: ${FEEDBACK_FORM_URL}
         MATERIAL_BASE_URL: ${MATERIAL_BASE_URL}
+    # includes the headless chrome instances for the pdf export
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
     network_mode: host
     restart: unless-stopped
     logging:
@@ -111,6 +126,10 @@ services:
       - DB_NAME=etherpad
       - DB_COLLECTION=etherpad
       - DB_URL=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:${MONGODB_PORT}/admin
+    deploy:
+      resources:
+        limits:
+          memory: 768M
     ports:
       - ${ETHERPAD_PORT}:9001
     depends_on:
@@ -127,16 +146,26 @@ services:
 
   elasticsearch:
     container_name: elasticsearch
-    image: elasticsearch:8.8.0
+    image: elasticsearch:8.19.22
     ports:
       - ${ELASTICSEARCH_PORT}:9200
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data:Z
     environment:
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      # the heap should take about half of the container's memory, the rest is
+      # needed for off-heap memory and the file system cache
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - discovery.type=single-node
       - xpack.security.enabled=true
+      # machine learning features are not used, but would run extra processes
+      - xpack.ml.enabled=false
       - ELASTIC_PASSWORD=${ELASTICSEARCH_PASSWORD}
+    # leave enough cpu to the backend and mongodb during indexing spikes
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
     restart: unless-stopped
     logging:
       driver: "json-file"

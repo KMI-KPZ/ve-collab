@@ -42,6 +42,17 @@ from resources.planner.etherpad_integration import EtherpadResouce
 from resources.network.profile import Profiles
 import util
 
+# the (searchable) attributes of a plan that are replicated to elasticsearch
+ELASTICSEARCH_PLAN_FIELDS = [
+    "name",
+    "author",
+    "read_access",
+    "write_access",
+    "topics",
+    "is_good_practise",
+    "abstract",
+]
+
 
 class VEPlanResource:
     """
@@ -296,18 +307,11 @@ class VEPlanResource:
         Get minimized copy of a plan for elastic
         """
 
-        elastic_plan = {
-            "_id": plan._id,
-            "name": plan.name,
-            "author": plan.author,
-            "read_access": plan.read_access,
-            "write_access": plan.write_access,
-            "topics": plan.topics,
-            "is_good_practise": plan.is_good_practise,
-            "abstract": plan.abstract,
-        }
+        elastic_plan = {"_id": plan._id}
+        for field in ELASTICSEARCH_PLAN_FIELDS:
+            elastic_plan[field] = getattr(plan, field)
 
-        return elastic_plan.copy()
+        return elastic_plan
 
     def _update_elastic_plan(
         self, plan_id: str | ObjectId, elasticsearch_collection: str = "plans"
@@ -708,8 +712,14 @@ class VEPlanResource:
             if update_result.upserted_id is None:
                 raise PlanDoesntExistError()
 
-        # Update Elasticsearch
-        self._update_elastic_plan(plan_id)
+        # Update Elasticsearch, but only if a searchable attribute changed
+        # (or the plan was freshly upserted and is not in the index yet),
+        # because the designer updates other fields like steps all the time
+        if (
+            field_name in ELASTICSEARCH_PLAN_FIELDS
+            or update_result.upserted_id is not None
+        ):
+            self._update_elastic_plan(plan_id)
 
         # if the updated field was partners, two side effects happen:
         # - the partners will automatically gain write access to the plan
@@ -744,6 +754,9 @@ class VEPlanResource:
                         }
                     },
                 )
+
+                # the access lists are searchable, so replicate them as well
+                self._update_elastic_plan(plan_id)
 
                 # dispatch a notification to the partners
                 async def _notification_send(usernames, payload):

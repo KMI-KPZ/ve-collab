@@ -15,6 +15,13 @@ import global_vars
 # etherpad checks the session on every message, so this has to outlast a regular editing session
 SESSION_VALIDITY = datetime.timedelta(hours=12)
 
+# (connect, read) timeouts, because the api calls are sent from the event loop,
+# which would otherwise hang along with a hanging etherpad
+ETHERPAD_TIMEOUT_SECONDS = (3, 5)
+
+# reuse the connections to etherpad across api calls
+_session = requests.Session()
+
 
 class EtherpadResouce:
     """
@@ -47,7 +54,7 @@ class EtherpadResouce:
         """
 
         try:
-            return requests.get(url)
+            return _session.get(url, timeout=ETHERPAD_TIMEOUT_SECONDS)
         except Exception:
             # in case we are curently running tests, we want to silently let the requests to etherpad
             # fail, but when running normally, get the errors
