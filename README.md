@@ -73,13 +73,6 @@ Set reasonably secure API key for etherpad in the file `APIKEY.txt`:
 echo "$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 25)" > APIKEY.txt
 ```
 
-Copy Etherpad's configuration into `etherpad_config.json` and fill out the section `ep_openid_connect` at the bottom according to <ins>your</ins> Keycloak instance:
-
-```bash
-mv etherpad_config.json.example etherpad_config.json
-nano etherpad_config.json
-```
-
 ### Running the Application
 
 To run the application, it is highly recommended to use the provided `Docker` containers.
@@ -132,13 +125,6 @@ Set reasonably secure API key for etherpad in the file `APIKEY.txt`:
 echo "$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 25)" > APIKEY.txt
 ```
 
-Copy Etherpad's configuration into `etherpad_config.json` and fill out the section `ep_openid_connect` at the bottom according to <ins>your</ins> Keycloak instance:
-
-```bash
-mv etherpad_config.json.example etherpad_config.json
-nano etherpad_config.json
-```
-
 #### Services
 
 Run `MongoDB`, `Elasticsearch`, and `Etherpad` through Docker. They need the `.env` file as if the application was run via Docker in full (see [Getting Started](#-getting-started)):
@@ -169,7 +155,7 @@ python3 main.py
 
 Optional Command Line Arguments:
 
-- `--build_indexes`: Force the application to (re)build the full text search index
+- `--build_indexes`: Force the application to (re)build the full text search indexes (MongoDB and Elasticsearch). The Elasticsearch indexes are also rebuilt from MongoDB automatically whenever their mapping changes
 - `--debug`: Run the application in debug mode (hot reload). Obviously, don't use debug mode in production
 - `--load_taxonomy`: (Re)load the default taxonomy of learning material
   >**Caution:** This operation performs a full overwrite discarding any previous taxonomy.

@@ -119,11 +119,12 @@ export default function PageCategoryNotSelected(props: Props) {
             {Bubble('Zusammen Lernen', 'mt-30 xl:top-[-9rem] xl:left-[52%] xl:-translate-x-1/2', [
                 '-bottom-[-2.5rem] -left-[10.5rem]', // game based learning
                 '-top-[2rem] -right-[6rem]', // kulturelle aspekte
-                '-bottom-[-0.5rem] -right-[10rem]', // sprachliche aspekte
+                '-bottom-[-4rem] -right-[11rem]', // sprachliche aspekte
                 router.locale === 'de'
                     ? '-top-[1.5rem] -left-[6.5rem]'
                     : '-top-[1rem] -left-[5.5rem]', //methodenkoffer
                 '-bottom-[4rem] -left-[3rem]', // controversiality
+                '-bottom-[3rem] -right-[9.5rem]', // ve mit jungen sprachlernenden
             ])}
         </>
     );

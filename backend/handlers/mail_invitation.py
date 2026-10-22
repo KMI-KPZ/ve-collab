@@ -210,7 +210,8 @@ class EmailInvitationHandler(BaseHandler):
                     self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
                     return
 
-                util.send_email(
+                await util.run_in_email_executor(
+                    util.send_email,
                     recipient_name,
                     recipient_mail,
                     "Einladung zum VE bei VE-Collab!",
@@ -225,7 +226,8 @@ class EmailInvitationHandler(BaseHandler):
                     },
                 )
             else:
-                util.send_email(
+                await util.run_in_email_executor(
+                    util.send_email,
                     recipient_name,
                     recipient_mail,
                     "Tritt VE-Collab bei!",

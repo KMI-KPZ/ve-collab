@@ -10,6 +10,7 @@ import tornado.ioloop
 
 import global_vars
 from handlers.base_handler import BaseHandler
+import util
 
 
 class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
@@ -48,13 +49,7 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
         else:
             abspath = ObjectId(abspath)
 
-        with pymongo.MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        ) as client:
-            db = client[global_vars.mongodb_db_name]
+        with util.get_mongodb() as db:
             fs = gridfs.GridFS(db)
 
             # get file from gridfs
@@ -135,13 +130,7 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
             except InvalidId:
                 raise tornado.web.HTTPError(404)
 
-        with pymongo.MongoClient(
-            global_vars.mongodb_host,
-            global_vars.mongodb_port,
-            username=global_vars.mongodb_username,
-            password=global_vars.mongodb_password,
-        ) as client:
-            db = client[global_vars.mongodb_db_name]
+        with util.get_mongodb() as db:
             fs = gridfs.GridFS(db)
 
             try:

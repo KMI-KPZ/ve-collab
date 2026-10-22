@@ -1,15 +1,14 @@
 from typing import Dict, List
 
-import requests
 import tornado.web
 from tornado.options import options
 
-import global_vars
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.planner.ve_plan import VEPlanResource
+from resources.elasticsearch_integration import ElasticsearchConnector
 
 import util
 
@@ -191,29 +190,16 @@ class SearchHandler(BaseHandler):
             },
         }
 
-        search_url = "{}/{}/_search?".format(
-            global_vars.elasticsearch_base_url, "profiles"
-        )
+        collection = "profiles"
 
         # catch test mode, because test_mode forces "test" index
         if options.test_admin or options.test_user:
-            search_url = "{}/{}/_search?".format(
-                global_vars.elasticsearch_base_url, "test"
-            )
+            collection = "test"
 
-        response = requests.post(
-            search_url,
-            auth=(
-                global_vars.elasticsearch_username,
-                global_vars.elasticsearch_password,
-            ),
-            json=query,
-        )
+        hits = ElasticsearchConnector().search(collection, query)
 
         # map usernames to exchange them for full profiles
-        usernames = [
-            elem["_source"]["username"] for elem in response.json()["hits"]["hits"]
-        ]
+        usernames = [elem["_source"]["username"] for elem in hits]
 
         with util.get_mongodb() as db:
             profile_manager = Profiles(db)
@@ -266,27 +252,16 @@ class SearchHandler(BaseHandler):
             },
         }
 
-        search_url = "{}/{}/_search?".format(
-            global_vars.elasticsearch_base_url, "spaces"
-        )
+        collection = "spaces"
 
         # catch test mode, because test_mode forces "test" index
         if options.test_admin or options.test_user:
-            search_url = "{}/{}/_search?".format(
-                global_vars.elasticsearch_base_url, "test"
-            )
+            collection = "test"
 
-        response = requests.post(
-            search_url,
-            auth=(
-                global_vars.elasticsearch_username,
-                global_vars.elasticsearch_password,
-            ),
-            json=query,
-        )
+        hits = ElasticsearchConnector().search(collection, query)
 
         # map _id's to exchange them for full spaces
-        space_ids = [elem["_id"] for elem in response.json()["hits"]["hits"]]
+        space_ids = [elem["_id"] for elem in hits]
 
         with util.get_mongodb() as db:
             space_manager = Spaces(db)
@@ -431,27 +406,16 @@ class SearchHandler(BaseHandler):
             },
         }
 
-        search_url = "{}/{}/_search?".format(
-            global_vars.elasticsearch_base_url, "plans"
-        )
+        collection = "plans"
 
         # catch test mode, because test_mode forces "test" index
         if options.test_admin or options.test_user:
-            search_url = "{}/{}/_search?".format(
-                global_vars.elasticsearch_base_url, "test"
-            )
+            collection = "test"
 
-        response = requests.post(
-            search_url,
-            auth=(
-                global_vars.elasticsearch_username,
-                global_vars.elasticsearch_password,
-            ),
-            json=query,
-        )
+        hits = ElasticsearchConnector().search(collection, query)
 
         # map _id's to exchange them for full plans
-        plans_ids = [elem["_id"] for elem in response.json()["hits"]["hits"]]
+        plans_ids = [elem["_id"] for elem in hits]
 
         with util.get_mongodb() as db:
             plans_manager = VEPlanResource(db)

@@ -16,7 +16,6 @@ import { Notification } from '@/interfaces/socketio';
 import { IPlan, PlanPreview } from '@/interfaces/planner/plannerInterfaces';
 import { signIn, useSession } from 'next-auth/react';
 import useSWR, { KeyedMutator } from 'swr';
-import { VEPlanSnippet } from '@/interfaces/profile/profileInterfaces';
 import {
     IMaterialNode,
     INode,
@@ -55,7 +54,7 @@ class APIError extends Error {
 // SWR fetcher for get requests
 const GETfetcher = (relativeUrl: string, accessToken?: string, autoResignin: boolean = true) =>
     fetch(BACKEND_BASE_URL + relativeUrl, {
-        headers: { Authorization: 'Bearer ' + accessToken },
+        headers: accessToken ? { Authorization: 'Bearer ' + accessToken } : {},
     }).then(async (res) => {
         if (res.status === 401 && autoResignin) {
             console.log('forced new signIn by api call');
@@ -68,7 +67,7 @@ const GETfetcher = (relativeUrl: string, accessToken?: string, autoResignin: boo
 
 const GETfetcherBlob = (relativeUrl: string, accessToken?: string, autoResignin: boolean = true) =>
     fetch(BACKEND_BASE_URL + relativeUrl, {
-        headers: { Authorization: 'Bearer ' + accessToken },
+        headers: accessToken ? { Authorization: 'Bearer ' + accessToken } : {},
     }).then(async (res) => {
         if (res.status === 401 && autoResignin) {
             console.log('forced new signIn by api call');

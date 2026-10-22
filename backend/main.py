@@ -46,9 +46,11 @@ from handlers.network.search import SearchHandler
 from handlers.network.space import SpaceHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from resources.planner.ve_plan import ELASTICSEARCH_PLAN_FIELDS
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
 from handlers.planner.ve_invite import VeInvitationHandler
@@ -218,6 +220,19 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
+        # ascending index on "follows" field in profiles
+        if "profiles_follows" not in db.profiles.index_information() or force_rebuild:
+            try:
+                db.profiles.drop_index("profiles_follows")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.profiles.create_index("follows", name="profiles_follows")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "profiles_follows", "profiles"
+                )
+            )
+
         # ascending index on "name" field in spaces
         if "space_name" not in db.spaces.index_information() or force_rebuild:
             try:
@@ -228,6 +243,54 @@ def init_indexes(force_rebuild: bool) -> None:
             logger.info(
                 "Built index named {} on collection {}".format("space_name", "spaces")
             )
+
+        # ascending index on "to" field in notifications
+        if (
+            "notifications_to" not in db.notifications.index_information()
+            or force_rebuild
+        ):
+            try:
+                db.notifications.drop_index("notifications_to")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.notifications.create_index("to", name="notifications_to")
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "notifications_to", "notifications"
+                )
+            )
+
+
+def init_elasticsearch_indexes(force_rebuild: bool) -> None:
+    """
+    make sure the elasticsearch indexes for profiles, spaces and plans exist with
+    their current mappings. indexes will be (re)built from the documents in MongoDB
+    if a) they don't exist, b) their mapping is outdated or c) if rebuild is forced
+    by setting force_rebuild to True.
+    this happens in the background, the application starts without waiting for it.
+
+    :param force_rebuild: boolean switch to trigger a forced rebuild of the indexes
+    """
+
+    def load_profiles():
+        with util.get_mongodb() as db:
+            for profile in db.profiles.find():
+                yield profile["_id"], profile
+
+    def load_spaces():
+        with util.get_mongodb() as db:
+            for space in db.spaces.find():
+                yield space["_id"], space
+
+    def load_plans():
+        with util.get_mongodb() as db:
+            for plan in db.plans.find({}, projection=ELASTICSEARCH_PLAN_FIELDS):
+                yield plan["_id"], plan
+
+    ElasticsearchConnector().ensure_indexes(
+        {"profiles": load_profiles, "spaces": load_spaces, "plans": load_plans},
+        force_rebuild,
+    )
 
 
 def create_initial_admin() -> None:
@@ -567,7 +630,7 @@ def main():
         "build_indexes",
         default=False,
         type=bool,
-        help="force the application to (re)build the indexes for full text search and query optimization. Warning: this might take a long time depending on your database size",
+        help="force the application to (re)build the indexes for full text search (MongoDB and Elasticsearch) and query optimization. Warning: this might take a long time depending on your database size",
     )
     define(
         "supress_stdout_access_log",
@@ -595,6 +658,9 @@ def main():
 
     # setup text indexes for searching
     init_indexes(options.build_indexes)
+
+    # setup elasticsearch indexes (in the background)
+    init_elasticsearch_indexes(options.build_indexes)
 
     # setup default group and profile pictures
     init_default_pictures()

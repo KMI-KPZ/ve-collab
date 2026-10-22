@@ -138,7 +138,9 @@ class NotificationResource:
         elif notification_setting == "email":
             await self._notify_push(recipient, notification_type, payload)
             try:
-                self._notify_email(recipient, notification_type, payload, None)
+                await util.run_in_email_executor(
+                    self._notify_email, recipient, notification_type, payload, None
+                )
             except Exception as e:
                 raise e
 
@@ -263,7 +265,7 @@ class NotificationResource:
         for recipient in all_users_notification_settings:
             # no notifications at all
             if recipient["notification_settings"][notification_setting] == "none":
-                return
+                continue
             # push only
             elif recipient["notification_settings"][notification_setting] == "push":
                 await self._notify_push(
@@ -275,8 +277,12 @@ class NotificationResource:
                     recipient["username"], notification_type, payload
                 )
                 try:
-                    self._notify_email(
-                        recipient["username"], notification_type, payload, email_subject
+                    await util.run_in_email_executor(
+                        self._notify_email,
+                        recipient["username"],
+                        notification_type,
+                        payload,
+                        email_subject,
                     )
                 except Exception as e:
                     logger.error(e)

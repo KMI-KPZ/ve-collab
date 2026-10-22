@@ -7,7 +7,7 @@
         "maxlength200": "Das Feld darf nicht mehr als 200 Buchstaben enthalten.",
         "maxlength100": "Das Feld darf nicht mehr als 100 Buchstaben enthalten.",
         "realistic_number": "Bitte geben Sie eine realistische Zahl ein",
-        "only_positive_number": "Bitte nur ganze postive Zahlen",
+        "only_positive_number": "Bitte nur ganze positive Zahlen",
         "no_special_chars": "Nur folgende Sonderzeichen sind zulässig: _*+\":,&()!?-",
         "start_date_before_end_date": "Das Startdatum muss vor dem Enddatum liegen",
         "required_field": "Bitte fülle das Feld '{{field}}' aus",
@@ -65,13 +65,13 @@
         "title": "Projektpartner:innen",
         "page_description": "Füge deine Partner:innen und ggf. externe Beteiligte zum VE hinzu. Einige Informationen fragt der VE-Designer pro Partner:in ab.",
         "subtitle": "Wer ist am Projekt beteiligt?",
-        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind Sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner:innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
+        "description-1": "Listet hier alle am Projekt beteiligten Personen namentlich auf. Sind die Personen bereits auf VE-Collab registriert, sind sie im Dropdown-Menü auffindbar. Aber auch nicht registrierte Partner:innen können eingetragen werden. Im Folgenden können dann einzelne Schritte (z. B. Lernziele, Bewertung und Evaluation) individuell für die einzelnen Beteiligten beantwortet werden.",
         "description-2": "Listet ggf. auch externe Beteiligte auf (z. B. Firmen oder weitere Institutionen), die nicht direkt in die Planung und Durchführung des VE involviert sind.",
         "tooltip": "Tipps für die Partner:innensuche findest du hier in den Selbstlernmaterialien …",
         "author": "Autor:in",
         "partners_title": "Beteiligte Personen",
         "externpartners_title": "Extern Beteiligte",
-        "externpartners_tooltip": "Extern Beteiligte können z.B Unternehmen oder Organisationen sein",
+        "externpartners_tooltip": "Extern Beteiligte können z.B. Unternehmen oder Organisationen sein",
         "search_users": "Name eingeben oder Nutzer:in suchen...",
         "enter_ext": "Bezeichnung...",
         "search_users_no_hit": "Kein Treffer im VE-Collab-Netzwerk.<br>Hier klicken um <bold>{{value}}</bold> als beteiligte Person zu verwenden.<br>Für eine Einladung via E-Mail das Widget rechts verwenden.",
@@ -94,7 +94,7 @@
         "eduinst_school1": "Schule – Primärbereich",
         "eduinst_school2": "Schule – Sekundarbereich",
         "eduinst_other": "Sonstige",
-        "import_institutions": "Institionen aus Profil importieren",
+        "import_institutions": "Institutionen aus Profil importieren",
         "no_inst_in_profile": "Es sind noch keine Institutionen im Profil hinterlegt."
     },
     "lectures": {
@@ -165,7 +165,7 @@
         "placeholder": "Lernumgebung beschreiben",
         "subtitle2": "In welchem Format / welchen Formaten soll der VE umgesetzt werden?",
         "tooltip2": "Mehr zu Formaten findest du hier in den Selbstlernmaterialien …",
-        "description2": "Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl  synchrone als auch asynchrone Phasen geplant sind.",
+        "description2": "Haltet an dieser Stelle fest, ob die kollaborativen Anteile des VE ausschließlich synchron (z. B. per Videokonferenz) oder asynchron (z. B. per E-Mail, Padlet etc.) stattfinden oder sowohl synchrone als auch asynchrone Phasen geplant sind.",
         "format": "Format",
         "sync": "synchron",
         "async": "asynchron",
@@ -208,7 +208,7 @@
     },
     "checklist": {
         "title": "Checkliste",
-        "page_description": "Über die Checkliste lässt sich sicherstellen, dass alle für den Erfolg des VE notwendigen Aspekt abgeklärt wurden, z.B. Semesterzeiten, Technik, etc. .",
+        "page_description": "Über die Checkliste lässt sich sicherstellen, dass alle für den Erfolg des VE notwendigen Aspekte abgeklärt wurden, z.B. Semesterzeiten, Technik, etc.",
         "subtitle": "An alles gedacht?",
         "description": "Hier noch einige wichtige Aspekte, die ihr geklärt haben solltet, bevor es mit der inhaltlichen und didaktischen Planung losgeht.",
         "tooltip": "Mehr zu den Rahmenbedingungen eines VE findest du hier in den Selbstlernmaterialien",
@@ -226,7 +226,7 @@
         "technicalEquipment_title": "Technik",
         "technicalEquipment_descr": [
             "Überprüft, ob eure Institution über eine ausreichende technische Ausstattung zur Durchführung des VE verfügt.",
-            "Erkundigt euch über Ressourcen für  technische Unterstützung während des VE an eurer Institution."
+            "Erkundigt euch über Ressourcen für technische Unterstützung während des VE an eurer Institution."
         ],
         "institutionalRequirements_title": "Institutionelle Vorgaben",
         "institutionalRequirements_descr": "Tauscht euch über den Umgang mit Anwesenheit und Mitarbeit an euren Institutionen und im VE aus.",

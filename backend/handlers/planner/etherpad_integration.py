@@ -9,7 +9,6 @@ from resources.planner.etherpad_integration import EtherpadResouce
 from resources.planner.ve_plan import VEPlanResource
 import util
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +21,9 @@ class EtherpadIntegrationHandler(BaseHandler):
                     plan_id = self.get_argument("plan_id")
                 except tornado.web.MissingArgumentError:
                     self.set_status(400)
-                    self.write({"success": False, "reason": MISSING_KEY_SLUG + "_id"})
+                    self.write(
+                        {"success": False, "reason": MISSING_KEY_SLUG + "plan_id"}
+                    )
                     return
 
                 # give the curently authenticated user access to this pad
@@ -45,25 +46,34 @@ class EtherpadIntegrationHandler(BaseHandler):
                         )
                     ):
                         self.set_status(403)
-                        self.write({"success": False, "reason": INSUFFICIENT_PERMISSIONS})
+                        self.write(
+                            {"success": False, "reason": INSUFFICIENT_PERMISSIONS}
+                        )
                         return
                 except PlanDoesntExistError:
                     self.set_status(409)
                     self.write({"success": False, "reason": PLAN_DOESNT_EXIST})
                     return
 
-                # user has access, so we obtain a session for him and invalidate
-                # all other previous sessions
+                # user has access, so we obtain a session for him and clean up his
+                # expired sessions.
                 er = EtherpadResouce(db)
                 try:
                     authorID = er.create_etherpad_author_for_user_if_not_exists(
                         self.current_user.user_id, self.current_user.username
                     )
                     groupID = er.create_etherpad_group_for_plan_if_not_exists(plan_id)
-                    er.revoke_all_session_for_user_in_group(authorID, groupID)
-                    sessionID = er.create_etherpad_user_session_for_plan(groupID, authorID)
+                    # the pad is usually created alongside the plan, but that silently fails
+                    # if etherpad was unreachable at that time. Since etherpad runs in
+                    # editOnly mode, access to a missing pad would be denied, so make sure it
+                    # exists (no-op if it already does)
+                    er.create_etherpad_group_pad_for_plan(groupID, plan_id)
+                    er.revoke_expired_sessions_of_author(authorID)
+                    sessionID = er.create_etherpad_user_session_for_plan(
+                        groupID, authorID
+                    )
                 except Exception:
-                    logger.warn("etherpad is possibly down")
+                    logger.warning("etherpad is possibly down")
                     sessionID = None
                     groupID = None
 
@@ -71,7 +81,7 @@ class EtherpadIntegrationHandler(BaseHandler):
                     {
                         "success": True,
                         "session_id": sessionID,
-                        "pad_id": "$".join([groupID, plan_id]),
+                        "pad_id": "$".join([str(groupID), str(plan_id)]),
                     }
                 )
 

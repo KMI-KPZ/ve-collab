@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from email.message import EmailMessage
 from datetime import datetime, timedelta
@@ -5,13 +6,16 @@ from email.utils import make_msgid
 import logging
 import mimetypes
 import smtplib
-from typing import Dict, Literal, Optional
+from typing import Any, Awaitable, Callable, Dict, Literal, Optional
 
 from bson import ObjectId
 import dateutil.parser
 from jinja2 import TemplateNotFound
+from jwcrypto import jwk
 from pymongo import MongoClient
 from pymongo.database import Database
+import time
+import tornado.ioloop
 
 from exceptions import ProfileDoesntExistException
 import global_vars
@@ -19,19 +23,25 @@ from resources.network.profile import Profiles
 
 logger = logging.getLogger(__name__)
 
+_mongo_client = None
+
+# sending an email (smtp and the keycloak lookup of the address) blocks for
+# quite a while, so it is done in this thread pool instead of on the event loop
+_email_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="email")
+
 
 @contextmanager
 def get_mongodb():
-    client = MongoClient(
-        global_vars.mongodb_host,
-        global_vars.mongodb_port,
-        username=global_vars.mongodb_username,
-        password=global_vars.mongodb_password,
-    )
-    try:
-        yield client[global_vars.mongodb_db_name]
-    finally:
-        client.close()
+    global _mongo_client
+    if _mongo_client is None:
+        _mongo_client = MongoClient(
+            global_vars.mongodb_host,
+            global_vars.mongodb_port,
+            username=global_vars.mongodb_username,
+            password=global_vars.mongodb_password,
+        )
+
+    yield _mongo_client[global_vars.mongodb_db_name]
 
 
 def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
@@ -84,9 +94,14 @@ def seconds_to_timedelta(seconds: float | int) -> timedelta:
     return timedelta(seconds=seconds)
 
 
+_kc_public_key, _kc_public_key_ts = None, 0.0
+
+
 def validate_keycloak_jwt(jwt_token: str) -> Dict:
     """
     Decodes and validates the JWT access token issued by Keycloak.
+
+    The public key of Keycloak is cached for 3600s.
 
     Returns the decoded token info as a dict if it is valid, raises one of the following
     errors otherwise:
@@ -95,14 +110,19 @@ def validate_keycloak_jwt(jwt_token: str) -> Dict:
         - `jose.exceptions.JWTError` : token did not validate
     """
 
-    # try to decode the JWT, if any error is thrown, re-raise it to signal
-    # to the caller that the token is invalid
-    try:
-        token_info = global_vars.keycloak.decode_token(jwt_token)
-    except Exception:
-        raise
+    global _kc_public_key, _kc_public_key_ts
 
-    return token_info
+    # abort if no token was supplied at all
+    if not jwt_token or jwt_token in ("undefined", "null", ""):
+        raise ValueError("no token")
+
+    if _kc_public_key is None or time.monotonic() - _kc_public_key_ts > 3600:
+        pem = f"-----BEGIN PUBLIC KEY-----\n{global_vars.keycloak.public_key()}\n-----END PUBLIC KEY-----"
+        _kc_public_key, _kc_public_key_ts = (
+            jwk.JWK.from_pem(pem.encode()),
+            time.monotonic(),
+        )
+    return global_vars.keycloak.decode_token(jwt_token, key=_kc_public_key)
 
 
 def json_serialize_response(dictionary: dict) -> dict:
@@ -413,6 +433,20 @@ def _append_msg_text(
     # set msg text and return
     msg.set_content(text)
     return msg
+
+
+def run_in_email_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:
+    """
+    Run the blocking `func` (e.g. `send_email`) with the given `args` in the email
+    thread pool, so that the event loop is not blocked while the mail is sent.
+
+    Returns an awaitable that resolves to the result of `func`, or raises
+    its exception.
+    """
+
+    return tornado.ioloop.IOLoop.current().run_in_executor(
+        _email_executor, func, *args
+    )
 
 
 def send_email(

@@ -8380,7 +8380,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         """
 
         members = self.chat_manager.add_members_to_room(
-            self.room_id, ["new_member", "another_new_member"], CURRENT_USER.username
+            self.room_id, ["new_member", "another_new_member"]
         )
 
         # expect the new members to be appended to the already existing ones
@@ -8407,7 +8407,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         """
 
         members = self.chat_manager.add_members_to_room(
-            self.room_id, [CURRENT_USER.username], CURRENT_ADMIN.username
+            self.room_id, [CURRENT_USER.username]
         )
 
         self.assertEqual(members, [CURRENT_ADMIN.username, CURRENT_USER.username])
@@ -8427,27 +8427,6 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             self.chat_manager.add_members_to_room,
             ObjectId(),
             ["new_member"],
-            CURRENT_USER.username,
-        )
-
-    def test_add_members_to_room_error_user_not_member(self):
-        """
-        expect: UserNotMemberError is raised because the requesting user
-        is not a member of the room
-        """
-
-        self.assertRaises(
-            UserNotMemberError,
-            self.chat_manager.add_members_to_room,
-            self.room_id,
-            ["new_member"],
-            "non_member_user",
-        )
-
-        # expect the members to be unchanged
-        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
-        self.assertEqual(
-            db_state["members"], [CURRENT_ADMIN.username, CURRENT_USER.username]
         )
 
     def test_set_room_name(self):
@@ -8456,15 +8435,13 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         by setting it to None
         """
 
-        self.chat_manager.set_room_name(
-            self.room_id, "renamed_room", CURRENT_USER.username
-        )
+        self.chat_manager.set_room_name(self.room_id, "renamed_room")
 
         db_state = self.db.chatrooms.find_one({"_id": self.room_id})
         self.assertEqual(db_state["name"], "renamed_room")
 
         # setting the name to None removes it again
-        self.chat_manager.set_room_name(self.room_id, None, CURRENT_USER.username)
+        self.chat_manager.set_room_name(self.room_id, None)
 
         db_state = self.db.chatrooms.find_one({"_id": self.room_id})
         self.assertEqual(db_state["name"], None)
@@ -8479,26 +8456,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             self.chat_manager.set_room_name,
             ObjectId(),
             "renamed_room",
-            CURRENT_USER.username,
         )
-
-    def test_set_room_name_error_user_not_member(self):
-        """
-        expect: UserNotMemberError is raised because the requesting user
-        is not a member of the room
-        """
-
-        self.assertRaises(
-            UserNotMemberError,
-            self.chat_manager.set_room_name,
-            self.room_id,
-            "renamed_room",
-            "non_member_user",
-        )
-
-        # expect the name to be unchanged
-        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
-        self.assertEqual(db_state["name"], self.default_room["name"])
 
     def test_get_all_messages_of_room(self):
         """

@@ -11,7 +11,11 @@ from resources.elasticsearch_integration import ElasticsearchConnector
 from error_reasons import USER_DOESNT_EXIST
 from exceptions import ProfileDoesntExistException
 
-from handlers.base_handler import BaseHandler, auth_needed
+from handlers.base_handler import (
+    BaseHandler,
+    auth_needed,
+    invalidate_keycloak_user_cache,
+)
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 import util
@@ -1076,6 +1080,7 @@ class UserHandler(BaseHandler):
                 keycloak_info = self.get_keycloak_user(username)
                 self._delete_all_of(username)
                 global_vars.keycloak_admin.delete_user(keycloak_info["id"])
+                invalidate_keycloak_user_cache(username)
             except KeycloakGetError as e:
                 error_response = json.loads(e.error_message.decode())
                 self.set_status(400)
