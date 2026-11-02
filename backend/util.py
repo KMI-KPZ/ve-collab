@@ -108,7 +108,7 @@ GRIDFS_CONTENT_TYPE_KEY = "content_type"
 
 def gridfs_put(
     fs: gridfs.GridFS,
-    data: bytes,
+    data: Any,
     filename: str,
     content_type: Optional[str],
     uploader: str,
@@ -116,8 +116,9 @@ def gridfs_put(
 ) -> Any:
     """
     store a file in gridfs, keeping the mime type and the uploader in the
-    file's `metadata` (see `GRIDFS_CONTENT_TYPE_KEY`). Any further keyword
-    arguments (e.g. `_id`) are passed on to `GridFS.put()`.
+    file's `metadata` (see `GRIDFS_CONTENT_TYPE_KEY`). `data` is either bytes
+    or a file-like object (e.g. another `GridOut`), which is read in chunks.
+    Any further keyword arguments (e.g. `_id`) are passed on to `GridFS.put()`.
     Returns the _id of the stored file.
     """
 

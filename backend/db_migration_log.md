@@ -246,3 +246,37 @@ fileshare
 
 #### letzte Änderung
 02.11.26 15:30
+
+---
+
+#### Kurzfassung
+db.spaces.files gelöscht --> neue Collection db.space_files
+
+#### branch
+fileshare
+
+#### Beschreibung
+- Das eingebettete Array `files` in jedem Space entfällt. Die Dateiablage wird zu einer hierarchischen Ordnerstruktur in der neuen Collection `space_files`, ein Dokument pro Datei bzw. Ordner:
+    {
+        "space": ObjectId,
+        "parent": ObjectId | null,        // null = Wurzelverzeichnis des Spaces
+        "type": "folder" | "file",
+        "name": str,                      // pro Ordner eindeutig (ohne Beachtung der Groß-/Kleinschreibung)
+        "author": str,
+        "created": datetime,
+        "modified": datetime,
+        // nur Ordner:
+        "system": str | null,             // "post_files" markiert den reservierten Ordner für Beitragsanhänge
+        // nur Dateien:
+        "file_id": ObjectId,              // GridFS _id
+        "content_type": str,              // aus dem Dateinamen abgeleitet
+        "size": int,
+        "manually_uploaded": bool,        // false = Anhang eines Beitrags (nur lesbar, kopierbar)
+        "post_id": ObjectId | null
+    }
+- Indizes: `space_files_space_parent` (space, parent), `space_files_unique_name` (space, parent, name; unique, Collation `en`/Stärke 2), `space_files_file_id` (file_id). Werden beim Start des Backends angelegt.
+- Grenzen (Konstanten in `resources/network/space_files.py`): max. Ordnertiefe 5, max. 80 MB pro Datei, max. 2 GB pro Space, max. 255 Zeichen pro Name.
+- Migration bestehender Dateien (idempotent, einmalig nach dem Deployment): `docker exec backend python3 -m migrations.space_files`. Manuell hochgeladene Dateien landen im Wurzelordner, Anhänge der Beiträge des Spaces (ohne Reposts) im Ordner für Beitragsanhänge, Einträge ehemaliger Beitragsanhänge ohne Beitrag als normale Dateien im Wurzelordner. Anschließend wird `files` aus dem Space entfernt.
+
+#### letzte Änderung
+02.11.26 15:55

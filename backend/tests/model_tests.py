@@ -109,7 +109,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.admins, [])
         self.assertEqual(space.invites, [])
         self.assertEqual(space.requests, [])
-        self.assertEqual(space.files, [])
         self.assertEqual(space.space_pic, None)
         self.assertEqual(space.space_description, None)
 
@@ -120,7 +119,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["admins"], [])
         self.assertEqual(space["invites"], [])
         self.assertEqual(space["requests"], [])
-        self.assertEqual(space["files"], [])
         self.assertEqual(space["space_pic"], None)
         self.assertEqual(space["space_description"], None)
 
@@ -139,7 +137,6 @@ class SpaceModelTest(TestCase):
                 "admins": ["test"],
                 "invites": ["test"],
                 "requests": ["test"],
-                "files": ["test"],
                 "space_pic": "test",
                 "space_description": "test",
             }
@@ -152,7 +149,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.admins, ["test"])
         self.assertEqual(space.invites, ["test"])
         self.assertEqual(space.requests, ["test"])
-        self.assertEqual(space.files, ["test"])
         self.assertEqual(space.space_pic, "test")
         self.assertEqual(space.space_description, "test")
 
@@ -163,7 +159,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["admins"], ["test"])
         self.assertEqual(space["invites"], ["test"])
         self.assertEqual(space["requests"], ["test"])
-        self.assertEqual(space["files"], ["test"])
         self.assertEqual(space["space_pic"], "test")
         self.assertEqual(space["space_description"], "test")
 
@@ -176,7 +171,6 @@ class SpaceModelTest(TestCase):
                 "admins": ["test"],
                 "invites": ["test"],
                 "requests": ["test"],
-                "files": ["test"],
             }
         )
 

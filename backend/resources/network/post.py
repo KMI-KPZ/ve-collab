@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 from bson.objectid import ObjectId
 from exceptions import (
     AlreadyLikerException,
+    FileDoesntExistError,
     NotLikerException,
     PostNotExistingException,
 )
@@ -11,7 +12,7 @@ import gridfs
 from pymongo.database import Database
 
 from resources.network.profile import Profiles
-from resources.network.space import FileDoesntExistError, SpaceDoesntExistError, Spaces
+from resources.network.space_files import SpaceFiles
 from model import VEPlan
 from resources.planner.ve_plan import VEPlanResource
 import util
@@ -243,10 +244,19 @@ class Posts:
 
     def delete_post_by_space(self, space_id: str | ObjectId) -> None:
         """
-        delete all posts that were in the space given by its _id
+        delete all posts that were in the space given by its _id,
+        including their files in gridfs
         """
 
         space_id = util.parse_object_id(space_id)
+
+        fs = gridfs.GridFS(self.db)
+        for post in self.db.posts.find(
+            {"space": space_id, "files.0": {"$exists": True}},
+            projection={"files": True},
+        ):
+            for file_obj in post["files"]:
+                fs.delete(file_obj["file_id"])
 
         self.db.posts.delete_many({"space": space_id})
 
@@ -526,8 +536,8 @@ class Posts:
 
     def delete_post_file(self, post_id: str | ObjectId, file_id: str | ObjectId) -> None:
         """
-        delete a file from uploads directory gridfs
-        and if post was in a space from the space's repository
+        delete a file from gridfs and, if the post was in a space,
+        its reference in the space's file share
         """
 
         fs = gridfs.GridFS(self.db)
@@ -542,13 +552,8 @@ class Posts:
         fs.delete(file_id)
 
         if post["space"]:
-            space_manager = Spaces(self.db)
             try:
-                space_manager.remove_post_file(
-                    post["space"], file_id
-                )
-            except SpaceDoesntExistError:
-                pass
+                SpaceFiles(self.db).remove_post_file(post["space"], file_id)
             except FileDoesntExistError:
                 pass
 
