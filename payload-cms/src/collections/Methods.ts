@@ -89,6 +89,7 @@ export const Methods: CollectionConfig = {
                 { label: 'Auflockerung', value: 'Auflockerung' },
                 { label: 'Ausklang', value: 'Ausklang' },
                 { label: 'Feedback einholen', value: 'Feedback einholen' },
+                { label: 'Gruppengefühl stärken', value: 'Gruppengefühl stärken' },
                 { label: 'Inhalte wiederholen', value: 'Inhalte wiederholen' },
                 { label: 'Kennenlernen', value: 'Kennenlernen' },
                 {

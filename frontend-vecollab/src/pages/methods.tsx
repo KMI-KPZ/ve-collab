@@ -5,16 +5,30 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { MdFilterList, MdSearch } from 'react-icons/md';
 import { Method } from '@/interfaces/method/methodInterfaces';
 import { getAllMethods } from '@/lib/cmsApi';
-import MethodSidebar, { MethodFilters } from '@/components/methods/MethodSidebar';
+import MethodSidebar, {
+    MethodFilters,
+    TEACHER_PROFILE_DIMENSIONS,
+    TEACHER_PROFILE_LEVELS,
+    TeacherProfileDimension,
+} from '@/components/methods/MethodSidebar';
 import MethodList from '@/components/methods/MethodList';
 import MethodDetail from '@/components/methods/MethodDetail';
 import CustomHead from '@/components/metaData/CustomHead';
+
+// allowing the highest level means no restriction
+const highestTeacherProfileLevel = TEACHER_PROFILE_LEVELS.length - 1;
 
 const defaultFilters: MethodFilters = {
     searchQuery: '',
     courseTypes: [],
     socialForms: [],
     phases: [],
+    subPhases: [],
+    teacherProfileLevels: {
+        'Digitale Lehre': highestTeacherProfileLevel,
+        'IT Kompetenz': highestTeacherProfileLevel,
+        'Kommunikation / Kollaboration': highestTeacherProfileLevel,
+    },
     materials: [],
     roomSpecs: [],
     maxParticipants: 200,
@@ -35,6 +49,22 @@ function collectUnique(methods: Method[], key: keyof Method): string[] {
         }
     }
     return Array.from(set).sort();
+}
+
+/** material entries that encode a teacher profile level instead of an actual material */
+function isTeacherProfileMaterial(material: string): boolean {
+    return TEACHER_PROFILE_DIMENSIONS.some((dimension) => material.startsWith(`${dimension}:`));
+}
+
+/** Index into TEACHER_PROFILE_LEVELS a method requires in a dimension, null if it states none */
+function getTeacherProfileLevel(method: Method, dimension: TeacherProfileDimension): number | null {
+    for (const material of method.material ?? []) {
+        const level = TEACHER_PROFILE_LEVELS.findIndex(
+            (l) => material === `${dimension}: ${l.value}`
+        );
+        if (level !== -1) return level;
+    }
+    return null;
 }
 
 /** Apply all filters to a list of methods */
@@ -61,8 +91,16 @@ function applyFilters(methods: Method[], filters: MethodFilters): Method[] {
             return false;
         if (filters.phases.length > 0 && !m.phase?.some((v) => filters.phases.includes(v)))
             return false;
+        if (filters.subPhases.length > 0 && !m.subPhase?.some((v) => filters.subPhases.includes(v)))
+            return false;
         if (filters.materials.length > 0 && !m.material?.some((v) => filters.materials.includes(v)))
             return false;
+
+        // teacher profile: a method must not require more than the selected level
+        for (const dimension of TEACHER_PROFILE_DIMENSIONS) {
+            const level = getTeacherProfileLevel(m, dimension);
+            if (level != null && level > filters.teacherProfileLevels[dimension]) return false;
+        }
         if (
             filters.roomSpecs.length > 0 &&
             !m.roomSpec?.some((v) => filters.roomSpecs.includes(v))
@@ -110,7 +148,11 @@ export default function Methods({ allMethods }: InferGetServerSidePropsType<type
         [allMethods]
     );
     const availablePhases = useMemo(() => collectUnique(allMethods, 'phase'), [allMethods]);
-    const availableMaterials = useMemo(() => collectUnique(allMethods, 'material'), [allMethods]);
+    // teacher profile levels are part of material, but get their own sliders
+    const availableMaterials = useMemo(
+        () => collectUnique(allMethods, 'material').filter((v) => !isTeacherProfileMaterial(v)),
+        [allMethods]
+    );
     const availableRoomSpecs = useMemo(() => collectUnique(allMethods, 'roomSpec'), [allMethods]);
     const maxParticipantsRange = useMemo(() => {
         let max = 0;
@@ -147,7 +189,7 @@ export default function Methods({ allMethods }: InferGetServerSidePropsType<type
                 {!selectedMethodId && (
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded text-sm"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded text-sm cursor-pointer"
                     >
                         <MdFilterList size={18} />
                         Filter
@@ -200,7 +242,7 @@ export default function Methods({ allMethods }: InferGetServerSidePropsType<type
                                 <span className="font-bold text-ve-collab-blue">Filter</span>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
-                                    className="text-gray-500 hover:text-gray-700 text-xl"
+                                    className="text-gray-500 hover:text-gray-700 text-xl cursor-pointer"
                                 >
                                     ✕
                                 </button>

@@ -199,6 +199,7 @@ export interface Method {
         | 'Auflockerung'
         | 'Ausklang'
         | 'Feedback einholen'
+        | 'Gruppengefühl stärken'
         | 'Inhalte wiederholen'
         | 'Kennenlernen'
         | 'Kritische Auseinandersetzung mit Wissen'
