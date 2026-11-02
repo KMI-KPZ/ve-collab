@@ -147,4 +147,4 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
         download every file instead of e.g. displaying images in browser
         """
 
-        return self.file.content_type
+        return util.gridfs_content_type(self.file) or "application/octet-stream"

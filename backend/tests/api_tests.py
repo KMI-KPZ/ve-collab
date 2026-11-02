@@ -2269,12 +2269,7 @@ class PostHandlerTest(BaseApiTestCase):
         file.seek(0)
 
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file,
-            filename=self.test_file_name,
-            content_type="text/plain",
-            metadata={"uploader": "me"},
-        )
+        _id = util.gridfs_put(fs, file.read(), self.test_file_name, "text/plain", "me")
         # manually insert test post and into space
         oid = ObjectId()
         self.db.posts.insert_one(
@@ -7394,12 +7389,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         file.seek(0)
 
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file,
-            filename=file_name,
-            content_type="text/plain",
-            metadata={"uploader": "me"},
-        )
+        _id = util.gridfs_put(fs, file.read(), file_name, "text/plain", "me")
 
         # add file metadata
         self.db.spaces.update_one(
@@ -7592,12 +7582,7 @@ class SpaceHandlerTest(BaseApiTestCase):
             file.seek(0)
 
             fs = gridfs.GridFS(self.db)
-            _id = fs.put(
-                file,
-                filename=file_name,
-                content_type="text/plain",
-                metadata={"uploader": "me"},
-            )
+            _id = util.gridfs_put(fs, file.read(), file_name, "text/plain", "me")
 
             # add file metadata
             self.db.spaces.update_one(

@@ -463,13 +463,8 @@ class Spaces:
         space_id = util.parse_object_id(space_id)
 
         fs = gridfs.GridFS(self.db)
-        # store in gridfs
-        _id = fs.put(
-            picture,
-            filename=filename,
-            content_type=content_type,
-            metadata={"uploader": "me"},
-        )
+        # store in gridfs (mime type and uploader live in the file's metadata)
+        _id = util.gridfs_put(fs, picture, filename, content_type, "me")
 
         update_result = self.db.spaces.update_one(
             {"_id": space_id},
@@ -867,14 +862,9 @@ class Spaces:
         if not self.check_space_exists(space_id):
             raise SpaceDoesntExistError()
 
-        # store file in gridfs
+        # store file in gridfs (mime type and uploader live in the file's metadata)
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": uploader},
-        )
+        _id = util.gridfs_put(fs, file_content, file_name, content_type, uploader)
 
         self.db.spaces.update_one(
             {"_id": space_id},

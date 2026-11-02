@@ -231,3 +231,18 @@ post-process-rework
 
 #### letzte Änderung
 18.12.24 09:30
+
+---
+
+#### Kurzfassung
+db.fs.files.contentType --> db.fs.files.metadata.content_type
+
+#### branch
+fileshare
+
+#### Beschreibung
+- PyMongo 4 markiert die Properties `content_type` von `GridIn`/`GridOut` (das Top-Level-Feld `contentType` der GridFS-Dateidokumente) als deprecated, PyMongo 5 entfernt sie. Der MIME-Type wird deshalb ab jetzt in den Metadaten der Datei abgelegt: `metadata.content_type` (Datentyp `str` oder `null`). Alle Schreibzugriffe laufen über `util.gridfs_put()`, alle Lesezugriffe über `util.gridfs_content_type()` (mit Fallback auf das Legacy-Feld für noch nicht migrierte Dateien).
+- Migration bestehender Dateien (idempotent, vor dem Upgrade auf PyMongo 5 nötig): `docker exec backend python3 -m migrations.gridfs_content_type`. Kopiert `contentType` nach `metadata.content_type` (bereits vorhandene Metadaten-Werte bleiben erhalten) und entfernt anschließend das Top-Level-Feld.
+
+#### letzte Änderung
+02.11.26 15:30

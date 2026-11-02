@@ -84,6 +84,16 @@ docker compose build
 docker compose up -d
 ```
 
+### Database Migrations
+
+Some changes require a one-off migration of the existing data. Those live as modules in `backend/migrations` and are run once after deploying the version that introduced them, inside the running backend container:
+
+```bash
+docker exec backend python3 -m migrations.<name>
+```
+
+Natively, run `python3 -m migrations.<name>` from the `backend` directory instead (the MongoDB settings are read from the environment or `.env`). All migrations are idempotent, so running one again does no harm. Which change requires which migration is documented in `backend/db_migration_log.md`.
+
 ## 🛠️ Development
 
 ### Running the platform without Docker

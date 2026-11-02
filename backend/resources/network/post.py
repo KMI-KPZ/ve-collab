@@ -519,13 +519,8 @@ class Posts:
 
         fs = gridfs.GridFS(self.db)
 
-        # store in gridfs
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": uploader},
-        )
+        # store in gridfs (mime type and uploader live in the file's metadata)
+        _id = util.gridfs_put(fs, file_content, file_name, content_type, uploader)
 
         return _id
 

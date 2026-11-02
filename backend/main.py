@@ -508,20 +508,24 @@ def init_default_pictures():
 
         if not fs.exists("default_profile_pic.jpg"):
             with open("assets/default_profile_pic.jpg", "rb") as fp:
-                fs.put(
+                util.gridfs_put(
+                    fs,
                     fp.read(),
+                    "default_profile_pic.jpg",
+                    "image/jpg",
+                    "system",
                     _id="default_profile_pic.jpg",
-                    content_type="image/jpg",
-                    metadata={"uploader": "system"},
                 )
                 logger.info("default_profile_pic created")
         if not fs.exists("default_group_pic.jpg"):
             with open("assets/default_group_pic.jpg", "rb") as fp:
-                fs.put(
+                util.gridfs_put(
+                    fs,
                     fp.read(),
+                    "default_group_pic.jpg",
+                    "image/jpg",
+                    "system",
                     _id="default_group_pic.jpg",
-                    content_type="image/jpg",
-                    metadata={"uploader": "system"},
                 )
                 logger.info("default_group_pic created")
 

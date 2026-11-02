@@ -10,6 +10,7 @@ from typing import Any, Awaitable, Callable, Dict, Literal, Optional
 
 from bson import ObjectId
 import dateutil.parser
+import gridfs
 from jinja2 import TemplateNotFound
 from jwcrypto import jwk
 from pymongo import MongoClient
@@ -95,6 +96,52 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
             can either be 'str' or 'bson.ObjectId',
             got: '{}'
             """.format(type(obj_id)))
+
+
+# the key inside a gridfs file's `metadata` that holds its mime type
+# (`metadata.content_type`, snake_case like every other field of the platform).
+# PyMongo 4 deprecates (and PyMongo 5 removes) the `content_type` properties
+# of GridIn/GridOut, i.e. the top-level `contentType` field of the file
+# document. The recommended replacement is to keep the mime type in `metadata`.
+GRIDFS_CONTENT_TYPE_KEY = "content_type"
+
+
+def gridfs_put(
+    fs: gridfs.GridFS,
+    data: bytes,
+    filename: str,
+    content_type: Optional[str],
+    uploader: str,
+    **kwargs: Any,
+) -> Any:
+    """
+    store a file in gridfs, keeping the mime type and the uploader in the
+    file's `metadata` (see `GRIDFS_CONTENT_TYPE_KEY`). Any further keyword
+    arguments (e.g. `_id`) are passed on to `GridFS.put()`.
+    Returns the _id of the stored file.
+    """
+
+    return fs.put(
+        data,
+        filename=filename,
+        metadata={GRIDFS_CONTENT_TYPE_KEY: content_type, "uploader": uploader},
+        **kwargs,
+    )
+
+
+def gridfs_content_type(grid_file: gridfs.GridOut) -> Optional[str]:
+    """
+    read the mime type of a gridfs file from its metadata. Files that were
+    stored before the switch to metadata carry the mime type in the legacy
+    top-level `contentType` field instead, which is read as a raw document
+    field here (not via the deprecated `content_type` property).
+    """
+
+    metadata = grid_file.metadata or {}
+    if metadata.get(GRIDFS_CONTENT_TYPE_KEY):
+        return metadata[GRIDFS_CONTENT_TYPE_KEY]
+
+    return getattr(grid_file, "contentType", None)
 
 
 def parse_datetime(timestamp: str | datetime) -> Optional[datetime]:

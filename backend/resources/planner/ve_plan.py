@@ -873,14 +873,11 @@ class VEPlanResource:
             if not self._check_write_access(plan_id, requesting_username):
                 raise NoWriteAccessError()
 
-        # store file in gridfs
+        # store file in gridfs (mime type and uploader live in the file's metadata)
         # TODO: if there was a file before, delete the old one
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": requesting_username},
+        _id = util.gridfs_put(
+            fs, file_content, file_name, content_type, requesting_username
         )
 
         self.db.plans.update_one(
@@ -983,13 +980,10 @@ class VEPlanResource:
             if not self._check_write_access(plan_id, requesting_username):
                 raise NoWriteAccessError()
 
-        # store file in gridfs
+        # store file in gridfs (mime type and uploader live in the file's metadata)
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": requesting_username},
+        _id = util.gridfs_put(
+            fs, file_content, file_name, content_type, requesting_username
         )
 
         self.db.plans.update_one(
