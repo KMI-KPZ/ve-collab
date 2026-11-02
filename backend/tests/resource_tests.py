@@ -1,5 +1,5 @@
 from bson import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import time
 from unittest import TestCase
@@ -2328,7 +2328,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2345,7 +2345,7 @@ class PostResourceTest(BaseResourceTestCase):
         # add one more post outside of the time frame (lies in the future just for the test)
         post = {
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2361,7 +2361,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include the 5 posts and the default one , but not the
         # future one
-        posts = post_manager.get_full_timeline(datetime.now(), 10)
+        posts = post_manager.get_full_timeline(datetime.now(timezone.utc), 10)
         self.assertEqual(len(posts), 6)
 
     def test_get_space_timeline(self):
@@ -2374,7 +2374,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2394,7 +2394,7 @@ class PostResourceTest(BaseResourceTestCase):
         # that is pinned
         post = {
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": space_id,
             "pinned": True,
@@ -2413,7 +2413,7 @@ class PostResourceTest(BaseResourceTestCase):
         # this should include only the 3 posts in the space
         # and the pinned post should be in the pinned_posts list
         timeline_posts, pinned_posts = post_manager.get_space_timeline(
-            space_id, datetime.now(), 10
+            space_id, datetime.now(timezone.utc), 10
         )
         self.assertEqual(len(timeline_posts), 3)
         self.assertEqual(len(pinned_posts), 1)
@@ -2427,7 +2427,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2446,7 +2446,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include only the 3 posts by the user
         posts = post_manager.get_user_timeline(
-            CURRENT_USER.username, datetime.now(), 10
+            CURRENT_USER.username, datetime.now(timezone.utc), 10
         )
         self.assertEqual(len(posts), 3)
 
@@ -2468,7 +2468,7 @@ class PostResourceTest(BaseResourceTestCase):
         post1 = {
             "_id": ObjectId(),
             "author": CURRENT_USER.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2483,7 +2483,7 @@ class PostResourceTest(BaseResourceTestCase):
         post2 = {
             "_id": ObjectId(),
             "author": "non_following_user",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2516,7 +2516,7 @@ class PostResourceTest(BaseResourceTestCase):
         post3 = {
             "_id": ObjectId(),
             "author": "doesnt_matter",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": space_id,
             "pinned": False,
@@ -2531,7 +2531,7 @@ class PostResourceTest(BaseResourceTestCase):
         post4 = {
             "_id": ObjectId(),
             "author": "doesnt_matter",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": ObjectId(),
             "pinned": False,
@@ -2548,7 +2548,7 @@ class PostResourceTest(BaseResourceTestCase):
         post5 = {
             "_id": ObjectId(),
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2566,7 +2566,7 @@ class PostResourceTest(BaseResourceTestCase):
         post6 = {
             "_id": ObjectId(),
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2587,7 +2587,7 @@ class PostResourceTest(BaseResourceTestCase):
         # and post5 and the default post because it is the users own post
         # but not the default post because it is out of time frame
         posts = post_manager.get_personal_timeline(
-            CURRENT_ADMIN.username, datetime.now()
+            CURRENT_ADMIN.username, datetime.now(timezone.utc)
         )
         self.assertEqual(len(posts), 4)
         post_ids = [post["_id"] for post in posts]
@@ -5842,8 +5842,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "author": "test_user",
             "read_access": ["test_user", "test_admin"],
             "write_access": ["test_user"],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
@@ -6403,8 +6403,8 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "_id": ObjectId(),
                 "author": "test_admin",
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "admin",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -6461,8 +6461,8 @@ class PlanResourceTest(BaseResourceTestCase):
             },
             {
                 "_id": ObjectId(),
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "user",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -6519,8 +6519,8 @@ class PlanResourceTest(BaseResourceTestCase):
             },
             {
                 "_id": ObjectId(),
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "user",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -9167,7 +9167,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "new_messages",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
             {
@@ -9175,7 +9175,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "space_invitation",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "sent",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
             {
@@ -9183,7 +9183,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "new_messages",
                 "to": CURRENT_USER.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
         ]
@@ -9220,7 +9220,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "recipient_name": "invitation_receiver",
             "recipient_mail": "invitation_receiver@mail.com",
             "message": "test",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.mail_invitations.insert_one(self.default_invitation)
 
@@ -9250,7 +9250,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
                     "recipient_name": "invitation_receiver",
                     "recipient_mail": "invitation_receiver@mail.com",
                     "message": "test",
-                    "timestamp": datetime.now() - timedelta(hours=i),
+                    "timestamp": datetime.now(timezone.utc) - timedelta(hours=i),
                 }
             )
 
@@ -9271,7 +9271,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "message": "test",
             "plan_id": None,
             "replied": False,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         inserted_id = self.invitation_manager.insert_invitation(invitation)
@@ -9295,7 +9295,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "sender": CURRENT_ADMIN.username,
             "recipient_mail": "invitation_receiver@mail.com",
             "message": "test",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         self.assertRaises(
@@ -9317,7 +9317,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
                 "message": "hi",
                 "plan_id": None,
                 "replied": False,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
             self.db.mail_invitations.insert_one(inv)
         other_inv = {
@@ -9328,7 +9328,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "message": "hi",
             "plan_id": None,
             "replied": False,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.mail_invitations.insert_one(other_inv)
 
@@ -9353,7 +9353,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
             "item_id": self.reported_item_id,
             "reason": "test",
             "state": "open",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.reports.insert_one(self.default_report)
 
@@ -9508,7 +9508,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -9532,7 +9532,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": ObjectId(),
@@ -9541,7 +9541,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -9569,7 +9569,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": ObjectId(),
@@ -9578,7 +9578,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -9625,7 +9625,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 

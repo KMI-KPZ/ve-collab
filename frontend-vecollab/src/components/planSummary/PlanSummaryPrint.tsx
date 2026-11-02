@@ -105,8 +105,9 @@ export function PlanSummaryPrint({
     const dateLocale = router.locale === 'de' ? de : enGB;
 
     const partnerName = (username: string) => partnerNameOf(partnerProfileSnippets, username);
+    // step dates are calendar dates stored as midnight UTC, only their date part is relevant
     const formatDate = (value?: string | null) =>
-        value ? format(parseISO(value), 'd. MMMM yyyy', { locale: dateLocale }) : '';
+        value ? format(parseISO(value.slice(0, 10)), 'd. MMMM yyyy', { locale: dateLocale }) : '';
 
     const filledInstitutions = getFilledInstitutions(plan);
     const filledLectures = getFilledLectures(plan);

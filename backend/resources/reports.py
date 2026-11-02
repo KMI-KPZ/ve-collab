@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from bson import ObjectId
 from pymongo.database import Database
 
@@ -129,7 +127,7 @@ class Reports:
 
         # add system attributes
         report["state"] = "open"
-        report["timestamp"] = datetime.now()
+        report["timestamp"] = util.utcnow()
 
         insert_result = self.db.reports.insert_one(report)
         

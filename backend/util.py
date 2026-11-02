@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from email.message import EmailMessage
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from email.utils import make_msgid
 import logging
 import mimetypes
@@ -34,14 +34,44 @@ _email_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="email")
 def get_mongodb():
     global _mongo_client
     if _mongo_client is None:
+        # tz_aware makes pymongo return datetimes as timezone-aware UTC instead of
+        # naive ones, so that serialized timestamps carry their offset (see `utcnow()`)
         _mongo_client = MongoClient(
             global_vars.mongodb_host,
             global_vars.mongodb_port,
             username=global_vars.mongodb_username,
             password=global_vars.mongodb_password,
+            tz_aware=True,
         )
 
     yield _mongo_client[global_vars.mongodb_db_name]
+
+
+def utcnow() -> datetime:
+    """
+    the current time as a timezone-aware datetime in UTC.
+
+    Pymongo stores naive datetimes as if they were UTC,
+    so a naive local time on a host that doesn't run in UTC ends up shifted
+    by the host's UTC offset (e.g. freshly created posts then don't show up
+    in the timeline until that offset has passed). Timezone-aware datetimes
+    are converted to UTC by pymongo and serialize with their offset, which
+    lets clients convert them to their own timezone unambiguously.
+    """
+
+    return datetime.now(timezone.utc)
+
+
+def as_utc(timestamp: datetime) -> datetime:
+    """
+    convert the datetime into a timezone-aware datetime in UTC. Naive
+    datetimes are interpreted as UTC, because that is how pymongo stores them.
+    """
+
+    if timestamp.tzinfo is None:
+        return timestamp.replace(tzinfo=timezone.utc)
+
+    return timestamp.astimezone(timezone.utc)
 
 
 def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
@@ -68,13 +98,20 @@ def parse_object_id(obj_id: str | ObjectId) -> ObjectId:
 
 
 def parse_datetime(timestamp: str | datetime) -> Optional[datetime]:
-    if timestamp is None or isinstance(timestamp, datetime):
-        return timestamp
-    elif timestamp == "":
+    """
+    parse the timestamp into a timezone-aware datetime in UTC (see `as_utc()`),
+    so that values from the db and values from requests (e.g. date-only strings)
+    can be compared and subtracted without mixing naive and aware datetimes.
+    """
+
+    if timestamp is None or timestamp == "":
         return None
-    else:
+
+    if not isinstance(timestamp, datetime):
         # dateutil parses guesses format, best bet is to use ISO8601 despite
-        return dateutil.parser.parse(timestamp)
+        timestamp = dateutil.parser.parse(timestamp)
+
+    return as_utc(timestamp)
 
 
 def timedelta_to_seconds(timedelta_obj: timedelta) -> float:
@@ -132,7 +169,7 @@ def json_serialize_response(dictionary: dict) -> dict:
     Fields that are transformed are those whose type is an instances of `ObjectId`
     and `datetime.datetime`.
     Parse those values using the `str()` function (for ObjectId's),
-    or the `.isoformat()` function (for datetimes).
+    or the `.isoformat()` function (for datetimes, in UTC with offset).
     """
 
     for key in dictionary:
@@ -140,7 +177,8 @@ def json_serialize_response(dictionary: dict) -> dict:
         if isinstance(dictionary[key], ObjectId):
             dictionary[key] = str(dictionary[key])
         elif isinstance(dictionary[key], datetime):
-            dictionary[key] = dictionary[key].isoformat()
+            # always carry the offset, so clients don't have to guess the timezone
+            dictionary[key] = as_utc(dictionary[key]).isoformat()
 
         # if it is a nested dict, recursively run on subdict
         # and reassemble it

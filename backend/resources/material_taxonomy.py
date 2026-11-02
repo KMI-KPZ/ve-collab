@@ -1,4 +1,3 @@
-from datetime import datetime
 import requests
 import logging
 
@@ -12,6 +11,7 @@ from exceptions import (
     MbrAPIUnauthorizedError,
 )
 import global_vars
+import util
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ class MaterialTaxonomyResource:
                         "inLanguage": ["de"],
                         "dateCreated": node_metadata["date"],
                         "datepublished": node_metadata["date"],
-                        "dateModified": datetime.now().isoformat(),
+                        "dateModified": util.utcnow().isoformat(),
                         "isAccessibleForFree": True,
                         "conditionsOfAccess": {
                             "type": "Concept",

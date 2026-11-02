@@ -246,7 +246,7 @@ class Chat:
 
         room_id = util.parse_object_id(room_id)
         message_id = ObjectId()
-        creation_date = datetime.datetime.now()
+        creation_date = util.utcnow()
 
         room = self.db.chatrooms.find_one(
             {"_id": room_id}, projection={"members": True}
@@ -446,7 +446,7 @@ class Chat:
                             "messages": {
                                 "$elemMatch": {
                                     "creation_date": {
-                                        "$gte": datetime.datetime.now()
+                                        "$gte": util.utcnow()
                                         - datetime.timedelta(days=1)
                                     },
                                     "send_states": {

@@ -14,7 +14,7 @@ import { useRouter } from 'next/router';
 import { Socket } from 'socket.io-client';
 import GeneralError from '../common/GeneralError';
 import { useTranslation } from 'next-i18next';
-import { add } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import ButtonLight from '../common/buttons/ButtongLight';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
@@ -28,6 +28,9 @@ interface Props {
     socket: Socket;
     hideForm?: boolean;
 }
+
+// the day a post was created on in the browser's timezone, posts are grouped by it
+const creationDay = (post: BackendPost) => format(parseISO(post.creation_date), 'yyyy-MM-dd');
 
 Timeline.auth = true;
 export default function Timeline({
@@ -44,9 +47,6 @@ export default function Timeline({
 
     const router = useRouter();
 
-    // hotfix for date issue #570
-    // let isoDate = new Date();
-    // isoDate = add(isoDate, { minutes: -1 * isoDate.getTimezoneOffset() });
     const [toDate, setToDate] = useState<Date>(new Date());
     const [postToRepost, setPostToRepost] = useState<BackendPost | null>(null);
     const [allPosts, setAllPosts] = useState<BackendPost[]>([]);
@@ -96,7 +96,7 @@ export default function Timeline({
         setFetchCount((prev) => ++prev);
         setAllPosts((prev) => {
             const allPosts = [...prev, ...newFetchedPosts];
-            setPostsByDate(groupBy(allPosts, (p) => p.creation_date.replace(/T.+/, '')));
+            setPostsByDate(groupBy(allPosts, creationDay));
             setIsLoadingTimeline(false);
             return allPosts;
         });
@@ -144,7 +144,7 @@ export default function Timeline({
     const updatePosts = (posts: BackendPost[]) => {
         setIsLoadingTimeline(true);
         setAllPosts(posts);
-        setPostsByDate(groupBy(posts, (p) => p.creation_date.replace(/T.+/, '')));
+        setPostsByDate(groupBy(posts, creationDay));
         setIsLoadingTimeline(false);
     };
 

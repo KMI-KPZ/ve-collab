@@ -1,11 +1,12 @@
 from base64 import b64encode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import io
 import json
 import logging
 import os
 import requests
 from typing import List
+from urllib.parse import quote
 
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -1272,7 +1273,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": None,
                 "pinned": False,
@@ -1331,7 +1332,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": ObjectId(),
                 "pinned": False,
@@ -1376,7 +1377,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": space_id,
                 "pinned": False,
@@ -1437,7 +1438,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": space_id,
                 "pinned": False,
@@ -1540,10 +1541,12 @@ class PostHandlerTest(BaseApiTestCase):
                 None,
             ),
         )
-        # for some odd reason, the ms in the timestamps jitter
+        # mongodb truncates the timestamp to milliseconds, so allow for a bit of jitter.
+        # the test client reads naive datetimes (which pymongo stores as UTC), while
+        # the response carries the offset, so align the db value before comparing
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
-            db_state["creation_date"],
+            db_state["creation_date"].replace(tzinfo=timezone.utc),
             delta=timedelta(seconds=1),
         )
         self.assertEqual(response["inserted_post"]["space"], db_state["space"])
@@ -1840,7 +1843,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1918,7 +1921,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -1978,7 +1981,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2021,7 +2024,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2064,7 +2067,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2113,7 +2116,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2140,7 +2143,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2172,7 +2175,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2199,7 +2202,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2238,7 +2241,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2278,7 +2281,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2347,7 +2350,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2380,7 +2383,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2408,7 +2411,7 @@ class CommentHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2575,7 +2578,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2606,7 +2609,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2641,7 +2644,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2671,7 +2674,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2712,7 +2715,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2748,7 +2751,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2783,7 +2786,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2810,7 +2813,7 @@ class LikePostHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -3017,7 +3020,7 @@ class RepostHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "initial_post_text",
             "space": self.test_space_id,
             "pinned": False,
@@ -3248,7 +3251,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3272,7 +3275,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         # use other random oid in the request that doesnt exist
@@ -3295,7 +3298,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         # use oid of original post instead of repost
@@ -3317,7 +3320,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3338,7 +3341,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3367,7 +3370,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3388,7 +3391,7 @@ class PinHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "initial_post_text",
             "space": self.test_space_id,
             "pinned": False,
@@ -3399,7 +3402,7 @@ class PinHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -4068,7 +4071,7 @@ class SearchHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": self.test_space_id,
             "pinned": False,
@@ -4079,7 +4082,7 @@ class SearchHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -4282,7 +4285,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": self.test_space_id,
             "pinned": False,
@@ -4293,7 +4296,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -7743,8 +7746,8 @@ class TimelineHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "read_access": [CURRENT_ADMIN.username],
             "write_access": [CURRENT_ADMIN.username],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [],
@@ -7756,8 +7759,8 @@ class TimelineHandlerTest(BaseApiTestCase):
             "target_groups": [],
             "languages": ["test", "test"],
             "evaluation": [],
-            "timestamp_from": datetime.now(),
-            "timestamp_to": datetime.now(),
+            "timestamp_from": datetime.now(timezone.utc),
+            "timestamp_to": datetime.now(timezone.utc),
             "involved_parties": ["test", "test"],
             "realization": "test",
             "physical_mobility": True,
@@ -7806,7 +7809,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[0],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "space_post_admin",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7817,7 +7820,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -7828,7 +7831,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[1],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "normal_post_admin",
                 "space": None,
                 "pinned": False,
@@ -7842,7 +7845,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[2],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "space_post_user",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7856,7 +7859,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[3],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "normal_post_user",
                 "space": None,
                 "pinned": False,
@@ -7929,8 +7932,8 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/timeline?from={}&to={}".format(
-                (datetime.now() - timedelta(hours=2)).isoformat(),
-                (datetime.now() - timedelta(hours=1)).isoformat(),
+                quote((datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()),
+                quote((datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()),
             ),
             True,
             200,
@@ -7986,7 +7989,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now() + timedelta(days=1),
+                "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
                 "text": "pinned_space_post_admin",
                 "space": self.test_space_id,
                 "pinned": True,
@@ -8183,10 +8186,10 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # query for new posts in the last 30 minutes
         # plenty of time, since setup happens right before the test
-        timestamp = (datetime.now() - timedelta(minutes=30)).isoformat()
+        timestamp = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
 
         response = self.base_checks(
-            "GET", "/updates?from={}".format(timestamp), True, 200
+            "GET", "/updates?from={}".format(quote(timestamp)), True, 200
         )
         self.assertIn("new_posts", response)
         self.assertTrue(response["new_posts"])
@@ -8204,7 +8207,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {},
             {
                 "$set": {
-                    "creation_date": (datetime.now() - timedelta(days=10)).isoformat()
+                    "creation_date": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
                 }
             },
         )
@@ -8363,8 +8366,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "read_access": [CURRENT_ADMIN.username],
             "write_access": [CURRENT_ADMIN.username],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
@@ -12810,7 +12813,7 @@ class ReportHandlerTest(BaseApiTestCase):
             "item_id": self.reported_item_id,
             "reason": "test",
             "state": "open",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.reports.insert_one(self.default_report)
 
@@ -12911,7 +12914,7 @@ class ReportHandlerTest(BaseApiTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "closed",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -12956,7 +12959,7 @@ class ReportHandlerTest(BaseApiTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": second_id,
@@ -12965,7 +12968,7 @@ class ReportHandlerTest(BaseApiTestCase):
                     "item_id": ObjectId(),
                     "reason": "test2",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -13166,7 +13169,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                         "_id": ObjectId(),
                         "message": "hi",
                         "sender": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "send_states": [
                             {
                                 "username": CURRENT_ADMIN.username,
@@ -13185,7 +13188,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "type": "new_messages",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             }
         )
@@ -13195,7 +13198,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "p1",
                 "space": None,
                 "pinned": False,
@@ -13212,7 +13215,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": "someone",
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "p2",
                 "space": None,
                 "pinned": False,
@@ -13225,7 +13228,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "c",
                         "pinned": False,
                     }
@@ -13275,7 +13278,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "message": "m",
                 "plan_id": None,
                 "replied": False,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -13288,7 +13291,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "item_id": ObjectId(),
                 "reason": "r",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
