@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Image from 'next/image';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -67,7 +67,7 @@ export default function TargetGroups({ socket, languageKeys }: Props): JSX.Eleme
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(TargetGroupsFormSchema),
+        resolver: zodResolver(TargetGroupsFormSchema) as Resolver<FormValues>,
         defaultValues: {
             targetGroups: [emptyTG],
             languages: [],

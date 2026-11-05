@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import React, { useCallback, useState } from 'react';
 import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendUserSnippet, BackendProfileSnippetsResponse } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -71,7 +71,7 @@ export default function Checklist({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(CheckListPartnersFormSchema),
+        resolver: zodResolver(CheckListPartnersFormSchema) as Resolver<FormValues>,
         defaultValues: {
             checklist: [emptyCheckListPartner],
         },

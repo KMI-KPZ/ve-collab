@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useCallback } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Resolver, SubmitHandler, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
@@ -26,7 +26,7 @@ export default function Name({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(NameFormSchema),
+        resolver: zodResolver(NameFormSchema) as Resolver<FormValues>,
     });
 
     const setPlanerData = useCallback(
@@ -89,7 +89,7 @@ export function NameNoAuthPreview() {
     const { t } = useTranslation(['designer', 'common']);
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(NameFormSchema),
+        resolver: zodResolver(NameFormSchema) as Resolver<FormValues>,
     });
 
     return (
