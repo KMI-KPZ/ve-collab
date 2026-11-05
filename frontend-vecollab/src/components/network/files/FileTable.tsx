@@ -40,9 +40,6 @@ interface Props {
     emptyMessage: string;
 }
 
-/**
- * the list view of a folder (or of search results)
- */
 export default function FileTable({
     items,
     authorNames,

@@ -17,9 +17,6 @@ interface Props {
     onClear: () => void;
 }
 
-/**
- * a small panel listing the running/finished uploads with their progress
- */
 export default function UploadPanel({ uploads, onClear }: Props) {
     const { t } = useTranslation('community');
 

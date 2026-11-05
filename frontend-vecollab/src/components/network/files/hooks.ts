@@ -6,9 +6,6 @@ import useSWR from 'swr';
 import { UploadItem } from './UploadPanel';
 import { formatBytes } from './fileUtils';
 
-/**
- * the error reasons of the file share endpoints that have a translated message
- */
 const KNOWN_ERROR_REASONS = [
     'node_doesnt_exist',
     'not_a_folder',
@@ -49,8 +46,7 @@ export function useFileShareErrorMessage(limits: BackendFileShareLimits | null) 
 }
 
 /**
- * display names ("first last") of the given usernames, fetched once per
- * distinct set of usernames. Unknown usernames are missing in the result.
+ * display names of the given usernames. Unknown usernames are missing in the result.
  */
 export function useDisplayNames(usernames: string[], accessToken?: string) {
     const key = useMemo(

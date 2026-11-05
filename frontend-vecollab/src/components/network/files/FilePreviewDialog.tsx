@@ -36,11 +36,6 @@ type LoadedContent =
     | { kind: 'image' | 'pdf' | 'video' | 'audio'; url: string }
     | { kind: 'none' };
 
-/**
- * in-platform reading view for files: text/code, markdown, csv, images,
- * pdf (browser's native viewer), audio and video. Everything else offers
- * a download.
- */
 export default function FilePreviewDialog({
     node,
     siblings = [],
@@ -125,7 +120,7 @@ export default function FilePreviewDialog({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [node?._id, session?.accessToken]);
 
-    // keyboard: escape closes, arrows navigate
+    // keyboard navigation
     const handleKey = useCallback(
         (event: KeyboardEvent) => {
             if (event.key === 'Escape') onClose();

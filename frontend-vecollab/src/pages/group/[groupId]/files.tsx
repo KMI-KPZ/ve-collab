@@ -15,7 +15,7 @@ import { useRouter } from 'next/router';
 import { type JSX } from 'react';
 
 /**
- * the file share of a group on its own page, so that folders and previews
+ * the file share of a group is its own page, such that folders and previews
  * are linkable (?folder=…&preview=…).
  */
 GroupFiles.auth = true;

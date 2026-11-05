@@ -6,9 +6,6 @@ interface Props {
     storage: BackendFileShareStorage;
 }
 
-/**
- * used and available storage of the group's file share
- */
 export default function StorageBar({ storage }: Props) {
     const { t } = useTranslation('community');
 

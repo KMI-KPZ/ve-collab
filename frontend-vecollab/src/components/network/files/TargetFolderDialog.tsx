@@ -22,10 +22,6 @@ interface Props {
     onClose: () => void;
 }
 
-/**
- * dialog to pick a target folder from the folder tree, used for moving and
- * copying nodes
- */
 export default function TargetFolderDialog({
     isOpen,
     title,

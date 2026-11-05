@@ -20,10 +20,6 @@ interface Props {
     className?: string;
 }
 
-/**
- * a collapsible tree of the folders of a group's file share, used as the
- * navigation sidebar and as target picker in the move/copy dialogs
- */
 export default function FolderTree({
     tree,
     selectedId,

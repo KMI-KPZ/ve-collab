@@ -60,7 +60,7 @@
     "fileshare_col_size": "Size",
     "fileshare_empty_folder": "This folder is empty.",
     "fileshare_empty_folder_upload_hint": "This folder is empty. Drop files here or use \"Upload\".",
-    "fileshare_search_placeholder": "Search files and folders …",
+    "fileshare_search_placeholder": "Search files and folders…",
     "fileshare_search_results_for": "Search results for \"{{query}}\"",
     "fileshare_no_search_results": "No files or folders found.",
     "fileshare_clear_search": "Clear search",

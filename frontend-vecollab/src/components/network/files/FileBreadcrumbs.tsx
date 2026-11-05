@@ -9,17 +9,19 @@ interface Props {
     onNavigate: (folderId: string | null) => void;
 }
 
-/**
- * clickable path from the root down to the current folder
- */
 export default function FileBreadcrumbs({ path, onNavigate }: Props) {
     const { t } = useTranslation('community');
 
     const label = (snippet: BackendFilePathSnippet) =>
-        snippet.system === SYSTEM_FOLDER_POST_FILES ? t('fileshare_post_files_folder') : snippet.name;
+        snippet.system === SYSTEM_FOLDER_POST_FILES
+            ? t('fileshare_post_files_folder')
+            : snippet.name;
 
     return (
-        <nav className="flex items-center flex-wrap text-sm text-gray-600 min-w-0" aria-label="breadcrumb">
+        <nav
+            className="flex items-center flex-wrap text-sm text-gray-600 min-w-0"
+            aria-label="breadcrumb"
+        >
             <button
                 type="button"
                 className={`flex items-center rounded px-1 py-0.5 cursor-pointer hover:bg-gray-100 ${

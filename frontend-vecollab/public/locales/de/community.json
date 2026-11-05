@@ -60,7 +60,7 @@
     "fileshare_col_size": "Größe",
     "fileshare_empty_folder": "Dieser Ordner ist leer.",
     "fileshare_empty_folder_upload_hint": "Dieser Ordner ist leer. Ziehe Dateien hierher oder nutze „Hochladen“.",
-    "fileshare_search_placeholder": "Dateien und Ordner suchen …",
+    "fileshare_search_placeholder": "Dateien und Ordner suchen…",
     "fileshare_search_results_for": "Suchergebnisse für „{{query}}“",
     "fileshare_no_search_results": "Keine Dateien oder Ordner gefunden.",
     "fileshare_clear_search": "Suche zurücksetzen",

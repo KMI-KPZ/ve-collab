@@ -40,11 +40,6 @@ interface Props {
     canWrite: boolean; // = space_acl "write_files"
 }
 
-/**
- * the file share of a group: folder tree, listing, search, uploads and previews.
- * The current folder and the previewed file are part of the url
- * (?folder=…&preview=…), so they are linkable and work with the browser history.
- */
 export default function FileBrowser({ groupId, canRead, canWrite }: Props) {
     const { data: session } = useSession();
     const accessToken = session?.accessToken;

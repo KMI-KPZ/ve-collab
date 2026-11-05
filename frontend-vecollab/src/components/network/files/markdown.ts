@@ -33,7 +33,6 @@ const ALLOWED_TAGS = [
  * render (GitHub flavored) markdown for the file preview. Images become links,
  * so that viewing a file doesn't load anything from third parties, and links
  * open in a new tab. The result is sanitized with DOMPurify.
- * Only works in the browser (uses DOMParser).
  */
 export function renderMarkdown(markdown: string): string {
     const html = marked.parse(markdown, { async: false, gfm: true }) as string;

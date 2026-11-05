@@ -18,10 +18,6 @@ interface Props {
     onClose: () => void;
 }
 
-/**
- * dialog with a single text input, used for creating folders and
- * renaming files/folders
- */
 export default function NameDialog({
     isOpen,
     title,

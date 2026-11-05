@@ -49,9 +49,6 @@ const CODE_EXTENSIONS = [
     'css',
 ];
 
-/**
- * icon for a file or folder, chosen by content type and extension
- */
 export default function FileIcon({ node, size = 22, className = '' }: Props) {
     if (node.type === 'folder') {
         return node.system ? (

@@ -62,7 +62,7 @@ export const MAX_TEXT_PREVIEW_BYTES = 2 * 1024 * 1024;
 
 /**
  * passive media that is previewed with the browser's own viewers (img, video,
- * audio, pdf). It can't run scripts, so it may also be opened in a new tab.
+ * audio, pdf)
  */
 const PASSIVE_MEDIA_TYPES = [
     'application/pdf',
@@ -144,16 +144,12 @@ export function previewMediaType(node: BackendFileNode): string {
         : (node.content_type || '').toLowerCase();
 }
 
-/**
- * whether the media preview may be opened in a new tab, i.e. as a document of
- * its own. Only passive media, never svg (see `SVG_TYPE`).
- */
 export function canOpenInNewTab(node: BackendFileNode): boolean {
     return PASSIVE_MEDIA_TYPES.includes(previewMediaType(node));
 }
 
 /**
- * human readable file size, e.g. 1.5 MB
+ * human readable file size
  */
 export function formatBytes(bytes: number | undefined | null, decimals = 1): string {
     if (!bytes || bytes <= 0) return '0 B';
@@ -190,7 +186,7 @@ export function splitName(name: string): { stem: string; extension: string } {
 }
 
 /**
- * parse csv/tsv text into rows for the table preview (simple, quote aware)
+ * parse csv/tsv text into rows for the table preview
  */
 export function parseDelimited(text: string, maxRows = 500): string[][] {
     // guess the delimiter from the first line: tab > semicolon > comma

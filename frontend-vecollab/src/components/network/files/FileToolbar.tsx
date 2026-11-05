@@ -11,9 +11,6 @@ interface Props {
     onCreateFolder: () => void;
 }
 
-/**
- * upload and new folder buttons as well as the search field of the file browser
- */
 export default function FileToolbar({
     canUpload,
     uploadDisabledHint,
