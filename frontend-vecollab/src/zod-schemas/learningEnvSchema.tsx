@@ -4,8 +4,7 @@ export const LearningEnvFormSchema = z.object({
     learningEnv: z.string().max(5000, "messages.maxlength5000"),
     courseFormat: z.string().max(5000, "messages.maxlength5000"),
     usePhysicalMobility: z.boolean({
-        required_error: "messages.please_yes_or_no",
-        invalid_type_error: "messages.please_yes_or_no",
+        error: "messages.please_yes_or_no",
     }),
     physicalMobilities: z
         .object({

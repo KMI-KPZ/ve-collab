@@ -1,0 +1,36 @@
+export interface Method {
+    id: string;
+    title: string;
+    alternativeTitle: string | null;
+    courseType: string[];
+    participantsMin: number | null;
+    participantsMax: number | null;
+    participantsComment: string | null;
+    userRating: number | null;
+    variations: string | null;
+    examples: string | null;
+    tips: string | null;
+    author: string | null;
+    links: string | null;
+    citations: string | null;
+    language: string;
+    socialForm: string[];
+    phase: string[];
+    subPhase: string[];
+    result: string | null;
+    timeMax: number | null;
+    timeComment: string | null;
+    proceeding: string | null;
+    phaseProceeding: string | null;
+    experiences: string | null;
+    visualization: string | null;
+    seating: string | null;
+    timeMin: number | null;
+    thumbnail: string | null;
+    material: string[];
+    roomSpec: string[];
+    vendorId: string | null;
+    originalCreationDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+}

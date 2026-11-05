@@ -93,7 +93,7 @@ class MailInvitation:
         """
 
         # get the current time and time 24 hours ago
-        current_time = datetime.datetime.now()
+        current_time = util.utcnow()
         time_24_hours_ago = current_time - datetime.timedelta(hours=24)
 
         # count the number of invitations sent by the user in the last 24 hours

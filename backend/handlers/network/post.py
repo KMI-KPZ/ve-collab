@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 
@@ -11,7 +10,11 @@ from error_reasons import (
     POST_DOESNT_EXIST,
     SPACE_DOESNT_EXIST,
 )
-from exceptions import NoWriteAccessError, PlanDoesntExistError
+from exceptions import (
+    FileAlreadyInRepoError,
+    NoWriteAccessError,
+    PlanDoesntExistError,
+)
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
 from resources.network.post import (
@@ -23,11 +26,8 @@ from resources.network.post import (
 from model import VEPlan
 from resources.planner.ve_plan import VEPlanResource
 from resources.network.profile import Profiles
-from resources.network.space import (
-    FileAlreadyInRepoError,
-    Spaces,
-    SpaceDoesntExistError,
-)
+from resources.network.space import Spaces, SpaceDoesntExistError
+from resources.network.space_files import SpaceFiles
 from resources.planner.ve_plan import VEPlanResource
 from handlers.network.timeline import BaseTimelineHandler
 import util
@@ -187,7 +187,7 @@ class PostHandler(BaseTimelineHandler):
         # no _id field means a new post is made
         if _id is None:
             author = self.current_user.username
-            creation_date = datetime.datetime.now()
+            creation_date = util.utcnow()
             text = self.get_body_argument("text")  # http_body['text']
             wordpress_post_id = self.get_body_argument("wordpress_post_id", None)
             tags = self.get_body_argument("tags", [])  # http_body['tags']
@@ -265,19 +265,6 @@ class PostHandler(BaseTimelineHandler):
                             }
                         )
 
-                        # if the post was in a space, also store the file in the repo,
-                        # indicating it is part of a post by setting manually_uploaded to False
-                        if space_id:
-                            try:
-                                space_manager.add_new_post_file(
-                                    space_id,
-                                    self.current_user.username,
-                                    stored_id,
-                                    file_obj["filename"],
-                                )
-                            except FileAlreadyInRepoError:
-                                pass
-
                 # if plans are referenced, they have to exist and
                 # the user has to have write permission for them
                 if plans:
@@ -328,6 +315,22 @@ class PostHandler(BaseTimelineHandler):
                 post_id = post_manager.insert_post(post)
 
                 post["_id"] = post_id
+
+                # if the post was in a space, also mirror the files into the
+                # space's file share (post files folder), referencing the post
+                if space_id:
+                    space_files = SpaceFiles(db)
+                    for file_obj in files:
+                        try:
+                            space_files.add_post_file(
+                                space_id,
+                                self.current_user.username,
+                                file_obj["file_id"],
+                                file_obj["file_name"],
+                                post_id,
+                            )
+                        except FileAlreadyInRepoError:
+                            pass
 
                 # enhance author with profile information
                 profile_manager = Profiles(db)
@@ -477,15 +480,16 @@ class PostHandler(BaseTimelineHandler):
                             }
                         )
 
-                        # if the post was in a space, also store the file in the repo,
-                        # indicating it is part of a post by setting manually_uploaded to False
+                        # if the post was in a space, also mirror the file into the
+                        # space's file share (post files folder), referencing the post
                         if post["space"]:
                             try:
-                                space_manager.add_new_post_file(
+                                SpaceFiles(db).add_post_file(
                                     post["space"],
                                     self.current_user.username,
                                     stored_id,
                                     file_obj["filename"],
+                                    _id,
                                 )
                             except FileAlreadyInRepoError:
                                 pass
@@ -750,7 +754,7 @@ class CommentHandler(BaseHandler):
             # create and store the comment
             comment = {
                 "author": self.current_user.username,
-                "creation_date": datetime.datetime.now(),
+                "creation_date": util.utcnow(),
                 "text": http_body["text"],
                 "pinned": False,
             }
@@ -1265,7 +1269,7 @@ class RepostHandler(BaseHandler):
                 post["isRepost"] = True
                 post["repostAuthor"] = self.current_user.username
                 post["originalCreationDate"] = post["creation_date"]
-                post["creation_date"] = datetime.datetime.now()
+                post["creation_date"] = util.utcnow()
                 if "isRepost" in originalPost and originalPost["isRepost"]:
                     post["text"] = originalPost["repostText"]
                     post["author"] = originalPost["repostAuthor"]

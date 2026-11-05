@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Stage from '@/components/VE-designer/FinePlanner/Stage';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Resolver, SubmitHandler, useForm } from 'react-hook-form';
 import { ISubmenuData } from '@/interfaces/ve-designer/sideProgressBar';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -104,7 +104,7 @@ export default function FinePlanner({ socket }: Props): JSX.Element {
 
     const methods = useForm<IFineStepFrontend>({
         mode: 'onChange',
-        resolver: zodResolver(FineStepFormSchema),
+        resolver: zodResolver(FineStepFormSchema) as Resolver<IFineStepFrontend>,
         defaultValues: {
             ...defaultFormValueDataFineStepFrontend,
         },

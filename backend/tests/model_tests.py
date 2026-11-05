@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
 from bson import ObjectId
@@ -109,7 +109,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.admins, [])
         self.assertEqual(space.invites, [])
         self.assertEqual(space.requests, [])
-        self.assertEqual(space.files, [])
         self.assertEqual(space.space_pic, None)
         self.assertEqual(space.space_description, None)
 
@@ -120,7 +119,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["admins"], [])
         self.assertEqual(space["invites"], [])
         self.assertEqual(space["requests"], [])
-        self.assertEqual(space["files"], [])
         self.assertEqual(space["space_pic"], None)
         self.assertEqual(space["space_description"], None)
 
@@ -139,7 +137,6 @@ class SpaceModelTest(TestCase):
                 "admins": ["test"],
                 "invites": ["test"],
                 "requests": ["test"],
-                "files": ["test"],
                 "space_pic": "test",
                 "space_description": "test",
             }
@@ -152,7 +149,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space.admins, ["test"])
         self.assertEqual(space.invites, ["test"])
         self.assertEqual(space.requests, ["test"])
-        self.assertEqual(space.files, ["test"])
         self.assertEqual(space.space_pic, "test")
         self.assertEqual(space.space_description, "test")
 
@@ -163,7 +159,6 @@ class SpaceModelTest(TestCase):
         self.assertEqual(space["admins"], ["test"])
         self.assertEqual(space["invites"], ["test"])
         self.assertEqual(space["requests"], ["test"])
-        self.assertEqual(space["files"], ["test"])
         self.assertEqual(space["space_pic"], "test")
         self.assertEqual(space["space_description"], "test")
 
@@ -176,7 +171,6 @@ class SpaceModelTest(TestCase):
                 "admins": ["test"],
                 "invites": ["test"],
                 "requests": ["test"],
-                "files": ["test"],
             }
         )
 
@@ -400,8 +394,8 @@ class StepModelTest(TestCase):
         """
 
         _id = ObjectId()
-        timestamp_from = datetime(2023, 1, 1)
-        timestamp_to = datetime(2023, 1, 8)
+        timestamp_from = datetime(2023, 1, 1, tzinfo=timezone.utc)
+        timestamp_to = datetime(2023, 1, 8, tzinfo=timezone.utc)
         task = Task()
         original_plan = ObjectId()
         step = Step(
@@ -443,6 +437,23 @@ class StepModelTest(TestCase):
         self.assertEqual(step2.duration, timedelta(days=7))
         self.assertIsInstance(step2._id, ObjectId)
         self.assertEqual(step2.original_plan, original_plan)
+
+    def test_init_timestamps_utc(self):
+        """
+        expect: timestamps are normalized into timezone-aware UTC datetimes,
+        naive values (date-only str's or datetimes) are interpreted as UTC,
+        values with an offset are converted
+        """
+
+        step = Step(
+            timestamp_from=datetime(2023, 1, 1),
+            timestamp_to="2023-01-08T02:00:00+02:00",
+        )
+        self.assertEqual(step.timestamp_from, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        self.assertEqual(step.timestamp_from.tzinfo, timezone.utc)
+        self.assertEqual(step.timestamp_to, datetime(2023, 1, 8, tzinfo=timezone.utc))
+        self.assertEqual(step.timestamp_to.tzinfo, timezone.utc)
+        self.assertEqual(step.duration, timedelta(days=7))
 
     def test_to_dict(self):
         """
@@ -493,8 +504,8 @@ class StepModelTest(TestCase):
             "_id": _id,
             "name": "test",
             "workload": 10,
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
             "learning_goal": "test",
             "learning_activity": "test",
             "has_tasks": True,
@@ -526,8 +537,8 @@ class StepModelTest(TestCase):
         step_dict = {
             "name": "test",
             "workload": 10,
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
             "learning_goal": "test",
             "learning_activity": "test",
             "has_tasks": True,
@@ -573,8 +584,8 @@ class StepModelTest(TestCase):
             "_id": ObjectId(),
             "name": "test",
             "workload": 10,
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
             "learning_goal": "test",
             "learning_activity": "test",
             "tasks": [Task().to_dict()],
@@ -592,8 +603,8 @@ class StepModelTest(TestCase):
             "_id": ObjectId(),
             "name": "test",
             "workload": 0,
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
             "learning_goal": "test",
             "learning_activity": "test",
             "has_tasks": True,
@@ -616,11 +627,11 @@ class StepModelTest(TestCase):
 
         step_dict["timestamp_from"] = 1
         self.assertRaises(TypeError, Step.from_dict, step_dict)
-        step_dict["timestamp_from"] = datetime(2023, 1, 1)
+        step_dict["timestamp_from"] = datetime(2023, 1, 1, tzinfo=timezone.utc)
 
         step_dict["timestamp_to"] = 1
         self.assertRaises(TypeError, Step.from_dict, step_dict)
-        step_dict["timestamp_to"] = datetime(2023, 1, 8)
+        step_dict["timestamp_to"] = datetime(2023, 1, 8, tzinfo=timezone.utc)
 
         step_dict["learning_goal"] = 123
         self.assertRaises(TypeError, Step.from_dict, step_dict)
@@ -1275,14 +1286,14 @@ class PhysicalMobilityModelTest(TestCase):
         physical_mobility = PhysicalMobility(
             _id=_id,
             location="test",
-            timestamp_from=datetime(2023, 1, 1),
-            timestamp_to=datetime(2023, 1, 8),
+            timestamp_from=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            timestamp_to=datetime(2023, 1, 8, tzinfo=timezone.utc),
         )
 
         self.assertEqual(physical_mobility._id, _id)
         self.assertEqual(physical_mobility.location, "test")
-        self.assertEqual(physical_mobility.timestamp_from, datetime(2023, 1, 1))
-        self.assertEqual(physical_mobility.timestamp_to, datetime(2023, 1, 8))
+        self.assertEqual(physical_mobility.timestamp_from, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        self.assertEqual(physical_mobility.timestamp_to, datetime(2023, 1, 8, tzinfo=timezone.utc))
 
     def test_to_dict(self):
         """
@@ -1294,8 +1305,8 @@ class PhysicalMobilityModelTest(TestCase):
         physical_mobility = PhysicalMobility(
             _id=_id,
             location="test",
-            timestamp_from=datetime(2023, 1, 1),
-            timestamp_to=datetime(2023, 1, 8),
+            timestamp_from=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            timestamp_to=datetime(2023, 1, 8, tzinfo=timezone.utc),
         ).to_dict()
 
         self.assertIn("_id", physical_mobility)
@@ -1304,8 +1315,8 @@ class PhysicalMobilityModelTest(TestCase):
         self.assertIn("timestamp_to", physical_mobility)
         self.assertEqual(physical_mobility["_id"], _id)
         self.assertEqual(physical_mobility["location"], "test")
-        self.assertEqual(physical_mobility["timestamp_from"], datetime(2023, 1, 1))
-        self.assertEqual(physical_mobility["timestamp_to"], datetime(2023, 1, 8))
+        self.assertEqual(physical_mobility["timestamp_from"], datetime(2023, 1, 1, tzinfo=timezone.utc))
+        self.assertEqual(physical_mobility["timestamp_to"], datetime(2023, 1, 8, tzinfo=timezone.utc))
 
     def test_from_dict(self):
         """
@@ -1316,8 +1327,8 @@ class PhysicalMobilityModelTest(TestCase):
         params = {
             "_id": ObjectId(),
             "location": "test",
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
         }
 
         physical_mobility = PhysicalMobility.from_dict(params)
@@ -1330,8 +1341,8 @@ class PhysicalMobilityModelTest(TestCase):
         # without _id
         params = {
             "location": "test",
-            "timestamp_from": datetime(2023, 1, 1),
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
         }
 
         physical_mobility = PhysicalMobility.from_dict(params)
@@ -1358,7 +1369,7 @@ class PhysicalMobilityModelTest(TestCase):
         # timestamp_from is missing
         params = {
             "location": "test",
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
         }
 
         self.assertRaises(MissingKeyError, PhysicalMobility.from_dict, params)
@@ -1372,14 +1383,14 @@ class PhysicalMobilityModelTest(TestCase):
         params = {
             "location": "test",
             "timestamp_from": 1,
-            "timestamp_to": datetime(2023, 1, 8),
+            "timestamp_to": datetime(2023, 1, 8, tzinfo=timezone.utc),
         }
 
         self.assertRaises(TypeError, PhysicalMobility.from_dict, params)
 
         params = {
             "location": "test",
-            "timestamp_from": datetime(2023, 1, 1),
+            "timestamp_from": datetime(2023, 1, 1, tzinfo=timezone.utc),
             "timestamp_to": 1,
         }
 
@@ -1616,8 +1627,8 @@ class VEPlanModelTest(TestCase):
     def create_step(
         self,
         name: str,
-        timestamp_from: datetime = datetime(2023, 1, 1),
-        timestamp_to: datetime = datetime(2023, 1, 8),
+        timestamp_from: datetime = datetime(2023, 1, 1, tzinfo=timezone.utc),
+        timestamp_to: datetime = datetime(2023, 1, 8, tzinfo=timezone.utc),
     ) -> Step:
         """
         convenience method to create a Step object with non-default values
@@ -1678,8 +1689,8 @@ class VEPlanModelTest(TestCase):
 
         return PhysicalMobility(
             location=location,
-            timestamp_from=datetime(2023, 1, 1),
-            timestamp_to=datetime(2023, 1, 8),
+            timestamp_from=datetime(2023, 1, 1, tzinfo=timezone.utc),
+            timestamp_to=datetime(2023, 1, 8, tzinfo=timezone.utc),
         )
 
     def create_evaluation(self, username: str = "test_admin") -> Evaluation:
@@ -1763,13 +1774,13 @@ class VEPlanModelTest(TestCase):
         steps = [
             self.create_step(
                 "test1",
-                timestamp_from=datetime(2023, 1, 1),
-                timestamp_to=datetime(2023, 1, 8),
+                timestamp_from=datetime(2023, 1, 1, tzinfo=timezone.utc),
+                timestamp_to=datetime(2023, 1, 8, tzinfo=timezone.utc),
             ),
             self.create_step(
                 "test2",
-                timestamp_from=datetime(2023, 1, 9),
-                timestamp_to=datetime(2023, 1, 16),
+                timestamp_from=datetime(2023, 1, 9, tzinfo=timezone.utc),
+                timestamp_to=datetime(2023, 1, 16, tzinfo=timezone.utc),
             ),
         ]
         target_groups = [
@@ -1893,15 +1904,15 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.literature_files, literature_files)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 20)
-        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
-        self.assertEqual(plan.timestamp_to, datetime(2023, 1, 16))
-        self.assertEqual(plan.duration, datetime(2023, 1, 16) - datetime(2023, 1, 1))
+        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        self.assertEqual(plan.timestamp_to, datetime(2023, 1, 16, tzinfo=timezone.utc))
+        self.assertEqual(plan.duration, datetime(2023, 1, 16, tzinfo=timezone.utc) - datetime(2023, 1, 1, tzinfo=timezone.utc))
 
         # again, this time without passing _ids and
         # without a "to" timestamp, expecting duration to become None
         steps = [
             self.create_step(
-                "test1", timestamp_from=datetime(2023, 1, 1), timestamp_to=None
+                "test1", timestamp_from=datetime(2023, 1, 1, tzinfo=timezone.utc), timestamp_to=None
             )
         ]
         plan = VEPlan(
@@ -1981,7 +1992,7 @@ class VEPlanModelTest(TestCase):
         self.assertEqual(plan.literature_files, literature_files)
         self.assertEqual(plan.progress["name"], "completed")
         self.assertEqual(plan.workload, 10)
-        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1))
+        self.assertEqual(plan.timestamp_from, datetime(2023, 1, 1, tzinfo=timezone.utc))
         self.assertEqual(plan.timestamp_to, None)
         self.assertEqual(plan.duration, None)
 

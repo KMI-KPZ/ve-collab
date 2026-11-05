@@ -4,7 +4,7 @@ import { fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { Socket } from 'socket.io-client';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -67,7 +67,7 @@ export default function Evaluation({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(EvaluationFormSchema),
+        resolver: zodResolver(EvaluationFormSchema) as Resolver<FormValues>,
         defaultValues: {
             evaluationPerPartner: defaultEvaluationValue,
         },

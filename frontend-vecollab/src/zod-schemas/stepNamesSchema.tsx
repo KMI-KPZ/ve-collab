@@ -11,7 +11,7 @@ const StepNameFormSchema = z
         timestamp_to: z.string().date('messages.valid_date'),
         workload: z
             .number({
-                invalid_type_error: 'messages.only_positive_number',
+                error: 'messages.only_positive_number',
             })
             .int('messages.only_positive_number')
             .gte(0, 'messages.only_positive_number')

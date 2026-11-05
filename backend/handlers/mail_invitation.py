@@ -1,4 +1,3 @@
-import datetime
 import json
 
 from error_reasons import (
@@ -195,7 +194,7 @@ class EmailInvitationHandler(BaseHandler):
                 "sender": self.current_user.username,
                 "plan_id": plan_id,
                 "replied": False,
-                "timestamp": datetime.datetime.now(),
+                "timestamp": util.utcnow(),
             }
             invitation_id = invitation_manager.insert_invitation(invitation)
 

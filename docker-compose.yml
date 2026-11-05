@@ -98,6 +98,7 @@ services:
         NEXT_PUBLIC_SOCKETIO_BASE_URL: "http://localhost:${BACKEND_PORT}"
         NEXT_PUBLIC_ETHERPAD_BASE_URL: "http://localhost:${ETHERPAD_PORT}"
         NEXT_PUBLIC_FEEDBACK_FORM_URL: ${FEEDBACK_FORM_URL}
+        NEXT_PUBLIC_CMS_URL: ${PAYLOAD_PUBLIC_URL}
         MATERIAL_BASE_URL: ${MATERIAL_BASE_URL}
     # includes the headless chrome instances for the pdf export
     deploy:
@@ -172,6 +173,48 @@ services:
       options:
         max-file: 5
         max-size: 10m
+
+  payload:
+    container_name: payload
+    build:
+      context: payload-cms
+      dockerfile: Dockerfile
+      args:
+        BASE_PATH: ${PAYLOAD_BASE_PATH}
+    ports:
+      - '3030:3000'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      payload-seed:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME}?authSource=admin
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+      KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      PAYLOAD_PUBLIC_URL: ${PAYLOAD_PUBLIC_URL}
+      BASE_PATH: ${PAYLOAD_BASE_PATH}
+    restart: unless-stopped
+
+  payload-seed:
+    container_name: payload-seed
+    build:
+      context: payload-cms
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        BASE_PATH: ${PAYLOAD_BASE_PATH}
+    command: npm run seed:methods
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME}?authSource=admin
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+    restart: "no"
 
 volumes:
   mongodb_data:

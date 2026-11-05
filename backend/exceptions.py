@@ -70,15 +70,61 @@ class FileAlreadyInRepoError(Exception):
     pass
 
 
-class FilenameCollisionError(Exception):
-    pass
-
-
 class FileDoesntExistError(Exception):
     pass
 
 
-class PostFileNotDeleteableError(Exception):
+class FileNodeDoesntExistError(Exception):
+    """The requested file or folder doesn't exist in the space's file share"""
+
+    pass
+
+
+class NotAFolderError(Exception):
+    """The target node is expected to be a folder, but is a file"""
+
+    pass
+
+
+class NotAFileError(Exception):
+    """The target node is expected to be a file, but is a folder"""
+
+    pass
+
+
+class FolderDepthExceededError(Exception):
+    """The operation would nest folders deeper than allowed"""
+
+    pass
+
+
+class FileTooLargeError(Exception):
+    """The uploaded file exceeds the maximum file size"""
+
+    pass
+
+
+class StorageQuotaExceededError(Exception):
+    """The operation would exceed the storage quota of the space"""
+
+    pass
+
+
+class InvalidFileNameError(Exception):
+    """The name of a file or folder is empty, too long or contains forbidden characters"""
+
+    pass
+
+
+class InvalidMoveTargetError(Exception):
+    """A folder cannot be moved into itself or one of its descendants"""
+
+    pass
+
+
+class ReadOnlyNodeError(Exception):
+    """The node is managed by the system (e.g. the post files folder) and cannot be modified"""
+
     pass
 
 

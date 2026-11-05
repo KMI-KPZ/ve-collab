@@ -138,6 +138,11 @@ export default function HeaderSection({
                                 {t('materials')}
                             </Link>
                         </li>
+                        <li className={isActivePath('/methods') ? activeClass : inactiveClass}>
+                            <Link href="/methods" className="py-1">
+                                {t('methods')}
+                            </Link>
+                        </li>
                         <li className={isActivePath('/group') ? activeClass : inactiveClass}>
                             <Link href="/groups" className="py-1">
                                 {t('groups')}
@@ -260,6 +265,11 @@ export default function HeaderSection({
                         >
                             <Link href="/learning-material" className="py-1">
                                 {t('materials')}
+                            </Link>
+                        </li>
+                        <li className={isActivePath('/methods') ? activeClass : inactiveClass}>
+                            <Link href="/methods" className="py-1">
+                                {t('methods')}
                             </Link>
                         </li>
                         <li>
@@ -391,6 +401,18 @@ export default function HeaderSection({
                                 }
                             >
                                 {t('materials')}
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/methods"
+                                className={
+                                    isActivePath('/methods')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('methods')}
                             </Link>
                         </li>
                         <li>
@@ -541,6 +563,18 @@ export default function HeaderSection({
                             </Link>
                         </li>
                         <li>
+                            <Link
+                                href="/methods"
+                                className={
+                                    isActivePath('/methods')
+                                        ? sandwichActiveItemClass
+                                        : sandwichItemClass
+                                }
+                            >
+                                {t('methods')}
+                            </Link>
+                        </li>
+                        <li>
                             <button
                                 onClick={() => signIn('keycloak', { callbackUrl: '/home' })}
                                 className={sandwichItemClass}
@@ -632,11 +666,11 @@ export default function HeaderSection({
                     )}
                 </div>
 
-                <ul className="min-[876px]:hidden flex flex-1 items-center justify-end">
+                <ul className="min-[976px]:hidden flex flex-1 items-center justify-end">
                     <MenuMobile />
                 </ul>
 
-                <ul className="hidden min-[876px]:flex flex-1 justify-end items-center space-x-3 xl:space-x-6">
+                <ul className="hidden min-[976px]:flex flex-1 justify-end items-center space-x-3 xl:space-x-6">
                     <Menu />
                 </ul>
             </nav>

@@ -41,8 +41,9 @@ export default function MailInvitationForm({
         let validMail = true;
 
         if (valid.error !== undefined) {
-            validName = !Object.hasOwn(valid.error?.formErrors.fieldErrors, 'name');
-            validMail = !Object.hasOwn(valid.error?.formErrors.fieldErrors, 'mail');
+            const { fieldErrors } = z.flattenError(valid.error);
+            validName = !Object.hasOwn(fieldErrors, 'name');
+            validMail = !Object.hasOwn(fieldErrors, 'mail');
         }
         setIsValidName(validName);
         setIsValidMail(validMail);

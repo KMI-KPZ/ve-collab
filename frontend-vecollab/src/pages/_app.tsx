@@ -17,6 +17,9 @@ import VEHead from '@/components/metaData/VEHead';
 
 export const SocketContext = createContext(socket);
 
+// stable reference to avoid recreation due to instance changes
+const COOKIE_DEFAULT_OPTIONS = { path: '/' };
+
 declare type ComponentWithAuth = NextComponentType<NextPageContext, any, any> & {
     auth?: boolean;
     autoForward?: boolean;
@@ -162,7 +165,7 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     return (
         <>
             <SessionProvider session={session} refetchInterval={5 * 60}>
-                <CookiesProvider defaultSetOptions={{ path: '/' }}>
+                <CookiesProvider defaultSetOptions={COOKIE_DEFAULT_OPTIONS}>
                     <SocketAuthenticationProvider>
                         <SocketContext.Provider value={socket}>
                             <VEHead />

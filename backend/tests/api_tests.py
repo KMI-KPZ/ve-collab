@@ -1,11 +1,12 @@
 from base64 import b64encode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import io
 import json
 import logging
 import os
 import requests
 from typing import List
+from urllib.parse import quote
 
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -33,6 +34,7 @@ from model import (
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 from resources.network.profile import Profiles
+from resources.network.space_files import SpaceFiles
 import util
 
 # load environment variables
@@ -72,6 +74,16 @@ PLAN_LOCKED_ERROR = "plan_locked"
 MAXIMUM_FILES_EXCEEDED_ERROR = "maximum_files_exceeded"
 FILE_DOESNT_EXIST_ERROR = "file_doesnt_exist"
 REPORT_DOESNT_EXIST_ERROR = "report_doesnt_exist"
+NODE_DOESNT_EXIST_ERROR = "node_doesnt_exist"
+NOT_A_FOLDER_ERROR = "not_a_folder"
+NOT_A_FILE_ERROR = "not_a_file"
+FOLDER_DEPTH_EXCEEDED_ERROR = "folder_depth_exceeded"
+FILE_TOO_LARGE_ERROR = "file_too_large"
+STORAGE_QUOTA_EXCEEDED_ERROR = "storage_quota_exceeded"
+INVALID_NAME_ERROR = "invalid_name"
+NAME_ALREADY_EXISTS_ERROR = "name_already_exists"
+INVALID_MOVE_TARGET_ERROR = "invalid_move_target"
+READ_ONLY_NODE_ERROR = "read_only_node"
 
 INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 
@@ -340,7 +352,6 @@ class BaseApiTestCase(AsyncHTTPTestCase):
                 "admins": [CURRENT_ADMIN.username],
                 "invites": [],
                 "requests": [],
-                "files": [],
             }
         )
         self.db.profiles.insert_many(
@@ -367,6 +378,7 @@ class BaseApiTestCase(AsyncHTTPTestCase):
         self.db.global_acl.delete_many({})
         self.db.space_acl.delete_many({})
         self.db.spaces.delete_many({})
+        self.db.space_files.delete_many({})
 
     def base_checks(
         self,
@@ -1272,7 +1284,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": None,
                 "pinned": False,
@@ -1331,7 +1343,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": ObjectId(),
                 "pinned": False,
@@ -1376,7 +1388,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": space_id,
                 "pinned": False,
@@ -1437,7 +1449,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": post_id,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "unittest_test_post",
                 "space": space_id,
                 "pinned": False,
@@ -1540,10 +1552,12 @@ class PostHandlerTest(BaseApiTestCase):
                 None,
             ),
         )
-        # for some odd reason, the ms in the timestamps jitter
+        # mongodb truncates the timestamp to milliseconds, so allow for a bit of jitter.
+        # the test client reads naive datetimes (which pymongo stores as UTC), while
+        # the response carries the offset, so align the db value before comparing
         self.assertAlmostEqual(
             datetime.fromisoformat(response["inserted_post"]["creation_date"]),
-            db_state["creation_date"],
+            db_state["creation_date"].replace(tzinfo=timezone.utc),
             delta=timedelta(seconds=1),
         )
         self.assertEqual(response["inserted_post"]["space"], db_state["space"])
@@ -1724,17 +1738,24 @@ class PostHandlerTest(BaseApiTestCase):
             ],
         )
 
-        # expect file to be in space as well
-        space_state = self.db.spaces.find_one({"_id": self.test_space_id})
-        self.assertIn("files", space_state)
-        self.assertIn(
-            {
-                "author": CURRENT_ADMIN.username,
-                "file_id": file._id,
-                "file_name": self.test_file_name,
-                "manually_uploaded": False,
-            },
-            space_state["files"],
+        # expect file to be mirrored into the space's file share (post files folder)
+        node = self.db.space_files.find_one(
+            {"space": self.test_space_id, "file_id": file._id}
+        )
+        self.assertIsNotNone(node)
+        self.assertEqual(node["type"], "file")
+        self.assertEqual(node["name"], self.test_file_name)
+        self.assertEqual(node["author"], CURRENT_ADMIN.username)
+        self.assertEqual(node["content_type"], "text/plain")
+        self.assertFalse(node["manually_uploaded"])
+        self.assertIsNotNone(node["post_id"])
+        self.assertEqual(
+            self.db.posts.find_one({"_id": node["post_id"]})["text"],
+            request_json["text"],
+        )
+        post_files_folder = self.db.space_files.find_one({"_id": node["parent"]})
+        self.assertEqual(
+            post_files_folder["system"], SpaceFiles.SYSTEM_FOLDER_POST_FILES
         )
 
         # check that the post counted towards the achievement "social"
@@ -1840,7 +1861,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -1918,7 +1939,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -1978,7 +1999,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2021,7 +2042,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2064,7 +2085,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2113,7 +2134,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2140,7 +2161,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2172,7 +2193,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2199,7 +2220,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2238,7 +2259,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2266,19 +2287,14 @@ class PostHandlerTest(BaseApiTestCase):
         file.seek(0)
 
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file,
-            filename=self.test_file_name,
-            content_type="text/plain",
-            metadata={"uploader": "me"},
-        )
+        _id = util.gridfs_put(fs, file.read(), self.test_file_name, "text/plain", "me")
         # manually insert test post and into space
         oid = ObjectId()
         self.db.posts.insert_one(
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2294,16 +2310,12 @@ class PostHandlerTest(BaseApiTestCase):
                 ],
             }
         )
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id},
-            {
-                "$push": {
-                    "files": {
-                        "author": CURRENT_ADMIN.username,
-                        "file_id": _id,
-                    }
-                }
-            },
+        SpaceFiles(self.db).add_post_file(
+            self.test_space_id,
+            CURRENT_ADMIN.username,
+            _id,
+            self.test_file_name,
+            oid,
         )
 
         self.base_checks("DELETE", "/posts", True, 200, body={"post_id": str(oid)})
@@ -2311,11 +2323,9 @@ class PostHandlerTest(BaseApiTestCase):
         # expect post deleted
         self.assertEqual(list(self.db.posts.find()), [])
 
-        # expect files to be removed from disk and from space
+        # expect files to be removed from disk and from the space's file share
         self.assertIsNone(fs.find_one({"_id": _id}))
-        self.assertEqual(
-            self.db.spaces.find_one({"_id": self.test_space_id})["files"], []
-        )
+        self.assertIsNone(self.db.space_files.find_one({"file_id": _id}))
 
     def test_delete_post_error_post_doesnt_exist(self):
         """
@@ -2347,7 +2357,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": None,
                 "pinned": False,
@@ -2380,7 +2390,7 @@ class PostHandlerTest(BaseApiTestCase):
             {
                 "_id": oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2408,7 +2418,7 @@ class CommentHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -2575,7 +2585,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2606,7 +2616,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2641,7 +2651,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2671,7 +2681,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2712,7 +2722,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2748,7 +2758,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2783,7 +2793,7 @@ class CommentHandlerTest(BaseApiTestCase):
                     "comments": {
                         "_id": comment_id,
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -2810,7 +2820,7 @@ class LikePostHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oid,
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "initial_post_text",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -3017,7 +3027,7 @@ class RepostHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "initial_post_text",
             "space": self.test_space_id,
             "pinned": False,
@@ -3248,7 +3258,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3272,7 +3282,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         # use other random oid in the request that doesnt exist
@@ -3295,7 +3305,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         # use oid of original post instead of repost
@@ -3317,7 +3327,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3338,7 +3348,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_ADMIN.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3367,7 +3377,7 @@ class RepostHandlerTest(BaseApiTestCase):
         post["repostAuthor"] = CURRENT_USER.username
         post["repostText"] = "test_repost"
         post["originalCreationDate"] = post["creation_date"]
-        post["creation_date"] = datetime.now()
+        post["creation_date"] = datetime.now(timezone.utc)
         self.db.posts.insert_one(post)
 
         request = {"_id": str(post["_id"]), "text": "updated_repost_text"}
@@ -3388,7 +3398,7 @@ class PinHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "initial_post_text",
             "space": self.test_space_id,
             "pinned": False,
@@ -3399,7 +3409,7 @@ class PinHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -4068,7 +4078,7 @@ class SearchHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": self.test_space_id,
             "pinned": False,
@@ -4079,7 +4089,7 @@ class SearchHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -4282,7 +4292,7 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.post_json = {
             "_id": self.post_oid,
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": self.test_space_id,
             "pinned": False,
@@ -4293,7 +4303,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                 {
                     "_id": self.comment_oid,
                     "author": CURRENT_USER.username,
-                    "creation_date": datetime.now(),
+                    "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
                 }
@@ -4859,108 +4869,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/spaceadministration/invites?id={}".format(str(self.test_space_id)),
-            False,
-            403,
-        )
-        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
-
-    def test_get_space_files(self):
-        """
-        expect: successfully request files of space
-        """
-        # manually add file
-        file_id = ObjectId()
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id},
-            {
-                "$set": {
-                    "files": [{"author": CURRENT_ADMIN.username, "file_id": file_id}]
-                }
-            },
-        )
-
-        response = self.base_checks(
-            "GET",
-            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
-            True,
-            200,
-        )
-
-        # expect the added file to be in the response
-        self.assertIn("files", response)
-        self.assertTrue(
-            any(file_obj["file_id"] == str(file_id) for file_obj in response["files"])
-        )
-
-    def test_get_space_files_no_files(self):
-        """
-        expect: an empty list passed as response
-        """
-
-        response = self.base_checks(
-            "GET",
-            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
-            True,
-            200,
-        )
-
-        # expect an empty list in the response
-        self.assertIn("files", response)
-        self.assertEqual(response["files"], [])
-
-    def test_get_space_files_error_space_doesnt_exist(self):
-        """
-        expect: fail message because space doesnt exist
-        """
-
-        response = self.base_checks(
-            "GET",
-            "/spaceadministration/files?id={}".format(ObjectId()),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
-
-    def test_get_space_files_error_user_not_member(self):
-        """
-        expect: fail message because user is not member of space
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # pull user from members
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id},
-            {
-                "$pull": {
-                    "members": CURRENT_USER.username,
-                    "admins": CURRENT_USER.username,
-                }
-            },
-        )
-
-        response = self.base_checks(
-            "GET",
-            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
-
-    def test_get_space_files_error_insufficient_permissions(self):
-        """
-        expect: fail message because user has no permission to view the files
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        response = self.base_checks(
-            "GET",
-            "/spaceadministration/files?id={}".format(str(self.test_space_id)),
             False,
             403,
         )
@@ -6896,193 +6804,6 @@ class SpaceHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
-    def test_post_space_put_file(self):
-        """
-        expect: successfully add a new file
-        """
-
-        # create file with IO Buffer
-        file_name = "test_file.txt"
-        file = io.BytesIO()
-        file.write(b"this is a binary test file")
-        file.seek(0)
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
-
-        self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
-            True,
-            200,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-
-        # assert file is stored in db
-        fs = gridfs.GridFS(self.db)
-        file = fs.find_one({"filename": file_name})
-        self.assertIsNotNone(file)
-
-        # assert that space now has this file attached
-        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
-        self.assertIn("files", db_state)
-        self.assertIn(
-            {
-                "author": CURRENT_ADMIN.username,
-                "file_id": file._id,
-                "file_name": file_name,
-                "manually_uploaded": True,
-            },
-            db_state["files"],
-        )
-
-    def test_post_space_put_file_error_no_name(self):
-        """
-        expect: fail message becase name parameter is missing
-        """
-
-        # create file with IO Buffer
-        file_name = "test_file.txt"
-        file = io.BytesIO()
-        file.write(b"this is a binary test file")
-        file.seek(0)
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file",
-            False,
-            400,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
-
-    def test_post_space_put_file_error_no_file(self):
-        """
-        expect: fail message because no file is transferred
-        """
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={})
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
-            False,
-            400,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
-
-        # second request has "file" key in formdata, but is not an actual file
-        request2 = MultipartEncoder(fields={"file": "value"})
-
-        response2 = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
-            False,
-            400,
-            headers={"Content-Type": request2.content_type},
-            body=request2.to_string(),
-        )
-        self.assertEqual(response2["reason"], MISSING_FILE_ERROR_SLUG + "file")
-
-    def test_post_space_put_file_error_space_doesnt_exist(self):
-        """
-        expect: fail message because space doesnt exist
-        """
-
-        # create file with IO Buffer
-        file_name = "test_file.txt"
-        file = io.BytesIO()
-        file.write(b"this is a binary test file")
-        file.seek(0)
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(ObjectId()),
-            False,
-            409,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
-
-    def test_post_space_put_file_error_user_not_member(self):
-        """
-        expect: fail message because user is not a member of the space
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # pull user from members
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id},
-            {
-                "$pull": {
-                    "members": CURRENT_USER.username,
-                    "admins": CURRENT_USER.username,
-                }
-            },
-        )
-
-        # create file with IO Buffer
-        file_name = "test_file.txt"
-        file = io.BytesIO()
-        file.write(b"this is a binary test file")
-        file.seek(0)
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
-            False,
-            409,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
-
-    def test_post_space_put_file_error_insufficient_permission(self):
-        """
-        expect: fail message because user has no permission to add new files
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # create file with IO Buffer
-        file_name = "test_file.txt"
-        file = io.BytesIO()
-        file.write(b"this is a binary test file")
-        file.seek(0)
-
-        # encode file as formdata
-        request = MultipartEncoder(fields={"file": (file_name, file, "text/plain")})
-
-        response = self.base_checks(
-            "POST",
-            "/spaceadministration/put_file?id={}".format(str(self.test_space_id)),
-            False,
-            403,
-            headers={"Content-Type": request.content_type},
-            body=request.to_string(),
-        )
-        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
-
     def test_delete_space_error_no_name(self):
         """
         expect: fail message because request is missing name parameter
@@ -7391,236 +7112,12 @@ class SpaceHandlerTest(BaseApiTestCase):
         file.seek(0)
 
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file,
-            filename=file_name,
-            content_type="text/plain",
-            metadata={"uploader": "me"},
-        )
+        _id = util.gridfs_put(fs, file.read(), file_name, "text/plain", "me")
 
-        # add file metadata
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id},
-            {
-                "$push": {
-                    "files": {
-                        "author": author,
-                        "file_id": _id,
-                        "manually_uploaded": True,
-                    }
-                }
-            },
-        )
+        # add the file to the space's file share
+        SpaceFiles(self.db).import_file(self.test_space_id, author, _id, file_name)
 
         return _id
-
-    def _assert_file_removed_from_space_and_filesystem(self, file_id: ObjectId) -> None:
-        """
-        helper function to assert correct deletion of file
-        """
-
-        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
-        self.assertIn("files", db_state)
-        self.assertFalse(any(file["file_id"] == file_id for file in db_state["files"]))
-        fs = gridfs.GridFS(self.db)
-        self.assertIsNone(fs.find_one({"_id": file_id}))
-
-    def test_delete_space_delete_file_author(self):
-        """
-        expect: successfully delete file because user is uploader of it
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_USER.username)
-        self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(file_id)
-            ),
-            True,
-            200,
-        )
-
-        # assert file has been removed from space metadata and filesystem
-        self._assert_file_removed_from_space_and_filesystem(file_id)
-
-    def test_delete_space_delete_file_space_admin(self):
-        """
-        expect: successfully delete file because user is space admin
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # set user as space admin
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
-        )
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_ADMIN.username)
-
-        self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(file_id)
-            ),
-            True,
-            200,
-        )
-
-        # assert file has been removed from space metadata and filesystem
-        self._assert_file_removed_from_space_and_filesystem(file_id)
-
-    def test_delete_space_delete_file_global_admin(self):
-        """
-        expect: successfully delete file because user is global admin
-        """
-
-        # pull user from space
-        self.db.spaces.update_one(
-            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
-        )
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_ADMIN.username)
-
-        self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(file_id)
-            ),
-            True,
-            200,
-        )
-
-        # assert file has been removed from space metadata and filesystem
-        self._assert_file_removed_from_space_and_filesystem(file_id)
-
-    def test_delete_space_delete_file_error_no_file_name(self):
-        """
-        expect: fail message because request misses file name parameter
-        """
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_USER.username)
-
-        response = self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}".format(str(self.test_space_id)),
-            False,
-            400,
-        )
-        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "file_id")
-
-    def test_delete_space_delete_file_error_space_doesnt_exist(self):
-        """
-        expect: fail message because space doesnt exist
-        """
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_USER.username)
-
-        response = self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                ObjectId(), str(file_id)
-            ),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
-
-    def test_delete_space_delete_file_error_file_doesnt_exist(self):
-        """
-        expect: fail message because file doesnt exist
-        """
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_USER.username)
-
-        response = self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(ObjectId())
-            ),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], "file_doesnt_exist_in_space")
-
-    def test_delete_space_delete_file_error_insufficient_permission(self):
-        """
-        expect: fail message because user is neither uploader nor space or global admin
-        """
-
-        # switch to user mode
-        options.test_admin = False
-        options.test_user = True
-
-        # manually add file
-        file_id = self._setup_space_file(CURRENT_ADMIN.username)
-
-        response = self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(file_id)
-            ),
-            False,
-            403,
-        )
-        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
-
-    def test_delete_space_delete_file_error_file_belongs_to_post(self):
-        """
-        expect: fail message because file belongs to a post and is therefore not deletable
-        """
-
-        # file setup done manually, because manually_uploaded has to be unset
-        def __setup(self):
-            file_name = "test_file.txt"
-            file = io.BytesIO()
-            file.write(b"this is a binary test file")
-            file.seek(0)
-
-            fs = gridfs.GridFS(self.db)
-            _id = fs.put(
-                file,
-                filename=file_name,
-                content_type="text/plain",
-                metadata={"uploader": "me"},
-            )
-
-            # add file metadata
-            self.db.spaces.update_one(
-                {"_id": self.test_space_id},
-                {
-                    "$push": {
-                        "files": {
-                            "author": CURRENT_ADMIN.username,
-                            "file_id": _id,
-                        }
-                    }
-                },
-            )
-
-            return _id
-
-        file_id = __setup(self)
-        response = self.base_checks(
-            "DELETE",
-            "/spaceadministration/delete_file?id={}&file_id={}".format(
-                self.test_space_id, str(file_id)
-            ),
-            False,
-            409,
-        )
-        self.assertEqual(response["reason"], "file_belongs_to_post")
 
     def test_delete_space_global_admin(self):
         """
@@ -7697,9 +7194,11 @@ class SpaceHandlerTest(BaseApiTestCase):
         space = self.db.spaces.find_one({"_id": self.test_space_id})
         posts = list(self.db.posts.find({"space": self.test_space_id}))
         space_acl = list(self.db.space_acl.find({"space": self.test_space_id}))
+        space_files = list(self.db.space_files.find({"space": self.test_space_id}))
         self.assertEqual(space, None)
         self.assertEqual(posts, [])
         self.assertEqual(space_acl, [])
+        self.assertEqual(space_files, [])
         fs = gridfs.GridFS(self.db)
         self.assertFalse(fs.exists(file_id))
 
@@ -7719,6 +7218,1432 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class SpaceFilesHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # setup basic environment of permissions
+        self.base_permission_environment_setUp()
+
+        self.space_files = SpaceFiles(self.db)
+        self.fs = gridfs.GridFS(self.db)
+
+    def tearDown(self) -> None:
+        # cleanup test data
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+
+        # delete uploaded files
+        for file in list(self.fs.find()):
+            self.fs.delete(file._id)
+
+        super().tearDown()
+
+    ###########################################################################
+    # helpers
+    ###########################################################################
+
+    def _url(self, slug: str, **params) -> str:
+        query = "&".join(
+            "{}={}".format(key, value) for key, value in params.items() if value is not None
+        )
+        return "/space_files/{}?id={}{}".format(
+            slug, str(self.test_space_id), "&" + query if query else ""
+        )
+
+    def _switch_to_user(self, read_files: bool = True, write_files: bool = False):
+        """
+        switch the request identity to the regular (non-admin) test user and
+        set his file permissions in the space
+        """
+
+        options.test_admin = False
+        options.test_user = True
+        self.db.space_acl.update_one(
+            {"username": CURRENT_USER.username, "space": self.test_space_id},
+            {"$set": {"read_files": read_files, "write_files": write_files}},
+        )
+
+    def _folder(self, name: str, parent=None, author: str = CURRENT_ADMIN.username) -> dict:
+        return self.space_files.create_folder(self.test_space_id, name, author, parent)
+
+    def _file(
+        self, name: str = "a.txt", parent=None, author: str = CURRENT_ADMIN.username
+    ) -> dict:
+        return self.space_files.add_file(
+            self.test_space_id, name, b"content", author, parent
+        )
+
+    def _post_file(self, name: str = "attachment.txt") -> dict:
+        file_id = util.gridfs_put(self.fs, b"post", name, "text/plain", CURRENT_USER.username)
+        return self.space_files.add_post_file(
+            self.test_space_id, CURRENT_USER.username, file_id, name, ObjectId()
+        )
+
+    def _upload(self, files: list, parent=None, expect_success=True, expect_code=200):
+        """
+        upload files via multipart request. `files` is a list of
+        (name, bytes, content_type) tuples.
+        """
+
+        fields = [
+            ("file", (name, io.BytesIO(content), content_type))
+            for name, content, content_type in files
+        ]
+        if parent is not None:
+            fields.append(("parent", str(parent)))
+        request = MultipartEncoder(fields=fields)
+
+        return self.base_checks(
+            "POST",
+            self._url("upload"),
+            expect_success,
+            expect_code,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+
+    ###########################################################################
+    # GET limits
+    ###########################################################################
+
+    def test_get_limits(self):
+        """
+        expect: the configured limits are returned
+        """
+
+        response = self.base_checks("GET", "/space_files/limits", True, 200)
+        self.assertEqual(
+            response["limits"],
+            {
+                "max_folder_depth": SpaceFiles.MAX_FOLDER_DEPTH,
+                "max_file_size_bytes": SpaceFiles.MAX_FILE_SIZE_BYTES,
+                "max_space_storage_bytes": SpaceFiles.MAX_SPACE_STORAGE_BYTES,
+                "max_name_length": SpaceFiles.MAX_NAME_LENGTH,
+            },
+        )
+
+    ###########################################################################
+    # GET list
+    ###########################################################################
+
+    def test_get_list(self):
+        """
+        expect: successfully list the root and a subfolder
+        """
+
+        docs = self._folder("docs")
+        self._file("b.txt")
+        self._file("a.txt")
+        inner = self._file("inner.txt", docs["_id"])
+        post_file = self._post_file()
+
+        response = self.base_checks("GET", self._url("list"), True, 200)
+        self.assertIsNone(response["folder"])
+        self.assertEqual(response["path"], [])
+        self.assertEqual(
+            [item["name"] for item in response["items"]],
+            [SpaceFiles.POST_FILES_FOLDER_NAME, "docs", "a.txt", "b.txt"],
+        )
+        self.assertEqual(response["items"][0]["system"], SpaceFiles.SYSTEM_FOLDER_POST_FILES)
+        self.assertEqual(response["items"][1]["_id"], str(docs["_id"]))
+        self.assertEqual(response["items"][2]["size"], 7)
+        self.assertEqual(response["items"][2]["content_type"], "text/plain")
+        self.assertEqual(response["items"][2]["author"], CURRENT_ADMIN.username)
+        self.assertTrue(response["items"][2]["manually_uploaded"])
+        self.assertEqual(
+            response["storage"],
+            {"used_bytes": 7 * 3 + 4, "max_bytes": SpaceFiles.MAX_SPACE_STORAGE_BYTES},
+        )
+
+        response = self.base_checks(
+            "GET", self._url("list", folder=str(docs["_id"])), True, 200
+        )
+        self.assertEqual(response["folder"]["_id"], str(docs["_id"]))
+        self.assertEqual(
+            response["path"],
+            [{"_id": str(docs["_id"]), "name": "docs", "type": "folder", "system": None}],
+        )
+        self.assertEqual([item["_id"] for item in response["items"]], [str(inner["_id"])])
+
+        # post files carry the post reference
+        response = self.base_checks(
+            "GET", self._url("list", folder=str(post_file["parent"])), True, 200
+        )
+        self.assertFalse(response["items"][0]["manually_uploaded"])
+        self.assertIsNotNone(response["items"][0]["post_id"])
+
+    def test_get_list_global_admin_not_member(self):
+        """
+        expect: a global admin can list the files even without being a member
+        """
+
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id},
+            {"$pull": {"members": CURRENT_ADMIN.username, "admins": CURRENT_ADMIN.username}},
+        )
+        self.base_checks("GET", self._url("list"), True, 200)
+
+    def test_get_list_user_with_permission(self):
+        """
+        expect: a regular member with read_files can list the files
+        """
+
+        self._switch_to_user(read_files=True)
+        self.base_checks("GET", self._url("list"), True, 200)
+
+    def test_get_list_error_missing_id(self):
+        """
+        expect: fail message because id is missing
+        """
+
+        response = self.base_checks("GET", "/space_files/list", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "id")
+
+    def test_get_list_error_invalid_object_id(self):
+        """
+        expect: fail message because the ids are not valid ObjectIds
+        """
+
+        response = self.base_checks("GET", "/space_files/list?id=abc", False, 400)
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+        response = self.base_checks("GET", self._url("list", folder="abc"), False, 400)
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_get_list_error_space_doesnt_exist(self):
+        """
+        expect: fail message because the space doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET", "/space_files/list?id={}".format(ObjectId()), False, 409
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_get_list_error_user_not_member(self):
+        """
+        expect: fail message because the user is not a member of the space
+        """
+
+        self._switch_to_user(read_files=True)
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+        response = self.base_checks("GET", self._url("list"), False, 409)
+        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
+
+    def test_get_list_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the read_files permission
+        """
+
+        self._switch_to_user(read_files=False)
+        response = self.base_checks("GET", self._url("list"), False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_list_error_folder_doesnt_exist(self):
+        """
+        expect: fail message because the folder doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET", self._url("list", folder=str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_get_list_error_not_a_folder(self):
+        """
+        expect: fail message because the node is a file
+        """
+
+        file_node = self._file()
+        response = self.base_checks(
+            "GET", self._url("list", folder=str(file_node["_id"])), False, 409
+        )
+        self.assertEqual(response["reason"], NOT_A_FOLDER_ERROR)
+
+    ###########################################################################
+    # GET node
+    ###########################################################################
+
+    def test_get_node(self):
+        """
+        expect: successfully get a node including its path
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file("a.txt", docs["_id"])
+
+        response = self.base_checks(
+            "GET", self._url("node", node_id=str(file_node["_id"])), True, 200
+        )
+        self.assertEqual(response["node"]["_id"], str(file_node["_id"]))
+        self.assertEqual(response["node"]["name"], "a.txt")
+        self.assertEqual(
+            [p["_id"] for p in response["path"]], [str(docs["_id"]), str(file_node["_id"])]
+        )
+
+    def test_get_node_error_missing_node_id(self):
+        """
+        expect: fail message because node_id is missing
+        """
+
+        response = self.base_checks("GET", self._url("node"), False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "node_id")
+
+    def test_get_node_error_node_doesnt_exist(self):
+        """
+        expect: fail message because the node doesnt exist
+        """
+
+        response = self.base_checks(
+            "GET", self._url("node", node_id=str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    ###########################################################################
+    # GET tree
+    ###########################################################################
+
+    def test_get_tree(self):
+        """
+        expect: successfully get the nested folder tree
+        """
+
+        a = self._folder("a")
+        self._folder("b", a["_id"])
+        self._file("f.txt", a["_id"])
+
+        response = self.base_checks("GET", self._url("tree"), True, 200)
+        self.assertEqual(len(response["tree"]), 1)
+        self.assertEqual(response["tree"][0]["_id"], str(a["_id"]))
+        self.assertEqual([c["name"] for c in response["tree"][0]["children"]], ["b"])
+
+    def test_get_tree_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the read_files permission
+        """
+
+        self._switch_to_user(read_files=False)
+        response = self.base_checks("GET", self._url("tree"), False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    ###########################################################################
+    # GET search
+    ###########################################################################
+
+    def test_get_search(self):
+        """
+        expect: successfully search by name, results carry their path
+        """
+
+        reports = self._folder("Reports")
+        self._file("annual_report.pdf", reports["_id"])
+        self._file("notes.txt")
+
+        response = self.base_checks("GET", self._url("search", query="report"), True, 200)
+        self.assertEqual(
+            [r["name"] for r in response["results"]], ["Reports", "annual_report.pdf"]
+        )
+        self.assertEqual(response["results"][0]["path"], [])
+        self.assertEqual(
+            [p["_id"] for p in response["results"][1]["path"]], [str(reports["_id"])]
+        )
+
+        response = self.base_checks("GET", self._url("search", query="zzz"), True, 200)
+        self.assertEqual(response["results"], [])
+
+    def test_get_search_error_missing_query(self):
+        """
+        expect: fail message because query is missing
+        """
+
+        response = self.base_checks("GET", self._url("search"), False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "query")
+
+    def test_get_search_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the read_files permission
+        """
+
+        self._switch_to_user(read_files=False)
+        response = self.base_checks("GET", self._url("search", query="a"), False, 403)
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    ###########################################################################
+    # POST create_folder
+    ###########################################################################
+
+    def test_post_create_folder(self):
+        """
+        expect: successfully create a folder in the root and a nested one
+        """
+
+        response = self.base_checks(
+            "POST", self._url("create_folder"), True, 200, body={"name": "docs"}
+        )
+        self.assertEqual(response["folder"]["name"], "docs")
+        self.assertIsNone(response["folder"]["parent"])
+        self.assertEqual(response["folder"]["author"], CURRENT_ADMIN.username)
+        db_state = self.db.space_files.find_one({"_id": ObjectId(response["folder"]["_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["space"], self.test_space_id)
+
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            True,
+            200,
+            body={"name": "2024", "parent": str(db_state["_id"])},
+        )
+        self.assertEqual(response["folder"]["parent"], str(db_state["_id"]))
+
+    def test_post_create_folder_user_with_permission(self):
+        """
+        expect: a regular member with write_files can create folders
+        """
+
+        self._switch_to_user(read_files=True, write_files=True)
+        response = self.base_checks(
+            "POST", self._url("create_folder"), True, 200, body={"name": "docs"}
+        )
+        self.assertEqual(response["folder"]["author"], CURRENT_USER.username)
+
+    def test_post_create_folder_error_json_parsing(self):
+        """
+        expect: fail message because the body is not valid json
+        """
+
+        response = self.base_checks(
+            "POST", self._url("create_folder"), False, 400, body="not json"
+        )
+        self.assertEqual(response["reason"], JSON_PARSING_ERROR)
+
+    def test_post_create_folder_error_missing_name(self):
+        """
+        expect: fail message because name is missing in the body
+        """
+
+        response = self.base_checks("POST", self._url("create_folder"), False, 400, body={})
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "name")
+
+    def test_post_create_folder_error_invalid_parent_id(self):
+        """
+        expect: fail message because parent is not a valid ObjectId
+        """
+
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            False,
+            400,
+            body={"name": "docs", "parent": "abc"},
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_create_folder_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission
+        """
+
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self.base_checks(
+            "POST", self._url("create_folder"), False, 403, body={"name": "docs"}
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_create_folder_error_space_doesnt_exist(self):
+        """
+        expect: fail message because the space doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/space_files/create_folder?id={}".format(ObjectId()),
+            False,
+            409,
+            body={"name": "docs"},
+        )
+        self.assertEqual(response["reason"], SPACE_DOESNT_EXIST_ERROR)
+
+    def test_post_create_folder_error_parent_doesnt_exist(self):
+        """
+        expect: fail message because the parent folder doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            False,
+            409,
+            body={"name": "docs", "parent": str(ObjectId())},
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_post_create_folder_error_not_a_folder(self):
+        """
+        expect: fail message because the parent is a file
+        """
+
+        file_node = self._file()
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            False,
+            409,
+            body={"name": "docs", "parent": str(file_node["_id"])},
+        )
+        self.assertEqual(response["reason"], NOT_A_FOLDER_ERROR)
+
+    def test_post_create_folder_error_read_only_parent(self):
+        """
+        expect: fail message because the parent is the post files folder
+        """
+
+        post_file = self._post_file()
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            False,
+            409,
+            body={"name": "docs", "parent": str(post_file["parent"])},
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    def test_post_create_folder_error_invalid_name(self):
+        """
+        expect: fail message because the name is invalid
+        """
+
+        response = self.base_checks(
+            "POST", self._url("create_folder"), False, 409, body={"name": "a/b"}
+        )
+        self.assertEqual(response["reason"], INVALID_NAME_ERROR)
+
+    def test_post_create_folder_error_depth_exceeded(self):
+        """
+        expect: fail message because the folder would be nested too deep
+        """
+
+        parent_id = None
+        for level in range(SpaceFiles.MAX_FOLDER_DEPTH):
+            parent_id = self._folder("level{}".format(level), parent_id)["_id"]
+
+        response = self.base_checks(
+            "POST",
+            self._url("create_folder"),
+            False,
+            409,
+            body={"name": "too_deep", "parent": str(parent_id)},
+        )
+        self.assertEqual(response["reason"], FOLDER_DEPTH_EXCEEDED_ERROR)
+
+    def test_post_create_folder_error_name_already_exists(self):
+        """
+        expect: fail message because a sibling with the same name exists
+        """
+
+        self._folder("docs")
+        response = self.base_checks(
+            "POST", self._url("create_folder"), False, 409, body={"name": "DOCS"}
+        )
+        self.assertEqual(response["reason"], NAME_ALREADY_EXISTS_ERROR)
+
+    ###########################################################################
+    # POST upload
+    ###########################################################################
+
+    def test_post_upload(self):
+        """
+        expect: successfully upload a single file into the root
+        """
+
+        response = self._upload([("test_file.txt", b"binary test file", "text/plain")])
+        self.assertEqual(len(response["files"]), 1)
+        node = response["files"][0]
+        self.assertEqual(node["name"], "test_file.txt")
+        self.assertIsNone(node["parent"])
+        self.assertEqual(node["author"], CURRENT_ADMIN.username)
+        self.assertEqual(node["content_type"], "text/plain")
+        self.assertEqual(node["size"], 16)
+        self.assertTrue(node["manually_uploaded"])
+
+        db_state = self.db.space_files.find_one({"_id": ObjectId(node["_id"])})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(self.fs.get(db_state["file_id"]).read(), b"binary test file")
+
+    def test_post_upload_ignores_client_content_type(self):
+        """
+        expect: the mime type is derived from the file name, the one sent by
+        the client is ignored (e.g. no html served for a picture)
+        """
+
+        response = self._upload([("picture.png", b"<script></script>", "text/html")])
+        node = response["files"][0]
+        self.assertEqual(node["content_type"], "image/png")
+
+        response = self.fetch("/uploads/{}".format(node["file_id"]))
+        self.assertEqual(response.code, 200)
+        self.assertTrue(response.headers["Content-Type"].startswith("image/png"))
+
+    def test_post_upload_multiple_into_folder(self):
+        """
+        expect: successfully upload multiple files into a folder, duplicate
+        names get a suffix
+        """
+
+        docs = self._folder("docs")
+        self._file("a.txt", docs["_id"])
+
+        response = self._upload(
+            [
+                ("a.txt", b"1", "text/plain"),
+                ("b.txt", b"2", "text/plain"),
+                ("a.txt", b"3", "text/plain"),
+            ],
+            parent=docs["_id"],
+        )
+        self.assertEqual(
+            [f["name"] for f in response["files"]], ["a (1).txt", "b.txt", "a (2).txt"]
+        )
+        self.assertTrue(all(f["parent"] == str(docs["_id"]) for f in response["files"]))
+        self.assertEqual(
+            self.db.space_files.count_documents({"parent": docs["_id"], "type": "file"}), 4
+        )
+
+    def test_post_upload_user_with_permission(self):
+        """
+        expect: a regular member with write_files can upload
+        """
+
+        self._switch_to_user(read_files=True, write_files=True)
+        response = self._upload([("test_file.txt", b"x", "text/plain")])
+        self.assertEqual(response["files"][0]["author"], CURRENT_USER.username)
+
+    def test_post_upload_error_missing_file(self):
+        """
+        expect: fail message because no file is attached
+        """
+
+        request = MultipartEncoder(fields={"parent": ""})
+        response = self.base_checks(
+            "POST",
+            self._url("upload"),
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
+
+    def test_post_upload_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission
+        """
+
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self._upload(
+            [("test_file.txt", b"x", "text/plain")], expect_success=False, expect_code=403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_upload_error_user_not_member(self):
+        """
+        expect: fail message because the user is not a member of the space
+        """
+
+        self._switch_to_user(read_files=True, write_files=True)
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+        response = self._upload(
+            [("test_file.txt", b"x", "text/plain")], expect_success=False, expect_code=409
+        )
+        self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
+
+    def test_post_upload_error_parent_doesnt_exist(self):
+        """
+        expect: fail message because the target folder doesnt exist
+        """
+
+        response = self._upload(
+            [("test_file.txt", b"x", "text/plain")],
+            parent=ObjectId(),
+            expect_success=False,
+            expect_code=409,
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_post_upload_error_read_only_parent(self):
+        """
+        expect: fail message because the target is the post files folder
+        """
+
+        post_file = self._post_file()
+        response = self._upload(
+            [("test_file.txt", b"x", "text/plain")],
+            parent=post_file["parent"],
+            expect_success=False,
+            expect_code=409,
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    def test_post_upload_error_invalid_name(self):
+        """
+        expect: fail message because a file name is invalid, nothing is stored
+        """
+
+        response = self._upload(
+            [("ok.txt", b"x", "text/plain"), ("..", b"x", "text/plain")],
+            expect_success=False,
+            expect_code=409,
+        )
+        self.assertEqual(response["reason"], INVALID_NAME_ERROR)
+        self.assertEqual(self.db.space_files.count_documents({}), 0)
+
+    def test_post_upload_error_file_too_large(self):
+        """
+        expect: fail message because a file exceeds the maximum size,
+        nothing is stored
+        """
+
+        original = SpaceFiles.MAX_FILE_SIZE_BYTES
+        SpaceFiles.MAX_FILE_SIZE_BYTES = 4
+        try:
+            response = self._upload(
+                [("small.txt", b"1234", "text/plain"), ("big.txt", b"12345", "text/plain")],
+                expect_success=False,
+                expect_code=409,
+            )
+        finally:
+            SpaceFiles.MAX_FILE_SIZE_BYTES = original
+        self.assertEqual(response["reason"], FILE_TOO_LARGE_ERROR)
+        self.assertEqual(self.db.space_files.count_documents({}), 0)
+
+    def test_post_upload_error_storage_quota_exceeded(self):
+        """
+        expect: fail message because the upload would exceed the space's
+        storage quota, nothing is stored
+        """
+
+        self._file("existing.txt")  # 7 bytes
+        original = SpaceFiles.MAX_SPACE_STORAGE_BYTES
+        SpaceFiles.MAX_SPACE_STORAGE_BYTES = 10
+        try:
+            response = self._upload(
+                [("a.txt", b"12", "text/plain"), ("b.txt", b"34", "text/plain")],
+                expect_success=False,
+                expect_code=409,
+            )
+        finally:
+            SpaceFiles.MAX_SPACE_STORAGE_BYTES = original
+        self.assertEqual(response["reason"], STORAGE_QUOTA_EXCEEDED_ERROR)
+        self.assertEqual(self.db.space_files.count_documents({"type": "file"}), 1)
+
+    ###########################################################################
+    # POST rename
+    ###########################################################################
+
+    def test_post_rename(self):
+        """
+        expect: successfully rename a folder as its author
+        """
+
+        docs = self._folder("docs")
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            True,
+            200,
+            body={"node_id": str(docs["_id"]), "name": "documents"},
+        )
+        self.assertEqual(response["node"]["name"], "documents")
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": docs["_id"]})["name"], "documents"
+        )
+
+    def test_post_rename_space_admin(self):
+        """
+        expect: a space admin can rename nodes of other users without an
+        explicit write_files permission
+        """
+
+        file_node = self._file("a.txt", author=CURRENT_USER.username)
+        self.db.space_acl.update_one(
+            {"username": CURRENT_ADMIN.username, "space": self.test_space_id},
+            {"$set": {"write_files": False}},
+        )
+        self.base_checks(
+            "POST",
+            self._url("rename"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "name": "b.txt"},
+        )
+
+    def test_post_rename_user_with_permission(self):
+        """
+        expect: a regular member with write_files can rename any node,
+        regardless of who created it
+        """
+
+        file_node = self._file("a.txt", author=CURRENT_ADMIN.username)
+        self._switch_to_user(read_files=True, write_files=True)
+        self.base_checks(
+            "POST",
+            self._url("rename"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "name": "b.txt"},
+        )
+
+    def test_post_rename_error_missing_keys(self):
+        """
+        expect: fail messages because node_id or name are missing
+        """
+
+        response = self.base_checks(
+            "POST", self._url("rename"), False, 400, body={"name": "x"}
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+
+        response = self.base_checks(
+            "POST", self._url("rename"), False, 400, body={"node_id": str(ObjectId())}
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "name")
+
+    def test_post_rename_error_invalid_node_id(self):
+        """
+        expect: fail message because node_id is not a valid ObjectId
+        """
+
+        response = self.base_checks(
+            "POST", self._url("rename"), False, 400, body={"node_id": "abc", "name": "x"}
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_rename_error_node_doesnt_exist(self):
+        """
+        expect: fail message because the node doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            False,
+            409,
+            body={"node_id": str(ObjectId()), "name": "x"},
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_post_rename_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission,
+        even for nodes he created himself
+        """
+
+        docs = self._folder("docs", author=CURRENT_USER.username)
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            False,
+            403,
+            body={"node_id": str(docs["_id"]), "name": "x"},
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_rename_error_read_only(self):
+        """
+        expect: fail message because post files cannot be renamed
+        """
+
+        post_file = self._post_file()
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            False,
+            409,
+            body={"node_id": str(post_file["_id"]), "name": "x"},
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    def test_post_rename_error_invalid_name(self):
+        """
+        expect: fail message because the new name is invalid
+        """
+
+        docs = self._folder("docs")
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            False,
+            409,
+            body={"node_id": str(docs["_id"]), "name": ""},
+        )
+        self.assertEqual(response["reason"], INVALID_NAME_ERROR)
+
+    def test_post_rename_error_name_already_exists(self):
+        """
+        expect: fail message because a sibling with the new name exists
+        """
+
+        self._folder("docs")
+        other = self._folder("other")
+        response = self.base_checks(
+            "POST",
+            self._url("rename"),
+            False,
+            409,
+            body={"node_id": str(other["_id"]), "name": "docs"},
+        )
+        self.assertEqual(response["reason"], NAME_ALREADY_EXISTS_ERROR)
+
+    ###########################################################################
+    # POST move
+    ###########################################################################
+
+    def test_post_move(self):
+        """
+        expect: successfully move a file into a folder and back to the root
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file()
+
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["node"]["parent"], str(docs["_id"]))
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": file_node["_id"]})["parent"], docs["_id"]
+        )
+
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "parent": None},
+        )
+        self.assertIsNone(response["node"]["parent"])
+
+    def test_post_move_error_missing_node_id(self):
+        """
+        expect: fail message because node_id is missing
+        """
+
+        response = self.base_checks("POST", self._url("move"), False, 400, body={})
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+
+    def test_post_move_error_node_doesnt_exist(self):
+        """
+        expect: fail message because the node or the target doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(ObjectId()), "parent": None},
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+        file_node = self._file()
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(file_node["_id"]), "parent": str(ObjectId())},
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_post_move_error_not_a_folder(self):
+        """
+        expect: fail message because the target is a file
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file()
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(docs["_id"]), "parent": str(file_node["_id"])},
+        )
+        self.assertEqual(response["reason"], NOT_A_FOLDER_ERROR)
+
+    def test_post_move_user_with_permission(self):
+        """
+        expect: a regular member with write_files can move nodes of other users
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file()
+        self._switch_to_user(read_files=True, write_files=True)
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["node"]["parent"], str(docs["_id"]))
+
+    def test_post_move_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission,
+        even for nodes he created himself
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file(author=CURRENT_USER.username)
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            403,
+            body={"node_id": str(file_node["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_move_error_read_only(self):
+        """
+        expect: fail message because post files cannot be moved and nothing
+        can be moved into the post files folder
+        """
+
+        post_file = self._post_file()
+        docs = self._folder("docs")
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(post_file["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(docs["_id"]), "parent": str(post_file["parent"])},
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    def test_post_move_error_invalid_move_target(self):
+        """
+        expect: fail message because a folder cannot be moved into its own subtree
+        """
+
+        a = self._folder("a")
+        b = self._folder("b", a["_id"])
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(a["_id"]), "parent": str(b["_id"])},
+        )
+        self.assertEqual(response["reason"], INVALID_MOVE_TARGET_ERROR)
+
+    def test_post_move_error_depth_exceeded(self):
+        """
+        expect: fail message because the moved subtree would be nested too deep
+        """
+
+        parent_id = None
+        for level in range(SpaceFiles.MAX_FOLDER_DEPTH):
+            parent_id = self._folder("level{}".format(level), parent_id)["_id"]
+        x = self._folder("x")
+
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(x["_id"]), "parent": str(parent_id)},
+        )
+        self.assertEqual(response["reason"], FOLDER_DEPTH_EXCEEDED_ERROR)
+
+    def test_post_move_error_name_already_exists(self):
+        """
+        expect: fail message because the target already contains the name
+        """
+
+        docs = self._folder("docs")
+        self._file("a.txt", docs["_id"])
+        file_node = self._file("a.txt")
+        response = self.base_checks(
+            "POST",
+            self._url("move"),
+            False,
+            409,
+            body={"node_id": str(file_node["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["reason"], NAME_ALREADY_EXISTS_ERROR)
+
+    ###########################################################################
+    # POST copy
+    ###########################################################################
+
+    def test_post_copy(self):
+        """
+        expect: successfully copy a post file into the root, the copy is a
+        regular file owned by the current user
+        """
+
+        post_file = self._post_file()
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            True,
+            200,
+            body={"node_id": str(post_file["_id"]), "parent": None},
+        )
+        copy = response["node"]
+        self.assertIsNone(copy["parent"])
+        self.assertEqual(copy["name"], post_file["name"])
+        self.assertEqual(copy["author"], CURRENT_ADMIN.username)
+        self.assertTrue(copy["manually_uploaded"])
+        self.assertIsNone(copy["post_id"])
+        self.assertNotEqual(copy["file_id"], str(post_file["file_id"]))
+        self.assertEqual(self.fs.get(ObjectId(copy["file_id"])).read(), b"post")
+
+    def test_post_copy_into_folder_user_with_permission(self):
+        """
+        expect: a regular member with write_files can copy files into a folder
+        """
+
+        docs = self._folder("docs")
+        file_node = self._file()
+        self._switch_to_user(read_files=True, write_files=True)
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            True,
+            200,
+            body={"node_id": str(file_node["_id"]), "parent": str(docs["_id"])},
+        )
+        self.assertEqual(response["node"]["parent"], str(docs["_id"]))
+        self.assertEqual(response["node"]["author"], CURRENT_USER.username)
+
+    def test_post_copy_error_missing_node_id(self):
+        """
+        expect: fail message because node_id is missing
+        """
+
+        response = self.base_checks("POST", self._url("copy"), False, 400, body={})
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+
+    def test_post_copy_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission
+        """
+
+        file_node = self._file()
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            False,
+            403,
+            body={"node_id": str(file_node["_id"]), "parent": None},
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_post_copy_error_node_doesnt_exist(self):
+        """
+        expect: fail message because the node doesnt exist
+        """
+
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            False,
+            409,
+            body={"node_id": str(ObjectId()), "parent": None},
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_post_copy_error_not_a_file(self):
+        """
+        expect: fail message because folders cannot be copied
+        """
+
+        docs = self._folder("docs")
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            False,
+            409,
+            body={"node_id": str(docs["_id"]), "parent": None},
+        )
+        self.assertEqual(response["reason"], NOT_A_FILE_ERROR)
+
+    def test_post_copy_error_read_only_target(self):
+        """
+        expect: fail message because nothing can be copied into the post files folder
+        """
+
+        post_file = self._post_file()
+        response = self.base_checks(
+            "POST",
+            self._url("copy"),
+            False,
+            409,
+            body={"node_id": str(post_file["_id"]), "parent": str(post_file["parent"])},
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    def test_post_copy_error_storage_quota_exceeded(self):
+        """
+        expect: fail message because the copy would exceed the storage quota
+        """
+
+        file_node = self._file()  # 7 bytes
+        original = SpaceFiles.MAX_SPACE_STORAGE_BYTES
+        SpaceFiles.MAX_SPACE_STORAGE_BYTES = 10
+        try:
+            response = self.base_checks(
+                "POST",
+                self._url("copy"),
+                False,
+                409,
+                body={"node_id": str(file_node["_id"]), "parent": None},
+            )
+        finally:
+            SpaceFiles.MAX_SPACE_STORAGE_BYTES = original
+        self.assertEqual(response["reason"], STORAGE_QUOTA_EXCEEDED_ERROR)
+
+    def test_post_unknown_slug(self):
+        """
+        expect: 404 for an unknown slug
+        """
+
+        response = self.fetch(
+            self._url("unknown"), method="POST", body=json.dumps({"node_id": str(ObjectId())})
+        )
+        self.assertEqual(response.code, 404)
+
+    ###########################################################################
+    # DELETE delete
+    ###########################################################################
+
+    def test_delete_node(self):
+        """
+        expect: successfully delete a file, the gridfs file is removed as well
+        """
+
+        file_node = self._file()
+        self.base_checks(
+            "DELETE", self._url("delete", node_id=str(file_node["_id"])), True, 200
+        )
+        self.assertIsNone(self.db.space_files.find_one({"_id": file_node["_id"]}))
+        self.assertFalse(self.fs.exists(file_node["file_id"]))
+
+    def test_delete_node_folder_recursive(self):
+        """
+        expect: deleting a folder removes all of its contents
+        """
+
+        a = self._folder("a")
+        b = self._folder("b", a["_id"])
+        inner = self._file("inner.txt", b["_id"])
+        self.base_checks("DELETE", self._url("delete", node_id=str(a["_id"])), True, 200)
+        self.assertEqual(
+            self.db.space_files.count_documents(
+                {"_id": {"$in": [a["_id"], b["_id"], inner["_id"]]}}
+            ),
+            0,
+        )
+        self.assertFalse(self.fs.exists(inner["file_id"]))
+
+    def test_delete_node_space_admin(self):
+        """
+        expect: a space admin can delete nodes of other users without an
+        explicit write_files permission
+        """
+
+        file_node = self._file(author=CURRENT_USER.username)
+        self.db.space_acl.update_one(
+            {"username": CURRENT_ADMIN.username, "space": self.test_space_id},
+            {"$set": {"write_files": False}},
+        )
+        self.base_checks(
+            "DELETE", self._url("delete", node_id=str(file_node["_id"])), True, 200
+        )
+
+    def test_delete_node_global_admin(self):
+        """
+        expect: a global admin who is not a space admin can delete
+        """
+
+        file_node = self._file(author=CURRENT_USER.username)
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id}, {"$pull": {"admins": CURRENT_ADMIN.username}}
+        )
+        self.db.space_acl.update_one(
+            {"username": CURRENT_ADMIN.username, "space": self.test_space_id},
+            {"$set": {"write_files": False}},
+        )
+        self.base_checks(
+            "DELETE", self._url("delete", node_id=str(file_node["_id"])), True, 200
+        )
+
+    def test_delete_node_user_with_permission(self):
+        """
+        expect: a regular member with write_files can delete nodes of other users
+        """
+
+        file_node = self._file(author=CURRENT_ADMIN.username)
+        self._switch_to_user(read_files=True, write_files=True)
+        self.base_checks(
+            "DELETE", self._url("delete", node_id=str(file_node["_id"])), True, 200
+        )
+        self.assertIsNone(self.db.space_files.find_one({"_id": file_node["_id"]}))
+
+    def test_delete_node_error_missing_node_id(self):
+        """
+        expect: fail message because node_id is missing
+        """
+
+        response = self.base_checks("DELETE", self._url("delete"), False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "node_id")
+
+    def test_delete_node_error_node_doesnt_exist(self):
+        """
+        expect: fail message because the node doesnt exist
+        """
+
+        response = self.base_checks(
+            "DELETE", self._url("delete", node_id=str(ObjectId())), False, 409
+        )
+        self.assertEqual(response["reason"], NODE_DOESNT_EXIST_ERROR)
+
+    def test_delete_node_error_insufficient_permission(self):
+        """
+        expect: fail message because the user lacks the write_files permission,
+        even for nodes he created himself
+        """
+
+        file_node = self._file(author=CURRENT_USER.username)
+        self._switch_to_user(read_files=True, write_files=False)
+        response = self.base_checks(
+            "DELETE", self._url("delete", node_id=str(file_node["_id"])), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+        self.assertIsNotNone(self.db.space_files.find_one({"_id": file_node["_id"]}))
+
+    def test_delete_node_error_read_only(self):
+        """
+        expect: fail message because post files and their folder cannot be deleted
+        """
+
+        post_file = self._post_file()
+        response = self.base_checks(
+            "DELETE", self._url("delete", node_id=str(post_file["_id"])), False, 409
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+        response = self.base_checks(
+            "DELETE", self._url("delete", node_id=str(post_file["parent"])), False, 409
+        )
+        self.assertEqual(response["reason"], READ_ONLY_NODE_ERROR)
+
+    ###########################################################################
+    # /uploads permission integration
+    ###########################################################################
+
+    def test_uploads_space_file_permission(self):
+        """
+        expect: files of the space's file share are only served to members
+        with read_files (or admins)
+        """
+
+        file_node = self._file()
+        url = "/uploads/{}".format(file_node["file_id"])
+
+        # admin (member, space admin) can download
+        response = self.fetch(url)
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.body, b"content")
+
+        # regular member without read_files is rejected
+        self._switch_to_user(read_files=False)
+        response = self.fetch(url)
+        self.assertEqual(response.code, 403)
+
+        # with read_files the download works
+        self._switch_to_user(read_files=True)
+        response = self.fetch(url)
+        self.assertEqual(response.code, 200)
+
+        # non-members are rejected
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
+        )
+        response = self.fetch(url)
+        self.assertEqual(response.code, 403)
+
+        # files outside of any file share are still served to any logged in user
+        other_id = util.gridfs_put(self.fs, b"free", "free.txt", "text/plain", "me")
+        response = self.fetch("/uploads/{}".format(other_id))
+        self.assertEqual(response.code, 200)
+
+    def test_uploads_content_type_header(self):
+        """
+        expect: the Content-Type header is taken from the file's metadata,
+        with a fallback to the legacy top-level field and to octet-stream
+        """
+
+        modern = util.gridfs_put(self.fs, b"x", "a.txt", "text/plain", "me")
+        response = self.fetch("/uploads/{}".format(modern))
+        self.assertEqual(response.code, 200)
+        self.assertTrue(response.headers["Content-Type"].startswith("text/plain"))
+
+        legacy = self.fs.put(b"x", filename="b.png", contentType="image/png")
+        response = self.fetch("/uploads/{}".format(legacy))
+        self.assertEqual(response.code, 200)
+        self.assertTrue(response.headers["Content-Type"].startswith("image/png"))
+
+        untyped = self.fs.put(b"x", filename="c.bin")
+        response = self.fetch("/uploads/{}".format(untyped))
+        self.assertEqual(response.code, 200)
+        self.assertTrue(response.headers["Content-Type"].startswith("application/octet-stream"))
+
+    def test_uploads_security_headers(self):
+        """
+        expect: uploads are never sniffed and sandboxed if rendered as a document,
+        files of a space's file share are only cached privately and revalidated
+        """
+
+        file_node = self._file()
+        response = self.fetch("/uploads/{}".format(file_node["file_id"]))
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response.headers["Content-Security-Policy"], "sandbox")
+        self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
+
+        other_id = util.gridfs_put(self.fs, b"free", "free.txt", "text/plain", "me")
+        response = self.fetch("/uploads/{}".format(other_id))
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response.headers["Content-Security-Policy"], "sandbox")
+        self.assertNotIn("Cache-Control", response.headers)
 
 
 class TimelineHandlerTest(BaseApiTestCase):
@@ -7743,8 +8668,8 @@ class TimelineHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "read_access": [CURRENT_ADMIN.username],
             "write_access": [CURRENT_ADMIN.username],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [],
@@ -7756,8 +8681,8 @@ class TimelineHandlerTest(BaseApiTestCase):
             "target_groups": [],
             "languages": ["test", "test"],
             "evaluation": [],
-            "timestamp_from": datetime.now(),
-            "timestamp_to": datetime.now(),
+            "timestamp_from": datetime.now(timezone.utc),
+            "timestamp_to": datetime.now(timezone.utc),
             "involved_parties": ["test", "test"],
             "realization": "test",
             "physical_mobility": True,
@@ -7806,7 +8731,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[0],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "space_post_admin",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7817,7 +8742,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_USER.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
                     }
@@ -7828,7 +8753,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[1],
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "normal_post_admin",
                 "space": None,
                 "pinned": False,
@@ -7842,7 +8767,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[2],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "space_post_user",
                 "space": self.test_space_id,
                 "pinned": False,
@@ -7856,7 +8781,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": self.post_oids[3],
                 "author": CURRENT_USER.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "normal_post_user",
                 "space": None,
                 "pinned": False,
@@ -7929,8 +8854,8 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "GET",
             "/timeline?from={}&to={}".format(
-                (datetime.now() - timedelta(hours=2)).isoformat(),
-                (datetime.now() - timedelta(hours=1)).isoformat(),
+                quote((datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()),
+                quote((datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()),
             ),
             True,
             200,
@@ -7986,7 +8911,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now() + timedelta(days=1),
+                "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
                 "text": "pinned_space_post_admin",
                 "space": self.test_space_id,
                 "pinned": True,
@@ -8183,10 +9108,10 @@ class TimelineHandlerTest(BaseApiTestCase):
 
         # query for new posts in the last 30 minutes
         # plenty of time, since setup happens right before the test
-        timestamp = (datetime.now() - timedelta(minutes=30)).isoformat()
+        timestamp = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
 
         response = self.base_checks(
-            "GET", "/updates?from={}".format(timestamp), True, 200
+            "GET", "/updates?from={}".format(quote(timestamp)), True, 200
         )
         self.assertIn("new_posts", response)
         self.assertTrue(response["new_posts"])
@@ -8204,7 +9129,7 @@ class TimelineHandlerTest(BaseApiTestCase):
             {},
             {
                 "$set": {
-                    "creation_date": (datetime.now() - timedelta(days=10)).isoformat()
+                    "creation_date": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
                 }
             },
         )
@@ -8363,8 +9288,8 @@ class VEPlanHandlerTest(BaseApiTestCase):
             "author": CURRENT_ADMIN.username,
             "read_access": [CURRENT_ADMIN.username],
             "write_access": [CURRENT_ADMIN.username],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": [CURRENT_USER.username],
             "institutions": [self.institution.to_dict()],
@@ -12810,7 +13735,7 @@ class ReportHandlerTest(BaseApiTestCase):
             "item_id": self.reported_item_id,
             "reason": "test",
             "state": "open",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.reports.insert_one(self.default_report)
 
@@ -12911,7 +13836,7 @@ class ReportHandlerTest(BaseApiTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "closed",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -12956,7 +13881,7 @@ class ReportHandlerTest(BaseApiTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": second_id,
@@ -12965,7 +13890,7 @@ class ReportHandlerTest(BaseApiTestCase):
                     "item_id": ObjectId(),
                     "reason": "test2",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -13166,7 +14091,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                         "_id": ObjectId(),
                         "message": "hi",
                         "sender": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "send_states": [
                             {
                                 "username": CURRENT_ADMIN.username,
@@ -13185,7 +14110,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "type": "new_messages",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             }
         )
@@ -13195,7 +14120,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "p1",
                 "space": None,
                 "pinned": False,
@@ -13212,7 +14137,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
             {
                 "_id": ObjectId(),
                 "author": "someone",
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "p2",
                 "space": None,
                 "pinned": False,
@@ -13225,7 +14150,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                     {
                         "_id": ObjectId(),
                         "author": CURRENT_ADMIN.username,
-                        "creation_date": datetime.now(),
+                        "creation_date": datetime.now(timezone.utc),
                         "text": "c",
                         "pinned": False,
                     }
@@ -13275,7 +14200,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "message": "m",
                 "plan_id": None,
                 "replied": False,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -13288,7 +14213,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                 "item_id": ObjectId(),
                 "reason": "r",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
