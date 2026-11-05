@@ -67,7 +67,6 @@ class Space(dict):
         "admins": list,
         "invites": list,
         "requests": list,
-        "files": list,
         "space_pic": (str, ObjectId, type(None)),
         "space_description": (str, type(None)),
     }
@@ -94,8 +93,6 @@ class Space(dict):
         super().__setitem__("invites", [])
         setattr(self, "requests", [])
         super().__setitem__("requests", [])
-        setattr(self, "files", [])
-        super().__setitem__("files", [])
         setattr(self, "space_pic", None)
         super().__setitem__("space_pic", None)
         setattr(self, "space_description", None)

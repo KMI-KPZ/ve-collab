@@ -1,4 +1,3 @@
-import datetime
 from typing import Dict, List
 
 from bson import ObjectId
@@ -157,7 +156,7 @@ class NotificationResource:
             "type": notification_type,
             "to": recipient,
             "receive_state": "pending",
-            "creation_timestamp": datetime.datetime.now(),
+            "creation_timestamp": util.utcnow(),
             "payload": payload,
         }
 

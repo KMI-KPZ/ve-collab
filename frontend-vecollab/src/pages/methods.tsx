@@ -101,10 +101,7 @@ function applyFilters(methods: Method[], filters: MethodFilters): Method[] {
             const level = getTeacherProfileLevel(m, dimension);
             if (level != null && level > filters.teacherProfileLevels[dimension]) return false;
         }
-        if (
-            filters.roomSpecs.length > 0 &&
-            !m.roomSpec?.some((v) => filters.roomSpecs.includes(v))
-        )
+        if (filters.roomSpecs.length > 0 && !m.roomSpec?.some((v) => filters.roomSpecs.includes(v)))
             return false;
 
         // range filters
@@ -120,7 +117,9 @@ function applyFilters(methods: Method[], filters: MethodFilters): Method[] {
     });
 }
 
-export default function Methods({ allMethods }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function Methods({
+    allMethods,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const router = useRouter();
     // a method can be preselected via ?method=<id>, e.g. from the dashboard suggestions
     const queryMethodId = typeof router.query.method === 'string' ? router.query.method : null;
@@ -311,10 +310,7 @@ export default function Methods({ allMethods }: InferGetServerSidePropsType<type
                             selectedMethodId ? 'block' : 'hidden md:block'
                         }`}
                     >
-                        <MethodDetail
-                            method={selectedMethod}
-                            onBack={handleBack}
-                        />
+                        <MethodDetail method={selectedMethod} onBack={handleBack} />
                     </div>
                 </div>
             </div>

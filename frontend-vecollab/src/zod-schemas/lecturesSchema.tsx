@@ -6,7 +6,7 @@ const LectureFormSchema = z.object({
     lecture_format: z.string().max(5000, "messages.maxlength5000"),
     participants_amount: z
         .number({
-            invalid_type_error: "messages.only_positive_number",
+            error: "messages.only_positive_number",
         })
         .int("messages.only_positive_number")
         .gte(0, "messages.only_positive_number")

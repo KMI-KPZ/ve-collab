@@ -6,7 +6,7 @@ import { fetchDELETE } from '@/lib/backend';
 import { AuthenticatedFile } from '@/components/common/AuthenticatedFile';
 import { RxFile } from 'react-icons/rx';
 import Wrapper from '@/components/VE-designer/Wrapper';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
 import { Socket } from 'socket.io-client';
 import { IoMdClose } from 'react-icons/io';
@@ -62,7 +62,7 @@ export default function PostProcess({ socket }: Props) {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(PostProcessSchema),
+        resolver: zodResolver(PostProcessSchema) as Resolver<FormValues>,
         defaultValues: {
             sharePlanned: false,
             share: false,

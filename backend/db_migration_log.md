@@ -231,3 +231,52 @@ post-process-rework
 
 #### letzte Änderung
 18.12.24 09:30
+
+---
+
+#### Kurzfassung
+db.fs.files.contentType --> db.fs.files.metadata.content_type
+
+#### branch
+fileshare
+
+#### Beschreibung
+- PyMongo 4 markiert die Properties `content_type` von `GridIn`/`GridOut` (das Top-Level-Feld `contentType` der GridFS-Dateidokumente) als deprecated, PyMongo 5 entfernt sie. Der MIME-Type wird deshalb ab jetzt in den Metadaten der Datei abgelegt: `metadata.content_type` (Datentyp `str` oder `null`). Alle Schreibzugriffe laufen über `util.gridfs_put()`, alle Lesezugriffe über `util.gridfs_content_type()` (mit Fallback auf das Legacy-Feld für noch nicht migrierte Dateien).
+- Migration bestehender Dateien (idempotent, vor dem Upgrade auf PyMongo 5 nötig): `docker exec backend python3 -m migrations.gridfs_content_type`. Kopiert `contentType` nach `metadata.content_type` (bereits vorhandene Metadaten-Werte bleiben erhalten) und entfernt anschließend das Top-Level-Feld.
+
+#### letzte Änderung
+02.11.26 15:30
+
+---
+
+#### Kurzfassung
+db.spaces.files gelöscht --> neue Collection db.space_files
+
+#### branch
+fileshare
+
+#### Beschreibung
+- Das eingebettete Array `files` in jedem Space entfällt. Die Dateiablage wird zu einer hierarchischen Ordnerstruktur in der neuen Collection `space_files`, ein Dokument pro Datei bzw. Ordner:
+    {
+        "space": ObjectId,
+        "parent": ObjectId | null,        // null = Wurzelverzeichnis des Spaces
+        "type": "folder" | "file",
+        "name": str,                      // pro Ordner eindeutig (ohne Beachtung der Groß-/Kleinschreibung)
+        "author": str,
+        "created": datetime,
+        "modified": datetime,
+        // nur Ordner:
+        "system": str | null,             // "post_files" markiert den reservierten Ordner für Beitragsanhänge
+        // nur Dateien:
+        "file_id": ObjectId,              // GridFS _id
+        "content_type": str,              // aus dem Dateinamen abgeleitet
+        "size": int,
+        "manually_uploaded": bool,        // false = Anhang eines Beitrags (nur lesbar, kopierbar)
+        "post_id": ObjectId | null
+    }
+- Indizes: `space_files_space_parent` (space, parent), `space_files_unique_name` (space, parent, name; unique, Collation `en`/Stärke 2), `space_files_file_id` (file_id). Werden beim Start des Backends angelegt.
+- Grenzen (Konstanten in `resources/network/space_files.py`): max. Ordnertiefe 5, max. 80 MB pro Datei, max. 2 GB pro Space, max. 255 Zeichen pro Name.
+- Migration bestehender Dateien (idempotent, einmalig nach dem Deployment): `docker exec backend python3 -m migrations.space_files`. Manuell hochgeladene Dateien landen im Wurzelordner, Anhänge der Beiträge des Spaces (ohne Reposts) im Ordner für Beitragsanhänge, Einträge ehemaliger Beitragsanhänge ohne Beitrag als normale Dateien im Wurzelordner. Anschließend wird `files` aus dem Space entfernt.
+
+#### letzte Änderung
+02.11.26 15:55

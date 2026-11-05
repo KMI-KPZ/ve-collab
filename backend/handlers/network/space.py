@@ -11,7 +11,6 @@ from resources.network.acl import ACL
 from resources.network.space import (
     AlreadyAdminError,
     OnlyAdminError,
-    PostFileNotDeleteableError,
     Spaces,
     SpaceDoesntExistError,
     UserNotAdminError,
@@ -165,32 +164,6 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
-        GET /spaceadministration/files
-            get the file metadata of the files uploaded to the given space
-            use the static file handler on /uploads to retrieve the actual file
-            query param:
-                "id": the space _id of which to view the files
-
-            returns:
-                200 OK
-                {"success": True,
-                 "files": [{"author": <str>, "filename": <str>}, ...]}
-
-                400 Bad Request
-                {"success": False,
-                 "reason": missing_key:name}
-
-                401 Unauthorized
-                {"success": False,
-                 "reason": "no_logged_in_user"}
-
-                403 Forbidden
-                {"success": False,
-                 "reason": "insufficient_permission"}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "space_doesnt_exist"}
         """
 
         if slug == "list":
@@ -244,17 +217,6 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.get_invites_for_space(space_id)
-            return
-
-        elif slug == "files":
-            try:
-                space_id = self.get_argument("id")
-            except tornado.web.MissingArgumentError:
-                self.set_status(400)
-                self.write({"success": False, "reason": "missing_key:id"})
-                return
-
-            self.get_files(space_id)
             return
 
         else:
@@ -668,41 +630,6 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "space_doesnt_exist"}
 
-        POST /spaceadministration/put_file
-            add a new file to the space's repository
-            query param:
-                "id": the _id of the space
-
-            form data:
-                "file": the file to upload
-
-            returns:
-                200 OK,
-                {"success": True}
-
-                400 Bad Request
-                {"success": False,
-                 "reason": missing_key:id}
-
-                400 Bad Request
-                {"success": False,
-                 "reason": missing_file:file}
-
-                401 Unauthorized
-                {"success": False,
-                 "reason": "no_logged_in_user"}
-
-                403 Forbidden
-                {"success": False,
-                 "reason": "insufficient_permission"}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "space_doesnt_exist"}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "user_not_member_of_space"}
         """
 
         # join_discussion and create route doesnt need space id, so only
@@ -844,21 +771,6 @@ class SpaceHandler(BaseHandler):
             self.toggle_space_joinability(space_id)
             return
 
-        elif slug == "put_file":
-            if "file" not in self.request.files or not self.request.files["file"][0]:
-                self.set_status(400)
-                self.write({"success": False, "reason": "missing_file:file"})
-                return
-
-            file_obj = self.request.files["file"][0]
-            self.put_new_file(
-                space_id,
-                file_obj["filename"],
-                file_obj["body"],
-                file_obj["content_type"],
-            )
-            return
-
         else:
             self.set_status(404)
 
@@ -954,43 +866,6 @@ class SpaceHandler(BaseHandler):
                 {"success": False,
                  "reason": "insufficient_permission"}
 
-        DELETE /spaceadministration/delete_file
-            remove an uploaded file from the space, requires being the uploader
-            or space admin / global admin
-            query param:
-                "id" : space _id of which space to delete, mandatory argument
-                "file_id": id of the file to delete, mandatory argument
-
-            returns:
-                200 OK,
-                {"success": True}
-
-                400 Bad Request
-                {"success": False,
-                 "reason": "missing_key:id"}
-
-                401 Unauthorized
-                {"success": False,
-                 "reason": "no_logged_in_user"}
-
-                403 Forbidden
-                {"success": False,
-                 "reason": "insufficient_permission}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "space_doesnt_exist"}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "file_doesnt_exist_in_space"}
-
-                409 Conflict
-                {"success": False,
-                 "reason": "file_belongs_to_post"}
-                --> file was not uploaded manually but landed in the files as part of a
-                    post, so it can only be deleted by deleting the post itself
-
         DELETE /spaceadministration/delete_space
             (space will be deleted, requires being global or space admin)
             query param:
@@ -1048,17 +923,6 @@ class SpaceHandler(BaseHandler):
                 return
 
             self.remove_admin_from_space(space_id, username)
-            return
-
-        elif slug == "delete_file":
-            try:
-                file_id = self.get_argument("file_id")
-            except tornado.web.MissingArgumentError:
-                self.set_status(400)
-                self.write({"success": False, "reason": "missing_key:file_id"})
-                return
-
-            self.delete_file(space_id, file_id)
             return
 
         elif slug == "delete_space":
@@ -1261,46 +1125,6 @@ class SpaceHandler(BaseHandler):
             )
         )
 
-    def get_files(self, space_id: str | ObjectId) -> None:
-        """
-        get the file metadata of all files in the space.
-        metadata means author and filename, use the filename to retrieve the actual
-        file from the `StaticFileHandler` on the /uploads endpoint by using
-        /uploads/<space_id>/<filename>
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        with util.get_mongodb() as db:
-            space_manager = Spaces(db)
-            acl = ACL(db)
-
-            # reject if user is not a member or space doesnt exist at all
-            try:
-                if not space_manager.check_user_is_member(
-                    space_id, self.current_user.username
-                ):
-                    self.set_status(409)
-                    self.write({"success": False, "reason": "user_not_member_of_space"})
-                    return
-            except SpaceDoesntExistError:
-                self.set_status(409)
-                self.write({"success": False, "reason": "space_doesnt_exist"})
-                return
-
-            # reject if user is not allowed to view files
-            if not acl.space_acl.ask(
-                self.current_user.username, space_id, "read_files"
-            ):
-                self.set_status(403)
-                self.write({"success": False, "reason": "insufficient_permission"})
-                return
-
-            files = space_manager.get_files(space_id)
-
-            self.set_status(200)
-            self.write(self.json_serialize_response({"success": True, "files": files}))
-
     def create_space(
         self, space_name: str, is_invisible: bool, is_joinable: bool
     ) -> None:
@@ -1331,7 +1155,6 @@ class SpaceHandler(BaseHandler):
                 "admins": [self.current_user.username],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_group_pic.jpg",
                 "space_description": "",
             }
@@ -1909,62 +1732,6 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
-    def put_new_file(
-        self,
-        space_id: str | ObjectId,
-        file_name: str,
-        file_content: bytes,
-        content_type: str,
-    ) -> None:
-        """
-        add a new file to the space's 'repository'.
-        each space has an own directory in the uploads directory, where the files will be stored.
-        using the filename of the file that was just stored, you can retrieve the actual content
-        of the file using the `StaticFileHandler` on the uploads-endpoint using
-        /uploads/<space_id>/<file_name>
-        :param space_id: the _id of the space where to upload the new file
-        :param file_name: the name of the new file
-        :param file_content: the body of the file as raw bytes
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        with util.get_mongodb() as db:
-            space_manager = Spaces(db)
-            acl = ACL(db)
-
-            # reject if user is not a member or space doesnt exist at all
-            try:
-                if not space_manager.check_user_is_member(
-                    space_id, self.current_user.username
-                ):
-                    self.set_status(409)
-                    self.write({"success": False, "reason": "user_not_member_of_space"})
-                    return
-            except SpaceDoesntExistError:
-                self.set_status(409)
-                self.write({"success": False, "reason": "space_doesnt_exist"})
-                return
-
-            # reject if user is not allowed to add files
-            if not acl.space_acl.ask(
-                self.current_user.username, space_id, "write_files"
-            ):
-                self.set_status(403)
-                self.write({"success": False, "reason": "insufficient_permission"})
-                return
-
-            space_manager.add_new_repo_file(
-                space_id,
-                file_name,
-                file_content,
-                content_type,
-                self.current_user.username,
-            )
-
-        self.set_status(200)
-        self.write({"success": True})
-
     def user_leave(self, space_id: str | ObjectId) -> None:
         """
         let the current user leave the space
@@ -2109,61 +1876,3 @@ class SpaceHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
-
-    def delete_file(self, space_id: str | ObjectId, file_id: str | ObjectId) -> None:
-        """
-        delete an uploaded file from the space
-        the user has to be either global or space admin, or the author (==uploader)
-        of the file.
-        """
-
-        space_id = util.parse_object_id(space_id)
-        file_id = util.parse_object_id(file_id)
-
-        with util.get_mongodb() as db:
-            space_manager = Spaces(db)
-            space = space_manager.get_space(
-                space_id, projection={"_id": False, "files": True, "admins": True}
-            )
-
-            # abort if space doesnt exist
-            if not space:
-                self.set_status(409)
-                self.write({"success": False, "reason": "space_doesnt_exist"})
-                return
-
-            # search for the desired file, if found, do permission checks
-            for file_obj in space["files"]:
-                if file_obj["file_id"] == file_id:
-                    # to delete a file, the user either has to be the author (==uploader),
-                    # a space admin or a global admin. if he is not any of these, reply
-                    # with insufficient permission
-                    if self.current_user.username != file_obj["author"]:
-                        if self.current_user.username not in space["admins"]:
-                            if not self.is_current_user_lionet_admin():
-                                self.set_status(403)
-                                self.write(
-                                    {
-                                        "success": False,
-                                        "reason": "insufficient_permission",
-                                    }
-                                )
-                                return
-
-                    # permission checks have passed, delete the file
-                    # last error is if the file belongs to a post
-                    # in this case, it is not deletable directly,
-                    # but only by deleting the whole post
-                    try:
-                        space_manager.remove_file(space_id, file_id)
-                        self.set_status(200)
-                        self.write({"success": True})
-                        return
-                    except PostFileNotDeleteableError:
-                        self.set_status(409)
-                        self.write({"success": False, "reason": "file_belongs_to_post"})
-                        return
-
-            # after iterating all files of the space, no match was found --> reply error
-            self.set_status(409)
-            self.write({"success": False, "reason": "file_doesnt_exist_in_space"})

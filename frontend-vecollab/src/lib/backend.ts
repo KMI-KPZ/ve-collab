@@ -2,6 +2,11 @@ import {
     BackendChatMessage,
     BackendChatroomSnippet,
     BackendPost,
+    BackendFileNode,
+    BackendFileSearchResult,
+    BackendFileShareLimits,
+    BackendFolderListing,
+    BackendFolderTreeNode,
     BackendGroup,
     BackendGroupACLEntry,
     BackendUserSnippet,
@@ -598,6 +603,176 @@ export function useGetMyGroupACLEntry(
         error,
         mutate,
     };
+}
+
+/**
+ * list the contents of a folder of a group's file share
+ * (folderId undefined/null means the root folder)
+ */
+export function useGetGroupFolder(
+    accessToken: string,
+    groupId?: string,
+    folderId?: string | null
+): {
+    data: BackendFolderListing | null;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        groupId
+            ? [
+                  `/space_files/list?id=${groupId}${folderId ? `&folder=${folderId}` : ''}`,
+                  accessToken,
+              ]
+            : null,
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { keepPreviousData: true })
+    );
+    return {
+        data: isLoading || error || !groupId ? null : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+/**
+ * the complete folder tree (folders only) of a group's file share
+ */
+export function useGetGroupFolderTree(
+    accessToken: string,
+    groupId?: string
+): {
+    data: BackendFolderTreeNode[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        groupId ? [`/space_files/tree?id=${groupId}`, accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+    return {
+        data: isLoading || error || !groupId ? [] : data.tree,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+/**
+ * search files and folders of a group's file share by name.
+ * An empty query disables the request.
+ */
+export function useSearchGroupFiles(
+    accessToken: string,
+    groupId?: string,
+    query?: string
+): {
+    data: BackendFileSearchResult[];
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        groupId && query && query.trim() !== ''
+            ? [
+                  `/space_files/search?id=${groupId}&query=${encodeURIComponent(query.trim())}`,
+                  accessToken,
+              ]
+            : null,
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { keepPreviousData: true })
+    );
+    return {
+        data: isLoading || error || !groupId || !query ? [] : data.results,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+/**
+ * the boundaries of the file share (max file size, depth, ...) as configured in the backend
+ */
+export function useGetFileShareLimits(accessToken: string): {
+    data: BackendFileShareLimits | null;
+    isLoading: boolean;
+    error: any;
+} {
+    const { data, error, isLoading } = useSWR(
+        accessToken ? ['/space_files/limits', accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+    return {
+        data: isLoading || error ? null : data.limits,
+        isLoading,
+        error,
+    };
+}
+
+/**
+ * upload files into a folder of a group's file share. Uses XHR instead of fetch
+ * to be able to report the upload progress. Resolves with the parsed json
+ * response of the backend (success or error), rejects only on network errors.
+ */
+export function uploadGroupFiles(
+    groupId: string,
+    files: File[],
+    parentId: string | null,
+    accessToken: string,
+    onProgress?: (fraction: number) => void
+): Promise<{ success: boolean; reason?: string; files?: BackendFileNode[] }> {
+    const body = new FormData();
+    files.forEach((file) => body.append('file', file, file.name));
+    if (parentId) body.append('parent', parentId);
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${BACKEND_BASE_URL}/space_files/upload?id=${groupId}`);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        xhr.upload.onprogress = (event) => {
+            if (onProgress && event.lengthComputable) {
+                onProgress(event.loaded / event.total);
+            }
+        };
+        xhr.onload = () => {
+            if (xhr.status === 401) {
+                console.log('forced new signIn by api call');
+                signIn('keycloak');
+            }
+            try {
+                resolve(JSON.parse(xhr.responseText));
+            } catch (e) {
+                resolve({ success: false, reason: 'invalid_response' });
+            }
+        };
+        xhr.onerror = () => reject(new Error('network error'));
+        xhr.send(body);
+    });
+}
+
+/**
+ * fetch a file from the backend with the necessary authorization header,
+ * returning the response so callers can decide between blob() and text()
+ */
+export async function fetchAuthenticatedFile(
+    relativeUrl: string,
+    accessToken?: string
+): Promise<Response> {
+    const headers: { Authorization?: string } = {};
+    if (accessToken) {
+        headers['Authorization'] = 'Bearer ' + accessToken;
+    }
+    const response = await fetch(BACKEND_BASE_URL + relativeUrl, { headers });
+    if (response.status === 401) {
+        console.log('forced new signIn by api call');
+        signIn('keycloak');
+    }
+    return response;
 }
 
 export function useGetMyACL(accessToken: string): {

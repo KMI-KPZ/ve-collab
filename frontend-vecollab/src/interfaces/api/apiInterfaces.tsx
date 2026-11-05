@@ -121,11 +121,61 @@ export interface BackendChatMessage {
     ];
 }
 
-export interface BackendFileSnippet {
+export type BackendFileNodeType = 'folder' | 'file';
+
+/**
+ * a node (file or folder) of a group's file share
+ */
+export interface BackendFileNode {
+    _id: string;
+    space: string;
+    parent: string | null;
+    type: BackendFileNodeType;
+    name: string;
     author: string;
-    file_id: string;
-    file_name: string;
-    manually_uploaded: boolean;
+    created: string;
+    modified: string;
+    system?: string | null; // folders only: "post_files" marks the reserved folder holding post attachments
+    // files only
+    file_id?: string;
+    content_type?: string | null;
+    size?: number;
+    manually_uploaded?: boolean;
+    post_id?: string | null;
+}
+
+export interface BackendFilePathSnippet {
+    _id: string;
+    name: string;
+    type: BackendFileNodeType;
+    system?: string | null;
+}
+
+export interface BackendFileSearchResult extends BackendFileNode {
+    path: BackendFilePathSnippet[];
+}
+
+export interface BackendFolderTreeNode extends BackendFileNode {
+    children: BackendFolderTreeNode[];
+}
+
+export interface BackendFileShareStorage {
+    used_bytes: number;
+    max_bytes: number;
+}
+
+export interface BackendFileShareLimits {
+    max_folder_depth: number;
+    max_file_size_bytes: number;
+    max_space_storage_bytes: number;
+    max_name_length: number;
+}
+
+export interface BackendFolderListing {
+    folder: BackendFileNode | null;
+    path: BackendFilePathSnippet[];
+    items: BackendFileNode[];
+    storage: BackendFileShareStorage;
 }
 
 export interface BackendGroup {
@@ -133,7 +183,6 @@ export interface BackendGroup {
     name: string;
     admins: string[];
     members: string[];
-    files: BackendFileSnippet[];
     invisible: boolean;
     joinable: boolean;
     invites: string[];

@@ -85,9 +85,7 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
             <table className="w-full">
                 <tbody>
                     {method.socialForm?.length > 0 && (
-                        <DetailRow label="Sozialform">
-                            {method.socialForm.join(', ')}
-                        </DetailRow>
+                        <DetailRow label="Sozialform">{method.socialForm.join(', ')}</DetailRow>
                     )}
                     {method.phase?.length > 0 && (
                         <DetailRow label="AVIVA-Phase(n)">{method.phase.join(', ')}</DetailRow>
@@ -98,9 +96,7 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
                         </DetailRow>
                     )}
                     {method.roomSpec?.length > 0 && (
-                        <DetailRow label="IKAP-Phase(n)">
-                            {method.roomSpec.join(', ')}
-                        </DetailRow>
+                        <DetailRow label="IKAP-Phase(n)">{method.roomSpec.join(', ')}</DetailRow>
                     )}
                     {method.result && (
                         <DetailRow label="IKAP-Phase(n) (Kommentar)">{method.result}</DetailRow>
@@ -142,9 +138,7 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
                         </DetailRow>
                     )}
                     {method.material?.length > 0 && (
-                        <DetailRow label="Lehrendenprofil">
-                            {method.material.join(', ')}
-                        </DetailRow>
+                        <DetailRow label="Lehrendenprofil">{method.material.join(', ')}</DetailRow>
                     )}
                     {method.timeMin != null && (
                         <DetailRow label="Zeitaufwand">
@@ -158,9 +152,7 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
                         </DetailRow>
                     )}
                     {method.timeComment && (
-                        <DetailRow label="Zeitaufwand (Kommentar)">
-                            {method.timeComment}
-                        </DetailRow>
+                        <DetailRow label="Zeitaufwand (Kommentar)">{method.timeComment}</DetailRow>
                     )}
                     {method.experiences && (
                         <DetailRow label="Erfahrungen">

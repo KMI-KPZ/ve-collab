@@ -8,11 +8,8 @@ from exceptions import (
     AlreadyAdminError,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
-    FileAlreadyInRepoError,
-    FileDoesntExistError,
     NotRequestedJoinError,
     OnlyAdminError,
-    PostFileNotDeleteableError,
     SpaceDoesntExistError,
     UserNotAdminError,
     UserNotInvitedError,
@@ -20,6 +17,7 @@ from exceptions import (
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.profile import Profiles
+from resources.network.space_files import SpaceFiles
 from model import Space
 import util
 
@@ -45,7 +43,6 @@ class Spaces:
             "admins": list,
             "invites": list,
             "requests": list,
-            "files": list,
             "space_pic": str,
             "space_description": str,
         }
@@ -265,7 +262,7 @@ class Spaces:
         create a new space, validating the existence of the necessary attributes
         beforehand. mandatory attributes are: name (str), invisible (bool),
         joinable (bool), members (list<str>), admins (list<str>), invites (list<str>),
-        requests (list<str>), files (list<ObjectId>)
+        requests (list<str>), space_pic (str), space_description (str)
 
         You can also specify the elasticsearch collection in which the profile
         should be replicated. The default is "spaces" just as in the mongodb.
@@ -327,20 +324,18 @@ class Spaces:
         """
         delete the space and all data associated with it, i.e.:
         - space data (description, ...)
-        - all posts that were posted into the space
+        - the complete file share of the space
+        - all posts that were posted into the space (including their files)
         - all space acl rules
         """
 
         space_id = util.parse_object_id(space_id)
 
-        # delete all files from the repository
-        try:
-            space_files = self.get_files(space_id)
-        except SpaceDoesntExistError:
-            raise
-        fs = gridfs.GridFS(self.db)
-        for file in space_files:
-            fs.delete(file["file_id"])
+        if not self.check_space_exists(space_id):
+            raise SpaceDoesntExistError()
+
+        # delete the file share of the space
+        SpaceFiles(self.db).delete_all_of_space(space_id)
 
         self.db.spaces.delete_one({"_id": space_id})
 
@@ -463,13 +458,8 @@ class Spaces:
         space_id = util.parse_object_id(space_id)
 
         fs = gridfs.GridFS(self.db)
-        # store in gridfs
-        _id = fs.put(
-            picture,
-            filename=filename,
-            content_type=content_type,
-            metadata={"uploader": "me"},
-        )
+        # store in gridfs (mime type and uploader live in the file's metadata)
+        _id = util.gridfs_put(fs, picture, filename, content_type, "me")
 
         update_result = self.db.spaces.update_one(
             {"_id": space_id},
@@ -795,161 +785,3 @@ class Spaces:
 
         # remove user from spaces admins list
         self.db.spaces.update_one({"_id": space_id}, {"$pull": {"admins": username}})
-
-    def get_files(self, space_id: str | ObjectId) -> List[Dict]:
-        """
-        get the metadata of the files from the given space as a list of dicts.
-        If no files are in the space, an empty list is returned instead.
-        Metdata contains the `author` and the `filename` as a dict.
-        use the filenames to retrieve the actual files via the `StaticFileHandler`
-        on the /uploads - endpoint by using /uploads/<space_id>/<filename>
-        :param space_id: the _id of the space to get the files of
-        :return: list of dicts of file metadata, or an empty list, if no files are
-                 in the space
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        db_result = self.get_space(space_id, projection={"_id": True, "files": True})
-
-        if db_result is None:
-            raise SpaceDoesntExistError()
-
-        return db_result["files"]
-
-    def add_new_post_file(
-        self, space_id: str | ObjectId, author: str, file_id: ObjectId, file_name: str
-    ) -> None:
-        """
-        add a new file to the space's 'repository', that was originally part of a post.
-        therefore we don't save a new file, but only keep a reference to the file_id in the space,
-        i.e. the actual saving of the file needs to be done by the post, and afterwards the
-        stored _id is used here as a parameter.
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        update_result = self.db.spaces.update_one(
-            {"_id": space_id},
-            {
-                "$addToSet": {
-                    "files": {
-                        "author": author,
-                        "file_id": file_id,
-                        "file_name": file_name,
-                        "manually_uploaded": False,
-                    }
-                }
-            },
-        )
-
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
-
-        if update_result.modified_count != 1:
-            raise FileAlreadyInRepoError()
-
-    def add_new_repo_file(
-        self,
-        space_id: str | ObjectId,
-        file_name: str,
-        file_content: bytes,
-        content_type: str,
-        uploader: str,
-    ) -> ObjectId:
-        """
-        add a new file to the space's 'repository', returning the _id of the newly
-        created file
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        if not self.check_space_exists(space_id):
-            raise SpaceDoesntExistError()
-
-        # store file in gridfs
-        fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": uploader},
-        )
-
-        self.db.spaces.update_one(
-            {"_id": space_id},
-            {
-                "$addToSet": {
-                    "files": {
-                        "author": uploader,
-                        "file_id": _id,
-                        "file_name": file_name,
-                        "manually_uploaded": True,
-                    }
-                }
-            },
-        )
-
-        return _id
-
-    def remove_file(self, space_id: str | ObjectId, file_id: ObjectId) -> None:
-        """
-        remove a file from the space, i.e. remove the reference from the db and
-        also remove it physically from gridfs
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        # search for the file first to check existence of the space and the file
-        # in the first place. if it is found, do the necessary checks before commiting
-        # to the deletion
-        try:
-            files = self.get_files(space_id)
-        except SpaceDoesntExistError:
-            raise
-
-        fs = gridfs.GridFS(self.db)
-        for file in files:
-            if file["file_id"] == file_id:
-                # if the file was not manually uploaded to the file repo,
-                # it belongs to a post, which makes it only deletable by
-                # deleting the post itself.
-                if (
-                    "manually_uploaded" not in file
-                    or file["manually_uploaded"] is False
-                ):
-                    raise PostFileNotDeleteableError()
-                # finally we can delete the file from space and from the FS
-                else:
-                    self.db.spaces.update_one(
-                        {"_id": space_id},
-                        {"$pull": {"files": {"file_id": file_id}}},
-                    )
-                    fs.delete(file_id)
-            return
-
-        # after iterating the whole loop, the file wasnt found, so we raise an error
-        raise FileDoesntExistError()
-
-    def remove_post_file(self, space_id: str | ObjectId, file_id: ObjectId) -> None:
-        """
-        remove a file from the space that belongs to a post. this function should ONLY be used,
-        when the corresponding post is deleted. For any files that were uploaded via
-        the regular space's repository, use `remove_file` instead, otherwise inconsistent states would
-        arise.
-        """
-
-        space_id = util.parse_object_id(space_id)
-
-        update_result = self.db.spaces.update_one(
-            {"_id": space_id},
-            {"$pull": {"files": {"file_id": file_id}}},
-        )
-
-        # if no document was matched, the space doesnt exist
-        if update_result.matched_count != 1:
-            raise SpaceDoesntExistError()
-
-        # if no document was modified, the file wasn't in the space files metadata
-        if update_result.modified_count != 1:
-            raise FileDoesntExistError()

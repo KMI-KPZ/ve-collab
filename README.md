@@ -6,7 +6,7 @@
   </a>
 </p>
 
-## 🔍 Project Overview
+## Project Overview
 
 ### Short Description
 
@@ -21,7 +21,7 @@ This research project addressed various problems (inadequate qualification, orga
 
 ### Tech Stack
 
-- **Languages**: Python 3.10, Typescript
+- **Languages**: Python 3.12+, Typescript
 - **Backend**: Tornado
 - **Frontend**: Next.js, TailwindCSS
 - **Authentication**: Keycloak (via OpenID Connect)
@@ -29,7 +29,7 @@ This research project addressed various problems (inadequate qualification, orga
 - **Deployment**: Docker, Nginx
 - **Other**: Etherpad, Wordpress
 
-## 📚 Table of Contents
+## Table of Contents
 
 1. [Getting Started](#-Getting-Started)
 2. [Development](#-Development)
@@ -39,7 +39,7 @@ This research project addressed various problems (inadequate qualification, orga
 6. [Important Components](#-Important-Components)
 7. [License](#-License)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -84,7 +84,17 @@ docker compose build
 docker compose up -d
 ```
 
-## 🛠️ Development
+### Database Migrations
+
+Some changes require a one-off migration of the existing data. Those live as modules in `backend/migrations` and are run once after deploying the version that introduced them, inside the running backend container:
+
+```bash
+docker exec backend python3 -m migrations.<name>
+```
+
+Natively, run `python3 -m migrations.<name>` from the `backend` directory instead (the MongoDB settings are read from the environment or `.env`). All migrations are idempotent. Which change requires which migration is documented in `backend/db_migration_log.md`.
+
+## Development
 
 ### Running the platform without Docker
 
@@ -98,8 +108,8 @@ For development it might be more convenient to run the platform without Docker.
 Make sure you have the following installed on your machine:
 
 - `Docker`: Latest version (for dependencies)
-- `Python 3.10`
-- `Node.js v20`
+- `Python 3.12 or higher`
+- `Node.js v25 or higher`
 
 #### Environment Variables
 
@@ -187,7 +197,7 @@ npm run dev
 - **master**: production branch, only pull requests from staging go here, has CI/CD
 
 
-## 🌟 Best Practices
+## Best Practices
 
 ### Clean Code
 
@@ -198,7 +208,7 @@ The frontend uses [Prettier](https://prettier.io/) with a custom `.prettierrc.js
 Both tools have plugins for Code Editors like VS Code.
 
 
-## 🔧 Testing
+## Testing
 
 ### Running Tests
 
@@ -208,7 +218,7 @@ Tests are split into model, resource, and api tests, combined by overarching tes
 python3 run_tests.py
 ```
 
-## 📜 License
+## License
 
 This project is licensed under [CC-BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 

@@ -28,10 +28,10 @@ class BaseTimelineHandler(BaseHandler):
         """
 
         time_from = self.get_argument(
-            "from", (datetime.now() - timedelta(days=1)).isoformat()
+            "from", (util.utcnow() - timedelta(days=1)).isoformat()
         )  # default value is 24h ago
         time_to = self.get_argument(
-            "to", datetime.now().isoformat()
+            "to", util.utcnow().isoformat()
         )  # default value is now
 
         # parse time strings into datetime objects (dateutil is able to guess format)
@@ -416,7 +416,7 @@ class NewPostsSinceTimestampHandler(BaseHandler):
         """
 
         timestamp = self.get_argument(
-            "from", (datetime.now() - timedelta(days=1)).isoformat()
+            "from", (util.utcnow() - timedelta(days=1)).isoformat()
         )
         timestamp = dateutil.parser.parse(timestamp)
 

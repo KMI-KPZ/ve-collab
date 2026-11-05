@@ -1,4 +1,4 @@
-import { format, formatDistance, parseISO, add } from 'date-fns';
+import { format, formatDistance, parseISO } from 'date-fns';
 import { de, enGB } from 'date-fns/locale';
 import { useRouter } from 'next/router';
 
@@ -19,8 +19,8 @@ export default function Timestamp({
 }: Props) {
     const router = useRouter();
 
-    let isoDate = parseISO(timestamp);
-    isoDate = add(isoDate, { minutes: -1 * isoDate.getTimezoneOffset() });
+    // backend timestamps carry their UTC offset, parseISO converts them to the browser's timezone
+    const isoDate = parseISO(timestamp);
 
     return (
         <>

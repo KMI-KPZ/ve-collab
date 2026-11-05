@@ -1,5 +1,4 @@
 import copy
-import datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -342,7 +341,7 @@ class VEPlanResource:
         """
 
         # set creation and last modified attributes
-        plan.creation_timestamp = plan.last_modified = datetime.datetime.now()
+        plan.creation_timestamp = plan.last_modified = util.utcnow()
 
         try:
             result = self.db.plans.insert_one(plan.to_dict())
@@ -492,7 +491,7 @@ class VEPlanResource:
         to the plan.
         """
 
-        now_timestamp = datetime.datetime.now()
+        now_timestamp = util.utcnow()
         plan.last_modified = now_timestamp
         plan_dict = plan.to_dict()
         # make sure meta attributes are not overwritten
@@ -689,7 +688,7 @@ class VEPlanResource:
         # for the upsert case, we need to construct a plan dict that doesn't
         # contain the field we tried to update and all fields we want to
         # set in the query because of a write concern at mongodb
-        now_timestamp = datetime.datetime.now()
+        now_timestamp = util.utcnow()
         on_insert_plan_dict = VEPlan(creation_timestamp=now_timestamp).to_dict()
         del on_insert_plan_dict["_id"]
         del on_insert_plan_dict["last_modified"]
@@ -834,7 +833,7 @@ class VEPlanResource:
             {"_id": plan_id},
             {
                 "$push": {"steps": step.to_dict()},
-                "$set": {"last_modified": datetime.datetime.now()},
+                "$set": {"last_modified": util.utcnow()},
             },
         )
 
@@ -874,14 +873,11 @@ class VEPlanResource:
             if not self._check_write_access(plan_id, requesting_username):
                 raise NoWriteAccessError()
 
-        # store file in gridfs
+        # store file in gridfs (mime type and uploader live in the file's metadata)
         # TODO: if there was a file before, delete the old one
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": requesting_username},
+        _id = util.gridfs_put(
+            fs, file_content, file_name, content_type, requesting_username
         )
 
         self.db.plans.update_one(
@@ -984,13 +980,10 @@ class VEPlanResource:
             if not self._check_write_access(plan_id, requesting_username):
                 raise NoWriteAccessError()
 
-        # store file in gridfs
+        # store file in gridfs (mime type and uploader live in the file's metadata)
         fs = gridfs.GridFS(self.db)
-        _id = fs.put(
-            file_content,
-            filename=file_name,
-            content_type=content_type,
-            metadata={"uploader": requesting_username},
+        _id = util.gridfs_put(
+            fs, file_content, file_name, content_type, requesting_username
         )
 
         self.db.plans.update_one(

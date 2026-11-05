@@ -44,12 +44,14 @@ from handlers.network.permissions import (
 from handlers.network.post import *
 from handlers.network.search import SearchHandler
 from handlers.network.space import SpaceHandler
+from handlers.network.space_files import SpaceFilesHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL, cleanup_unused_rules
 from resources.network.profile import ProfileDoesntExistException, Profiles
 from resources.network.space import Spaces
+from resources.network.space_files import SpaceFiles
 from resources.planner.ve_plan import ELASTICSEARCH_PLAN_FIELDS
 from handlers.planner.etherpad_integration import EtherpadIntegrationHandler
 from handlers.planner.ve_plan import VEPlanHandler
@@ -114,6 +116,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/(.+)", SpaceHandler),
+            (r"/space_files/(.+)", SpaceFilesHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
             (r"/timeline/user/(.+)", UserTimelineHandler),
@@ -257,6 +260,15 @@ def init_indexes(force_rebuild: bool) -> None:
             logger.info(
                 "Built index named {} on collection {}".format(
                     "notifications_to", "notifications"
+                )
+            )
+
+        # indexes of the space file shares (folder listings, unique names
+        # per folder, permission lookups by file_id when serving files)
+        for index_name in SpaceFiles.create_indexes(db, force_rebuild):
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    index_name, "space_files"
                 )
             )
 
@@ -508,20 +520,24 @@ def init_default_pictures():
 
         if not fs.exists("default_profile_pic.jpg"):
             with open("assets/default_profile_pic.jpg", "rb") as fp:
-                fs.put(
+                util.gridfs_put(
+                    fs,
                     fp.read(),
+                    "default_profile_pic.jpg",
+                    "image/jpg",
+                    "system",
                     _id="default_profile_pic.jpg",
-                    content_type="image/jpg",
-                    metadata={"uploader": "system"},
                 )
                 logger.info("default_profile_pic created")
         if not fs.exists("default_group_pic.jpg"):
             with open("assets/default_group_pic.jpg", "rb") as fp:
-                fs.put(
+                util.gridfs_put(
+                    fs,
                     fp.read(),
+                    "default_group_pic.jpg",
+                    "image/jpg",
+                    "system",
                     _id="default_group_pic.jpg",
-                    content_type="image/jpg",
-                    metadata={"uploader": "system"},
                 )
                 logger.info("default_group_pic created")
 

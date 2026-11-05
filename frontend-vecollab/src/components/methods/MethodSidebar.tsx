@@ -124,7 +124,7 @@ interface StepSliderProps {
 
 /**
  * slider snapping to a few ordered steps: while dragging, the thumb follows the pointer
- * freely and snaps to the nearest step on release, the step labels are clickable as well.
+ * freely and snaps to the nearest step on release.
  * Not a native range input, because its drag could get stuck after releasing the mouse
  * outside of it, then following the pointer without any button held.
  */
@@ -237,7 +237,6 @@ function StepSlider({ label, steps, value, onChange }: StepSliderProps) {
     );
 }
 
-/** sub phases ordered along the AVIVA phases they usually belong to */
 const AVIVA_SUB_PHASES = [
     'Kennenlernen',
     'Persönlicher Austausch (Erfahrung)',
@@ -257,10 +256,6 @@ const AVIVA_SUB_PHASES = [
     'Feedback einholen',
 ];
 
-/**
- * competences of the teacher profile, a method states the level it requires per
- * dimension as a material entry, e.g. "IT Kompetenz: mittlere Ausprägung"
- */
 export const TEACHER_PROFILE_DIMENSIONS = [
     'Digitale Lehre',
     'IT Kompetenz',

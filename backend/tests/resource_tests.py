@@ -1,8 +1,8 @@
 from bson import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import time
-from unittest import TestCase
+from unittest import TestCase, mock
 from bson import ObjectId
 import gridfs
 
@@ -21,6 +21,12 @@ from exceptions import (
     AlreadyRequestedJoinError,
     FileAlreadyInRepoError,
     FileDoesntExistError,
+    FileNodeDoesntExistError,
+    FileTooLargeError,
+    FilenameCollisionError,
+    FolderDepthExceededError,
+    InvalidFileNameError,
+    InvalidMoveTargetError,
     InvitationDoesntExistError,
     MaximumFilesExceededError,
     MessageDoesntExistError,
@@ -28,24 +34,29 @@ from exceptions import (
     NoReadAccessError,
     NoWriteAccessError,
     NonUniqueTasksError,
+    NotAFileError,
+    NotAFolderError,
     NotFollowedException,
     NotLikerException,
     NotRequestedJoinError,
     OnlyAdminError,
     PlanAlreadyExistsError,
     PlanDoesntExistError,
+    ReadOnlyNodeError,
     ReportDoesntExistError,
     RoomDoesntExistError,
-    PostFileNotDeleteableError,
     PostNotExistingException,
     ProfileDoesntExistException,
     SpaceDoesntExistError,
+    StorageQuotaExceededError,
     UserNotAdminError,
     UserNotInvitedError,
     UserNotMemberError,
 )
 import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
+from migrations.gridfs_content_type import migrate as migrate_gridfs_content_type
+from migrations.space_files import migrate as migrate_space_files
 from model import (
     Evaluation,
     IndividualLearningGoal,
@@ -65,6 +76,7 @@ from resources.network.chat import Chat
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+from resources.network.space_files import SpaceFiles
 from resources.planner.ve_plan import VEPlanResource
 from resources.reports import Reports
 from resources.notifications import NotificationResource
@@ -1638,18 +1650,16 @@ class PostResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [
-                {
-                    "file_id": file_id,
-                    "author": CURRENT_ADMIN.username,
-                    "manually_uploaded": True,
-                }
-            ],
         }
         self.db.spaces.insert_one(space)
 
         # create a post in the space
         post_id = ObjectId()
+
+        # mirror the file into the space's file share as a post file
+        SpaceFiles(self.db).add_post_file(
+            space_id, CURRENT_ADMIN.username, file_id, "test.txt", post_id
+        )
         post = {
             "_id": post_id,
             "author": CURRENT_ADMIN.username,
@@ -1683,9 +1693,10 @@ class PostResourceTest(BaseResourceTestCase):
         # check if file was deleted
         self.assertIsNone(fs.find_one({"_id": file_id}))
 
-        # check if file was deleted from space's repository
-        space = self.db.spaces.find_one({"_id": space_id})
-        self.assertEqual(space["files"], [])
+        # check if file was deleted from space's file share
+        self.assertIsNone(self.db.space_files.find_one({"file_id": file_id}))
+
+        self.db.space_files.delete_many({})
 
     def test_delete_post_error_post_doesnt_exist(self):
         """
@@ -1702,8 +1713,12 @@ class PostResourceTest(BaseResourceTestCase):
         expect: successfully delete all posts in the space
         """
 
-        # add 2 more space posts
+        # add 2 more space posts, one of them with a file
         space_id = ObjectId()
+        fs = gridfs.GridFS(self.db)
+        file_id = util.gridfs_put(
+            fs, b"test", "test.txt", "text/plain", CURRENT_ADMIN.username
+        )
         additional_posts = [
             {
                 "_id": ObjectId(),
@@ -1716,7 +1731,14 @@ class PostResourceTest(BaseResourceTestCase):
                 "wordpress_post_id": None,
                 "tags": ["test"],
                 "plans": [],
-                "files": [],
+                "files": [
+                    {
+                        "file_id": file_id,
+                        "file_name": "test.txt",
+                        "file_type": "text/plain",
+                        "author": CURRENT_ADMIN.username,
+                    }
+                ],
                 "comments": [],
                 "likers": [],
             },
@@ -1741,9 +1763,10 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         post_manager.delete_post_by_space(space_id)
 
-        # check if posts were deleted
+        # check if posts were deleted, including their files
         posts = list(self.db.posts.find({"space": space_id}))
         self.assertEqual(len(posts), 0)
+        self.assertFalse(fs.exists(file_id))
 
         # check that default post is still there
         post = self.db.posts.find_one({"_id": self.post_id})
@@ -2328,7 +2351,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2345,7 +2368,7 @@ class PostResourceTest(BaseResourceTestCase):
         # add one more post outside of the time frame (lies in the future just for the test)
         post = {
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2361,7 +2384,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include the 5 posts and the default one , but not the
         # future one
-        posts = post_manager.get_full_timeline(datetime.now(), 10)
+        posts = post_manager.get_full_timeline(datetime.now(timezone.utc), 10)
         self.assertEqual(len(posts), 6)
 
     def test_get_space_timeline(self):
@@ -2374,7 +2397,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2394,7 +2417,7 @@ class PostResourceTest(BaseResourceTestCase):
         # that is pinned
         post = {
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": space_id,
             "pinned": True,
@@ -2413,7 +2436,7 @@ class PostResourceTest(BaseResourceTestCase):
         # this should include only the 3 posts in the space
         # and the pinned post should be in the pinned_posts list
         timeline_posts, pinned_posts = post_manager.get_space_timeline(
-            space_id, datetime.now(), 10
+            space_id, datetime.now(timezone.utc), 10
         )
         self.assertEqual(len(timeline_posts), 3)
         self.assertEqual(len(pinned_posts), 1)
@@ -2427,7 +2450,7 @@ class PostResourceTest(BaseResourceTestCase):
         for i in range(5):
             post = {
                 "author": CURRENT_ADMIN.username,
-                "creation_date": datetime.now(),
+                "creation_date": datetime.now(timezone.utc),
                 "text": "test",
                 "space": None,
                 "pinned": False,
@@ -2446,7 +2469,7 @@ class PostResourceTest(BaseResourceTestCase):
         post_manager = Posts(self.db)
         # this should include only the 3 posts by the user
         posts = post_manager.get_user_timeline(
-            CURRENT_USER.username, datetime.now(), 10
+            CURRENT_USER.username, datetime.now(timezone.utc), 10
         )
         self.assertEqual(len(posts), 3)
 
@@ -2468,7 +2491,7 @@ class PostResourceTest(BaseResourceTestCase):
         post1 = {
             "_id": ObjectId(),
             "author": CURRENT_USER.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2483,7 +2506,7 @@ class PostResourceTest(BaseResourceTestCase):
         post2 = {
             "_id": ObjectId(),
             "author": "non_following_user",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2516,7 +2539,7 @@ class PostResourceTest(BaseResourceTestCase):
         post3 = {
             "_id": ObjectId(),
             "author": "doesnt_matter",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": space_id,
             "pinned": False,
@@ -2531,7 +2554,7 @@ class PostResourceTest(BaseResourceTestCase):
         post4 = {
             "_id": ObjectId(),
             "author": "doesnt_matter",
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": ObjectId(),
             "pinned": False,
@@ -2548,7 +2571,7 @@ class PostResourceTest(BaseResourceTestCase):
         post5 = {
             "_id": ObjectId(),
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(),
+            "creation_date": datetime.now(timezone.utc),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2566,7 +2589,7 @@ class PostResourceTest(BaseResourceTestCase):
         post6 = {
             "_id": ObjectId(),
             "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now() + timedelta(days=1),
+            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
             "text": "test",
             "space": None,
             "pinned": False,
@@ -2587,7 +2610,7 @@ class PostResourceTest(BaseResourceTestCase):
         # and post5 and the default post because it is the users own post
         # but not the default post because it is out of time frame
         posts = post_manager.get_personal_timeline(
-            CURRENT_ADMIN.username, datetime.now()
+            CURRENT_ADMIN.username, datetime.now(timezone.utc)
         )
         self.assertEqual(len(posts), 4)
         post_ids = [post["_id"] for post in posts]
@@ -4061,7 +4084,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4160,6 +4182,7 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         self.db.spaces.delete_many({})
         self.db.profiles.delete_many({})
+        self.db.space_files.delete_many({})
 
         # delete all created files in gridfs
         fs = gridfs.GridFS(self.db)
@@ -4285,7 +4308,6 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space.admins, self.default_space["admins"])
         self.assertEqual(space.invites, self.default_space["invites"])
         self.assertEqual(space.requests, self.default_space["requests"])
-        self.assertEqual(space.files, self.default_space["files"])
         self.assertEqual(space.space_pic, self.default_space["space_pic"])
         self.assertEqual(
             space.space_description, self.default_space["space_description"]
@@ -4315,7 +4337,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4343,7 +4364,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4357,7 +4377,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [CURRENT_ADMIN.username],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4371,7 +4390,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4402,7 +4420,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4430,7 +4447,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [CURRENT_ADMIN.username],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4443,7 +4459,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4473,7 +4488,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [CURRENT_ADMIN.username],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4486,7 +4500,6 @@ class SpaceResourceTest(BaseResourceTestCase):
                 "admins": [],
                 "invites": [],
                 "requests": [],
-                "files": [],
                 "space_pic": "default_space_pic.jpg",
                 "space_description": "test",
             },
@@ -4521,7 +4534,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [],
             "invites": [CURRENT_ADMIN.username],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4551,7 +4563,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [],
             "invites": [],
             "requests": [CURRENT_ADMIN.username],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4573,7 +4584,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4593,7 +4603,6 @@ class SpaceResourceTest(BaseResourceTestCase):
         self.assertEqual(space["admins"], new_space["admins"])
         self.assertEqual(space["invites"], new_space["invites"])
         self.assertEqual(space["requests"], new_space["requests"])
-        self.assertEqual(space["files"], new_space["files"])
         self.assertEqual(space["space_pic"], new_space["space_pic"])
         self.assertEqual(space["space_description"], new_space["space_description"])
 
@@ -4639,7 +4648,6 @@ class SpaceResourceTest(BaseResourceTestCase):
             "admins": [CURRENT_ADMIN.username],
             "invites": [],
             "requests": [],
-            "files": [],
             "space_pic": "default_space_pic.jpg",
             "space_description": "test",
         }
@@ -4671,12 +4679,25 @@ class SpaceResourceTest(BaseResourceTestCase):
         expect: successfully delete space
         """
 
+        # put a folder with a file into the space's file share
+        space_files = SpaceFiles(self.db)
+        folder = space_files.create_folder(self.space_id, "docs", CURRENT_ADMIN.username)
+        file_node = space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username, folder["_id"]
+        )
+
         space_manager = Spaces(self.db)
         space_manager.delete_space(self.space_id, "test")
 
         # check if space was deleted
         space = self.db.spaces.find_one({"_id": self.space_id})
         self.assertIsNone(space)
+
+        # check that the file share (nodes and gridfs files) was deleted as well
+        self.assertEqual(
+            self.db.space_files.count_documents({"space": self.space_id}), 0
+        )
+        self.assertFalse(gridfs.GridFS(self.db).exists(file_node["file_id"]))
 
     def test_delete_space_error_space_doesnt_exist(self):
         """
@@ -5532,280 +5553,1670 @@ class SpaceResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username,
         )
 
-    def test_get_files(self):
+
+class GridFSHelpersTest(BaseResourceTestCase):
+    """
+    the gridfs helpers keep the mime type in the file metadata instead of the
+    top-level contentType field, whose accessors are deprecated in PyMongo 4
+    and removed in PyMongo 5
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.fs = gridfs.GridFS(self.db)
+
+    def tearDown(self) -> None:
+        for fs_file in self.fs.find():
+            self.fs.delete(fs_file._id)
+        super().tearDown()
+
+    def test_gridfs_put(self):
         """
-        expect: successfully get all files metadata of the space
-        """
-
-        space_manager = Spaces(self.db)
-
-        # default case
-        files = space_manager.get_files(self.space_id)
-        self.assertEqual(files, self.default_space["files"])
-
-        # add file metadata to space
-        additional_file = {
-            "author": CURRENT_USER.username,
-            "file_id": ObjectId(),
-            "manually_uploaded": True,
-        }
-        self.db.spaces.update_one(
-            {"_id": self.space_id},
-            {"$push": {"files": additional_file}},
-        )
-        files = space_manager.get_files(self.space_id)
-        self.assertEqual(files, [additional_file])
-
-    def test_get_files_error_space_doesnt_exist(self):
-        """
-        expect: SpaceDoesntExistError is raised because no space with this name exists
+        expect: the file is stored with mime type and uploader in its metadata
+        and without the legacy top-level contentType field
         """
 
-        space_manager = Spaces(self.db)
-        self.assertRaises(SpaceDoesntExistError, space_manager.get_files, ObjectId())
-
-    def test_add_new_post_file(self):
-        """
-        expect: successfully add new file that was originally added from a post,
-        therefore only metadata are inserted
-        """
-
-        file_id = ObjectId()
-        filename = "test"
-        space_manager = Spaces(self.db)
-        space_manager.add_new_post_file(
-            self.space_id, CURRENT_USER.username, file_id, filename
-        )
-
-        space = self.db.spaces.find_one({"_id": self.space_id})
+        file_id = util.gridfs_put(self.fs, b"data", "a.txt", "text/plain", "me")
+        grid_file = self.fs.get(file_id)
+        self.assertEqual(grid_file.read(), b"data")
+        self.assertEqual(grid_file.filename, "a.txt")
         self.assertEqual(
-            space["files"],
-            [
-                {
-                    "author": CURRENT_USER.username,
-                    "file_id": file_id,
-                    "file_name": filename,
-                    "manually_uploaded": False,
-                }
-            ],
+            grid_file.metadata,
+            {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
+        )
+        self.assertNotIn("contentType", self.db.fs.files.find_one({"_id": file_id}))
+
+        # additional kwargs (e.g. a custom _id) are passed through
+        custom = util.gridfs_put(self.fs, b"x", "custom", "image/png", "system", _id="custom_id")
+        self.assertEqual(custom, "custom_id")
+        self.assertTrue(self.fs.exists("custom_id"))
+
+    def test_gridfs_content_type(self):
+        """
+        expect: the mime type is read from the metadata, with a fallback to
+        the legacy top-level field, and None if there is none at all
+        """
+
+        modern = self.fs.get(util.gridfs_put(self.fs, b"1", "a.txt", "text/plain", "me"))
+        self.assertEqual(util.gridfs_content_type(modern), "text/plain")
+
+        legacy = self.fs.get(self.fs.put(b"2", filename="b.png", contentType="image/png"))
+        self.assertEqual(util.gridfs_content_type(legacy), "image/png")
+
+        # metadata wins over the legacy field
+        both = self.fs.get(
+            self.fs.put(
+                b"3",
+                filename="c.pdf",
+                contentType="text/plain",
+                metadata={util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf"},
+            )
+        )
+        self.assertEqual(util.gridfs_content_type(both), "application/pdf")
+
+        none = self.fs.get(self.fs.put(b"4", filename="d.bin"))
+        self.assertIsNone(util.gridfs_content_type(none))
+
+    def test_migrate_gridfs_content_type(self):
+        """
+        expect: legacy files get their mime type moved into the metadata (keeping
+        other metadata), files that already carry one in the metadata keep it,
+        the legacy field is removed everywhere and a second run is a no-op
+        """
+
+        legacy_no_metadata = self.fs.put(b"1", filename="a.png", contentType="image/png")
+        legacy_with_metadata = self.fs.put(
+            b"2", filename="b.txt", contentType="text/plain", metadata={"uploader": "me"}
+        )
+        legacy_null_metadata = self.fs.put(
+            b"3", filename="c.txt", contentType="text/csv", metadata=None
+        )
+        both = self.fs.put(
+            b"4",
+            filename="d.pdf",
+            contentType="text/plain",
+            metadata={util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
+        )
+        modern = util.gridfs_put(self.fs, b"5", "e.txt", "text/plain", "me")
+        untyped = self.fs.put(b"6", filename="f.bin")
+
+        self.assertEqual(migrate_gridfs_content_type(self.db), 4)
+
+        expected = {
+            legacy_no_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "image/png"},
+            legacy_with_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
+            legacy_null_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/csv"},
+            both: {util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
+            modern: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
+        }
+        for file_id, metadata in expected.items():
+            with self.subTest(file_id=file_id):
+                document = self.db.fs.files.find_one({"_id": file_id})
+                self.assertEqual(document["metadata"], metadata)
+                self.assertNotIn("contentType", document)
+
+        # files without any mime type are left alone
+        document = self.db.fs.files.find_one({"_id": untyped})
+        self.assertNotIn("contentType", document)
+        self.assertNotIn("metadata", document)
+
+        # idempotent
+        self.assertEqual(migrate_gridfs_content_type(self.db), 0)
+        self.assertEqual(
+            self.db.fs.files.find_one({"_id": legacy_with_metadata})["metadata"],
+            expected[legacy_with_metadata],
+        )
+        self.assertEqual(self.db.fs.files.count_documents({"contentType": {"$exists": True}}), 0)
+
+
+class SpaceFilesResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.space_id = ObjectId()
+        self.default_space = {
+            "_id": self.space_id,
+            "name": "test",
+            "invisible": False,
+            "joinable": True,
+            "members": [CURRENT_ADMIN.username, CURRENT_USER.username],
+            "admins": [CURRENT_ADMIN.username],
+            "invites": [],
+            "requests": [],
+            "space_pic": "default_space_pic.jpg",
+            "space_description": "test",
+        }
+        self.db.spaces.insert_one(self.default_space)
+
+        self.space_files = SpaceFiles(self.db)
+        self.fs = gridfs.GridFS(self.db)
+
+    def tearDown(self) -> None:
+        self.db.spaces.delete_many({})
+        self.db.space_files.delete_many({})
+        self.db.posts.delete_many({})
+
+        # delete all created files in gridfs
+        for fs_file in self.fs.find():
+            self.fs.delete(fs_file._id)
+
+        super().tearDown()
+
+    def _post_file(self, name: str = "attachment.txt", content: bytes = b"post") -> dict:
+        """
+        helper: store a file in gridfs and mirror it as a post file
+        """
+
+        file_id = util.gridfs_put(self.fs, content, name, "text/plain", CURRENT_USER.username)
+        return self.space_files.add_post_file(
+            self.space_id, CURRENT_USER.username, file_id, name, ObjectId()
         )
 
-    def test_add_new_post_file_error_space_doesnt_exist(self):
+    def test_validate_name(self):
         """
-        expect: SpaceDoesntExistError is raised because no space with this name exists
+        expect: valid names are returned stripped, invalid names raise
+        InvalidFileNameError
         """
 
-        file_id = ObjectId()
-        space_manager = Spaces(self.db)
+        self.assertEqual(self.space_files.validate_name("  report.pdf "), "report.pdf")
+
+        for invalid in ["", "   ", ".", "..", "a/b", "a\\b", "a\nb", None, 12]:
+            with self.subTest(name=invalid):
+                self.assertRaises(
+                    InvalidFileNameError, self.space_files.validate_name, invalid
+                )
+
         self.assertRaises(
-            SpaceDoesntExistError,
-            space_manager.add_new_post_file,
+            InvalidFileNameError,
+            self.space_files.validate_name,
+            "a" * (self.space_files.MAX_NAME_LENGTH + 1),
+        )
+
+    def test_get_limits(self):
+        """
+        expect: the limits reflect the class constants
+        """
+
+        limits = self.space_files.get_limits()
+        self.assertEqual(limits["max_folder_depth"], SpaceFiles.MAX_FOLDER_DEPTH)
+        self.assertEqual(limits["max_file_size_bytes"], SpaceFiles.MAX_FILE_SIZE_BYTES)
+        self.assertEqual(
+            limits["max_space_storage_bytes"], SpaceFiles.MAX_SPACE_STORAGE_BYTES
+        )
+        self.assertEqual(limits["max_name_length"], SpaceFiles.MAX_NAME_LENGTH)
+
+    def test_create_folder(self):
+        """
+        expect: successfully create a folder in the root and a nested one
+        """
+
+        folder = self.space_files.create_folder(
+            self.space_id, " docs ", CURRENT_ADMIN.username
+        )
+        db_state = self.db.space_files.find_one({"_id": folder["_id"]})
+        self.assertIsNotNone(db_state)
+        self.assertEqual(db_state["space"], self.space_id)
+        self.assertIsNone(db_state["parent"])
+        self.assertEqual(db_state["type"], "folder")
+        self.assertEqual(db_state["name"], "docs")
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertIsNone(db_state["system"])
+        self.assertIsInstance(db_state["created"], datetime)
+        self.assertIsInstance(db_state["modified"], datetime)
+
+        nested = self.space_files.create_folder(
+            self.space_id, "2024", CURRENT_ADMIN.username, folder["_id"]
+        )
+        db_state = self.db.space_files.find_one({"_id": nested["_id"]})
+        self.assertEqual(db_state["parent"], folder["_id"])
+
+    def test_create_folder_error_invalid_name(self):
+        """
+        expect: InvalidFileNameError is raised for an invalid name
+        """
+
+        self.assertRaises(
+            InvalidFileNameError,
+            self.space_files.create_folder,
+            self.space_id,
+            "a/b",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_create_folder_error_parent_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the parent folder
+        doesn't exist in the space
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.create_folder,
+            self.space_id,
+            "docs",
+            CURRENT_ADMIN.username,
             ObjectId(),
+        )
+
+        # a folder of another space is not visible either
+        other_space_folder = self.space_files.create_folder(
+            ObjectId(), "foreign", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.create_folder,
+            self.space_id,
+            "docs",
+            CURRENT_ADMIN.username,
+            other_space_folder["_id"],
+        )
+
+    def test_create_folder_error_not_a_folder(self):
+        """
+        expect: NotAFolderError is raised because the parent is a file
+        """
+
+        file_node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            NotAFolderError,
+            self.space_files.create_folder,
+            self.space_id,
+            "docs",
+            CURRENT_ADMIN.username,
+            file_node["_id"],
+        )
+
+    def test_create_folder_error_read_only_parent(self):
+        """
+        expect: ReadOnlyNodeError is raised because the parent is the
+        system folder for post files
+        """
+
+        post_file = self._post_file()
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.create_folder,
+            self.space_id,
+            "docs",
+            CURRENT_ADMIN.username,
+            post_file["parent"],
+        )
+
+    def test_create_folder_error_depth_exceeded(self):
+        """
+        expect: FolderDepthExceededError is raised when nesting deeper
+        than MAX_FOLDER_DEPTH
+        """
+
+        parent_id = None
+        for level in range(SpaceFiles.MAX_FOLDER_DEPTH):
+            folder = self.space_files.create_folder(
+                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+            )
+            parent_id = folder["_id"]
+
+        self.assertRaises(
+            FolderDepthExceededError,
+            self.space_files.create_folder,
+            self.space_id,
+            "too_deep",
+            CURRENT_ADMIN.username,
+            parent_id,
+        )
+
+    def test_create_folder_error_name_collision(self):
+        """
+        expect: FilenameCollisionError is raised because a node with the
+        same name (case-insensitive) already exists in the folder
+        """
+
+        self.space_files.create_folder(self.space_id, "Docs", CURRENT_ADMIN.username)
+        self.assertRaises(
+            FilenameCollisionError,
+            self.space_files.create_folder,
+            self.space_id,
+            "docs",
+            CURRENT_ADMIN.username,
+        )
+
+        # files count as well
+        self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FilenameCollisionError,
+            self.space_files.create_folder,
+            self.space_id,
+            "a.txt",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_add_file(self):
+        """
+        expect: successfully store a file in gridfs and add a node for it
+        """
+
+        folder = self.space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
+        node = self.space_files.add_file(
+            self.space_id,
+            "report.pdf",
+            b"%PDF-1.4",
+            CURRENT_ADMIN.username,
+            folder["_id"],
+        )
+
+        db_state = self.db.space_files.find_one({"_id": node["_id"]})
+        self.assertEqual(db_state["type"], "file")
+        self.assertEqual(db_state["name"], "report.pdf")
+        self.assertEqual(db_state["parent"], folder["_id"])
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertEqual(db_state["content_type"], "application/pdf")
+        self.assertEqual(db_state["size"], 8)
+        self.assertTrue(db_state["manually_uploaded"])
+        self.assertIsNone(db_state["post_id"])
+
+        grid_file = self.fs.get(db_state["file_id"])
+        self.assertEqual(grid_file.read(), b"%PDF-1.4")
+        self.assertEqual(grid_file.filename, "report.pdf")
+        # the mime type lives in the metadata, not in the deprecated contentType field
+        self.assertEqual(grid_file.metadata[util.GRIDFS_CONTENT_TYPE_KEY], "application/pdf")
+        self.assertEqual(util.gridfs_content_type(grid_file), "application/pdf")
+        self.assertEqual(grid_file.metadata["uploader"], CURRENT_ADMIN.username)
+
+    def test_add_file_content_type_from_name(self):
+        """
+        expect: the mime type is derived from the file name, both in the node
+        and in gridfs, unknown extensions are generic binary data
+        """
+
+        node = self.space_files.add_file(
+            self.space_id, "picture.png", b"png", CURRENT_ADMIN.username
+        )
+        self.assertEqual(node["content_type"], "image/png")
+        grid_file = self.fs.get(node["file_id"])
+        self.assertEqual(util.gridfs_content_type(grid_file), "image/png")
+
+        node = self.space_files.add_file(
+            self.space_id, "data.xyz123", b"?", CURRENT_ADMIN.username
+        )
+        self.assertEqual(node["content_type"], "application/octet-stream")
+
+    def test_add_file_removes_bytes_if_node_fails(self):
+        """
+        expect: if the node can't be inserted, the already stored gridfs file
+        is removed again, so nothing is left behind
+        """
+
+        with mock.patch.object(
+            SpaceFiles, "_insert_file_node", side_effect=RuntimeError("db down")
+        ):
+            self.assertRaises(
+                RuntimeError,
+                self.space_files.add_file,
+                self.space_id,
+                "a.txt",
+                b"a",
+                CURRENT_ADMIN.username,
+            )
+
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+        self.assertEqual(self.db.space_files.count_documents({}), 0)
+
+    def test_unique_name_index(self):
+        """
+        expect: the unique index rejects case-insensitive duplicates that slip
+        past the name check (e.g. a concurrent request took the name in between):
+        creating a folder fails, uploading retries with the next free name
+        """
+
+        SpaceFiles.create_indexes(self.db)
+        self.addCleanup(self.db.space_files.drop_indexes)
+
+        self.space_files.create_folder(self.space_id, "Docs", CURRENT_ADMIN.username)
+        self.space_files.add_file(self.space_id, "a.txt", b"a", CURRENT_ADMIN.username)
+
+        with mock.patch.object(SpaceFiles, "_name_exists", return_value=False):
+            self.assertRaises(
+                FilenameCollisionError,
+                self.space_files.create_folder,
+                self.space_id,
+                "docs",
+                CURRENT_ADMIN.username,
+            )
+
+        # the first computed name is already taken when inserting
+        with mock.patch.object(
+            SpaceFiles, "_deduplicate_name", side_effect=["A.txt", "a (1).txt"]
+        ):
+            node = self.space_files.add_file(
+                self.space_id, "A.txt", b"b", CURRENT_ADMIN.username
+            )
+        self.assertEqual(node["name"], "a (1).txt")
+        self.assertEqual(self.db.space_files.count_documents({"type": "file"}), 2)
+
+        # same name in another folder is fine
+        folder = self.space_files.create_folder(
+            self.space_id, "other", CURRENT_ADMIN.username
+        )
+        self.space_files.add_file(
+            self.space_id, "a.txt", b"c", CURRENT_ADMIN.username, folder["_id"]
+        )
+
+    def test_add_file_deduplicates_name(self):
+        """
+        expect: uploading the same name twice yields a numeric suffix
+        """
+
+        first = self.space_files.add_file(
+            self.space_id, "report.pdf", b"1", CURRENT_ADMIN.username
+        )
+        second = self.space_files.add_file(
+            self.space_id, "Report.PDF", b"2", CURRENT_ADMIN.username
+        )
+        third = self.space_files.add_file(
+            self.space_id, "report.pdf", b"3", CURRENT_ADMIN.username
+        )
+        self.assertEqual(first["name"], "report.pdf")
+        self.assertEqual(second["name"], "Report (1).PDF")
+        self.assertEqual(third["name"], "report (2).pdf")
+
+    def test_add_file_error_invalid_name(self):
+        """
+        expect: InvalidFileNameError is raised for an invalid name
+        """
+
+        self.assertRaises(
+            InvalidFileNameError,
+            self.space_files.add_file,
+            self.space_id,
+            "",
+            b"a",
+            CURRENT_ADMIN.username,
+        )
+
+    def test_add_file_error_file_too_large(self):
+        """
+        expect: FileTooLargeError is raised when the content exceeds
+        MAX_FILE_SIZE_BYTES, nothing is stored
+        """
+
+        self.space_files.MAX_FILE_SIZE_BYTES = 4
+        self.assertRaises(
+            FileTooLargeError,
+            self.space_files.add_file,
+            self.space_id,
+            "big.bin",
+            b"12345",
+            "application/octet-stream",
+            CURRENT_ADMIN.username,
+        )
+        self.assertEqual(self.db.space_files.count_documents({}), 0)
+        self.assertIsNone(self.fs.find_one({"filename": "big.bin"}))
+
+    def test_add_file_error_storage_quota_exceeded(self):
+        """
+        expect: StorageQuotaExceededError is raised when the space would
+        exceed MAX_SPACE_STORAGE_BYTES
+        """
+
+        self.space_files.MAX_SPACE_STORAGE_BYTES = 6
+        self.space_files.add_file(
+            self.space_id, "a.txt", b"1234", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            StorageQuotaExceededError,
+            self.space_files.add_file,
+            self.space_id,
+            "b.txt",
+            b"123",
+            CURRENT_ADMIN.username,
+        )
+        self.assertIsNone(self.db.space_files.find_one({"name": "b.txt"}))
+
+    def test_add_file_error_parent_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the parent doesn't exist
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.add_file,
+            self.space_id,
+            "a.txt",
+            b"a",
+            CURRENT_ADMIN.username,
+            ObjectId(),
+        )
+
+    def test_add_file_error_not_a_folder(self):
+        """
+        expect: NotAFolderError is raised because the parent is a file
+        """
+
+        file_node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            NotAFolderError,
+            self.space_files.add_file,
+            self.space_id,
+            "b.txt",
+            b"b",
+            CURRENT_ADMIN.username,
+            file_node["_id"],
+        )
+
+    def test_add_file_error_read_only_parent(self):
+        """
+        expect: ReadOnlyNodeError is raised because the parent is the
+        system folder for post files
+        """
+
+        post_file = self._post_file()
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.add_file,
+            self.space_id,
+            "b.txt",
+            b"b",
+            CURRENT_ADMIN.username,
+            post_file["parent"],
+        )
+
+    def test_add_post_file(self):
+        """
+        expect: the post file lands in the (automatically created) system
+        folder and is marked as not manually uploaded
+        """
+
+        post_id = ObjectId()
+        file_id = util.gridfs_put(
+            self.fs, b"post", "attachment.txt", "text/plain", CURRENT_USER.username
+        )
+        node = self.space_files.add_post_file(
+            self.space_id,
             CURRENT_USER.username,
             file_id,
-            "test",
+            "attachment.txt",
+            post_id,
         )
 
-    def test_add_new_post_file_error_file_already_in_repo(self):
-        """
-        expect: FileAlreadyInRepoError is raised because the same file already exists
-        """
+        folder = self.db.space_files.find_one({"_id": node["parent"]})
+        self.assertEqual(folder["type"], "folder")
+        self.assertEqual(folder["system"], SpaceFiles.SYSTEM_FOLDER_POST_FILES)
+        self.assertEqual(folder["name"], SpaceFiles.POST_FILES_FOLDER_NAME)
+        self.assertIsNone(folder["parent"])
 
-        # manually add post file
-        file_obj = {
-            "author": CURRENT_USER.username,
-            "file_id": ObjectId(),
-            "file_name": "test",
-            "manually_uploaded": False,
-        }
-        self.db.spaces.update_one(
-            {"_id": self.space_id},
-            {"$push": {"files": file_obj}},
+        db_state = self.db.space_files.find_one({"_id": node["_id"]})
+        self.assertEqual(db_state["file_id"], file_id)
+        self.assertEqual(db_state["author"], CURRENT_USER.username)
+        self.assertEqual(db_state["size"], 4)
+        self.assertEqual(db_state["content_type"], "text/plain")
+        self.assertFalse(db_state["manually_uploaded"])
+        self.assertEqual(db_state["post_id"], post_id)
+
+        # a second post file reuses the system folder and gets a unique name
+        second = self._post_file("attachment.txt")
+        self.assertEqual(second["parent"], node["parent"])
+        self.assertEqual(second["name"], "attachment (1).txt")
+        self.assertEqual(
+            self.db.space_files.count_documents(
+                {"space": self.space_id, "system": SpaceFiles.SYSTEM_FOLDER_POST_FILES}
+            ),
+            1,
         )
 
-        space_manager = Spaces(self.db)
+    def test_add_post_file_error_file_already_in_repo(self):
+        """
+        expect: FileAlreadyInRepoError is raised because the file is already
+        referenced in the space
+        """
+
+        post_file = self._post_file()
         self.assertRaises(
             FileAlreadyInRepoError,
-            space_manager.add_new_post_file,
+            self.space_files.add_post_file,
             self.space_id,
             CURRENT_USER.username,
-            file_obj["file_id"],
-            file_obj["file_name"],
+            post_file["file_id"],
+            "attachment.txt",
         )
 
-    def test_add_new_repo_file(self):
+    def test_add_post_file_error_file_doesnt_exist(self):
         """
-        expect: successfully add new file to the space repo
-        """
-
-        space_manager = Spaces(self.db)
-        _id = space_manager.add_new_repo_file(
-            self.space_id,
-            "test_file",
-            b"test",
-            "image/jpg",
-            CURRENT_ADMIN.username,
-        )
-
-        space = self.db.spaces.find_one({"_id": self.space_id})
-        self.assertEqual(
-            space["files"],
-            [
-                {
-                    "author": CURRENT_ADMIN.username,
-                    "file_id": _id,
-                    "file_name": "test_file",
-                    "manually_uploaded": True,
-                }
-            ],
-        )
-        fs = gridfs.GridFS(self.db)
-        self.assertEqual(fs.get(_id).read(), b"test")
-
-    def test_add_new_repo_file_error_space_doesnt_exist(self):
-        """
-        expect: SpaceDoesntExistError is raised because no space with this name exists
+        expect: FileDoesntExistError is raised because the file is not in gridfs
         """
 
-        space_manager = Spaces(self.db)
-        self.assertRaises(
-            SpaceDoesntExistError,
-            space_manager.add_new_repo_file,
-            ObjectId(),
-            "test_file",
-            b"test",
-            "image/jpg",
-            CURRENT_ADMIN.username,
-        )
-
-    def test_remove_file(self):
-        """
-        expect: successfully remove file from space repo
-        """
-
-        # manually add file to space repo
-        file_id = gridfs.GridFS(self.db).put(b"test")
-        file_obj = {
-            "author": CURRENT_ADMIN.username,
-            "file_id": file_id,
-            "manually_uploaded": True,
-        }
-        self.db.spaces.update_one(
-            {"_id": self.space_id},
-            {"$push": {"files": file_obj}},
-        )
-
-        space_manager = Spaces(self.db)
-        space_manager.remove_file(self.space_id, file_id)
-
-        space = self.db.spaces.find_one({"_id": self.space_id})
-        self.assertEqual(space["files"], [])
-        self.assertFalse(gridfs.GridFS(self.db).exists(file_id))
-
-    def test_remove_file_error_space_doesnt_exist(self):
-        """
-        expect: SpaceDoesntExistError is raised because no space with this name exists
-        """
-
-        file_id = ObjectId()
-        space_manager = Spaces(self.db)
-        self.assertRaises(
-            SpaceDoesntExistError,
-            space_manager.remove_file,
-            ObjectId(),
-            file_id,
-        )
-
-    def test_remove_file_error_post_file_not_deletable(self):
-        """
-        expect: PostFileNotDeleteableError is raised because the file was originally
-        added from a post and therefore cannot be deleted manually, only by
-        deleting the corresponding post
-        """
-
-        # manually add post file metadata
-        file_id = ObjectId()
-        file_obj = {
-            "author": CURRENT_ADMIN.username,
-            "file_id": file_id,
-            "manually_uploaded": False,
-        }
-        self.db.spaces.update_one(
-            {"_id": self.space_id},
-            {"$push": {"files": file_obj}},
-        )
-
-        space_manager = Spaces(self.db)
-        self.assertRaises(
-            PostFileNotDeleteableError,
-            space_manager.remove_file,
-            self.space_id,
-            file_id,
-        )
-
-    def test_remove_file_error_file_doesnt_exist(self):
-        """
-        expect: FileDoesntExistError is raised because no file with this id exists
-        """
-
-        space_manager = Spaces(self.db)
         self.assertRaises(
             FileDoesntExistError,
-            space_manager.remove_file,
+            self.space_files.add_post_file,
+            self.space_id,
+            CURRENT_USER.username,
+            ObjectId(),
+            "attachment.txt",
+        )
+
+    def test_import_file(self):
+        """
+        expect: an existing gridfs file is added as a regular file, taking
+        content type, size and creation date from gridfs
+        """
+
+        file_id = util.gridfs_put(
+            self.fs, b"legacy", "old.txt", "text/plain", CURRENT_ADMIN.username
+        )
+        node = self.space_files.import_file(
+            self.space_id, CURRENT_ADMIN.username, file_id, "old.txt"
+        )
+
+        db_state = self.db.space_files.find_one({"_id": node["_id"]})
+        self.assertIsNone(db_state["parent"])
+        self.assertEqual(db_state["file_id"], file_id)
+        self.assertEqual(db_state["content_type"], "text/plain")
+        self.assertEqual(db_state["size"], 6)
+        self.assertTrue(db_state["manually_uploaded"])
+        self.assertEqual(db_state["created"], self.fs.get(file_id).upload_date)
+
+    def test_import_file_content_type_from_name(self):
+        """
+        expect: the mime type of an imported file is derived from its name,
+        regardless of what the (legacy, client-supplied) gridfs field says
+        """
+
+        # write the legacy field directly, bypassing the deprecated property
+        file_id = self.fs.put(b"legacy", filename="old.txt", contentType="text/html")
+        node = self.space_files.import_file(
+            self.space_id, CURRENT_ADMIN.username, file_id, "old.txt"
+        )
+        self.assertEqual(node["content_type"], "text/plain")
+
+        # unknown extensions are generic binary data
+        file_id = self.fs.put(b"unknown", filename="unknown.xyz123")
+        node = self.space_files.import_file(
+            self.space_id, CURRENT_ADMIN.username, file_id, "unknown.xyz123"
+        )
+        self.assertEqual(node["content_type"], "application/octet-stream")
+
+    def test_import_file_error_file_already_in_repo(self):
+        """
+        expect: FileAlreadyInRepoError is raised because the file is already
+        referenced in the space
+        """
+
+        node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FileAlreadyInRepoError,
+            self.space_files.import_file,
+            self.space_id,
+            CURRENT_ADMIN.username,
+            node["file_id"],
+            "a.txt",
+        )
+
+    def test_import_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because the file is not in gridfs
+        """
+
+        self.assertRaises(
+            FileDoesntExistError,
+            self.space_files.import_file,
+            self.space_id,
+            CURRENT_ADMIN.username,
+            ObjectId(),
+            "a.txt",
+        )
+
+    ###########################################################################
+    # read operations
+    ###########################################################################
+
+    def test_get_node(self):
+        """
+        expect: successfully get a node by its id
+        """
+
+        folder = self.space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
+        node = self.space_files.get_node(self.space_id, str(folder["_id"]))
+        self.assertEqual(node["_id"], folder["_id"])
+        self.assertEqual(node["name"], "docs")
+
+    def test_get_node_error_node_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the node doesn't
+        exist (in this space)
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError, self.space_files.get_node, self.space_id, ObjectId()
+        )
+
+        foreign = self.space_files.create_folder(
+            ObjectId(), "foreign", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.get_node,
+            self.space_id,
+            foreign["_id"],
+        )
+
+    def test_get_node_by_file_id(self):
+        """
+        expect: successfully resolve a gridfs id to its node, None if the
+        file is not part of a file share
+        """
+
+        node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        found = self.space_files.get_node_by_file_id(node["file_id"])
+        self.assertEqual(found["_id"], node["_id"])
+
+        self.assertIsNone(self.space_files.get_node_by_file_id(ObjectId()))
+
+    def test_list_folder(self):
+        """
+        expect: children are listed with system folders first, then folders,
+        then files, each sorted by name
+        """
+
+        self.space_files.add_file(
+            self.space_id, "b.txt", b"b", CURRENT_ADMIN.username
+        )
+        self.space_files.add_file(
+            self.space_id, "A.txt", b"a", CURRENT_ADMIN.username
+        )
+        zeta = self.space_files.create_folder(self.space_id, "zeta", CURRENT_ADMIN.username)
+        self.space_files.create_folder(self.space_id, "alpha", CURRENT_ADMIN.username)
+        self._post_file()
+        self.space_files.add_file(
+            self.space_id, "inner.txt", b"i", CURRENT_ADMIN.username, zeta["_id"]
+        )
+
+        root = self.space_files.list_folder(self.space_id)
+        self.assertEqual(
+            [node["name"] for node in root],
+            [SpaceFiles.POST_FILES_FOLDER_NAME, "alpha", "zeta", "A.txt", "b.txt"],
+        )
+
+        inner = self.space_files.list_folder(self.space_id, zeta["_id"])
+        self.assertEqual([node["name"] for node in inner], ["inner.txt"])
+
+        # ids may be passed as str as well
+        again = self.space_files.list_folder(self.space_id, str(zeta["_id"]))
+        self.assertEqual([node["name"] for node in again], ["inner.txt"])
+
+    def test_list_folder_error_folder_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the folder doesn't exist
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.list_folder,
             self.space_id,
             ObjectId(),
         )
+
+    def test_list_folder_error_not_a_folder(self):
+        """
+        expect: NotAFolderError is raised because the node is a file
+        """
+
+        file_node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            NotAFolderError,
+            self.space_files.list_folder,
+            self.space_id,
+            file_node["_id"],
+        )
+
+    def test_get_path(self):
+        """
+        expect: the path lists the ancestors from the root down to the node
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        b = self.space_files.create_folder(
+            self.space_id, "b", CURRENT_ADMIN.username, a["_id"]
+        )
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username, b["_id"]
+        )
+
+        self.assertEqual(self.space_files.get_path(self.space_id, None), [])
+
+        path = self.space_files.get_path(self.space_id, f["_id"])
+        self.assertEqual(
+            [(p["_id"], p["name"], p["type"]) for p in path],
+            [(a["_id"], "a", "folder"), (b["_id"], "b", "folder"), (f["_id"], "f.txt", "file")],
+        )
+
+        self.assertRaises(
+            FileNodeDoesntExistError, self.space_files.get_path, self.space_id, ObjectId()
+        )
+
+    def test_get_folder_tree(self):
+        """
+        expect: all folders are returned as a nested tree, files are omitted
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        self.space_files.create_folder(self.space_id, "b", CURRENT_ADMIN.username, a["_id"])
+        self.space_files.create_folder(self.space_id, "c", CURRENT_ADMIN.username)
+        self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username, a["_id"]
+        )
+        self._post_file()
+
+        tree = self.space_files.get_folder_tree(self.space_id)
+        self.assertEqual(
+            [node["name"] for node in tree],
+            [SpaceFiles.POST_FILES_FOLDER_NAME, "a", "c"],
+        )
+        self.assertEqual([node["name"] for node in tree[1]["children"]], ["b"])
+        self.assertEqual(tree[1]["children"][0]["children"], [])
+        self.assertEqual(tree[2]["children"], [])
+
+        self.assertEqual(self.space_files.get_folder_tree(ObjectId()), [])
+
+    def test_search(self):
+        """
+        expect: case-insensitive substring search on names across the whole
+        tree, folders first, each result carries its parent path
+        """
+
+        a = self.space_files.create_folder(self.space_id, "Reports", CURRENT_ADMIN.username)
+        self.space_files.add_file(
+            self.space_id, "annual_report.pdf", b"r",
+            CURRENT_ADMIN.username, a["_id"],
+        )
+        self.space_files.add_file(
+            self.space_id, "notes.txt", b"n", CURRENT_ADMIN.username
+        )
+        # same name in another space must not be found
+        self.space_files.add_file(
+            ObjectId(), "report_foreign.pdf", b"x", CURRENT_ADMIN.username
+        )
+
+        results = self.space_files.search(self.space_id, "REPORT")
+        self.assertEqual(
+            [node["name"] for node in results], ["Reports", "annual_report.pdf"]
+        )
+        self.assertEqual(results[0]["path"], [])
+        self.assertEqual([p["_id"] for p in results[1]["path"]], [a["_id"]])
+
+        self.assertEqual(self.space_files.search(self.space_id, "   "), [])
+        self.assertEqual(self.space_files.search(self.space_id, "nothing"), [])
+
+        # regex special characters are matched literally
+        self.space_files.add_file(
+            self.space_id, "a (1).txt", b"a", CURRENT_ADMIN.username
+        )
+        self.assertEqual(
+            [node["name"] for node in self.space_files.search(self.space_id, "(1)")],
+            ["a (1).txt"],
+        )
+
+    def test_get_storage_usage(self):
+        """
+        expect: the sum of all file sizes of the space
+        """
+
+        self.assertEqual(self.space_files.get_storage_usage(self.space_id), 0)
+        self.space_files.add_file(
+            self.space_id, "a.txt", b"aaaa", CURRENT_ADMIN.username
+        )
+        self._post_file(content=b"pp")
+        self.assertEqual(self.space_files.get_storage_usage(self.space_id), 6)
+
+    ###########################################################################
+    # rename
+    ###########################################################################
+
+    def test_rename_node(self):
+        """
+        expect: successfully rename a folder and a file (including the
+        gridfs filename)
+        """
+
+        folder = self.space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
+        renamed = self.space_files.rename_node(self.space_id, folder["_id"], " documents ")
+        self.assertEqual(renamed["name"], "documents")
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": folder["_id"]})["name"], "documents"
+        )
+
+        file_node = self.space_files.add_file(
+            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
+        )
+        self.space_files.rename_node(self.space_id, file_node["_id"], "b.txt")
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": file_node["_id"]})["name"], "b.txt"
+        )
+        self.assertEqual(self.fs.get(file_node["file_id"]).filename, "b.txt")
+
+        # renaming to the same name with different case is allowed
+        self.space_files.rename_node(self.space_id, file_node["_id"], "B.txt")
+
+    def test_rename_node_error_node_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the node doesn't exist
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.rename_node,
+            self.space_id,
+            ObjectId(),
+            "x",
+        )
+
+    def test_rename_node_error_read_only(self):
+        """
+        expect: ReadOnlyNodeError is raised for the system folder and post files
+        """
+
+        post_file = self._post_file()
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.rename_node,
+            self.space_id,
+            post_file["parent"],
+            "x",
+        )
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.rename_node,
+            self.space_id,
+            post_file["_id"],
+            "x",
+        )
+
+    def test_rename_node_error_invalid_name(self):
+        """
+        expect: InvalidFileNameError is raised for an invalid name
+        """
+
+        folder = self.space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            InvalidFileNameError,
+            self.space_files.rename_node,
+            self.space_id,
+            folder["_id"],
+            "",
+        )
+
+    def test_rename_node_error_name_collision(self):
+        """
+        expect: FilenameCollisionError is raised because a sibling with the
+        same name exists
+        """
+
+        self.space_files.create_folder(self.space_id, "docs", CURRENT_ADMIN.username)
+        other = self.space_files.create_folder(
+            self.space_id, "other", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FilenameCollisionError,
+            self.space_files.rename_node,
+            self.space_id,
+            other["_id"],
+            "DOCS",
+        )
+
+    ###########################################################################
+    # move
+    ###########################################################################
+
+    def test_move_node(self):
+        """
+        expect: successfully move a file into a folder, a folder into another
+        folder and back to the root
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        b = self.space_files.create_folder(self.space_id, "b", CURRENT_ADMIN.username)
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+
+        moved = self.space_files.move_node(self.space_id, f["_id"], a["_id"])
+        self.assertEqual(moved["parent"], a["_id"])
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": f["_id"]})["parent"], a["_id"]
+        )
+
+        self.space_files.move_node(self.space_id, a["_id"], b["_id"])
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": a["_id"]})["parent"], b["_id"]
+        )
+        # the file inside "a" is still inside "a"
+        self.assertEqual(
+            self.db.space_files.find_one({"_id": f["_id"]})["parent"], a["_id"]
+        )
+
+        self.space_files.move_node(self.space_id, a["_id"], None)
+        self.assertIsNone(self.db.space_files.find_one({"_id": a["_id"]})["parent"])
+
+    def test_move_node_error_node_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the node or the
+        target doesn't exist
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.move_node,
+            self.space_id,
+            ObjectId(),
+            a["_id"],
+        )
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            ObjectId(),
+        )
+
+    def test_move_node_error_not_a_folder(self):
+        """
+        expect: NotAFolderError is raised because the target is a file
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            NotAFolderError, self.space_files.move_node, self.space_id, a["_id"], f["_id"]
+        )
+
+    def test_move_node_error_read_only(self):
+        """
+        expect: ReadOnlyNodeError is raised for post files, the system folder
+        and when the target is the system folder
+        """
+
+        post_file = self._post_file()
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.move_node,
+            self.space_id,
+            post_file["_id"],
+            a["_id"],
+        )
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.move_node,
+            self.space_id,
+            post_file["parent"],
+            a["_id"],
+        )
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            post_file["parent"],
+        )
+
+    def test_move_node_error_invalid_move_target(self):
+        """
+        expect: InvalidMoveTargetError is raised when moving a folder into
+        itself or into one of its descendants
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        b = self.space_files.create_folder(
+            self.space_id, "b", CURRENT_ADMIN.username, a["_id"]
+        )
+        self.assertRaises(
+            InvalidMoveTargetError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            a["_id"],
+        )
+        self.assertRaises(
+            InvalidMoveTargetError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            b["_id"],
+        )
+
+    def test_move_node_error_depth_exceeded(self):
+        """
+        expect: FolderDepthExceededError is raised when the moved subtree
+        would exceed MAX_FOLDER_DEPTH
+        """
+
+        # chain of MAX_FOLDER_DEPTH - 1 folders
+        parent_id = None
+        for level in range(SpaceFiles.MAX_FOLDER_DEPTH - 1):
+            folder = self.space_files.create_folder(
+                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+            )
+            parent_id = folder["_id"]
+
+        # a subtree of height 2 cannot be appended there, height 1 can
+        x = self.space_files.create_folder(self.space_id, "x", CURRENT_ADMIN.username)
+        self.space_files.create_folder(self.space_id, "y", CURRENT_ADMIN.username, x["_id"])
+        z = self.space_files.create_folder(self.space_id, "z", CURRENT_ADMIN.username)
+
+        self.assertRaises(
+            FolderDepthExceededError,
+            self.space_files.move_node,
+            self.space_id,
+            x["_id"],
+            parent_id,
+        )
+        self.space_files.move_node(self.space_id, z["_id"], parent_id)
+
+    def test_move_node_error_name_collision(self):
+        """
+        expect: FilenameCollisionError is raised because the target folder
+        already contains a node with the same name
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        self.space_files.add_file(
+            self.space_id, "f.txt", b"1", CURRENT_ADMIN.username, a["_id"]
+        )
+        f = self.space_files.add_file(
+            self.space_id, "F.txt", b"2", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FilenameCollisionError,
+            self.space_files.move_node,
+            self.space_id,
+            f["_id"],
+            a["_id"],
+        )
+
+    ###########################################################################
+    # copy
+    ###########################################################################
+
+    def test_copy_file(self):
+        """
+        expect: a copy of a post file is a regular file with a new gridfs
+        file, the same content and the copying user as author
+        """
+
+        post_file = self._post_file(content=b"original")
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+
+        copy = self.space_files.copy_file(
+            self.space_id, post_file["_id"], a["_id"], CURRENT_ADMIN.username
+        )
+        db_state = self.db.space_files.find_one({"_id": copy["_id"]})
+        self.assertEqual(db_state["parent"], a["_id"])
+        self.assertEqual(db_state["name"], post_file["name"])
+        self.assertEqual(db_state["author"], CURRENT_ADMIN.username)
+        self.assertTrue(db_state["manually_uploaded"])
+        self.assertIsNone(db_state["post_id"])
+        self.assertEqual(db_state["size"], 8)
+        self.assertNotEqual(db_state["file_id"], post_file["file_id"])
+        self.assertEqual(self.fs.get(db_state["file_id"]).read(), b"original")
+        # the original is untouched
+        self.assertTrue(self.fs.exists(post_file["file_id"]))
+
+        # a second copy into the same folder gets a suffix, copying to root works
+        second = self.space_files.copy_file(
+            self.space_id, post_file["_id"], a["_id"], CURRENT_ADMIN.username
+        )
+        self.assertEqual(second["name"], "attachment (1).txt")
+        third = self.space_files.copy_file(
+            self.space_id, copy["_id"], None, CURRENT_USER.username
+        )
+        self.assertIsNone(third["parent"])
+        self.assertEqual(third["author"], CURRENT_USER.username)
+
+        # the copy is modifiable
+        self.space_files.rename_node(self.space_id, copy["_id"], "renamed.txt")
+        self.space_files.delete_node(self.space_id, copy["_id"])
+
+    def test_copy_file_error_node_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the source or the
+        target doesn't exist
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.copy_file,
+            self.space_id,
+            ObjectId(),
+            None,
+            CURRENT_ADMIN.username,
+        )
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.copy_file,
+            self.space_id,
+            f["_id"],
+            ObjectId(),
+            CURRENT_ADMIN.username,
+        )
+
+    def test_copy_file_error_not_a_file(self):
+        """
+        expect: NotAFileError is raised because the source is a folder
+        """
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        self.assertRaises(
+            NotAFileError,
+            self.space_files.copy_file,
+            self.space_id,
+            a["_id"],
+            None,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_copy_file_error_not_a_folder(self):
+        """
+        expect: NotAFolderError is raised because the target is a file
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            NotAFolderError,
+            self.space_files.copy_file,
+            self.space_id,
+            f["_id"],
+            f["_id"],
+            CURRENT_ADMIN.username,
+        )
+
+    def test_copy_file_error_read_only_target(self):
+        """
+        expect: ReadOnlyNodeError is raised because the target is the system folder
+        """
+
+        post_file = self._post_file()
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.copy_file,
+            self.space_id,
+            post_file["_id"],
+            post_file["parent"],
+            CURRENT_ADMIN.username,
+        )
+
+    def test_copy_file_error_storage_quota_exceeded(self):
+        """
+        expect: StorageQuotaExceededError is raised because the copy would
+        exceed MAX_SPACE_STORAGE_BYTES
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"12345", CURRENT_ADMIN.username
+        )
+        self.space_files.MAX_SPACE_STORAGE_BYTES = 8
+        self.assertRaises(
+            StorageQuotaExceededError,
+            self.space_files.copy_file,
+            self.space_id,
+            f["_id"],
+            None,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_copy_file_error_file_doesnt_exist(self):
+        """
+        expect: FileDoesntExistError is raised because the source is missing in gridfs
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.fs.delete(f["file_id"])
+        self.assertRaises(
+            FileDoesntExistError,
+            self.space_files.copy_file,
+            self.space_id,
+            f["_id"],
+            None,
+            CURRENT_ADMIN.username,
+        )
+
+    ###########################################################################
+    # delete
+    ###########################################################################
+
+    def test_delete_node(self):
+        """
+        expect: deleting a file removes it from gridfs, deleting a folder
+        removes everything below it
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.space_files.delete_node(self.space_id, f["_id"])
+        self.assertIsNone(self.db.space_files.find_one({"_id": f["_id"]}))
+        self.assertFalse(self.fs.exists(f["file_id"]))
+
+        a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
+        b = self.space_files.create_folder(
+            self.space_id, "b", CURRENT_ADMIN.username, a["_id"]
+        )
+        inner = self.space_files.add_file(
+            self.space_id, "inner.txt", b"i", CURRENT_ADMIN.username, b["_id"]
+        )
+        untouched = self.space_files.add_file(
+            self.space_id, "untouched.txt", b"u", CURRENT_ADMIN.username
+        )
+
+        self.space_files.delete_node(self.space_id, a["_id"])
+        self.assertEqual(
+            self.db.space_files.count_documents(
+                {"_id": {"$in": [a["_id"], b["_id"], inner["_id"]]}}
+            ),
+            0,
+        )
+        self.assertFalse(self.fs.exists(inner["file_id"]))
+        self.assertIsNotNone(self.db.space_files.find_one({"_id": untouched["_id"]}))
+        self.assertTrue(self.fs.exists(untouched["file_id"]))
+
+    def test_delete_node_error_node_doesnt_exist(self):
+        """
+        expect: FileNodeDoesntExistError is raised because the node doesn't exist
+        """
+
+        self.assertRaises(
+            FileNodeDoesntExistError,
+            self.space_files.delete_node,
+            self.space_id,
+            ObjectId(),
+        )
+
+    def test_delete_node_error_read_only(self):
+        """
+        expect: ReadOnlyNodeError is raised for the system folder and post files
+        """
+
+        post_file = self._post_file()
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.delete_node,
+            self.space_id,
+            post_file["parent"],
+        )
+        self.assertRaises(
+            ReadOnlyNodeError,
+            self.space_files.delete_node,
+            self.space_id,
+            post_file["_id"],
+        )
+        self.assertTrue(self.fs.exists(post_file["file_id"]))
 
     def test_remove_post_file(self):
         """
-        expect: successfully remove file, even if it has manually_uploaded=False,
-        should only be called in conjunction with deleting the corresponding post
+        expect: the reference to the post file is removed, the gridfs file
+        is kept (the post takes care of that)
         """
 
-        # manually add post file metadata
-        file_id = ObjectId()
-        file_obj = {
-            "author": CURRENT_ADMIN.username,
-            "file_id": file_id,
-            "manually_uploaded": False,
-        }
-        self.db.spaces.update_one(
-            {"_id": self.space_id},
-            {"$push": {"files": file_obj}},
-        )
-
-        space_manager = Spaces(self.db)
-        space_manager.remove_post_file(self.space_id, file_id)
-
-        space = self.db.spaces.find_one({"_id": self.space_id})
-        self.assertEqual(space["files"], [])
-
-    def test_remove_post_file_error_space_doesnt_exist(self):
-        """
-        expect: SpaceDoesntExistError is raised because no space with this name exists
-        """
-
-        file_id = ObjectId()
-        space_manager = Spaces(self.db)
-        self.assertRaises(
-            SpaceDoesntExistError,
-            space_manager.remove_post_file,
-            ObjectId(),
-            file_id,
-        )
+        post_file = self._post_file()
+        self.space_files.remove_post_file(self.space_id, post_file["file_id"])
+        self.assertIsNone(self.db.space_files.find_one({"_id": post_file["_id"]}))
+        self.assertTrue(self.fs.exists(post_file["file_id"]))
 
     def test_remove_post_file_error_file_doesnt_exist(self):
         """
-        expect: FileDoesntExistError is raised because no file with this id exists
+        expect: FileDoesntExistError is raised because no post file with this
+        id is referenced in the space (manually uploaded files don't count)
         """
 
-        space_manager = Spaces(self.db)
         self.assertRaises(
             FileDoesntExistError,
-            space_manager.remove_post_file,
+            self.space_files.remove_post_file,
             self.space_id,
             ObjectId(),
         )
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        self.assertRaises(
+            FileDoesntExistError,
+            self.space_files.remove_post_file,
+            self.space_id,
+            f["file_id"],
+        )
+
+    def test_delete_all_of_space(self):
+        """
+        expect: all nodes of the space are removed, manually uploaded gridfs
+        files are deleted, post files are kept in gridfs, other spaces are
+        untouched
+        """
+
+        f = self.space_files.add_file(
+            self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
+        )
+        post_file = self._post_file()
+        other_space_id = ObjectId()
+        other = self.space_files.add_file(
+            other_space_id, "o.txt", b"o", CURRENT_ADMIN.username
+        )
+
+        self.space_files.delete_all_of_space(self.space_id)
+
+        self.assertEqual(self.db.space_files.count_documents({"space": self.space_id}), 0)
+        self.assertFalse(self.fs.exists(f["file_id"]))
+        self.assertTrue(self.fs.exists(post_file["file_id"]))
+        self.assertIsNotNone(self.db.space_files.find_one({"_id": other["_id"]}))
+        self.assertTrue(self.fs.exists(other["file_id"]))
+
+
+class SpaceFilesMigrationTest(BaseResourceTestCase):
+    """
+    the migration of the legacy flat file repository of spaces (embedded
+    `files` array) into the hierarchical file share
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.fs = gridfs.GridFS(self.db)
+        self.space_id = ObjectId()
+
+    def tearDown(self) -> None:
+        self.db.spaces.delete_many({})
+        self.db.space_files.delete_many({})
+        self.db.posts.delete_many({})
+        for fs_file in self.fs.find():
+            self.fs.delete(fs_file._id)
+        super().tearDown()
+
+    def _put(self, name: str) -> ObjectId:
+        return util.gridfs_put(self.fs, b"x", name, "text/plain", CURRENT_ADMIN.username)
+
+    def _insert_post(self, files: list, is_repost: bool = False) -> ObjectId:
+        post_id = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": post_id,
+                "author": CURRENT_USER.username,
+                "creation_date": datetime(2023, 1, 1, 9, 0, 0),
+                "text": "test",
+                "space": self.space_id,
+                "pinned": False,
+                "isRepost": is_repost,
+                "files": [
+                    {
+                        "file_id": file_id,
+                        "file_name": name,
+                        "file_type": "text/plain",
+                        "author": CURRENT_USER.username,
+                    }
+                    for file_id, name in files
+                ],
+                "comments": [],
+                "likers": [],
+            }
+        )
+        return post_id
+
+    def test_migrate(self):
+        """
+        expect: manually uploaded files land in the root, post attachments in
+        the post files folder (linked to their post, reposts are skipped),
+        orphaned post file entries become regular files, missing gridfs files
+        are skipped and the legacy `files` array is removed
+        """
+
+        manual = self._put("notes.txt")
+        manual_same_name = self._put("Notes.txt")
+        attachment = self._put("slides.pdf")
+        orphaned = self._put("old.txt")
+        reposted = self._put("repost.txt")
+        missing = ObjectId()
+
+        post_id = self._insert_post([(attachment, "slides.pdf")])
+        self._insert_post([(reposted, "repost.txt")], is_repost=True)
+        self.db.spaces.insert_one(
+            {
+                "_id": self.space_id,
+                "name": "test",
+                "members": [CURRENT_ADMIN.username],
+                "admins": [CURRENT_ADMIN.username],
+                "files": [
+                    {
+                        "author": CURRENT_ADMIN.username,
+                        "file_id": manual,
+                        "file_name": "notes.txt",
+                        "manually_uploaded": True,
+                    },
+                    {
+                        "author": CURRENT_USER.username,
+                        "file_id": manual_same_name,
+                        "file_name": "Notes.txt",
+                        "manually_uploaded": True,
+                    },
+                    {
+                        "author": CURRENT_USER.username,
+                        "file_id": attachment,
+                        "file_name": "slides.pdf",
+                        "manually_uploaded": False,
+                    },
+                    # legacy entries had no manually_uploaded flag for post files
+                    {
+                        "author": CURRENT_USER.username,
+                        "file_id": orphaned,
+                        "file_name": "old.txt",
+                    },
+                    {
+                        "author": CURRENT_ADMIN.username,
+                        "file_id": missing,
+                        "file_name": "gone.txt",
+                        "manually_uploaded": True,
+                    },
+                ],
+            }
+        )
+
+        stats = migrate_space_files(self.db)
+        self.assertEqual(
+            stats, {"spaces": 1, "imported": 3, "post_files": 1, "missing": 1}
+        )
+
+        root = {
+            node["name"]: node
+            for node in self.db.space_files.find(
+                {"space": self.space_id, "parent": None}
+            )
+        }
+        self.assertEqual(
+            set(root.keys()),
+            {"notes.txt", "Notes (1).txt", "old.txt", SpaceFiles.POST_FILES_FOLDER_NAME},
+        )
+        self.assertEqual(root["notes.txt"]["file_id"], manual)
+        self.assertEqual(root["notes.txt"]["author"], CURRENT_ADMIN.username)
+        self.assertTrue(root["notes.txt"]["manually_uploaded"])
+        self.assertEqual(root["Notes (1).txt"]["file_id"], manual_same_name)
+        self.assertEqual(root["old.txt"]["file_id"], orphaned)
+        self.assertTrue(root["old.txt"]["manually_uploaded"])
+
+        post_files = list(
+            self.db.space_files.find(
+                {"parent": root[SpaceFiles.POST_FILES_FOLDER_NAME]["_id"]}
+            )
+        )
+        self.assertEqual(len(post_files), 1)
+        self.assertEqual(post_files[0]["file_id"], attachment)
+        self.assertEqual(post_files[0]["post_id"], post_id)
+        self.assertFalse(post_files[0]["manually_uploaded"])
+
+        self.assertIsNone(self.db.space_files.find_one({"file_id": reposted}))
+        self.assertNotIn("files", self.db.spaces.find_one({"_id": self.space_id}))
+
+    def test_migrate_idempotent(self):
+        """
+        expect: a second run (or a run after an interruption) doesn't import
+        anything twice
+        """
+
+        manual = self._put("notes.txt")
+        attachment = self._put("slides.pdf")
+        self._insert_post([(attachment, "slides.pdf")])
+        self.db.spaces.insert_one(
+            {
+                "_id": self.space_id,
+                "name": "test",
+                "files": [
+                    {
+                        "author": CURRENT_ADMIN.username,
+                        "file_id": manual,
+                        "file_name": "notes.txt",
+                        "manually_uploaded": True,
+                    }
+                ],
+            }
+        )
+
+        migrate_space_files(self.db)
+        node_count = self.db.space_files.count_documents({})
+
+        # simulate an interrupted run: the files array is still there
+        self.db.spaces.update_one(
+            {"_id": self.space_id},
+            {"$set": {"files": [{"file_id": manual, "file_name": "notes.txt"}]}},
+        )
+        stats = migrate_space_files(self.db)
+        self.assertEqual(stats["imported"], 0)
+        self.assertEqual(stats["post_files"], 0)
+        self.assertEqual(self.db.space_files.count_documents({}), node_count)
+
+        # nothing left to migrate
+        self.assertEqual(migrate_space_files(self.db)["spaces"], 0)
 
 
 class PostSpaceACLResourceIntegrationTest(BaseResourceTestCase):
@@ -5842,8 +7253,8 @@ class PlanResourceTest(BaseResourceTestCase):
             "author": "test_user",
             "read_access": ["test_user", "test_admin"],
             "write_access": ["test_user"],
-            "creation_timestamp": datetime.now(),
-            "last_modified": datetime.now(),
+            "creation_timestamp": datetime.now(timezone.utc),
+            "last_modified": datetime.now(timezone.utc),
             "name": "test",
             "partners": ["test_admin"],
             "institutions": [self.institution.to_dict()],
@@ -6403,8 +7814,8 @@ class PlanResourceTest(BaseResourceTestCase):
             {
                 "_id": ObjectId(),
                 "author": "test_admin",
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "admin",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -6461,8 +7872,8 @@ class PlanResourceTest(BaseResourceTestCase):
             },
             {
                 "_id": ObjectId(),
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "user",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -6519,8 +7930,8 @@ class PlanResourceTest(BaseResourceTestCase):
             },
             {
                 "_id": ObjectId(),
-                "creation_timestamp": datetime.now(),
-                "last_modified": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
+                "last_modified": datetime.now(timezone.utc),
                 "name": "user",
                 "partners": ["test_user"],
                 "institutions": [self.institution.to_dict()],
@@ -9167,7 +10578,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "new_messages",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
             {
@@ -9175,7 +10586,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "space_invitation",
                 "to": CURRENT_ADMIN.username,
                 "receive_state": "sent",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
             {
@@ -9183,7 +10594,7 @@ class NotificationIntegrationTest(BaseResourceTestCase):
                 "type": "new_messages",
                 "to": CURRENT_USER.username,
                 "receive_state": "pending",
-                "creation_timestamp": datetime.now(),
+                "creation_timestamp": datetime.now(timezone.utc),
                 "payload": {},
             },
         ]
@@ -9220,7 +10631,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "recipient_name": "invitation_receiver",
             "recipient_mail": "invitation_receiver@mail.com",
             "message": "test",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.mail_invitations.insert_one(self.default_invitation)
 
@@ -9250,7 +10661,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
                     "recipient_name": "invitation_receiver",
                     "recipient_mail": "invitation_receiver@mail.com",
                     "message": "test",
-                    "timestamp": datetime.now() - timedelta(hours=i),
+                    "timestamp": datetime.now(timezone.utc) - timedelta(hours=i),
                 }
             )
 
@@ -9271,7 +10682,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "message": "test",
             "plan_id": None,
             "replied": False,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         inserted_id = self.invitation_manager.insert_invitation(invitation)
@@ -9295,7 +10706,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "sender": CURRENT_ADMIN.username,
             "recipient_mail": "invitation_receiver@mail.com",
             "message": "test",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         self.assertRaises(
@@ -9317,7 +10728,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
                 "message": "hi",
                 "plan_id": None,
                 "replied": False,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
             self.db.mail_invitations.insert_one(inv)
         other_inv = {
@@ -9328,7 +10739,7 @@ class MailInvitationResourceTest(BaseResourceTestCase):
             "message": "hi",
             "plan_id": None,
             "replied": False,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.mail_invitations.insert_one(other_inv)
 
@@ -9353,7 +10764,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
             "item_id": self.reported_item_id,
             "reason": "test",
             "state": "open",
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
         self.db.reports.insert_one(self.default_report)
 
@@ -9508,7 +10919,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 
@@ -9532,7 +10943,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": ObjectId(),
@@ -9541,7 +10952,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -9569,7 +10980,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "open",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
                 {
                     "_id": ObjectId(),
@@ -9578,7 +10989,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                     "item_id": ObjectId(),
                     "reason": "test",
                     "state": "closed",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 },
             ]
         )
@@ -9625,7 +11036,7 @@ class ReportResourceTest(BaseResourceTestCase, AsyncTestCase):
                 "item_id": ObjectId(),
                 "reason": "test",
                 "state": "open",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         )
 

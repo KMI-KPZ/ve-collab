@@ -580,13 +580,14 @@ class Profiles:
                     provide an actual image as bytes!"""
                 )
 
-            # save image to gridfs
+            # save image to gridfs (mime type and uploader live in the file's metadata)
             fs = gridfs.GridFS(self.db)
-            _id = fs.put(
+            _id = util.gridfs_put(
+                fs,
                 profile_pic,
-                filename=updated_profile["profile_pic"],
-                content_type=profile_pic_content_type,
-                metadata={"uploader": "system"},
+                updated_profile["profile_pic"],
+                profile_pic_content_type,
+                "system",
             )
             updated_profile["profile_pic"] = _id
 

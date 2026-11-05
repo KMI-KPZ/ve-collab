@@ -40,11 +40,13 @@ export default function ViewFinestep({
         !plan.is_good_practise_ro ||
         plan.write_access.includes(session?.user.preferred_username as string);
 
+    // step dates are calendar dates stored as midnight UTC, so they are displayed in UTC
     const convertDateToLocal = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('de-DE', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
+            timeZone: 'UTC',
         });
     };
 

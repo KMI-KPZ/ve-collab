@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import trash from '@/images/icons/ve-designer/trash.png';
 import Image from 'next/image';
 import Wrapper from '@/components/VE-designer/Wrapper';
@@ -67,7 +67,7 @@ export default function Institutions({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(InstitutionsFormSchema),
+        resolver: zodResolver(InstitutionsFormSchema) as Resolver<FormValues>,
         defaultValues: {
             institutions: [],
         },
@@ -392,7 +392,7 @@ export function InstitutionsNoAuthPreview() {
     const { t } = useTranslation(['designer', 'common']);
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(InstitutionsFormSchema),
+        resolver: zodResolver(InstitutionsFormSchema) as Resolver<FormValues>,
         defaultValues: {
             institutions: [],
         },

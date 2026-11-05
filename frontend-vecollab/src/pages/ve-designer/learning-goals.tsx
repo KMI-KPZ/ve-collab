@@ -6,7 +6,7 @@ import CreatableSelect from 'react-select/creatable';
 import Link from 'next/link';
 import { Tooltip } from '@/components/common/Tooltip';
 import { PiBookOpenText } from 'react-icons/pi';
-import { Controller, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { BackendProfileSnippetsResponse, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import Wrapper from '@/components/VE-designer/Wrapper';
 import { IPlan } from '@/interfaces/planner/plannerInterfaces';
@@ -66,7 +66,7 @@ export default function LearningGoals({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(LearningGoalsFormSchema),
+        resolver: zodResolver(LearningGoalsFormSchema) as Resolver<FormValues>,
         defaultValues: {
             majorLearningGoals: [],
             individualLearningGoals: [],
@@ -398,7 +398,7 @@ export function LearningGoalsNoAuthPreview() {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(LearningGoalsFormSchema),
+        resolver: zodResolver(LearningGoalsFormSchema) as Resolver<FormValues>,
         defaultValues: {
             majorLearningGoals: [],
             individualLearningGoals: [],

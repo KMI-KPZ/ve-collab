@@ -8,8 +8,7 @@ export const EvaluationFormSchema = z.object({
                 .max(200, "messages.maxlength200")
                 .nullable(),
             is_graded: z.boolean({
-                required_error: "messages.please_yes_or_no",
-                invalid_type_error: "messages.please_yes_or_no",
+                error: "messages.please_yes_or_no",
             }),
             task_type: z
                 .string()

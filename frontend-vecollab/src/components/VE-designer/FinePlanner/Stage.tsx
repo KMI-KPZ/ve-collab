@@ -20,15 +20,18 @@ export default function Stage({ fineStep }: Props) {
         control,
         rules: { minLength: 1 },
     });
+    // step dates are calendar dates stored as midnight UTC, so they are displayed in UTC
     let dateFrom = new Date(fineStep.timestamp_from).toLocaleString('de-DE', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        timeZone: 'UTC',
     });
     let dateTo = new Date(fineStep.timestamp_to).toLocaleString('de-DE', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        timeZone: 'UTC',
     });
 
     const handleDelete = (index: number): void => {

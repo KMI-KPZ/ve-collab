@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RxPlus } from 'react-icons/rx';
 import { useRouter } from 'next/router';
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { Resolver, SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { IFineStep } from '@/pages/ve-designer/step/[stepId]';
 import {
     DragDropContext,
@@ -81,7 +81,8 @@ export default function StepNames({ socket }: Props): JSX.Element {
 
     const methods = useForm<FormValues>({
         mode: 'onChange',
-        resolver: zodResolver(StepNamesFormSchema),
+        // FormValues also holds the fine step fields, which this schema does not validate
+        resolver: zodResolver(StepNamesFormSchema) as unknown as Resolver<FormValues>,
         // TODO may load default values only on first visit of a plan?!
         defaultValues: {
             stepNames: [
