@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRef, useState } from 'react';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { AVIVA_PHASES, IKAP_PHASES, PhaseName } from './methodPhases';
 
 interface CollapsiblePanelProps {
     title: string;
@@ -37,9 +38,10 @@ interface CheckboxGroupProps {
     options: string[];
     selected: string[];
     onChange: (selected: string[]) => void;
+    renderOption?: (option: string) => React.ReactNode;
 }
 
-function CheckboxGroup({ options, selected, onChange }: CheckboxGroupProps) {
+function CheckboxGroup({ options, selected, onChange, renderOption }: CheckboxGroupProps) {
     const toggle = (value: string) => {
         if (selected.includes(value)) {
             onChange(selected.filter((v) => v !== value));
@@ -57,7 +59,7 @@ function CheckboxGroup({ options, selected, onChange }: CheckboxGroupProps) {
                         onChange={() => toggle(opt)}
                         className="cursor-pointer accent-ve-collab-orange"
                     />
-                    {opt}
+                    {renderOption ? renderOption(opt) : opt}
                 </label>
             ))}
         </div>
@@ -291,9 +293,7 @@ interface MethodSidebarProps {
     onFiltersChange: (filters: MethodFilters) => void;
     availableCourseTypes: string[];
     availableSocialForms: string[];
-    availablePhases: string[];
     availableMaterials: string[];
-    availableRoomSpecs: string[];
     maxParticipantsRange: number;
     maxTimeRange: number;
 }
@@ -303,9 +303,7 @@ export default function MethodSidebar({
     onFiltersChange,
     availableCourseTypes,
     availableSocialForms,
-    availablePhases,
     availableMaterials,
-    availableRoomSpecs,
     maxParticipantsRange,
     maxTimeRange,
 }: MethodSidebarProps) {
@@ -394,9 +392,10 @@ export default function MethodSidebar({
             <CollapsiblePanel title="AVIVA-Phasen">
                 <FilterHeading>AVIVA-Phase(n)</FilterHeading>
                 <CheckboxGroup
-                    options={availablePhases}
+                    options={Object.keys(AVIVA_PHASES)}
                     selected={filters.phases}
                     onChange={(phases) => update({ phases })}
+                    renderOption={(phase) => <PhaseName name={AVIVA_PHASES[phase]} />}
                 />
                 <FilterHeading>AVIVA-Unterphase(n)</FilterHeading>
                 <CheckboxGroup
@@ -408,9 +407,10 @@ export default function MethodSidebar({
 
             <CollapsiblePanel title="IKAP-Phase(n)">
                 <CheckboxGroup
-                    options={availableRoomSpecs}
+                    options={IKAP_PHASES}
                     selected={filters.roomSpecs}
                     onChange={(roomSpecs) => update({ roomSpecs })}
+                    renderOption={(phase) => <PhaseName name={phase} />}
                 />
             </CollapsiblePanel>
         </div>

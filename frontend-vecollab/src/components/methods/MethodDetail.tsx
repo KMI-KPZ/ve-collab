@@ -1,6 +1,7 @@
 import React from 'react';
 import { Method } from '@/interfaces/method/methodInterfaces';
 import { MdArrowBack } from 'react-icons/md';
+import { AVIVA_PHASES, IKAP_PHASES, PhaseNames } from './methodPhases';
 
 interface MethodDetailProps {
     method: Method | null;
@@ -88,7 +89,13 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
                         <DetailRow label="Sozialform">{method.socialForm.join(', ')}</DetailRow>
                     )}
                     {method.phase?.length > 0 && (
-                        <DetailRow label="AVIVA-Phase(n)">{method.phase.join(', ')}</DetailRow>
+                        <DetailRow label="AVIVA-Phase(n)">
+                            <PhaseNames
+                                names={Object.keys(AVIVA_PHASES)
+                                    .filter((phase) => method.phase.includes(phase))
+                                    .map((phase) => AVIVA_PHASES[phase])}
+                            />
+                        </DetailRow>
                     )}
                     {method.subPhase?.length > 0 && (
                         <DetailRow label="AVIVA-Unterphase(n)">
@@ -96,7 +103,13 @@ export default function MethodDetail({ method, onBack }: MethodDetailProps) {
                         </DetailRow>
                     )}
                     {method.roomSpec?.length > 0 && (
-                        <DetailRow label="IKAP-Phase(n)">{method.roomSpec.join(', ')}</DetailRow>
+                        <DetailRow label="IKAP-Phase(n)">
+                            <PhaseNames
+                                names={IKAP_PHASES.filter((phase) =>
+                                    method.roomSpec.includes(phase)
+                                )}
+                            />
+                        </DetailRow>
                     )}
                     {method.result && (
                         <DetailRow label="IKAP-Phase(n) (Kommentar)">{method.result}</DetailRow>
