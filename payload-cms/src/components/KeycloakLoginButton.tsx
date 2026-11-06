@@ -16,6 +16,7 @@ export default function KeycloakLoginButton() {
                 <span style={{ color: 'var(--theme-elevation-500)', fontSize: '0.85rem' }}>or</span>
                 <hr style={{ flex: 1, border: 'none', borderTop: '1px solid var(--theme-elevation-250)' }} />
             </div>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- api route that redirects to Keycloak, needs a full page load */}
             <a
                 href="/api/keycloak/login"
                 style={{

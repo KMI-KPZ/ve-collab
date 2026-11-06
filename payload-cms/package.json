@@ -19,16 +19,16 @@
     "seed:methods": "tsx src/seed/import-methods.ts"
   },
   "dependencies": {
-    "@payloadcms/db-mongodb": "^3.89.0",
-    "@payloadcms/next": "^3.89.0",
-    "@payloadcms/richtext-lexical": "^3.89.0",
-    "@payloadcms/ui": "^3.89.0",
+    "@payloadcms/db-mongodb": "^3.93.0",
+    "@payloadcms/next": "^3.93.0",
+    "@payloadcms/richtext-lexical": "^3.93.0",
+    "@payloadcms/ui": "^3.93.0",
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
     "jsonwebtoken": "^9.0.3",
     "next": "^16.3.5",
-    "payload": "^3.89.0",
+    "payload": "^3.93.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "sharp": "^0.35.4"
@@ -48,10 +48,10 @@
     "tsx": "4.21.0",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "6.0.5",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0",
+    "node": "^22.23.4 || >=24.22.1",
     "pnpm": "^9 || ^10"
   },
   "pnpm": {
@@ -60,5 +60,11 @@
       "esbuild",
       "unrs-resolver"
     ]
+  },
+  "overrides": {
+    "happy-dom": "^21.0.4",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
   }
 }

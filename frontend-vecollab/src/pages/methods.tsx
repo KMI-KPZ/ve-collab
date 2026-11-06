@@ -146,13 +146,11 @@ export default function Methods({
         () => collectUnique(allMethods, 'socialForm'),
         [allMethods]
     );
-    const availablePhases = useMemo(() => collectUnique(allMethods, 'phase'), [allMethods]);
     // teacher profile levels are part of material, but get their own sliders
     const availableMaterials = useMemo(
         () => collectUnique(allMethods, 'material').filter((v) => !isTeacherProfileMaterial(v)),
         [allMethods]
     );
-    const availableRoomSpecs = useMemo(() => collectUnique(allMethods, 'roomSpec'), [allMethods]);
     const maxParticipantsRange = useMemo(() => {
         let max = 0;
         for (const m of allMethods) {
@@ -216,15 +214,13 @@ export default function Methods({
             <div className="flex relative" style={{ height: 'calc(100vh - 120px)' }}>
                 {/* === Sidebar === */}
                 {/* Desktop: always visible */}
-                <div className="hidden md:block w-64 flex-shrink-0 border-r border-gray-200 bg-white">
+                <div className="hidden md:block w-64 shrink-0 border-r border-gray-200 bg-white">
                     <MethodSidebar
                         filters={filters}
                         onFiltersChange={setFilters}
                         availableCourseTypes={availableCourseTypes}
                         availableSocialForms={availableSocialForms}
-                        availablePhases={availablePhases}
                         availableMaterials={availableMaterials}
-                        availableRoomSpecs={availableRoomSpecs}
                         maxParticipantsRange={maxParticipantsRange}
                         maxTimeRange={maxTimeRange}
                     />
@@ -251,9 +247,7 @@ export default function Methods({
                                 onFiltersChange={setFilters}
                                 availableCourseTypes={availableCourseTypes}
                                 availableSocialForms={availableSocialForms}
-                                availablePhases={availablePhases}
                                 availableMaterials={availableMaterials}
-                                availableRoomSpecs={availableRoomSpecs}
                                 maxParticipantsRange={maxParticipantsRange}
                                 maxTimeRange={maxTimeRange}
                             />
@@ -266,7 +260,7 @@ export default function Methods({
                     {/* Desktop: always visible as left column */}
                     {/* Mobile: visible only when no method is selected */}
                     <div
-                        className={`w-full md:w-80 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col ${
+                        className={`w-full md:w-80 shrink-0 border-r border-gray-200 bg-white flex flex-col ${
                             selectedMethodId ? 'hidden md:flex' : 'flex'
                         }`}
                     >
