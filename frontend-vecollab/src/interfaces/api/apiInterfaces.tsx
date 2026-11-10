@@ -111,14 +111,40 @@ export interface BackendChatMessage {
     _id: string;
     sender: string;
     recipients?: string[];
+    room_id?: string; // only in socket events
     message: string;
     creation_date: string;
-    send_states: [
+    // not part of socket events and search results
+    send_states?: [
         {
             username: string;
             send_state: 'sent' | 'pending' | 'acknowledged';
         }
     ];
+    files: BackendChatFile[];
+}
+
+export interface BackendChatFile {
+    file_id: string;
+    file_name: string;
+    content_type: string;
+    size: number;
+}
+
+/**
+ * a file sent in a chat room, together with the message it was sent with
+ */
+export interface BackendChatRoomFile extends BackendChatFile {
+    message_id: string;
+    sender: string;
+    creation_date: string;
+}
+
+export interface BackendChatFileLimits {
+    max_message_files_bytes: number; // all files of one message together
+    max_files_per_message: number;
+    max_room_storage_bytes: number;
+    max_file_name_length: number;
 }
 
 export type BackendFileNodeType = 'folder' | 'file';

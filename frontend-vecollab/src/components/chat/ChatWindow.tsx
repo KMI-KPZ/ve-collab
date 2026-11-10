@@ -1,14 +1,12 @@
-import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
-import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetChatrooms } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { MdClose } from 'react-icons/md';
+import { useRouter } from 'next/router';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { MdClose, MdOpenInFull } from 'react-icons/md';
 import { Socket } from 'socket.io-client';
-import LoadingAnimation from '../common/LoadingAnimation';
-import ChatRoom from './ChatRoom';
-import Rooms from '@/components/chat/Rooms';
 import { useTranslation } from 'next-i18next';
+import ChatPanel from './ChatPanel';
+import { useChatProfileSnippets } from './useChatProfileSnippets';
 
 interface Props {
     socket: Socket;
@@ -18,6 +16,9 @@ interface Props {
     toggleChatWindow: () => void;
     open: boolean;
     prop_openOrCreateChatWith: string[];
+    selectedRoomId: string | null;
+    onSelectRoom: (roomId: string | null) => void;
+    onRoomDeleted: (roomId: string) => void;
 }
 
 ChatWindow.auth = true;
@@ -29,69 +30,27 @@ export default function ChatWindow({
     toggleChatWindow,
     open,
     prop_openOrCreateChatWith,
+    selectedRoomId,
+    onSelectRoom,
+    onRoomDeleted,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
+    const router = useRouter();
 
-    const [selectedRoom, setSelectedRoom] = useState<BackendChatroomSnippet>();
-    const [profileSnippets, setProfileSnippets] = useState<UserSnippet[]>([]);
-    const [profileSnippetsLoading, setProfileSnippetsLoading] = useState<boolean>(true);
+    // the full page chat shows everything the window would
+    const onChatPage = router.pathname === '/chat';
 
     const [openOrCreateChatWith, setOpenOrCreateChatWith] =
         useState<string[]>(prop_openOrCreateChatWith);
 
-    const {
-        data: rooms,
-        isLoading: loadingRooms,
-        error,
-        mutate,
-    } = useGetChatrooms(session!.accessToken);
-
-    // usernames we already requested snippets for. keeping track of the request instead of
-    // the response prevents a fetch loop in case the backend has no snippet for a username
-    const requestedProfileSnippets = useRef<Set<string>>(new Set());
-
-    useEffect(() => {
-        if (loadingRooms || !open) return;
-
-        // edge case: having no rooms would cause loading animation to spin indefinitely
-        // because of initial true state
-        if (rooms.length === 0) {
-            setProfileSnippetsLoading(false);
-            return;
-        }
-
-        // filter a distinct list of usernames from the room snippets, skipping those
-        // that were already requested. rooms may be added to the list at any time (e.g. when
-        // somebody starts a new chat with us), so this may well run more than once
-        const usernames = Array.from(new Set(rooms.map((room) => room.members).flat())).filter(
-            (username) => !requestedProfileSnippets.current.has(username)
-        );
-
-        if (!usernames.length) {
-            setProfileSnippetsLoading(false);
-            return;
-        }
-        usernames.forEach((username) => requestedProfileSnippets.current.add(username));
-
-        // fetch profile snippets
-        fetchPOST('/profile_snippets', { usernames: usernames }, session?.accessToken).then(
-            (data) => {
-                setProfileSnippets((prev) => [
-                    ...prev,
-                    ...data.user_snippets.map((snippet: any) => {
-                        return {
-                            profilePicUrl: snippet.profile_pic,
-                            name: snippet.first_name + ' ' + snippet.last_name,
-                            preferredUsername: snippet.username,
-                            institution: snippet.institution,
-                        };
-                    }),
-                ]);
-                setProfileSnippetsLoading(false);
-            }
-        );
-    }, [loadingRooms, open, rooms, session]);
+    const { data: rooms, isLoading: loadingRooms, mutate } = useGetChatrooms(session!.accessToken);
+    const { profileSnippets, isLoading: profileSnippetsLoading } = useChatProfileSnippets(
+        rooms,
+        loadingRooms,
+        open,
+        session?.accessToken
+    );
 
     useEffect(() => {
         if (loadingRooms || !prop_openOrCreateChatWith.length) return;
@@ -103,7 +62,7 @@ export default function ChatWindow({
                 room.members.every((a) => prop_openOrCreateChatWith.includes(a))
         );
         if (existingRoom) {
-            setSelectedRoom(existingRoom);
+            onSelectRoom(existingRoom._id);
             setOpenOrCreateChatWith([]);
         } else {
             fetchPOST(
@@ -115,26 +74,42 @@ export default function ChatWindow({
                 session?.accessToken
             )
                 .then((res) => {
-                    console.log('/chatroom/create_or_get', { res });
+                    // open the new room right away
+                    if (res.success) {
+                        mutate();
+                        onSelectRoom(res.room_id);
+                    }
                 })
                 .finally(() => {
                     setOpenOrCreateChatWith([]);
                 });
         }
-    }, [prop_openOrCreateChatWith, loadingRooms, rooms, session?.accessToken]);
+    }, [
+        prop_openOrCreateChatWith,
+        loadingRooms,
+        rooms,
+        session?.accessToken,
+        onSelectRoom,
+        mutate,
+    ]);
 
-    const handleChatSelect = (chat: string) => {
-        setSelectedRoom(rooms.find((room) => room._id === chat));
+    // the header button can't open the window on top of the full page chat
+    useEffect(() => {
+        if (open && onChatPage) toggleChatWindow();
+    }, [open, onChatPage, toggleChatWindow]);
+
+    const maximize = () => {
+        toggleChatWindow();
+        router.push({
+            pathname: '/chat',
+            query: {
+                ...(selectedRoomId ? { room: selectedRoomId } : {}),
+                from: router.asPath, // the page the minimize button returns to
+            },
+        });
     };
 
-    // a room was renamed or got new members: apply the change to the currently opened
-    // room right away and refetch the list, so that the snippets are up to date as well
-    const handleRoomUpdate = (updatedRoom: BackendChatroomSnippet) => {
-        setSelectedRoom(updatedRoom);
-        mutate();
-    };
-
-    if (!open) {
+    if (!open || onChatPage) {
         return <></>;
     }
 
@@ -150,39 +125,32 @@ export default function ChatWindow({
                     <MdClose size={20} />
                 </button>
             </div>
-            <div className="font-bold text-center mb-2">
-                {selectedRoom ? t('chat') : t('chats')}
+            <div className="relative font-bold text-center mb-2">
+                {selectedRoomId ? t('chat') : t('chats')}
+                <button
+                    type="button"
+                    onClick={maximize}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1 font-normal text-gray-600 hover:bg-slate-100 cursor-pointer"
+                    title={t('chat_maximize')}
+                    aria-label={t('chat_maximize')}
+                >
+                    <MdOpenInFull size={16} />
+                </button>
             </div>
 
-            {selectedRoom ? (
-                <div className="h-[60vh] min-h-[16rem] flex flex-col">
-                    <ChatRoom
-                        socketMessages={messageEvents}
-                        headerBarMessageEvents={headerBarMessageEvents}
-                        setHeaderBarMessageEvents={setHeaderBarMessageEvents}
-                        socket={socket}
-                        room={selectedRoom!}
-                        closeRoom={() => setSelectedRoom(undefined)}
-                        roomUpdatedCallback={handleRoomUpdate}
-                        memberProfileSnippets={profileSnippets.filter((profile) =>
-                            selectedRoom.members.includes(profile.preferredUsername)
-                        )}
-                    />
-                </div>
-            ) : (
-                <div className="h-[60vh] min-h-[16rem]">
-                    {profileSnippetsLoading ? (
-                        <LoadingAnimation size="small" />
-                    ) : (
-                        <Rooms
-                            handleChatSelect={handleChatSelect}
-                            socketMessages={messageEvents}
-                            headerBarMessageEvents={headerBarMessageEvents}
-                            profileSnippets={profileSnippets}
-                        />
-                    )}
-                </div>
-            )}
+            <div className="h-[60vh] min-h-[16rem] flex flex-col">
+                <ChatPanel
+                    socket={socket}
+                    messageEvents={messageEvents}
+                    headerBarMessageEvents={headerBarMessageEvents}
+                    setHeaderBarMessageEvents={setHeaderBarMessageEvents}
+                    profileSnippets={profileSnippets}
+                    profileSnippetsLoading={profileSnippetsLoading}
+                    selectedRoomId={selectedRoomId}
+                    onSelectRoom={onSelectRoom}
+                    onRoomDeleted={onRoomDeleted}
+                />
+            </div>
         </div>
     );
 }

@@ -3,7 +3,7 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import Portal from '@/components/common/Portal';
 import { BackendFileNode, BackendFileSearchResult } from '@/interfaces/api/apiInterfaces';
 import {
-    fetchAuthenticatedFile,
+    downloadAuthenticatedFile,
     fetchGET,
     useGetFileShareLimits,
     useGetGroupFolder,
@@ -193,21 +193,10 @@ export default function FileBrowser({ groupId, canRead, canWrite }: Props) {
     };
 
     const download = async (node: BackendFileNode) => {
-        const response = await fetchAuthenticatedFile(`/uploads/${node.file_id}`, accessToken);
-        if (!response.ok) {
-            showNotice(
-                errorMessage(response.status === 403 ? 'insufficient_permission' : undefined)
-            );
-            return;
+        const status = await downloadAuthenticatedFile(node.file_id!, node.name, accessToken);
+        if (status !== 200) {
+            showNotice(errorMessage(status === 403 ? 'insufficient_permission' : undefined));
         }
-        const href = URL.createObjectURL(await response.blob());
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = node.name;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(href), 1000);
     };
 
     const openNode = (node: BackendFileNode) => {

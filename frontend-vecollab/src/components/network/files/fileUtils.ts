@@ -92,6 +92,15 @@ const PASSIVE_MEDIA_TYPES = [
  */
 const SVG_TYPE = 'image/svg+xml';
 
+/**
+ * what the preview, the icon and the helpers below need to know about a file, so that
+ * they work for the nodes of a group's file share as well as for files sent in a chat
+ */
+export type PreviewableFile = Pick<
+    BackendFileNode,
+    '_id' | 'type' | 'name' | 'file_id' | 'content_type' | 'size' | 'system'
+>;
+
 export function getExtension(name: string): string {
     const index = name.lastIndexOf('.');
     return index === -1 ? '' : name.slice(index + 1).toLowerCase();
@@ -101,7 +110,7 @@ export function getExtension(name: string): string {
  * decide how a file can be previewed inside the platform based on its
  * content type and (as a fallback) its extension
  */
-export function getPreviewKind(node: BackendFileNode): PreviewKind {
+export function getPreviewKind(node: PreviewableFile): PreviewKind {
     if (node.type !== 'file') return 'none';
 
     const contentType = (node.content_type || '').toLowerCase();
@@ -129,7 +138,7 @@ export function getPreviewKind(node: BackendFileNode): PreviewKind {
     return 'none';
 }
 
-export function isPreviewable(node: BackendFileNode): boolean {
+export function isPreviewable(node: PreviewableFile): boolean {
     return getPreviewKind(node) !== 'none';
 }
 
@@ -138,13 +147,13 @@ export function isPreviewable(node: BackendFileNode): boolean {
  * explicitly from the allowlist above instead of taking the type the server
  * sends along (which for post attachments comes from the uploading client).
  */
-export function previewMediaType(node: BackendFileNode): string {
+export function previewMediaType(node: PreviewableFile): string {
     return getPreviewKind(node) === 'pdf'
         ? 'application/pdf'
         : (node.content_type || '').toLowerCase();
 }
 
-export function canOpenInNewTab(node: BackendFileNode): boolean {
+export function canOpenInNewTab(node: PreviewableFile): boolean {
     return PASSIVE_MEDIA_TYPES.includes(previewMediaType(node));
 }
 

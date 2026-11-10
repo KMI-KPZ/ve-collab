@@ -1,4 +1,5 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
+import { mutate as mutateSWR } from 'swr';
 import '@/styles/globals.css';
 import '@/styles/networkPostsFormatter.css';
 import type { AppProps } from 'next/app';
@@ -95,6 +96,8 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
     const [chatOpen, setChatOpen] = useState<boolean>(false);
     const [notifOpen, setNotifOpen] = useState<boolean>(false);
     const [openOrCreateChatWith, setOpenOrCreateChatWith] = useState<string[]>([]);
+    // the chat room that is open, shared by the chat window and the full page chat
+    const [chatRoomId, setChatRoomId] = useState<string | null>(null);
 
     // it is a pain:
     // the headerbar has to get a state copy of the messageEvents, because in order to remove the
@@ -151,6 +154,26 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
         };
     }, [notificationEvents, messageEvents]);
 
+    // a chat room was deleted (by us or another member): forget its messages and
+    // close it, and refetch the room list everywhere
+    const removeChatRoom = useCallback((roomId: string) => {
+        setMessageEvents((prev) => prev.filter((message) => message.room_id !== roomId));
+        setMessageEventsHeaderBar((prev) => prev.filter((message) => message.room_id !== roomId));
+        setChatRoomId((prev) => (prev === roomId ? null : prev));
+        mutateSWR((key) => Array.isArray(key) && key[0] === '/chatroom/get_mine');
+    }, []);
+
+    useEffect(() => {
+        function onRoomDeleted(value: { room_id: string }) {
+            removeChatRoom(value.room_id);
+        }
+
+        socket.on('room_deleted', onRoomDeleted);
+        return () => {
+            socket.off('room_deleted', onRoomDeleted);
+        };
+    }, [removeChatRoom]);
+
     const toggleChatWindow = () => {
         setNotifOpen(false);
         setChatOpen(!chatOpen);
@@ -201,6 +224,13 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                                     setChatOpen(true);
                                                     setOpenOrCreateChatWith(users);
                                                 }}
+                                                chatRoomId={chatRoomId}
+                                                selectChatRoom={setChatRoomId}
+                                                removeChatRoom={removeChatRoom}
+                                                openChatWindow={() => {
+                                                    setNotifOpen(false);
+                                                    setChatOpen(true);
+                                                }}
                                             />
                                         </Auth>
                                     ) : (
@@ -228,6 +258,9 @@ const App = ({ Component, pageProps: { session, ...pageProps } }: AppPropsWithAu
                                         open={chatOpen}
                                         toggleChatWindow={toggleChatWindow}
                                         prop_openOrCreateChatWith={openOrCreateChatWith}
+                                        selectedRoomId={chatRoomId}
+                                        onSelectRoom={setChatRoomId}
+                                        onRoomDeleted={removeChatRoom}
                                     />
                                     <NotificationsWindow
                                         socket={socket}

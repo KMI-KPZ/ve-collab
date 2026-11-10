@@ -16,6 +16,7 @@ interface Props {
     socketMessages: any[];
     headerBarMessageEvents: any[];
     profileSnippets: UserSnippet[];
+    selectedRoomId?: string | null; // highlighted, when the room is open next to the list
 }
 
 // timestamp of a message in ms, used to order the rooms by their latest activity
@@ -36,6 +37,7 @@ export default function Sidebar({
     socketMessages,
     headerBarMessageEvents,
     profileSnippets,
+    selectedRoomId,
 }: Props) {
     const { data: session, status } = useSession();
     const { t } = useTranslation('common');
@@ -142,6 +144,7 @@ export default function Sidebar({
                                 room={room}
                                 handleChatSelect={handleChatSelect}
                                 unreadCount={unreadCount}
+                                selected={room._id === selectedRoomId}
                                 memberProfileSnippets={profileSnippets.filter((profileSnippet) =>
                                     room.members.includes(profileSnippet.preferredUsername)
                                 )}

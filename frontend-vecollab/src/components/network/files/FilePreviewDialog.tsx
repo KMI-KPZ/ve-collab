@@ -1,5 +1,4 @@
 import LoadingAnimation from '@/components/common/LoadingAnimation';
-import { BackendFileNode } from '@/interfaces/api/apiInterfaces';
 import { fetchAuthenticatedFile } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
@@ -15,6 +14,7 @@ import {
 import FileIcon from './FileIcon';
 import {
     MAX_TEXT_PREVIEW_BYTES,
+    PreviewableFile,
     canOpenInNewTab,
     formatBytes,
     getPreviewKind,
@@ -23,11 +23,12 @@ import {
 } from './fileUtils';
 import { renderMarkdown } from './markdown';
 
-interface Props {
-    node: BackendFileNode | null;
-    siblings?: BackendFileNode[];
-    onSelect?: (node: BackendFileNode) => void;
-    onDownload: (node: BackendFileNode) => void;
+// generic over the file type, so that the callbacks get back what was passed in
+interface Props<T extends PreviewableFile> {
+    node: T | null;
+    siblings?: T[];
+    onSelect?: (node: T) => void;
+    onDownload: (node: T) => void;
     onClose: () => void;
 }
 
@@ -36,15 +37,15 @@ type LoadedContent =
     | { kind: 'image' | 'pdf' | 'video' | 'audio'; url: string }
     | { kind: 'none' };
 
-export default function FilePreviewDialog({
+export default function FilePreviewDialog<T extends PreviewableFile>({
     node,
     siblings = [],
     onSelect,
     onDownload,
     onClose,
-}: Props) {
+}: Props<T>) {
     const { data: session } = useSession();
-    const { t } = useTranslation(['community', 'common']);
+    const { t } = useTranslation('common');
 
     const [content, setContent] = useState<LoadedContent | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -100,12 +101,12 @@ export default function FilePreviewDialog({
                 if (!cancelled) {
                     setError(
                         e?.message === 'too_large'
-                            ? t('fileshare_preview_too_large', {
+                            ? t('file_preview.too_large', {
                                   size: formatBytes(MAX_TEXT_PREVIEW_BYTES),
                               })
                             : e?.message === 'insufficient_permission'
-                            ? t('fileshare_error_insufficient_permission')
-                            : t('fileshare_preview_failed')
+                            ? t('file_preview.insufficient_permission')
+                            : t('file_preview.failed')
                     );
                 }
             } finally {
@@ -163,7 +164,7 @@ export default function FilePreviewDialog({
                         className="flex items-center rounded-lg bg-ve-collab-orange px-4 py-2 text-white cursor-pointer"
                         onClick={() => onDownload(node)}
                     >
-                        <MdDownload className="mr-2" /> {t('fileshare_download')}
+                        <MdDownload className="mr-2" /> {t('file_preview.download')}
                     </button>
                 </div>
             );
@@ -172,13 +173,13 @@ export default function FilePreviewDialog({
             return (
                 <div className="flex flex-col items-center justify-center h-full text-white/90">
                     <FileIcon node={node} size={64} className="mb-4 opacity-80" />
-                    <div className="mb-4">{t('fileshare_no_preview')}</div>
+                    <div className="mb-4">{t('file_preview.no_preview')}</div>
                     <button
                         type="button"
                         className="flex items-center rounded-lg bg-ve-collab-orange px-4 py-2 text-white cursor-pointer"
                         onClick={() => onDownload(node)}
                     >
-                        <MdDownload className="mr-2" /> {t('fileshare_download')}
+                        <MdDownload className="mr-2" /> {t('file_preview.download')}
                     </button>
                 </div>
             );
@@ -320,7 +321,7 @@ export default function FilePreviewDialog({
                             wrap ? 'text-white' : 'text-white/50'
                         }`}
                         onClick={() => setWrap(!wrap)}
-                        title={t('fileshare_toggle_wrap')}
+                        title={t('file_preview.toggle_wrap')}
                     >
                         <MdWrapText size={22} />
                     </button>
@@ -332,8 +333,8 @@ export default function FilePreviewDialog({
                         onClick={() => setShowRawMarkdown(!showRawMarkdown)}
                     >
                         {showRawMarkdown
-                            ? t('fileshare_show_rendered')
-                            : t('fileshare_show_source')}
+                            ? t('file_preview.show_rendered')
+                            : t('file_preview.show_source')}
                     </button>
                 )}
                 {content && 'url' in content && canOpenInNewTab(node) && (
@@ -341,7 +342,7 @@ export default function FilePreviewDialog({
                         type="button"
                         className="p-2 rounded hover:bg-white/10 cursor-pointer"
                         onClick={openInNewTab}
-                        title={t('fileshare_open_new_tab')}
+                        title={t('file_preview.open_new_tab')}
                     >
                         <MdOpenInNew size={22} />
                     </button>
@@ -350,7 +351,7 @@ export default function FilePreviewDialog({
                     type="button"
                     className="p-2 rounded hover:bg-white/10 cursor-pointer"
                     onClick={() => onDownload(node)}
-                    title={t('fileshare_download')}
+                    title={t('file_preview.download')}
                 >
                     <MdDownload size={22} />
                 </button>
@@ -358,8 +359,8 @@ export default function FilePreviewDialog({
                     type="button"
                     className="p-2 rounded hover:bg-white/10 cursor-pointer"
                     onClick={onClose}
-                    title={t('common:close')}
-                    aria-label={t('common:close')}
+                    title={t('close')}
+                    aria-label={t('close')}
                 >
                     <MdClose size={24} />
                 </button>

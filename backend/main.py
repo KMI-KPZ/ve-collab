@@ -263,6 +263,24 @@ def init_indexes(force_rebuild: bool) -> None:
                 )
             )
 
+        # index on the files sent in chats (permission lookups by file_id when serving files)
+        if (
+            "chatrooms_message_files" not in db.chatrooms.index_information()
+            or force_rebuild
+        ):
+            try:
+                db.chatrooms.drop_index("chatrooms_message_files")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.chatrooms.create_index(
+                "messages.files.file_id", name="chatrooms_message_files"
+            )
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "chatrooms_message_files", "chatrooms"
+                )
+            )
+
         # indexes of the space file shares (folder listings, unique names
         # per folder, permission lookups by file_id when serving files)
         for index_name in SpaceFiles.create_indexes(db, force_rebuild):

@@ -280,3 +280,21 @@ fileshare
 
 #### letzte Änderung
 02.11.26 15:55
+
+---
+
+#### Kurzfassung
+db.chatrooms.messages.files neu
+
+#### branch
+dev
+
+#### Beschreibung
+- Nachrichten können Dateien enthalten. Attribut `files` ist neu in jeder Nachricht eines Chatrooms, Datentyp `list` von `{"file_id": ObjectId, "file_name": str, "content_type": str, "size": int}`; die Bytes liegen in GridFS (Uploader in `metadata.uploader`).
+- Migration bestehender Nachrichten (idempotent, einmalig direkt nach dem Deployment): `docker exec backend python3 -m migrations.chat_message_files`. Ergänzt `files: []` in allen Nachrichten ohne das Attribut. Bis die Migration gelaufen ist, scheitern das Ausliefern noch nicht bestätigter Altnachrichten beim Login über Socket.IO und das Löschen von Chatrooms mit Altnachrichten.
+- Index `chatrooms_message_files` auf `messages.files.file_id` (Berechtigungsprüfung beim Ausliefern der Dateien), wird beim Start des Backends angelegt.
+- Grenzen (Konstanten in `resources/network/chat.py`): max. 10 Dateien und zusammen max. 80 MB pro Nachricht, max. 2 GB pro Chatroom.
+- Beim Löschen eines Chatrooms werden alle darin gesendeten Dateien aus GridFS entfernt.
+
+#### letzte Änderung
+10.11.26 13:48

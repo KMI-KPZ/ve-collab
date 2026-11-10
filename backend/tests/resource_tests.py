@@ -55,6 +55,7 @@ from exceptions import (
 )
 import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
+from migrations.chat_message_files import migrate as migrate_chat_message_files
 from migrations.gridfs_content_type import migrate as migrate_gridfs_content_type
 from migrations.space_files import migrate as migrate_space_files
 from model import (
@@ -4681,7 +4682,9 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # put a folder with a file into the space's file share
         space_files = SpaceFiles(self.db)
-        folder = space_files.create_folder(self.space_id, "docs", CURRENT_ADMIN.username)
+        folder = space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
         file_node = space_files.add_file(
             self.space_id, "a.txt", b"a", CURRENT_ADMIN.username, folder["_id"]
         )
@@ -5587,7 +5590,9 @@ class GridFSHelpersTest(BaseResourceTestCase):
         self.assertNotIn("contentType", self.db.fs.files.find_one({"_id": file_id}))
 
         # additional kwargs (e.g. a custom _id) are passed through
-        custom = util.gridfs_put(self.fs, b"x", "custom", "image/png", "system", _id="custom_id")
+        custom = util.gridfs_put(
+            self.fs, b"x", "custom", "image/png", "system", _id="custom_id"
+        )
         self.assertEqual(custom, "custom_id")
         self.assertTrue(self.fs.exists("custom_id"))
 
@@ -5597,10 +5602,14 @@ class GridFSHelpersTest(BaseResourceTestCase):
         the legacy top-level field, and None if there is none at all
         """
 
-        modern = self.fs.get(util.gridfs_put(self.fs, b"1", "a.txt", "text/plain", "me"))
+        modern = self.fs.get(
+            util.gridfs_put(self.fs, b"1", "a.txt", "text/plain", "me")
+        )
         self.assertEqual(util.gridfs_content_type(modern), "text/plain")
 
-        legacy = self.fs.get(self.fs.put(b"2", filename="b.png", contentType="image/png"))
+        legacy = self.fs.get(
+            self.fs.put(b"2", filename="b.png", contentType="image/png")
+        )
         self.assertEqual(util.gridfs_content_type(legacy), "image/png")
 
         # metadata wins over the legacy field
@@ -5624,9 +5633,14 @@ class GridFSHelpersTest(BaseResourceTestCase):
         the legacy field is removed everywhere and a second run is a no-op
         """
 
-        legacy_no_metadata = self.fs.put(b"1", filename="a.png", contentType="image/png")
+        legacy_no_metadata = self.fs.put(
+            b"1", filename="a.png", contentType="image/png"
+        )
         legacy_with_metadata = self.fs.put(
-            b"2", filename="b.txt", contentType="text/plain", metadata={"uploader": "me"}
+            b"2",
+            filename="b.txt",
+            contentType="text/plain",
+            metadata={"uploader": "me"},
         )
         legacy_null_metadata = self.fs.put(
             b"3", filename="c.txt", contentType="text/csv", metadata=None
@@ -5635,7 +5649,10 @@ class GridFSHelpersTest(BaseResourceTestCase):
             b"4",
             filename="d.pdf",
             contentType="text/plain",
-            metadata={util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
+            metadata={
+                util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf",
+                "uploader": "me",
+            },
         )
         modern = util.gridfs_put(self.fs, b"5", "e.txt", "text/plain", "me")
         untyped = self.fs.put(b"6", filename="f.bin")
@@ -5644,7 +5661,10 @@ class GridFSHelpersTest(BaseResourceTestCase):
 
         expected = {
             legacy_no_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "image/png"},
-            legacy_with_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
+            legacy_with_metadata: {
+                util.GRIDFS_CONTENT_TYPE_KEY: "text/plain",
+                "uploader": "me",
+            },
             legacy_null_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/csv"},
             both: {util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
             modern: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
@@ -5666,7 +5686,9 @@ class GridFSHelpersTest(BaseResourceTestCase):
             self.db.fs.files.find_one({"_id": legacy_with_metadata})["metadata"],
             expected[legacy_with_metadata],
         )
-        self.assertEqual(self.db.fs.files.count_documents({"contentType": {"$exists": True}}), 0)
+        self.assertEqual(
+            self.db.fs.files.count_documents({"contentType": {"$exists": True}}), 0
+        )
 
 
 class SpaceFilesResourceTest(BaseResourceTestCase):
@@ -5702,12 +5724,16 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
 
         super().tearDown()
 
-    def _post_file(self, name: str = "attachment.txt", content: bytes = b"post") -> dict:
+    def _post_file(
+        self, name: str = "attachment.txt", content: bytes = b"post"
+    ) -> dict:
         """
         helper: store a file in gridfs and mirror it as a post file
         """
 
-        file_id = util.gridfs_put(self.fs, content, name, "text/plain", CURRENT_USER.username)
+        file_id = util.gridfs_put(
+            self.fs, content, name, "text/plain", CURRENT_USER.username
+        )
         return self.space_files.add_post_file(
             self.space_id, CURRENT_USER.username, file_id, name, ObjectId()
         )
@@ -5853,7 +5879,10 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         parent_id = None
         for level in range(SpaceFiles.MAX_FOLDER_DEPTH):
             folder = self.space_files.create_folder(
-                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+                self.space_id,
+                "level{}".format(level),
+                CURRENT_ADMIN.username,
+                parent_id,
             )
             parent_id = folder["_id"]
 
@@ -5882,9 +5911,7 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         )
 
         # files count as well
-        self.space_files.add_file(
-            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
-        )
+        self.space_files.add_file(self.space_id, "a.txt", b"a", CURRENT_ADMIN.username)
         self.assertRaises(
             FilenameCollisionError,
             self.space_files.create_folder,
@@ -5923,7 +5950,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         self.assertEqual(grid_file.read(), b"%PDF-1.4")
         self.assertEqual(grid_file.filename, "report.pdf")
         # the mime type lives in the metadata, not in the deprecated contentType field
-        self.assertEqual(grid_file.metadata[util.GRIDFS_CONTENT_TYPE_KEY], "application/pdf")
+        self.assertEqual(
+            grid_file.metadata[util.GRIDFS_CONTENT_TYPE_KEY], "application/pdf"
+        )
         self.assertEqual(util.gridfs_content_type(grid_file), "application/pdf")
         self.assertEqual(grid_file.metadata["uploader"], CURRENT_ADMIN.username)
 
@@ -6051,7 +6080,6 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
             self.space_id,
             "big.bin",
             b"12345",
-            "application/octet-stream",
             CURRENT_ADMIN.username,
         )
         self.assertEqual(self.db.space_files.count_documents({}), 0)
@@ -6296,7 +6324,10 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         """
 
         self.assertRaises(
-            FileNodeDoesntExistError, self.space_files.get_node, self.space_id, ObjectId()
+            FileNodeDoesntExistError,
+            self.space_files.get_node,
+            self.space_id,
+            ObjectId(),
         )
 
         foreign = self.space_files.create_folder(
@@ -6329,13 +6360,11 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         then files, each sorted by name
         """
 
-        self.space_files.add_file(
-            self.space_id, "b.txt", b"b", CURRENT_ADMIN.username
+        self.space_files.add_file(self.space_id, "b.txt", b"b", CURRENT_ADMIN.username)
+        self.space_files.add_file(self.space_id, "A.txt", b"a", CURRENT_ADMIN.username)
+        zeta = self.space_files.create_folder(
+            self.space_id, "zeta", CURRENT_ADMIN.username
         )
-        self.space_files.add_file(
-            self.space_id, "A.txt", b"a", CURRENT_ADMIN.username
-        )
-        zeta = self.space_files.create_folder(self.space_id, "zeta", CURRENT_ADMIN.username)
         self.space_files.create_folder(self.space_id, "alpha", CURRENT_ADMIN.username)
         self._post_file()
         self.space_files.add_file(
@@ -6400,11 +6429,18 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         path = self.space_files.get_path(self.space_id, f["_id"])
         self.assertEqual(
             [(p["_id"], p["name"], p["type"]) for p in path],
-            [(a["_id"], "a", "folder"), (b["_id"], "b", "folder"), (f["_id"], "f.txt", "file")],
+            [
+                (a["_id"], "a", "folder"),
+                (b["_id"], "b", "folder"),
+                (f["_id"], "f.txt", "file"),
+            ],
         )
 
         self.assertRaises(
-            FileNodeDoesntExistError, self.space_files.get_path, self.space_id, ObjectId()
+            FileNodeDoesntExistError,
+            self.space_files.get_path,
+            self.space_id,
+            ObjectId(),
         )
 
     def test_get_folder_tree(self):
@@ -6413,7 +6449,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         """
 
         a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
-        self.space_files.create_folder(self.space_id, "b", CURRENT_ADMIN.username, a["_id"])
+        self.space_files.create_folder(
+            self.space_id, "b", CURRENT_ADMIN.username, a["_id"]
+        )
         self.space_files.create_folder(self.space_id, "c", CURRENT_ADMIN.username)
         self.space_files.add_file(
             self.space_id, "f.txt", b"f", CURRENT_ADMIN.username, a["_id"]
@@ -6437,10 +6475,15 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         tree, folders first, each result carries its parent path
         """
 
-        a = self.space_files.create_folder(self.space_id, "Reports", CURRENT_ADMIN.username)
+        a = self.space_files.create_folder(
+            self.space_id, "Reports", CURRENT_ADMIN.username
+        )
         self.space_files.add_file(
-            self.space_id, "annual_report.pdf", b"r",
-            CURRENT_ADMIN.username, a["_id"],
+            self.space_id,
+            "annual_report.pdf",
+            b"r",
+            CURRENT_ADMIN.username,
+            a["_id"],
         )
         self.space_files.add_file(
             self.space_id, "notes.txt", b"n", CURRENT_ADMIN.username
@@ -6494,7 +6537,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         folder = self.space_files.create_folder(
             self.space_id, "docs", CURRENT_ADMIN.username
         )
-        renamed = self.space_files.rename_node(self.space_id, folder["_id"], " documents ")
+        renamed = self.space_files.rename_node(
+            self.space_id, folder["_id"], " documents "
+        )
         self.assertEqual(renamed["name"], "documents")
         self.assertEqual(
             self.db.space_files.find_one({"_id": folder["_id"]})["name"], "documents"
@@ -6646,7 +6691,11 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
             self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
         )
         self.assertRaises(
-            NotAFolderError, self.space_files.move_node, self.space_id, a["_id"], f["_id"]
+            NotAFolderError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            f["_id"],
         )
 
     def test_move_node_error_read_only(self):
@@ -6715,13 +6764,18 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         parent_id = None
         for level in range(SpaceFiles.MAX_FOLDER_DEPTH - 1):
             folder = self.space_files.create_folder(
-                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+                self.space_id,
+                "level{}".format(level),
+                CURRENT_ADMIN.username,
+                parent_id,
             )
             parent_id = folder["_id"]
 
         # a subtree of height 2 cannot be appended there, height 1 can
         x = self.space_files.create_folder(self.space_id, "x", CURRENT_ADMIN.username)
-        self.space_files.create_folder(self.space_id, "y", CURRENT_ADMIN.username, x["_id"])
+        self.space_files.create_folder(
+            self.space_id, "y", CURRENT_ADMIN.username, x["_id"]
+        )
         z = self.space_files.create_folder(self.space_id, "z", CURRENT_ADMIN.username)
 
         self.assertRaises(
@@ -7030,7 +7084,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
 
         self.space_files.delete_all_of_space(self.space_id)
 
-        self.assertEqual(self.db.space_files.count_documents({"space": self.space_id}), 0)
+        self.assertEqual(
+            self.db.space_files.count_documents({"space": self.space_id}), 0
+        )
         self.assertFalse(self.fs.exists(f["file_id"]))
         self.assertTrue(self.fs.exists(post_file["file_id"]))
         self.assertIsNotNone(self.db.space_files.find_one({"_id": other["_id"]}))
@@ -7057,7 +7113,9 @@ class SpaceFilesMigrationTest(BaseResourceTestCase):
         super().tearDown()
 
     def _put(self, name: str) -> ObjectId:
-        return util.gridfs_put(self.fs, b"x", name, "text/plain", CURRENT_ADMIN.username)
+        return util.gridfs_put(
+            self.fs, b"x", name, "text/plain", CURRENT_ADMIN.username
+        )
 
     def _insert_post(self, files: list, is_repost: bool = False) -> ObjectId:
         post_id = ObjectId()
@@ -7156,7 +7214,12 @@ class SpaceFilesMigrationTest(BaseResourceTestCase):
         }
         self.assertEqual(
             set(root.keys()),
-            {"notes.txt", "Notes (1).txt", "old.txt", SpaceFiles.POST_FILES_FOLDER_NAME},
+            {
+                "notes.txt",
+                "Notes (1).txt",
+                "old.txt",
+                SpaceFiles.POST_FILES_FOLDER_NAME,
+            },
         )
         self.assertEqual(root["notes.txt"]["file_id"], manual)
         self.assertEqual(root["notes.txt"]["author"], CURRENT_ADMIN.username)
@@ -9656,6 +9719,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
                 {"username": CURRENT_USER.username, "send_state": "sent"},
             ],
+            "files": [],
         }
         self.default_room = {
             "_id": self.room_id,
@@ -9669,7 +9733,42 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         self.db.chatrooms.delete_many({})
         self.chat_manager = None
 
+        # delete all files that were sent in the chats
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
+
         super().tearDown()
+
+    def _store_files(self, *names: str) -> list:
+        """
+        helper: store files with the given names (and their names as content)
+        for a message in the default room
+        """
+
+        return self.chat_manager.store_message_files(
+            self.room_id,
+            [{"file_name": name, "content": name.encode()} for name in names],
+            CURRENT_ADMIN.username,
+        )
+
+    def _insert_message(self, text: str, date: datetime, files: list = None) -> dict:
+        """
+        helper: insert a message from the admin into the default room
+        """
+
+        message = {
+            "_id": ObjectId(),
+            "message": text,
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": date,
+            "send_states": [],
+            "files": files or [],
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+        return message
 
     def test_get_or_create_room_id(self):
         """
@@ -9884,6 +9983,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -9918,6 +10018,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
 
         self.chat_manager.store_message(self.room_id, message)
@@ -9944,8 +10045,21 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             ValueError, self.chat_manager.store_message, self.room_id, message
         )
 
+        # the files are required as well, even if there are none
+        message["send_states"] = []
+        self.assertRaises(
+            ValueError, self.chat_manager.store_message, self.room_id, message
+        )
+
         # wrong types
+        message["files"] = []
         message["send_states"] = "wrong_type"
+        self.assertRaises(
+            TypeError, self.chat_manager.store_message, self.room_id, message
+        )
+
+        message["send_states"] = []
+        message["files"] = "wrong_type"
         self.assertRaises(
             TypeError, self.chat_manager.store_message, self.room_id, message
         )
@@ -9964,6 +10078,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
 
         self.assertRaises(
@@ -9998,6 +10113,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             {"username": CURRENT_USER.username, "send_state": "pending"},
             db_state["messages"][1]["send_states"],
         )
+        self.assertEqual(db_state["messages"][1]["files"], [])
 
     @gen_test
     async def test_send_message_error_room_doesnt_exist(self):
@@ -10102,6 +10218,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 }
             ],
         }
@@ -10125,6 +10242,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 }
             ],
         }
@@ -10141,6 +10259,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -10169,6 +10288,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "pending"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -10195,6 +10315,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 },
                 {
                     "_id": ObjectId(),
@@ -10208,6 +10329,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 },
             ],
         }
@@ -10270,6 +10392,308 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         ids = [r["_id"] for r in rooms]
         self.assertIn(self.room_id, ids)
         self.assertIn(room_extra["_id"], ids)
+
+    def test_get_file_limits(self):
+        """
+        expect: the limits reflect the class constants
+        """
+
+        limits = self.chat_manager.get_file_limits()
+        self.assertEqual(
+            limits["max_message_files_bytes"], Chat.MAX_MESSAGE_FILES_BYTES
+        )
+        self.assertEqual(limits["max_files_per_message"], Chat.MAX_FILES_PER_MESSAGE)
+        self.assertEqual(limits["max_room_storage_bytes"], Chat.MAX_ROOM_STORAGE_BYTES)
+        self.assertEqual(limits["max_file_name_length"], Chat.MAX_FILE_NAME_LENGTH)
+
+    def test_store_message_with_files(self):
+        """
+        expect: the file references are stored as part of the message
+        """
+
+        stored = self._store_files("notes.txt")
+        message = {**self.default_message, "_id": ObjectId(), "files": stored}
+        self.chat_manager.store_message(self.room_id, message)
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["messages"][1]["files"], stored)
+
+    def test_store_message_files(self):
+        """
+        expect: the files are stored in gridfs (mime type derived from the name,
+        uploader in the metadata) and their references are returned
+        """
+
+        stored = self._store_files("notes.txt", "picture.png")
+
+        self.assertEqual([f["file_name"] for f in stored], ["notes.txt", "picture.png"])
+        self.assertEqual(stored[0]["content_type"], "text/plain")
+        self.assertEqual(stored[1]["content_type"], "image/png")
+        self.assertEqual(stored[0]["size"], len(b"notes.txt"))
+
+        fs = gridfs.GridFS(self.db)
+        grid_file = fs.get(stored[1]["file_id"])
+        self.assertEqual(grid_file.read(), b"picture.png")
+        self.assertEqual(util.gridfs_content_type(grid_file), "image/png")
+        self.assertEqual(grid_file.metadata["uploader"], CURRENT_ADMIN.username)
+
+    def test_store_message_files_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.store_message_files,
+            ObjectId(),
+            [{"file_name": "a.txt", "content": b"a"}],
+            CURRENT_ADMIN.username,
+        )
+
+    def test_store_message_files_error_user_not_member(self):
+        """
+        expect: UserNotMemberError is raised because the uploader is not a member
+        of the room, nothing is stored
+        """
+
+        self.assertRaises(
+            UserNotMemberError,
+            self.chat_manager.store_message_files,
+            self.room_id,
+            [{"file_name": "a.txt", "content": b"a"}],
+            "not_a_member",
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_maximum_files_exceeded(self):
+        """
+        expect: MaximumFilesExceededError is raised for no files at all and for
+        more than MAX_FILES_PER_MESSAGE files, nothing is stored
+        """
+
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self.chat_manager.store_message_files,
+            self.room_id,
+            [],
+            CURRENT_ADMIN.username,
+        )
+
+        self.chat_manager.MAX_FILES_PER_MESSAGE = 2
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self._store_files,
+            "a.txt",
+            "b.txt",
+            "c.txt",
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_invalid_name(self):
+        """
+        expect: InvalidFileNameError is raised for an invalid name, nothing is stored
+        """
+
+        self.assertRaises(
+            InvalidFileNameError, self._store_files, "fine.txt", "../evil.txt"
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_file_too_large(self):
+        """
+        expect: FileTooLargeError is raised if the files together exceed
+        MAX_MESSAGE_FILES_BYTES, nothing is stored
+        """
+
+        self.chat_manager.MAX_MESSAGE_FILES_BYTES = 10
+        # 5 + 6 bytes, each one alone would fit
+        self.assertRaises(FileTooLargeError, self._store_files, "a.txt", "bb.txt")
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_storage_quota_exceeded(self):
+        """
+        expect: StorageQuotaExceededError is raised if the room would exceed
+        MAX_ROOM_STORAGE_BYTES, nothing is stored
+        """
+
+        stored = self._store_files("a.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        self.chat_manager.MAX_ROOM_STORAGE_BYTES = len(b"a.txt") + 5
+        self.assertRaises(StorageQuotaExceededError, self._store_files, "bb.txt")
+        self.assertEqual(self.db.fs.files.count_documents({}), 1)
+
+    def test_get_storage_usage(self):
+        """
+        expect: the sizes of all files sent in the room are summed up
+        """
+
+        self.assertEqual(self.chat_manager.get_storage_usage(self.room_id), 0)
+
+        first = self._store_files("a.txt")
+        second = self._store_files("bb.txt", "ccc.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), first)
+        self._insert_message("", datetime(2023, 1, 3, tzinfo=timezone.utc), second)
+
+        self.assertEqual(
+            self.chat_manager.get_storage_usage(self.room_id),
+            len(b"a.txt") + len(b"bb.txt") + len(b"ccc.txt"),
+        )
+
+    @gen_test
+    async def test_send_message_with_files(self):
+        """
+        expect: the files are stored as part of the message
+        """
+
+        stored = self._store_files("notes.txt")
+        await self.chat_manager.send_message(
+            self.room_id, "see attachment", CURRENT_ADMIN.username, stored
+        )
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        message = db_state["messages"][1]
+        self.assertEqual(message["message"], "see attachment")
+        self.assertEqual(message["files"], stored)
+
+    def test_search_messages(self):
+        """
+        expect: messages are found case-insensitively by their text and by the
+        names of their files, newest first and without send states; special
+        characters are matched literally and an empty query yields nothing
+        """
+
+        older = self._insert_message(
+            "Meeting on Monday", datetime(2023, 1, 2, tzinfo=timezone.utc)
+        )
+        newer = self._insert_message(
+            "the meeting notes (draft)", datetime(2023, 1, 3, tzinfo=timezone.utc)
+        )
+        with_file = self._insert_message(
+            "",
+            datetime(2023, 1, 4, tzinfo=timezone.utc),
+            [
+                {
+                    "file_id": ObjectId(),
+                    "file_name": "Meeting-Slides.pdf",
+                    "content_type": "application/pdf",
+                    "size": 1,
+                }
+            ],
+        )
+
+        results = self.chat_manager.search_messages(self.room_id, " MEETING ")
+        self.assertEqual(
+            [m["_id"] for m in results],
+            [with_file["_id"], newer["_id"], older["_id"]],
+        )
+        self.assertTrue(all("send_states" not in m for m in results))
+
+        results = self.chat_manager.search_messages(self.room_id, "(draft)")
+        self.assertEqual([m["_id"] for m in results], [newer["_id"]])
+
+        self.assertEqual(self.chat_manager.search_messages(self.room_id, ".*"), [])
+        self.assertEqual(self.chat_manager.search_messages(self.room_id, "   "), [])
+
+    def test_search_messages_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.search_messages, ObjectId(), "test"
+        )
+
+    def test_get_files_of_room(self):
+        """
+        expect: all files of the room are returned newest first, together with
+        the message they were sent with
+        """
+
+        first = self._store_files("a.txt")
+        second = self._store_files("b.txt", "c.txt")
+        first_message = self._insert_message(
+            "", datetime(2023, 1, 2, tzinfo=timezone.utc), first
+        )
+        second_message = self._insert_message(
+            "two files", datetime(2023, 1, 3, tzinfo=timezone.utc), second
+        )
+
+        files = self.chat_manager.get_files_of_room(self.room_id)
+        self.assertEqual([f["file_name"] for f in files], ["b.txt", "c.txt", "a.txt"])
+        self.assertEqual(files[0]["message_id"], second_message["_id"])
+        self.assertEqual(files[2]["message_id"], first_message["_id"])
+        self.assertEqual(files[2]["file_id"], first[0]["file_id"])
+        self.assertEqual(files[2]["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(files[2]["content_type"], "text/plain")
+        self.assertEqual(files[2]["size"], len(b"a.txt"))
+        self.assertIsNotNone(files[2]["creation_date"])
+
+    def test_get_files_of_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.get_files_of_room, ObjectId()
+        )
+
+    def test_get_room_members_by_file_id(self):
+        """
+        expect: the members of the room the file was sent in, or None for
+        files that weren't sent in a chat
+        """
+
+        stored = self._store_files("a.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        self.assertEqual(
+            self.chat_manager.get_room_members_by_file_id(stored[0]["file_id"]),
+            self.default_room["members"],
+        )
+        self.assertIsNone(self.chat_manager.get_room_members_by_file_id(ObjectId()))
+
+    def test_delete_room(self):
+        """
+        expect: the room is deleted including its messages and the files that
+        were sent in it, files of other rooms are left alone
+        """
+
+        stored = self._store_files("a.txt", "b.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        other_room_id = ObjectId()
+        self.db.chatrooms.insert_one(
+            {
+                "_id": other_room_id,
+                "name": None,
+                "members": [CURRENT_ADMIN.username],
+                "messages": [],
+            }
+        )
+        other_file = self.chat_manager.store_message_files(
+            other_room_id,
+            [{"file_name": "keep.txt", "content": b"x"}],
+            CURRENT_ADMIN.username,
+        )
+
+        members = self.chat_manager.delete_room(self.room_id)
+
+        self.assertEqual(members, self.default_room["members"])
+        self.assertIsNone(self.db.chatrooms.find_one({"_id": self.room_id}))
+        fs = gridfs.GridFS(self.db)
+        self.assertFalse(any(fs.exists(f["file_id"]) for f in stored))
+        self.assertTrue(fs.exists(other_file[0]["file_id"]))
+        self.assertIsNotNone(self.db.chatrooms.find_one({"_id": other_room_id}))
+
+    def test_delete_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.delete_room, ObjectId()
+        )
 
 
 class ElasticsearchIntegrationTest(BaseResourceTestCase):

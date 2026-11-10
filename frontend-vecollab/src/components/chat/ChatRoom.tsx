@@ -1,20 +1,40 @@
-import { useGetChatroomHistory } from '@/lib/backend';
+import { downloadAuthenticatedFile, fetchDELETE, useGetChatroomHistory } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import LoadingAnimation from '../common/LoadingAnimation';
-import { BackendChatroomSnippet } from '@/interfaces/api/apiInterfaces';
+import {
+    BackendChatFile,
+    BackendChatMessage,
+    BackendChatroomSnippet,
+} from '@/interfaces/api/apiInterfaces';
 import ChatMessage from './ChatMessage';
 import InputArea from './InputArea';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
-import { MdArrowBackIosNew, MdOutlineGroup, MdOutlineEdit } from 'react-icons/md';
+import {
+    MdArrowBackIosNew,
+    MdClose,
+    MdDeleteOutline,
+    MdOutlineEdit,
+    MdOutlineFolder,
+    MdOutlineGroup,
+    MdSearch,
+} from 'react-icons/md';
 import AuthenticatedImage from '../common/AuthenticatedImage';
 import { useTranslation } from 'next-i18next';
 import { GoAlert } from 'react-icons/go';
 import Dropdown from '../common/Dropdown';
 import ReportDialog from '../common/dialogs/Report';
+import ConfirmDialog from '../common/dialogs/Confirm';
 import Dialog from '../profile/Dialog';
+import Portal from '../common/Portal';
 import EditChatRoomForm from './EditChatRoomForm';
+import ChatSearch from './ChatSearch';
+import ChatFiles from './ChatFiles';
+import FilePreviewDialog from '../network/files/FilePreviewDialog';
+import { PreviewableFile, isPreviewable } from '../network/files/fileUtils';
+import { messageElementId, toPreviewableFile, useChatDayLabel } from './chatUtils';
+import { format, parseISO } from 'date-fns';
 
 interface Props {
     socket: Socket;
@@ -24,8 +44,16 @@ interface Props {
     room: BackendChatroomSnippet;
     closeRoom: () => void;
     roomUpdatedCallback: (room: BackendChatroomSnippet) => void;
+    roomDeletedCallback: (roomId: string) => void;
     memberProfileSnippets: UserSnippet[];
+    wide?: boolean; // full page: search and files open next to the messages instead of over them
 }
+
+type SidePanel = 'none' | 'search' | 'files';
+
+type ListItem =
+    | { kind: 'day'; key: string; label: string }
+    | { kind: 'message'; message: BackendChatMessage; showSender: boolean };
 
 export default function ChatRoom({
     socket,
@@ -35,13 +63,18 @@ export default function ChatRoom({
     room,
     closeRoom,
     roomUpdatedCallback,
+    roomDeletedCallback,
     memberProfileSnippets,
+    wide = false,
 }: Props) {
     const { data: session, status } = useSession();
     const { t } = useTranslation(['community', 'common']);
+    const dayLabel = useChatDayLabel();
     const messageBottomRef = useRef<HTMLLIElement>(null);
     const messageContainerRef = useRef<HTMLDivElement>(null);
-    const [displayMessages, setDisplayMessages] = useState<any[]>([]);
+    const [displayMessages, setDisplayMessages] = useState<BackendChatMessage[]>([]);
+
+    const currentUser = session?.user.preferred_username;
 
     const {
         data: messageHistory,
@@ -79,11 +112,19 @@ export default function ChatRoom({
 
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [sidePanel, setSidePanel] = useState<SidePanel>('none');
+    const [roomError, setRoomError] = useState<string | null>(null);
+    const [previewFile, setPreviewFile] = useState<PreviewableFile | null>(null);
 
     const handleSelectOption = (value: string) => {
         switch (value) {
             case 'edit':
                 setEditDialogOpen(true);
+                break;
+
+            case 'delete':
+                setDeleteDialogOpen(true);
                 break;
 
             case 'report':
@@ -103,6 +144,12 @@ export default function ChatRoom({
                 icon: <MdOutlineEdit />,
             },
             {
+                value: 'delete',
+                label: t('common:chat_delete'),
+                icon: <MdDeleteOutline />,
+                liClasses: 'text-red-700',
+            },
+            {
                 value: 'report',
                 label: t('common:report.report_title'),
                 icon: <GoAlert />,
@@ -111,6 +158,20 @@ export default function ChatRoom({
         ];
 
         return <Dropdown options={options} onSelect={handleSelectOption} />;
+    };
+
+    const deleteRoom = async () => {
+        setDeleteDialogOpen(false);
+        const response = await fetchDELETE(
+            `/chatroom/delete?room_id=${room._id}`,
+            undefined,
+            session?.accessToken
+        );
+        if (response.success) {
+            roomDeletedCallback(room._id);
+        } else {
+            setRoomError(t('common:chat_error_generic'));
+        }
     };
 
     useEffect(() => {
@@ -136,12 +197,135 @@ export default function ChatRoom({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [displayMessages]);
 
+    const senderName = (username: string) =>
+        memberProfileSnippets.find((member) => member.preferredUsername === username)?.name ||
+        username;
+
+    // a separator for each day, and the name of the sender above the first of their
+    // consecutive messages, which is only necessary in group chats
+    const isGroupChat = room.members.length > 2;
+    const listItems = useMemo(() => {
+        const items: ListItem[] = [];
+        let previous: BackendChatMessage | undefined;
+        let previousDay: string | undefined;
+        displayMessages.forEach((message) => {
+            const date = parseISO(message.creation_date);
+            const day = format(date, 'yyyy-MM-dd');
+            const newDay = day !== previousDay;
+            if (newDay) items.push({ kind: 'day', key: day, label: dayLabel(date) });
+            items.push({
+                kind: 'message',
+                message,
+                showSender:
+                    isGroupChat &&
+                    message.sender !== currentUser &&
+                    (newDay || previous?.sender !== message.sender),
+            });
+            previous = message;
+            previousDay = day;
+        });
+        return items;
+    }, [displayMessages, dayLabel, isGroupChat, currentUser]);
+
+    // jumping to a message (from the search or the files): scroll it into view once it
+    // is rendered and highlight it for a moment
+    const [jumpTarget, setJumpTarget] = useState<string | null>(null);
+    const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+
+    const jumpToMessage = (messageId: string) => {
+        // in the narrow window the panel covers the messages
+        if (!wide) setSidePanel('none');
+        setJumpTarget(messageId);
+    };
+
+    useEffect(() => {
+        if (!jumpTarget) return;
+        const element = messageContainerRef.current?.querySelector(
+            `[id="${messageElementId(jumpTarget)}"]`
+        );
+        if (!element) return; // not rendered yet, e.g. the history is still loading
+        element.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setHighlightedMessageId(jumpTarget);
+        setJumpTarget(null);
+    }, [jumpTarget, listItems]);
+
+    useEffect(() => {
+        if (!highlightedMessageId) return;
+        const timer = setTimeout(() => setHighlightedMessageId(null), 2500);
+        return () => clearTimeout(timer);
+    }, [highlightedMessageId]);
+
+    // files are previewed like in the file share of groups, the siblings allow
+    // browsing through all previewable files of the room in their order
+    const previewableFiles = useMemo(
+        () =>
+            displayMessages
+                .flatMap((message) => message.files)
+                .map(toPreviewableFile)
+                .filter(isPreviewable),
+        [displayMessages]
+    );
+    const fileCount = useMemo(
+        () => displayMessages.reduce((count, message) => count + message.files.length, 0),
+        [displayMessages]
+    );
+
+    const downloadFile = async (file: PreviewableFile) => {
+        const status = await downloadAuthenticatedFile(
+            file.file_id!,
+            file.name,
+            session?.accessToken
+        );
+        if (status !== 200) setRoomError(t('common:chat_error_generic'));
+    };
+
+    const openFile = (file: BackendChatFile) => {
+        const node = toPreviewableFile(file);
+        if (isPreviewable(node)) setPreviewFile(node);
+        else downloadFile(node);
+    };
+
+    const renderSidePanel = () => {
+        if (sidePanel === 'search') {
+            return (
+                <ChatSearch
+                    roomId={room._id}
+                    senderName={senderName}
+                    onJump={jumpToMessage}
+                    onClose={() => setSidePanel('none')}
+                />
+            );
+        }
+        if (sidePanel === 'files') {
+            return (
+                <ChatFiles
+                    roomId={room._id}
+                    fileCount={fileCount}
+                    senderName={senderName}
+                    onOpenFile={openFile}
+                    onJump={jumpToMessage}
+                    onClose={() => setSidePanel('none')}
+                />
+            );
+        }
+        return null;
+    };
+
+    const togglePanel = (panel: SidePanel) => setSidePanel(sidePanel === panel ? 'none' : panel);
+
+    const headerButtonClasses = (panel: SidePanel) =>
+        `rounded-full p-1.5 hover:bg-slate-100 cursor-pointer ${
+            sidePanel === panel ? 'text-ve-collab-blue bg-slate-100' : 'text-gray-600'
+        }`;
+
     return (
         <div className="w-full h-full flex flex-col">
-            <div className="flex flex-nowrap text-nowrap items-center justify-between mb-2 px-2">
+            <div className="flex flex-nowrap text-nowrap items-center justify-between mb-2 px-2 gap-2">
                 <button
                     onClick={closeRoom}
-                    className="flex rounded-full items-center hover:bg-slate-100"
+                    className={`flex rounded-full items-center hover:bg-slate-100 cursor-pointer ${
+                        wide ? 'md:hidden' : ''
+                    }`}
                 >
                     <MdArrowBackIosNew />
                     &nbsp;
@@ -151,7 +335,25 @@ export default function ChatRoom({
                         {room.name}
                     </span>
                 )}
-                <div className="flex items-center">
+                <div className="flex items-center gap-1 ml-auto">
+                    <button
+                        type="button"
+                        onClick={() => togglePanel('search')}
+                        className={headerButtonClasses('search')}
+                        title={t('common:chat_search')}
+                        aria-label={t('common:chat_search')}
+                    >
+                        <MdSearch size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => togglePanel('files')}
+                        className={headerButtonClasses('files')}
+                        title={t('common:chat_files')}
+                        aria-label={t('common:chat_files')}
+                    >
+                        <MdOutlineFolder size={18} />
+                    </button>
                     <div className="group/members text-sm flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible">
                         {room.members.length}&nbsp;
                         <MdOutlineGroup size={20} />
@@ -173,27 +375,78 @@ export default function ChatRoom({
                     <ChatRoomDropdown />
                 </div>
             </div>
-            <div
-                ref={messageContainerRef}
-                className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border-gray-200"
-            >
-                {/* Chat messages */}
-                {isLoading ? (
-                    <LoadingAnimation size="small" />
-                ) : (
-                    <ul className="flex flex-col justify-end">
-                        {displayMessages.map((message, index) => (
-                            <ChatMessage
-                                key={index}
-                                message={message}
-                                currentUser={session?.user.preferred_username}
-                            />
-                        ))}
-                        <li ref={messageBottomRef} className="h-12"></li>
-                    </ul>
+            {roomError && (
+                <div className="mx-2 mb-2 flex items-start justify-between gap-2 rounded-md bg-red-50 px-2 py-1 text-sm text-red-700">
+                    <span>{roomError}</span>
+                    <button
+                        type="button"
+                        onClick={() => setRoomError(null)}
+                        className="cursor-pointer"
+                        aria-label={t('common:close')}
+                    >
+                        <MdClose />
+                    </button>
+                </div>
+            )}
+            <div className="flex min-h-0 flex-1 gap-4">
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="relative min-h-0 flex-1">
+                        <div
+                            ref={messageContainerRef}
+                            className="h-full bg-white overflow-y-auto content-scrollbar relative rounded-md border-gray-200"
+                        >
+                            {/* Chat messages */}
+                            {isLoading ? (
+                                <LoadingAnimation size="small" />
+                            ) : (
+                                <ul className="flex flex-col justify-end">
+                                    {listItems.map((item) =>
+                                        item.kind === 'day' ? (
+                                            <li
+                                                key={item.key}
+                                                role="separator"
+                                                className="my-2 flex items-center gap-2 px-2 text-xs text-gray-500"
+                                            >
+                                                <span className="h-px flex-1 bg-gray-200" />
+                                                <span>{item.label}</span>
+                                                <span className="h-px flex-1 bg-gray-200" />
+                                            </li>
+                                        ) : (
+                                            <ChatMessage
+                                                key={item.message._id}
+                                                message={item.message}
+                                                own={item.message.sender === currentUser}
+                                                senderName={
+                                                    item.showSender
+                                                        ? senderName(item.message.sender)
+                                                        : undefined
+                                                }
+                                                highlighted={
+                                                    item.message._id === highlightedMessageId
+                                                }
+                                                onOpenFile={openFile}
+                                            />
+                                        )
+                                    )}
+                                    <li ref={messageBottomRef} className="h-12"></li>
+                                </ul>
+                            )}
+                        </div>
+                        {/* in the narrow window, search and files cover the messages */}
+                        {!wide && sidePanel !== 'none' && (
+                            <div className="absolute inset-0 z-10 rounded-md bg-white p-1">
+                                {renderSidePanel()}
+                            </div>
+                        )}
+                    </div>
+                    <InputArea roomID={room._id} socket={socket} />
+                </div>
+                {wide && sidePanel !== 'none' && (
+                    <aside className="w-72 shrink-0 border-l border-gray-200 pl-4 lg:w-80">
+                        {renderSidePanel()}
+                    </aside>
                 )}
             </div>
-            <InputArea roomID={room._id} socket={socket} />
             <Dialog
                 isOpen={editDialogOpen}
                 title={t('common:edit_chat_title')}
@@ -215,6 +468,24 @@ export default function ChatRoom({
                     }}
                 />
             )}
+            {deleteDialogOpen && (
+                <ConfirmDialog
+                    message={t('common:chat_delete_confirm')}
+                    callback={(proceed) => {
+                        if (proceed) deleteRoom();
+                        else setDeleteDialogOpen(false);
+                    }}
+                />
+            )}
+            <Portal>
+                <FilePreviewDialog
+                    node={previewFile}
+                    siblings={previewableFiles}
+                    onSelect={setPreviewFile}
+                    onDownload={downloadFile}
+                    onClose={() => setPreviewFile(null)}
+                />
+            </Portal>
         </div>
     );
 }

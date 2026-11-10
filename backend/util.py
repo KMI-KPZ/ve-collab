@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from email.utils import make_msgid
 import logging
 import mimetypes
+import re
 import smtplib
 from typing import Any, Awaitable, Callable, Dict, Literal, Optional
 
@@ -18,7 +19,7 @@ from pymongo.database import Database
 import time
 import tornado.ioloop
 
-from exceptions import ProfileDoesntExistException
+from exceptions import InvalidFileNameError, ProfileDoesntExistException
 import global_vars
 from resources.network.profile import Profiles
 
@@ -29,6 +30,16 @@ _mongo_client = None
 # sending an email (smtp and the keycloak lookup of the address) blocks for
 # quite a while, so it is done in this thread pool instead of on the event loop
 _email_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="email")
+
+# uploading, copying and deleting user files (group file shares, chat attachments)
+# moves large amounts of data through gridfs, which would block the event loop (and
+# with it every other request and the socket.io connections) for that long, so it
+# runs in this pool. The small size also limits how many large files are held in
+# memory at once
+_file_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="files")
+
+# path separators and control characters are not allowed in file names
+_INVALID_FILE_NAME_CHARS = re.compile(r"[\\/\x00-\x1f\x7f]")
 
 
 @contextmanager
@@ -521,6 +532,56 @@ def _append_msg_text(
     return msg
 
 
+def run_in_file_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:
+    """
+    Run the blocking `func` (e.g. storing a file in gridfs) with the given `args`
+    in the file thread pool, so that the event loop is not blocked meanwhile.
+
+    Returns an awaitable that resolves to the result of `func`, or raises
+    its exception.
+    """
+
+    return tornado.ioloop.IOLoop.current().run_in_executor(_file_executor, func, *args)
+
+
+def validate_file_name(name: str, max_length: int = 255) -> str:
+    """
+    validate the name of a user file (or folder) and return it stripped of
+    surrounding whitespace.
+
+    Raises `InvalidFileNameError` if the name is not a string, empty,
+    longer than `max_length` or contains path separators or control characters.
+    """
+
+    if not isinstance(name, str):
+        raise InvalidFileNameError("name has to be a string")
+
+    name = name.strip()
+
+    if not name or name in (".", ".."):
+        raise InvalidFileNameError("name must not be empty")
+
+    if len(name) > max_length:
+        raise InvalidFileNameError(
+            "name exceeds maximum length of {}".format(max_length)
+        )
+
+    if _INVALID_FILE_NAME_CHARS.search(name):
+        raise InvalidFileNameError("name contains forbidden characters")
+
+    return name
+
+
+def content_type_of(file_name: str) -> str:
+    """
+    derive the mime type of a user file from its name. The type a client sends
+    along is not trusted, so that the stored type always matches the
+    extension (e.g. no "text/html" for a "picture.png").
+    """
+
+    return mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+
+
 def run_in_email_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:
     """
     Run the blocking `func` (e.g. `send_email`) with the given `args` in the email
@@ -530,9 +591,7 @@ def run_in_email_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:
     its exception.
     """
 
-    return tornado.ioloop.IOLoop.current().run_in_executor(
-        _email_executor, func, *args
-    )
+    return tornado.ioloop.IOLoop.current().run_in_executor(_email_executor, func, *args)
 
 
 def send_email(
