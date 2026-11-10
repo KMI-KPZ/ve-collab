@@ -389,15 +389,15 @@ export default function MethodSidebar({
                 />
             </CollapsiblePanel>
 
-            <CollapsiblePanel title="AVIVA-Phasen">
-                <FilterHeading>AVIVA-Phase(n)</FilterHeading>
+            <CollapsiblePanel title="AVIVA+-Phasen">
+                <FilterHeading>AVIVA+-Phase(n)</FilterHeading>
                 <CheckboxGroup
                     options={Object.keys(AVIVA_PHASES)}
                     selected={filters.phases}
                     onChange={(phases) => update({ phases })}
                     renderOption={(phase) => <PhaseName name={AVIVA_PHASES[phase]} />}
                 />
-                <FilterHeading>AVIVA-Unterphase(n)</FilterHeading>
+                <FilterHeading>AVIVA+-Unterphase(n)</FilterHeading>
                 <CheckboxGroup
                     options={AVIVA_SUB_PHASES}
                     selected={filters.subPhases}
