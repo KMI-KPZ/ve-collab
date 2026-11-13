@@ -138,6 +138,7 @@
     "chat_attach_files": "Dateien anhängen",
     "chat_remove_file": "Datei entfernen",
     "chat_send": "Senden",
+    "insert_emoji": "Emoji einfügen",
     "chat_uploading": "Wird hochgeladen … {{percent}} %",
     "chat_more_files": "+{{count}} weitere",
     "chat_delete": "Chat löschen",

@@ -13,6 +13,7 @@ import {
     Toolbar,
     createButton,
 } from 'react-simple-wysiwyg';
+import EmojiPicker from '../common/EmojiPicker';
 import Dialog from '../profile/Dialog';
 import { sanitizedText } from './sanitizedText';
 
@@ -24,6 +25,12 @@ export const isEmptyRichText = (html: string): boolean =>
         .replace(/<[^>]*>/g, '')
         .replace(/&nbsp;| /g, '')
         .trim() === '';
+
+/**
+ * the editable element of the editor library within the given wrapper
+ */
+const editableElement = (wrapper: HTMLElement | null): HTMLElement | null =>
+    wrapper?.querySelector<HTMLElement>('.rsw-ce') ?? null;
 
 interface Props {
     value: string;
@@ -60,11 +67,52 @@ export default function RichTextEditor({
         | undefined
     >();
     const [cursorInLink, setCursorInLink] = useState<false | HTMLAnchorElement>(false);
+    // the last caret position (or selection) in the editor, which is kept
+    // while e.g. the emoji picker has the focus
+    const lastRangeRef = useRef<Range | null>(null);
 
     useEffect(() => {
         if (!autoFocus) return;
-        (wrapperRef.current?.querySelector('.rsw-ce') as HTMLElement | null)?.focus();
+        editableElement(wrapperRef.current)?.focus();
     }, [autoFocus]);
+
+    useEffect(() => {
+        const onSelectionChange = () => {
+            const selection = window.getSelection();
+            const editable = editableElement(wrapperRef.current);
+            if (!selection?.rangeCount || !editable) return;
+
+            const range = selection.getRangeAt(0);
+            if (editable.contains(range.commonAncestorContainer)) {
+                lastRangeRef.current = range.cloneRange();
+            }
+        };
+
+        document.addEventListener('selectionchange', onSelectionChange);
+        return () => document.removeEventListener('selectionchange', onSelectionChange);
+    }, []);
+
+    const insertEmoji = (emoji: string) => {
+        const editable = editableElement(wrapperRef.current);
+        if (!editable) return;
+
+        const range = lastRangeRef.current;
+        editable.focus();
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        if (range && editable.contains(range.commonAncestorContainer)) {
+            selection?.addRange(range);
+        } else {
+            // the editor wasn't used yet: append the emoji
+            const end = document.createRange();
+            end.selectNodeContents(editable);
+            end.collapse(false);
+            selection?.addRange(end);
+        }
+
+        // inserts just like typing, so the editor's onChange fires and undo works
+        document.execCommand('insertText', false, emoji);
+    };
 
     const BtnClearFormatting = createButton(
         t('clear_formatting'),
@@ -107,7 +155,7 @@ export default function RichTextEditor({
             // update the existing link. Changing the DOM directly doesn't
             // trigger the editor's onChange, so hand the result over manually
             cursorInLink.href = url;
-            const editable = wrapperRef.current?.querySelector('.rsw-ce');
+            const editable = editableElement(wrapperRef.current);
             if (editable) onChange(sanitizedText(editable.innerHTML));
         } else if (selectedLinkText !== undefined) {
             // create a new link in the selected range
@@ -226,6 +274,11 @@ export default function RichTextEditor({
                                 <BtnNumberedList style={{ paddingLeft: '5px' }} />
                                 <BtnLink />
                                 <BtnClearFormatting />
+                                <EmojiPicker
+                                    onSelect={insertEmoji}
+                                    buttonClassName="rsw-btn"
+                                    pickerClassName="left-0 top-full mt-1"
+                                />
                             </Toolbar>
                         )}
                         {actions && <div className="ml-auto pl-2 pt-1">{actions}</div>}

@@ -1,13 +1,11 @@
 import { ChangeEvent, DragEvent, KeyboardEvent, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
-import { RxCross2, RxFace } from 'react-icons/rx';
 import { IoIosSend } from 'react-icons/io';
 import { MdAttachFile, MdClose } from 'react-icons/md';
 import { useTranslation } from 'next-i18next';
 import { useSession } from 'next-auth/react';
 import { uploadChatFiles, useGetChatFileLimits } from '@/lib/backend';
+import EmojiPicker from '../common/EmojiPicker';
 import { formatBytes } from '../network/files/fileUtils';
 import { useChatFileErrorMessage } from './chatUtils';
 
@@ -21,7 +19,7 @@ export default function InputArea({ roomID, socket }: Props) {
     const { data: session } = useSession();
 
     const [sendingMessage, setSendingMessage] = useState<string>('');
-    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // files to send with the next message
     const [files, setFiles] = useState<File[]>([]);
@@ -104,6 +102,19 @@ export default function InputArea({ roomID, socket }: Props) {
         setSendingMessage('');
     };
 
+    const insertEmoji = (emoji: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        // a textarea keeps its caret position while it isn't focused
+        textarea.focus();
+        // inserts just like typing: at the caret, replacing a selected text,
+        // firing onChange and with undo
+        if (!document.execCommand('insertText', false, emoji)) {
+            setSendingMessage((message) => message + emoji);
+        }
+    };
+
     const sendOnEnter = (e: KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.code == 'Enter' && !e.shiftKey) {
             handleMessageSend();
@@ -141,35 +152,13 @@ export default function InputArea({ roomID, socket }: Props) {
             {error && <div className="mb-1 text-sm text-red-700">{error}</div>}
             <div className="border border-[#cccccc] bg-white rounded-md ">
                 <textarea
+                    ref={textareaRef}
                     className="w-full h-16 p-2 border-b border-b-gray-200 rounded-t-md resize-none"
                     placeholder={t('type_message_placeholder')}
                     value={sendingMessage}
                     onChange={(e) => setSendingMessage(e.target.value)}
                     onKeyDown={(e) => sendOnEnter(e)}
                 />
-                {showEmojiPicker && (
-                    <div className="absolute right-48 bottom-0">
-                        <div className="p-4 relative">
-                            <Picker
-                                data={data}
-                                onEmojiSelect={(emoji: any) => {
-                                    setSendingMessage(sendingMessage + emoji.native);
-                                    setShowEmojiPicker(false);
-                                }}
-                                perLine={12}
-                                previewPosition="none"
-                            />
-                            <div className="absolute top-0 right-0">
-                                <button
-                                    className="bg-gray-300 rounded-lg p-1 flex justify-center items-center"
-                                    onClick={(e) => setShowEmojiPicker(false)}
-                                >
-                                    <RxCross2 />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div className="flex items-center justify-end">
                     {uploadProgress !== null && (
                         <span className="mr-auto pl-2 text-xs text-gray-500">
@@ -193,12 +182,12 @@ export default function InputArea({ roomID, socket }: Props) {
                     >
                         <MdAttachFile />
                     </button>
-                    <button
-                        className="font-bold py-2 px-3 rounded-md cursor-pointer"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    >
-                        <RxFace />
-                    </button>
+                    <EmojiPicker
+                        onSelect={insertEmoji}
+                        buttonClassName="py-2 px-3 rounded-md cursor-pointer"
+                        pickerClassName="right-48 bottom-0 p-4"
+                        perLine={12}
+                    />
                     <button
                         type="submit"
                         className="py-2 px-4 rounded-md ml-1 cursor-pointer disabled:opacity-50"

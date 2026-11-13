@@ -138,6 +138,7 @@
     "chat_attach_files": "Attach files",
     "chat_remove_file": "Remove file",
     "chat_send": "Send",
+    "insert_emoji": "Insert emoji",
     "chat_uploading": "Uploading … {{percent}} %",
     "chat_more_files": "+{{count}} more",
     "chat_delete": "Delete chat",
