@@ -189,6 +189,8 @@
     "confirm_delete_post": "Beitrag löschen?",
     "post_deleted": "Beitrag gelöscht",
     "cite_post": "Beitrag zitieren",
+    "like": "Gefällt mir",
+    "unlike": "Gefällt mir nicht mehr",
     "expand": "Erweitern",
     "clear_formatting": "Formatierung löschen",
     "remove_link": "Link entfernen",

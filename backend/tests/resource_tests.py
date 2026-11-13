@@ -19,6 +19,7 @@ from exceptions import (
     AlreadyLikerException,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
+    CommentDoesntExistError,
     FileAlreadyInRepoError,
     FileDoesntExistError,
     FileNodeDoesntExistError,
@@ -57,6 +58,8 @@ import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
 from migrations.chat_message_files import migrate as migrate_chat_message_files
 from migrations.gridfs_content_type import migrate as migrate_gridfs_content_type
+from migrations.post_comments import migrate as migrate_post_comments
+from migrations.sanitize_post_texts import migrate as migrate_sanitize_post_texts
 from migrations.space_files import migrate as migrate_space_files
 from model import (
     Evaluation,
@@ -1028,6 +1031,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "test_comment",
             "pinned": False,
+            "likers": [],
         }
         self.default_post = {
             "_id": self.post_id,
@@ -1297,6 +1301,7 @@ class PostResourceTest(BaseResourceTestCase):
                     "creation_date": datetime(2023, 1, 3, 9, 5, 0),
                     "text": "c",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
             "likers": [],
@@ -1878,6 +1883,189 @@ class PostResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username,
         )
 
+    def test_like_comment(self):
+        """
+        expect: successfully like a comment, counting towards the "give_likes"
+        achievement of the liking user
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.like_comment(self.comment_id, CURRENT_ADMIN.username)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [CURRENT_ADMIN.username])
+        # the post itself is not liked
+        self.assertEqual(post["likers"], [])
+
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+        # also works with a str id
+        post_manager.like_comment(str(self.comment_id), CURRENT_USER.username)
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(
+            post["comments"][0]["likers"],
+            [CURRENT_ADMIN.username, CURRENT_USER.username],
+        )
+
+    def test_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: CommentDoesntExistError is raised because no comment with this
+        _id exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            CommentDoesntExistError,
+            post_manager.like_comment,
+            ObjectId(),
+            CURRENT_ADMIN.username,
+        )
+
+    def test_like_comment_error_already_liker(self):
+        """
+        expect: AlreadyLikerException is raised because the user already likes
+        the comment, the achievement is only counted once
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.like_comment(self.comment_id, CURRENT_ADMIN.username)
+        self.assertRaises(
+            AlreadyLikerException,
+            post_manager.like_comment,
+            self.comment_id,
+            CURRENT_ADMIN.username,
+        )
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [CURRENT_ADMIN.username])
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+    def test_unlike_comment(self):
+        """
+        expect: successfully remove the like of a comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_id},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        post_manager = Posts(self.db)
+        post_manager.unlike_comment(self.comment_id, CURRENT_ADMIN.username)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [])
+
+    def test_unlike_comment_error_comment_doesnt_exist(self):
+        """
+        expect: CommentDoesntExistError is raised because no comment with this
+        _id exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            CommentDoesntExistError,
+            post_manager.unlike_comment,
+            ObjectId(),
+            CURRENT_ADMIN.username,
+        )
+
+    def test_unlike_comment_error_not_liker(self):
+        """
+        expect: NotLikerException is raised because the user hadn't liked the
+        comment before
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            NotLikerException,
+            post_manager.unlike_comment,
+            self.comment_id,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_texts_are_sanitized(self):
+        """
+        expect: the texts of posts, reposts and comments are sanitized before
+        they are stored, also in the dicts that were passed in (the handlers
+        return them)
+        """
+
+        injected = '<p onclick="alert(1)">text</p><script>alert(1)</script>'
+        sanitized = "<p>text</p>"
+        post_manager = Posts(self.db)
+
+        post = {
+            **self.default_post,
+            "text": injected,
+            "comments": [],
+        }
+        del post["_id"]
+        post_id = post_manager.insert_post(post)
+        self.assertEqual(post["text"], sanitized)
+        self.assertEqual(self.db.posts.find_one({"_id": post_id})["text"], sanitized)
+
+        post_manager.update_post_text(self.post_id, injected)
+        self.assertEqual(
+            self.db.posts.find_one({"_id": self.post_id})["text"], sanitized
+        )
+
+        repost = {
+            **post,
+            "text": injected,
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": post["creation_date"],
+            "repostText": injected,
+        }
+        del repost["_id"]
+        repost_id = post_manager.insert_repost(repost)
+        db_repost = self.db.posts.find_one({"_id": repost_id})
+        self.assertEqual(db_repost["text"], sanitized)
+        self.assertEqual(db_repost["repostText"], sanitized)
+
+        post_manager.update_repost_text(repost_id, injected + "!")
+        self.assertEqual(
+            self.db.posts.find_one({"_id": repost_id})["repostText"], sanitized + "!"
+        )
+        # saving the same text again is fine
+        post_manager.update_repost_text(repost_id, sanitized + "!")
+
+        comment = {**self.default_comment, "text": injected}
+        del comment["_id"]
+        comment_id = post_manager.add_comment(self.post_id, comment)
+        self.assertEqual(comment["text"], sanitized)
+        db_comment = next(
+            c
+            for c in self.db.posts.find_one({"_id": self.post_id})["comments"]
+            if c["_id"] == comment_id
+        )
+        self.assertEqual(db_comment["text"], sanitized)
+
+    def test_texts_are_sanitized_error_no_str(self):
+        """
+        expect: TypeError is raised if a text is no string, nothing is stored
+        """
+
+        post_manager = Posts(self.db)
+
+        comment = {**self.default_comment, "text": None}
+        del comment["_id"]
+        self.assertRaises(TypeError, post_manager.add_comment, self.post_id, comment)
+        self.assertRaises(TypeError, post_manager.update_post_text, self.post_id, 1)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(len(post["comments"]), 1)
+
     def test_add_comment(self):
         """
         expect: successfully add comment to the post
@@ -1888,6 +2076,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "new_comment",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
@@ -1918,6 +2107,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager.add_comment(self.post_id, comment)
@@ -1941,6 +2131,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "new_comment",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
@@ -1966,9 +2157,15 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.add_comment, self.post_id, comment)
+
+        # the likers are required as well, even if there are none yet
+        comment["text"] = "new_comment"
+        del comment["likers"]
         self.assertRaises(ValueError, post_manager.add_comment, self.post_id, comment)
 
     def test_delete_comment(self):
@@ -5555,6 +5752,67 @@ class SpaceResourceTest(BaseResourceTestCase):
             self.space_id,
             CURRENT_ADMIN.username,
         )
+
+
+class SanitizeHtmlTest(TestCase):
+    """
+    the texts of posts and comments are reduced to the markup of the rich text
+    editor before they are stored
+    """
+
+    def test_sanitize_html_keeps_editor_markup(self):
+        """
+        expect: everything the rich text editor produces is kept unchanged
+        """
+
+        html = (
+            "<p><b>b</b> <i>i</i> <u>u</u> <strike>s</strike></p>"
+            "<ul><li>x</li></ul><ol><li>y</li></ol><div>d<br></div>"
+            '<a href="https://example.org/path?a=1&amp;b=2">l</a>'
+        )
+        self.assertEqual(util.sanitize_html(html), html)
+
+    def test_sanitize_html_removes_everything_else(self):
+        """
+        expect: scripts, event handlers, styles, other elements and attributes
+        and links with other schemes are removed, while the text of removed
+        elements (except scripts and styles) is kept; sanitizing twice yields
+        the same result
+        """
+
+        cases = [
+            ("<script>alert(1)</script>text", "text"),
+            ("<style>p {}</style>text", "text"),
+            ('<p onclick="alert(1)" style="color: red">p</p>', "<p>p</p>"),
+            ('<a href="javascript:alert(1)">l</a>', "<a>l</a>"),
+            (
+                '<a href="mailto:a@b.de" target="_blank" rel="opener">m</a>',
+                '<a href="mailto:a@b.de">m</a>',
+            ),
+            ('<img src="x" onerror="alert(1)">', ""),
+            ("<span>kept</span> <strong>text</strong>", "kept text"),
+            ("<!-- comment -->text", "text"),
+        ]
+        for html, expected in cases:
+            with self.subTest(html=html):
+                self.assertEqual(util.sanitize_html(html), expected)
+                self.assertEqual(util.sanitize_html(expected), expected)
+
+    def test_sanitize_html_escapes_plain_text(self):
+        """
+        expect: plain text comes out HTML escaped, so it is shown as before
+        """
+
+        self.assertEqual(util.sanitize_html("1 < 2 & 3 > 2"), "1 &lt; 2 &amp; 3 &gt; 2")
+        self.assertEqual(util.sanitize_html(""), "")
+
+    def test_sanitize_html_error_no_str(self):
+        """
+        expect: TypeError is raised for anything but a string
+        """
+
+        self.assertRaises(TypeError, util.sanitize_html, None)
+        self.assertRaises(TypeError, util.sanitize_html, ["<p>text</p>"])
 
 
 class GridFSHelpersTest(BaseResourceTestCase):

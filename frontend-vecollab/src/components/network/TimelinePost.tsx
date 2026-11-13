@@ -1,9 +1,7 @@
 import { fetchDELETE, fetchGET, fetchPOST } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
-import { HiHeart, HiOutlineHeart } from 'react-icons/hi';
 import Link from 'next/link';
-import { FormEvent, useEffect, useState } from 'react';
-import { IoIosSend } from 'react-icons/io';
+import { useEffect, useState } from 'react';
 import Dropdown from '../common/Dropdown';
 import {
     BackendPost,
@@ -20,6 +18,7 @@ import {
     MdDoubleArrow,
     MdModeEdit,
     MdOutlineKeyboardDoubleArrowDown,
+    MdOutlineThumbUp,
     MdShare,
     MdThumbUp,
     MdVideoFile,
@@ -40,6 +39,9 @@ import { useTranslation } from 'react-i18next';
 import { GoAlert } from 'react-icons/go';
 import ReportDialog from '../common/dialogs/Report';
 import PlanIcon from '../plans/PlanIcon';
+import CommentForm from './CommentForm';
+import Likes from './Likes';
+import PostComment from './PostComment';
 
 interface Props {
     post: BackendPost;
@@ -75,7 +77,6 @@ export default function TimelinePost({
     const { t } = useTranslation(['community', 'common']);
 
     const ref = useRef<any>(null);
-    const commentFormref = useRef<any>(null);
     const [willRemvoe, setWillRemove] = useState<boolean>(false);
     const [repostExpand, setRepostExpand] = useState<boolean>(false);
     const [comments, setComments] = useState<BackendPostComment[]>(post.comments);
@@ -83,8 +84,6 @@ export default function TimelinePost({
     const [showXComments, setShowXComments] = useState<number>(3);
     const [editPost, setEditPost] = useState<boolean>(false);
     const [shareDialogIsOpen, setShareDialogIsOpen] = useState<boolean>(false);
-    const [loadingLikers, setLoadingLikers] = useState<boolean>(false);
-    const [likers, setLikers] = useState<BackendPostAuthor[]>([]);
     const [askDeletion, setAskDeletion] = useState<boolean>(false);
     const [reportPostDialogOpen, setReportPostDialogOpen] = useState<boolean>(false);
     const [reportCommentDialogOpen, setReportCommentDialogOpen] = useState<boolean>(false);
@@ -92,6 +91,7 @@ export default function TimelinePost({
         undefined
     );
 
+    const postLiked = post.likers.includes(session?.user.preferred_username as string);
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
     const attachedFiles = post.files.filter((file) => !file.file_type.startsWith('image/'));
 
@@ -125,28 +125,6 @@ export default function TimelinePost({
         }
     });
 
-    const onSubmitCommentForm = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const text = (formData.get('text') as string).trim();
-
-        if (text === '') return;
-
-        try {
-            const newComment = await fetchPOST(
-                '/comment',
-                { text, post_id: post._id },
-                session?.accessToken
-            );
-            if (newComment.inserted_comment) {
-                setComments((prev) => [...prev, newComment.inserted_comment]);
-            }
-            commentFormref.current?.reset();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     const onClickLikeBtn = async () => {
         let newLikers = [...post.likers];
         const likeIt = post.likers.includes(session?.user.preferred_username as string);
@@ -160,7 +138,6 @@ export default function TimelinePost({
                 newLikers.push(session?.user.preferred_username as string);
             }
             updatePost({ ...post, likers: newLikers });
-            fetchLikers(newLikers);
         } catch (error) {
             console.log(error);
         }
@@ -206,7 +183,7 @@ export default function TimelinePost({
         }
     };
 
-    const handleSelectOption = (value: string, ...rest: any[]) => {
+    const handleSelectOption = (value: string) => {
         switch (value) {
             case 'share':
                 navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
@@ -218,15 +195,8 @@ export default function TimelinePost({
             case 'edit':
                 setEditPost(true);
                 break;
-            case 'remove-comment':
-                deleteComment(rest[0]);
-                break;
             case 'report-post':
                 setReportPostDialogOpen(true);
-                break;
-            case 'report-comment':
-                setReportedComment(rest[0]);
-                setReportCommentDialogOpen(true);
                 break;
             default:
                 break;
@@ -242,21 +212,43 @@ export default function TimelinePost({
         setEditPost(false);
     };
 
-    const openCommentForm = () => {
-        setShowCommentForm(true);
-        setTimeout(() => {
-            commentFormref.current?.querySelector('input')?.focus();
-        }, 1);
+    // the comment form focuses its editor itself when it appears this way
+    const openCommentForm = () => setShowCommentForm(true);
+
+    const reportComment = (comment: BackendPostComment) => {
+        setReportedComment(comment);
+        setReportCommentDialogOpen(true);
     };
 
-    const fetchLikers = (usernames: string[]) => {
-        if (likers.length == usernames.length || loadingLikers) return;
+    const likeComment = async (comment: BackendPostComment) => {
+        const username = session?.user.preferred_username as string;
+        const liked = comment.likers.includes(username);
 
-        setLoadingLikers(true);
-        fetchPOST('/profile_snippets', { usernames }, session?.accessToken).then((data) => {
-            setLikers(data.user_snippets);
-            setLoadingLikers(false);
-        });
+        try {
+            if (liked) {
+                await fetchDELETE(
+                    '/comment/like',
+                    { comment_id: comment._id },
+                    session?.accessToken
+                );
+            } else {
+                await fetchPOST('/comment/like', { comment_id: comment._id }, session?.accessToken);
+            }
+            setComments((prev) =>
+                prev.map((c) =>
+                    c._id == comment._id
+                        ? {
+                              ...c,
+                              likers: liked
+                                  ? c.likers.filter((liker) => liker != username)
+                                  : [...c.likers, username],
+                          }
+                        : c
+                )
+            );
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const pinComment = async (comment: BackendPostComment) => {
@@ -284,123 +276,43 @@ export default function TimelinePost({
         }
     };
 
+    const commentProps = (comment: BackendPostComment) => ({
+        comment,
+        userIsAdmin,
+        onLike: likeComment,
+        onPin: pinComment,
+        onDelete: deleteComment,
+        onReport: reportComment,
+    });
+
     const GroupnameById = (groupId: string) => {
         if (!allGroups) return <>{groupId}</>;
         const group = allGroups.find((group) => group._id == groupId);
         return <>{group?.name}</>;
     };
 
-    const Likes = () => {
-        if (!post.likers.length) return <></>;
-
-        return (
-            <div
-                className="group/likes w-10 text-sm mr-3 my-4 flex relative hover:cursor-pointer overflow-hidden hover:overflow-visible"
-                onMouseOver={() => fetchLikers(post.likers)}
-            >
-                <MdThumbUp className="" size={20} />
-                &nbsp;{post.likers.length}
-                <div className="absolute w-40 overflow-y-auto max-h-32 left-1/2 -translate-x-1/2 p-2 mt-5 group-hover/likes:opacity-100 hover:opacity-100! transition-opacity opacity-0 rounded-md bg-white shadow-sm border border-gray-200">
-                    {likers.map((liker, i) => (
-                        <Link key={i} href={`/profile/user/${liker.username}`} className="truncate">
-                            <AuthenticatedImage
-                                imageId={liker.profile_pic}
-                                alt={t('profile_picture')}
-                                width={20}
-                                height={20}
-                                className="rounded-full mr-3 inline"
-                            />
-                            {liker.first_name ? (
-                                <>
-                                    {liker.first_name} {liker.last_name}
-                                </>
-                            ) : (
-                                <>{liker.username}</>
-                            )}
-                        </Link>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
-    const Comment = ({ comment }: { comment: BackendPostComment }) => (
-        <>
-            <div className={`flex items-center group/comment`}>
-                <PostHeader author={comment.author} date={comment.creation_date} />
-                <div
-                    className={`ml-auto ${
-                        !comment.pinned ? 'opacity-0' : ''
-                    } transition-opacity group-hover/comment:opacity-100`}
-                >
-                    {userIsAdmin || comment.author.username == session?.user.preferred_username ? (
-                        <button
-                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
-                            onClick={(e) => pinComment(comment)}
-                            title={comment.pinned ? t('unpin_comment') : t('pin_comment')}
-                        >
-                            {comment.pinned ? <TiPin /> : <TiPinOutline />}
-                        </button>
-                    ) : (
-                        <>{comment.pinned && <TiPin />}</>
-                    )}
-                    <div className="inline opacity-0 group-hover/comment:opacity-100">
-                        <CommentHeaderDropdown comment={comment} />
-                    </div>
-                </div>
-            </div>
-            <div className="mt-3 mb-6">{comment.text}</div>
-        </>
-    );
-
-    const CommentHeaderDropdown = ({ comment }: { comment: BackendPostComment }) => {
-        if (comment.author.username == session?.user.preferred_username || userIsAdmin) {
-            return (
-                <Dropdown
-                    options={[
-                        {
-                            value: 'remove-comment',
-                            label: t('common:delete'),
-                            icon: <MdDeleteOutline />,
-                        },
-                        {
-                            value: 'report-comment',
-                            label: t('common:report.report_title'),
-                            icon: <GoAlert />,
-                            liClasses: 'text-red-500',
-                        },
-                    ]}
-                    onSelect={(value) => {
-                        handleSelectOption(value, comment);
-                    }}
-                />
-            );
-        }
-        return <></>;
-    };
-
     const FileIcon = ({ _file }: { _file: BackendPostFile }) => {
         if (_file.file_type?.startsWith('video/')) {
             return (
-                <div className="h-[50px] flex items-center">
+                <div className="h-12.5 flex items-center">
                     <MdVideoFile size={35} />
                 </div>
             );
         } else if (_file.file_type?.startsWith('audio/')) {
             return (
-                <div className="h-[50px] flex items-center">
+                <div className="h-12.5 flex items-center">
                     <MdAudioFile size={35} />
                 </div>
             );
         } else if (_file.file_type?.startsWith('text/')) {
             return (
-                <div className="h-[50px] flex items-center">
+                <div className="h-12.5 flex items-center">
                     <RxFileText size={35} />
                 </div>
             );
         } else {
             return (
-                <div className="h-[50px] flex items-center">
+                <div className="h-12.5 flex items-center">
                     <RxFile size={35} />
                 </div>
             );
@@ -501,21 +413,13 @@ export default function TimelinePost({
                     )}
 
                     <div className="ml-auto opacity-0 group-hover/post:opacity-100 transition-opacity">
-                        {post.likers.includes(session?.user.preferred_username as string) ? (
-                            <button
-                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
-                                onClick={onClickLikeBtn}
-                            >
-                                <HiHeart />
-                            </button>
-                        ) : (
-                            <button
-                                className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
-                                onClick={onClickLikeBtn}
-                            >
-                                <HiOutlineHeart />
-                            </button>
-                        )}
+                        <button
+                            className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
+                            onClick={onClickLikeBtn}
+                            title={postLiked ? t('unlike') : t('like')}
+                        >
+                            {postLiked ? <MdThumbUp /> : <MdOutlineThumbUp />}
+                        </button>
                         {group && userIsAdmin && (
                             <button
                                 className="p-2 rounded-full cursor-pointer hover:bg-ve-collab-blue-light"
@@ -586,7 +490,7 @@ export default function TimelinePost({
 
                 {!editPost && attachedImages.length > 0 && (
                     <div className="my-4">
-                        <div className="mb-8 flex flex-wrap max-h-[100vh] overflow-y-auto content-scrollbar">
+                        <div className="mb-8 flex flex-wrap max-h-screen overflow-y-auto content-scrollbar">
                             {attachedImages.map((file, index) => (
                                 <AuthenticatedFile
                                     key={index}
@@ -644,7 +548,7 @@ export default function TimelinePost({
                                     title="Open plan"
                                 >
                                     <div className="flex justify-center">
-                                        <PlanIcon className="h-[36px]" />
+                                        <PlanIcon className="h-9" />
                                     </div>
                                     <div className="max-w-1/2 justify-center mx-2 px-1 my-1 truncate">
                                         {plan.name}
@@ -655,13 +559,13 @@ export default function TimelinePost({
                     </div>
                 )}
 
-                <Likes />
+                <Likes likers={post.likers} className="my-4 w-fit" />
 
                 {comments.length == 0 && !showCommentForm && (!groupACL || groupACL.comment) && (
                     <div className="mt-4 mb-2">
                         <button
                             onClick={openCommentForm}
-                            className="px-2 py-[6px] w-1/3 rounded-md border border-gray-200 text-gray-400 text-left text-nowrap overflow-hidden truncate cursor-pointer"
+                            className="px-2 py-1.5 w-1/3 rounded-md border border-gray-200 text-gray-400 text-left text-nowrap overflow-hidden truncate cursor-pointer"
                         >
                             {t('write_comment')}
                         </button>
@@ -673,28 +577,11 @@ export default function TimelinePost({
                         <div className="mb-4 text-slate-900 font-bold text-lg">{t('comments')}</div>
 
                         {(!groupACL || groupACL.comment) && (
-                            <form
-                                onSubmit={onSubmitCommentForm}
-                                className="mb-2"
-                                ref={commentFormref}
-                            >
-                                <input
-                                    className={
-                                        'w-1/3 border border-[#cccccc] rounded-md px-2 py-[6px]'
-                                    }
-                                    type="text"
-                                    placeholder={t('write_comment')}
-                                    name="text"
-                                    autoComplete="off"
-                                />
-                                <button
-                                    className="p-2 cursor-pointer"
-                                    type="submit"
-                                    title={t('send')}
-                                >
-                                    <IoIosSend />
-                                </button>
-                            </form>
+                            <CommentForm
+                                postId={post._id}
+                                autoFocus={showCommentForm}
+                                onCreated={(comment) => setComments((prev) => [...prev, comment])}
+                            />
                         )}
 
                         {comments.length > 0 && (
@@ -702,10 +589,8 @@ export default function TimelinePost({
                                 {comments
                                     .filter((c) => c.pinned)
                                     .reverse()
-                                    .map((cmnt, ci) => (
-                                        <div key={ci}>
-                                            <Comment comment={cmnt} />
-                                        </div>
+                                    .map((cmnt) => (
+                                        <PostComment key={cmnt._id} {...commentProps(cmnt)} />
                                     ))}
                                 {comments
                                     .filter((c) => !c.pinned)
@@ -713,7 +598,7 @@ export default function TimelinePost({
                                     .slice(0, showXComments)
                                     .map((cmnt, ci) => (
                                         <div key={cmnt._id}>
-                                            <Comment comment={cmnt} />
+                                            <PostComment {...commentProps(cmnt)} />
                                             {ci + 1 == showXComments &&
                                                 comments.filter((c) => !c.pinned).length >
                                                     showXComments && (

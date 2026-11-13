@@ -189,6 +189,8 @@
     "confirm_delete_post": "Delete post?",
     "post_deleted": "Post deleted",
     "cite_post": "Cite post",
+    "like": "Like",
+    "unlike": "Unlike",
     "expand": "Expand",
     "clear_formatting": "Clear formatting",
     "remove_link": "Remove Link",

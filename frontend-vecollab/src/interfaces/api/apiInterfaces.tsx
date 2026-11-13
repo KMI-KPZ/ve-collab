@@ -245,7 +245,8 @@ export interface BackendPostComment {
     author: BackendPostAuthor;
     creation_date: string;
     pinned: boolean;
-    text: string;
+    text: string; // sanitized HTML
+    likers: string[];
 }
 
 export interface BackendPostFile {

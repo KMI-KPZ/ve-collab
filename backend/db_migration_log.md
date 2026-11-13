@@ -298,3 +298,34 @@ dev
 
 #### letzte Änderung
 10.11.26 13:48
+
+---
+
+#### Kurzfassung
+db.posts.comments: text als HTML, likers neu
+
+#### branch
+dev
+
+#### Beschreibung
+- Kommentare werden im selben Rich-Text-Editor wie Beiträge verfasst. Attribut `text` eines Kommentars ist damit HTML statt Klartext (wie bei Beiträgen beim Anzeigen im Frontend bereinigt).
+- Kommentare können geliked werden. Attribut `likers` ist neu in jedem Kommentar, Datentyp `list` von `str` (Benutzernamen). Endpunkt `POST`/`DELETE /comment/like`.
+- Migration bestehender Kommentare (idempotent, einmalig direkt nach dem Deployment): `docker exec backend python3 -m migrations.post_comments`. Escaped den Klartext bestehender Kommentare zu HTML (Zeilenumbrüche werden zu `<br>`, die Anzeige bleibt unverändert) und ergänzt `likers: []`. Kommentare mit `likers` gelten als migriert. Bis die Migration gelaufen ist, scheitert im Frontend die Anzeige von Beiträgen mit älteren Kommentaren.
+
+#### letzte Änderung
+13.11.26 09:21
+
+---
+
+#### Kurzfassung
+db.posts: text, repostText und comments.text serverseitig bereinigt
+
+#### branch
+dev
+
+#### Beschreibung
+- Das HTML von Beiträgen (`text`), Reposts (`repostText`) und Kommentaren (`comments.text`) wird vor dem Speichern mit `util.sanitize_html()` (nh3, neue Abhängigkeit) auf das Markup des Rich-Text-Editors reduziert: `br`, `div`, `p`, `b`, `i`, `u`, `strike`, `ul`, `ol`, `li` und `a` mit `href` (nur http, https, mailto). Dieselbe Liste wie beim Anzeigen im Frontend (`sanitizedText.tsx`).
+- Migration bestehender Texte (idempotent, einmalig direkt nach dem Deployment): `docker exec backend python3 -m migrations.sanitize_post_texts`. Bereinigt alle Beitrags- und Repost-Texte sowie Kommentare mit `likers`; Kommentare ohne `likers` sind noch Klartext und werden von `migrations.post_comments` escaped. Die Reihenfolge der beiden Migrationen ist egal.
+
+#### letzte Änderung
+13.11.26 09:37

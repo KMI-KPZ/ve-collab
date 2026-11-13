@@ -4,35 +4,10 @@ import { fetchPOST, useGetAvailablePlans, useGetOwnProfile } from '@/lib/backend
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import React, {
-    FormEvent,
-    MouseEvent,
-    MouseEventHandler,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import React, { FormEvent, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { IoIosSend, IoMdClose } from 'react-icons/io';
-import {
-    MdArrowDropDown,
-    MdAttachFile,
-    MdEdit,
-    MdFormatClear,
-    MdInsertLink,
-    MdLinkOff,
-} from 'react-icons/md';
+import { MdArrowDropDown, MdAttachFile } from 'react-icons/md';
 import { RxFile } from 'react-icons/rx';
-import {
-    BtnBold,
-    BtnBulletList,
-    BtnItalic,
-    BtnNumberedList,
-    BtnUnderline,
-    Editor,
-    EditorProvider,
-    Toolbar,
-    createButton,
-} from 'react-simple-wysiwyg';
 import { Socket } from 'socket.io-client';
 import Dropdown from '../common/Dropdown';
 import LoadingAnimation from '../common/LoadingAnimation';
@@ -40,9 +15,9 @@ import Timestamp from '../common/Timestamp';
 import ButtonNewPlan from '../plans/ButtonNewPlan';
 import Dialog from '../profile/Dialog';
 import PostHeader from './PostHeader';
+import RichTextEditor, { isEmptyRichText } from './RichTextEditor';
 import TimelinePostText from './TimelinePostText';
 import UserProfileImage from './UserProfileImage';
-import { sanitizedText } from './sanitizedText';
 
 import { FaMedal } from 'react-icons/fa';
 import { AuthenticatedFile } from '../common/AuthenticatedFile';
@@ -81,20 +56,9 @@ export default function TimelinePostForm({
     const [storedFiles, setStoredFiles] = useState<BackendPostFile[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [text, setText] = useState<string>('');
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState<boolean>(false);
-    const [selectedLinkText, setSelectedLinkText] = useState<
-        | {
-              parentNode: Node;
-              selectionStart: number;
-              selectionEnd: number;
-          }
-        | undefined
-    >();
-    const [cursorInLink, setCursorInLink] = useState<false | HTMLLinkElement>(false);
     const [formHadFocus, setFormHadFocus] = useState<boolean>(false);
     const [isPlanDialogOpen, setIsPlanDialogOpen] = useState<boolean>(false);
     const [plansToAttach, setPlansToAttach] = useState<PlanPreview[]>([]);
-    const domParser = new DOMParser();
 
     const { data: userProfileSnippet } = useGetOwnProfile(session!.accessToken);
 
@@ -122,10 +86,8 @@ export default function TimelinePostForm({
 
     const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // require domparser to check empty lines, eg `<p></p>`
-        var newValueDoc = domParser.parseFromString(text, 'text/html');
-
-        if (text == '' || newValueDoc.body.innerText == '') return;
+        // empty lines (e.g. `<p></p>`) don't count as text
+        if (isEmptyRichText(text)) return;
 
         setLoading(true);
 
@@ -295,84 +257,6 @@ export default function TimelinePostForm({
         setStoredFiles((prev) => (prev ? prev.filter((a, i) => i != fileId) : null));
     };
 
-    var BtnClearFormatting = createButton(
-        t('clear_formatting'),
-        <MdFormatClear className="m-auto" />,
-        'removeFormat'
-    );
-
-    var BtnLink = createButton(
-        cursorInLink ? t('remove_link') : t('create_link'),
-        cursorInLink ? <MdLinkOff className="m-auto" /> : <MdInsertLink className="m-auto" />,
-        function (_a) {
-            var $selection = _a.$selection;
-            if (
-                ($selection === null || $selection === void 0 ? void 0 : $selection.nodeName) ===
-                'A'
-            ) {
-                if (window.getSelection()?.getRangeAt(0).toString() == '') {
-                    window.getSelection()?.selectAllChildren($selection as Node);
-                }
-                document.execCommand('unlink');
-                setCursorInLink(false);
-            } else if ($selection) {
-                setSelectedLinkText({
-                    parentNode: window.getSelection()?.focusNode as Node,
-                    selectionStart: window.getSelection()?.anchorOffset as number,
-                    selectionEnd: window.getSelection()?.focusOffset as number,
-                });
-                setIsLinkDialogOpen(true);
-            }
-        }
-    );
-
-    const submitNewLinkDialog = (event: FormEvent) => {
-        event.preventDefault();
-        const target = event.currentTarget.querySelector('input');
-
-        if (!target?.value || target.value == '' || !target.value.startsWith('http')) {
-            return;
-        }
-
-        if (cursorInLink !== false) {
-            // update existing link
-            cursorInLink.href = target.value;
-        } else if (selectedLinkText !== undefined) {
-            // create new link in selected range
-            const range = new Range();
-            range.setStart(selectedLinkText.parentNode, selectedLinkText.selectionStart);
-            range.setEnd(selectedLinkText.parentNode, selectedLinkText.selectionEnd);
-            var selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-            document.execCommand('createLink', false, target.value);
-        }
-
-        setIsLinkDialogOpen(false);
-        setSelectedLinkText(undefined);
-    };
-
-    const openLinkEditor = (event: MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-        if (!cursorInLink) return;
-
-        var selection = window.getSelection();
-        var range = document.createRange();
-        range.selectNodeContents(cursorInLink);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-
-        setIsLinkDialogOpen(true);
-    };
-
-    const editorCaretChanged = () => {
-        if (window.getSelection()?.focusNode?.parentNode?.nodeName === 'A') {
-            setCursorInLink(window.getSelection()?.focusNode?.parentNode as HTMLLinkElement);
-        } else {
-            setCursorInLink(false);
-        }
-    };
-
     const PlansDialog = () => {
         const pageLength = 5;
         const [filterBy, setFilterBy] = useState<IplansFilter>({
@@ -460,30 +344,6 @@ export default function TimelinePostForm({
 
     return (
         <>
-            {/* link dialog */}
-            <Dialog
-                isOpen={isLinkDialogOpen}
-                title={t('link')}
-                onClose={() => setIsLinkDialogOpen(false)}
-            >
-                <form onSubmit={submitNewLinkDialog}>
-                    <input
-                        type="url"
-                        name="url"
-                        defaultValue={cursorInLink ? cursorInLink.href : ''}
-                        autoComplete="off"
-                        autoFocus
-                        className="mr-2 p-2 border border-[#cccccc] rounded-md invalid:border-red-500"
-                    />
-                    <button
-                        type="submit"
-                        className="my-2 py-2 px-5 rounded-lg bg-ve-collab-orange text-white cursor-pointer"
-                    >
-                        {t('common:ok')}
-                    </button>
-                </form>
-            </Dialog>
-
             {/* VE plan dialog */}
             <Dialog
                 isOpen={isPlanDialogOpen}
@@ -505,34 +365,6 @@ export default function TimelinePostForm({
                     </>
                 )}
 
-                {/* link tooltip  */}
-                {cursorInLink && (
-                    <div
-                        style={{
-                            left: `${cursorInLink.offsetLeft - cursorInLink.offsetWidth / 2}px`,
-                            top: `${2 + cursorInLink.offsetHeight + cursorInLink.offsetTop}px`,
-                        }}
-                        className={`absolute p-2 rounded-md bg-white shadow-sm border border-gray-200 text-ve-collab-blue after:content-[' '] after:absolute after:bottom-full after:left-1/2 after:-ml-2 after:border-4 after:border-transparent after:border-b-gray-300`}
-                    >
-                        <a
-                            href={cursorInLink.getAttribute('href') as string}
-                            className="hover:underline"
-                            title={t('open_link')}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            {cursorInLink.getAttribute('href') as string}
-                        </a>
-                        <button
-                            onClick={(e) => openLinkEditor(e)}
-                            className=""
-                            title={t('edit_link')}
-                        >
-                            <MdEdit className="ml-2" />
-                        </button>
-                    </div>
-                )}
-
                 <div className="flex items-center mb-5">
                     {!postToEdit && (
                         <UserProfileImage
@@ -542,32 +374,18 @@ export default function TimelinePostForm({
                     )}
 
                     <div className="w-full">
-                        <EditorProvider>
-                            <Editor
-                                value={text}
-                                placeholder={t('post_editor_placeholder')}
-                                onChange={(e) => setText(sanitizedText(e.target.value))}
-                                onKeyUp={editorCaretChanged}
-                                onClick={editorCaretChanged}
-                                onFocus={(e) => setFormHadFocus(true)}
-                            />
-                            {(postToEdit || postToRepost || formHadFocus) && (
-                                <Toolbar>
-                                    <BtnBold />
-                                    <BtnItalic />
-                                    <BtnUnderline />
-                                    <BtnBulletList style={{ paddingLeft: '5px' }} />
-                                    <BtnNumberedList style={{ paddingLeft: '5px' }} />
-                                    <BtnLink />
-                                    <BtnClearFormatting />
-                                </Toolbar>
-                            )}
-                        </EditorProvider>
+                        <RichTextEditor
+                            value={text}
+                            onChange={setText}
+                            placeholder={t('post_editor_placeholder')}
+                            showToolbar={!!(postToEdit || postToRepost || formHadFocus)}
+                            onFocus={() => setFormHadFocus(true)}
+                        />
                     </div>
                 </div>
 
                 {postToRepost && (
-                    <div className="my-5 ml-[50px] p-3 rounded-sm bg-slate-100">
+                    <div className="my-5 ml-12.5 p-3 rounded-sm bg-slate-100">
                         <div className="flex items-center mb-6">
                             {postToRepost.isRepost ? (
                                 <PostHeader
@@ -601,7 +419,7 @@ export default function TimelinePostForm({
                     (filesToAttach && filesToAttach.length > 0)) && (
                     <div className="ml-16 mb-4 flex flex-wrap max-h-[40vh] overflow-y-auto content-scrollbar">
                         {storedFiles?.map((file, index) => (
-                            <div className="max-w-[250px] mr-4 flex items-center" key={index}>
+                            <div className="max-w-62.5 mr-4 flex items-center" key={index}>
                                 <AuthenticatedFile
                                     key={index}
                                     url={`/uploads/${file.file_id}`}
@@ -626,7 +444,7 @@ export default function TimelinePostForm({
                             </div>
                         ))}
                         {filesToAttach?.map((file, index) => (
-                            <div className="max-w-[250px] mr-4 flex items-center" key={index}>
+                            <div className="max-w-62.5 mr-4 flex items-center" key={index}>
                                 {file.type.startsWith('image/') ? (
                                     <Image
                                         src={URL.createObjectURL(file)}
@@ -692,7 +510,7 @@ export default function TimelinePostForm({
                             <>
                                 <div
                                     title={t('add_file_or_plan')}
-                                    className="px-2 py-2.5 inline rounded-lg bg-[#d8f2f9] text-ve-collab-blue hover:bg-ve-collab-blue/20"
+                                    className="px-2 py-2.5 inline rounded-lg bg-ve-collab-blue-light text-ve-collab-blue hover:bg-ve-collab-blue/20"
                                 >
                                     <Dropdown
                                         options={[
@@ -733,7 +551,7 @@ export default function TimelinePostForm({
                         <button
                             type="submit"
                             className={`relative py-2 px-5 rounded-lg text-white overflow-hidden ${
-                                text.trim() == ''
+                                isEmptyRichText(text)
                                     ? 'cursor-default bg-ve-collab-orange/75'
                                     : 'cursor-pointer bg-ve-collab-orange'
                             }`}

@@ -14,6 +14,7 @@ import dateutil.parser
 import gridfs
 from jinja2 import TemplateNotFound
 from jwcrypto import jwk
+import nh3
 from pymongo import MongoClient
 from pymongo.database import Database
 import time
@@ -40,6 +41,12 @@ _file_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="files")
 
 # path separators and control characters are not allowed in file names
 _INVALID_FILE_NAME_CHARS = re.compile(r"[\\/\x00-\x1f\x7f]")
+
+# the markup the rich text editor of posts and comments produces, keep in line
+# with `sanitizedText()` in the frontend (components/network/sanitizedText.tsx)
+RICH_TEXT_TAGS = {"br", "div", "p", "b", "i", "u", "strike", "ul", "ol", "li", "a"}
+RICH_TEXT_ATTRIBUTES = {"a": {"href"}}
+RICH_TEXT_URL_SCHEMES = {"http", "https", "mailto"}
 
 
 @contextmanager
@@ -580,6 +587,30 @@ def content_type_of(file_name: str) -> str:
     """
 
     return mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+
+
+def sanitize_html(html: str) -> str:
+    """
+    reduce the `html` of a post or comment to the markup the rich text editor
+    produces (`RICH_TEXT_TAGS`), so that nothing else is ever stored: no
+    scripts, event handlers, styles, other elements or attributes and no links
+    other than http(s) and mailto. The text of removed elements is kept,
+    except for the content of scripts and styles. Plain text comes out HTML
+    escaped.
+
+    Raises `TypeError` if `html` is not a string.
+    """
+
+    if not isinstance(html, str):
+        raise TypeError("html has to be a string, got '{}'".format(type(html)))
+
+    return nh3.clean(
+        html,
+        tags=RICH_TEXT_TAGS,
+        attributes=RICH_TEXT_ATTRIBUTES,
+        url_schemes=RICH_TEXT_URL_SCHEMES,
+        link_rel=None,
+    )
 
 
 def run_in_email_executor(func: Callable[..., Any], *args) -> Awaitable[Any]:

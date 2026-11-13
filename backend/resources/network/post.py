@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 from bson.objectid import ObjectId
 from exceptions import (
     AlreadyLikerException,
+    CommentDoesntExistError,
     FileDoesntExistError,
     NotLikerException,
     PostNotExistingException,
@@ -25,7 +26,6 @@ class Posts:
         with util.get_mongodb() as db:
             post_manager = Posts(db)
             ...
-
     """
 
     def __init__(self, db: Database):
@@ -57,6 +57,7 @@ class Posts:
             "creation_date",
             "text",
             "pinned",
+            "likers",
         ]
 
     def get_post(self, post_id: str, projection: dict = {}) -> Dict:
@@ -77,7 +78,6 @@ class Posts:
         post = self.db.posts.find_one({"_id": post_id}, projection=projection)
         if not post:
             raise PostNotExistingException()
-
 
         # may add plans information
         if "plans" in post and post["plans"] != []:
@@ -159,6 +159,8 @@ class Posts:
         if not all(attr in post for attr in self.post_attributes):
             raise ValueError("Post misses required attribute")
 
+        post["text"] = util.sanitize_html(post["text"])
+
         result = self.db.posts.insert_one(post)
 
         # the post is viable for the achievement "create_posts", when the
@@ -178,7 +180,7 @@ class Posts:
 
         # try to do the update
         update_result = self.db.posts.update_one(
-            {"_id": post_id}, {"$set": {"text": text}}
+            {"_id": post_id}, {"$set": {"text": util.sanitize_html(text)}}
         )
 
         # if no documents matched the update, raise error
@@ -186,7 +188,9 @@ class Posts:
             raise PostNotExistingException()
         return post_id
 
-    def update_post_plans(self, post_id: str | ObjectId, plan_ids: List[str | ObjectId]) -> ObjectId:
+    def update_post_plans(
+        self, post_id: str | ObjectId, plan_ids: List[str | ObjectId]
+    ) -> ObjectId:
         """
         update the plans of an existing post
         """
@@ -337,6 +341,54 @@ class Posts:
         if update_result.modified_count != 1:
             raise NotLikerException()
 
+    def like_comment(self, comment_id: str | ObjectId, username: str) -> None:
+        """
+        Let the given user like the comment given by its _id. Like liking a
+        post, it counts towards the achievement "give_likes" of the user.
+
+        Raises `CommentDoesntExistError` if no comment with the given _id exists.
+        Raises `AlreadyLikerException` if the user already likes the comment.
+        """
+
+        comment_id = util.parse_object_id(comment_id)
+
+        update_result = self.db.posts.update_one(
+            {"comments._id": comment_id},
+            {"$addToSet": {"comments.$.likers": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise CommentDoesntExistError()
+
+        # the comment exists, so if nothing changed, the user already liked it
+        if update_result.modified_count != 1:
+            raise AlreadyLikerException()
+
+        profile_manager = Profiles(self.db)
+        profile_manager.achievement_count_up(username, "give_likes")
+
+    def unlike_comment(self, comment_id: str | ObjectId, username: str) -> None:
+        """
+        Remove the like of the given user from the comment given by its _id.
+
+        Raises `CommentDoesntExistError` if no comment with the given _id exists.
+        Raises `NotLikerException` if the user hadn't liked the comment before.
+        """
+
+        comment_id = util.parse_object_id(comment_id)
+
+        update_result = self.db.posts.update_one(
+            {"comments._id": comment_id},
+            {"$pull": {"comments.$.likers": username}},
+        )
+
+        if update_result.matched_count != 1:
+            raise CommentDoesntExistError()
+
+        # the comment exists, so if nothing changed, the user hadn't liked it
+        if update_result.modified_count != 1:
+            raise NotLikerException()
+
     def add_comment(self, post_id: str | ObjectId, comment: dict) -> ObjectId:
         """
         add the given comment to the post, validating the attributes beforehand
@@ -348,6 +400,8 @@ class Posts:
         # verify comment has all the necessary attributes
         if not all(attr in comment for attr in self.comment_attributes):
             raise ValueError("Comment misses required attribute")
+
+        comment["text"] = util.sanitize_html(comment["text"])
 
         # assign an id to the comment
         comment["_id"] = ObjectId()
@@ -423,6 +477,10 @@ class Posts:
         ):
             raise ValueError("Post misses required attribute")
 
+        # the text is a copy of the original post's one
+        repost["text"] = util.sanitize_html(repost["text"])
+        repost["repostText"] = util.sanitize_html(repost["repostText"])
+
         result = self.db.posts.insert_one(repost)
 
         return result.inserted_id
@@ -436,12 +494,12 @@ class Posts:
 
         # do the update
         update_result = self.db.posts.update_one(
-            {"_id": repost_id}, {"$set": {"repostText": text}}
+            {"_id": repost_id}, {"$set": {"repostText": util.sanitize_html(text)}}
         )
 
-        # if no documents have been modified by the update
-        # we know that there was no post with the given _id
-        if update_result.modified_count != 1:
+        # if no documents matched the update, there was no post with the given
+        # _id (an unchanged text matches, but modifies nothing)
+        if update_result.matched_count != 1:
             raise PostNotExistingException()
 
         return repost_id
@@ -534,7 +592,9 @@ class Posts:
 
         return _id
 
-    def delete_post_file(self, post_id: str | ObjectId, file_id: str | ObjectId) -> None:
+    def delete_post_file(
+        self, post_id: str | ObjectId, file_id: str | ObjectId
+    ) -> None:
         """
         delete a file from gridfs and, if the post was in a space,
         its reference in the space's file share
@@ -556,7 +616,6 @@ class Posts:
                 SpaceFiles(self.db).remove_post_file(post["space"], file_id)
             except FileDoesntExistError:
                 pass
-
 
     def get_full_timeline(
         self, time_to: datetime.datetime, limit: int = 10

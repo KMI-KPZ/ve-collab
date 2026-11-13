@@ -60,6 +60,7 @@ UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
 POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
+COMMENT_DOESNT_EXIST_ERROR = "comment_doesnt_exist"
 USER_NOT_AUTHOR_ERROR = "user_not_author"
 INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 USER_ALREADY_MEMBER_ERROR = "user_already_member"
@@ -91,6 +92,7 @@ INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
 MEMBERS_NOT_LIST_OF_STR_ERROR = "members_not_list_of_str"
 NAME_NOT_STR_ERROR = "name_not_str"
+TEXT_NOT_STR_ERROR = "text_not_str"
 USER_DOESNT_EXIST_ERROR = "user_doesnt_exist"
 
 # don't change, these values match with the ones in BaseHandler
@@ -2453,6 +2455,7 @@ class CommentHandlerTest(BaseApiTestCase):
         # expect the inserted comment to be in the response
         self.assertIn("inserted_comment", response)
         self.assertEqual(response["inserted_comment"]["text"], request["text"])
+        self.assertEqual(response["inserted_comment"]["likers"], [])
 
         # expect the author of the comment to be enhanced with profile information
         self.assertIn("author", response["inserted_comment"])
@@ -2498,6 +2501,7 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertIn("comments", db_state)
         self.assertEqual(len(db_state["comments"]), 1)
         self.assertEqual(db_state["comments"][0]["text"], request["text"])
+        self.assertEqual(db_state["comments"][0]["likers"], [])
 
         # check that the comment counted towards the achievement "social"
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
@@ -2521,6 +2525,47 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
         )
+
+    def test_post_comment_error_missing_text(self):
+        """
+        expect: fail message because text is not in the request
+        """
+
+        request = {"post_id": str(self.post_oid)}
+
+        response = self.base_checks("POST", "/comment", False, 400, body=request)
+
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "text")
+        self.assertNotIn("comments", self.db.posts.find_one({"_id": self.post_oid}))
+
+    def test_post_comment_sanitized(self):
+        """
+        expect: the text of the comment is sanitized before it is stored and
+        returned
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": '<p onclick="alert(1)">hi</p><script>alert(1)</script>',
+        }
+
+        response = self.base_checks("POST", "/comment", True, 200, body=request)
+
+        self.assertEqual(response["inserted_comment"]["text"], "<p>hi</p>")
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertEqual(db_state["comments"][0]["text"], "<p>hi</p>")
+
+    def test_post_comment_error_text_not_str(self):
+        """
+        expect: fail message because the text is no string
+        """
+
+        request = {"post_id": str(self.post_oid), "text": ["<p>hi</p>"]}
+
+        response = self.base_checks("POST", "/comment", False, 400, body=request)
+
+        self.assertEqual(response["reason"], TEXT_NOT_STR_ERROR)
+        self.assertNotIn("comments", self.db.posts.find_one({"_id": self.post_oid}))
 
     def test_post_comment_error_post_doesnt_exist(self):
         """
@@ -2589,6 +2634,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2620,6 +2666,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2655,6 +2702,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2685,6 +2733,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2726,6 +2775,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2762,6 +2812,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2797,6 +2848,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -3017,6 +3069,173 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertEqual(response.code, 304)
 
 
+class LikeCommentHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+
+        self.post_oid = ObjectId()
+        self.comment_oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": self.post_oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(timezone.utc),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [
+                    {
+                        "_id": self.comment_oid,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.now(timezone.utc),
+                        "text": "<p>test_comment</p>",
+                        "pinned": False,
+                        "likers": [],
+                    }
+                ],
+                "likers": [],
+            }
+        )
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def _comment_likers(self) -> list:
+        return self.db.posts.find_one({"_id": self.post_oid})["comments"][0]["likers"]
+
+    def _fetch_without_content(self, method: str):
+        """
+        304 doesn't allow content, so base_checks can't be used
+        """
+
+        return self.fetch(
+            "/comment/like",
+            method=method,
+            body=json.dumps({"comment_id": str(self.comment_oid)}),
+            allow_nonstandard_methods=True,
+        )
+
+    def test_post_like_comment(self):
+        """
+        expect: successfully like the comment, counting towards the "give_likes"
+        achievement
+        """
+
+        request = {"comment_id": str(self.comment_oid)}
+        self.base_checks("POST", "/comment/like", True, 200, body=request)
+
+        self.assertEqual(self._comment_likers(), [CURRENT_ADMIN.username])
+        self.assertEqual(self.db.posts.find_one({"_id": self.post_oid})["likers"], [])
+
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
+                "progress"
+            ]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+    def test_post_like_comment_error_missing_comment_id(self):
+        """
+        expect: fail message because the request misses the comment_id
+        """
+
+        response = self.base_checks("POST", "/comment/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "comment_id"
+        )
+
+    def test_post_like_comment_error_invalid_object_id(self):
+        """
+        expect: fail message because the comment_id is no valid ObjectId
+        """
+
+        response = self.base_checks(
+            "POST", "/comment/like", False, 400, body={"comment_id": "invalid"}
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: fail message because no comment with this _id exists
+        """
+
+        response = self.base_checks(
+            "POST", "/comment/like", False, 409, body={"comment_id": str(ObjectId())}
+        )
+        self.assertEqual(response["reason"], COMMENT_DOESNT_EXIST_ERROR)
+
+    def test_post_like_comment_error_already_liker(self):
+        """
+        expect: 304 because the user already likes the comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        response = self._fetch_without_content("POST")
+        self.assertEqual(response.code, 304)
+        self.assertEqual(self._comment_likers(), [CURRENT_ADMIN.username])
+
+    def test_delete_like_comment(self):
+        """
+        expect: successfully remove the like from the comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        request = {"comment_id": str(self.comment_oid)}
+        self.base_checks("DELETE", "/comment/like", True, 200, body=request)
+
+        self.assertEqual(self._comment_likers(), [])
+
+    def test_delete_like_comment_error_missing_comment_id(self):
+        """
+        expect: fail message because the request misses the comment_id
+        """
+
+        response = self.base_checks("DELETE", "/comment/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "comment_id"
+        )
+
+    def test_delete_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: fail message because no comment with this _id exists
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/comment/like",
+            False,
+            409,
+            body={"comment_id": str(ObjectId())},
+        )
+        self.assertEqual(response["reason"], COMMENT_DOESNT_EXIST_ERROR)
+
+    def test_delete_like_comment_error_not_liker(self):
+        """
+        expect: 304 because the user hadn't liked the comment before
+        """
+
+        response = self._fetch_without_content("DELETE")
+        self.assertEqual(response.code, 304)
+
+
 class RepostHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -3166,6 +3385,18 @@ class RepostHandlerTest(BaseApiTestCase):
         response = self.base_checks("POST", "/repost", False, 400, body=request)
 
         self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "text")
+
+    def test_post_create_repost_error_text_not_str(self):
+        """
+        expect: fail message because the text is no string
+        """
+
+        request = {"post_id": str(self.post_oid), "text": None, "space": None}
+
+        response = self.base_checks("POST", "/repost", False, 400, body=request)
+
+        self.assertEqual(response["reason"], TEXT_NOT_STR_ERROR)
+        self.assertEqual(self.db.posts.count_documents({"isRepost": True}), 0)
 
     def test_post_create_repost_error_no_post_id(self):
         """
@@ -3413,6 +3644,7 @@ class PinHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -4093,6 +4325,7 @@ class SearchHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -4307,6 +4540,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -8802,6 +9036,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 ],
                 "likers": [],
@@ -14638,6 +14873,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "c",
                         "pinned": False,
+                        "likers": [],
                     }
                 ],
                 "likers": [],

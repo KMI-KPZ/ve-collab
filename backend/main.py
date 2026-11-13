@@ -110,6 +110,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/health", HealthCheckHandler),
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
+            (r"/comment/like", LikeCommentHandler),
             (r"/like", LikePostHandler),
             (r"/repost", RepostHandler),
             (r"/pin", PinHandler),
