@@ -115,9 +115,11 @@ services:
 
   etherpad:
     container_name: etherpad
-    build:
-      context: https://github.com/ether/etherpad-lite.git#1.9.6
-      dockerfile: Dockerfile
+    # Use the prebuilt release image instead of building from the git tag:
+    # the 1.9.6 Dockerfile uses the floating `node:lts-alpine` base, which now
+    # resolves to Node >= 25. That Node removed `buffer.SlowBuffer`, and the
+    # bundled ueberdb2 (via buffer-equal-constant-time) crashes on startup.
+    image: etherpad/etherpad:1.9.6
     environment:
       - TRUST_PROXY=true
       - EDIT_ONLY=true
