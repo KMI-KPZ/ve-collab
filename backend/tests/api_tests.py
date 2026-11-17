@@ -6,6 +6,7 @@ import logging
 import os
 import requests
 from typing import List
+from unittest import mock
 from urllib.parse import quote
 
 from bson import ObjectId
@@ -7453,6 +7454,113 @@ class SpaceHandlerTest(BaseApiTestCase):
             403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+
+class GroupSuggestionsHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # the test space of the base environment has the admin and the user as
+        # members, so it is never suggested
+        self.base_permission_environment_setUp()
+
+        # elasticsearch is mocked, the scoring is tested along with the resource
+        mock.patch.object(
+            ElasticsearchConnector, "search_profile_match", return_value=[]
+        ).start()
+        mock.patch.object(
+            ElasticsearchConnector, "search_space_topic_match", return_value={}
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+
+        self.suggested_space_id = self.insert_space("suggested_space")
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+        options.test_user = False
+        super().tearDown()
+
+    def insert_space(self, name: str, **attributes) -> ObjectId:
+        """
+        insert a visible space of somebody else, the `attributes` override the
+        defaults
+        """
+
+        space = {
+            "name": name,
+            "invisible": False,
+            "joinable": True,
+            "members": ["someone"],
+            "admins": ["someone"],
+            "invites": [],
+            "requests": [],
+            "space_pic": "default_group_pic.jpg",
+            "space_description": "test",
+        } | attributes
+        return self.db.spaces.insert_one(space).inserted_id
+
+    def test_get_group_suggestions(self):
+        """
+        expect: suggest the space that the admin is no member of as a snippet
+        """
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            response["suggestions"],
+            [
+                {
+                    "_id": str(self.suggested_space_id),
+                    "name": "suggested_space",
+                    "space_pic": "default_group_pic.jpg",
+                    "space_description": "test",
+                }
+            ],
+        )
+
+    def test_get_group_suggestions_user(self):
+        """
+        expect: suggest the space that the user is no member of
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            [space["_id"] for space in response["suggestions"]],
+            [str(self.suggested_space_id)],
+        )
+
+    def test_get_group_suggestions_excluded_spaces(self):
+        """
+        expect: no suggestions of invisible spaces and spaces that the admin was
+        invited to or requested to join
+        """
+
+        self.insert_space("invisible_space", invisible=True)
+        self.insert_space("invited_space", invites=[CURRENT_ADMIN.username])
+        self.insert_space("requested_space", requests=[CURRENT_ADMIN.username])
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            [space["_id"] for space in response["suggestions"]],
+            [str(self.suggested_space_id)],
+        )
+
+    def test_get_group_suggestions_none(self):
+        """
+        expect: no suggestions, if the admin is a member of all spaces
+        """
+
+        self.db.spaces.delete_one({"_id": self.suggested_space_id})
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(response["suggestions"], [])
 
 
 class SpaceFilesHandlerTest(BaseApiTestCase):

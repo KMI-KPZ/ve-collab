@@ -6,8 +6,9 @@ import H2 from '../common/H2';
 import { fetchGET, fetchTaxonomy, getTopLevelNodes } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
-import { BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
+import { BackendGroupSuggestion, BackendUserSnippet } from '@/interfaces/api/apiInterfaces';
 import LocalStorage from '@/lib/storage';
+import AuthenticatedImage from '../common/AuthenticatedImage';
 import UserProfileImage from '../network/UserProfileImage';
 import printUsername from '../common/Username';
 
@@ -181,9 +182,73 @@ export default function SuggestionBox() {
         );
     };
 
+    const SuggestedGroups = () => {
+        const [suggestedGroups, setSuggestedGroups] = useState<BackendGroupSuggestion[]>([]);
+
+        useEffect(() => {
+            const cachedSuggestedGroups = LocalStorage.getItem('suggested_groups');
+            if (cachedSuggestedGroups) {
+                setSuggestedGroups(cachedSuggestedGroups);
+                return;
+            }
+
+            fetchGET('/group_suggestions', session?.accessToken)
+                .then((response) => {
+                    // only cache actual suggestions, not a failed request
+                    if (!response.success) return;
+                    setSuggestedGroups(response.suggestions);
+                    LocalStorage.addItem('suggested_groups', response.suggestions, ttl);
+                })
+                .catch(console.error);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []);
+
+        if (!suggestedGroups.length) return <></>;
+
+        return (
+            <Wrapper>
+                <H2>{t('suggested_groups')}</H2>
+                <ul className="*:px-2 *:rounded-full *:my-3 *:text-ve-collab-blue">
+                    {suggestedGroups.map((group) => {
+                        return (
+                            <li key={group._id} className="@container">
+                                <Link
+                                    className="flex items-center justify-center flex-wrap @[230px]:flex-nowrap @[230px]:justify-start truncate p-2"
+                                    href={`/group/${group._id}`}
+                                >
+                                    <span className="shrink-0">
+                                        <AuthenticatedImage
+                                            imageId={group.space_pic}
+                                            alt={t('group_picture')}
+                                            width={40}
+                                            height={40}
+                                            className="rounded-full mr-3"
+                                        />
+                                    </span>
+                                    <span className="text-slate-900 truncate inline-block w-full @[230px]:w-fit text-center @[230px]:text-start hover:text-ve-collab-orange">
+                                        {group.name}
+                                    </span>
+                                </Link>
+                            </li>
+                        );
+                    })}
+                </ul>
+                <div className="px-4 py-2 mt-6 ml-auto w-fit hover:bg-white/25 rounded-full transition easy-in-out">
+                    <Link href={`/groups`}>
+                        {t('common:more')} <MdArrowRight size={24} className="inline mx-1" />
+                    </Link>
+                </div>
+            </Wrapper>
+        );
+    };
+
     // if idx given enforces specific module
     const getModule = (idx?: number) => {
-        const modules = [<SuggestedModules key={0} />, <SuggestedUsers key={1} />];
+        const modules = [
+            <SuggestedModules key={0} />,
+            <SuggestedUsers key={1} />,
+            <SuggestedGroups key={2} />,
+        ];
         return (
             <>{modules[typeof idx !== 'undefined' ? idx : new Date().getDate() % modules.length]}</>
         );

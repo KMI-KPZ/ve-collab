@@ -4,6 +4,7 @@ import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { AccessDenied } from '@/components/network/AccessDenied';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
+import GroupPreview from '@/components/network/GroupPreview';
 import GroupSidebar from '@/components/network/GroupSidebar';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
 import { fetchPOST, useGetMyGroupACLEntry, useGetGroup, useIsGlobalAdmin } from '@/lib/backend';
@@ -48,15 +49,29 @@ export default function Group({ socket }: Props): JSX.Element {
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
-    const { data: group, isLoading } = useGetGroup(session!.accessToken, groupId as string);
+    const {
+        data: group,
+        isLoading,
+        mutate: mutateGroup,
+    } = useGetGroup(session!.accessToken, groupId as string);
 
     // TODO use conditional fetching with the swr hook to wait for the router to be ready,
     // because sometimes when the router is not yet ready, but the hook fires
     // an additional request with undefined id is made
-    const { data: groupACLEntry } = useGetMyGroupACLEntry(session!.accessToken, groupId as string);
+    const { data: groupACLEntry, mutate: mutateGroupACLEntry } = useGetMyGroupACLEntry(
+        session!.accessToken,
+        groupId as string
+    );
 
     useEffect(() => {
-        if (isLoading) {
+        if (isLoading || !group) {
+            return;
+        }
+        // the members are only shown to members and admins, not in the preview
+        const username = session?.user?.preferred_username as string;
+        const canSeeMembers =
+            group.members.includes(username) || group.admins.includes(username) || isGlobalAdmin;
+        if (!canSeeMembers) {
             return;
         }
         fetchPOST('/profile_snippets', { usernames: group.members }, session?.accessToken).then(
@@ -73,7 +88,7 @@ export default function Group({ socket }: Props): JSX.Element {
                 setMemberSnippetsLoading(false);
             }
         );
-    }, [group, isLoading, session]);
+    }, [group, isLoading, session, isGlobalAdmin]);
 
     // snippet of a member, with a fallback so a missing profile never crashes the view
     function snippetOf(username: string): UserSnippet {
@@ -160,11 +175,25 @@ export default function Group({ socket }: Props): JSX.Element {
 
     if (isLoading) return <LoadingAnimation />;
 
-    if (!(userIsMember() || userIsAdmin()))
+    // the backend denies invisible groups to everybody except their members and
+    // global admins, so does the page (and for groups that don't exist)
+    if (!group || (group.invisible && !(userIsMember() || userIsAdmin())))
         return (
             <>
                 <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
                 <AccessDenied />
+            </>
+        );
+
+    // visible groups show their public information to everybody else, who may join
+    if (!(userIsMember() || userIsAdmin()))
+        return (
+            <>
+                <CustomHead pageTitle={t('groups')} pageSlug={`group/${groupId}`} />
+                <GroupPreview
+                    group={group}
+                    onMembershipChange={() => Promise.all([mutateGroup(), mutateGroupACLEntry()])}
+                />
             </>
         );
 
@@ -204,7 +233,9 @@ export default function Group({ socket }: Props): JSX.Element {
                     onSelectSection={(section) => {
                         setRenderPicker(section);
                         router.replace(
-                            section === 'members' ? `/group/${groupId}?tab=members` : `/group/${groupId}`,
+                            section === 'members'
+                                ? `/group/${groupId}?tab=members`
+                                : `/group/${groupId}`,
                             undefined,
                             { shallow: true }
                         );

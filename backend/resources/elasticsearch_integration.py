@@ -339,9 +339,7 @@ class ElasticsearchConnector:
         force_rebuild: bool,
     ) -> None:
         if not self._wait_until_available():
-            logger.error(
-                "elasticsearch is not reachable, skipped checking its indexes"
-            )
+            logger.error("elasticsearch is not reachable, skipped checking its indexes")
             return
 
         for index, definition in INDEX_DEFINITIONS.items():
@@ -594,9 +592,7 @@ class ElasticsearchConnector:
             "query": {
                 "bool": {
                     # exclude the user itself from the search results
-                    "must_not": [
-                        {"term": {"username.keyword": profile["username"]}}
-                    ],
+                    "must_not": [{"term": {"username.keyword": profile["username"]}}],
                     "filter": [
                         {"match": {"excluded_from_matching": False}},
                     ],
@@ -608,3 +604,48 @@ class ElasticsearchConnector:
         }
 
         return self.search("profiles", query)
+
+    def search_space_topic_match(
+        self, text: str, space_ids: List[str | ObjectId]
+    ) -> Dict[str, float]:
+        """
+        Match the free `text` (e.g. the consolidated topics of a profile) against
+        the names and descriptions of the groups given by their `space_ids` and
+        return the score of each matching space as a dict of its _id (as str) and
+        the score. Spaces that don't match at all are not contained.
+        """
+
+        if not text.strip() or not space_ids:
+            return {}
+
+        query = {
+            "size": len(space_ids),
+            "_source": False,
+            "query": {
+                "bool": {
+                    "filter": [{"ids": {"values": [str(_id) for _id in space_ids]}}],
+                    "should": [
+                        {
+                            "match": {
+                                "name": {
+                                    "query": text,
+                                    "fuzziness": "AUTO",
+                                    "boost": 2,
+                                }
+                            }
+                        },
+                        {
+                            "match": {
+                                "space_description": {
+                                    "query": text,
+                                    "fuzziness": "AUTO",
+                                }
+                            }
+                        },
+                    ],
+                    "minimum_should_match": 1,
+                }
+            },
+        }
+
+        return {hit["_id"]: hit["_score"] for hit in self.search("spaces", query)}

@@ -217,6 +217,11 @@ export interface BackendGroup {
     space_description: string;
 }
 
+export type BackendGroupSuggestion = Pick<
+    BackendGroup,
+    '_id' | 'name' | 'space_pic' | 'space_description'
+>;
+
 export interface BackendGroupACLEntry {
     username: string;
     group: string;

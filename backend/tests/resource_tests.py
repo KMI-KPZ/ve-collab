@@ -5754,6 +5754,333 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
 
 
+class SpaceSuggestionsResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # elasticsearch is mocked, only the use of its results is tested here
+        self.profile_match = mock.patch.object(
+            ElasticsearchConnector, "search_profile_match", return_value=[]
+        ).start()
+        self.topic_match = mock.patch.object(
+            ElasticsearchConnector, "search_space_topic_match", return_value={}
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+
+        self.profile = {
+            "username": "suggestion_user",
+            "follows": [],
+            "expertise": "Computer Science",
+            "ve_interests": ["Research", ""],
+            "ve_goals": [""],
+            "research_tags": ["robotics"],
+            "courses": [
+                {"title": "Machine Learning", "academic_courses": "", "semester": ""}
+            ],
+        }
+
+    def tearDown(self) -> None:
+        self.db.spaces.delete_many({})
+        self.db.posts.delete_many({})
+        self.db.plans.delete_many({})
+        super().tearDown()
+
+    def insert_group(self, name: str, members: list = None, **attributes) -> ObjectId:
+        """
+        insert a visible group that may be suggested to `self.profile`, the
+        `attributes` override the defaults
+        """
+
+        group = {
+            "name": name,
+            "invisible": False,
+            "joinable": True,
+            "members": members or [],
+            "admins": [],
+            "invites": [],
+            "requests": [],
+            "space_pic": "default_group_pic.jpg",
+            "space_description": "",
+        } | attributes
+        return self.db.spaces.insert_one(group).inserted_id
+
+    def insert_posts(self, space_id: ObjectId, count: int, days_ago: int = 0) -> None:
+        creation_date = datetime.now(timezone.utc) - timedelta(days=days_ago)
+        self.db.posts.insert_many(
+            [
+                {
+                    "author": "someone",
+                    "creation_date": creation_date,
+                    "text": "test",
+                    "space": space_id,
+                }
+                for _ in range(count)
+            ]
+        )
+
+    def scored_groups(self) -> dict:
+        """
+        the scored groups of `self.profile` by their _id
+        """
+
+        return {
+            group["_id"]: group
+            for group in Spaces(self.db).score_spaces_for_suggestions(self.profile)
+        }
+
+    def deterministic_suggestions(self) -> Spaces:
+        """
+        `Spaces` whose suggestions always draw the groups with the highest weights
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.suggestion_random = mock.Mock(random=mock.Mock(return_value=0.5))
+        return space_manager
+
+    def test_get_suggestions(self):
+        """
+        expect: suggest all groups as snippets, since there are fewer than the limit
+        """
+
+        group_ids = {self.insert_group("group_{}".format(i)) for i in range(3)}
+
+        suggestions = Spaces(self.db).get_space_suggestions(self.profile)
+
+        self.assertEqual({group["_id"] for group in suggestions}, group_ids)
+        for group in suggestions:
+            self.assertEqual(
+                set(group.keys()), {"_id", "name", "space_pic", "space_description"}
+            )
+
+    def test_get_suggestions_no_groups(self):
+        """
+        expect: no suggestions without any groups
+        """
+
+        self.assertEqual(Spaces(self.db).get_space_suggestions(self.profile), [])
+
+    def test_get_suggestions_excluded_groups(self):
+        """
+        expect: never suggest invisible groups and groups that the user is a member or
+        admin of, was invited to or requested to join
+        """
+
+        username = self.profile["username"]
+        self.insert_group("invisible", invisible=True)
+        self.insert_group("member", members=[username])
+        self.insert_group("admin", admins=[username])
+        self.insert_group("invited", invites=[username])
+        self.insert_group("requested", requests=[username])
+        suggested_id = self.insert_group("suggested")
+
+        suggestions = Spaces(self.db).get_space_suggestions(self.profile)
+
+        self.assertEqual([group["_id"] for group in suggestions], [suggested_id])
+
+    def test_get_suggestions_limit(self):
+        """
+        expect: suggest as many different groups as the limit allows, also beyond
+        the best scored ones
+        """
+
+        for i in range(12):
+            self.insert_group("group_{}".format(i), members=["member_{}".format(i)])
+
+        for limit, expected in ((5, 5), (3, 3), (10, 10), (20, 12)):
+            suggestions = Spaces(self.db).get_space_suggestions(
+                self.profile, limit=limit
+            )
+            self.assertEqual(len({group["_id"] for group in suggestions}), expected)
+
+    def test_get_suggestions_best_and_active_groups(self):
+        """
+        expect: suggest the best scored groups first and fill the remaining slots with
+        active groups beyond them, but not with inactive ones
+        """
+
+        self.profile["follows"] = ["followed_1", "followed_2", "followed_3"]
+        best_ids = [
+            self.insert_group("best_{}".format(i), members=self.profile["follows"])
+            for i in range(Spaces.SUGGESTION_POOL_SIZE)
+        ]
+        active_ids = []
+        for i in range(2):
+            active_id = self.insert_group("active_{}".format(i), members=["member"])
+            self.insert_posts(active_id, 1)
+            active_ids.append(active_id)
+        inactive_ids = [
+            self.insert_group("inactive_{}".format(i), members=["member"])
+            for i in range(2)
+        ]
+
+        suggestions = self.deterministic_suggestions().get_space_suggestions(
+            self.profile
+        )
+        suggested_ids = [group["_id"] for group in suggestions]
+
+        self.assertEqual(len(suggested_ids), 5)
+        self.assertTrue(set(suggested_ids[:3]).issubset(best_ids))
+        self.assertEqual(set(suggested_ids[3:]), set(active_ids))
+        self.assertFalse(set(suggested_ids) & set(inactive_ids))
+
+    def test_score_groups_order(self):
+        """
+        expect: the total score weighs the scores of the signals, the best scored
+        group comes first
+        """
+
+        self.profile["follows"] = ["followed"]
+        self.insert_group("other", members=["other"])
+        network_id = self.insert_group("network", members=["followed"])
+
+        groups = Spaces(self.db).score_spaces_for_suggestions(self.profile)
+
+        self.assertEqual(groups[0]["_id"], network_id)
+        for group in groups:
+            self.assertAlmostEqual(
+                group["score"],
+                sum(
+                    Spaces.SUGGESTION_WEIGHTS[signal] * score
+                    for signal, score in group["scores"].items()
+                ),
+            )
+
+    def test_score_groups_similar_members(self):
+        """
+        expect: groups score by their members with matching profiles, big groups
+        don't win by their size alone
+        """
+
+        self.profile_match.return_value = [
+            {"_source": {"username": "similar"}, "_score": 4.0},
+            {"_source": {"username": "less_similar"}, "_score": 1.0},
+        ]
+        similar_id = self.insert_group("similar", members=["similar"])
+        less_similar_id = self.insert_group("less_similar", members=["less_similar"])
+        big_id = self.insert_group(
+            "big", members=["similar", "other_1", "other_2", "other_3"]
+        )
+        other_id = self.insert_group("other", members=["other_1"])
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[similar_id]["scores"]["similar_members"], 1.0)
+        self.assertEqual(groups[less_similar_id]["scores"]["similar_members"], 0.25)
+        self.assertEqual(groups[big_id]["scores"]["similar_members"], 0.5)
+        self.assertEqual(groups[other_id]["scores"]["similar_members"], 0.0)
+
+        # the matching flattens the profile it gets, so it has to be a copy
+        matched_profile = self.profile_match.call_args.args[0]
+        self.assertIsNot(matched_profile, self.profile)
+        self.assertEqual(matched_profile, self.profile)
+
+    def test_score_groups_network(self):
+        """
+        expect: groups score by their members that the user follows or plans VEs
+        with, up to a saturation
+        """
+
+        username = self.profile["username"]
+        self.profile["follows"] = ["followed"]
+        self.db.plans.insert_many(
+            [
+                {"name": "own_plan", "author": username, "partners": ["partner"]},
+                {"name": "other_plan", "author": "plan_author", "partners": [username]},
+            ]
+        )
+        followed_id = self.insert_group("followed", members=["followed", "other"])
+        partner_id = self.insert_group("partner", members=["partner"])
+        author_id = self.insert_group("author", members=["plan_author"])
+        network_id = self.insert_group(
+            "network", members=["followed", "partner", "plan_author"]
+        )
+        other_id = self.insert_group("other", members=["other"])
+
+        groups = self.scored_groups()
+
+        for group_id in (followed_id, partner_id, author_id):
+            self.assertAlmostEqual(groups[group_id]["scores"]["network"], 1 / 3)
+        self.assertEqual(groups[network_id]["scores"]["network"], 1.0)
+        self.assertEqual(groups[other_id]["scores"]["network"], 0.0)
+
+    def test_score_groups_topic(self):
+        """
+        expect: groups score by how well they match the topics of the profile, which
+        are searched with both the English keys and German labels of the options
+        """
+
+        matching_id = self.insert_group("matching")
+        less_matching_id = self.insert_group("less_matching")
+        other_id = self.insert_group("other")
+        self.topic_match.return_value = {
+            str(matching_id): 3.0,
+            str(less_matching_id): 1.5,
+        }
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[matching_id]["scores"]["topic"], 1.0)
+        self.assertEqual(groups[less_matching_id]["scores"]["topic"], 0.5)
+        self.assertEqual(groups[other_id]["scores"]["topic"], 0.0)
+
+        text, space_ids = self.topic_match.call_args.args
+        for term in (
+            "Computer Science",
+            "Informatik",
+            "Research",
+            "Forschung",
+            "robotics",
+            "Machine Learning",
+        ):
+            self.assertIn(term, text)
+        self.assertEqual(set(space_ids), {matching_id, less_matching_id, other_id})
+
+    def test_score_groups_activity(self):
+        """
+        expect: groups score by their posts of the last days and their members, the
+        posts weigh more and older posts don't count
+        """
+
+        active_id = self.insert_group("active", members=["member"])
+        self.insert_posts(active_id, 3)
+        old_id = self.insert_group("old", members=["member"])
+        self.insert_posts(old_id, 3, days_ago=Spaces.SUGGESTION_ACTIVITY_DAYS + 1)
+        bigger_id = self.insert_group(
+            "bigger", members=["member_1", "member_2", "member_3"]
+        )
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[active_id]["recent_posts"], 3)
+        self.assertEqual(groups[old_id]["recent_posts"], 0)
+        self.assertEqual(groups[bigger_id]["recent_posts"], 0)
+        self.assertGreater(
+            groups[active_id]["scores"]["activity"],
+            groups[bigger_id]["scores"]["activity"],
+        )
+        self.assertGreater(
+            groups[bigger_id]["scores"]["activity"],
+            groups[old_id]["scores"]["activity"],
+        )
+
+    def test_score_groups_elasticsearch_unavailable(self):
+        """
+        expect: without elasticsearch, the groups are still scored by the other
+        signals
+        """
+
+        self.profile_match.side_effect = requests.ConnectionError()
+        self.topic_match.side_effect = requests.ConnectionError()
+        self.profile["follows"] = ["followed"]
+        network_id = self.insert_group("network", members=["followed"])
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[network_id]["scores"]["similar_members"], 0.0)
+        self.assertEqual(groups[network_id]["scores"]["topic"], 0.0)
+        self.assertAlmostEqual(groups[network_id]["scores"]["network"], 1 / 3)
+
+
 class SanitizeHtmlTest(TestCase):
     """
     the texts of posts and comments are reduced to the markup of the rich text

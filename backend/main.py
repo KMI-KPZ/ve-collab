@@ -43,7 +43,7 @@ from handlers.network.permissions import (
 )
 from handlers.network.post import *
 from handlers.network.search import SearchHandler
-from handlers.network.space import SpaceHandler
+from handlers.network.space import GroupSuggestionsHandler, SpaceHandler
 from handlers.network.space_files import SpaceFilesHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
@@ -117,6 +117,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/(.+)", SpaceHandler),
+            (r"/group_suggestions", GroupSuggestionsHandler),
             (r"/space_files/(.+)", SpaceFilesHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/(.+)", SpaceTimelineHandler),

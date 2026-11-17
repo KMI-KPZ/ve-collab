@@ -1,9 +1,14 @@
-from typing import Dict, List, Optional
+from datetime import datetime, timedelta, timezone
+import logging
+import math
+import random
+from typing import Callable, Dict, List, Optional
 
 from bson import ObjectId
 import gridfs
 from pymongo import ReturnDocument
 from pymongo.database import Database
+import requests
 from exceptions import (
     AlreadyAdminError,
     AlreadyMemberError,
@@ -17,9 +22,16 @@ from exceptions import (
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.profile import Profiles
+from resources.network.profile_option_labels import PROFILE_OPTION_LABELS_DE
 from resources.network.space_files import SpaceFiles
 from model import Space
 import util
+
+logger = logging.getLogger(__name__)
+
+# errors of a failed or unexpected elasticsearch response. Elasticsearch is only a
+# replica, so the space suggestions leave out its signals then instead of failing
+ELASTICSEARCH_ERRORS = (requests.RequestException, KeyError, ValueError)
 
 
 class Spaces:
@@ -32,8 +44,36 @@ class Spaces:
 
     """
 
+    # weights of the signals of the space suggestions, see `get_space_suggestions()`
+    SUGGESTION_WEIGHTS = {
+        "similar_members": 0.35,
+        "network": 0.25,
+        "topic": 0.2,
+        "activity": 0.2,
+    }
+    # number of profile matching hits that count as similar users
+    SUGGESTION_SIMILAR_USERS_COUNT = 100
+    # a space gets the full network score with this many members of the network
+    SUGGESTION_NETWORK_SATURATION = 3
+    # posts of this many past days count as activity
+    SUGGESTION_ACTIVITY_DAYS = 90
+    # the suggestions are drawn from this many best scored spaces ...
+    SUGGESTION_POOL_SIZE = 8
+    # ... except for this many, which are drawn from the remaining active spaces
+    SUGGESTION_DISCOVER_COUNT = 2
+    # remaining spaces count as active with a recent post or this many members
+    SUGGESTION_DISCOVER_MIN_MEMBERS = 3
+    # spaces without any score are still drawn, just very unlikely
+    SUGGESTION_MIN_DRAW_WEIGHT = 0.01
+    # the fields of a space that a suggestion consists of
+    SUGGESTION_FIELDS = ("_id", "name", "space_pic", "space_description")
+
     def __init__(self, db: Database):
         self.db = db
+
+        # the randomness of the suggestions
+        # TODO can be fixed to a number with evidence from realworld data
+        self.suggestion_random = random.Random()
 
         self.space_attributes = {
             "name": str,
@@ -390,7 +430,7 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyMemberError()
-        
+
         # since all checks have passed, count towards the achievement "join_groups"
         profile_manager = Profiles(self.db)
         profile_manager.achievement_count_up(username, "join_groups")
@@ -439,7 +479,7 @@ class Spaces:
         # because a set doesnt allow duplicates, meaning his name is already in it
         if update_result.modified_count != 1:
             raise AlreadyAdminError()
-        
+
         # since all checks have passed, count towards the achievement "admin_groups"
         profile_manager = Profiles(self.db)
         profile_manager.achievement_count_up(username, "admin_groups")
@@ -785,3 +825,286 @@ class Spaces:
 
         # remove user from spaces admins list
         self.db.spaces.update_one({"_id": space_id}, {"$pull": {"admins": username}})
+
+    def get_space_suggestions(self, profile: Dict, limit: int = 5) -> List[Dict]:
+        """
+        suggest at most `limit` spaces to join to the user of the given `profile`,
+        best scored first. Never suggested are invisible spaces and spaces that the
+        user is a member or admin of, was invited to or requested to join.
+
+        Every space gets a score of 0 to 1, weighing these signals (each scaled to 0
+        to 1, see `SUGGESTION_WEIGHTS`):
+
+        - similar members: members whose profiles match the profile of the user,
+          (using the profile matching approach)
+        - network: members that the user follows or plans VEs with
+        - topic: the name and description of the space match the expertise, VE
+          interests and goals, research tags and courses of the user
+        - activity: posts of the last days and the number of members
+
+        The suggestions are drawn from the best scored spaces, weighted by their
+        score, plus a few active spaces from the rest, so that users also come
+        across spaces beyond their profile. As long as there are few spaces and
+        sparse profiles, mostly the activity tells the spaces apart, which still
+        favors lively spaces. Since they are drawn randomly, the suggestions vary
+        between calls.
+
+        This operation is relatively compute-expensive, so should be cached where possible.
+
+        :return: the suggested spaces, each with its _id, name, space_pic and
+                 space_description
+        """
+
+        spaces = self.score_spaces_for_suggestions(profile)
+        pool = spaces[: self.SUGGESTION_POOL_SIZE]
+        rest = spaces[self.SUGGESTION_POOL_SIZE :]
+
+        active_rest = [
+            space
+            for space in rest
+            if space["recent_posts"]
+            or len(space["members"]) >= self.SUGGESTION_DISCOVER_MIN_MEMBERS
+        ]
+        suggestions = self._draw_suggestions(
+            active_rest,
+            lambda space: space["scores"]["activity"],
+            min(self.SUGGESTION_DISCOVER_COUNT, limit),
+        )
+        suggestions += self._draw_suggestions(
+            pool, lambda space: space["score"], limit - len(suggestions)
+        )
+
+        # only if `limit` exceeds the pool: fill up with the remaining spaces
+        drawn = {space["_id"] for space in suggestions}
+        leftover = [space for space in spaces if space["_id"] not in drawn]
+        suggestions += self._draw_suggestions(
+            leftover, lambda space: space["score"], limit - len(suggestions)
+        )
+
+        suggestions.sort(key=lambda space: space["score"], reverse=True)
+        return [
+            {field: space[field] for field in self.SUGGESTION_FIELDS if field in space}
+            for space in suggestions
+        ]
+
+    def score_spaces_for_suggestions(self, profile: Dict) -> List[Dict]:
+        """
+        score all spaces that may be suggested to the user of the given `profile`
+        (see `get_space_suggestions()`).
+
+        :return: the spaces (their suggestion fields and members) along with their
+                 number of "recent_posts", their "scores" per signal and their total
+                 "score", best scored first
+        """
+
+        username = profile["username"]
+        spaces = list(
+            self.db.spaces.find(
+                {
+                    "invisible": {"$ne": True},
+                    "members": {"$ne": username},
+                    "admins": {"$ne": username},
+                    "invites": {"$ne": username},
+                    "requests": {"$ne": username},
+                },
+                projection={field: True for field in self.SUGGESTION_FIELDS}
+                | {"members": True},
+            )
+        )
+        if not spaces:
+            return []
+
+        recent_posts = self._recent_post_counts(spaces)
+        for space in spaces:
+            space["recent_posts"] = recent_posts.get(space["_id"], 0)
+
+        signals = {
+            "similar_members": self._suggestion_similar_members_scores(profile, spaces),
+            "network": self._suggestion_network_scores(profile, spaces),
+            "topic": self._suggestion_topic_scores(profile, spaces),
+            "activity": self._suggestion_activity_scores(spaces),
+        }
+        for space in spaces:
+            space["scores"] = {
+                signal: scores[space["_id"]] for signal, scores in signals.items()
+            }
+            space["score"] = sum(
+                self.SUGGESTION_WEIGHTS[signal] * score
+                for signal, score in space["scores"].items()
+            )
+
+        return sorted(spaces, key=lambda space: space["score"], reverse=True)
+
+    def _suggestion_similar_members_scores(
+        self, profile: Dict, spaces: List[Dict]
+    ) -> Dict[ObjectId, float]:
+        """
+        the matching scores of the members, summed up per space. The sum is divided
+        by the square root of the number of members, so that big spaces don't win by
+        their size alone
+        """
+
+        try:
+            # the matching flattens the lists of the profile in place
+            hits = ElasticsearchConnector().search_profile_match(
+                dict(profile), None, None, size=self.SUGGESTION_SIMILAR_USERS_COUNT
+            )
+            user_scores = {hit["_source"]["username"]: hit["_score"] for hit in hits}
+        except ELASTICSEARCH_ERRORS as e:
+            logger.warning("could not match profiles for space suggestions: %s", e)
+            user_scores = {}
+
+        return self._scaled(
+            {
+                space["_id"]: (
+                    sum(user_scores.get(member, 0) for member in space["members"])
+                    / math.sqrt(len(space["members"]))
+                    if space["members"]
+                    else 0
+                )
+                for space in spaces
+            }
+        )
+
+    def _suggestion_network_scores(
+        self, profile: Dict, spaces: List[Dict]
+    ) -> Dict[ObjectId, float]:
+        """
+        the number of members that the user follows or plans VEs with (as author or
+        partner of a plan), up to `SUGGESTION_NETWORK_SATURATION`
+        """
+
+        username = profile["username"]
+        network = set(profile["follows"])
+        for plan in self.db.plans.find(
+            {"$or": [{"author": username}, {"partners": username}]},
+            projection={"author": True, "partners": True},
+        ):
+            network.add(plan["author"])
+            network.update(plan["partners"])
+        network.discard(username)
+
+        return {
+            space["_id"]: min(
+                len(network.intersection(space["members"])),
+                self.SUGGESTION_NETWORK_SATURATION,
+            )
+            / self.SUGGESTION_NETWORK_SATURATION
+            for space in spaces
+        }
+
+    def _suggestion_topic_scores(
+        self, profile: Dict, spaces: List[Dict]
+    ) -> Dict[ObjectId, float]:
+        """
+        how well the names and descriptions of the spaces match the topics of the
+        profile
+        """
+
+        try:
+            space_scores = ElasticsearchConnector().search_space_topic_match(
+                self._suggestion_topic_text(profile),
+                [space["_id"] for space in spaces],
+            )
+        except ELASTICSEARCH_ERRORS as e:
+            logger.warning("could not match topics for space suggestions: %s", e)
+            space_scores = {}
+
+        return self._scaled(
+            {space["_id"]: space_scores.get(str(space["_id"]), 0) for space in spaces}
+        )
+
+    @staticmethod
+    def _suggestion_topic_text(profile: Dict) -> str:
+        """
+        the topics of the profile as a single text: its expertise, VE interests and
+        VE goals (with their English keys and German labels), its research tags and
+        the titles of its courses
+        """
+
+        terms = []
+        options = [profile["expertise"], *profile["ve_interests"], *profile["ve_goals"]]
+        for option in options:
+            if option:
+                terms += [option, PROFILE_OPTION_LABELS_DE.get(option, "")]
+        terms += profile["research_tags"]
+        terms += [course["title"] for course in profile["courses"]]
+
+        return " ".join(term for term in terms if term)
+
+    def _recent_post_counts(self, spaces: List[Dict]) -> Dict[ObjectId, int]:
+        """
+        the number of posts of the last `SUGGESTION_ACTIVITY_DAYS` days per space,
+        spaces without such posts are not contained
+        """
+
+        since = datetime.now(timezone.utc) - timedelta(
+            days=self.SUGGESTION_ACTIVITY_DAYS
+        )
+        return {
+            row["_id"]: row["count"]
+            for row in self.db.posts.aggregate(
+                [
+                    {
+                        "$match": {
+                            "space": {"$in": [space["_id"] for space in spaces]},
+                            "creation_date": {"$gte": since},
+                        }
+                    },
+                    {"$group": {"_id": "$space", "count": {"$sum": 1}}},
+                ]
+            )
+        }
+
+    def _suggestion_activity_scores(self, spaces: List[Dict]) -> Dict[ObjectId, float]:
+        """
+        the recent posts and the members of the spaces, both on a logarithmic scale,
+        since the first few make the biggest difference. The posts weigh more,
+        members alone don't make a space lively
+        """
+
+        posts = self._scaled(
+            {space["_id"]: math.log1p(space["recent_posts"]) for space in spaces}
+        )
+        members = self._scaled(
+            {space["_id"]: math.log1p(len(space["members"])) for space in spaces}
+        )
+        return {
+            space["_id"]: 0.7 * posts[space["_id"]] + 0.3 * members[space["_id"]]
+            for space in spaces
+        }
+
+    @staticmethod
+    def _scaled(values: Dict[ObjectId, float]) -> Dict[ObjectId, float]:
+        """
+        scale the values to 0 to 1 by dividing them by the biggest one
+        """
+
+        highest = max(values.values(), default=0)
+        if highest <= 0:
+            return {key: 0.0 for key in values}
+        return {key: value / highest for key, value in values.items()}
+
+    def _draw_suggestions(
+        self, spaces: List[Dict], weight: Callable[[Dict], float], count: int
+    ) -> List[Dict]:
+        """
+        draw `count` of the `spaces` (or all of them, if there are fewer) without
+        replacement, each one with a chance proportional to its `weight`
+        """
+
+        if count <= 0:
+            return []
+
+        # weighted random sampling: the highest keys
+        # of random() ** (1 / weight) are a weighted sample
+        keyed = [
+            (
+                self.suggestion_random.random()
+                ** (1 / max(weight(space), self.SUGGESTION_MIN_DRAW_WEIGHT)),
+                space,
+            )
+            for space in spaces
+        ]
+        keyed.sort(key=lambda pair: pair[0], reverse=True)
+        return [space for _, space in keyed[:count]]
