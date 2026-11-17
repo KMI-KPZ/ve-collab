@@ -31,4 +31,7 @@ export default class LocalStorage {
 
         return item.value;
     }
+    static removeItem(key: string) {
+        localStorage.removeItem(key);
+    }
 }

@@ -11,6 +11,7 @@ import tornado.ioloop
 import global_vars
 from handlers.base_handler import BaseHandler
 from resources.network.acl import ACL
+from resources.network.chat import Chat
 from resources.network.space import Spaces
 from resources.network.space_files import SpaceFiles
 import util
@@ -24,8 +25,9 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
     absolutely no use
     """
 
-    # whether the requested file belongs to a space's file share (set while validating)
-    is_space_file = False
+    # whether the requested file is permission-checked, i.e. belongs to a space's
+    # file share or was sent in a chat (set while validating)
+    is_protected_file = False
 
     def options(self, slug):
         # no body
@@ -151,12 +153,33 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
 
         return True
 
+    def _check_chat_file_permission(self, db, file_id: ObjectId) -> bool:
+        """
+        if the file was sent in a chat, the current user has to be a member of
+        that chat room (or a global admin, e.g. to handle a report of the room),
+        otherwise reply 403.
+
+        Returns whether the file was sent in a chat.
+        """
+
+        members = Chat(db).get_room_members_by_file_id(file_id)
+        if members is None:
+            return False
+
+        if (
+            self.current_user.username not in members
+            and not self.is_current_user_lionet_admin()
+        ):
+            raise tornado.web.HTTPError(403)
+
+        return True
+
     def validate_absolute_path(self, root: str, absolute_path: str) -> Optional[str]:
         """
         overridden
         validate that there is a valid session (self.current_user),
         check that the user may access the file if it belongs to a space's
-        file share (403 if not),
+        file share or was sent in a chat (403 if not),
         check if the file exists (404 if not),
         set the file as instance attribute (that way other functions
         dont need to request from gridfs again and again)
@@ -186,9 +209,10 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
             except gridfs.NoFile:
                 raise tornado.web.HTTPError(404)
 
-            self.is_space_file = isinstance(
-                absolute_path, ObjectId
-            ) and self._check_space_file_permission(db, absolute_path)
+            self.is_protected_file = isinstance(absolute_path, ObjectId) and (
+                self._check_space_file_permission(db, absolute_path)
+                or self._check_chat_file_permission(db, absolute_path)
+            )
 
             return absolute_path
 
@@ -198,13 +222,14 @@ class GridFSStaticFileHandler(tornado.web.StaticFileHandler, BaseHandler):
         uploads are user content: browsers must not guess another type than the
         stored one, and if a file is ever rendered as a document (e.g. an html
         or svg file), the sandbox keeps it from running scripts in this origin.
-        Files of a space's file share are permission-checked, so they may only
-        be cached privately and have to be revalidated (i.e. checked) on every use.
+        Files of a space's file share and chat files are permission-checked, so they
+        may only be cached privately and have to be revalidated (i.e. checked) on
+        every use.
         """
 
         self.set_header("X-Content-Type-Options", "nosniff")
         self.set_header("Content-Security-Policy", "sandbox")
-        if self.is_space_file:
+        if self.is_protected_file:
             self.set_header("Cache-Control", "private, no-cache")
 
     def get_content_type(self) -> str:

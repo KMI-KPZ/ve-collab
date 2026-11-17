@@ -8,6 +8,7 @@ import tornado.web
 
 from handlers.base_handler import BaseHandler, auth_needed
 from resources.network.acl import ACL
+from resources.network.profile import Profiles
 from resources.network.space import (
     AlreadyAdminError,
     OnlyAdminError,
@@ -1218,12 +1219,14 @@ class SpaceHandler(BaseHandler):
                     )
 
                     # notify space admins about the join request
-                    space = space_manager.get_space(space_id, projection={"admins": True, "name": True})
+                    space = space_manager.get_space(
+                        space_id, projection={"admins": True, "name": True}
+                    )
                     for admin in space["admins"]:
                         notification_payload = {
                             "join_request_sender": self.current_user.username,
                             "space_name": space["name"],
-                            "space_id": space_id
+                            "space_id": space_id,
                         }
                         notification_manager = NotificationResource(db)
                         await notification_manager.send_notification(
@@ -1391,7 +1394,9 @@ class SpaceHandler(BaseHandler):
             self.set_status(200)
             self.write({"success": True})
 
-    async def invite_user_into_space(self, space_id: str | ObjectId, username: str) -> None:
+    async def invite_user_into_space(
+        self, space_id: str | ObjectId, username: str
+    ) -> None:
         """
         invite a user into the space
         """
@@ -1433,7 +1438,7 @@ class SpaceHandler(BaseHandler):
                 "invitation_sender": self.current_user.username,
                 "invitation_recipient": username,
                 "space_name": space["name"],
-                "space_id": space_id
+                "space_id": space_id,
             }
             notification_manager = NotificationResource(db)
             await notification_manager.send_notification(
@@ -1876,3 +1881,41 @@ class SpaceHandler(BaseHandler):
                 self.set_status(409)
                 self.write({"success": False, "reason": "space_doesnt_exist"})
                 return
+
+
+class GroupSuggestionsHandler(BaseHandler):
+    @auth_needed
+    def get(self):
+        """
+        GET /group_suggestions
+            suggest up to 5 groups to join to the current user, based on
+            their profile and network as well as the activity of the groups (see
+            `Spaces.get_space_suggestions()` for details). Never suggested are
+            invisible groups and groups that the user is a member or admin of, was
+            invited to or requested to join. The suggestions are drawn randomly to
+            some degree, so they vary between requests.
+
+            returns:
+                200 OK
+                {"success": True,
+                 "suggestions": [
+                    {
+                        "_id": "<string>",
+                        "name": "<string>",
+                        "space_pic": "<string>",
+                        "space_description": "<string>"
+                    },
+                    ...
+                 ]}
+
+                401 Unauthorized
+                {"success": False,
+                 "reason": "no_logged_in_user"}
+        """
+
+        with util.get_mongodb() as db:
+            profile = Profiles(db).ensure_profile_exists(self.current_user.username)
+            suggestions = Spaces(db).get_space_suggestions(profile)
+
+        self.set_status(200)
+        self.serialize_and_write({"success": True, "suggestions": suggestions})

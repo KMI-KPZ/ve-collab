@@ -1,16 +1,23 @@
 import json
 import logging
 
+from bson.errors import InvalidId
 from bson.objectid import ObjectId
 import tornado.web
 
 from error_reasons import (
+    COMMENT_DOESNT_EXIST,
     INSUFFICIENT_PERMISSIONS,
+    INVALID_OBJECT_ID,
+    JSON_PARSING_ERROR,
+    MISSING_KEY_IN_HTTP_BODY_SLUG,
     MISSING_KEY_SLUG,
     POST_DOESNT_EXIST,
     SPACE_DOESNT_EXIST,
+    TEXT_NOT_STR,
 )
 from exceptions import (
+    CommentDoesntExistError,
     FileAlreadyInRepoError,
     NoWriteAccessError,
     PlanDoesntExistError,
@@ -436,7 +443,9 @@ class PostHandler(BaseTimelineHandler):
                     # got plans from request -> update DB
                     for plan_id in plans_ids:
                         try:
-                            if not plan_manager._check_write_access(plan_id, self.current_user.username):
+                            if not plan_manager._check_write_access(
+                                plan_id, self.current_user.username
+                            ):
                                 raise NoWriteAccessError()
                         except PlanDoesntExistError:
                             raise
@@ -579,8 +588,12 @@ class PostHandler(BaseTimelineHandler):
             if post_to_delete["space"]:
                 post_to_delete["space"] = util.parse_object_id(post_to_delete["space"])
 
-                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
-                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                if (
+                    "repostAuthor" not in post_to_delete
+                    and self.current_user.username != post_to_delete["author"]
+                ) or (
+                    "repostAuthor" in post_to_delete
+                    and self.current_user.username != post_to_delete["repostAuthor"]
                 ):
                     if not self.is_current_user_lionet_admin():
                         space_manager = Spaces(db)
@@ -611,8 +624,12 @@ class PostHandler(BaseTimelineHandler):
             # if the post is not in a space, the option to be space admin
             # to remove the post doesnt hold anymore, check only the other 2 options
             else:
-                if ("repostAuthor" not in post_to_delete and self.current_user.username != post_to_delete["author"]) or (
-                    "repostAuthor" in post_to_delete and self.current_user.username != post_to_delete["repostAuthor"]
+                if (
+                    "repostAuthor" not in post_to_delete
+                    and self.current_user.username != post_to_delete["author"]
+                ) or (
+                    "repostAuthor" in post_to_delete
+                    and self.current_user.username != post_to_delete["repostAuthor"]
                 ):
                     if not self.is_current_user_lionet_admin():
                         # none of the two permission cases apply, deny removal
@@ -654,7 +671,7 @@ class CommentHandler(BaseHandler):
         POST /comment
         http body:
             {
-                "text": "content_of_comment",
+                "text": "content_of_comment",  # HTML from the rich text editor
                 "post_id": "id_of_post"
             }
         return:
@@ -672,6 +689,7 @@ class CommentHandler(BaseHandler):
                     "creation_date": "string",
                     "text": "string",
                     "pinned": "bool",
+                    "likers": [],
                 },
              }
 
@@ -684,6 +702,16 @@ class CommentHandler(BaseHandler):
             {"status": 400,
              "success": False,
              "reason": "missing_key_in_http_body:post_id"}
+
+            400 Bad Request
+            {"status": 400,
+             "success": False,
+             "reason": "missing_key_in_http_body:text"}
+
+            400 Bad Request
+            {"status": 400,
+             "success": False,
+             "reason": "text_not_str"}
 
             401 Unauthorized
             {"status": 401,
@@ -709,15 +737,21 @@ class CommentHandler(BaseHandler):
             )
             return
 
-        if "post_id" not in http_body:
+        for key in ("post_id", "text"):
+            if key not in http_body:
+                self.set_status(400)
+                self.write(
+                    {
+                        "status": 400,
+                        "success": False,
+                        "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + key,
+                    }
+                )
+                return
+
+        if not isinstance(http_body["text"], str):
             self.set_status(400)
-            self.write(
-                {
-                    "status": 400,
-                    "success": False,
-                    "reason": "missing_key_in_http_body:post_id",
-                }
-            )
+            self.write({"status": 400, "success": False, "reason": TEXT_NOT_STR})
             return
 
         with util.get_mongodb() as db:
@@ -757,6 +791,7 @@ class CommentHandler(BaseHandler):
                 "creation_date": util.utcnow(),
                 "text": http_body["text"],
                 "pinned": False,
+                "likers": [],
             }
 
             try:
@@ -1089,6 +1124,153 @@ class LikePostHandler(BaseHandler):
         self.write({"status": 200, "success": True})
 
 
+class LikeCommentHandler(BaseHandler):
+    @auth_needed
+    def post(self):
+        """
+        POST /comment/like
+            like a comment
+
+            http body:
+                {
+                    "comment_id": "id_of_comment_to_like"
+                }
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True}
+
+                304 Not Modified
+                --> current_user already likes the comment
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:comment_id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "invalid_object_id"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "comment_doesnt_exist"}
+        """
+
+        self._set_like(like=True)
+
+    @auth_needed
+    def delete(self):
+        """
+        DELETE /comment/like
+            remove your like from a comment
+
+            http body:
+                {
+                    "comment_id": "id_of_comment_to_unlike"
+                }
+
+            returns:
+                200 OK
+                {"status": 200,
+                 "success": True}
+
+                304 Not Modified
+                --> current_user hadn't liked the comment before
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "json_parsing_error"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "missing_key_in_http_body:comment_id"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "invalid_object_id"}
+
+                401 Unauthorized
+                {"status": 401,
+                 "success": False,
+                 "reason": "no_logged_in_user"}
+
+                409 Conflict
+                {"status": 409,
+                 "success": False,
+                 "reason": "comment_doesnt_exist"}
+        """
+
+        self._set_like(like=False)
+
+    def _set_like(self, like: bool) -> None:
+        """
+        like (or unlike) the comment given in the http body in the name of the
+        current user and write the response
+        """
+
+        try:
+            http_body = json.loads(self.request.body)
+        except json.JSONDecodeError:
+            self.set_status(400)
+            self.write({"status": 400, "success": False, "reason": JSON_PARSING_ERROR})
+            return
+
+        if "comment_id" not in http_body:
+            self.set_status(400)
+            self.write(
+                {
+                    "status": 400,
+                    "success": False,
+                    "reason": MISSING_KEY_IN_HTTP_BODY_SLUG + "comment_id",
+                }
+            )
+            return
+
+        try:
+            comment_id = util.parse_object_id(http_body["comment_id"])
+        except (InvalidId, TypeError):
+            self.set_status(400)
+            self.write({"status": 400, "success": False, "reason": INVALID_OBJECT_ID})
+            return
+
+        with util.get_mongodb() as db:
+            post_manager = Posts(db)
+            try:
+                if like:
+                    post_manager.like_comment(comment_id, self.current_user.username)
+                else:
+                    post_manager.unlike_comment(comment_id, self.current_user.username)
+            except (AlreadyLikerException, NotLikerException):
+                self.set_status(304)
+                return
+            except CommentDoesntExistError:
+                self.set_status(409)
+                self.write(
+                    {"status": 409, "success": False, "reason": COMMENT_DOESNT_EXIST}
+                )
+                return
+
+        self.set_status(200)
+        self.write({"status": 200, "success": True})
+
+
 class RepostHandler(BaseHandler):
     @auth_needed
     def post(self):
@@ -1125,6 +1307,11 @@ class RepostHandler(BaseHandler):
                 {"status": 400,
                  "success": False,
                  "reason": "missing_key_in_http_body:text"}
+
+                400 Bad Request
+                {"status": 400,
+                 "success": False,
+                 "reason": "text_not_str"}
 
                 400 Bad Request
                 {"status": 400,
@@ -1190,6 +1377,11 @@ class RepostHandler(BaseHandler):
                     "reason": "missing_key_in_http_body:text",
                 }
             )
+            return
+
+        if not isinstance(http_body["text"], str):
+            self.set_status(400)
+            self.write({"status": 400, "success": False, "reason": TEXT_NOT_STR})
             return
 
         # no _id field in the request means a new repost is made (not to confuse with post_id, which is the _id of the original post that is being reposted here)

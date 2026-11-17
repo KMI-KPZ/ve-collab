@@ -4,9 +4,10 @@ import { formatBytes } from './fileUtils';
 
 interface Props {
     storage: BackendFileShareStorage;
+    label?: string; // defaults to the label of a group's file share
 }
 
-export default function StorageBar({ storage }: Props) {
+export default function StorageBar({ storage, label }: Props) {
     const { t } = useTranslation('community');
 
     const percent = Math.min(
@@ -17,7 +18,7 @@ export default function StorageBar({ storage }: Props) {
     return (
         <div className="text-xs text-gray-500">
             <div className="flex justify-between mb-1">
-                <span>{t('fileshare_storage')}</span>
+                <span>{label ?? t('fileshare_storage')}</span>
                 <span>
                     {formatBytes(storage.used_bytes)} / {formatBytes(storage.max_bytes)}
                 </span>

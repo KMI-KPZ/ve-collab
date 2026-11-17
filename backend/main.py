@@ -43,7 +43,7 @@ from handlers.network.permissions import (
 )
 from handlers.network.post import *
 from handlers.network.search import SearchHandler
-from handlers.network.space import SpaceHandler
+from handlers.network.space import GroupSuggestionsHandler, SpaceHandler
 from handlers.network.space_files import SpaceFilesHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
@@ -110,12 +110,14 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/health", HealthCheckHandler),
             (r"/posts", PostHandler),
             (r"/comment", CommentHandler),
+            (r"/comment/like", LikeCommentHandler),
             (r"/like", LikePostHandler),
             (r"/repost", RepostHandler),
             (r"/pin", PinHandler),
             (r"/follow", FollowHandler),
             (r"/updates", NewPostsSinceTimestampHandler),
             (r"/spaceadministration/(.+)", SpaceHandler),
+            (r"/group_suggestions", GroupSuggestionsHandler),
             (r"/space_files/(.+)", SpaceFilesHandler),
             (r"/timeline", TimelineHandler),
             (r"/timeline/space/(.+)", SpaceTimelineHandler),
@@ -260,6 +262,24 @@ def init_indexes(force_rebuild: bool) -> None:
             logger.info(
                 "Built index named {} on collection {}".format(
                     "notifications_to", "notifications"
+                )
+            )
+
+        # index on the files sent in chats (permission lookups by file_id when serving files)
+        if (
+            "chatrooms_message_files" not in db.chatrooms.index_information()
+            or force_rebuild
+        ):
+            try:
+                db.chatrooms.drop_index("chatrooms_message_files")
+            except pymongo.errors.OperationFailure:
+                pass
+            db.chatrooms.create_index(
+                "messages.files.file_id", name="chatrooms_message_files"
+            )
+            logger.info(
+                "Built index named {} on collection {}".format(
+                    "chatrooms_message_files", "chatrooms"
                 )
             )
 

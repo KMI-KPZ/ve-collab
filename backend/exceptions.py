@@ -203,6 +203,12 @@ class MessageDoesntExistError(Exception):
     pass
 
 
+class CommentDoesntExistError(Exception):
+    """the requested comment doesn't exist"""
+
+    pass
+
+
 class ReportDoesntExistError(Exception):
     """the requested report doesn't exist"""
 

@@ -1,5 +1,4 @@
 import datetime
-import mimetypes
 import os
 import re
 from typing import Any, Dict, List, Optional
@@ -88,9 +87,6 @@ class SpaceFiles:
     NAME_COLLATION = Collation(locale="en", strength=2)
     UNIQUE_NAME_INDEX = "space_files_unique_name"
 
-    # path separators and control characters are not allowed in names
-    _INVALID_NAME_CHARS = re.compile(r"[\\/\x00-\x1f\x7f]")
-
     def __init__(self, db: Database):
         self.db = db
 
@@ -159,23 +155,7 @@ class SpaceFiles:
         control characters.
         """
 
-        if not isinstance(name, str):
-            raise InvalidFileNameError("name has to be a string")
-
-        name = name.strip()
-
-        if not name or name in (".", ".."):
-            raise InvalidFileNameError("name must not be empty")
-
-        if len(name) > self.MAX_NAME_LENGTH:
-            raise InvalidFileNameError(
-                "name exceeds maximum length of {}".format(self.MAX_NAME_LENGTH)
-            )
-
-        if self._INVALID_NAME_CHARS.search(name):
-            raise InvalidFileNameError("name contains forbidden characters")
-
-        return name
+        return util.validate_file_name(name, self.MAX_NAME_LENGTH)
 
     @staticmethod
     def content_type_of(file_name: str) -> str:
@@ -185,7 +165,7 @@ class SpaceFiles:
         extension (e.g. no "text/html" for a "picture.png").
         """
 
-        return mimetypes.guess_type(file_name)[0] or "application/octet-stream"
+        return util.content_type_of(file_name)
 
     def _name_exists(
         self,

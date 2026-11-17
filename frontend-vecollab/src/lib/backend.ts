@@ -1,6 +1,10 @@
 import {
+    BackendChatFile,
+    BackendChatFileLimits,
     BackendChatMessage,
+    BackendChatRoomFile,
     BackendChatroomSnippet,
+    BackendFileShareStorage,
     BackendPost,
     BackendFileNode,
     BackendFileSearchResult,
@@ -443,6 +447,69 @@ export function useGetChatrooms(accessToken: string): {
     };
 }
 
+export function useSearchChatMessages(
+    accessToken: string,
+    roomId: string,
+    query: string
+): {
+    data: BackendChatMessage[];
+    isLoading: boolean;
+    error: any;
+} {
+    const { data, error, isLoading } = useSWR(
+        query.trim() !== ''
+            ? [
+                  `/chatroom/search_messages?room_id=${roomId}&query=${encodeURIComponent(
+                      query.trim()
+                  )}`,
+                  accessToken,
+              ]
+            : null,
+        ([url, token]) => GETfetcher(url, token),
+        Object.assign({}, swrConfig, { keepPreviousData: true })
+    );
+    return {
+        data: !data || error ? [] : data.messages,
+        isLoading,
+        error,
+    };
+}
+
+export function useGetChatroomFiles(
+    accessToken: string,
+    roomId: string
+): {
+    data: BackendChatRoomFile[];
+    storage: BackendFileShareStorage | null;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        [`/chatroom/get_files?room_id=${roomId}`, accessToken],
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+    return {
+        data: !data || isLoading || error ? [] : data.files,
+        storage: !data || isLoading || error ? null : data.storage,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+export function useGetChatFileLimits(accessToken: string): {
+    data: BackendChatFileLimits | null;
+} {
+    const { data, error, isLoading } = useSWR(
+        accessToken ? ['/chatroom/file_limits', accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+    return { data: !data || isLoading || error ? null : data.limits };
+}
+
 export function useGetChatroomHistory(
     accessToken: string,
     chatroomId: string
@@ -715,8 +782,7 @@ export function useGetFileShareLimits(accessToken: string): {
 }
 
 /**
- * upload files into a folder of a group's file share. Uses XHR instead of fetch
- * to be able to report the upload progress. Resolves with the parsed json
+ * upload files into a folder of a group's file share. Resolves with the parsed json
  * response of the backend (success or error), rejects only on network errors.
  */
 export function uploadGroupFiles(
@@ -730,9 +796,42 @@ export function uploadGroupFiles(
     files.forEach((file) => body.append('file', file, file.name));
     if (parentId) body.append('parent', parentId);
 
+    return postMultipart(`/space_files/upload?id=${groupId}`, body, accessToken, onProgress);
+}
+
+/**
+ * send files with an optional text as a message to a chat room. Resolves with the
+ * parsed json response of the backend (success or error), rejects only on network errors.
+ * The message itself arrives like any other message via the socket.
+ */
+export function uploadChatFiles(
+    roomId: string,
+    files: File[],
+    message: string,
+    accessToken: string,
+    onProgress?: (fraction: number) => void
+): Promise<{ success: boolean; reason?: string; files?: BackendChatFile[] }> {
+    const body = new FormData();
+    files.forEach((file) => body.append('file', file, file.name));
+    if (message) body.append('message', message);
+
+    return postMultipart(`/chatroom/upload?room_id=${roomId}`, body, accessToken, onProgress);
+}
+
+/**
+ * POST multipart form data. Uses XHR instead of fetch to be able to report the upload
+ * progress. Resolves with the parsed json response of the backend (success or error),
+ * rejects only on network errors.
+ */
+function postMultipart(
+    relativeUrl: string,
+    body: FormData,
+    accessToken: string,
+    onProgress?: (fraction: number) => void
+): Promise<any> {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${BACKEND_BASE_URL}/space_files/upload?id=${groupId}`);
+        xhr.open('POST', `${BACKEND_BASE_URL}${relativeUrl}`);
         xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
         xhr.upload.onprogress = (event) => {
             if (onProgress && event.lengthComputable) {
@@ -773,6 +872,29 @@ export async function fetchAuthenticatedFile(
         signIn('keycloak');
     }
     return response;
+}
+
+/**
+ * download a file from the backend (gridfs) and let the browser save it under the
+ * given name. Returns the http status, i.e. 200 on success
+ */
+export async function downloadAuthenticatedFile(
+    fileId: string,
+    name: string,
+    accessToken?: string
+): Promise<number> {
+    const response = await fetchAuthenticatedFile(`/uploads/${fileId}`, accessToken);
+    if (!response.ok) return response.status;
+
+    const href = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    return response.status;
 }
 
 export function useGetMyACL(accessToken: string): {

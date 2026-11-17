@@ -1,11 +1,9 @@
-from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
 from typing import Any, Callable, Optional
 
 from bson import ObjectId
 from bson.errors import InvalidId
-import tornado.ioloop
 import tornado.web
 
 from error_reasons import (
@@ -49,12 +47,6 @@ from resources.network.space_files import SpaceFiles
 import util
 
 logger = logging.getLogger(__name__)
-
-# uploading, copying and deleting files moves up to `MAX_FILE_SIZE_BYTES` per file
-# through gridfs, which would block the event loop (and with it every other
-# request and the socket.io connections) for that long, so it runs in this pool.
-# The small size also limits how many large files are held in memory at once.
-_file_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="space_files")
 
 
 class SpaceFilesHandler(BaseHandler):
@@ -142,7 +134,9 @@ class SpaceFilesHandler(BaseHandler):
         """
 
         try:
-            return acl.space_acl.ask(self.current_user.username, space_id, permission_key)
+            return acl.space_acl.ask(
+                self.current_user.username, space_id, permission_key
+            )
         except ValueError:
             return False
 
@@ -150,7 +144,7 @@ class SpaceFilesHandler(BaseHandler):
         """
         common access checks for every endpoint:
         - the space has to exist (409 otherwise)
-        - the current user has to be a member of the space or is a global / space 
+        - the current user has to be a member of the space or is a global / space
           admin (409 otherwise)
         - the user needs the given space acl permission ("read_files" or
           "write_files"), global admins and space admins implicitly have it
@@ -189,13 +183,12 @@ class SpaceFilesHandler(BaseHandler):
 
     def _run_blocking(self, func: Callable[..., Any], *args) -> Any:
         """
-        run the blocking `func` with the given `args` in the file share's thread
-        pool and return an awaitable of its result (or its exception)
+        run the blocking `func` with the given `args` in the thread pool for
+        user files (see `util.run_in_file_executor`) and return an awaitable
+        of its result (or its exception)
         """
 
-        return tornado.ioloop.IOLoop.current().run_in_executor(
-            _file_executor, func, *args
-        )
+        return util.run_in_file_executor(func, *args)
 
     def _write_node_error(self, error: Exception) -> None:
         """

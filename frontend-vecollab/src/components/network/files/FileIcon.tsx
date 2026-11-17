@@ -1,4 +1,3 @@
-import { BackendFileNode } from '@/interfaces/api/apiInterfaces';
 import {
     MdFolder,
     MdFolderSpecial,
@@ -13,10 +12,10 @@ import {
     MdFolderZip,
     MdCode,
 } from 'react-icons/md';
-import { getExtension } from './fileUtils';
+import { PreviewableFile, getExtension } from './fileUtils';
 
 interface Props {
-    node: BackendFileNode;
+    node: PreviewableFile;
     size?: number;
     className?: string;
 }

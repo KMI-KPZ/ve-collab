@@ -13,6 +13,7 @@ import {
 } from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { BackendGroup } from '@/interfaces/api/apiInterfaces';
 import { GetStaticPropsContext } from 'next';
@@ -38,6 +39,7 @@ Groups.noAuthPreview = <GroupsNoAuthPreview />;
 export default function Groups() {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
+    const router = useRouter();
 
     const [searchInput, setSearchInput] = useState('');
     const [newInput, setNewInput] = useState('');
@@ -46,6 +48,8 @@ export default function Groups() {
     // const [searchResults, setSearchResults] = useState<BackendGroup[]>([]);
 
     const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+    const [creatingGroup, setCreatingGroup] = useState(false);
+    const [createGroupFailed, setCreateGroupFailed] = useState(false);
 
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
@@ -134,18 +138,33 @@ export default function Groups() {
         setNewInput('');
         setNewGroupInvisibleCheckboxChecked(false);
         setNewGroupJoinableCheckboxChecked(false);
+        setCreateGroupFailed(false);
         setIsNewDialogOpen(true);
     };
 
-    const createNewGroup = () => {
-        if (!newInput) return;
-        fetchPOST(
-            `/spaceadministration/create?name=${newInput}&invisible=${newGroupInvisibleCheckboxChecked}&joinable=${!newGroupJoinableCheckboxChecked}`,
+    // creates the group and opens it right away, the dialog stays open on errors
+    const createNewGroup = async () => {
+        if (!newInput || creatingGroup) return;
+
+        setCreatingGroup(true);
+        setCreateGroupFailed(false);
+        const response = await fetchPOST(
+            `/spaceadministration/create?name=${encodeURIComponent(
+                newInput
+            )}&invisible=${newGroupInvisibleCheckboxChecked}&joinable=${!newGroupJoinableCheckboxChecked}`,
             {},
             session!.accessToken
         );
-        // mutateMyGroups();
+        setCreatingGroup(false);
+
+        if (!response.success) {
+            setCreateGroupFailed(true);
+            return;
+        }
+        setIsNewDialogOpen(false);
+        // so the new group is listed when coming back
         mutateAllGroups();
+        router.push(`/group/${response.space_id}`);
     };
 
     function sendJoinRequest(groupId: string): void {
@@ -322,65 +341,34 @@ export default function Groups() {
         return <Dropdown options={options} onSelect={handleSelectOption} />;
     };
 
-    const Item = ({
-        group,
-        clickable,
-        buttons,
-    }: {
-        group: BackendGroup;
-        clickable: boolean;
-        buttons: JSX.Element;
-    }) => (
+    // groups link to their page, which shows a preview to non-members of visible groups
+    const Item = ({ group, buttons }: { group: BackendGroup; buttons: JSX.Element }) => (
         <div className="flex items-center">
             <div className="grow md:basis-5/12 font-normal text-base group truncate flex flex-nowrap items-center justify-between hover:bg-slate-50 px-2">
-                {clickable ? (
-                    <Link
-                        href={`/group/${group._id}`}
-                        className="py-2 w-full flex flex-nowrap items-center"
-                    >
-                        <AuthenticatedImage
-                            imageId={group.space_pic}
-                            alt={t('group_picture')}
-                            width={60}
-                            height={60}
-                            className="rounded-full mr-2"
-                        ></AuthenticatedImage>
+                <Link
+                    href={`/group/${group._id}`}
+                    className="py-2 w-full flex flex-nowrap items-center"
+                >
+                    <AuthenticatedImage
+                        imageId={group.space_pic}
+                        alt={t('group_picture')}
+                        width={60}
+                        height={60}
+                        className="rounded-full mr-2"
+                    ></AuthenticatedImage>
 
-                        <div className="flex flex-col truncate">
-                            <span className="font-semibold truncate">
-                                {group.name}
-                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
+                    <div className="flex flex-col truncate">
+                        <span className="font-semibold truncate">
+                            {group.name}
+                            {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
                             {group.members.length} {t('members')}
                         </span> */}
-                            </span>
-                            {group.space_description && (
-                                <p className="truncate">{group.space_description}</p>
-                            )}
-                        </div>
-                    </Link>
-                ) : (
-                    <div className="py-2 flex flex-nowrap items-center truncate">
-                        <AuthenticatedImage
-                            imageId={group.space_pic}
-                            alt={t('group_picture')}
-                            width={60}
-                            height={60}
-                            className="rounded-full mr-2"
-                        ></AuthenticatedImage>
-
-                        <div className="flex flex-col truncate">
-                            <span className="font-semibold truncate">
-                                {group.name}
-                                {/* <span className="hidden group-hover:inline-block text-slate-500 mx-4 font-normal">
-                            {group.members.length} {t('members')}
-                        </span> */}
-                            </span>
-                            {group.space_description && (
-                                <p className="truncate">{group.space_description}</p>
-                            )}
-                        </div>
+                        </span>
+                        {group.space_description && (
+                            <p className="truncate">{group.space_description}</p>
+                        )}
                     </div>
-                )}
+                </Link>
                 {buttons}
             </div>
             <div className="sm:ml-0 md:ml-2 lg:ml-4">
@@ -409,12 +397,11 @@ export default function Groups() {
             {groups?.map((group, i) => {
                 // user is member
                 if (group.members.includes(session!.user.preferred_username!)) {
-                    return <Item clickable={true} group={group} key={i} buttons={<></>} />;
+                    return <Item group={group} key={i} buttons={<></>} />;
                 }
                 // user is not member
                 return (
                     <Item
-                        clickable={false}
                         group={group}
                         key={i}
                         buttons={
@@ -524,7 +511,6 @@ export default function Groups() {
                                                 <Item
                                                     key={i}
                                                     group={group}
-                                                    clickable={true}
                                                     buttons={
                                                         <>
                                                             <ButtonPrimary
@@ -556,7 +542,6 @@ export default function Groups() {
                                                 <Item
                                                     key={i}
                                                     group={group}
-                                                    clickable={false}
                                                     buttons={
                                                         <ButtonLightBlue
                                                             onClick={() => {
@@ -637,16 +622,16 @@ export default function Groups() {
                             {t('private')}
                         </label>
                     </div>
+                    {createGroupFailed && (
+                        <p className="mt-2 text-red-700">{t('group_action_error')}</p>
+                    )}
                     <div className="flex justify-between w-full mt-4">
                         <ButtonSecondary onClick={handleCloseNewDialog}>
                             {t('common:cancel')}
                         </ButtonSecondary>
                         <ButtonPrimary
-                            onClick={() => {
-                                createNewGroup();
-                                handleCloseNewDialog();
-                            }}
-                            disabled={!newInput}
+                            onClick={createNewGroup}
+                            disabled={!newInput || creatingGroup}
                         >
                             {t('common:create')}
                         </ButtonPrimary>

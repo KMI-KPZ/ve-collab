@@ -222,6 +222,7 @@ async def authenticate(sid, data):
                         "recipients": room["members"],
                         "room_id": room["_id"],
                         "creation_date": message["creation_date"],
+                        "files": message["files"],
                     },
                     room=sid,
                 )

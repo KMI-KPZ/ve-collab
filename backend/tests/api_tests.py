@@ -6,6 +6,7 @@ import logging
 import os
 import requests
 from typing import List
+from unittest import mock
 from urllib.parse import quote
 
 from bson import ObjectId
@@ -33,6 +34,7 @@ from model import (
 )
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
+from resources.network.chat import Chat
 from resources.network.profile import Profiles
 from resources.network.space_files import SpaceFiles
 import util
@@ -59,6 +61,7 @@ UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
 POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
+COMMENT_DOESNT_EXIST_ERROR = "comment_doesnt_exist"
 USER_NOT_AUTHOR_ERROR = "user_not_author"
 INVALID_PIN_TYPE_ERROR = "invalid_pin_type_in_http_body"
 USER_ALREADY_MEMBER_ERROR = "user_already_member"
@@ -90,6 +93,7 @@ INVITATION_DOESNT_EXIST_ERROR = "invitation_doesnt_exist"
 ROOM_DOESNT_EXIST_ERROR = "room_doesnt_exist"
 MEMBERS_NOT_LIST_OF_STR_ERROR = "members_not_list_of_str"
 NAME_NOT_STR_ERROR = "name_not_str"
+TEXT_NOT_STR_ERROR = "text_not_str"
 USER_DOESNT_EXIST_ERROR = "user_doesnt_exist"
 
 # don't change, these values match with the ones in BaseHandler
@@ -2452,6 +2456,7 @@ class CommentHandlerTest(BaseApiTestCase):
         # expect the inserted comment to be in the response
         self.assertIn("inserted_comment", response)
         self.assertEqual(response["inserted_comment"]["text"], request["text"])
+        self.assertEqual(response["inserted_comment"]["likers"], [])
 
         # expect the author of the comment to be enhanced with profile information
         self.assertIn("author", response["inserted_comment"])
@@ -2497,6 +2502,7 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertIn("comments", db_state)
         self.assertEqual(len(db_state["comments"]), 1)
         self.assertEqual(db_state["comments"][0]["text"], request["text"])
+        self.assertEqual(db_state["comments"][0]["likers"], [])
 
         # check that the comment counted towards the achievement "social"
         profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
@@ -2520,6 +2526,47 @@ class CommentHandlerTest(BaseApiTestCase):
         self.assertEqual(
             response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "post_id"
         )
+
+    def test_post_comment_error_missing_text(self):
+        """
+        expect: fail message because text is not in the request
+        """
+
+        request = {"post_id": str(self.post_oid)}
+
+        response = self.base_checks("POST", "/comment", False, 400, body=request)
+
+        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "text")
+        self.assertNotIn("comments", self.db.posts.find_one({"_id": self.post_oid}))
+
+    def test_post_comment_sanitized(self):
+        """
+        expect: the text of the comment is sanitized before it is stored and
+        returned
+        """
+
+        request = {
+            "post_id": str(self.post_oid),
+            "text": '<p onclick="alert(1)">hi</p><script>alert(1)</script>',
+        }
+
+        response = self.base_checks("POST", "/comment", True, 200, body=request)
+
+        self.assertEqual(response["inserted_comment"]["text"], "<p>hi</p>")
+        db_state = self.db.posts.find_one({"_id": self.post_oid})
+        self.assertEqual(db_state["comments"][0]["text"], "<p>hi</p>")
+
+    def test_post_comment_error_text_not_str(self):
+        """
+        expect: fail message because the text is no string
+        """
+
+        request = {"post_id": str(self.post_oid), "text": ["<p>hi</p>"]}
+
+        response = self.base_checks("POST", "/comment", False, 400, body=request)
+
+        self.assertEqual(response["reason"], TEXT_NOT_STR_ERROR)
+        self.assertNotIn("comments", self.db.posts.find_one({"_id": self.post_oid}))
 
     def test_post_comment_error_post_doesnt_exist(self):
         """
@@ -2588,6 +2635,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2619,6 +2667,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2654,6 +2703,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2684,6 +2734,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2725,6 +2776,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2761,6 +2813,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -2796,6 +2849,7 @@ class CommentHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 },
             },
@@ -3016,6 +3070,173 @@ class LikePostHandlerTest(BaseApiTestCase):
         self.assertEqual(response.code, 304)
 
 
+class LikeCommentHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.base_permission_environment_setUp()
+
+        self.post_oid = ObjectId()
+        self.comment_oid = ObjectId()
+        self.db.posts.insert_one(
+            {
+                "_id": self.post_oid,
+                "author": CURRENT_ADMIN.username,
+                "creation_date": datetime.now(timezone.utc),
+                "text": "initial_post_text",
+                "space": None,
+                "pinned": False,
+                "wordpress_post_id": None,
+                "tags": [],
+                "plans": [],
+                "files": [],
+                "comments": [
+                    {
+                        "_id": self.comment_oid,
+                        "author": CURRENT_USER.username,
+                        "creation_date": datetime.now(timezone.utc),
+                        "text": "<p>test_comment</p>",
+                        "pinned": False,
+                        "likers": [],
+                    }
+                ],
+                "likers": [],
+            }
+        )
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+        self.db.posts.delete_many({})
+        super().tearDown()
+
+    def _comment_likers(self) -> list:
+        return self.db.posts.find_one({"_id": self.post_oid})["comments"][0]["likers"]
+
+    def _fetch_without_content(self, method: str):
+        """
+        304 doesn't allow content, so base_checks can't be used
+        """
+
+        return self.fetch(
+            "/comment/like",
+            method=method,
+            body=json.dumps({"comment_id": str(self.comment_oid)}),
+            allow_nonstandard_methods=True,
+        )
+
+    def test_post_like_comment(self):
+        """
+        expect: successfully like the comment, counting towards the "give_likes"
+        achievement
+        """
+
+        request = {"comment_id": str(self.comment_oid)}
+        self.base_checks("POST", "/comment/like", True, 200, body=request)
+
+        self.assertEqual(self._comment_likers(), [CURRENT_ADMIN.username])
+        self.assertEqual(self.db.posts.find_one({"_id": self.post_oid})["likers"], [])
+
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            self.test_profiles[CURRENT_ADMIN.username]["achievements"]["social"][
+                "progress"
+            ]
+            + 1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+    def test_post_like_comment_error_missing_comment_id(self):
+        """
+        expect: fail message because the request misses the comment_id
+        """
+
+        response = self.base_checks("POST", "/comment/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "comment_id"
+        )
+
+    def test_post_like_comment_error_invalid_object_id(self):
+        """
+        expect: fail message because the comment_id is no valid ObjectId
+        """
+
+        response = self.base_checks(
+            "POST", "/comment/like", False, 400, body={"comment_id": "invalid"}
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: fail message because no comment with this _id exists
+        """
+
+        response = self.base_checks(
+            "POST", "/comment/like", False, 409, body={"comment_id": str(ObjectId())}
+        )
+        self.assertEqual(response["reason"], COMMENT_DOESNT_EXIST_ERROR)
+
+    def test_post_like_comment_error_already_liker(self):
+        """
+        expect: 304 because the user already likes the comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        response = self._fetch_without_content("POST")
+        self.assertEqual(response.code, 304)
+        self.assertEqual(self._comment_likers(), [CURRENT_ADMIN.username])
+
+    def test_delete_like_comment(self):
+        """
+        expect: successfully remove the like from the comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_oid},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        request = {"comment_id": str(self.comment_oid)}
+        self.base_checks("DELETE", "/comment/like", True, 200, body=request)
+
+        self.assertEqual(self._comment_likers(), [])
+
+    def test_delete_like_comment_error_missing_comment_id(self):
+        """
+        expect: fail message because the request misses the comment_id
+        """
+
+        response = self.base_checks("DELETE", "/comment/like", False, 400, body={})
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "comment_id"
+        )
+
+    def test_delete_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: fail message because no comment with this _id exists
+        """
+
+        response = self.base_checks(
+            "DELETE",
+            "/comment/like",
+            False,
+            409,
+            body={"comment_id": str(ObjectId())},
+        )
+        self.assertEqual(response["reason"], COMMENT_DOESNT_EXIST_ERROR)
+
+    def test_delete_like_comment_error_not_liker(self):
+        """
+        expect: 304 because the user hadn't liked the comment before
+        """
+
+        response = self._fetch_without_content("DELETE")
+        self.assertEqual(response.code, 304)
+
+
 class RepostHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -3165,6 +3386,18 @@ class RepostHandlerTest(BaseApiTestCase):
         response = self.base_checks("POST", "/repost", False, 400, body=request)
 
         self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "text")
+
+    def test_post_create_repost_error_text_not_str(self):
+        """
+        expect: fail message because the text is no string
+        """
+
+        request = {"post_id": str(self.post_oid), "text": None, "space": None}
+
+        response = self.base_checks("POST", "/repost", False, 400, body=request)
+
+        self.assertEqual(response["reason"], TEXT_NOT_STR_ERROR)
+        self.assertEqual(self.db.posts.count_documents({"isRepost": True}), 0)
 
     def test_post_create_repost_error_no_post_id(self):
         """
@@ -3412,6 +3645,7 @@ class PinHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -4092,6 +4326,7 @@ class SearchHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -4306,6 +4541,7 @@ class SpaceHandlerTest(BaseApiTestCase):
                     "creation_date": datetime.now(timezone.utc),
                     "text": "test_comment",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
         }
@@ -7220,6 +7456,113 @@ class SpaceHandlerTest(BaseApiTestCase):
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
 
+class GroupSuggestionsHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # the test space of the base environment has the admin and the user as
+        # members, so it is never suggested
+        self.base_permission_environment_setUp()
+
+        # elasticsearch is mocked, the scoring is tested along with the resource
+        mock.patch.object(
+            ElasticsearchConnector, "search_profile_match", return_value=[]
+        ).start()
+        mock.patch.object(
+            ElasticsearchConnector, "search_space_topic_match", return_value={}
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+
+        self.suggested_space_id = self.insert_space("suggested_space")
+
+    def tearDown(self) -> None:
+        self.base_permission_environments_tearDown()
+        options.test_user = False
+        super().tearDown()
+
+    def insert_space(self, name: str, **attributes) -> ObjectId:
+        """
+        insert a visible space of somebody else, the `attributes` override the
+        defaults
+        """
+
+        space = {
+            "name": name,
+            "invisible": False,
+            "joinable": True,
+            "members": ["someone"],
+            "admins": ["someone"],
+            "invites": [],
+            "requests": [],
+            "space_pic": "default_group_pic.jpg",
+            "space_description": "test",
+        } | attributes
+        return self.db.spaces.insert_one(space).inserted_id
+
+    def test_get_group_suggestions(self):
+        """
+        expect: suggest the space that the admin is no member of as a snippet
+        """
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            response["suggestions"],
+            [
+                {
+                    "_id": str(self.suggested_space_id),
+                    "name": "suggested_space",
+                    "space_pic": "default_group_pic.jpg",
+                    "space_description": "test",
+                }
+            ],
+        )
+
+    def test_get_group_suggestions_user(self):
+        """
+        expect: suggest the space that the user is no member of
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            [space["_id"] for space in response["suggestions"]],
+            [str(self.suggested_space_id)],
+        )
+
+    def test_get_group_suggestions_excluded_spaces(self):
+        """
+        expect: no suggestions of invisible spaces and spaces that the admin was
+        invited to or requested to join
+        """
+
+        self.insert_space("invisible_space", invisible=True)
+        self.insert_space("invited_space", invites=[CURRENT_ADMIN.username])
+        self.insert_space("requested_space", requests=[CURRENT_ADMIN.username])
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(
+            [space["_id"] for space in response["suggestions"]],
+            [str(self.suggested_space_id)],
+        )
+
+    def test_get_group_suggestions_none(self):
+        """
+        expect: no suggestions, if the admin is a member of all spaces
+        """
+
+        self.db.spaces.delete_one({"_id": self.suggested_space_id})
+
+        response = self.base_checks("GET", "/group_suggestions", True, 200)
+
+        self.assertEqual(response["suggestions"], [])
+
+
 class SpaceFilesHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -7247,7 +7590,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
 
     def _url(self, slug: str, **params) -> str:
         query = "&".join(
-            "{}={}".format(key, value) for key, value in params.items() if value is not None
+            "{}={}".format(key, value)
+            for key, value in params.items()
+            if value is not None
         )
         return "/space_files/{}?id={}{}".format(
             slug, str(self.test_space_id), "&" + query if query else ""
@@ -7266,7 +7611,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
             {"$set": {"read_files": read_files, "write_files": write_files}},
         )
 
-    def _folder(self, name: str, parent=None, author: str = CURRENT_ADMIN.username) -> dict:
+    def _folder(
+        self, name: str, parent=None, author: str = CURRENT_ADMIN.username
+    ) -> dict:
         return self.space_files.create_folder(self.test_space_id, name, author, parent)
 
     def _file(
@@ -7277,7 +7624,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         )
 
     def _post_file(self, name: str = "attachment.txt") -> dict:
-        file_id = util.gridfs_put(self.fs, b"post", name, "text/plain", CURRENT_USER.username)
+        file_id = util.gridfs_put(
+            self.fs, b"post", name, "text/plain", CURRENT_USER.username
+        )
         return self.space_files.add_post_file(
             self.test_space_id, CURRENT_USER.username, file_id, name, ObjectId()
         )
@@ -7347,7 +7696,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
             [item["name"] for item in response["items"]],
             [SpaceFiles.POST_FILES_FOLDER_NAME, "docs", "a.txt", "b.txt"],
         )
-        self.assertEqual(response["items"][0]["system"], SpaceFiles.SYSTEM_FOLDER_POST_FILES)
+        self.assertEqual(
+            response["items"][0]["system"], SpaceFiles.SYSTEM_FOLDER_POST_FILES
+        )
         self.assertEqual(response["items"][1]["_id"], str(docs["_id"]))
         self.assertEqual(response["items"][2]["size"], 7)
         self.assertEqual(response["items"][2]["content_type"], "text/plain")
@@ -7364,9 +7715,18 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         self.assertEqual(response["folder"]["_id"], str(docs["_id"]))
         self.assertEqual(
             response["path"],
-            [{"_id": str(docs["_id"]), "name": "docs", "type": "folder", "system": None}],
+            [
+                {
+                    "_id": str(docs["_id"]),
+                    "name": "docs",
+                    "type": "folder",
+                    "system": None,
+                }
+            ],
         )
-        self.assertEqual([item["_id"] for item in response["items"]], [str(inner["_id"])])
+        self.assertEqual(
+            [item["_id"] for item in response["items"]], [str(inner["_id"])]
+        )
 
         # post files carry the post reference
         response = self.base_checks(
@@ -7382,7 +7742,12 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
 
         self.db.spaces.update_one(
             {"_id": self.test_space_id},
-            {"$pull": {"members": CURRENT_ADMIN.username, "admins": CURRENT_ADMIN.username}},
+            {
+                "$pull": {
+                    "members": CURRENT_ADMIN.username,
+                    "admins": CURRENT_ADMIN.username,
+                }
+            },
         )
         self.base_checks("GET", self._url("list"), True, 200)
 
@@ -7483,7 +7848,8 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         self.assertEqual(response["node"]["_id"], str(file_node["_id"]))
         self.assertEqual(response["node"]["name"], "a.txt")
         self.assertEqual(
-            [p["_id"] for p in response["path"]], [str(docs["_id"]), str(file_node["_id"])]
+            [p["_id"] for p in response["path"]],
+            [str(docs["_id"]), str(file_node["_id"])],
         )
 
     def test_get_node_error_missing_node_id(self):
@@ -7544,7 +7910,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         self._file("annual_report.pdf", reports["_id"])
         self._file("notes.txt")
 
-        response = self.base_checks("GET", self._url("search", query="report"), True, 200)
+        response = self.base_checks(
+            "GET", self._url("search", query="report"), True, 200
+        )
         self.assertEqual(
             [r["name"] for r in response["results"]], ["Reports", "annual_report.pdf"]
         )
@@ -7588,7 +7956,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         self.assertEqual(response["folder"]["name"], "docs")
         self.assertIsNone(response["folder"]["parent"])
         self.assertEqual(response["folder"]["author"], CURRENT_ADMIN.username)
-        db_state = self.db.space_files.find_one({"_id": ObjectId(response["folder"]["_id"])})
+        db_state = self.db.space_files.find_one(
+            {"_id": ObjectId(response["folder"]["_id"])}
+        )
         self.assertIsNotNone(db_state)
         self.assertEqual(db_state["space"], self.test_space_id)
 
@@ -7627,7 +7997,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         expect: fail message because name is missing in the body
         """
 
-        response = self.base_checks("POST", self._url("create_folder"), False, 400, body={})
+        response = self.base_checks(
+            "POST", self._url("create_folder"), False, 400, body={}
+        )
         self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "name")
 
     def test_post_create_folder_error_invalid_parent_id(self):
@@ -7811,7 +8183,10 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         )
         self.assertTrue(all(f["parent"] == str(docs["_id"]) for f in response["files"]))
         self.assertEqual(
-            self.db.space_files.count_documents({"parent": docs["_id"], "type": "file"}), 4
+            self.db.space_files.count_documents(
+                {"parent": docs["_id"], "type": "file"}
+            ),
+            4,
         )
 
     def test_post_upload_user_with_permission(self):
@@ -7846,7 +8221,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
 
         self._switch_to_user(read_files=True, write_files=False)
         response = self._upload(
-            [("test_file.txt", b"x", "text/plain")], expect_success=False, expect_code=403
+            [("test_file.txt", b"x", "text/plain")],
+            expect_success=False,
+            expect_code=403,
         )
         self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
 
@@ -7860,7 +8237,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
             {"_id": self.test_space_id}, {"$pull": {"members": CURRENT_USER.username}}
         )
         response = self._upload(
-            [("test_file.txt", b"x", "text/plain")], expect_success=False, expect_code=409
+            [("test_file.txt", b"x", "text/plain")],
+            expect_success=False,
+            expect_code=409,
         )
         self.assertEqual(response["reason"], USER_NOT_MEMBER_ERROR)
 
@@ -7914,7 +8293,10 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         SpaceFiles.MAX_FILE_SIZE_BYTES = 4
         try:
             response = self._upload(
-                [("small.txt", b"1234", "text/plain"), ("big.txt", b"12345", "text/plain")],
+                [
+                    ("small.txt", b"1234", "text/plain"),
+                    ("big.txt", b"12345", "text/plain"),
+                ],
                 expect_success=False,
                 expect_code=409,
             )
@@ -8008,7 +8390,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         response = self.base_checks(
             "POST", self._url("rename"), False, 400, body={"name": "x"}
         )
-        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id"
+        )
 
         response = self.base_checks(
             "POST", self._url("rename"), False, 400, body={"node_id": str(ObjectId())}
@@ -8021,7 +8405,11 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks(
-            "POST", self._url("rename"), False, 400, body={"node_id": "abc", "name": "x"}
+            "POST",
+            self._url("rename"),
+            False,
+            400,
+            body={"node_id": "abc", "name": "x"},
         )
         self.assertEqual(response["reason"], INVALID_OBJECT_ID)
 
@@ -8123,7 +8511,8 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         )
         self.assertEqual(response["node"]["parent"], str(docs["_id"]))
         self.assertEqual(
-            self.db.space_files.find_one({"_id": file_node["_id"]})["parent"], docs["_id"]
+            self.db.space_files.find_one({"_id": file_node["_id"]})["parent"],
+            docs["_id"],
         )
 
         response = self.base_checks(
@@ -8141,7 +8530,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("POST", self._url("move"), False, 400, body={})
-        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id"
+        )
 
     def test_post_move_error_node_doesnt_exist(self):
         """
@@ -8347,7 +8738,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         """
 
         response = self.base_checks("POST", self._url("copy"), False, 400, body={})
-        self.assertEqual(response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id")
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "node_id"
+        )
 
     def test_post_copy_error_insufficient_permission(self):
         """
@@ -8435,7 +8828,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         """
 
         response = self.fetch(
-            self._url("unknown"), method="POST", body=json.dumps({"node_id": str(ObjectId())})
+            self._url("unknown"),
+            method="POST",
+            body=json.dumps({"node_id": str(ObjectId())}),
         )
         self.assertEqual(response.code, 404)
 
@@ -8463,7 +8858,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         a = self._folder("a")
         b = self._folder("b", a["_id"])
         inner = self._file("inner.txt", b["_id"])
-        self.base_checks("DELETE", self._url("delete", node_id=str(a["_id"])), True, 200)
+        self.base_checks(
+            "DELETE", self._url("delete", node_id=str(a["_id"])), True, 200
+        )
         self.assertEqual(
             self.db.space_files.count_documents(
                 {"_id": {"$in": [a["_id"], b["_id"], inner["_id"]]}}
@@ -8623,7 +9020,9 @@ class SpaceFilesHandlerTest(BaseApiTestCase):
         untyped = self.fs.put(b"x", filename="c.bin")
         response = self.fetch("/uploads/{}".format(untyped))
         self.assertEqual(response.code, 200)
-        self.assertTrue(response.headers["Content-Type"].startswith("application/octet-stream"))
+        self.assertTrue(
+            response.headers["Content-Type"].startswith("application/octet-stream")
+        )
 
     def test_uploads_security_headers(self):
         """
@@ -8745,6 +9144,7 @@ class TimelineHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "test_comment",
                         "pinned": False,
+                        "likers": [],
                     }
                 ],
                 "likers": [],
@@ -9129,7 +9529,9 @@ class TimelineHandlerTest(BaseApiTestCase):
             {},
             {
                 "$set": {
-                    "creation_date": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+                    "creation_date": (
+                        datetime.now(timezone.utc) - timedelta(days=10)
+                    ).isoformat()
                 }
             },
         )
@@ -13207,6 +13609,7 @@ class ChatHandlerTest(BaseApiTestCase):
                 CURRENT_ADMIN.username: "acknowledged",
                 "other_user": "sent",
             },
+            "files": [],
         }
         self.default_room = {
             "_id": self.room_id,
@@ -13221,7 +13624,51 @@ class ChatHandlerTest(BaseApiTestCase):
 
         self.db.chatrooms.delete_many({})
 
+        # delete all files that were sent in the chats
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
+
         super().tearDown()
+
+    def _switch_to_user(self) -> None:
+        """
+        switch the request identity to the regular test user, who is not a
+        member of the default room
+        """
+
+        options.test_admin = False
+        options.test_user = True
+
+    def _chat_upload(
+        self,
+        files: list,
+        room_id=None,
+        message: str = None,
+        expect_success: bool = True,
+        expect_code: int = 200,
+    ) -> dict:
+        """
+        send files (a list of (name, bytes) tuples) and an optional text to a
+        room via multipart request, the default room if no `room_id` is given
+        """
+
+        fields = [
+            ("file", (name, io.BytesIO(content), "text/plain"))
+            for name, content in files
+        ]
+        if message is not None:
+            fields.append(("message", message))
+        request = MultipartEncoder(fields=fields)
+
+        return self.base_checks(
+            "POST",
+            "/chatroom/upload?room_id={}".format(room_id or self.room_id),
+            expect_success,
+            expect_code,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
 
     def test_get_get_mine(self):
         """
@@ -13282,6 +13729,7 @@ class ChatHandlerTest(BaseApiTestCase):
                 CURRENT_ADMIN.username: "sent",
                 "other_user": "acknowledged",
             },
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -13719,6 +14167,385 @@ class ChatHandlerTest(BaseApiTestCase):
         db_state = self.db.chatrooms.find_one({"_id": self.room_id})
         self.assertEqual(db_state["name"], self.default_room["name"])
 
+    def test_get_search_messages(self):
+        """
+        expect: successfully find the messages that contain the query
+        """
+
+        match = {
+            "_id": ObjectId(),
+            "message": "Hello World",
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": datetime(2023, 1, 2, 8, 0, 0),
+            "send_states": [],
+            "files": [],
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": match}}
+        )
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/search_messages?room_id={}&query=hello".format(self.room_id),
+            True,
+            200,
+        )
+        self.assertEqual(response["room_id"], str(self.room_id))
+        self.assertEqual([m["_id"] for m in response["messages"]], [str(match["_id"])])
+        self.assertNotIn("send_states", response["messages"][0])
+
+    def test_get_search_messages_error_missing_key(self):
+        """
+        expect: fail message because room_id or query is missing
+        """
+
+        response = self.base_checks(
+            "GET", "/chatroom/search_messages?query=hello", False, 400
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/search_messages?room_id={}".format(self.room_id),
+            False,
+            400,
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "query")
+
+    def test_get_search_messages_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is not a valid ObjectId
+        """
+
+        response = self.base_checks(
+            "GET", "/chatroom/search_messages?room_id=invalid&query=hello", False, 400
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_get_search_messages_error_insufficient_permission(self):
+        """
+        expect: fail message because the user is not a member of the room
+        """
+
+        self._switch_to_user()
+        response = self.base_checks(
+            "GET",
+            "/chatroom/search_messages?room_id={}&query=test".format(self.room_id),
+            False,
+            403,
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_search_messages_error_room_doesnt_exist(self):
+        """
+        expect: fail message because the room doesn't exist
+        """
+
+        response = self.base_checks(
+            "GET",
+            "/chatroom/search_messages?room_id={}&query=test".format(ObjectId()),
+            False,
+            409,
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_get_get_files(self):
+        """
+        expect: successfully get the files of the room and its storage usage
+        """
+
+        uploaded = self._chat_upload([("a.txt", b"aaa"), ("b.txt", b"bb")])["files"]
+
+        response = self.base_checks(
+            "GET", "/chatroom/get_files?room_id={}".format(self.room_id), True, 200
+        )
+        self.assertEqual(
+            [f["file_id"] for f in response["files"]],
+            [f["file_id"] for f in uploaded],
+        )
+        message = self.db.chatrooms.find_one({"_id": self.room_id})["messages"][-1]
+        self.assertEqual(response["files"][0]["message_id"], str(message["_id"]))
+        self.assertEqual(response["files"][0]["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(response["storage"]["used_bytes"], 5)
+        self.assertEqual(response["storage"]["max_bytes"], Chat.MAX_ROOM_STORAGE_BYTES)
+
+    def test_get_get_files_error_missing_key(self):
+        """
+        expect: fail message because the room_id is missing
+        """
+
+        response = self.base_checks("GET", "/chatroom/get_files", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+    def test_get_get_files_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is not a valid ObjectId
+        """
+
+        response = self.base_checks(
+            "GET", "/chatroom/get_files?room_id=invalid", False, 400
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_get_get_files_error_insufficient_permission(self):
+        """
+        expect: fail message because the user is not a member of the room
+        """
+
+        self._switch_to_user()
+        response = self.base_checks(
+            "GET", "/chatroom/get_files?room_id={}".format(self.room_id), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+    def test_get_get_files_error_room_doesnt_exist(self):
+        """
+        expect: fail message because the room doesn't exist
+        """
+
+        response = self.base_checks(
+            "GET", "/chatroom/get_files?room_id={}".format(ObjectId()), False, 409
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_get_file_limits(self):
+        """
+        expect: the configured limits are returned
+        """
+
+        response = self.base_checks("GET", "/chatroom/file_limits", True, 200)
+        self.assertEqual(response["limits"], Chat(self.db).get_file_limits())
+
+    def test_post_upload(self):
+        """
+        expect: the files are stored and sent as a message with the text,
+        the mime type is derived from the file name
+        """
+
+        response = self._chat_upload(
+            [("notes.txt", b"notes"), ("picture.png", b"png")], message="see files"
+        )
+        self.assertEqual(
+            [f["file_name"] for f in response["files"]], ["notes.txt", "picture.png"]
+        )
+        self.assertEqual(response["files"][1]["content_type"], "image/png")
+
+        message = self.db.chatrooms.find_one({"_id": self.room_id})["messages"][-1]
+        self.assertEqual(message["message"], "see files")
+        self.assertEqual(message["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(
+            [str(f["file_id"]) for f in message["files"]],
+            [f["file_id"] for f in response["files"]],
+        )
+        fs = gridfs.GridFS(self.db)
+        self.assertEqual(fs.get(message["files"][0]["file_id"]).read(), b"notes")
+
+    def test_post_upload_error_missing_key(self):
+        """
+        expect: fail message because the room_id is missing
+        """
+
+        request = MultipartEncoder(
+            fields=[("file", ("a.txt", io.BytesIO(b"a"), "text/plain"))]
+        )
+        response = self.base_checks(
+            "POST",
+            "/chatroom/upload",
+            False,
+            400,
+            headers={"Content-Type": request.content_type},
+            body=request.to_string(),
+        )
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+    def test_post_upload_error_missing_file(self):
+        """
+        expect: fail message because the request contains no file
+        """
+
+        response = self._chat_upload(
+            [], message="no files", expect_success=False, expect_code=400
+        )
+        self.assertEqual(response["reason"], MISSING_FILE_ERROR_SLUG + "file")
+
+    def test_post_upload_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is not a valid ObjectId
+        """
+
+        response = self._chat_upload(
+            [("a.txt", b"a")], room_id="invalid", expect_success=False, expect_code=400
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_post_upload_error_insufficient_permission(self):
+        """
+        expect: fail message because the user is not a member of the room,
+        nothing is stored
+        """
+
+        self._switch_to_user()
+        response = self._chat_upload(
+            [("a.txt", b"a")], expect_success=False, expect_code=403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_post_upload_error_room_doesnt_exist(self):
+        """
+        expect: fail message because the room doesn't exist
+        """
+
+        response = self._chat_upload(
+            [("a.txt", b"a")], room_id=ObjectId(), expect_success=False, expect_code=409
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_post_upload_error_maximum_files_exceeded(self):
+        """
+        expect: fail message because there are more files than allowed per
+        message, nothing is stored
+        """
+
+        original = Chat.MAX_FILES_PER_MESSAGE
+        Chat.MAX_FILES_PER_MESSAGE = 1
+        try:
+            response = self._chat_upload(
+                [("a.txt", b"a"), ("b.txt", b"b")],
+                expect_success=False,
+                expect_code=409,
+            )
+        finally:
+            Chat.MAX_FILES_PER_MESSAGE = original
+        self.assertEqual(response["reason"], MAXIMUM_FILES_EXCEEDED_ERROR)
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_post_upload_error_invalid_name(self):
+        """
+        expect: fail message because a file name is invalid, nothing is stored
+        """
+
+        response = self._chat_upload(
+            [("a.txt", b"a"), ("..", b"b")], expect_success=False, expect_code=409
+        )
+        self.assertEqual(response["reason"], INVALID_NAME_ERROR)
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_post_upload_error_file_too_large(self):
+        """
+        expect: fail message because the files together exceed the maximum
+        size of a message, nothing is stored
+        """
+
+        original = Chat.MAX_MESSAGE_FILES_BYTES
+        Chat.MAX_MESSAGE_FILES_BYTES = 4
+        try:
+            response = self._chat_upload(
+                [("a.txt", b"123"), ("b.txt", b"45")],
+                expect_success=False,
+                expect_code=409,
+            )
+        finally:
+            Chat.MAX_MESSAGE_FILES_BYTES = original
+        self.assertEqual(response["reason"], FILE_TOO_LARGE_ERROR)
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_post_upload_error_storage_quota_exceeded(self):
+        """
+        expect: fail message because the room would exceed its storage quota,
+        nothing is stored
+        """
+
+        original = Chat.MAX_ROOM_STORAGE_BYTES
+        Chat.MAX_ROOM_STORAGE_BYTES = 2
+        try:
+            response = self._chat_upload(
+                [("a.txt", b"123")], expect_success=False, expect_code=409
+            )
+        finally:
+            Chat.MAX_ROOM_STORAGE_BYTES = original
+        self.assertEqual(response["reason"], STORAGE_QUOTA_EXCEEDED_ERROR)
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_delete_delete(self):
+        """
+        expect: the room is deleted including its messages and files
+        """
+
+        uploaded = self._chat_upload([("a.txt", b"a")])["files"]
+
+        self.base_checks(
+            "DELETE", "/chatroom/delete?room_id={}".format(self.room_id), True, 200
+        )
+        self.assertIsNone(self.db.chatrooms.find_one({"_id": self.room_id}))
+        fs = gridfs.GridFS(self.db)
+        self.assertFalse(fs.exists(ObjectId(uploaded[0]["file_id"])))
+
+    def test_delete_delete_error_missing_key(self):
+        """
+        expect: fail message because the room_id is missing
+        """
+
+        response = self.base_checks("DELETE", "/chatroom/delete", False, 400)
+        self.assertEqual(response["reason"], MISSING_KEY_ERROR_SLUG + "room_id")
+
+    def test_delete_delete_error_invalid_object_id(self):
+        """
+        expect: fail message because the room_id is not a valid ObjectId
+        """
+
+        response = self.base_checks(
+            "DELETE", "/chatroom/delete?room_id=invalid", False, 400
+        )
+        self.assertEqual(response["reason"], INVALID_OBJECT_ID)
+
+    def test_delete_delete_error_insufficient_permission(self):
+        """
+        expect: fail message because the user is not a member of the room,
+        the room stays
+        """
+
+        self._switch_to_user()
+        response = self.base_checks(
+            "DELETE", "/chatroom/delete?room_id={}".format(self.room_id), False, 403
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+        self.assertIsNotNone(self.db.chatrooms.find_one({"_id": self.room_id}))
+
+    def test_delete_delete_error_room_doesnt_exist(self):
+        """
+        expect: fail message because the room doesn't exist
+        """
+
+        response = self.base_checks(
+            "DELETE", "/chatroom/delete?room_id={}".format(ObjectId()), False, 409
+        )
+        self.assertEqual(response["reason"], ROOM_DOESNT_EXIST_ERROR)
+
+    def test_uploads_chat_file_permission(self):
+        """
+        expect: files sent in a chat are only served to members of the room
+        """
+
+        uploaded = self._chat_upload([("a.txt", b"secret")])["files"]
+        url = "/uploads/{}".format(uploaded[0]["file_id"])
+
+        response = self.fetch(url)
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.body, b"secret")
+        self.assertEqual(response.headers["Cache-Control"], "private, no-cache")
+
+        # the regular user is not a member of the room
+        self._switch_to_user()
+        response = self.fetch(url)
+        self.assertEqual(response.code, 403)
+
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"members": CURRENT_USER.username}}
+        )
+        response = self.fetch(url)
+        self.assertEqual(response.code, 200)
+
 
 class ReportHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
@@ -14098,6 +14925,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                                 "send_state": "acknowledged",
                             }
                         ],
+                        "files": [],
                     }
                 ],
             }
@@ -14153,6 +14981,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
                         "creation_date": datetime.now(timezone.utc),
                         "text": "c",
                         "pinned": False,
+                        "likers": [],
                     }
                 ],
                 "likers": [],

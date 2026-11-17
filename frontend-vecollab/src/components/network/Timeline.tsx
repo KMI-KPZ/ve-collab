@@ -15,7 +15,6 @@ import { Socket } from 'socket.io-client';
 import GeneralError from '../common/GeneralError';
 import { useTranslation } from 'next-i18next';
 import { format, parseISO } from 'date-fns';
-import ButtonLight from '../common/buttons/ButtongLight';
 import ButtonLightBlue from '../common/buttons/ButtonLightBlue';
 
 interface Props {
@@ -187,10 +186,13 @@ export default function Timeline({
                             <TiPin size={25} className="inline" />{' '}
                             {pinnedPosts.length > 1 ? t('pinned_posts') : t('pinned_post')}
                         </div>
+                        {/* expanded, nothing is cut off, so popovers (e.g. the emoji
+                        picker of a comment form) aren't clipped. flow-root keeps the
+                        margins of the posts from collapsing, just like overflow-hidden */}
                         <div
                             className={`${
-                                !pinnedPostsExpanded ? 'max-h-36' : ''
-                            } overflow-hidden relative`}
+                                !pinnedPostsExpanded ? 'max-h-36 overflow-hidden' : 'flow-root'
+                            } relative`}
                         >
                             {pinnedPosts.map((post, i) => (
                                 <TimelinePost

@@ -10,6 +10,7 @@ interface Props {
     handleChatSelect: (chat: string) => void;
     unreadCount: number;
     memberProfileSnippets: UserSnippet[];
+    selected?: boolean; // the room that is open next to the list
 }
 
 export default function RoomSnippet({
@@ -17,6 +18,7 @@ export default function RoomSnippet({
     handleChatSelect,
     unreadCount,
     memberProfileSnippets,
+    selected = false,
 }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation('common');
@@ -28,9 +30,18 @@ export default function RoomSnippet({
               )
             : undefined;
 
+    // messages that only consist of files are previewed with the file names
+    const files = room.last_message?.files ?? [];
+    const lastMessageFiles = files.length
+        ? `${files[0].file_name}` +
+          (files.length > 1 ? ` ${t('chat_more_files', { count: files.length - 1 })}` : '')
+        : '';
+
     return (
         <li
-            className="rounded-md py-2 cursor-pointer hover:bg-gray-200 overflow-hidden whitespace-nowrap text-ellipsis"
+            className={`rounded-md py-2 cursor-pointer hover:bg-gray-200 overflow-hidden whitespace-nowrap text-ellipsis ${
+                selected ? 'bg-gray-100' : ''
+            }`}
             onClick={() => handleChatSelect(room._id)}
         >
             <div className="flex items-center px-1">
@@ -77,7 +88,7 @@ export default function RoomSnippet({
                             unreadCount > 0 ? 'font-semibold text-gray-700' : 'text-gray-500'
                         }`}
                     >
-                        {room.last_message?.message ? (
+                        {room.last_message?.message || room.last_message?.files.length ? (
                             <>
                                 <span className="inline-block max-w-50 truncate">
                                     {memberProfileSnippets.find(
@@ -85,7 +96,10 @@ export default function RoomSnippet({
                                             member.preferredUsername === room.last_message?.sender
                                     )?.name || room.last_message.sender}
                                 </span>
-                                :&nbsp;<span className="truncate">{room.last_message.message}</span>
+                                :&nbsp;
+                                <span className="truncate">
+                                    {room.last_message.message || lastMessageFiles}
+                                </span>
                             </>
                         ) : (
                             t('no_messages_yet')

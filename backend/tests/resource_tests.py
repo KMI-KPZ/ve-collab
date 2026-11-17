@@ -19,6 +19,7 @@ from exceptions import (
     AlreadyLikerException,
     AlreadyMemberError,
     AlreadyRequestedJoinError,
+    CommentDoesntExistError,
     FileAlreadyInRepoError,
     FileDoesntExistError,
     FileNodeDoesntExistError,
@@ -55,7 +56,10 @@ from exceptions import (
 )
 import global_vars
 from main import make_app  # import, otherwise test mode will fail in the app
+from migrations.chat_message_files import migrate as migrate_chat_message_files
 from migrations.gridfs_content_type import migrate as migrate_gridfs_content_type
+from migrations.post_comments import migrate as migrate_post_comments
+from migrations.sanitize_post_texts import migrate as migrate_sanitize_post_texts
 from migrations.space_files import migrate as migrate_space_files
 from model import (
     Evaluation,
@@ -1027,6 +1031,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "test_comment",
             "pinned": False,
+            "likers": [],
         }
         self.default_post = {
             "_id": self.post_id,
@@ -1296,6 +1301,7 @@ class PostResourceTest(BaseResourceTestCase):
                     "creation_date": datetime(2023, 1, 3, 9, 5, 0),
                     "text": "c",
                     "pinned": False,
+                    "likers": [],
                 }
             ],
             "likers": [],
@@ -1877,6 +1883,189 @@ class PostResourceTest(BaseResourceTestCase):
             CURRENT_ADMIN.username,
         )
 
+    def test_like_comment(self):
+        """
+        expect: successfully like a comment, counting towards the "give_likes"
+        achievement of the liking user
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.like_comment(self.comment_id, CURRENT_ADMIN.username)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [CURRENT_ADMIN.username])
+        # the post itself is not liked
+        self.assertEqual(post["likers"], [])
+
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+        # also works with a str id
+        post_manager.like_comment(str(self.comment_id), CURRENT_USER.username)
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(
+            post["comments"][0]["likers"],
+            [CURRENT_ADMIN.username, CURRENT_USER.username],
+        )
+
+    def test_like_comment_error_comment_doesnt_exist(self):
+        """
+        expect: CommentDoesntExistError is raised because no comment with this
+        _id exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            CommentDoesntExistError,
+            post_manager.like_comment,
+            ObjectId(),
+            CURRENT_ADMIN.username,
+        )
+
+    def test_like_comment_error_already_liker(self):
+        """
+        expect: AlreadyLikerException is raised because the user already likes
+        the comment, the achievement is only counted once
+        """
+
+        post_manager = Posts(self.db)
+        post_manager.like_comment(self.comment_id, CURRENT_ADMIN.username)
+        self.assertRaises(
+            AlreadyLikerException,
+            post_manager.like_comment,
+            self.comment_id,
+            CURRENT_ADMIN.username,
+        )
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [CURRENT_ADMIN.username])
+        profile = self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+        self.assertEqual(
+            profile["achievements"]["social"]["progress"],
+            1 * self.SOCIAL_ACHIEVEMENTS_PROGRESS_MULTIPLIERS["give_likes"],
+        )
+
+    def test_unlike_comment(self):
+        """
+        expect: successfully remove the like of a comment
+        """
+
+        self.db.posts.update_one(
+            {"_id": self.post_id},
+            {"$set": {"comments.0.likers": [CURRENT_ADMIN.username]}},
+        )
+
+        post_manager = Posts(self.db)
+        post_manager.unlike_comment(self.comment_id, CURRENT_ADMIN.username)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["comments"][0]["likers"], [])
+
+    def test_unlike_comment_error_comment_doesnt_exist(self):
+        """
+        expect: CommentDoesntExistError is raised because no comment with this
+        _id exists
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            CommentDoesntExistError,
+            post_manager.unlike_comment,
+            ObjectId(),
+            CURRENT_ADMIN.username,
+        )
+
+    def test_unlike_comment_error_not_liker(self):
+        """
+        expect: NotLikerException is raised because the user hadn't liked the
+        comment before
+        """
+
+        post_manager = Posts(self.db)
+        self.assertRaises(
+            NotLikerException,
+            post_manager.unlike_comment,
+            self.comment_id,
+            CURRENT_ADMIN.username,
+        )
+
+    def test_texts_are_sanitized(self):
+        """
+        expect: the texts of posts, reposts and comments are sanitized before
+        they are stored, also in the dicts that were passed in (the handlers
+        return them)
+        """
+
+        injected = '<p onclick="alert(1)">text</p><script>alert(1)</script>'
+        sanitized = "<p>text</p>"
+        post_manager = Posts(self.db)
+
+        post = {
+            **self.default_post,
+            "text": injected,
+            "comments": [],
+        }
+        del post["_id"]
+        post_id = post_manager.insert_post(post)
+        self.assertEqual(post["text"], sanitized)
+        self.assertEqual(self.db.posts.find_one({"_id": post_id})["text"], sanitized)
+
+        post_manager.update_post_text(self.post_id, injected)
+        self.assertEqual(
+            self.db.posts.find_one({"_id": self.post_id})["text"], sanitized
+        )
+
+        repost = {
+            **post,
+            "text": injected,
+            "isRepost": True,
+            "repostAuthor": CURRENT_USER.username,
+            "originalCreationDate": post["creation_date"],
+            "repostText": injected,
+        }
+        del repost["_id"]
+        repost_id = post_manager.insert_repost(repost)
+        db_repost = self.db.posts.find_one({"_id": repost_id})
+        self.assertEqual(db_repost["text"], sanitized)
+        self.assertEqual(db_repost["repostText"], sanitized)
+
+        post_manager.update_repost_text(repost_id, injected + "!")
+        self.assertEqual(
+            self.db.posts.find_one({"_id": repost_id})["repostText"], sanitized + "!"
+        )
+        # saving the same text again is fine
+        post_manager.update_repost_text(repost_id, sanitized + "!")
+
+        comment = {**self.default_comment, "text": injected}
+        del comment["_id"]
+        comment_id = post_manager.add_comment(self.post_id, comment)
+        self.assertEqual(comment["text"], sanitized)
+        db_comment = next(
+            c
+            for c in self.db.posts.find_one({"_id": self.post_id})["comments"]
+            if c["_id"] == comment_id
+        )
+        self.assertEqual(db_comment["text"], sanitized)
+
+    def test_texts_are_sanitized_error_no_str(self):
+        """
+        expect: TypeError is raised if a text is no string, nothing is stored
+        """
+
+        post_manager = Posts(self.db)
+
+        comment = {**self.default_comment, "text": None}
+        del comment["_id"]
+        self.assertRaises(TypeError, post_manager.add_comment, self.post_id, comment)
+        self.assertRaises(TypeError, post_manager.update_post_text, self.post_id, 1)
+
+        post = self.db.posts.find_one({"_id": self.post_id})
+        self.assertEqual(post["text"], self.default_post["text"])
+        self.assertEqual(len(post["comments"]), 1)
+
     def test_add_comment(self):
         """
         expect: successfully add comment to the post
@@ -1887,6 +2076,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "new_comment",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
@@ -1917,6 +2107,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager.add_comment(self.post_id, comment)
@@ -1940,6 +2131,7 @@ class PostResourceTest(BaseResourceTestCase):
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "text": "new_comment",
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
@@ -1965,9 +2157,15 @@ class PostResourceTest(BaseResourceTestCase):
             "author": CURRENT_ADMIN.username,
             "creation_date": datetime(2023, 1, 1, 9, 5, 0),
             "pinned": False,
+            "likers": [],
         }
 
         post_manager = Posts(self.db)
+        self.assertRaises(ValueError, post_manager.add_comment, self.post_id, comment)
+
+        # the likers are required as well, even if there are none yet
+        comment["text"] = "new_comment"
+        del comment["likers"]
         self.assertRaises(ValueError, post_manager.add_comment, self.post_id, comment)
 
     def test_delete_comment(self):
@@ -4681,7 +4879,9 @@ class SpaceResourceTest(BaseResourceTestCase):
 
         # put a folder with a file into the space's file share
         space_files = SpaceFiles(self.db)
-        folder = space_files.create_folder(self.space_id, "docs", CURRENT_ADMIN.username)
+        folder = space_files.create_folder(
+            self.space_id, "docs", CURRENT_ADMIN.username
+        )
         file_node = space_files.add_file(
             self.space_id, "a.txt", b"a", CURRENT_ADMIN.username, folder["_id"]
         )
@@ -5554,6 +5754,394 @@ class SpaceResourceTest(BaseResourceTestCase):
         )
 
 
+class SpaceSuggestionsResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        # elasticsearch is mocked, only the use of its results is tested here
+        self.profile_match = mock.patch.object(
+            ElasticsearchConnector, "search_profile_match", return_value=[]
+        ).start()
+        self.topic_match = mock.patch.object(
+            ElasticsearchConnector, "search_space_topic_match", return_value={}
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+
+        self.profile = {
+            "username": "suggestion_user",
+            "follows": [],
+            "expertise": "Computer Science",
+            "ve_interests": ["Research", ""],
+            "ve_goals": [""],
+            "research_tags": ["robotics"],
+            "courses": [
+                {"title": "Machine Learning", "academic_courses": "", "semester": ""}
+            ],
+        }
+
+    def tearDown(self) -> None:
+        self.db.spaces.delete_many({})
+        self.db.posts.delete_many({})
+        self.db.plans.delete_many({})
+        super().tearDown()
+
+    def insert_group(self, name: str, members: list = None, **attributes) -> ObjectId:
+        """
+        insert a visible group that may be suggested to `self.profile`, the
+        `attributes` override the defaults
+        """
+
+        group = {
+            "name": name,
+            "invisible": False,
+            "joinable": True,
+            "members": members or [],
+            "admins": [],
+            "invites": [],
+            "requests": [],
+            "space_pic": "default_group_pic.jpg",
+            "space_description": "",
+        } | attributes
+        return self.db.spaces.insert_one(group).inserted_id
+
+    def insert_posts(self, space_id: ObjectId, count: int, days_ago: int = 0) -> None:
+        creation_date = datetime.now(timezone.utc) - timedelta(days=days_ago)
+        self.db.posts.insert_many(
+            [
+                {
+                    "author": "someone",
+                    "creation_date": creation_date,
+                    "text": "test",
+                    "space": space_id,
+                }
+                for _ in range(count)
+            ]
+        )
+
+    def scored_groups(self) -> dict:
+        """
+        the scored groups of `self.profile` by their _id
+        """
+
+        return {
+            group["_id"]: group
+            for group in Spaces(self.db).score_spaces_for_suggestions(self.profile)
+        }
+
+    def deterministic_suggestions(self) -> Spaces:
+        """
+        `Spaces` whose suggestions always draw the groups with the highest weights
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.suggestion_random = mock.Mock(random=mock.Mock(return_value=0.5))
+        return space_manager
+
+    def test_get_suggestions(self):
+        """
+        expect: suggest all groups as snippets, since there are fewer than the limit
+        """
+
+        group_ids = {self.insert_group("group_{}".format(i)) for i in range(3)}
+
+        suggestions = Spaces(self.db).get_space_suggestions(self.profile)
+
+        self.assertEqual({group["_id"] for group in suggestions}, group_ids)
+        for group in suggestions:
+            self.assertEqual(
+                set(group.keys()), {"_id", "name", "space_pic", "space_description"}
+            )
+
+    def test_get_suggestions_no_groups(self):
+        """
+        expect: no suggestions without any groups
+        """
+
+        self.assertEqual(Spaces(self.db).get_space_suggestions(self.profile), [])
+
+    def test_get_suggestions_excluded_groups(self):
+        """
+        expect: never suggest invisible groups and groups that the user is a member or
+        admin of, was invited to or requested to join
+        """
+
+        username = self.profile["username"]
+        self.insert_group("invisible", invisible=True)
+        self.insert_group("member", members=[username])
+        self.insert_group("admin", admins=[username])
+        self.insert_group("invited", invites=[username])
+        self.insert_group("requested", requests=[username])
+        suggested_id = self.insert_group("suggested")
+
+        suggestions = Spaces(self.db).get_space_suggestions(self.profile)
+
+        self.assertEqual([group["_id"] for group in suggestions], [suggested_id])
+
+    def test_get_suggestions_limit(self):
+        """
+        expect: suggest as many different groups as the limit allows, also beyond
+        the best scored ones
+        """
+
+        for i in range(12):
+            self.insert_group("group_{}".format(i), members=["member_{}".format(i)])
+
+        for limit, expected in ((5, 5), (3, 3), (10, 10), (20, 12)):
+            suggestions = Spaces(self.db).get_space_suggestions(
+                self.profile, limit=limit
+            )
+            self.assertEqual(len({group["_id"] for group in suggestions}), expected)
+
+    def test_get_suggestions_best_and_active_groups(self):
+        """
+        expect: suggest the best scored groups first and fill the remaining slots with
+        active groups beyond them, but not with inactive ones
+        """
+
+        self.profile["follows"] = ["followed_1", "followed_2", "followed_3"]
+        best_ids = [
+            self.insert_group("best_{}".format(i), members=self.profile["follows"])
+            for i in range(Spaces.SUGGESTION_POOL_SIZE)
+        ]
+        active_ids = []
+        for i in range(2):
+            active_id = self.insert_group("active_{}".format(i), members=["member"])
+            self.insert_posts(active_id, 1)
+            active_ids.append(active_id)
+        inactive_ids = [
+            self.insert_group("inactive_{}".format(i), members=["member"])
+            for i in range(2)
+        ]
+
+        suggestions = self.deterministic_suggestions().get_space_suggestions(
+            self.profile
+        )
+        suggested_ids = [group["_id"] for group in suggestions]
+
+        self.assertEqual(len(suggested_ids), 5)
+        self.assertTrue(set(suggested_ids[:3]).issubset(best_ids))
+        self.assertEqual(set(suggested_ids[3:]), set(active_ids))
+        self.assertFalse(set(suggested_ids) & set(inactive_ids))
+
+    def test_score_groups_order(self):
+        """
+        expect: the total score weighs the scores of the signals, the best scored
+        group comes first
+        """
+
+        self.profile["follows"] = ["followed"]
+        self.insert_group("other", members=["other"])
+        network_id = self.insert_group("network", members=["followed"])
+
+        groups = Spaces(self.db).score_spaces_for_suggestions(self.profile)
+
+        self.assertEqual(groups[0]["_id"], network_id)
+        for group in groups:
+            self.assertAlmostEqual(
+                group["score"],
+                sum(
+                    Spaces.SUGGESTION_WEIGHTS[signal] * score
+                    for signal, score in group["scores"].items()
+                ),
+            )
+
+    def test_score_groups_similar_members(self):
+        """
+        expect: groups score by their members with matching profiles, big groups
+        don't win by their size alone
+        """
+
+        self.profile_match.return_value = [
+            {"_source": {"username": "similar"}, "_score": 4.0},
+            {"_source": {"username": "less_similar"}, "_score": 1.0},
+        ]
+        similar_id = self.insert_group("similar", members=["similar"])
+        less_similar_id = self.insert_group("less_similar", members=["less_similar"])
+        big_id = self.insert_group(
+            "big", members=["similar", "other_1", "other_2", "other_3"]
+        )
+        other_id = self.insert_group("other", members=["other_1"])
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[similar_id]["scores"]["similar_members"], 1.0)
+        self.assertEqual(groups[less_similar_id]["scores"]["similar_members"], 0.25)
+        self.assertEqual(groups[big_id]["scores"]["similar_members"], 0.5)
+        self.assertEqual(groups[other_id]["scores"]["similar_members"], 0.0)
+
+        # the matching flattens the profile it gets, so it has to be a copy
+        matched_profile = self.profile_match.call_args.args[0]
+        self.assertIsNot(matched_profile, self.profile)
+        self.assertEqual(matched_profile, self.profile)
+
+    def test_score_groups_network(self):
+        """
+        expect: groups score by their members that the user follows or plans VEs
+        with, up to a saturation
+        """
+
+        username = self.profile["username"]
+        self.profile["follows"] = ["followed"]
+        self.db.plans.insert_many(
+            [
+                {"name": "own_plan", "author": username, "partners": ["partner"]},
+                {"name": "other_plan", "author": "plan_author", "partners": [username]},
+            ]
+        )
+        followed_id = self.insert_group("followed", members=["followed", "other"])
+        partner_id = self.insert_group("partner", members=["partner"])
+        author_id = self.insert_group("author", members=["plan_author"])
+        network_id = self.insert_group(
+            "network", members=["followed", "partner", "plan_author"]
+        )
+        other_id = self.insert_group("other", members=["other"])
+
+        groups = self.scored_groups()
+
+        for group_id in (followed_id, partner_id, author_id):
+            self.assertAlmostEqual(groups[group_id]["scores"]["network"], 1 / 3)
+        self.assertEqual(groups[network_id]["scores"]["network"], 1.0)
+        self.assertEqual(groups[other_id]["scores"]["network"], 0.0)
+
+    def test_score_groups_topic(self):
+        """
+        expect: groups score by how well they match the topics of the profile, which
+        are searched with both the English keys and German labels of the options
+        """
+
+        matching_id = self.insert_group("matching")
+        less_matching_id = self.insert_group("less_matching")
+        other_id = self.insert_group("other")
+        self.topic_match.return_value = {
+            str(matching_id): 3.0,
+            str(less_matching_id): 1.5,
+        }
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[matching_id]["scores"]["topic"], 1.0)
+        self.assertEqual(groups[less_matching_id]["scores"]["topic"], 0.5)
+        self.assertEqual(groups[other_id]["scores"]["topic"], 0.0)
+
+        text, space_ids = self.topic_match.call_args.args
+        for term in (
+            "Computer Science",
+            "Informatik",
+            "Research",
+            "Forschung",
+            "robotics",
+            "Machine Learning",
+        ):
+            self.assertIn(term, text)
+        self.assertEqual(set(space_ids), {matching_id, less_matching_id, other_id})
+
+    def test_score_groups_activity(self):
+        """
+        expect: groups score by their posts of the last days and their members, the
+        posts weigh more and older posts don't count
+        """
+
+        active_id = self.insert_group("active", members=["member"])
+        self.insert_posts(active_id, 3)
+        old_id = self.insert_group("old", members=["member"])
+        self.insert_posts(old_id, 3, days_ago=Spaces.SUGGESTION_ACTIVITY_DAYS + 1)
+        bigger_id = self.insert_group(
+            "bigger", members=["member_1", "member_2", "member_3"]
+        )
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[active_id]["recent_posts"], 3)
+        self.assertEqual(groups[old_id]["recent_posts"], 0)
+        self.assertEqual(groups[bigger_id]["recent_posts"], 0)
+        self.assertGreater(
+            groups[active_id]["scores"]["activity"],
+            groups[bigger_id]["scores"]["activity"],
+        )
+        self.assertGreater(
+            groups[bigger_id]["scores"]["activity"],
+            groups[old_id]["scores"]["activity"],
+        )
+
+    def test_score_groups_elasticsearch_unavailable(self):
+        """
+        expect: without elasticsearch, the groups are still scored by the other
+        signals
+        """
+
+        self.profile_match.side_effect = requests.ConnectionError()
+        self.topic_match.side_effect = requests.ConnectionError()
+        self.profile["follows"] = ["followed"]
+        network_id = self.insert_group("network", members=["followed"])
+
+        groups = self.scored_groups()
+
+        self.assertEqual(groups[network_id]["scores"]["similar_members"], 0.0)
+        self.assertEqual(groups[network_id]["scores"]["topic"], 0.0)
+        self.assertAlmostEqual(groups[network_id]["scores"]["network"], 1 / 3)
+
+
+class SanitizeHtmlTest(TestCase):
+    """
+    the texts of posts and comments are reduced to the markup of the rich text
+    editor before they are stored
+    """
+
+    def test_sanitize_html_keeps_editor_markup(self):
+        """
+        expect: everything the rich text editor produces is kept unchanged
+        """
+
+        html = (
+            "<p><b>b</b> <i>i</i> <u>u</u> <strike>s</strike></p>"
+            "<ul><li>x</li></ul><ol><li>y</li></ol><div>d<br></div>"
+            '<a href="https://example.org/path?a=1&amp;b=2">l</a>'
+        )
+        self.assertEqual(util.sanitize_html(html), html)
+
+    def test_sanitize_html_removes_everything_else(self):
+        """
+        expect: scripts, event handlers, styles, other elements and attributes
+        and links with other schemes are removed, while the text of removed
+        elements (except scripts and styles) is kept; sanitizing twice yields
+        the same result
+        """
+
+        cases = [
+            ("<script>alert(1)</script>text", "text"),
+            ("<style>p {}</style>text", "text"),
+            ('<p onclick="alert(1)" style="color: red">p</p>', "<p>p</p>"),
+            ('<a href="javascript:alert(1)">l</a>', "<a>l</a>"),
+            (
+                '<a href="mailto:a@b.de" target="_blank" rel="opener">m</a>',
+                '<a href="mailto:a@b.de">m</a>',
+            ),
+            ('<img src="x" onerror="alert(1)">', ""),
+            ("<span>kept</span> <strong>text</strong>", "kept text"),
+            ("<!-- comment -->text", "text"),
+        ]
+        for html, expected in cases:
+            with self.subTest(html=html):
+                self.assertEqual(util.sanitize_html(html), expected)
+                self.assertEqual(util.sanitize_html(expected), expected)
+
+    def test_sanitize_html_escapes_plain_text(self):
+        """
+        expect: plain text comes out HTML escaped, so it is shown as before
+        """
+
+        self.assertEqual(util.sanitize_html("1 < 2 & 3 > 2"), "1 &lt; 2 &amp; 3 &gt; 2")
+        self.assertEqual(util.sanitize_html(""), "")
+
+    def test_sanitize_html_error_no_str(self):
+        """
+        expect: TypeError is raised for anything but a string
+        """
+
+        self.assertRaises(TypeError, util.sanitize_html, None)
+        self.assertRaises(TypeError, util.sanitize_html, ["<p>text</p>"])
+
+
 class GridFSHelpersTest(BaseResourceTestCase):
     """
     the gridfs helpers keep the mime type in the file metadata instead of the
@@ -5587,7 +6175,9 @@ class GridFSHelpersTest(BaseResourceTestCase):
         self.assertNotIn("contentType", self.db.fs.files.find_one({"_id": file_id}))
 
         # additional kwargs (e.g. a custom _id) are passed through
-        custom = util.gridfs_put(self.fs, b"x", "custom", "image/png", "system", _id="custom_id")
+        custom = util.gridfs_put(
+            self.fs, b"x", "custom", "image/png", "system", _id="custom_id"
+        )
         self.assertEqual(custom, "custom_id")
         self.assertTrue(self.fs.exists("custom_id"))
 
@@ -5597,10 +6187,14 @@ class GridFSHelpersTest(BaseResourceTestCase):
         the legacy top-level field, and None if there is none at all
         """
 
-        modern = self.fs.get(util.gridfs_put(self.fs, b"1", "a.txt", "text/plain", "me"))
+        modern = self.fs.get(
+            util.gridfs_put(self.fs, b"1", "a.txt", "text/plain", "me")
+        )
         self.assertEqual(util.gridfs_content_type(modern), "text/plain")
 
-        legacy = self.fs.get(self.fs.put(b"2", filename="b.png", contentType="image/png"))
+        legacy = self.fs.get(
+            self.fs.put(b"2", filename="b.png", contentType="image/png")
+        )
         self.assertEqual(util.gridfs_content_type(legacy), "image/png")
 
         # metadata wins over the legacy field
@@ -5624,9 +6218,14 @@ class GridFSHelpersTest(BaseResourceTestCase):
         the legacy field is removed everywhere and a second run is a no-op
         """
 
-        legacy_no_metadata = self.fs.put(b"1", filename="a.png", contentType="image/png")
+        legacy_no_metadata = self.fs.put(
+            b"1", filename="a.png", contentType="image/png"
+        )
         legacy_with_metadata = self.fs.put(
-            b"2", filename="b.txt", contentType="text/plain", metadata={"uploader": "me"}
+            b"2",
+            filename="b.txt",
+            contentType="text/plain",
+            metadata={"uploader": "me"},
         )
         legacy_null_metadata = self.fs.put(
             b"3", filename="c.txt", contentType="text/csv", metadata=None
@@ -5635,7 +6234,10 @@ class GridFSHelpersTest(BaseResourceTestCase):
             b"4",
             filename="d.pdf",
             contentType="text/plain",
-            metadata={util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
+            metadata={
+                util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf",
+                "uploader": "me",
+            },
         )
         modern = util.gridfs_put(self.fs, b"5", "e.txt", "text/plain", "me")
         untyped = self.fs.put(b"6", filename="f.bin")
@@ -5644,7 +6246,10 @@ class GridFSHelpersTest(BaseResourceTestCase):
 
         expected = {
             legacy_no_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "image/png"},
-            legacy_with_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
+            legacy_with_metadata: {
+                util.GRIDFS_CONTENT_TYPE_KEY: "text/plain",
+                "uploader": "me",
+            },
             legacy_null_metadata: {util.GRIDFS_CONTENT_TYPE_KEY: "text/csv"},
             both: {util.GRIDFS_CONTENT_TYPE_KEY: "application/pdf", "uploader": "me"},
             modern: {util.GRIDFS_CONTENT_TYPE_KEY: "text/plain", "uploader": "me"},
@@ -5666,7 +6271,9 @@ class GridFSHelpersTest(BaseResourceTestCase):
             self.db.fs.files.find_one({"_id": legacy_with_metadata})["metadata"],
             expected[legacy_with_metadata],
         )
-        self.assertEqual(self.db.fs.files.count_documents({"contentType": {"$exists": True}}), 0)
+        self.assertEqual(
+            self.db.fs.files.count_documents({"contentType": {"$exists": True}}), 0
+        )
 
 
 class SpaceFilesResourceTest(BaseResourceTestCase):
@@ -5702,12 +6309,16 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
 
         super().tearDown()
 
-    def _post_file(self, name: str = "attachment.txt", content: bytes = b"post") -> dict:
+    def _post_file(
+        self, name: str = "attachment.txt", content: bytes = b"post"
+    ) -> dict:
         """
         helper: store a file in gridfs and mirror it as a post file
         """
 
-        file_id = util.gridfs_put(self.fs, content, name, "text/plain", CURRENT_USER.username)
+        file_id = util.gridfs_put(
+            self.fs, content, name, "text/plain", CURRENT_USER.username
+        )
         return self.space_files.add_post_file(
             self.space_id, CURRENT_USER.username, file_id, name, ObjectId()
         )
@@ -5853,7 +6464,10 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         parent_id = None
         for level in range(SpaceFiles.MAX_FOLDER_DEPTH):
             folder = self.space_files.create_folder(
-                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+                self.space_id,
+                "level{}".format(level),
+                CURRENT_ADMIN.username,
+                parent_id,
             )
             parent_id = folder["_id"]
 
@@ -5882,9 +6496,7 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         )
 
         # files count as well
-        self.space_files.add_file(
-            self.space_id, "a.txt", b"a", CURRENT_ADMIN.username
-        )
+        self.space_files.add_file(self.space_id, "a.txt", b"a", CURRENT_ADMIN.username)
         self.assertRaises(
             FilenameCollisionError,
             self.space_files.create_folder,
@@ -5923,7 +6535,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         self.assertEqual(grid_file.read(), b"%PDF-1.4")
         self.assertEqual(grid_file.filename, "report.pdf")
         # the mime type lives in the metadata, not in the deprecated contentType field
-        self.assertEqual(grid_file.metadata[util.GRIDFS_CONTENT_TYPE_KEY], "application/pdf")
+        self.assertEqual(
+            grid_file.metadata[util.GRIDFS_CONTENT_TYPE_KEY], "application/pdf"
+        )
         self.assertEqual(util.gridfs_content_type(grid_file), "application/pdf")
         self.assertEqual(grid_file.metadata["uploader"], CURRENT_ADMIN.username)
 
@@ -6051,7 +6665,6 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
             self.space_id,
             "big.bin",
             b"12345",
-            "application/octet-stream",
             CURRENT_ADMIN.username,
         )
         self.assertEqual(self.db.space_files.count_documents({}), 0)
@@ -6296,7 +6909,10 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         """
 
         self.assertRaises(
-            FileNodeDoesntExistError, self.space_files.get_node, self.space_id, ObjectId()
+            FileNodeDoesntExistError,
+            self.space_files.get_node,
+            self.space_id,
+            ObjectId(),
         )
 
         foreign = self.space_files.create_folder(
@@ -6329,13 +6945,11 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         then files, each sorted by name
         """
 
-        self.space_files.add_file(
-            self.space_id, "b.txt", b"b", CURRENT_ADMIN.username
+        self.space_files.add_file(self.space_id, "b.txt", b"b", CURRENT_ADMIN.username)
+        self.space_files.add_file(self.space_id, "A.txt", b"a", CURRENT_ADMIN.username)
+        zeta = self.space_files.create_folder(
+            self.space_id, "zeta", CURRENT_ADMIN.username
         )
-        self.space_files.add_file(
-            self.space_id, "A.txt", b"a", CURRENT_ADMIN.username
-        )
-        zeta = self.space_files.create_folder(self.space_id, "zeta", CURRENT_ADMIN.username)
         self.space_files.create_folder(self.space_id, "alpha", CURRENT_ADMIN.username)
         self._post_file()
         self.space_files.add_file(
@@ -6400,11 +7014,18 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         path = self.space_files.get_path(self.space_id, f["_id"])
         self.assertEqual(
             [(p["_id"], p["name"], p["type"]) for p in path],
-            [(a["_id"], "a", "folder"), (b["_id"], "b", "folder"), (f["_id"], "f.txt", "file")],
+            [
+                (a["_id"], "a", "folder"),
+                (b["_id"], "b", "folder"),
+                (f["_id"], "f.txt", "file"),
+            ],
         )
 
         self.assertRaises(
-            FileNodeDoesntExistError, self.space_files.get_path, self.space_id, ObjectId()
+            FileNodeDoesntExistError,
+            self.space_files.get_path,
+            self.space_id,
+            ObjectId(),
         )
 
     def test_get_folder_tree(self):
@@ -6413,7 +7034,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         """
 
         a = self.space_files.create_folder(self.space_id, "a", CURRENT_ADMIN.username)
-        self.space_files.create_folder(self.space_id, "b", CURRENT_ADMIN.username, a["_id"])
+        self.space_files.create_folder(
+            self.space_id, "b", CURRENT_ADMIN.username, a["_id"]
+        )
         self.space_files.create_folder(self.space_id, "c", CURRENT_ADMIN.username)
         self.space_files.add_file(
             self.space_id, "f.txt", b"f", CURRENT_ADMIN.username, a["_id"]
@@ -6437,10 +7060,15 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         tree, folders first, each result carries its parent path
         """
 
-        a = self.space_files.create_folder(self.space_id, "Reports", CURRENT_ADMIN.username)
+        a = self.space_files.create_folder(
+            self.space_id, "Reports", CURRENT_ADMIN.username
+        )
         self.space_files.add_file(
-            self.space_id, "annual_report.pdf", b"r",
-            CURRENT_ADMIN.username, a["_id"],
+            self.space_id,
+            "annual_report.pdf",
+            b"r",
+            CURRENT_ADMIN.username,
+            a["_id"],
         )
         self.space_files.add_file(
             self.space_id, "notes.txt", b"n", CURRENT_ADMIN.username
@@ -6494,7 +7122,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         folder = self.space_files.create_folder(
             self.space_id, "docs", CURRENT_ADMIN.username
         )
-        renamed = self.space_files.rename_node(self.space_id, folder["_id"], " documents ")
+        renamed = self.space_files.rename_node(
+            self.space_id, folder["_id"], " documents "
+        )
         self.assertEqual(renamed["name"], "documents")
         self.assertEqual(
             self.db.space_files.find_one({"_id": folder["_id"]})["name"], "documents"
@@ -6646,7 +7276,11 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
             self.space_id, "f.txt", b"f", CURRENT_ADMIN.username
         )
         self.assertRaises(
-            NotAFolderError, self.space_files.move_node, self.space_id, a["_id"], f["_id"]
+            NotAFolderError,
+            self.space_files.move_node,
+            self.space_id,
+            a["_id"],
+            f["_id"],
         )
 
     def test_move_node_error_read_only(self):
@@ -6715,13 +7349,18 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
         parent_id = None
         for level in range(SpaceFiles.MAX_FOLDER_DEPTH - 1):
             folder = self.space_files.create_folder(
-                self.space_id, "level{}".format(level), CURRENT_ADMIN.username, parent_id
+                self.space_id,
+                "level{}".format(level),
+                CURRENT_ADMIN.username,
+                parent_id,
             )
             parent_id = folder["_id"]
 
         # a subtree of height 2 cannot be appended there, height 1 can
         x = self.space_files.create_folder(self.space_id, "x", CURRENT_ADMIN.username)
-        self.space_files.create_folder(self.space_id, "y", CURRENT_ADMIN.username, x["_id"])
+        self.space_files.create_folder(
+            self.space_id, "y", CURRENT_ADMIN.username, x["_id"]
+        )
         z = self.space_files.create_folder(self.space_id, "z", CURRENT_ADMIN.username)
 
         self.assertRaises(
@@ -7030,7 +7669,9 @@ class SpaceFilesResourceTest(BaseResourceTestCase):
 
         self.space_files.delete_all_of_space(self.space_id)
 
-        self.assertEqual(self.db.space_files.count_documents({"space": self.space_id}), 0)
+        self.assertEqual(
+            self.db.space_files.count_documents({"space": self.space_id}), 0
+        )
         self.assertFalse(self.fs.exists(f["file_id"]))
         self.assertTrue(self.fs.exists(post_file["file_id"]))
         self.assertIsNotNone(self.db.space_files.find_one({"_id": other["_id"]}))
@@ -7057,7 +7698,9 @@ class SpaceFilesMigrationTest(BaseResourceTestCase):
         super().tearDown()
 
     def _put(self, name: str) -> ObjectId:
-        return util.gridfs_put(self.fs, b"x", name, "text/plain", CURRENT_ADMIN.username)
+        return util.gridfs_put(
+            self.fs, b"x", name, "text/plain", CURRENT_ADMIN.username
+        )
 
     def _insert_post(self, files: list, is_repost: bool = False) -> ObjectId:
         post_id = ObjectId()
@@ -7156,7 +7799,12 @@ class SpaceFilesMigrationTest(BaseResourceTestCase):
         }
         self.assertEqual(
             set(root.keys()),
-            {"notes.txt", "Notes (1).txt", "old.txt", SpaceFiles.POST_FILES_FOLDER_NAME},
+            {
+                "notes.txt",
+                "Notes (1).txt",
+                "old.txt",
+                SpaceFiles.POST_FILES_FOLDER_NAME,
+            },
         )
         self.assertEqual(root["notes.txt"]["file_id"], manual)
         self.assertEqual(root["notes.txt"]["author"], CURRENT_ADMIN.username)
@@ -9656,6 +10304,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
                 {"username": CURRENT_USER.username, "send_state": "sent"},
             ],
+            "files": [],
         }
         self.default_room = {
             "_id": self.room_id,
@@ -9669,7 +10318,42 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         self.db.chatrooms.delete_many({})
         self.chat_manager = None
 
+        # delete all files that were sent in the chats
+        fs = gridfs.GridFS(self.db)
+        for fs_file in fs.find():
+            fs.delete(fs_file._id)
+
         super().tearDown()
+
+    def _store_files(self, *names: str) -> list:
+        """
+        helper: store files with the given names (and their names as content)
+        for a message in the default room
+        """
+
+        return self.chat_manager.store_message_files(
+            self.room_id,
+            [{"file_name": name, "content": name.encode()} for name in names],
+            CURRENT_ADMIN.username,
+        )
+
+    def _insert_message(self, text: str, date: datetime, files: list = None) -> dict:
+        """
+        helper: insert a message from the admin into the default room
+        """
+
+        message = {
+            "_id": ObjectId(),
+            "message": text,
+            "sender": CURRENT_ADMIN.username,
+            "creation_date": date,
+            "send_states": [],
+            "files": files or [],
+        }
+        self.db.chatrooms.update_one(
+            {"_id": self.room_id}, {"$push": {"messages": message}}
+        )
+        return message
 
     def test_get_or_create_room_id(self):
         """
@@ -9884,6 +10568,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -9918,6 +10603,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
 
         self.chat_manager.store_message(self.room_id, message)
@@ -9944,8 +10630,21 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             ValueError, self.chat_manager.store_message, self.room_id, message
         )
 
+        # the files are required as well, even if there are none
+        message["send_states"] = []
+        self.assertRaises(
+            ValueError, self.chat_manager.store_message, self.room_id, message
+        )
+
         # wrong types
+        message["files"] = []
         message["send_states"] = "wrong_type"
+        self.assertRaises(
+            TypeError, self.chat_manager.store_message, self.room_id, message
+        )
+
+        message["send_states"] = []
+        message["files"] = "wrong_type"
         self.assertRaises(
             TypeError, self.chat_manager.store_message, self.room_id, message
         )
@@ -9964,6 +10663,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "sent"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
 
         self.assertRaises(
@@ -9998,6 +10698,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
             {"username": CURRENT_USER.username, "send_state": "pending"},
             db_state["messages"][1]["send_states"],
         )
+        self.assertEqual(db_state["messages"][1]["files"], [])
 
     @gen_test
     async def test_send_message_error_room_doesnt_exist(self):
@@ -10102,6 +10803,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 }
             ],
         }
@@ -10125,6 +10827,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 }
             ],
         }
@@ -10141,6 +10844,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "acknowledged"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -10169,6 +10873,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                 {"username": CURRENT_ADMIN.username, "send_state": "pending"},
                 {"username": CURRENT_USER.username, "send_state": "acknowledged"},
             ],
+            "files": [],
         }
         self.db.chatrooms.update_one(
             {"_id": self.room_id}, {"$push": {"messages": message}}
@@ -10195,6 +10900,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 },
                 {
                     "_id": ObjectId(),
@@ -10208,6 +10914,7 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
                             "send_state": "acknowledged",
                         },
                     ],
+                    "files": [],
                 },
             ],
         }
@@ -10270,6 +10977,308 @@ class ChatResourceTest(BaseResourceTestCase, AsyncTestCase):
         ids = [r["_id"] for r in rooms]
         self.assertIn(self.room_id, ids)
         self.assertIn(room_extra["_id"], ids)
+
+    def test_get_file_limits(self):
+        """
+        expect: the limits reflect the class constants
+        """
+
+        limits = self.chat_manager.get_file_limits()
+        self.assertEqual(
+            limits["max_message_files_bytes"], Chat.MAX_MESSAGE_FILES_BYTES
+        )
+        self.assertEqual(limits["max_files_per_message"], Chat.MAX_FILES_PER_MESSAGE)
+        self.assertEqual(limits["max_room_storage_bytes"], Chat.MAX_ROOM_STORAGE_BYTES)
+        self.assertEqual(limits["max_file_name_length"], Chat.MAX_FILE_NAME_LENGTH)
+
+    def test_store_message_with_files(self):
+        """
+        expect: the file references are stored as part of the message
+        """
+
+        stored = self._store_files("notes.txt")
+        message = {**self.default_message, "_id": ObjectId(), "files": stored}
+        self.chat_manager.store_message(self.room_id, message)
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        self.assertEqual(db_state["messages"][1]["files"], stored)
+
+    def test_store_message_files(self):
+        """
+        expect: the files are stored in gridfs (mime type derived from the name,
+        uploader in the metadata) and their references are returned
+        """
+
+        stored = self._store_files("notes.txt", "picture.png")
+
+        self.assertEqual([f["file_name"] for f in stored], ["notes.txt", "picture.png"])
+        self.assertEqual(stored[0]["content_type"], "text/plain")
+        self.assertEqual(stored[1]["content_type"], "image/png")
+        self.assertEqual(stored[0]["size"], len(b"notes.txt"))
+
+        fs = gridfs.GridFS(self.db)
+        grid_file = fs.get(stored[1]["file_id"])
+        self.assertEqual(grid_file.read(), b"picture.png")
+        self.assertEqual(util.gridfs_content_type(grid_file), "image/png")
+        self.assertEqual(grid_file.metadata["uploader"], CURRENT_ADMIN.username)
+
+    def test_store_message_files_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError,
+            self.chat_manager.store_message_files,
+            ObjectId(),
+            [{"file_name": "a.txt", "content": b"a"}],
+            CURRENT_ADMIN.username,
+        )
+
+    def test_store_message_files_error_user_not_member(self):
+        """
+        expect: UserNotMemberError is raised because the uploader is not a member
+        of the room, nothing is stored
+        """
+
+        self.assertRaises(
+            UserNotMemberError,
+            self.chat_manager.store_message_files,
+            self.room_id,
+            [{"file_name": "a.txt", "content": b"a"}],
+            "not_a_member",
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_maximum_files_exceeded(self):
+        """
+        expect: MaximumFilesExceededError is raised for no files at all and for
+        more than MAX_FILES_PER_MESSAGE files, nothing is stored
+        """
+
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self.chat_manager.store_message_files,
+            self.room_id,
+            [],
+            CURRENT_ADMIN.username,
+        )
+
+        self.chat_manager.MAX_FILES_PER_MESSAGE = 2
+        self.assertRaises(
+            MaximumFilesExceededError,
+            self._store_files,
+            "a.txt",
+            "b.txt",
+            "c.txt",
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_invalid_name(self):
+        """
+        expect: InvalidFileNameError is raised for an invalid name, nothing is stored
+        """
+
+        self.assertRaises(
+            InvalidFileNameError, self._store_files, "fine.txt", "../evil.txt"
+        )
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_file_too_large(self):
+        """
+        expect: FileTooLargeError is raised if the files together exceed
+        MAX_MESSAGE_FILES_BYTES, nothing is stored
+        """
+
+        self.chat_manager.MAX_MESSAGE_FILES_BYTES = 10
+        # 5 + 6 bytes, each one alone would fit
+        self.assertRaises(FileTooLargeError, self._store_files, "a.txt", "bb.txt")
+        self.assertEqual(self.db.fs.files.count_documents({}), 0)
+
+    def test_store_message_files_error_storage_quota_exceeded(self):
+        """
+        expect: StorageQuotaExceededError is raised if the room would exceed
+        MAX_ROOM_STORAGE_BYTES, nothing is stored
+        """
+
+        stored = self._store_files("a.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        self.chat_manager.MAX_ROOM_STORAGE_BYTES = len(b"a.txt") + 5
+        self.assertRaises(StorageQuotaExceededError, self._store_files, "bb.txt")
+        self.assertEqual(self.db.fs.files.count_documents({}), 1)
+
+    def test_get_storage_usage(self):
+        """
+        expect: the sizes of all files sent in the room are summed up
+        """
+
+        self.assertEqual(self.chat_manager.get_storage_usage(self.room_id), 0)
+
+        first = self._store_files("a.txt")
+        second = self._store_files("bb.txt", "ccc.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), first)
+        self._insert_message("", datetime(2023, 1, 3, tzinfo=timezone.utc), second)
+
+        self.assertEqual(
+            self.chat_manager.get_storage_usage(self.room_id),
+            len(b"a.txt") + len(b"bb.txt") + len(b"ccc.txt"),
+        )
+
+    @gen_test
+    async def test_send_message_with_files(self):
+        """
+        expect: the files are stored as part of the message
+        """
+
+        stored = self._store_files("notes.txt")
+        await self.chat_manager.send_message(
+            self.room_id, "see attachment", CURRENT_ADMIN.username, stored
+        )
+
+        db_state = self.db.chatrooms.find_one({"_id": self.room_id})
+        message = db_state["messages"][1]
+        self.assertEqual(message["message"], "see attachment")
+        self.assertEqual(message["files"], stored)
+
+    def test_search_messages(self):
+        """
+        expect: messages are found case-insensitively by their text and by the
+        names of their files, newest first and without send states; special
+        characters are matched literally and an empty query yields nothing
+        """
+
+        older = self._insert_message(
+            "Meeting on Monday", datetime(2023, 1, 2, tzinfo=timezone.utc)
+        )
+        newer = self._insert_message(
+            "the meeting notes (draft)", datetime(2023, 1, 3, tzinfo=timezone.utc)
+        )
+        with_file = self._insert_message(
+            "",
+            datetime(2023, 1, 4, tzinfo=timezone.utc),
+            [
+                {
+                    "file_id": ObjectId(),
+                    "file_name": "Meeting-Slides.pdf",
+                    "content_type": "application/pdf",
+                    "size": 1,
+                }
+            ],
+        )
+
+        results = self.chat_manager.search_messages(self.room_id, " MEETING ")
+        self.assertEqual(
+            [m["_id"] for m in results],
+            [with_file["_id"], newer["_id"], older["_id"]],
+        )
+        self.assertTrue(all("send_states" not in m for m in results))
+
+        results = self.chat_manager.search_messages(self.room_id, "(draft)")
+        self.assertEqual([m["_id"] for m in results], [newer["_id"]])
+
+        self.assertEqual(self.chat_manager.search_messages(self.room_id, ".*"), [])
+        self.assertEqual(self.chat_manager.search_messages(self.room_id, "   "), [])
+
+    def test_search_messages_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.search_messages, ObjectId(), "test"
+        )
+
+    def test_get_files_of_room(self):
+        """
+        expect: all files of the room are returned newest first, together with
+        the message they were sent with
+        """
+
+        first = self._store_files("a.txt")
+        second = self._store_files("b.txt", "c.txt")
+        first_message = self._insert_message(
+            "", datetime(2023, 1, 2, tzinfo=timezone.utc), first
+        )
+        second_message = self._insert_message(
+            "two files", datetime(2023, 1, 3, tzinfo=timezone.utc), second
+        )
+
+        files = self.chat_manager.get_files_of_room(self.room_id)
+        self.assertEqual([f["file_name"] for f in files], ["b.txt", "c.txt", "a.txt"])
+        self.assertEqual(files[0]["message_id"], second_message["_id"])
+        self.assertEqual(files[2]["message_id"], first_message["_id"])
+        self.assertEqual(files[2]["file_id"], first[0]["file_id"])
+        self.assertEqual(files[2]["sender"], CURRENT_ADMIN.username)
+        self.assertEqual(files[2]["content_type"], "text/plain")
+        self.assertEqual(files[2]["size"], len(b"a.txt"))
+        self.assertIsNotNone(files[2]["creation_date"])
+
+    def test_get_files_of_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.get_files_of_room, ObjectId()
+        )
+
+    def test_get_room_members_by_file_id(self):
+        """
+        expect: the members of the room the file was sent in, or None for
+        files that weren't sent in a chat
+        """
+
+        stored = self._store_files("a.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        self.assertEqual(
+            self.chat_manager.get_room_members_by_file_id(stored[0]["file_id"]),
+            self.default_room["members"],
+        )
+        self.assertIsNone(self.chat_manager.get_room_members_by_file_id(ObjectId()))
+
+    def test_delete_room(self):
+        """
+        expect: the room is deleted including its messages and the files that
+        were sent in it, files of other rooms are left alone
+        """
+
+        stored = self._store_files("a.txt", "b.txt")
+        self._insert_message("", datetime(2023, 1, 2, tzinfo=timezone.utc), stored)
+
+        other_room_id = ObjectId()
+        self.db.chatrooms.insert_one(
+            {
+                "_id": other_room_id,
+                "name": None,
+                "members": [CURRENT_ADMIN.username],
+                "messages": [],
+            }
+        )
+        other_file = self.chat_manager.store_message_files(
+            other_room_id,
+            [{"file_name": "keep.txt", "content": b"x"}],
+            CURRENT_ADMIN.username,
+        )
+
+        members = self.chat_manager.delete_room(self.room_id)
+
+        self.assertEqual(members, self.default_room["members"])
+        self.assertIsNone(self.db.chatrooms.find_one({"_id": self.room_id}))
+        fs = gridfs.GridFS(self.db)
+        self.assertFalse(any(fs.exists(f["file_id"]) for f in stored))
+        self.assertTrue(fs.exists(other_file[0]["file_id"]))
+        self.assertIsNotNone(self.db.chatrooms.find_one({"_id": other_room_id}))
+
+    def test_delete_room_error_room_doesnt_exist(self):
+        """
+        expect: RoomDoesntExistError is raised because the room doesn't exist
+        """
+
+        self.assertRaises(
+            RoomDoesntExistError, self.chat_manager.delete_room, ObjectId()
+        )
 
 
 class ElasticsearchIntegrationTest(BaseResourceTestCase):
