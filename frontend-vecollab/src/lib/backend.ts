@@ -34,6 +34,7 @@ import {
     ITopLevelNode,
 } from '@/interfaces/material/materialInterfaces';
 import { IplansFilter } from '@/pages/plans';
+import { TeacherProfileAssessment } from '@/interfaces/profile/profileInterfaces';
 
 if (!process.env.NEXT_PUBLIC_BACKEND_BASE_URL) {
     throw new Error(`
@@ -174,6 +175,30 @@ export function useGetOwnProfile(accessToken: string): {
 
     return {
         data: isLoading || error ? {} : data,
+        isLoading,
+        error,
+        mutate,
+    };
+}
+
+/**
+ * the teacher profile self-assessment of the current user, null while loading,
+ * without an access token or if the user has not made it yet
+ */
+export function useGetTeacherProfileAssessment(accessToken: string): {
+    data: TeacherProfileAssessment | null;
+    isLoading: boolean;
+    error: any;
+    mutate: KeyedMutator<any>;
+} {
+    const { data, error, isLoading, mutate } = useSWR(
+        accessToken ? ['/teacher_profile_assessment', accessToken] : null,
+        ([url, token]) => GETfetcher(url, token),
+        swrConfig
+    );
+
+    return {
+        data: isLoading || error ? null : data?.assessment ?? null,
         isLoading,
         error,
         mutate,

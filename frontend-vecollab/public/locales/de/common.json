@@ -653,5 +653,10 @@
         "show_rendered": "Formatiert",
         "show_source": "Quelltext",
         "open_new_tab": "In neuem Tab öffnen"
+    },
+    "teacher_profile_assessment_intro": {
+        "title": "Kurze Selbsteinschätzung",
+        "text": "Schätze in etwa zwei Minuten ein, wie sicher du dich in der digitalen Lehre fühlst. In der Methodensammlung siehst du dann beim Filter „Lehrendenprofil“, wo du dich einordnest. Du findest die Selbsteinschätzung jederzeit in deinen Profileinstellungen.",
+        "start": "Jetzt starten"
     }
 }

@@ -451,5 +451,45 @@
         "title": "Download your data",
         "description": "We provide you with a file containing all your data that we have about you. Please note that this may take some time.",
         "download_now": "Download now"
+    },
+    "teacher_profile_assessment": {
+        "tab": "Self-assessment",
+        "title": "Self-assessment: teacher profile",
+        "intro": "Answer a few short questions on how confident you feel in digital teaching. In the method collection, the \"Lehrendenprofil\" (teacher profile) filter then shows where you place yourself, as a guide to which methods suit you. Your answers are only visible to you.",
+        "last_updated": "Last updated on {{date}}.",
+        "to_methods": "Go to the methods",
+        "progress": "{{answered}} of {{total}} questions answered",
+        "incomplete": "Your self-assessment is saved as soon as all questions are answered.",
+        "incomplete_keeps_previous": "Until then, your previous assessment remains.",
+        "reset": "Reset answers",
+        "save_failed": "Your self-assessment could not be saved.",
+        "likert": {
+            "1": "disagree",
+            "2": "somewhat disagree",
+            "3": "partly",
+            "4": "somewhat agree",
+            "5": "fully agree"
+        },
+        "dimensions": {
+            "digital_teaching": "Digital teaching",
+            "it_competence": "IT competence",
+            "communication_collaboration": "Communication / collaboration"
+        },
+        "questions": {
+            "describe_online_methods": "I am able to describe various methods of online teaching and learning. (e.g. digital brainstorming)",
+            "describe_planning_aspects": "I can describe important planning aspects for designing e-learning scenarios.",
+            "conduct_scenarios": "I can conduct online or blended learning scenarios (applying suitable methods, social forms and media)",
+            "advise_others": "I feel able to advise others (colleagues, learners) on conducting media-supported teaching and learning settings",
+            "operate_learning_platforms": "I can operate learning platforms to accompany my courses (e.g. create a course structure, set up a forum, upload files, contact students, create groups, create online tests)",
+            "protect_digital_data": "I can take suitable measures myself to protect my digital data.",
+            "guide_web20_tools": "I am confident to guide others in using Web 2.0 tools (using blogs, wikis, forums, social networks)",
+            "guide_learning_platforms": "I feel able to guide others in using learning platforms.",
+            "identify_online_communication_issues": "I can identify possible problems and opportunities of online communication",
+            "support_learner_cooperation": "I can support learners in online cooperation",
+            "guide_cooperation_design": "I can guide others in designing online cooperation processes"
+        },
+        "dashboard_title": "Find methods that suit you",
+        "dashboard_text": "With a short self-assessment, the method collection shows where you place yourself in the \"Lehrendenprofil\" (teacher profile) filter. It only takes about two minutes.",
+        "dashboard_button": "Start self-assessment"
     }
 }

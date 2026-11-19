@@ -14,6 +14,8 @@ import 'swiper/css/navigation';
 
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
+import { useGetTeacherProfileAssessment } from '@/lib/backend';
 
 const COOKIE = 'firstvisit-home';
 
@@ -26,6 +28,15 @@ Swiper_LoggedIn.auth = true;
 export default function Swiper_LoggedIn({ className, profileInformation }: Props) {
     const { t } = useTranslation(['community', 'common']);
     const router = useRouter();
+    const { data: session } = useSession();
+
+    const {
+        data: teacherProfileAssessment,
+        isLoading: isLoadingAssessment,
+        error: assessmentError,
+    } = useGetTeacherProfileAssessment(session?.accessToken ?? '');
+    const showAssessmentHint =
+        !!session && !isLoadingAssessment && !assessmentError && teacherProfileAssessment === null;
 
     const [cookies, setCookie] = useCookies([COOKIE]);
     const [firstVisit, setFirstVisit] = useState(
@@ -108,6 +119,27 @@ export default function Swiper_LoggedIn({ className, profileInformation }: Props
                             <Link href={'/profile/edit'} className="absolute bottom-0">
                                 <ButtonSecondary onClick={() => {}}>
                                     <MdEdit className="inline mr-1" /> {t('common:edit')}
+                                </ButtonSecondary>
+                            </Link>
+                        </div>
+                    </SwiperSlide>
+                )}
+
+                {showAssessmentHint && (
+                    <SwiperSlide>
+                        <div className="min-h-64 mx-12 my-2">
+                            <H2 className="mb-4">
+                                {t('teacher_profile_assessment.dashboard_title')}
+                            </H2>
+
+                            <p className="mb-6">{t('teacher_profile_assessment.dashboard_text')}</p>
+
+                            <Link
+                                href={'/profile/edit#tabSelfAssessment'}
+                                className="absolute bottom-0"
+                            >
+                                <ButtonSecondary onClick={() => {}}>
+                                    {t('teacher_profile_assessment.dashboard_button')}
                                 </ButtonSecondary>
                             </Link>
                         </div>

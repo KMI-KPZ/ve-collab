@@ -8,6 +8,7 @@ from resources.network.chat import Chat
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+from resources.network.teacher_profile_assessment import TeacherProfileAssessments
 from resources.notifications import NotificationResource
 from resources.planner.ve_plan import VEPlanResource
 from resources.reports import Reports
@@ -37,6 +38,9 @@ class DataDownloadHandler(BaseHandler):
             # profile data
             profile_manager = Profiles(db)
             profile_data = profile_manager.get_profile(self.current_user.username)
+            teacher_profile_assessment = TeacherProfileAssessments(db).get_assessment(
+                self.current_user.username
+            )
 
             # chatrooms and messages
             chat_manager = Chat(db)
@@ -86,6 +90,7 @@ class DataDownloadHandler(BaseHandler):
             data = {
                 "user_data": keycloak_info,
                 "profile_data": profile_data,
+                "teacher_profile_assessment": teacher_profile_assessment,
                 "chatrooms": chatrooms,
                 "notifications": notifications,
                 "posts": posts,

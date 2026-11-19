@@ -1,7 +1,9 @@
 import React from 'react';
 import { useRef, useState } from 'react';
-import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import Link from 'next/link';
+import { MdExpandMore, MdExpandLess, MdInfoOutline } from 'react-icons/md';
 import { AVIVA_PHASES, IKAP_PHASES, PhaseName } from './methodPhases';
+import type { TeacherProfileScores } from './teacherProfileAssessment';
 
 interface CollapsiblePanelProps {
     title: string;
@@ -122,6 +124,24 @@ interface StepSliderProps {
     steps: string[];
     value: number;
     onChange: (value: number) => void;
+    /** position of the self-assessment marker on the slider from 0 to 1 */
+    marker?: number;
+}
+
+function AssessmentMarkerIcon({
+    className = '',
+    style,
+}: {
+    className?: string;
+    style?: React.CSSProperties;
+}) {
+    return (
+        <span
+            aria-hidden
+            className={`inline-block h-0 w-0 border-x-[5px] border-t-[7px] border-x-transparent border-t-ve-collab-blue ${className}`}
+            style={style}
+        />
+    );
 }
 
 /**
@@ -130,7 +150,7 @@ interface StepSliderProps {
  * Not a native range input, because its drag could get stuck after releasing the mouse
  * outside of it, then following the pointer without any button held.
  */
-function StepSlider({ label, steps, value, onChange }: StepSliderProps) {
+function StepSlider({ label, steps, value, onChange, marker }: StepSliderProps) {
     // unsnapped thumb position while dragging, null otherwise
     const [dragPosition, setDragPosition] = useState<number | null>(null);
     const trackRef = useRef<HTMLDivElement>(null);
@@ -194,10 +214,19 @@ function StepSlider({ label, steps, value, onChange }: StepSliderProps) {
                 onPointerMove={handlePointerMove}
                 onLostPointerCapture={() => setDragPosition(null)}
                 onKeyDown={handleKeyDown}
-                className="py-2 px-2 cursor-pointer select-none touch-pan-y rounded outline-none focus-visible:ring-2 focus-visible:ring-ve-collab-orange-light"
+                className={`${
+                    marker == null ? 'pt-2' : 'pt-4'
+                } pb-2 px-2 cursor-pointer select-none touch-pan-y rounded outline-none focus-visible:ring-2 focus-visible:ring-ve-collab-orange-light`}
             >
                 {/* the horizontal padding is half the thumb width, so it stays inside at both ends */}
                 <div ref={trackRef} className="relative h-1 rounded-full bg-gray-200">
+                    {marker != null && (
+                        // sits right above the thumb, so both stay visible when they meet
+                        <AssessmentMarkerIcon
+                            className="absolute bottom-[calc(100%+7px)] -translate-x-1/2 pointer-events-none"
+                            style={{ left: `${Math.min(1, Math.max(0, marker)) * 100}%` }}
+                        />
+                    )}
                     <div
                         className={`absolute inset-y-0 left-0 rounded-full bg-ve-collab-orange ${
                             dragPosition === null ? 'transition-[width] duration-150' : ''
@@ -221,6 +250,12 @@ function StepSlider({ label, steps, value, onChange }: StepSliderProps) {
                     />
                 </div>
             </div>
+            {marker != null && (
+                <span className="sr-only">
+                    Deine Selbsteinschätzung liegt bei {Math.round(marker * 100)} % zwischen{' '}
+                    {steps[0]} und {steps[lastStep]}.
+                </span>
+            )}
             <div className="flex justify-between text-xs text-gray-500">
                 {steps.map((step, i) => (
                     <button
@@ -296,6 +331,8 @@ interface MethodSidebarProps {
     availableMaterials: string[];
     maxParticipantsRange: number;
     maxTimeRange: number;
+    /** result of the self-assessment of a logged in user, marked on the teacher profile sliders */
+    teacherProfileScores?: TeacherProfileScores | null;
 }
 
 export default function MethodSidebar({
@@ -306,7 +343,11 @@ export default function MethodSidebar({
     availableMaterials,
     maxParticipantsRange,
     maxTimeRange,
+    teacherProfileScores,
 }: MethodSidebarProps) {
+    const [assessmentInfoOpen, setAssessmentInfoOpen] = useState(false);
+    const hasAssessment = !!teacherProfileScores && Object.keys(teacherProfileScores).length > 0;
+
     const update = (partial: Partial<MethodFilters>) => {
         onFiltersChange({ ...filters, ...partial });
     };
@@ -315,10 +356,45 @@ export default function MethodSidebar({
         <div className="h-full overflow-y-auto p-3 space-y-1">
             <h3 className="font-bold text-lg text-ve-collab-blue mb-2">Filter</h3>
 
-            <CollapsiblePanel title="Lehrendenprofil">
+            {/* opens up as soon as there is a self-assessment to show */}
+            <CollapsiblePanel
+                key={hasAssessment ? 'with-assessment' : 'without-assessment'}
+                title="Lehrendenprofil"
+                defaultOpen={hasAssessment}
+            >
                 <p className="mb-2 text-xs text-gray-500">
                     Zeigt Methoden, die höchstens die gewählte Ausprägung erfordern.
                 </p>
+                {hasAssessment && (
+                    <div className="mb-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                            <AssessmentMarkerIcon />
+                            <span>Deine Selbsteinschätzung</span>
+                            <button
+                                type="button"
+                                onClick={() => setAssessmentInfoOpen(!assessmentInfoOpen)}
+                                aria-expanded={assessmentInfoOpen}
+                                aria-label="Was bedeutet die Markierung?"
+                                className="cursor-pointer text-gray-400 hover:text-ve-collab-blue"
+                            >
+                                <MdInfoOutline size={16} />
+                            </button>
+                        </div>
+                        {assessmentInfoOpen && (
+                            <div className="mt-1 rounded bg-ve-collab-blue-light p-2 text-gray-700">
+                                Die Markierung zeigt, wo du dich laut deiner Selbsteinschätzung
+                                einordnest. Sie ist nur ein Vorschlag: Ob du den Regler darauf,
+                                darunter oder darüber setzt, entscheidest du selbst.{' '}
+                                <Link
+                                    href="/profile/edit#tabSelfAssessment"
+                                    className="text-ve-collab-blue underline"
+                                >
+                                    Selbsteinschätzung ändern
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                )}
                 <div className="space-y-3">
                     {TEACHER_PROFILE_DIMENSIONS.map((dimension) => (
                         <StepSlider
@@ -326,6 +402,7 @@ export default function MethodSidebar({
                             label={dimension}
                             steps={TEACHER_PROFILE_LEVELS.map((level) => level.label)}
                             value={filters.teacherProfileLevels[dimension]}
+                            marker={teacherProfileScores?.[dimension]}
                             onChange={(level) =>
                                 update({
                                     teacherProfileLevels: {

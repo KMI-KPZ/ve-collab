@@ -654,5 +654,10 @@
         "show_rendered": "Rendered",
         "show_source": "Source",
         "open_new_tab": "Open in new tab"
+    },
+    "teacher_profile_assessment_intro": {
+        "title": "Short self-assessment",
+        "text": "Take about two minutes to assess how confident you feel in digital teaching. The \"Lehrendenprofil\" (teacher profile) filter of the method collection then shows where you place yourself. You can find the self-assessment in your profile settings at any time.",
+        "start": "Start now"
     }
 }

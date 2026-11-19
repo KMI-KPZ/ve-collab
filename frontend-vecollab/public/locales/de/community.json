@@ -452,5 +452,45 @@
         "title": "Daten herunterladen",
         "description": "Wir stellen dir eine Datei mit all deinen Daten zur Verfügung, die wir über dich besitzen. Bitte beachte, dass dies u.U. einige Zeit in Anspruch nehmen kann.",
         "download_now": "Jetzt herunterladen"
+    },
+    "teacher_profile_assessment": {
+        "tab": "Selbsteinschätzung",
+        "title": "Selbsteinschätzung: Lehrendenprofil",
+        "intro": "Schätze mit ein paar kurzen Fragen ein, wie sicher du dich in der digitalen Lehre fühlst. In der Methodensammlung siehst du dann beim Filter „Lehrendenprofil“, wo du dich einordnest – als Orientierung, welche Methoden zu dir passen. Deine Antworten sind nur für dich sichtbar.",
+        "last_updated": "Zuletzt aktualisiert am {{date}}.",
+        "to_methods": "Zu den Methoden",
+        "progress": "{{answered}} von {{total}} Fragen beantwortet",
+        "incomplete": "Deine Selbsteinschätzung wird gespeichert, sobald alle Fragen beantwortet sind.",
+        "incomplete_keeps_previous": "Bis dahin bleibt deine bisherige Einschätzung bestehen.",
+        "reset": "Antworten zurücksetzen",
+        "save_failed": "Deine Selbsteinschätzung konnte nicht gespeichert werden.",
+        "likert": {
+            "1": "stimme nicht zu",
+            "2": "stimme eher nicht zu",
+            "3": "teils / teils",
+            "4": "stimme eher zu",
+            "5": "stimme voll und ganz zu"
+        },
+        "dimensions": {
+            "digital_teaching": "Digitale Lehre",
+            "it_competence": "IT Kompetenz",
+            "communication_collaboration": "Kommunikation / Kollaboration"
+        },
+        "questions": {
+            "describe_online_methods": "Ich bin in der Lage, verschiedene Methoden des Online-Lehrens und -Lernens zu beschreiben. (Bsp: Digitales Brainstorming)",
+            "describe_planning_aspects": "Ich kann wichtige Planungsaspekte für die Konzeption von eLearning-Szenarien beschreiben.",
+            "conduct_scenarios": "Ich kann Online- oder Blended-Learning-Szenarien durchführen (geeignete Methoden, Sozialformen und Medien anwenden)",
+            "advise_others": "Ich fühle mich in der Lage, andere (Kolleg*innen, Lernende) bei der Durchführung von mediengestützten Lehr-Lern-Settings zu beraten",
+            "operate_learning_platforms": "Ich kann Lernplattformen zur Begleitung meiner Lehrveranstaltungen bedienen (z.B. Kursstruktur anlegen, ein Forum einrichten, Dateien hochladen, Studierende kontaktieren, Gruppen anlegen, Online-Tests erstellen)",
+            "protect_digital_data": "Ich kann selbst geeignete Maßnahmen zum Schutz meiner digitalen Daten treffen.",
+            "guide_web20_tools": "Ich traue mir zu andere im Umgang mit Web 2.0 Werkzeugen anzuleiten (Blogs, Wikis, Foren bedienen, Soziale Netzwerke nutzen)",
+            "guide_learning_platforms": "Ich fühle mich in der Lage andere im Umgang mit Lernplattformen anzuleiten.",
+            "identify_online_communication_issues": "Ich kann mögliche Probleme und Chancen der Online-Kommunikation identifizieren",
+            "support_learner_cooperation": "Ich kann Lernende bei der Online-Kooperation unterstützen",
+            "guide_cooperation_design": "Ich kann andere bei der Gestaltung von Online-Kooperationsprozessen anleiten"
+        },
+        "dashboard_title": "Finde Methoden, die zu dir passen",
+        "dashboard_text": "Mit einer kurzen Selbsteinschätzung siehst du in der Methodensammlung, wo du dich beim Filter „Lehrendenprofil“ einordnest. Das dauert nur etwa zwei Minuten.",
+        "dashboard_button": "Selbsteinschätzung starten"
     }
 }

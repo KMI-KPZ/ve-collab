@@ -215,6 +215,12 @@ class ReportDoesntExistError(Exception):
     pass
 
 
+class InvalidAssessmentAnswersError(Exception):
+    """the answers of a teacher profile assessment are incomplete or out of range"""
+
+    pass
+
+
 class MbrAPIError(Exception):
     """any error related to the Mein Bildungsraum API"""
 
