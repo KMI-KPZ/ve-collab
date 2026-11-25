@@ -328,13 +328,14 @@ class SpaceHandler(BaseHandler):
                  "reason": "space_doesnt_exist"}
 
         POST /spaceadministration/space_information
-            (update the space's description and/or picture,
+            (update the space's name, description and/or picture,
             requires space admin or global admin privileges)
             query param:
                 "id" : space _id of which space to update, mandatory argument
 
-            http body:
+            http body (every key is optional, only the given ones are updated):
                 {
+                    "name": "<str>",
                     "description": "<str>",
                     "picture": {
                         "payload": "<base64_encoded_image>",
@@ -347,8 +348,9 @@ class SpaceHandler(BaseHandler):
                 {"success": True}
 
                 400 Bad Request
+                (the name is empty)
                 {"success": False,
-                 "reason": missing_key:name}
+                 "reason": "invalid_name"}
 
                 401 Unauthorized
                 {"success": False,
@@ -692,6 +694,14 @@ class SpaceHandler(BaseHandler):
                 http_body["description"] if "description" in http_body else None
             )
 
+            space_name = http_body.get("name")
+            if space_name is not None:
+                if not isinstance(space_name, str) or not space_name.strip():
+                    self.set_status(400)
+                    self.write({"success": False, "reason": "invalid_name"})
+                    return
+                space_name = space_name.strip()
+
             if "picture" in http_body:
                 space_pic_obj = {
                     "body": b64decode(http_body["picture"]["payload"]),
@@ -704,9 +714,12 @@ class SpaceHandler(BaseHandler):
                     filename,
                     space_pic_obj["body"],
                     space_pic_obj["content_type"],
+                    space_name,
                 )
             else:
-                self.update_space_information(space_id, space_description)
+                self.update_space_information(
+                    space_id, space_description, space_name=space_name
+                )
 
         elif slug == "invite":
             try:
@@ -1308,9 +1321,10 @@ class SpaceHandler(BaseHandler):
         space_pic_filename: str = None,
         space_pic: bytes = None,
         space_pic_content_type: str = None,
+        space_name: str = None,
     ):
         """
-        update space information (description, picture)
+        update the given space information (name, description, picture),
         requires space admin or global admin privileges
         """
 
@@ -1342,7 +1356,11 @@ class SpaceHandler(BaseHandler):
                     space_pic_content_type,
                 )
 
-            if space_description:
+            if space_name is not None:
+                space_manager.set_space_name(space_id, space_name)
+
+            # an empty description is a valid one, it clears the description
+            if space_description is not None:
                 space_manager.set_space_description(space_id, space_description)
 
             self.set_status(200)

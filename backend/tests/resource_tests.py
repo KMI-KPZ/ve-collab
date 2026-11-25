@@ -5576,6 +5576,45 @@ class SpaceResourceTest(BaseResourceTestCase):
             "test",
         )
 
+    def test_set_space_name(self):
+        """
+        expect: successfully rename the space
+        """
+
+        space_manager = Spaces(self.db)
+        space_manager.set_space_name(self.space_id, "renamed_space", "test")
+
+        space = self.db.spaces.find_one({"_id": self.space_id})
+        self.assertEqual(space["name"], "renamed_space")
+
+        # check that the update was replicated to elasticsearch
+        response = requests.get(
+            "{}/{}/_doc/{}".format(
+                global_vars.elasticsearch_base_url, "test", space["_id"]
+            ),
+            auth=(
+                global_vars.elasticsearch_username,
+                global_vars.elasticsearch_password,
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["_source"]["name"], "renamed_space")
+
+    def test_set_space_name_error_space_doesnt_exist(self):
+        """
+        expect: SpaceDoesntExistError is raised because no
+        space with this _id exists
+        """
+
+        space_manager = Spaces(self.db)
+        self.assertRaises(
+            SpaceDoesntExistError,
+            space_manager.set_space_name,
+            ObjectId(),
+            "renamed_space",
+            "test",
+        )
+
     def test_invite_user(self):
         """
         expect: successfully add user to invites list
@@ -6533,7 +6572,9 @@ class TeacherProfileAssessmentResourceTest(BaseResourceTestCase):
         manager.set_assessment("test_user", changed_answers)
 
         self.assertEqual(
-            self.db.teacher_profile_assessments.count_documents({"username": "test_user"}),
+            self.db.teacher_profile_assessments.count_documents(
+                {"username": "test_user"}
+            ),
             1,
         )
         self.assertEqual(

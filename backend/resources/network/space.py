@@ -543,6 +543,34 @@ class Spaces:
             space_id, elasticsearch_collection, update_result
         )
 
+    def set_space_name(
+        self,
+        space_id: str | ObjectId,
+        name: str,
+        elasticsearch_collection: str = "spaces",
+    ) -> None:
+        """
+        rename the space.
+        :param space_id: the space to rename
+        :param name: the new name of the space
+        """
+
+        space_id = util.parse_object_id(space_id)
+
+        update_result = self.db.spaces.find_one_and_update(
+            {"_id": space_id},
+            {"$set": {"name": name}},
+            return_document=ReturnDocument.AFTER,
+        )
+
+        # the filter didnt match any document, so the space doesnt exist
+        if update_result is None:
+            raise SpaceDoesntExistError()
+
+        ElasticsearchConnector().on_update(
+            space_id, elasticsearch_collection, update_result
+        )
+
     def invite_user(self, space_id: str | ObjectId, username: str) -> None:
         """
         invite a user into the give space, i.e. add him to the invites list

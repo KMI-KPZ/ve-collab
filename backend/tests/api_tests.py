@@ -62,6 +62,7 @@ INSUFFICIENT_PERMISSION_ERROR = "insufficient_permission"
 UNRECOGNIZABLE_KEY_ERROR = "unrecognizable_key_in_http_body"
 NON_BOOL_VALUE_ERROR = "value_not_bool_in_http_body"
 SPACE_DOESNT_EXIST_ERROR = "space_doesnt_exist"
+INVALID_NAME_ERROR = "invalid_name"
 POST_DOESNT_EXIST_ERROR = "post_doesnt_exist"
 COMMENT_DOESNT_EXIST_ERROR = "comment_doesnt_exist"
 USER_NOT_AUTHOR_ERROR = "user_not_author"
@@ -5762,6 +5763,107 @@ class SpaceHandlerTest(BaseApiTestCase):
 
         db_state2 = self.db.spaces.find_one({"_id": self.test_space_id})
         self.assertEqual(db_state2["space_description"], request_json2["description"])
+
+    def test_post_space_information_name(self):
+        """
+        expect: successfully rename the space (without surrounding whitespace),
+        while the description stays as it is
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        self.db.spaces.update_one(
+            {"_id": self.test_space_id}, {"$push": {"admins": CURRENT_USER.username}}
+        )
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
+            True,
+            200,
+            body={"name": "  renamed_space  "},
+        )
+
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
+        self.assertEqual(db_state["name"], "renamed_space")
+        self.assertEqual(
+            db_state.get("space_description"), space.get("space_description")
+        )
+
+    def test_post_space_information_clear_description(self):
+        """
+        expect: an empty description clears the description of the space
+        """
+
+        self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
+            True,
+            200,
+            body={"description": ""},
+        )
+
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
+        self.assertEqual(db_state["space_description"], "")
+
+    def test_post_space_information_error_invalid_name(self):
+        """
+        expect: fail message because the name is empty or no string,
+        nothing is updated
+        """
+
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+
+        for name in ["", "   ", 42]:
+            response = self.base_checks(
+                "POST",
+                "/spaceadministration/space_information?id={}".format(
+                    str(self.test_space_id)
+                ),
+                False,
+                400,
+                body={"name": name, "description": "updated_space_description"},
+            )
+            self.assertEqual(response["reason"], INVALID_NAME_ERROR)
+
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
+        self.assertEqual(db_state["name"], space["name"])
+        self.assertEqual(
+            db_state.get("space_description"), space.get("space_description")
+        )
+
+    def test_post_space_information_name_error_insufficient_permission(self):
+        """
+        expect: fail message because user is neither global admin nor space admin,
+        the name stays as it is
+        """
+
+        # switch to user mode
+        options.test_admin = False
+        options.test_user = True
+
+        space = self.db.spaces.find_one({"_id": self.test_space_id})
+
+        response = self.base_checks(
+            "POST",
+            "/spaceadministration/space_information?id={}".format(
+                str(self.test_space_id)
+            ),
+            False,
+            403,
+            body={"name": "renamed_space"},
+        )
+        self.assertEqual(response["reason"], INSUFFICIENT_PERMISSION_ERROR)
+
+        db_state = self.db.spaces.find_one({"_id": self.test_space_id})
+        self.assertEqual(db_state["name"], space["name"])
 
     def test_post_space_information_error_space_doesnt_exist(self):
         """

@@ -35,7 +35,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
     const [toggleJoinable, setToggleJoinable] = useState(true);
     const [toggleInvisible, setToggleInvisible] = useState(true);
     const [groupPicFile, setGroupPicFile] = useState('');
+    const [updatedName, setUpdatedName] = useState('');
     const [updatedDescription, setUpdatedDescription] = useState('');
+    const [savingInformation, setSavingInformation] = useState(false);
+    const [savingInformationFailed, setSavingInformationFailed] = useState(false);
     const [invitedUser, setInvitedUser] = useState<{ label: string; value: string }>({
         label: '',
         value: '',
@@ -81,7 +84,9 @@ export default function GroupHeader({ userIsAdmin }: Props) {
 
     const handleOpenEditDialog = () => {
         setIsEditDialogOpen(true);
+        setUpdatedName(group.name);
         setUpdatedDescription(group.space_description);
+        setSavingInformationFailed(false);
     };
 
     const handleCloseEditDialog = () => {
@@ -138,16 +143,23 @@ export default function GroupHeader({ userIsAdmin }: Props) {
         };
     };
 
-    const handleUpdateDescription = () => {
-        fetchPOST(
+    const handleUpdateInformation = async () => {
+        setSavingInformation(true);
+        setSavingInformationFailed(false);
+        const response = await fetchPOST(
             `/spaceadministration/space_information?id=${group._id}`,
             {
+                name: updatedName.trim(),
                 description: updatedDescription,
             },
             session?.accessToken
-        ).then((data) => {
-            mutate();
-        });
+        );
+        if (response.success) {
+            await mutate();
+        } else {
+            setSavingInformationFailed(true);
+        }
+        setSavingInformation(false);
     };
 
     const toggleVisibility = () => {
@@ -360,7 +372,10 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                     >
                         <div className="w-full h-full min-h-[60vh] min-w-[50vw]">
                             <VerticalTabs>
-                                <div tabid="pic_description" tabname={t('pic_and_description')}>
+                                <div
+                                    tabid="pic_description"
+                                    tabname={t('name_pic_and_description')}
+                                >
                                     <div className="flex">
                                         <div className="flex justify-center mx-6">
                                             <div className="">
@@ -421,6 +436,22 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                         'mb-1 font-bold text-slate-900 text-lg'
                                                     }
                                                 >
+                                                    {t('common:name')}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    className={
+                                                        'w-full mb-4 border border-[#cccccc] rounded-md px-2 py-1.5'
+                                                    }
+                                                    placeholder={t('new_group_name_placeholder')}
+                                                    value={updatedName}
+                                                    onChange={(e) => setUpdatedName(e.target.value)}
+                                                />
+                                                <div
+                                                    className={
+                                                        'mb-1 font-bold text-slate-900 text-lg'
+                                                    }
+                                                >
                                                     {t('description')}
                                                 </div>
                                                 <textarea
@@ -435,9 +466,17 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                                     }
                                                 ></textarea>
                                                 <ButtonPrimary
-                                                    onClick={() => handleUpdateDescription()}
+                                                    onClick={() => handleUpdateInformation()}
                                                     label={t('common:save')}
+                                                    disabled={
+                                                        !updatedName.trim() || savingInformation
+                                                    }
                                                 />
+                                                {savingInformationFailed && (
+                                                    <p className="mt-2 text-red-700">
+                                                        {t('group_action_error')}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

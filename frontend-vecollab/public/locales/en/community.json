@@ -112,7 +112,7 @@
     "delete_group": "Delete group",
     "message_last_user_in_space": "You are the only member of the group and cannot leave it",
     "warning_before_delete_group": "Attention: all posts and files of the group will be lost!",
-    "pic_and_description": "Picture & Description",
+    "name_pic_and_description": "Name, Picture & Description",
     "change": "change",
     "upload_group_picture": "Upload group picture",
     "choose_picture_and_cut": "Choose a new picture and crop it",
