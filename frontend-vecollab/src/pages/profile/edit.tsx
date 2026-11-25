@@ -1,7 +1,12 @@
 import WhiteBox from '@/components/common/WhiteBox';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import VerticalTabs from '@/components/profile/VerticalTabs';
-import { fetchGET, fetchPOST, useGetOwnProfile } from '@/lib/backend';
+import {
+    fetchGET,
+    fetchPOST,
+    useGetOwnProfile,
+    useGetTeacherProfileAssessment,
+} from '@/lib/backend';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useState } from 'react';
@@ -29,6 +34,12 @@ import CustomHead from '@/components/metaData/CustomHead';
 import { languageKeys } from '@/data/languages';
 import EditProfileDelete from '@/components/profile/EditProfileDelete';
 import EditProfileDownloadData from '@/components/profile/EditProfileDownloadData';
+import EditTeacherProfileAssessment from '@/components/profile/EditTeacherProfileAssessment';
+import {
+    isAssessmentComplete,
+    TEACHER_PROFILE_QUESTION_IDS,
+    TeacherProfileAnswers,
+} from '@/components/methods/teacherProfileAssessment';
 
 const defaultPersonalInformation: PersonalInformation = {
     firstName: '',
@@ -130,9 +141,49 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
     const { data: session } = useSession();
     const [loading] = useState(false);
     const [successPopupOpen, setSuccessPopupOpen] = useState(false);
+    const [errorPopupOpen, setErrorPopupOpen] = useState(false);
     const router = useRouter();
 
     const { data: userInfo, isLoading, mutate } = useGetOwnProfile(session!.accessToken);
+
+    // the self-assessment is stored apart from the profile,
+    // its answers are the saved ones until the user edits them
+    const { data: savedAssessment, mutate: mutateAssessment } = useGetTeacherProfileAssessment(
+        session!.accessToken
+    );
+    const [editedAssessmentAnswers, setEditedAssessmentAnswers] =
+        useState<TeacherProfileAnswers | null>(null);
+    const assessmentAnswers = editedAssessmentAnswers ?? savedAssessment?.answers ?? {};
+
+    /*
+    save the self-assessment, if it has changed and every question is answered,
+    an incomplete one keeps the previously saved one.
+    Returns whether this succeeded or there was nothing to save.
+    */
+    const updateAssessment = async (): Promise<boolean> => {
+        if (!isAssessmentComplete(assessmentAnswers)) return true;
+        if (
+            TEACHER_PROFILE_QUESTION_IDS.every(
+                (id) => assessmentAnswers[id] === savedAssessment?.answers[id]
+            )
+        )
+            return true;
+
+        // only send the current questions, previously saved answers may hold outdated ones
+        const answers = Object.fromEntries(
+            TEACHER_PROFILE_QUESTION_IDS.map((id) => [id, assessmentAnswers[id]])
+        );
+        const response = await fetchPOST(
+            '/teacher_profile_assessment',
+            { answers },
+            session?.accessToken
+        );
+        if (!response.success) return false;
+
+        await mutateAssessment();
+        setEditedAssessmentAnswers(null);
+        return true;
+    };
 
     useEffect(() => {
         if (isLoading) return;
@@ -249,7 +300,11 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
             },
             session?.accessToken
         );
-        setSuccessPopupOpen(true);
+        if (await updateAssessment()) {
+            setSuccessPopupOpen(true);
+        } else {
+            setErrorPopupOpen(true);
+        }
 
         // trigger a re-fetch of the user's profile data to reflect the changes
         await mutate();
@@ -375,6 +430,19 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                                         importOrcidProfile={importOrcidProfile}
                                     />
                                 </div> */}
+                                <div
+                                    tabid="SelfAssessment"
+                                    tabname={t('teacher_profile_assessment.tab')}
+                                >
+                                    <EditTeacherProfileAssessment
+                                        answers={assessmentAnswers}
+                                        onAnswersChange={setEditedAssessmentAnswers}
+                                        savedAssessment={savedAssessment}
+                                        updateProfileData={updateProfileData}
+                                        orcid={session?.user.orcid}
+                                        importOrcidProfile={importOrcidProfile}
+                                    />
+                                </div>
                                 <div tabid="Settings" tabname={t('settings')}>
                                     <EditSettings
                                         updateProfileData={updateProfileData}
@@ -410,6 +478,13 @@ export default function EditProfile({ optionLists }: Props): JSX.Element {
                         message={t('saved')}
                         autoclose={2000}
                         onClose={() => setSuccessPopupOpen(false)}
+                    />
+                )}
+                {errorPopupOpen && (
+                    <Alert
+                        type="error"
+                        message={t('teacher_profile_assessment.save_failed')}
+                        onClose={() => setErrorPopupOpen(false)}
                     />
                 )}
             </div>

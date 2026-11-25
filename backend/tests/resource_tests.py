@@ -27,6 +27,7 @@ from exceptions import (
     FilenameCollisionError,
     FolderDepthExceededError,
     InvalidFileNameError,
+    InvalidAssessmentAnswersError,
     InvalidMoveTargetError,
     InvitationDoesntExistError,
     MaximumFilesExceededError,
@@ -81,6 +82,10 @@ from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
 from resources.network.space_files import SpaceFiles
+from resources.network.teacher_profile_assessment import (
+    TEACHER_PROFILE_QUESTIONS,
+    TeacherProfileAssessments,
+)
 from resources.planner.ve_plan import VEPlanResource
 from resources.reports import Reports
 from resources.notifications import NotificationResource
@@ -6476,6 +6481,102 @@ class SpaceSuggestionsResourceTest(BaseResourceTestCase):
         self.assertEqual(groups[network_id]["scores"]["similar_members"], 0.0)
         self.assertEqual(groups[network_id]["scores"]["topic"], 0.0)
         self.assertAlmostEqual(groups[network_id]["scores"]["network"], 1 / 3)
+
+
+class TeacherProfileAssessmentResourceTest(BaseResourceTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.answers = {
+            question_id: 4
+            for questions in TEACHER_PROFILE_QUESTIONS.values()
+            for question_id in questions
+        }
+
+    def tearDown(self) -> None:
+        self.db.teacher_profile_assessments.delete_many({})
+        super().tearDown()
+
+    def test_get_assessment_none(self):
+        """
+        expect: None, if the user has not made the assessment yet
+        """
+
+        manager = TeacherProfileAssessments(self.db)
+
+        self.assertIsNone(manager.get_assessment("test_user"))
+
+    def test_set_and_get_assessment(self):
+        """
+        expect: the answers are saved per user with the time of the update
+        """
+
+        manager = TeacherProfileAssessments(self.db)
+
+        saved = manager.set_assessment("test_user", self.answers)
+
+        self.assertEqual(saved["answers"], self.answers)
+        self.assertIsInstance(saved["updated_at"], datetime)
+        self.assertNotIn("_id", saved)
+        self.assertEqual(manager.get_assessment("test_user"), saved)
+        self.assertIsNone(manager.get_assessment("other_user"))
+
+    def test_set_assessment_replaces_previous(self):
+        """
+        expect: saving again replaces the answers instead of adding a second assessment
+        """
+
+        manager = TeacherProfileAssessments(self.db)
+        manager.set_assessment("test_user", self.answers)
+
+        changed_answers = self.answers | {"protect_digital_data": 1}
+        manager.set_assessment("test_user", changed_answers)
+
+        self.assertEqual(
+            self.db.teacher_profile_assessments.count_documents({"username": "test_user"}),
+            1,
+        )
+        self.assertEqual(
+            manager.get_assessment("test_user")["answers"], changed_answers
+        )
+
+    def test_set_assessment_error_invalid_answers(self):
+        """
+        expect: InvalidAssessmentAnswersError and nothing saved, if the answers are
+        incomplete, unknown or no likert values
+        """
+
+        manager = TeacherProfileAssessments(self.db)
+        incomplete = dict(self.answers)
+        del incomplete["protect_digital_data"]
+
+        for answers in [
+            incomplete,
+            self.answers | {"unknown_question": 4},
+            self.answers | {"protect_digital_data": 0},
+            self.answers | {"protect_digital_data": 6},
+            self.answers | {"protect_digital_data": "4"},
+            self.answers | {"protect_digital_data": False},
+            None,
+        ]:
+            with self.assertRaises(InvalidAssessmentAnswersError):
+                manager.set_assessment("test_user", answers)
+
+        self.assertIsNone(manager.get_assessment("test_user"))
+
+    def test_delete_assessment(self):
+        """
+        expect: the assessment of the user is deleted, others stay
+        """
+
+        manager = TeacherProfileAssessments(self.db)
+        manager.set_assessment("test_user", self.answers)
+        manager.set_assessment("other_user", self.answers)
+
+        manager.delete_assessment("test_user")
+
+        self.assertIsNone(manager.get_assessment("test_user"))
+        self.assertIsNotNone(manager.get_assessment("other_user"))
 
 
 class SanitizeHtmlTest(TestCase):

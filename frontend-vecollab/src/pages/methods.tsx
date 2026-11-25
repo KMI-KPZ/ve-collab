@@ -14,6 +14,9 @@ import MethodSidebar, {
 import MethodList from '@/components/methods/MethodList';
 import MethodDetail from '@/components/methods/MethodDetail';
 import CustomHead from '@/components/metaData/CustomHead';
+import { useSession } from 'next-auth/react';
+import { useGetTeacherProfileAssessment } from '@/lib/backend';
+import { getTeacherProfileScores } from '@/components/methods/teacherProfileAssessment';
 
 // allowing the highest level means no restriction
 const highestTeacherProfileLevel = TEACHER_PROFILE_LEVELS.length - 1;
@@ -128,6 +131,19 @@ export default function Methods({
     const [selectedMethodId, setSelectedMethodId] = useState<string | null>(queryMethodId);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // logged in users see the result of their self-assessment on the teacher profile sliders
+    const { data: session } = useSession();
+    const { data: teacherProfileAssessment } = useGetTeacherProfileAssessment(
+        session?.accessToken ?? ''
+    );
+    const teacherProfileScores = useMemo(
+        () =>
+            teacherProfileAssessment
+                ? getTeacherProfileScores(teacherProfileAssessment.answers)
+                : null,
+        [teacherProfileAssessment]
+    );
+
     useEffect(() => {
         if (queryMethodId) setSelectedMethodId(queryMethodId);
     }, [queryMethodId]);
@@ -223,6 +239,7 @@ export default function Methods({
                         availableMaterials={availableMaterials}
                         maxParticipantsRange={maxParticipantsRange}
                         maxTimeRange={maxTimeRange}
+                        teacherProfileScores={teacherProfileScores}
                     />
                 </div>
                 {/* Mobile: slide-in overlay */}
@@ -250,6 +267,7 @@ export default function Methods({
                                 availableMaterials={availableMaterials}
                                 maxParticipantsRange={maxParticipantsRange}
                                 maxTimeRange={maxTimeRange}
+                                teacherProfileScores={teacherProfileScores}
                             />
                         </div>
                     </>

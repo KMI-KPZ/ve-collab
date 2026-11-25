@@ -38,6 +38,7 @@ from resources.network.chat import Chat
 from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space_files import SpaceFiles
+from resources.network.teacher_profile_assessment import TEACHER_PROFILE_QUESTIONS
 import util
 
 # load environment variables
@@ -7564,6 +7565,157 @@ class GroupSuggestionsHandlerTest(BaseApiTestCase):
         self.assertEqual(response["suggestions"], [])
 
 
+class TeacherProfileAssessmentHandlerTest(BaseApiTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.answers = {
+            question_id: 3
+            for questions in TEACHER_PROFILE_QUESTIONS.values()
+            for question_id in questions
+        }
+
+    def tearDown(self) -> None:
+        self.db.teacher_profile_assessments.delete_many({})
+        options.test_user = False
+        super().tearDown()
+
+    def test_get_assessment_none(self):
+        """
+        expect: no assessment present
+        """
+
+        self.db.teacher_profile_assessments.insert_one(
+            {
+                "username": "someone_else",
+                "answers": self.answers,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        )
+
+        response = self.base_checks("GET", "/teacher_profile_assessment", True, 200)
+
+        self.assertIsNone(response["assessment"])
+
+    def test_post_and_get_assessment(self):
+        """
+        expect: the saved answers are returned (without the username)
+        """
+
+        response = self.base_checks(
+            "POST",
+            "/teacher_profile_assessment",
+            True,
+            200,
+            body={"answers": self.answers},
+        )
+        self.assertEqual(response["assessment"]["answers"], self.answers)
+        self.assertIn("updated_at", response["assessment"])
+
+        response = self.base_checks("GET", "/teacher_profile_assessment", True, 200)
+        self.assertEqual(response["assessment"]["answers"], self.answers)
+        self.assertNotIn("username", response["assessment"])
+
+    def test_post_assessment_user(self):
+        """
+        expect: the assessment is saved for the user
+        """
+
+        # explicitely switch to user mode for this test
+        options.test_admin = False
+        options.test_user = True
+
+        self.base_checks(
+            "POST",
+            "/teacher_profile_assessment",
+            True,
+            200,
+            body={"answers": self.answers},
+        )
+
+        stored = list(self.db.teacher_profile_assessments.find())
+        self.assertEqual(len(stored), 1)
+        self.assertEqual(stored[0]["username"], CURRENT_USER.username)
+
+    def test_post_assessment_replaces_previous(self):
+        """
+        expect: a new assessment replaces the previous one
+        """
+
+        self.base_checks(
+            "POST",
+            "/teacher_profile_assessment",
+            True,
+            200,
+            body={"answers": self.answers},
+        )
+        changed_answers = self.answers | {"advise_others": 5}
+        self.base_checks(
+            "POST",
+            "/teacher_profile_assessment",
+            True,
+            200,
+            body={"answers": changed_answers},
+        )
+
+        stored = list(self.db.teacher_profile_assessments.find())
+        self.assertEqual(len(stored), 1)
+        self.assertEqual(stored[0]["answers"], changed_answers)
+
+    def test_post_assessment_error_no_json(self):
+        """
+        expect: fail message because the http body is no valid json
+        """
+
+        response = self.base_checks(
+            "POST", "/teacher_profile_assessment", False, 400, body="no json"
+        )
+        self.assertEqual(response["reason"], JSON_PARSING_ERROR)
+
+    def test_post_assessment_error_missing_answers(self):
+        """
+        expect: fail message because the http body misses the answers
+        """
+
+        response = self.base_checks(
+            "POST", "/teacher_profile_assessment", False, 400, body={}
+        )
+        self.assertEqual(
+            response["reason"], MISSING_KEY_HTTP_BODY_ERROR_SLUG + "answers"
+        )
+
+    def test_post_assessment_error_invalid_answers(self):
+        """
+        expect: fail message and nothing saved, if a question is unanswered or
+        unknown or an answer is no likert value
+        """
+
+        incomplete = dict(self.answers)
+        del incomplete["advise_others"]
+        invalid_answers = [
+            incomplete,
+            self.answers | {"unknown_question": 3},
+            self.answers | {"advise_others": 0},
+            self.answers | {"advise_others": 6},
+            self.answers | {"advise_others": "3"},
+            self.answers | {"advise_others": 3.5},
+            self.answers | {"advise_others": True},
+            list(self.answers.values()),
+        ]
+
+        for answers in invalid_answers:
+            response = self.base_checks(
+                "POST",
+                "/teacher_profile_assessment",
+                False,
+                400,
+                body={"answers": answers},
+            )
+            self.assertEqual(response["reason"], "invalid_assessment_answers")
+
+        self.assertEqual(self.db.teacher_profile_assessments.count_documents({}), 0)
+
+
 class SpaceFilesHandlerTest(BaseApiTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -15053,6 +15205,15 @@ class DataDownloadHandlerTest(BaseApiTestCase):
             }
         )
 
+        # teacher profile assessment
+        self.db.teacher_profile_assessments.insert_one(
+            {
+                "username": CURRENT_ADMIN.username,
+                "answers": {"advise_others": 4},
+                "updated_at": datetime.now(timezone.utc),
+            }
+        )
+
     def tearDown(self) -> None:
         # cleanup created collections
         self.db.chatrooms.delete_many({})
@@ -15063,6 +15224,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
         self.db.invitations.delete_many({})
         self.db.mail_invitations.delete_many({})
         self.db.reports.delete_many({})
+        self.db.teacher_profile_assessments.delete_many({})
         return super().tearDown()
 
     def test_get_userdata(self):
@@ -15076,6 +15238,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
         for key in [
             "user_data",
             "profile_data",
+            "teacher_profile_assessment",
             "chatrooms",
             "notifications",
             "posts",
@@ -15093,3 +15256,7 @@ class DataDownloadHandlerTest(BaseApiTestCase):
         self.assertIsInstance(response["data"]["notifications"], list)
         self.assertIsInstance(response["data"]["posts"], list)
         self.assertIsInstance(response["data"]["spaces"], list)
+        self.assertEqual(
+            response["data"]["teacher_profile_assessment"]["answers"],
+            {"advise_others": 4},
+        )

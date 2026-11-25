@@ -103,6 +103,12 @@ export interface NotificationSettings {
     system: 'email' | 'push' | 'none';
 }
 
+export interface TeacherProfileAssessment {
+    /** question id -> likert value from 1 to 5 */
+    answers: Record<string, number>;
+    updated_at: string;
+}
+
 export interface OptionLists {
     veInterestsKeys: string[];
     veGoalsKeys: string[];

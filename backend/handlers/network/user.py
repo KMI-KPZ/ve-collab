@@ -18,6 +18,7 @@ from handlers.base_handler import (
 )
 from resources.network.profile import Profiles
 from resources.network.space import Spaces
+from resources.network.teacher_profile_assessment import TeacherProfileAssessments
 import util
 
 import global_vars
@@ -1185,6 +1186,7 @@ class UserHandler(BaseHandler):
                 {}, {"$pull": {"follows": username}}
             )
             db.profiles.delete_one({"username": username})
+            TeacherProfileAssessments(db).delete_assessment(username)
 
         with util.get_mongodb() as db:
             delete_plans(db)

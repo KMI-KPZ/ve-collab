@@ -45,6 +45,7 @@ from handlers.network.post import *
 from handlers.network.search import SearchHandler
 from handlers.network.space import GroupSuggestionsHandler, SpaceHandler
 from handlers.network.space_files import SpaceFilesHandler
+from handlers.network.teacher_profile_assessment import TeacherProfileAssessmentHandler
 from handlers.network.timeline import *
 from handlers.network.user import *
 from resources.elasticsearch_integration import ElasticsearchConnector
@@ -125,6 +126,7 @@ def make_app(cookie_secret: str, debug: bool = False):
             (r"/timeline/you", PersonalTimelineHandler),
             (r"/profileinformation", ProfileInformationHandler),
             (r"/profile_snippets", BulkProfileSnippets),
+            (r"/teacher_profile_assessment", TeacherProfileAssessmentHandler),
             (r"/users/(.+)", UserHandler),
             (r"/role/(.+)", RoleHandler),
             (r"/global_acl/(.+)", GlobalACLHandler),

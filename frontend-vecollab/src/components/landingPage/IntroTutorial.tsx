@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -15,6 +16,7 @@ import { fetchPOST, useGetOwnProfile } from '@/lib/backend';
 export default function IntroTutorial() {
     const { data: session } = useSession();
     const { t } = useTranslation(['common']);
+    const router = useRouter();
 
     const {
         data: userProfile,
@@ -35,6 +37,11 @@ export default function IntroTutorial() {
         );
 
         mutate();
+    };
+
+    const startAssessment = async () => {
+        await handleClose();
+        router.push('/profile/edit#tabSelfAssessment');
     };
 
     const handlePlay = (i: number) => {
@@ -99,6 +106,17 @@ export default function IntroTutorial() {
                                         </span>
                                     </div>
                                 ))}
+                            </div>
+                            <div className="mx-4 mb-6 p-4 rounded-md bg-ve-collab-blue-light">
+                                <div className="mb-1 font-bold text-ve-collab-blue">
+                                    {t('teacher_profile_assessment_intro.title')}
+                                </div>
+                                <p className="mb-3 text-sm">
+                                    {t('teacher_profile_assessment_intro.text')}
+                                </p>
+                                <ButtonPrimary onClick={startAssessment}>
+                                    {t('teacher_profile_assessment_intro.start')}
+                                </ButtonPrimary>
                             </div>
                             <ButtonPrimary
                                 onClick={handleClose}
