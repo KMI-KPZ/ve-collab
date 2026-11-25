@@ -24,6 +24,7 @@ from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.profile import Profiles
 from resources.network.profile_option_labels import PROFILE_OPTION_LABELS_DE
 from resources.network.space_files import SpaceFiles
+from resources.planner.ve_plan import VEPlanResource
 from model import Space
 import util
 
@@ -976,12 +977,7 @@ class Spaces:
 
         username = profile["username"]
         network = set(profile["follows"])
-        for plan in self.db.plans.find(
-            {"$or": [{"author": username}, {"partners": username}]},
-            projection={"author": True, "partners": True},
-        ):
-            network.add(plan["author"])
-            network.update(plan["partners"])
+        network.update(VEPlanResource(self.db).get_ve_partners(username))
         network.discard(username)
 
         return {

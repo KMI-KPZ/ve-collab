@@ -5,11 +5,10 @@ from bson.errors import InvalidId
 import gridfs
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Set
 import tornado
 
 import logging
-import logging.handlers
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +252,26 @@ class VEPlanResource:
         # plans is not yet implemented
         result = self.db.plans.find({"author": username, "is_good_practise": True})
         return [VEPlan.from_dict(res) for res in result]
+
+    def get_ve_partners(self, username: str) -> Set[str]:
+        """
+        Request the usernames of everybody that the user given by `username` plans
+        VEs with, i.e. the authors and partners of the plans that the user is an author
+        or partner of (without the user himself).
+
+        Returns an empty set, if the user doesn't plan any VEs with others.
+        """
+
+        partners = set()
+        for plan in self.db.plans.find(
+            {"$or": [{"author": username}, {"partners": username}]},
+            projection={"author": True, "partners": True},
+        ):
+            partners.add(plan["author"])
+            partners.update(plan.get("partners", []))
+        partners.discard(username)
+
+        return partners
 
     def find_plans_for_user_by_slug(self, username: str, slug: str) -> List[VEPlan]:
         """

@@ -1,5 +1,7 @@
+from collections import Counter
 import datetime
-from typing import Dict, List, Tuple
+import logging
+from typing import Dict, List, Optional, Set, Tuple
 
 from bson.objectid import ObjectId
 from exceptions import (
@@ -8,15 +10,20 @@ from exceptions import (
     FileDoesntExistError,
     NotLikerException,
     PostNotExistingException,
+    ProfileDoesntExistException,
 )
 import gridfs
 from pymongo.database import Database
 
+from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.profile import Profiles
+from resources.network.space import ELASTICSEARCH_ERRORS, Spaces
 from resources.network.space_files import SpaceFiles
 from model import VEPlan
 from resources.planner.ve_plan import VEPlanResource
 import util
+
+logger = logging.getLogger(__name__)
 
 
 class Posts:
@@ -27,6 +34,33 @@ class Posts:
             post_manager = Posts(db)
             ...
     """
+
+    # the weights of the signals that suggested posts are scored by (each scaled to
+    # [0, 1]), see `get_personal_timeline_with_suggestions`
+    SUGGESTION_WEIGHTS = {
+        "similar_profile": 0.45,
+        "extended_network": 0.35,
+        "engagement": 0.2,
+    }
+    # the share of suggested posts on top of the posts of a timeline page (4 per 10)
+    SUGGESTION_SHARE = 0.4
+    # older posts are never suggested
+    SUGGESTION_MAX_AGE = datetime.timedelta(days=60)
+    # only this many of the newest posts in the time frame of a page are scored
+    SUGGESTION_CANDIDATES = 100
+    # the number of best matching profiles that count as similar
+    SUGGESTION_SIMILAR_USERS_COUNT = 50
+    # people followed by at least this many of the people that the user follows
+    # belong to the extended network of the user
+    SUGGESTION_MUTUAL_FOLLOWS = 2
+    # likes + 2 * comments at which the engagement of a post counts as full
+    SUGGESTION_ENGAGEMENT_SATURATION = 10
+    # the profile matches and the extended network of a user change slowly, but take
+    # some effort to determine, so they are cached for this long
+    SUGGESTION_CONTEXT_TTL = datetime.timedelta(hours=6)
+
+    # username -> (expiry, context) of the cached suggestion contexts
+    suggestion_contexts: Dict[str, Tuple[datetime.datetime, Dict]] = {}
 
     def __init__(self, db: Database):
         self.db = db
@@ -733,24 +767,43 @@ class Posts:
             )
         )
 
+    @staticmethod
+    def _posted_by(usernames: List[str]) -> Dict:
+        """
+        the query filter for the posts that one of `usernames` has posted,
+        i.e. reposts by whoever reposted them and all other posts by their author
+        """
+
+        return {
+            "$or": [
+                {"isRepost": True, "repostAuthor": {"$in": usernames}},
+                {"isRepost": {"$ne": True}, "author": {"$in": usernames}},
+            ]
+        }
+
     def get_personal_timeline(
         self, username: str, time_to: datetime.datetime, limit: int = 10
     ) -> List[Dict]:
         """
         get the "personal" or rather frontpage timeline of a user, i.e.
-        - your own posts
-        - posts of people that you follow,
-        - posts in spaces that you are a member of
+        - posts of people that you follow (outside of spaces),
+        - posts in spaces that you are a member of.
+
+        Your own posts are left out. Reposts count as
+        posted by whoever reposted them, not by the author of the original post.
 
         The timeline will always include `limit` number of posts, that are older than the
-        `time_to` timestamp. So, e.g. achieve endless scrolling, retrieve the next `limit`
-        posts as kind of a pagination approach, use the oldest timestamp of your current
-        result set as the new starting point.
+        `time_to` timestamp. So, e.g. to achieve endless scrolling and retrieve the next
+        `limit` posts as kind of a pagination approach, use the oldest timestamp of your
+        current result set as the new starting point.
 
         If there are not enough posts, the timeline will include as many
         posts as possible. In turn, if there are less then `limit` posts returned,
         this timeline does not contain any more posts, so further requests with an even
         older timestamp will not yield any more results.
+
+        See `get_personal_timeline_with_suggestions` for the timeline that also
+        suggests posts of people that you don't follow yet.
 
         :param username: the name of the user whose personal timeline is requested
         :param time_to: the maximum creation date of the posts to be returned (i.e. only
@@ -758,186 +811,325 @@ class Posts:
         :param limit: the maximum number of posts to be returned, default 10
         """
 
-        pipeline = self.db.posts.aggregate(
-            [
-                # add the current_user as a field,
-                # we need this because looksups have to be on fields
-                {"$addFields": {"curr_user": username}},
-                # join with the space collection on the space name
+        try:
+            follows = Profiles(self.db).get_follows(username)
+        except ProfileDoesntExistException:
+            follows = []
+
+        return self._get_personal_timeline(username, follows, time_to, limit)
+
+    def _get_personal_timeline(
+        self,
+        username: str,
+        follows: List[str],
+        time_to: datetime.datetime,
+        limit: int,
+    ) -> List[Dict]:
+        """
+        the personal timeline of `username` (see `get_personal_timeline`),
+        with the `follows` of the user already known
+        """
+
+        # resolving the spaces (and follows) first lets the query below use the
+        # index on the creation date, instead of joining them to every single post
+        space_ids = Spaces(self.db).get_space_ids_of_user(username)
+
+        return list(
+            self.db.posts.find(
                 {
-                    "$lookup": {
-                        "from": "spaces",
-                        "localField": "space",
-                        "foreignField": "_id",
-                        "as": "space_obj",
-                    }
+                    "creation_date": {"$lte": time_to},
+                    "$or": [
+                        # posts in spaces are only visible to their members
+                        {"space": {"$in": space_ids}},
+                        {"space": None, **self._posted_by(follows)},
+                    ],
+                    "$nor": [self._posted_by([username])],
                 },
-                # join with the follows collection on the current user
-                {
-                    "$lookup": {
-                        "from": "profiles",
-                        "localField": "curr_user",
-                        "foreignField": "username",
-                        "as": "profile_obj",
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one space and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$space_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # lookup result is a list, but since it is a n:1-relation,
-                # we only expect one follow-record
-                # and can safely flatten the list to a dict
-                {
-                    "$unwind": {
-                        "path": "$profile_obj",
-                        "preserveNullAndEmptyArrays": True,
-                    }
-                },
-                # to make our lives easier with matching later
-                # we extract the list of users the current_user follows from the dict
-                # and also append the current_user himself to it
-                # (that way we can simply match "author in flattened_follows").
-                # this is rather complex, because if the lookup doesnt find any match,
-                # the result is missing (instead of None or []), so we have to check for that
-                {
-                    "$addFields": {
-                        "flattened_follows": {
-                            "$cond": {
-                                "if": {"$ne": [{"$type": "$profile_obj"}, "missing"]},
-                                "then": {
-                                    "$concatArrays": [
-                                        "$profile_obj.follows",
-                                        [username],
-                                    ]
-                                },
-                                "else": {
-                                    "$concatArrays": [
-                                        [],
-                                        [username],
-                                    ]
-                                },
-                            }
-                        }
-                    }
-                },
-                # now the actual filtering begins:
-                # - we first check for the time frame to include only posts that are older than time_to
-                # we now have to check for the 3 cases described on top of the pipeline,
-                # that allow for the post to be in the timeline
-                {
-                    "$match": {
-                        "creation_date": {"$lte": time_to},
-                        "$or": [
-                            # this catches the first and the second case
-                            # (being either the author yourself or you are following
-                            # the author of the post)
-                            {"$expr": {"$in": ["$author", "$flattened_follows"]}},
-                            # this catches the third case, being a member of the space
-                            # the post was put into
-                            # same story as for the flattened_follows:
-                            # this is rather complex, because if the lookup doesnt find anything
-                            # the expected dict is not present (instead of None or []),
-                            # so we have to check existence, and only if it exists, if current_user
-                            # is really a member of the space
-                            {
-                                "$expr": {
-                                    "$in": [
-                                        username,
-                                        {
-                                            "$cond": {
-                                                "if": {
-                                                    "$ne": [
-                                                        {"$type": "$space_obj"},
-                                                        "missing",
-                                                    ]
-                                                },
-                                                "then": "$space_obj.members",
-                                                "else": [],
-                                            }
-                                        },
-                                    ]
-                                }
-                            },
-                        ],
-                        # the matches above actually cover all relevant cases, but one single detail is missing:
-                        # they include posts from user that i follow, that they have posted into spaces
-                        # where i am not a member.
-                        # since i am not a member of that space, i shouldnt be allowed to view that post,
-                        # so we have to filter those out as well by checking:
-                        #   author is not current_user
-                        #   AND post is in a space
-                        #   AND current_user is not member of that space
-                        # if that is true, we leave out the post
-                        "$expr": {
-                            "$eq": [
-                                False,
-                                {
-                                    "$cond": {
-                                        "if": {
-                                            "$and": [
-                                                # check author != cur_user
-                                                {
-                                                    "$ne": [
-                                                        "$author",
-                                                        "$curr_user",
-                                                    ]
-                                                },
-                                                # check space not None
-                                                {"$ne": ["$space", None]},
-                                                # check cur_user not member of space
-                                                {
-                                                    "$not": {
-                                                        "$in": [
-                                                            username,
-                                                            {
-                                                                "$cond": {
-                                                                    "if": {
-                                                                        "$ne": [
-                                                                            {
-                                                                                "$type": "$space_obj"
-                                                                            },
-                                                                            "missing",
-                                                                        ]
-                                                                    },
-                                                                    "then": "$space_obj.members",
-                                                                    "else": [],
-                                                                }
-                                                            },
-                                                        ]
-                                                    }
-                                                },
-                                            ]
-                                        },
-                                        "then": True,
-                                        "else": False,
-                                    }
-                                },
-                            ]
-                        },
-                    }
-                },
-                # sort by creation date, descending
-                {"$sort": {"creation_date": -1}},
-                # only include the last `limit` posts
-                {"$limit": limit},
-                # last step, cleanup all the extra fields we had to use along
-                {
-                    "$unset": [
-                        "curr_user",
-                        "flattened_follows",
-                        "profile_obj",
-                        "space_obj",
-                    ]
-                },
-            ]
+                sort=[("creation_date", -1)],
+                limit=limit,
+            )
         )
 
-        return list(pipeline)
+    def get_personal_timeline_with_suggestions(
+        self, profile: Dict, time_to: datetime.datetime, limit: int = 10
+    ) -> List[Dict]:
+        """
+        get the personal timeline (see `get_personal_timeline`) of the user given by
+        his `profile`, along with suggested posts of people that he doesn't follow yet,
+        which are marked with `"suggested": True`. All posts are sorted newest first.
+
+        Only posts outside of spaces (posts in spaces are only visible to their
+        members) of the last `SUGGESTION_MAX_AGE` are suggested, but no reposts and
+        no posts of users that excluded themselves from the matching. They are scored
+        by the following signals (each scaled to [0, 1] and weighted by
+        `SUGGESTION_WEIGHTS`):
+        - similar_profile: how well the profile of the author matches the profile
+          of the user (matching)
+        - extended_network: the author plans VEs with the user or is followed by at
+          least `SUGGESTION_MUTUAL_FOLLOWS` of the people that the user follows,
+          or one of those people liked or commented the post
+        - engagement: the likes and comments of the post, up to
+          `SUGGESTION_ENGAGEMENT_SATURATION`
+
+        A page holds up to `SUGGESTION_SHARE` suggestions on top of its `limit` posts,
+        at most one per author, which need a similar profile or the extended network
+        to be suggested. They lie in between the oldest post of the page and
+        `time_to`, so that continuing from the oldest post skips none of the posts
+        of the timeline.
+
+        Once the timeline runs out of posts (e.g. for new users), suggestions fill the
+        rest of the page instead, out of all posts of the last `SUGGESTION_MAX_AGE`.
+        These may get by on their engagement alone, and there may be more than one
+        per author, if there are not enough authors.
+
+        :param profile: the profile of the user whose timeline is requested
+        :param time_to: the maximum creation date of the posts to be returned (i.e. only
+                        posts older than this date will be returned)
+        :param limit: the number of posts of the timeline, default 10
+        """
+
+        timeline = self._get_personal_timeline(
+            profile["username"], profile.get("follows", []), time_to, limit
+        )
+        suggestions = self._get_suggested_posts(profile, timeline, time_to, limit)
+
+        return sorted(
+            timeline + suggestions,
+            key=lambda post: util.as_utc(post["creation_date"]),
+            reverse=True,
+        )
+
+    def _get_suggested_posts(
+        self,
+        profile: Dict,
+        timeline: List[Dict],
+        time_to: datetime.datetime,
+        limit: int,
+    ) -> List[Dict]:
+        """
+        the suggested posts for the page `timeline` of the personal timeline,
+        see `get_personal_timeline_with_suggestions`
+        """
+
+        filling = len(timeline) < limit
+        count = round(limit * self.SUGGESTION_SHARE)
+        if filling:
+            count = max(count, limit - len(timeline))
+        if count <= 0:
+            return []
+
+        time_from = util.utcnow() - self.SUGGESTION_MAX_AGE
+        if not filling:
+            time_from = max(time_from, util.as_utc(timeline[-1]["creation_date"]))
+
+        username = profile["username"]
+        follows = set(profile.get("follows", []))
+        candidates = list(
+            self.db.posts.find(
+                {
+                    "creation_date": {"$gte": time_from, "$lte": time_to},
+                    "space": None,
+                    "isRepost": {"$ne": True},
+                    "author": {"$nin": [username, *follows]},
+                },
+                projection={
+                    "author": True,
+                    "creation_date": True,
+                    "likers": True,
+                    "comments.author": True,
+                },
+                sort=[("creation_date", -1)],
+                limit=self.SUGGESTION_CANDIDATES,
+            )
+        )
+        candidates = self._without_excluded_from_matching(candidates)
+        if not candidates:
+            return []
+
+        context = self._suggestion_context(profile)
+        for post in candidates:
+            post["scores"] = self._suggestion_scores(post, context, follows)
+            post["score"] = sum(
+                self.SUGGESTION_WEIGHTS[signal] * score
+                for signal, score in post["scores"].items()
+            )
+        if not filling:
+            candidates = [
+                post
+                for post in candidates
+                if post["scores"]["similar_profile"] > 0
+                or post["scores"]["extended_network"] > 0
+            ]
+
+        picked_ids = self._pick_suggestions(candidates, count, filling)
+        suggestions = list(self.db.posts.find({"_id": {"$in": picked_ids}}))
+        for post in suggestions:
+            post["suggested"] = True
+
+        return suggestions
+
+    def _without_excluded_from_matching(self, posts: List[Dict]) -> List[Dict]:
+        """
+        the `posts` without those of authors that excluded themselves from the matching
+        """
+
+        excluded = {
+            profile["username"]
+            for profile in self.db.profiles.find(
+                {
+                    "username": {"$in": list({post["author"] for post in posts})},
+                    "excluded_from_matching": True,
+                },
+                projection={"username": True},
+            )
+        }
+
+        return [post for post in posts if post["author"] not in excluded]
+
+    def _suggestion_context(self, profile: Dict) -> Dict:
+        """
+        what the suggestions for the user given by his `profile` are scored against,
+        cached for `SUGGESTION_CONTEXT_TTL`:
+        - similar_profiles: the scores of the best matching profiles by username,
+          scaled to [0, 1]
+        - extended_network: the usernames of the people that the user plans VEs with
+          and of those followed by at least `SUGGESTION_MUTUAL_FOLLOWS` of the people
+          that the user follows
+        """
+
+        username = profile["username"]
+        now = util.utcnow()
+        cached = self.suggestion_contexts.get(username)
+        if cached and cached[0] > now:
+            return cached[1]
+
+        similar_profiles = self._similar_profile_scores(profile)
+        context = {
+            "similar_profiles": similar_profiles or {},
+            "extended_network": self._extended_network(profile),
+        }
+
+        # forget the expired contexts along the way
+        expired = [
+            key
+            for key, (expiry, _) in self.suggestion_contexts.items()
+            if expiry <= now
+        ]
+        for key in expired:
+            del self.suggestion_contexts[key]
+        # without the profile matching, the context is only used for this request,
+        # so that an elasticsearch outage doesn't outlast itself in the cache
+        if similar_profiles is not None:
+            self.suggestion_contexts[username] = (
+                now + self.SUGGESTION_CONTEXT_TTL,
+                context,
+            )
+
+        return context
+
+    def _similar_profile_scores(self, profile: Dict) -> Optional[Dict[str, float]]:
+        """
+        the matching scores of the `SUGGESTION_SIMILAR_USERS_COUNT` best matching
+        profiles by username, scaled to [0, 1] (the best match being 1),
+        or None if elasticsearch is unavailable
+        """
+
+        try:
+            # the matching flattens the lists of the profile in place
+            hits = ElasticsearchConnector().search_profile_match(
+                dict(profile), None, None, size=self.SUGGESTION_SIMILAR_USERS_COUNT
+            )
+            scores = {hit["_source"]["username"]: hit["_score"] for hit in hits}
+        except ELASTICSEARCH_ERRORS as e:
+            logger.warning("could not match profiles for post suggestions: %s", e)
+            return None
+
+        best = max(scores.values(), default=0)
+        if not best:
+            return {}
+
+        return {
+            username: score / best for username, score in scores.items() if score > 0
+        }
+
+    def _extended_network(self, profile: Dict) -> Set[str]:
+        """
+        the usernames of the people that the user given by his `profile` plans VEs
+        with and of those followed by at least `SUGGESTION_MUTUAL_FOLLOWS` of the
+        people that the user follows
+        """
+
+        username = profile["username"]
+        followed_by = Counter()
+        for followed in self.db.profiles.find(
+            {"username": {"$in": profile.get("follows", [])}},
+            projection={"follows": True},
+        ):
+            followed_by.update(set(followed.get("follows", [])))
+
+        network = {
+            user
+            for user, count in followed_by.items()
+            if count >= self.SUGGESTION_MUTUAL_FOLLOWS
+        }
+        network.update(VEPlanResource(self.db).get_ve_partners(username))
+        network.discard(username)
+
+        return network
+
+    def _suggestion_scores(
+        self, post: Dict, context: Dict, follows: Set[str]
+    ) -> Dict[str, float]:
+        """
+        the scores of the signals of the suggested `post` (see
+        `get_personal_timeline_with_suggestions`), each scaled to [0, 1]
+        """
+
+        likers = post.get("likers", [])
+        commenters = [comment["author"] for comment in post.get("comments", [])]
+        in_extended_network = post["author"] in context["extended_network"]
+        engaged_by_follows = bool(follows.intersection(likers + commenters))
+
+        return {
+            "similar_profile": context["similar_profiles"].get(post["author"], 0.0),
+            "extended_network": (
+                1.0 if in_extended_network or engaged_by_follows else 0.0
+            ),
+            "engagement": min(
+                (len(likers) + 2 * len(commenters))
+                / self.SUGGESTION_ENGAGEMENT_SATURATION,
+                1,
+            ),
+        }
+
+    @staticmethod
+    def _pick_suggestions(
+        candidates: List[Dict], count: int, filling: bool
+    ) -> List[ObjectId]:
+        """
+        the _ids of the `count` best scored `candidates` (the newer one on a tie),
+        at most one per author. When `filling` the timeline, more posts of the same
+        authors are picked if there are not enough authors.
+        """
+
+        ranked = sorted(
+            candidates,
+            key=lambda post: (post["score"], util.as_utc(post["creation_date"])),
+            reverse=True,
+        )
+
+        picked = []
+        authors = set()
+        for post in ranked:
+            if len(picked) < count and post["author"] not in authors:
+                picked.append(post["_id"])
+                authors.add(post["author"])
+        if filling:
+            for post in ranked:
+                if len(picked) < count and post["_id"] not in picked:
+                    picked.append(post["_id"])
+
+        return picked
 
     def check_new_posts_since_timestamp(self, timestamp: datetime.datetime) -> bool:
         """

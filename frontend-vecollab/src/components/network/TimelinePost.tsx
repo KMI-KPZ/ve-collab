@@ -90,6 +90,9 @@ export default function TimelinePost({
     const [reportedComment, setReportedComment] = useState<BackendPostComment | undefined>(
         undefined
     );
+    // the author of a suggested post can be followed right away
+    const [isFollowingAuthor, setIsFollowingAuthor] = useState<boolean>(false);
+    const [sendingFollow, setSendingFollow] = useState<boolean>(false);
 
     const postLiked = post.likers.includes(session?.user.preferred_username as string);
     const attachedImages = post.files.filter((file) => file.file_type.startsWith('image/'));
@@ -141,6 +144,17 @@ export default function TimelinePost({
         } catch (error) {
             console.log(error);
         }
+    };
+
+    const onClickFollowAuthor = async () => {
+        setSendingFollow(true);
+        const response = await fetchPOST(
+            `/follow?user=${encodeURIComponent(post.author.username)}`,
+            {},
+            session?.accessToken
+        );
+        if (response.success) setIsFollowingAuthor(true);
+        setSendingFollow(false);
     };
 
     const onClickPin = async () => {
@@ -409,6 +423,31 @@ export default function TimelinePost({
                             <Link href={`/group/${post.space}`} className="font-bold align-middle">
                                 {GroupnameById(post.space)}
                             </Link>
+                        </div>
+                    )}
+
+                    {post.suggested && (
+                        <div className="self-start leading-[1.6rem] ml-2 flex flex-wrap items-center gap-x-2 text-xs">
+                            <span
+                                className="px-2 rounded-full bg-ve-collab-blue-light text-ve-collab-blue text-nowrap"
+                                title={t('suggested_post_hint')}
+                            >
+                                {t('suggested_post')}
+                            </span>
+                            {isFollowingAuthor ? (
+                                <span className="text-gray-500 text-nowrap">
+                                    {t('is_following')}
+                                </span>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="font-bold text-ve-collab-blue hover:underline cursor-pointer disabled:opacity-50"
+                                    onClick={onClickFollowAuthor}
+                                    disabled={sendingFollow}
+                                >
+                                    {t('follow')}
+                                </button>
+                            )}
                         </div>
                     )}
 

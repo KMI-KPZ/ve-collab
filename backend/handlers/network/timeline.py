@@ -125,7 +125,6 @@ class BaseTimelineHandler(BaseHandler):
         However, if no matching plan is found (e.g. it got deleted), the plan_id is returned back.
         """
 
-
         # collect all plan_ids without duplicates
         plan_ids = []
         for post in posts:
@@ -352,7 +351,8 @@ class UserTimelineHandler(BaseTimelineHandler):
 class PersonalTimelineHandler(BaseTimelineHandler):
     """
     the timeline of the currently authenticated user.
-    i.e. your posts, posts of users you follow, posts in spaces you are in
+    i.e. posts of users you follow, posts in spaces you are in, but not your own posts,
+    along with suggested posts of people that you don't follow yet
     """
 
     @auth_needed
@@ -368,6 +368,11 @@ class PersonalTimelineHandler(BaseTimelineHandler):
             posts as possible. In turn, if there are less then `limit` posts returned,
             this timeline does not contain any more posts, so further requests with an even
             older timestamp will not yield any more results.
+
+            On top of that, a page includes up to 4 suggested posts per 10 posts
+            (marked with "suggested": true) of people that you don't follow yet,
+            which lie in between the oldest post and "to". Once the timeline runs out
+            of posts, suggested posts of the last 60 days fill the rest of the page.
 
             query params:
                 "to" : ISO timestamp string (fetch posts younger than this), default: now
@@ -386,9 +391,9 @@ class PersonalTimelineHandler(BaseTimelineHandler):
 
         # query personal timeline
         with util.get_mongodb() as db:
-            post_manager = Posts(db)
-            result = post_manager.get_personal_timeline(
-                self.current_user.username, time_to, limit
+            profile = Profiles(db).ensure_profile_exists(self.current_user.username)
+            result = Posts(db).get_personal_timeline_with_suggestions(
+                profile, time_to, limit
             )
 
         posts = self.add_profile_information_to_author(result)

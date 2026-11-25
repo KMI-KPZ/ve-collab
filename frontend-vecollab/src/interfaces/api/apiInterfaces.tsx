@@ -279,6 +279,7 @@ export interface BackendPost {
     originalCreationDate?: string;
     repostAuthor?: BackendPostAuthor;
     repostText?: string;
+    suggested?: boolean;
 }
 
 export interface Achievements {

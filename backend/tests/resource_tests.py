@@ -1019,6 +1019,50 @@ class ACLResourceTest(BaseResourceTestCase):
         self.assertEqual(acl_entry["create_space"], True)
 
 
+def timeline_post(
+    author: str,
+    space: ObjectId = None,
+    age: timedelta = timedelta(),
+    **fields,
+) -> dict:
+    """
+    a post by `author` (into `space`, if given), created `age` ago,
+    the `fields` override the defaults
+    """
+
+    post = {
+        "_id": ObjectId(),
+        "author": author,
+        "creation_date": datetime.now(timezone.utc) - age,
+        "text": "test",
+        "space": space,
+        "pinned": False,
+        "isRepost": False,
+        "wordpress_post_id": None,
+        "tags": [],
+        "plans": [],
+        "files": [],
+        "comments": [],
+        "likers": [],
+    }
+    post.update(fields)
+    return post
+
+
+def timeline_repost(repost_author: str, author: str) -> dict:
+    """
+    a repost by `repost_author` of a post by `author`
+    """
+
+    return timeline_post(
+        author,
+        isRepost=True,
+        repostAuthor=repost_author,
+        originalCreationDate=datetime.now(timezone.utc) - timedelta(days=1),
+        repostText="test",
+    )
+
+
 class PostResourceTest(BaseResourceTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -2673,149 +2717,143 @@ class PostResourceTest(BaseResourceTestCase):
 
     def test_get_personal_timeline(self):
         """
-        expect: successfully get all posts that are in the time frame and match the criteria (OR match):
-        - from people that the user follows,
+        expect: get the posts that are in the time frame and match the criteria
+        (OR match):
+        - from people that the user follows (outside of spaces),
         - in spaces that the user is a member of
-        - the users own posts
+        but not the posts of the user himself
         """
 
-        # follow CURRENT_USER.username
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$push": {"follows": CURRENT_USER.username}},
+        )
+        member_space_id = ObjectId()
+        other_space_id = ObjectId()
+        self.db.spaces.insert_many(
+            [
+                {
+                    "_id": member_space_id,
+                    "name": "member_space",
+                    "invisible": False,
+                    "joinable": True,
+                    "members": [CURRENT_ADMIN.username],
+                    "admins": [CURRENT_ADMIN.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+                {
+                    "_id": other_space_id,
+                    "name": "other_space",
+                    "invisible": False,
+                    "joinable": True,
+                    "members": [CURRENT_USER.username],
+                    "admins": [CURRENT_USER.username],
+                    "invites": [],
+                    "requests": [],
+                    "files": [],
+                },
+            ]
+        )
+
+        followed_post = timeline_post(CURRENT_USER.username)
+        member_space_post = timeline_post("stranger", member_space_id)
+        excluded_posts = [
+            # not followed
+            timeline_post("stranger"),
+            # in spaces that the user is not a member of
+            timeline_post("stranger", other_space_id),
+            timeline_post(CURRENT_USER.username, other_space_id),
+            # the own posts
+            timeline_post(CURRENT_ADMIN.username),
+            timeline_post(CURRENT_ADMIN.username, member_space_id),
+            # out of the time frame (in the future, because backwards
+            # the timeline includes up to <limit> posts)
+            timeline_post(CURRENT_USER.username, age=timedelta(days=-1)),
+        ]
+        self.db.posts.insert_many([followed_post, member_space_post, *excluded_posts])
+
+        # the default post is left out as well, since it is the own post of the user
+        posts = Posts(self.db).get_personal_timeline(
+            CURRENT_ADMIN.username, datetime.now(timezone.utc)
+        )
+        self.assertCountEqual(
+            [post["_id"] for post in posts],
+            [followed_post["_id"], member_space_post["_id"]],
+        )
+
+    def test_get_personal_timeline_reposts(self):
+        """
+        expect: reposts count as posted by whoever reposted them,
+        not by the author of the original post
+        """
+
         self.db.profiles.update_one(
             {"username": CURRENT_ADMIN.username},
             {"$push": {"follows": CURRENT_USER.username}},
         )
 
-        # add one post of CURRENT_USER.username and one of a different username
-        post1 = {
-            "_id": ObjectId(),
-            "author": CURRENT_USER.username,
-            "creation_date": datetime.now(timezone.utc),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-        post2 = {
-            "_id": ObjectId(),
-            "author": "non_following_user",
-            "creation_date": datetime.now(timezone.utc),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
+        followed_repost = timeline_repost(CURRENT_USER.username, "stranger")
+        excluded_reposts = [
+            timeline_repost("stranger", CURRENT_USER.username),
+            timeline_repost(CURRENT_ADMIN.username, CURRENT_USER.username),
+        ]
+        self.db.posts.insert_many([followed_repost, *excluded_reposts])
 
-        # create space test_space
-        space_id = ObjectId()
-        space = {
-            "_id": space_id,
-            "name": "test_space",
-            "invisible": False,
-            "joinable": True,
-            "members": [CURRENT_ADMIN.username],
-            "admins": [CURRENT_ADMIN.username],
-            "invites": [],
-            "requests": [],
-            "files": [],
-        }
-        self.db.spaces.insert_one(space)
-
-        # add one post in a space that CURRENT_USER.username is a member of and one in a space that
-        # he is not a member of
-        post3 = {
-            "_id": ObjectId(),
-            "author": "doesnt_matter",
-            "creation_date": datetime.now(timezone.utc),
-            "text": "test",
-            "space": space_id,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-        post4 = {
-            "_id": ObjectId(),
-            "author": "doesnt_matter",
-            "creation_date": datetime.now(timezone.utc),
-            "text": "test",
-            "space": ObjectId(),
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        # add one post by the user himself
-        post5 = {
-            "_id": ObjectId(),
-            "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(timezone.utc),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        # add one post that is out of the time frame (lies in the future to check
-        # the time frame constraint, because backwards it would include up to <limit> posts)
-        post6 = {
-            "_id": ObjectId(),
-            "author": CURRENT_ADMIN.username,
-            "creation_date": datetime.now(timezone.utc) + timedelta(days=1),
-            "text": "test",
-            "space": None,
-            "pinned": False,
-            "isRepost": False,
-            "wordpress_post_id": None,
-            "tags": ["test"],
-            "plans": [],
-            "files": [],
-            "comments": [],
-            "likers": [],
-        }
-
-        self.db.posts.insert_many([post1, post2, post3, post4, post5, post6])
-
-        post_manager = Posts(self.db)
-        # this should include post1 because it is from a user that the user follows,
-        # post3 because it is from a space that the user is a member of,
-        # and post5 and the default post because it is the users own post
-        # but not the default post because it is out of time frame
-        posts = post_manager.get_personal_timeline(
+        posts = Posts(self.db).get_personal_timeline(
             CURRENT_ADMIN.username, datetime.now(timezone.utc)
         )
-        self.assertEqual(len(posts), 4)
-        post_ids = [post["_id"] for post in posts]
-        self.assertIn(post1["_id"], post_ids)
-        self.assertIn(post3["_id"], post_ids)
-        self.assertIn(post5["_id"], post_ids)
-        self.assertIn(self.post_id, post_ids)
+        self.assertEqual([post["_id"] for post in posts], [followed_repost["_id"]])
+
+    def test_get_personal_timeline_limit(self):
+        """
+        expect: only the newest `limit` posts, newest first
+        """
+
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username},
+            {"$push": {"follows": CURRENT_USER.username}},
+        )
+        oldest, middle, newest = [
+            timeline_post(CURRENT_USER.username, age=timedelta(hours=hours))
+            for hours in (3, 2, 1)
+        ]
+        self.db.posts.insert_many([oldest, middle, newest])
+
+        posts = Posts(self.db).get_personal_timeline(
+            CURRENT_ADMIN.username, datetime.now(timezone.utc), limit=2
+        )
+        self.assertEqual(
+            [post["_id"] for post in posts], [newest["_id"], middle["_id"]]
+        )
+
+    def test_get_personal_timeline_no_profile(self):
+        """
+        expect: a user without a profile still gets the posts of his spaces
+        """
+
+        space_id = ObjectId()
+        self.db.spaces.insert_one(
+            {
+                "_id": space_id,
+                "name": "test_space",
+                "invisible": False,
+                "joinable": True,
+                "members": ["no_profile_user"],
+                "admins": ["no_profile_user"],
+                "invites": [],
+                "requests": [],
+                "files": [],
+            }
+        )
+        space_post = timeline_post(CURRENT_USER.username, space_id)
+        self.db.posts.insert_one(space_post)
+
+        posts = Posts(self.db).get_personal_timeline(
+            "no_profile_user", datetime.now(timezone.utc)
+        )
+        self.assertEqual([post["_id"] for post in posts], [space_post["_id"]])
 
     def test_check_new_posts_since_timestamp(self):
         """
@@ -2896,6 +2934,365 @@ class PostResourceTest(BaseResourceTestCase):
         self.assertRaises(
             PostNotExistingException, post_manager.update_post_files, ObjectId(), []
         )
+
+
+class PostSuggestionsResourceTest(BaseResourceTestCase):
+    """
+    the suggested posts of the personal timeline,
+    see `Posts.get_personal_timeline_with_suggestions`
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        # elasticsearch is mocked, only the use of its results is tested here
+        self.profile_match = mock.patch.object(
+            ElasticsearchConnector, "search_profile_match", return_value=[]
+        ).start()
+        self.addCleanup(mock.patch.stopall)
+        Posts.suggestion_contexts.clear()
+
+        # the admin follows the user, whose posts make up the timeline
+        self.db.profiles.insert_many(
+            [
+                {
+                    "username": CURRENT_ADMIN.username,
+                    "follows": [CURRENT_USER.username],
+                },
+                {"username": CURRENT_USER.username, "follows": []},
+            ]
+        )
+
+    def tearDown(self) -> None:
+        self.db.posts.delete_many({})
+        self.db.profiles.delete_many({})
+        self.db.plans.delete_many({})
+        Posts.suggestion_contexts.clear()
+        super().tearDown()
+
+    def profile(self) -> dict:
+        return self.db.profiles.find_one({"username": CURRENT_ADMIN.username})
+
+    def set_similar_profiles(self, **scores: float) -> None:
+        """
+        let the mocked profile matching return the `scores` by username
+        """
+
+        self.profile_match.return_value = [
+            {"_source": {"username": username}, "_score": score}
+            for username, score in scores.items()
+        ]
+
+    def insert_full_timeline(self) -> list[dict]:
+        """
+        insert a full page (10 posts) of the timeline of the admin,
+        created 1 to 10 hours ago
+        """
+
+        posts = [
+            timeline_post(CURRENT_USER.username, age=timedelta(hours=hours))
+            for hours in range(1, 11)
+        ]
+        self.db.posts.insert_many(posts)
+        return posts
+
+    def get_timeline(self, limit: int = 10) -> list[dict]:
+        return Posts(self.db).get_personal_timeline_with_suggestions(
+            self.profile(), datetime.now(timezone.utc), limit
+        )
+
+    @staticmethod
+    def suggested_ids(posts: list[dict]) -> list[ObjectId]:
+        return [post["_id"] for post in posts if post.get("suggested")]
+
+    @staticmethod
+    def comments_by(*authors: str) -> list[dict]:
+        return [{"_id": ObjectId(), "author": author} for author in authors]
+
+    def test_fill_empty_timeline(self):
+        """
+        expect: the suggestions fill an empty timeline, newest first,
+        even without a similar profile or the extended network
+        """
+
+        liked = timeline_post("stranger_a", age=timedelta(hours=2), likers=["x"])
+        unnoticed = timeline_post("stranger_b", age=timedelta(hours=1))
+        never_suggested = [
+            # too old
+            timeline_post("stranger_c", age=timedelta(days=61)),
+            # only visible to the members of the space
+            timeline_post("stranger_c", ObjectId()),
+            timeline_repost("stranger_c", "stranger_d"),
+            timeline_post(CURRENT_ADMIN.username),
+        ]
+        self.db.posts.insert_many([liked, unnoticed, *never_suggested])
+
+        posts = self.get_timeline()
+        self.assertEqual(
+            [post["_id"] for post in posts], [unnoticed["_id"], liked["_id"]]
+        )
+        self.assertTrue(all(post["suggested"] for post in posts))
+
+    def test_fill_by_engagement(self):
+        """
+        expect: the posts with the most engagement fill the timeline
+        """
+
+        unnoticed = timeline_post("stranger_a", age=timedelta(hours=1))
+        liked = timeline_post(
+            "stranger_b", age=timedelta(hours=2), likers=["a", "b", "c", "d", "e"]
+        )
+        commented = timeline_post(
+            "stranger_c", age=timedelta(hours=3), comments=self.comments_by("a", "b")
+        )
+        self.db.posts.insert_many([unnoticed, liked, commented])
+
+        self.assertEqual(
+            self.suggested_ids(self.get_timeline(limit=2)),
+            [liked["_id"], commented["_id"]],
+        )
+
+    def test_fill_rest_of_timeline(self):
+        """
+        expect: once the timeline runs out of posts, the suggestions fill the rest
+        of the page, instead of only 4 per 10 posts
+        """
+
+        self.db.posts.insert_many(
+            [
+                timeline_post(CURRENT_USER.username, age=timedelta(hours=hours))
+                for hours in (1, 2)
+            ]
+            + [
+                timeline_post("stranger_{}".format(days), age=timedelta(days=days))
+                for days in range(1, 11)
+            ]
+        )
+
+        posts = self.get_timeline()
+        self.assertEqual(len(posts), 10)
+        self.assertEqual(len(self.suggested_ids(posts)), 8)
+
+    def test_fill_with_more_posts_per_author(self):
+        """
+        expect: authors may have more than one suggested post to fill the timeline,
+        if there are not enough authors
+        """
+
+        posts_of_author = [
+            timeline_post("stranger_a", age=timedelta(hours=hours))
+            for hours in (1, 2, 3)
+        ]
+        self.db.posts.insert_many(posts_of_author)
+
+        self.assertEqual(
+            self.suggested_ids(self.get_timeline()),
+            [post["_id"] for post in posts_of_author],
+        )
+
+    def test_share_of_full_timeline(self):
+        """
+        expect: 4 suggestions on top of the 10 posts of a full timeline,
+        all sorted by date
+        """
+
+        timeline = self.insert_full_timeline()
+        strangers = ["stranger_{}".format(i) for i in range(6)]
+        self.set_similar_profiles(**{stranger: 1 for stranger in strangers})
+        self.db.posts.insert_many(
+            [
+                timeline_post(stranger, age=timedelta(hours=5, minutes=i))
+                for i, stranger in enumerate(strangers)
+            ]
+        )
+
+        posts = self.get_timeline()
+        self.assertEqual(len(posts), 14)
+        self.assertEqual(len(self.suggested_ids(posts)), 4)
+        for post in timeline:
+            self.assertIn(post["_id"], [post["_id"] for post in posts])
+        dates = [util.as_utc(post["creation_date"]) for post in posts]
+        self.assertEqual(dates, sorted(dates, reverse=True))
+
+    def test_suggestions_within_page(self):
+        """
+        expect: the suggestions of a full timeline lie in between its oldest post
+        and `time_to`
+        """
+
+        self.insert_full_timeline()
+        self.set_similar_profiles(stranger_a=1, stranger_b=1, stranger_c=1)
+        within = timeline_post("stranger_a", age=timedelta(hours=5))
+        older = timeline_post("stranger_b", age=timedelta(hours=11))
+        newer = timeline_post("stranger_c", age=timedelta(days=-1))
+        self.db.posts.insert_many([within, older, newer])
+
+        self.assertEqual(self.suggested_ids(self.get_timeline()), [within["_id"]])
+
+    def test_suggestions_need_match(self):
+        """
+        expect: the suggestions of a full timeline need a similar profile or the
+        extended network, the engagement alone is not enough
+        """
+
+        self.insert_full_timeline()
+        self.set_similar_profiles(stranger_a=1)
+        similar = timeline_post("stranger_a", age=timedelta(hours=5))
+        popular = timeline_post(
+            "stranger_b",
+            age=timedelta(hours=5),
+            likers=["user_{}".format(i) for i in range(20)],
+        )
+        self.db.posts.insert_many([similar, popular])
+
+        self.assertEqual(self.suggested_ids(self.get_timeline()), [similar["_id"]])
+
+    def test_one_suggestion_per_author(self):
+        """
+        expect: only the newest of equally scored posts of an author is suggested
+        in a full timeline
+        """
+
+        self.insert_full_timeline()
+        self.set_similar_profiles(stranger_a=1)
+        posts_of_author = [
+            timeline_post("stranger_a", age=timedelta(hours=hours))
+            for hours in (3, 4, 5)
+        ]
+        self.db.posts.insert_many(posts_of_author)
+
+        self.assertEqual(
+            self.suggested_ids(self.get_timeline()), [posts_of_author[0]["_id"]]
+        )
+
+    def test_excluded_from_matching(self):
+        """
+        expect: no suggestions of users that excluded themselves from the matching,
+        not even to fill the timeline
+        """
+
+        self.db.profiles.insert_one(
+            {"username": "stranger_a", "follows": [], "excluded_from_matching": True}
+        )
+        self.db.posts.insert_one(timeline_post("stranger_a"))
+
+        self.assertEqual(self.get_timeline(), [])
+
+    def test_similar_profile_scores(self):
+        """
+        expect: the matching scores, scaled to the best match
+        """
+
+        self.set_similar_profiles(stranger_a=4, stranger_b=2, stranger_c=0)
+
+        context = Posts(self.db)._suggestion_context(self.profile())
+        self.assertEqual(
+            context["similar_profiles"], {"stranger_a": 1, "stranger_b": 0.5}
+        )
+
+    def test_extended_network(self):
+        """
+        expect: the people that the user plans VEs with and those followed by at
+        least 2 of the people that the user follows
+        """
+
+        self.db.profiles.update_one(
+            {"username": CURRENT_ADMIN.username}, {"$push": {"follows": "friend"}}
+        )
+        self.db.profiles.update_one(
+            {"username": CURRENT_USER.username},
+            {"$set": {"follows": ["mutual", "single", CURRENT_ADMIN.username]}},
+        )
+        self.db.profiles.insert_one(
+            {"username": "friend", "follows": ["mutual", CURRENT_ADMIN.username]}
+        )
+        self.db.plans.insert_one(
+            {
+                "_id": ObjectId(),
+                "author": CURRENT_ADMIN.username,
+                "partners": ["partner"],
+            }
+        )
+
+        context = Posts(self.db)._suggestion_context(self.profile())
+        self.assertEqual(context["extended_network"], {"mutual", "partner"})
+
+    def test_extended_network_by_follows_engagement(self):
+        """
+        expect: posts that people the user follows liked or commented count as
+        the extended network
+        """
+
+        context = {"similar_profiles": {}, "extended_network": set()}
+        follows = {CURRENT_USER.username}
+        cases = [
+            (timeline_post("stranger", likers=[CURRENT_USER.username]), 1),
+            (
+                timeline_post(
+                    "stranger", comments=self.comments_by(CURRENT_USER.username)
+                ),
+                1,
+            ),
+            (timeline_post("stranger", likers=["somebody"]), 0),
+        ]
+        for post, expected_score in cases:
+            scores = Posts(self.db)._suggestion_scores(post, context, follows)
+            self.assertEqual(scores["extended_network"], expected_score)
+
+    def test_engagement_scores(self):
+        """
+        expect: likes + 2 * comments, saturated at 10
+        """
+
+        context = {"similar_profiles": {}, "extended_network": set()}
+        cases = [
+            (
+                timeline_post(
+                    "stranger",
+                    likers=["a", "b", "c"],
+                    comments=self.comments_by("d", "e"),
+                ),
+                0.7,
+            ),
+            (timeline_post("stranger", likers=["a"] * 20), 1),
+            (timeline_post("stranger"), 0),
+        ]
+        for post, expected_score in cases:
+            scores = Posts(self.db)._suggestion_scores(post, context, set())
+            self.assertAlmostEqual(scores["engagement"], expected_score)
+
+    def test_elasticsearch_unavailable(self):
+        """
+        expect: without elasticsearch, the suggestions work without the profile
+        matching, which isn't cached, so it is tried again on the next request
+        """
+
+        self.profile_match.side_effect = requests.ConnectionError()
+        liked = timeline_post("stranger_a", likers=["x"])
+        self.db.posts.insert_one(liked)
+
+        self.assertEqual(self.suggested_ids(self.get_timeline()), [liked["_id"]])
+        self.assertEqual(Posts.suggestion_contexts, {})
+
+    def test_context_cached(self):
+        """
+        expect: the profile matching only runs again once the cached context expired
+        """
+
+        self.db.posts.insert_one(timeline_post("stranger_a"))
+
+        self.get_timeline()
+        self.get_timeline()
+        self.assertEqual(self.profile_match.call_count, 1)
+
+        # let the cached context expire
+        _, context = Posts.suggestion_contexts[CURRENT_ADMIN.username]
+        Posts.suggestion_contexts[CURRENT_ADMIN.username] = (
+            util.utcnow() - timedelta(seconds=1),
+            context,
+        )
+        self.get_timeline()
+        self.assertEqual(self.profile_match.call_count, 2)
 
 
 class ProfileResourceTest(BaseResourceTestCase):
@@ -8668,6 +9065,30 @@ class PlanResourceTest(BaseResourceTestCase):
         plans = self.planner.get_good_practise_plans()
         self.assertEqual(len(plans), 1)
         self.assertEqual(plans[0]._id, additional_good_practise_plan_id)
+
+    def test_get_ve_partners(self):
+        """
+        expect: the authors and partners of the plans that the user is an author or
+        partner of, without the user himself
+        """
+
+        self.db.plans.insert_many(
+            [
+                {"_id": ObjectId(), "author": "planner", "partners": ["partner_a"]},
+                {
+                    "_id": ObjectId(),
+                    "author": "author_b",
+                    "partners": ["planner", "partner_c"],
+                },
+                {"_id": ObjectId(), "author": "stranger", "partners": ["partner_a"]},
+            ]
+        )
+
+        self.assertEqual(
+            self.planner.get_ve_partners("planner"),
+            {"partner_a", "author_b", "partner_c"},
+        )
+        self.assertEqual(self.planner.get_ve_partners("nobody"), set())
 
     def test_insert_plan(self):
         """

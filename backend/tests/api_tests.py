@@ -35,6 +35,7 @@ from model import (
 from resources.elasticsearch_integration import ElasticsearchConnector
 from resources.network.acl import ACL
 from resources.network.chat import Chat
+from resources.network.post import Posts
 from resources.network.profile import Profiles
 from resources.network.space_files import SpaceFiles
 import util
@@ -9393,9 +9394,13 @@ class TimelineHandlerTest(BaseApiTestCase):
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
 
+    def suggested_ids(self, posts: List[dict]) -> List[ObjectId]:
+        return [ObjectId(post["_id"]) for post in posts if post.get("suggested")]
+
     def test_get_personal_timeline_not_following_not_space_member(self):
         """
-        expect: only 2 posts (own ones)
+        expect: only the post outside of the space from the other user, suggested
+        to fill the timeline, since the own posts are left out
         """
 
         # pull user from space
@@ -9412,40 +9417,32 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/timeline/you", True, 200)
         self.assertIn("posts", response)
 
-        # expect only the posts in spaces to be in the response
-        self.assertEqual(len(response["posts"]), 2)
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertEqual(ids, [self.post_oids[3]])
+        self.assertEqual(self.suggested_ids(response["posts"]), [self.post_oids[3]])
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
-
-        # expect only my own posts
-        for post in response["posts"]:
-            self.assertEqual(CURRENT_ADMIN.username, post["author"]["username"])
 
     def test_get_personal_timeline_not_following_space_member(self):
         """
-        expect: 3 posts (own ones and the one in space from other user)
+        expect: the post in the space from the other user, and his post outside of
+        the space suggested to fill the timeline
         """
 
         response = self.base_checks("GET", "/timeline/you", True, 200)
         self.assertIn("posts", response)
 
-        # expect only the posts in spaces to be in the response
-        self.assertEqual(len(response["posts"]), 3)
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertCountEqual(ids, [self.post_oids[2], self.post_oids[3]])
+        self.assertEqual(self.suggested_ids(response["posts"]), [self.post_oids[3]])
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
 
-        # expect only my own posts and the one from the other user that is in space
-        ids = [ObjectId(post["_id"]) for post in response["posts"]]
-        self.assertEqual(
-            sorted(ids),
-            sorted([self.post_oids[0], self.post_oids[1], self.post_oids[2]]),
-        )
-
     def test_get_personal_timeline_following_not_space_member(self):
         """
-        expect: 3 posts (own ones and the one not in space from other user)
+        expect: only the post outside of the space from the followed user
         """
 
         # follow other user
@@ -9468,22 +9465,16 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/timeline/you", True, 200)
         self.assertIn("posts", response)
 
-        # expect only the posts in spaces to be in the response
-        self.assertEqual(len(response["posts"]), 3)
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertEqual(ids, [self.post_oids[3]])
+        self.assertEqual(self.suggested_ids(response["posts"]), [])
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
 
-        # expect only my own posts and the one from the other user that is in space
-        ids = [ObjectId(post["_id"]) for post in response["posts"]]
-        self.assertEqual(
-            sorted(ids),
-            sorted([self.post_oids[0], self.post_oids[1], self.post_oids[3]]),
-        )
-
     def test_get_personal_timeline_follow_space_member(self):
         """
-        expect: all 4 posts
+        expect: both posts of the other user, but not the own ones
         """
 
         # follow other user
@@ -9495,11 +9486,27 @@ class TimelineHandlerTest(BaseApiTestCase):
         response = self.base_checks("GET", "/timeline/you", True, 200)
         self.assertIn("posts", response)
 
-        # expect only the posts in spaces to be in the response
-        self.assertEqual(len(response["posts"]), 4)
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertCountEqual(ids, [self.post_oids[2], self.post_oids[3]])
+        self.assertEqual(self.suggested_ids(response["posts"]), [])
 
         # expect the author to be enhanced with the correct profile picture
         self.assert_author_enhanced(response["posts"])
+
+    def test_get_personal_timeline_excluded_from_matching(self):
+        """
+        expect: no suggested posts of users that excluded themselves from matching
+        """
+
+        self.db.profiles.update_one(
+            {"username": CURRENT_USER.username},
+            {"$set": {"excluded_from_matching": True}},
+        )
+
+        response = self.base_checks("GET", "/timeline/you", True, 200)
+
+        ids = [ObjectId(post["_id"]) for post in response["posts"]]
+        self.assertEqual(ids, [self.post_oids[2]])
 
     def test_get_new_posts(self):
         """

@@ -254,6 +254,8 @@
     "suggested_materials": "Vorgeschlagene Module",
     "suggested_users": "Vorgeschlagene Nutzer:innen",
     "suggested_groups": "Vorgeschlagene Gruppen",
+    "suggested_post": "Vorgeschlagen",
+    "suggested_post_hint": "Ein Beitrag von jemandem, dem du noch nicht folgst",
     "general": "Stammdaten",
     "settings": "Einstellungen",
     "saved": "Gespeichert",

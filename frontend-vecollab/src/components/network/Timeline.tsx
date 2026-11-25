@@ -132,8 +132,11 @@ export default function Timeline({
             if (newFetchedPosts.length < perFetchLimit) return;
 
             setIsLoadingTimeline(true);
+            // the backend includes posts created exactly at "to", so continue right
+            // before the oldest loaded post, otherwise it would be fetched again and the
+            // whole page would be dropped as already loaded (see the effect above)
             const newToDate = new Date(allPosts[allPosts.length - 1].creation_date);
-            newToDate.setMilliseconds(newToDate.getMilliseconds() + 1);
+            newToDate.setMilliseconds(newToDate.getMilliseconds() - 1);
 
             setToDate(newToDate);
         },

@@ -253,6 +253,8 @@
     "suggested_materials": "Suggested Learning Modules",
     "suggested_users": "Suggested users",
     "suggested_groups": "Suggested groups",
+    "suggested_post": "Suggested",
+    "suggested_post_hint": "A post by someone you don't follow yet",
     "general": "General Information",
     "settings": "Settings",
     "saved": "Saved",
