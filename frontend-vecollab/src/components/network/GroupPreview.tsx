@@ -14,16 +14,11 @@ import ButtonSecondary from '../common/buttons/ButtonSecondary';
 type MembershipAction = 'join' | 'accept_invite' | 'decline_invite' | 'revoke_request';
 
 interface Props {
-    // a visible group that the user is no member of
     group: BackendGroup;
     // reloads the group after the user joined, requested to join, ...
     onMembershipChange: () => Promise<unknown>;
 }
 
-/**
- * the public information of a group (name, picture and description) along with the
- * possibility to join it, request to join it or to answer an invitation to it
- */
 export default function GroupPreview({ group, onMembershipChange }: Props) {
     const { data: session } = useSession();
     const { t } = useTranslation(['community', 'common']);
@@ -110,9 +105,9 @@ export default function GroupPreview({ group, onMembershipChange }: Props) {
                     height={120}
                     className="rounded-full"
                 />
-                <h1 className="font-bold text-3xl pt-5 pb-3 break-words">{group.name}</h1>
+                <h1 className="font-bold text-3xl pt-5 pb-3 wrap-anywhere">{group.name}</h1>
                 {group.space_description && (
-                    <p className="pb-6 text-gray-500 break-words">{group.space_description}</p>
+                    <p className="pb-6 text-gray-500 wrap-anywhere">{group.space_description}</p>
                 )}
                 {actions()}
                 {failed && <p className="mt-4 text-red-700">{t('group_action_error')}</p>}

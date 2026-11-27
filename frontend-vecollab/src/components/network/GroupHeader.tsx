@@ -332,10 +332,14 @@ export default function GroupHeader({ userIsAdmin }: Props) {
             ) : (
                 <>
                     <div className={'flex flex-wrap justify-between'}>
-                        <div className="flex flex-nowrap">
+                        {/* on small screens: name below the picture, picture smaller, long
+                        name breaks. next to the picture, 
+                        on medium screens: name below the banner next to the picture, 
+                        so a long one grows downwards instead of into the banner*/}
+                        <div className="flex min-w-0 flex-col sm:flex-row">
                             <div
                                 className={
-                                    'flex-none mr-8 rounded-full overflow-hidden border-4 border-white shadow-sm w-[180px] h-[180px]'
+                                    'flex-none sm:mr-8 rounded-full overflow-hidden border-4 border-white shadow-sm w-30 h-30 sm:w-45 sm:h-45'
                                 }
                             >
                                 <AuthenticatedImage
@@ -345,11 +349,23 @@ export default function GroupHeader({ userIsAdmin }: Props) {
                                     height={180}
                                 />
                             </div>
-                            <div className={'flex grow items-center mt-6 text-slate-900 font-bold'}>
-                                <div className={'text-4xl pr-6'}>{group.name}</div>
+                            <div
+                                className={
+                                    'flex grow min-w-0 items-center mt-4 sm:mt-16 sm:min-h-19 sm:self-start text-slate-900 font-bold'
+                                }
+                            >
+                                <div className={'min-w-0 text-2xl sm:text-4xl pr-6 wrap-anywhere'}>
+                                    {group.name}
+                                </div>
                             </div>
                         </div>
-                        <div className={'flex items-center mt-6'}>
+                        {/* the dropdown opens to the left, so it stays on the right even
+                        when it wraps below a long name, otherwise it opens off the screen */}
+                        <div
+                            className={`flex items-center mt-2 sm:mt-6 ${
+                                userIsAdmin() ? '' : 'ml-auto'
+                            }`}
+                        >
                             <div className="mt-2 min-h-[2rem]">
                                 {userIsAdmin() ? (
                                     <ButtonSecondary

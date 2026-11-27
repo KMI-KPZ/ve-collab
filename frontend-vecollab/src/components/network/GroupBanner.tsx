@@ -82,8 +82,14 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                     }
                 ></div>
 
-                <div className={'flex absolute top-[90px] right-14 divide-x divide-gray-200 z-10'}>
-                    <div className={'flex items-center pr-6 text-lg text-white'}>
+                {/* smaller and further right on small screens, so it doesn't cover the
+                group picture of the header */}
+                <div
+                    className={
+                        'flex absolute top-[90px] right-4 sm:right-14 divide-x divide-gray-200 z-10 text-base sm:text-lg'
+                    }
+                >
+                    <div className={'flex items-center pr-4 sm:pr-6 text-white'}>
                         <div>
                             <div className="font-bold">
                                 {group.joinable ? t('public') : t('private')}
@@ -94,7 +100,7 @@ export default function GroupBanner({ userIsAdmin }: Props) {
                         </div>
                     </div>
                     <div
-                        className={'pl-6 text-lg text-white cursor-pointer'}
+                        className={'pl-4 sm:pl-6 text-white cursor-pointer'}
                         onClick={(e) => {
                             e.preventDefault();
                             handleOpenMemberDialog();
