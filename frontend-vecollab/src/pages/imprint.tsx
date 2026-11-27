@@ -206,7 +206,7 @@ export default function Imprint(): JSX.Element {
             <p>Christine Magosch, Elisa Müller, Annika Liese, Maria Ferrera Feria</p>
             <p className="underline mt-4">VE-Designer</p>
             <p>Konzeption:</p>
-            <p>Mihaela Marcovic, Elisa Müller, Christine Magosch</p>
+            <p>Mihaela Markovic, Elisa Müller, Christine Magosch</p>
             <p className="underline mt-4">technische Entwicklung</p>
             <p className="mb-10">Christian Schlecht, Simeon Ackermann, Jonas Greim</p>
         </>

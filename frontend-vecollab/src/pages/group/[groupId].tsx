@@ -1,9 +1,9 @@
-import BoxHeadline from '@/components/common/BoxHeadline';
 import WhiteBox from '@/components/common/WhiteBox';
 import LoadingAnimation from '@/components/common/LoadingAnimation';
 import { AccessDenied } from '@/components/network/AccessDenied';
 import GroupBanner from '@/components/network/GroupBanner';
 import GroupHeader from '@/components/network/GroupHeader';
+import GroupMembers from '@/components/network/GroupMembers';
 import GroupPreview from '@/components/network/GroupPreview';
 import GroupSidebar from '@/components/network/GroupSidebar';
 import { UserSnippet } from '@/interfaces/profile/profileInterfaces';
@@ -17,15 +17,15 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { GetServerSidePropsContext } from 'next';
 import { useTranslation } from 'next-i18next';
 import CustomHead from '@/components/metaData/CustomHead';
-import UserProfileImage from '@/components/network/UserProfileImage';
 
 interface Props {
     socket: Socket;
+    openOrCreateChatWith: (users: string[]) => void;
 }
 
 Group.auth = true;
 Group.autoForward = true;
-export default function Group({ socket }: Props): JSX.Element {
+export default function Group({ socket, openOrCreateChatWith }: Props): JSX.Element {
     const { data: session, status } = useSession();
     const { t } = useTranslation(['community', 'common']);
 
@@ -90,18 +90,6 @@ export default function Group({ socket }: Props): JSX.Element {
         );
     }, [group, isLoading, session, isGlobalAdmin]);
 
-    // snippet of a member, with a fallback so a missing profile never crashes the view
-    function snippetOf(username: string): UserSnippet {
-        return (
-            memberSnippets.find((snippet) => snippet.preferredUsername === username) ?? {
-                name: username,
-                profilePicUrl: '',
-                institution: '',
-                preferredUsername: username,
-            }
-        );
-    }
-
     function members() {
         // the page can open directly on this tab (e.g. coming back from the file
         // share), in which case the snippets are not loaded yet
@@ -114,52 +102,11 @@ export default function Group({ socket }: Props): JSX.Element {
         }
 
         return (
-            <WhiteBox>
-                <BoxHeadline title={t('admins')} />
-                <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
-                <div className="mb-8 flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
-                    {group.admins.map((admin, index) => (
-                        <div
-                            key={index}
-                            className="mx-6 my-1 cursor-pointer"
-                            onClick={() => router.push(`/profile/user/${admin}`)}
-                        >
-                            <div className="flex justify-center">
-                                <UserProfileImage
-                                    profile_pic={snippetOf(admin).profilePicUrl}
-                                    chosen_achievement={snippetOf(admin).chosen_achievement}
-                                    width={100}
-                                    height={100}
-                                />
-                            </div>
-                            <BoxHeadline title={snippetOf(admin).name} />
-                        </div>
-                    ))}
-                </div>
-                <BoxHeadline title={t('members')} />
-                <hr className="h-px mt-2 mb-6 bg-gray-200 border-0" />
-                <div className="flex flex-wrap max-h-72 overflow-y-auto content-scrollbar">
-                    {group.members
-                        .filter((member) => !group.admins.includes(member))
-                        .map((member, index) => (
-                            <div
-                                key={index}
-                                className="mx-6 my-1 cursor-pointer"
-                                onClick={() => router.push(`/profile/user/${member}`)}
-                            >
-                                <div className="flex justify-center">
-                                    <UserProfileImage
-                                        profile_pic={snippetOf(member).profilePicUrl}
-                                        chosen_achievement={snippetOf(member).chosen_achievement}
-                                        width={100}
-                                        height={100}
-                                    />
-                                </div>
-                                <BoxHeadline title={snippetOf(member).name} />
-                            </div>
-                        ))}
-                </div>
-            </WhiteBox>
+            <GroupMembers
+                group={group}
+                memberSnippets={memberSnippets}
+                openOrCreateChatWith={openOrCreateChatWith}
+            />
         );
     }
 
